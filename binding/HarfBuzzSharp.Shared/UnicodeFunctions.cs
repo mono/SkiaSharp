@@ -140,9 +140,6 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ($"{nameof (UnicodeFunctions)} is immutable and can't be changed.");
 		}
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
 		protected override void DisposeHandler ()
 		{
 			if (Handle != IntPtr.Zero) {

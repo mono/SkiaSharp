@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Xunit;
+﻿using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKBasicTypesTest : SKTest
 	{
-		private const float EPSILON = 0.0001f;
-		private const int PRECISION = 4;
-
 		[SkippableFact]
 		public void ImageInfoMethodsDoNotModifySource()
 		{
@@ -49,7 +43,7 @@ namespace SkiaSharp.Tests
 			rect1.Location = new SKPoint(25, 30);
 
 			var rect2 = new SKRect(15, 25, 55, 75);
-			rect2.Offset (10, 5);
+			rect2.Offset(10, 5);
 
 			Assert.Equal(expected, rect1);
 			Assert.Equal(expected, rect2);

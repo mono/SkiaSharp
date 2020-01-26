@@ -13,18 +13,18 @@ namespace SkiaSharp
 		public SKRoundRect ()
 			: this (SkiaApi.sk_rrect_new (), true)
 		{
-			if (Handle == IntPtr.Zero) {
+			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKRoundRect instance.");
-			}
+
 			SetEmpty ();
 		}
 
 		public SKRoundRect (SKRect rect)
 			: this (SkiaApi.sk_rrect_new (), true)
 		{
-			if (Handle == IntPtr.Zero) {
+			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKRoundRect instance.");
-			}
+
 			SetRect (rect);
 		}
 
@@ -36,9 +36,9 @@ namespace SkiaSharp
 		public SKRoundRect (SKRect rect, float xRadius, float yRadius)
 			: this (SkiaApi.sk_rrect_new (), true)
 		{
-			if (Handle == IntPtr.Zero) {
+			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKRoundRect instance.");
-			}
+
 			SetRect (rect, xRadius, yRadius);
 		}
 
@@ -46,9 +46,6 @@ namespace SkiaSharp
 			: this (SkiaApi.sk_rrect_new_copy (rrect.Handle), true)
 		{
 		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_rrect_delete (Handle);
@@ -92,35 +89,23 @@ namespace SkiaSharp
 				Utils.NearlyEqual (ll.X, ll.Y, tolerance);
 		}
 
-		public void SetEmpty ()
-		{
+		public void SetEmpty () =>
 			SkiaApi.sk_rrect_set_empty (Handle);
-		}
 
-		public void SetRect (SKRect rect)
-		{
+		public void SetRect (SKRect rect) =>
 			SkiaApi.sk_rrect_set_rect (Handle, &rect);
-		}
 
-		public void SetRect (SKRect rect, float xRadius, float yRadius)
-		{
+		public void SetRect (SKRect rect, float xRadius, float yRadius) =>
 			SkiaApi.sk_rrect_set_rect_xy (Handle, &rect, xRadius, yRadius);
-		}
 
-		public void SetOval (SKRect rect)
-		{
+		public void SetOval (SKRect rect) =>
 			SkiaApi.sk_rrect_set_oval (Handle, &rect);
-		}
 
-		public void SetNinePatch (SKRect rect, float leftRadius, float topRadius, float rightRadius, float bottomRadius)
-		{
+		public void SetNinePatch (SKRect rect, float leftRadius, float topRadius, float rightRadius, float bottomRadius) =>
 			SkiaApi.sk_rrect_set_nine_patch (Handle, &rect, leftRadius, topRadius, rightRadius, bottomRadius);
-		}
 
-		public void SetRectRadii (SKRect rect, SKPoint[] radii)
+		public void SetRectRadii (SKRect rect, ReadOnlySpan<SKPoint> radii)
 		{
-			if (radii == null)
-				throw new ArgumentNullException (nameof (radii));
 			if (radii.Length != 4)
 				throw new ArgumentException ("Radii must have a length of 4.", nameof (radii));
 
@@ -129,10 +114,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public bool Contains (SKRect rect)
-		{
-			return SkiaApi.sk_rrect_contains (Handle, &rect);
-		}
+		public bool Contains (SKRect rect) =>
+			SkiaApi.sk_rrect_contains (Handle, &rect);
 
 		public SKPoint GetRadii (SKRoundRectCorner corner)
 		{
@@ -141,35 +124,23 @@ namespace SkiaSharp
 			return radii;
 		}
 
-		public void Deflate (SKSize size)
-		{
+		public void Deflate (SKSize size) =>
 			Deflate (size.Width, size.Height);
-		}
 
-		public void Deflate (float dx, float dy)
-		{
+		public void Deflate (float dx, float dy) =>
 			SkiaApi.sk_rrect_inset (Handle, dx, dy);
-		}
 
-		public void Inflate (SKSize size)
-		{
+		public void Inflate (SKSize size) =>
 			Inflate (size.Width, size.Height);
-		}
 
-		public void Inflate (float dx, float dy)
-		{
+		public void Inflate (float dx, float dy) =>
 			SkiaApi.sk_rrect_outset (Handle, dx, dy);
-		}
 
-		public void Offset (SKPoint pos)
-		{
+		public void Offset (SKPoint pos) =>
 			Offset (pos.X, pos.Y);
-		}
 
-		public void Offset (float dx, float dy)
-		{
+		public void Offset (float dx, float dy) =>
 			SkiaApi.sk_rrect_offset (Handle, dx, dy);
-		}
 
 		public bool TryTransform (SKMatrix matrix, out SKRoundRect transformed)
 		{
@@ -183,12 +154,7 @@ namespace SkiaSharp
 			return false;
 		}
 
-		public SKRoundRect Transform (SKMatrix matrix)
-		{
-			if (TryTransform (matrix, out var transformed)) {
-				return transformed;
-			}
-			return null;
-		}
+		public SKRoundRect Transform (SKMatrix matrix) =>
+			TryTransform (matrix, out var transformed) ? transformed : null;
 	}
 }

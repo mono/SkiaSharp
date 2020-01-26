@@ -1,30 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKBitmapTest : SKTest
 	{
-		[SkippableFact]
-		public void BitmapCanCopyIsCorrect()
-		{
-			var bmp = CreateTestBitmap();
-
-			Assert.True(bmp.CanCopyTo(SKColorType.Alpha8));
-			Assert.True(bmp.CanCopyTo(SKColorType.Rgb565));
-			Assert.True(bmp.CanCopyTo(SKColorType.Argb4444));
-			Assert.True(bmp.CanCopyTo(SKColorType.Bgra8888));
-			Assert.True(bmp.CanCopyTo(SKColorType.Rgba8888));
-			Assert.True(bmp.CanCopyTo(SKColorType.RgbaF16));
-
-			Assert.False(bmp.CanCopyTo(SKColorType.Unknown));
-			Assert.False(bmp.CanCopyTo(SKColorType.Gray8));
-		}
-
 		[SkippableFact]
 		public void DoesNotCrashWhenDecodingInvalidPath()
 		{
@@ -51,7 +35,7 @@ namespace SkiaSharp.Tests
 			var path = Path.Combine(PathToImages, "index8.png");
 			var bmp = SKBitmap.Decode(path);
 
-			bmp.CopyTo(bmp, SKImageInfo.PlatformColorType);
+			bmp.CopyTo(bmp);
 
 			Assert.Equal((SKColor)0x7EA4C639, bmp.GetPixel(182, 348));
 			Assert.Equal(SKImageInfo.PlatformColorType, bmp.ColorType);
@@ -165,15 +149,17 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{
-			bool released = false;
+			var released = false;
 
-			var onRelease = new SKBitmapReleaseDelegate((addr, ctx) => {
+			var onRelease = new SKBitmapReleaseDelegate((addr, ctx) =>
+			{
 				Marshal.FreeCoTaskMem(addr);
 				released = true;
 				Assert.Equal("RELEASING!", ctx);
 			});
 
-			using (var bitmap = new SKBitmap()) {
+			using (var bitmap = new SKBitmap())
+			{
 				var info = new SKImageInfo(1, 1);
 				var pixels = Marshal.AllocCoTaskMem(info.BytesSize);
 
@@ -187,10 +173,10 @@ namespace SkiaSharp.Tests
 		public void ImageCreateDoesNotThrow()
 		{
 			var info = new SKImageInfo(1, 1);
-			using (var image = SKImage.Create(info)) {
-				Assert.False(image.IsTextureBacked);
-				Assert.Equal(image, image.ToRasterImage());
-			}
+			using var image = SKImage.Create(info);
+
+			Assert.False(image.IsTextureBacked);
+			Assert.Equal(image, image.ToRasterImage());
 		}
 
 		[SkippableFact]
@@ -199,7 +185,8 @@ namespace SkiaSharp.Tests
 			var info = new SKImageInfo(1, 1);
 			var pixels = Marshal.AllocCoTaskMem(info.BytesSize);
 
-			using (var bitmap = new SKBitmap()) {
+			using (var bitmap = new SKBitmap())
+			{
 				bitmap.InstallPixels(info, pixels, info.RowBytes);
 			}
 
@@ -214,12 +201,12 @@ namespace SkiaSharp.Tests
 
 			var alpha = new SKBitmap();
 
-			SKPointI offset;
-			SKPaint paint = new SKPaint {
+			var paint = new SKPaint
+			{
 				MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 5.0f)
 			};
 
-			Assert.True(bitmap.ExtractAlpha(alpha, paint, out offset));
+			Assert.True(bitmap.ExtractAlpha(alpha, paint, out var offset));
 
 			Assert.Equal(new SKPointI(-12, -12), offset);
 		}
@@ -229,65 +216,40 @@ namespace SkiaSharp.Tests
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
 
-			using (var bitmap = SKBitmap.Decode(path))
-			using (var surface = SKSurface.Create(new SKImageInfo(200, 200))) {
-				var canvas = surface.Canvas;
-				canvas.Clear(SKColors.White);
-				canvas.DrawBitmap(bitmap, 0, 0);
+			using var bitmap = SKBitmap.Decode(path);
+			using var surface = SKSurface.Create(new SKImageInfo(200, 200));
 
-				using (var img = surface.Snapshot())
-				using (var bmp = SKBitmap.FromImage(img)) {
-					Assert.Equal(new SKColor(2, 255, 42), bmp.GetPixel(20, 20));
-					Assert.Equal(new SKColor(1, 83, 255), bmp.GetPixel(108, 20));
-					Assert.Equal(new SKColor(255, 166, 1), bmp.GetPixel(20, 108));
-					Assert.Equal(new SKColor(255, 1, 214), bmp.GetPixel(108, 108));
-				}
-			}
+			var canvas = surface.Canvas;
+			canvas.Clear(SKColors.White);
+			canvas.DrawBitmap(bitmap, 0, 0);
+
+			using var img = surface.Snapshot();
+			using var bmp = SKBitmap.FromImage(img);
+
+			Assert.Equal(new SKColor(2, 255, 42), bmp.GetPixel(20, 20));
+			Assert.Equal(new SKColor(1, 83, 255), bmp.GetPixel(108, 20));
+			Assert.Equal(new SKColor(255, 166, 1), bmp.GetPixel(20, 108));
+			Assert.Equal(new SKColor(255, 1, 214), bmp.GetPixel(108, 108));
 		}
 
 		[SkippableFact]
 		public void BitmapAndPixmapAreValid()
 		{
 			var info = new SKImageInfo(10, 10);
-			using (var bitmap = new SKBitmap(info)) {
-				Assert.Equal(10, bitmap.Width);
-				Assert.Equal(10, bitmap.Height);
+			using var bitmap = new SKBitmap(info);
 
-				var pixmap = bitmap.PeekPixels();
-				Assert.NotNull(pixmap);
+			Assert.Equal(10, bitmap.Width);
+			Assert.Equal(10, bitmap.Height);
 
-				Assert.Equal(10, pixmap.Width);
-				Assert.Equal(10, pixmap.Height);
+			using var pixmap = bitmap.PeekPixels();
+			Assert.NotNull(pixmap);
 
-				Assert.True(bitmap.GetPixels() != IntPtr.Zero);
-				Assert.True(pixmap.GetPixels() != IntPtr.Zero);
-				Assert.Equal(bitmap.GetPixels(), pixmap.GetPixels());
-			}
-		}
+			Assert.Equal(10, pixmap.Width);
+			Assert.Equal(10, pixmap.Height);
 
-		[Obsolete]
-		[SkippableFact]
-		public void BitmapResizesObsolete()
-		{
-			var srcInfo = new SKImageInfo(200, 200);
-			var dstInfo = new SKImageInfo(100, 100);
-
-			var srcBmp = new SKBitmap(srcInfo);
-
-			using (var canvas = new SKCanvas(srcBmp))
-			using (var paint = new SKPaint { Color = SKColors.Green }) {
-				canvas.Clear(SKColors.Blue);
-				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
-			}
-
-			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
-			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
-
-			var dstBmp = srcBmp.Resize(dstInfo, SKBitmapResizeMethod.Mitchell);
-			Assert.NotNull(dstBmp);
-
-			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
-			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
+			Assert.True(bitmap.GetPixels() != IntPtr.Zero);
+			Assert.True(pixmap.GetPixels() != IntPtr.Zero);
+			Assert.Equal(bitmap.GetPixels(), pixmap.GetPixels());
 		}
 
 		[SkippableFact]
@@ -299,7 +261,8 @@ namespace SkiaSharp.Tests
 			var srcBmp = new SKBitmap(srcInfo);
 
 			using (var canvas = new SKCanvas(srcBmp))
-			using (var paint = new SKPaint { Color = SKColors.Green }) {
+			using (var paint = new SKPaint { Color = SKColors.Green })
+			{
 				canvas.Clear(SKColors.Blue);
 				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
 			}
@@ -351,7 +314,7 @@ namespace SkiaSharp.Tests
 			{
 				Assert.Equal(255, pixel.Alpha);
 			}
-			
+
 			var maskBuffer = new byte[]
 			{
 				128, 127, 126, 125,
@@ -387,7 +350,6 @@ namespace SkiaSharp.Tests
 			mask.FreeImage();
 		}
 
-		[Obsolete]
 		[SkippableFact(Skip = "This test takes a long time (~3mins), so ignore this most of the time.")]
 		public static void ImageScalingMultipleThreadsTest()
 		{
@@ -398,11 +360,11 @@ namespace SkiaSharp.Tests
 
 			var tasks = new List<Task>();
 
-			for (int i = 0; i < numThreads; i++)
+			for (var i = 0; i < numThreads; i++)
 			{
 				var task = Task.Run(() =>
 				{
-					for (int j = 0; j < numIterationsPerThread; j++)
+					for (var j = 0; j < numIterationsPerThread; j++)
 					{
 						var imageData = ComputeThumbnail(referenceFile);
 					}
@@ -415,51 +377,44 @@ namespace SkiaSharp.Tests
 			Console.WriteLine($"Test completed for {numThreads} tasks, {numIterationsPerThread} each.");
 		}
 
-		[Obsolete]
 		private static byte[] ComputeThumbnail(string fileName)
 		{
-			using (var ms = new MemoryStream())
-			using (var bitmap = SKBitmap.Decode(fileName))
-			using (var scaledBitmap = new SKBitmap(60, 40, bitmap.ColorType, bitmap.AlphaType))
-			{
-				SKBitmap.Resize(scaledBitmap, bitmap, SKBitmapResizeMethod.Hamming);
+			using var ms = new MemoryStream();
+			using var bitmap = SKBitmap.Decode(fileName);
+			using var scaledBitmap = new SKBitmap(60, 40, bitmap.ColorType, bitmap.AlphaType);
 
-				using (var image = SKImage.FromBitmap(scaledBitmap))
-				using (var data = image.Encode(SKEncodedImageFormat.Png, 80))
-				{
-					data.SaveTo(ms);
+			bitmap.ScalePixels(scaledBitmap, SKFilterQuality.High);
 
-					return ms.ToArray();
-				}
-			}
+			using var image = SKImage.FromBitmap(scaledBitmap);
+			using var data = image.Encode(SKEncodedImageFormat.Png, 80);
+
+			data.SaveTo(ms);
+
+			return ms.ToArray();
 		}
 
 		[SkippableFact]
 		public void SwizzleRedBlueTest()
 		{
 			var info = new SKImageInfo(1, 1);
+			using var bmp = new SKBitmap(info);
 
-			using (var bmp = new SKBitmap(info))
-			{
-				bmp.Erase((uint)0xFACEB004);
+			bmp.Erase((uint)0xFACEB004);
 
-				Assert.Equal((uint)0xFACEB004, (uint)bmp.GetPixel(0, 0));
+			Assert.Equal((uint)0xFACEB004, (uint)bmp.GetPixel(0, 0));
 
-				SKSwizzle.SwapRedBlue(bmp.GetPixels(), bmp.GetPixels(), 1);
+			SKSwizzle.SwapRedBlue(bmp.GetPixels(), bmp.GetPixels(), 1);
 
-				Assert.Equal((uint)0xFA04B0CE, (uint)bmp.GetPixel(0, 0));
-			}
+			Assert.Equal((uint)0xFA04B0CE, (uint)bmp.GetPixel(0, 0));
 		}
 
 		[SkippableFact]
 		public void SupportsNonASCIICharactersInPath()
 		{
 			var fileName = Path.Combine(PathToImages, "上田雅美.jpg");
+			using var bitmap = SKBitmap.Decode(fileName);
 
-			using (var bitmap = SKBitmap.Decode(fileName))
-			{
-				Assert.NotNull(bitmap);
-			}
+			Assert.NotNull(bitmap);
 		}
 	}
 }

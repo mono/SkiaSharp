@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
-using System.Collections.Generic;
 
 namespace SkiaSharp.Tests
 {
@@ -85,7 +85,7 @@ namespace SkiaSharp.Tests
 			var exists = SKObject.GetInstance<SKManagedStream>(handle, out _);
 			Assert.False(exists);
 
-			IntPtr DoWork()
+			static IntPtr DoWork()
 			{
 				var dotnet = CreateTestStream();
 				var stream = new SKManagedStream(dotnet, true);
@@ -97,7 +97,7 @@ namespace SkiaSharp.Tests
 		public void ManagedStreamReadsByteCorrectly()
 		{
 			var data = new byte[1024];
-			for (int i = 0; i < data.Length; i++)
+			for (var i = 0; i < data.Length; i++)
 			{
 				data[i] = (byte)(i % byte.MaxValue);
 			}
@@ -109,7 +109,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, stream.Position);
 			Assert.Equal(0, skManagedStream.Position);
 
-			for (int i = 0; i < data.Length; i++)
+			for (var i = 0; i < data.Length; i++)
 			{
 				skManagedStream.Position = i;
 
@@ -128,7 +128,7 @@ namespace SkiaSharp.Tests
 		public void ManagedStreamReadsChunkCorrectly()
 		{
 			var data = new byte[1024];
-			for (int i = 0; i < data.Length; i++)
+			for (var i = 0; i < data.Length; i++)
 			{
 				data[i] = (byte)(i % byte.MaxValue);
 			}
@@ -150,7 +150,7 @@ namespace SkiaSharp.Tests
 		public void ManagedStreamReadsOffsetChunkCorrectly()
 		{
 			var data = new byte[1024];
-			for (int i = 0; i < data.Length; i++)
+			for (var i = 0; i < data.Length; i++)
 			{
 				data[i] = (byte)(i % byte.MaxValue);
 			}
@@ -175,41 +175,37 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ManagedStreamIsNotCollectedPrematurely()
 		{
-			using (var document = CreateDocument(out var handle))
+			var fontList = new List<SKFont>();
+			var paint = new SKPaint();
+
+			for (var index = 0; index < 10; index++)
 			{
-				var paintList = new List<SKPaint>();
+				var fontStream = File.OpenRead(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+				var typeface = SKTypeface.FromStream(fontStream);
 
-				for (var index = 0; index < 10; index++)
-				{
-					var fontStream = File.OpenRead(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
-					var typeface = SKTypeface.FromStream(fontStream);
-
-					var paint = new SKPaint
-					{
-						Typeface = typeface
-					};
-					paintList.Add(paint);
-				}
-
-				using (var pageCanvas = document.BeginPage(792, 842))
-				{
-					foreach (var paint in paintList)
-					{
-						for (var i = 0; i < 100; i++)
-							pageCanvas.DrawText("Text", 0, 5 * i, paint);
-					}
-
-					document.EndPage();
-				}
-
-				CollectGarbage();
-
-				Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
-
-				document.Close();
+				var font = new SKFont { Typeface = typeface };
+				fontList.Add(font);
 			}
 
-			SKDocument CreateDocument(out IntPtr streamHandle)
+			using var document = CreateDocument(out var handle);
+			using (var pageCanvas = document.BeginPage(792, 842))
+			{
+				foreach (var font in fontList)
+				{
+					for (var i = 0; i < 100; i++)
+						pageCanvas.DrawText("Text", 0, 5 * i, font, paint);
+				}
+
+				document.EndPage();
+			}
+
+			CollectGarbage();
+
+			Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
+
+			document.Close();
+
+			static SKDocument CreateDocument(out IntPtr streamHandle)
 			{
 				var stream = new SKDynamicMemoryWStream();
 				streamHandle = stream.Handle;
@@ -267,8 +263,6 @@ namespace SkiaSharp.Tests
 		{
 			VerifyImmediateFinalizers();
 
-			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
-
 			DoWork(out var codecH, out var streamH);
 
 			CollectGarbage();
@@ -276,7 +270,7 @@ namespace SkiaSharp.Tests
 			Assert.False(SKObject.GetInstance<SKManagedStream>(streamH, out _));
 			Assert.False(SKObject.GetInstance<SKCodec>(codecH, out _));
 
-			void DoWork(out IntPtr codecHandle, out IntPtr streamHandle)
+			static void DoWork(out IntPtr codecHandle, out IntPtr streamHandle)
 			{
 				var codec = CreateCodec(out streamHandle);
 				codecHandle = codec.Handle;
@@ -291,8 +285,10 @@ namespace SkiaSharp.Tests
 				Assert.True(stream.IgnorePublicDispose);
 			}
 
-			SKCodec CreateCodec(out IntPtr streamHandle)
+			static SKCodec CreateCodec(out IntPtr streamHandle)
 			{
+				var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
+
 				var stream = new SKManagedStream(new MemoryStream(bytes), true);
 				streamHandle = stream.Handle;
 

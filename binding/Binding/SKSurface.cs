@@ -1,33 +1,16 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
 	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
-		[Obsolete ("Use Create(SKImageInfo) instead.")]
-		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType) => Create (new SKImageInfo (width, height, colorType, alphaType));
-		[Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), props);
-		[Obsolete ("Use Create(SKImageInfo, IntPtr, int) instead.")]
-		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes);
-		[Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props);
-
 		[Preserve]
 		internal SKSurface (IntPtr h, bool owns)
 			: base (h, owns)
 		{
 		}
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
 		// RASTER surface
-
-		[Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (SKImageInfo info, SKSurfaceProps props) =>
-			Create (info, 0, new SKSurfaceProperties (props));
 
 		public static SKSurface Create (SKImageInfo info) =>
 			Create (info, 0, null);
@@ -46,10 +29,6 @@ namespace SkiaSharp
 
 		// convenience RASTER DIRECT to use a SKPixmap instead of SKImageInfo and IntPtr
 
-		[Obsolete ("Use Create(SKPixmap, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (SKPixmap pixmap, SKSurfaceProps props) =>
-			Create (pixmap, new SKSurfaceProperties (props));
-
 		public static SKSurface Create (SKPixmap pixmap) =>
 			Create (pixmap, null);
 
@@ -62,10 +41,6 @@ namespace SkiaSharp
 		}
 
 		// RASTER DIRECT surface
-
-		[Obsolete ("Use Create(SKImageInfo, IntPtr, rowBytes, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props) =>
-			Create (info, pixels, rowBytes, null, null, new SKSurfaceProperties (props));
 
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels) =>
 			Create (info, pixels, info.RowBytes, null, null, null);
@@ -94,26 +69,6 @@ namespace SkiaSharp
 
 		// GPU BACKEND RENDER TARGET surface
 
-		[Obsolete ("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
-		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc)
-		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
-
-			var renderTarget = new GRBackendRenderTarget (context.Backend, desc);
-			return Create (context, renderTarget, desc.Origin, desc.Config.ToColorType (), null, null);
-		}
-
-		[Obsolete ("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc, SKSurfaceProps props)
-		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
-
-			var renderTarget = new GRBackendRenderTarget (context.Backend, desc);
-			return Create (context, renderTarget, desc.Origin, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
-		}
-
 		public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, SKColorType colorType) =>
 			Create (context, renderTarget, GRSurfaceOrigin.BottomLeft, colorType, null, null);
 
@@ -140,22 +95,6 @@ namespace SkiaSharp
 		}
 
 		// GPU BACKEND TEXTURE surface
-
-		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
-		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc) =>
-			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, null);
-
-		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
-		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc) =>
-			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, null);
-
-		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props) =>
-			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
-
-		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props) =>
-			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
 
 		public static SKSurface Create (GRContext context, GRBackendTexture texture, SKColorType colorType) =>
 			Create (context, texture, GRSurfaceOrigin.BottomLeft, 0, colorType, null, null);
@@ -190,22 +129,6 @@ namespace SkiaSharp
 
 		// GPU BACKEND TEXTURE AS RENDER TARGET surface
 
-		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
-		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc) =>
-			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, null);
-
-		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
-		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc) =>
-			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, null);
-
-		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
-		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props) =>
-			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
-
-		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
-		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props) =>
-			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
-
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType) =>
 			CreateAsRenderTarget (context, texture, GRSurfaceOrigin.BottomLeft, 0, colorType, null, null);
 
@@ -238,10 +161,6 @@ namespace SkiaSharp
 		}
 
 		// GPU NEW surface
-
-		[Obsolete ("Use Create(GRContext, bool, SKImageInfo, int, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProps props) =>
-			Create (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft, new SKSurfaceProperties (props), false);
 
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info) =>
 			Create (context, budgeted, info, 0, GRSurfaceOrigin.BottomLeft, null, false);
@@ -276,17 +195,6 @@ namespace SkiaSharp
 
 		public SKCanvas Canvas =>
 			GetObject<SKCanvas> (SkiaApi.sk_surface_get_canvas (Handle), false);
-
-		[Obsolete ("Use SurfaceProperties instead.")]
-		public SKSurfaceProps SurfaceProps {
-			get {
-				var props = SurfaceProperties;
-				return new SKSurfaceProps {
-					Flags = props.Flags,
-					PixelGeometry = props.PixelGeometry
-				};
-			}
-		}
 
 		public SKSurfaceProperties SurfaceProperties =>
 			GetObject<SKSurfaceProperties> (SkiaApi.sk_surface_get_props (Handle), false);

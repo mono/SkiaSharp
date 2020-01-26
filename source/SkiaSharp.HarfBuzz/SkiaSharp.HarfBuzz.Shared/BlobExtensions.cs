@@ -10,9 +10,7 @@ namespace SkiaSharp.HarfBuzz
 		public static Blob ToHarfBuzzBlob(this SKStreamAsset asset)
 		{
 			if (asset == null)
-			{
 				throw new ArgumentNullException(nameof(asset));
-			}
 
 			var size = asset.Length;
 

@@ -3,9 +3,9 @@ using System.Globalization;
 
 namespace SkiaSharp
 {
-	public unsafe struct SKPMColor
+	public unsafe readonly struct SKPMColor : IEquatable<SKPMColor>
 	{
-		private uint color;
+		private readonly uint color;
 
 		public SKPMColor (uint value)
 		{
@@ -17,93 +17,85 @@ namespace SkiaSharp
 		public byte Green => (byte)((color >> SKImageInfo.PlatformColorGreenShift) & 0xff);
 		public byte Blue => (byte)((color >> SKImageInfo.PlatformColorBlueShift) & 0xff);
 
-		public static SKPMColor PreMultiply (SKColor color)
+		public static SKPMColor PreMultiply (SKColor color) =>
+			SkiaApi.sk_color_premultiply ((uint)color);
+
+		public static SKColor UnPreMultiply (SKPMColor pmcolor) =>
+			SkiaApi.sk_color_unpremultiply ((uint)pmcolor);
+
+		public static SKPMColor[] PreMultiply (ReadOnlySpan<SKColor> colors)
 		{
-			return SkiaApi.sk_color_premultiply ((uint)color);
+			var pmcolors = new SKPMColor[colors.Length];
+			PreMultiply (colors, pmcolors);
+			return pmcolors;
 		}
 
-		public static SKColor UnPreMultiply (SKPMColor pmcolor)
+		public static void PreMultiply (ReadOnlySpan<SKColor> colors, Span<SKPMColor> pmcolors)
 		{
-			return SkiaApi.sk_color_unpremultiply ((uint)pmcolor);
-		}
+			if (pmcolors.Length != colors.Length)
+				throw new ArgumentException ("The length of pmcolors must be the same as the length of colors.", nameof (pmcolors));
 
-		public static SKPMColor[] PreMultiply (SKColor[] colors)
-		{
-			var pmcolors = new SKPMColor [colors.Length];
 			fixed (SKColor* c = colors)
 			fixed (SKPMColor* pm = pmcolors) {
 				SkiaApi.sk_color_premultiply_array ((uint*)c, colors.Length, (uint*)pm);
 			}
-			return pmcolors;
 		}
 
-		public static SKColor[] UnPreMultiply (SKPMColor[] pmcolors)
+		public static SKColor[] UnPreMultiply (ReadOnlySpan<SKPMColor> pmcolors)
 		{
-			var colors = new SKColor [pmcolors.Length];
+			var colors = new SKColor[pmcolors.Length];
+			UnPreMultiply (pmcolors, colors);
+			return colors;
+		}
+
+		public static void UnPreMultiply (ReadOnlySpan<SKPMColor> pmcolors, Span<SKColor> colors)
+		{
+			if (colors.Length != pmcolors.Length)
+				throw new ArgumentException ("The length of colors must be the same as the length of pmcolors.", nameof (colors));
+
 			fixed (SKColor* c = colors)
 			fixed (SKPMColor* pm = pmcolors) {
 				SkiaApi.sk_color_unpremultiply_array ((uint*)pm, pmcolors.Length, (uint*)c);
 			}
-			return colors;
 		}
 
-		public override bool Equals (object other)
-		{
-			if (!(other is SKPMColor))
-				return false;
+		public bool Equals (SKPMColor other) =>
+			other.color == color;
 
-			var c = (SKPMColor)other;
-			return c.color == this.color;
-		}
+		public override bool Equals (object other) =>
+			other is SKPMColor c ? c.color == color : false;
 
-		public override int GetHashCode ()
-		{
-			return (int)color;
-		}
+		public override int GetHashCode () => (int)color;
 
-		public static bool operator == (SKPMColor left, SKPMColor right)
-		{
-			return left.color == right.color;
-		}
+		public static bool operator == (SKPMColor left, SKPMColor right) =>
+			left.color == right.color;
 
-		public static bool operator != (SKPMColor left, SKPMColor right)
-		{
-			return !(left == right);
-		}
+		public static bool operator != (SKPMColor left, SKPMColor right) =>
+			!(left == right);
 
-		public static explicit operator SKPMColor (SKColor color)
-		{
-			return SKPMColor.PreMultiply (color);
-		}
+		public static explicit operator SKPMColor (SKColor color) =>
+			PreMultiply (color);
 
-		public static explicit operator SKColor (SKPMColor color)
-		{
-			return SKPMColor.UnPreMultiply (color);
-		}
+		public static explicit operator SKColor (SKPMColor color) =>
+			UnPreMultiply (color);
 
-		public static implicit operator SKPMColor (uint color)
-		{
-			return new SKPMColor (color);
-		}
+		public static implicit operator SKPMColor (uint color) =>
+			new SKPMColor (color);
 
-		public static explicit operator uint (SKPMColor color)
-		{
-			return color.color;
-		}
+		public static explicit operator uint (SKPMColor color) =>
+			color.color;
 
-		public override string ToString ()
-		{
-			return string.Format (CultureInfo.InvariantCulture, "#{0:x2}{1:x2}{2:x2}{3:x2}", Alpha, Red, Green, Blue);
-		}
+		public override string ToString () =>
+			$"#{Alpha:x2}{Red:x2}{Green:x2}{Blue:x2}";
 	}
 
-	public struct SKColor
+	public unsafe readonly struct SKColor : IEquatable<SKColor>
 	{
 		private const float EPSILON = 0.001f;
 
 		public static readonly SKColor Empty;
 
-		private uint color;
+		private readonly uint color;
 
 		public SKColor (uint value)
 		{
@@ -120,25 +112,17 @@ namespace SkiaSharp
 			color = (0xff000000u | (uint)(red << 16) | (uint)(green << 8) | blue);
 		}
 
-		public SKColor WithRed (byte red)
-		{
-			return new SKColor (red, Green, Blue, Alpha);
-		}
+		public SKColor WithRed (byte red) =>
+			new SKColor (red, Green, Blue, Alpha);
 
-		public SKColor WithGreen (byte green)
-		{
-			return new SKColor (Red, green, Blue, Alpha);
-		}
+		public SKColor WithGreen (byte green) =>
+			new SKColor (Red, green, Blue, Alpha);
 
-		public SKColor WithBlue (byte blue)
-		{
-			return new SKColor (Red, Green, blue, Alpha);
-		}
+		public SKColor WithBlue (byte blue) =>
+			new SKColor (Red, Green, blue, Alpha);
 
-		public SKColor WithAlpha (byte alpha)
-		{
-			return new SKColor (Red, Green, Blue, alpha);
-		}
+		public SKColor WithAlpha (byte alpha) =>
+			new SKColor (Red, Green, Blue, alpha);
 
 		public byte Alpha => (byte)((color >> 24) & 0xff);
 		public byte Red => (byte)((color >> 16) & 0xff);
@@ -147,11 +131,11 @@ namespace SkiaSharp
 
 		public float Hue {
 			get {
-				ToHsv (out var h, out var s, out var v);
+				ToHsv (out var h, out _, out _);
 				return h;
 			}
 		}
-		
+
 		public static SKColor FromHsl (float h, float s, float l, byte a = 255)
 		{
 			// convert from percentages
@@ -165,8 +149,7 @@ namespace SkiaSharp
 			var b = l * 255f;
 
 			// HSL from 0 to 1
-			if (Math.Abs (s) > EPSILON)
-			{
+			if (Math.Abs (s) > EPSILON) {
 				float v2;
 				if (l < 0.5f)
 					v2 = l * (1f + s);
@@ -199,7 +182,7 @@ namespace SkiaSharp
 			return (v1);
 		}
 
-		public static SKColor FromHsv(float h, float s, float v, byte a = 255)
+		public static SKColor FromHsv (float h, float s, float v, byte a = 255)
 		{
 			// convert from percentages
 			h = h / 360f;
@@ -212,8 +195,7 @@ namespace SkiaSharp
 			var b = v;
 
 			// HSL from 0 to 1
-			if (Math.Abs (s) > EPSILON)
-			{
+			if (Math.Abs (s) > EPSILON) {
 				h = h * 6f;
 				if (Math.Abs (h - 6f) < EPSILON)
 					h = 0f; // H must be < 1
@@ -223,38 +205,27 @@ namespace SkiaSharp
 				var v2 = v * (1f - s * (h - hInt));
 				var v3 = v * (1f - s * (1f - (h - hInt)));
 
-				if (hInt == 0)
-				{
+				if (hInt == 0) {
 					r = v;
 					g = v3;
 					b = v1;
-				}
-				else if (hInt == 1)
-				{
+				} else if (hInt == 1) {
 					r = v2;
 					g = v;
 					b = v1;
-				}
-				else if (hInt == 2)
-				{
+				} else if (hInt == 2) {
 					r = v1;
 					g = v;
 					b = v3;
-				}
-				else if (hInt == 3)
-				{
+				} else if (hInt == 3) {
 					r = v1;
 					g = v2;
 					b = v;
-				}
-				else if (hInt == 4)
-				{
+				} else if (hInt == 4) {
 					r = v3;
 					g = v1;
 					b = v;
-				}
-				else
-				{
+				} else {
 					r = v;
 					g = v1;
 					b = v2;
@@ -286,8 +257,7 @@ namespace SkiaSharp
 			l = (max + min) / 2f;
 
 			// chromatic data...
-			if (Math.Abs (delta) > EPSILON)
-			{
+			if (Math.Abs (delta) > EPSILON) {
 				if (l < 0.5f)
 					s = delta / (max + min);
 				else
@@ -333,8 +303,7 @@ namespace SkiaSharp
 			v = max;
 
 			// chromatic data...
-			if (Math.Abs (delta) > EPSILON)
-			{
+			if (Math.Abs (delta) > EPSILON) {
 				s = delta / max;
 
 				var deltaR = (((max - r) / 6f) + (delta / 2f)) / delta;
@@ -360,44 +329,28 @@ namespace SkiaSharp
 			v = v * 100f;
 		}
 
-		public override string ToString ()
-		{
-			return string.Format (CultureInfo.InvariantCulture, "#{0:x2}{1:x2}{2:x2}{3:x2}",  Alpha, Red, Green, Blue);
-		}
+		public override string ToString () =>
+			$"#{Alpha:x2}{Red:x2}{Green:x2}{Blue:x2}";
 
-		public override bool Equals (object other)
-		{
-			if (!(other is SKColor))
-				return false;
+		public bool Equals (SKColor other) =>
+			other.color == color;
 
-			var c = (SKColor) other;
-			return c.color == this.color;
-		}
+		public override bool Equals (object other) =>
+			other is SKColor c ? c.color == color : false;
 
-		public override int GetHashCode ()
-		{
-			return (int) color;
-		}
+		public override int GetHashCode () => (int)color;
 
-		public static implicit operator SKColor (uint color)
-		{
-			return new SKColor (color);
-		}
+		public static implicit operator SKColor (uint color) =>
+			new SKColor (color);
 
-		public static explicit operator uint (SKColor color)
-		{
-			return color.color;
-		}
+		public static explicit operator uint (SKColor color) =>
+			color.color;
 
-		public static bool operator == (SKColor left, SKColor right)
-		{
-			return left.color == right.color;
-		}
+		public static bool operator == (SKColor left, SKColor right) =>
+			left.color == right.color;
 
-		public static bool operator != (SKColor left, SKColor right)
-		{
-			return !(left == right);
-		}
+		public static bool operator != (SKColor left, SKColor right) =>
+			!(left == right);
 
 		public static SKColor Parse (string hexString)
 		{
@@ -416,7 +369,7 @@ namespace SkiaSharp
 
 			// clean up string
 			hexString = hexString.Trim ().ToUpperInvariant ();
-			if (hexString [0] == '#')
+			if (hexString[0] == '#')
 				hexString = hexString.Substring (1);
 
 			var len = hexString.Length;
@@ -424,7 +377,7 @@ namespace SkiaSharp
 				byte a;
 				// parse [A]
 				if (len == 4) {
-					if (!byte.TryParse (string.Concat (hexString [len - 4], hexString [len - 4]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a)) {
+					if (!byte.TryParse (string.Concat (hexString[len - 4], hexString[len - 4]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a)) {
 						// error
 						color = SKColor.Empty;
 						return false;
@@ -434,16 +387,16 @@ namespace SkiaSharp
 				}
 
 				// parse RGB
-				if (!byte.TryParse (string.Concat (hexString [len - 3], hexString [len - 3]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var r) ||
-					!byte.TryParse (string.Concat (hexString [len - 2], hexString [len - 2]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var g) ||
-					!byte.TryParse (string.Concat (hexString [len - 1], hexString [len - 1]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b)) {
+				if (!byte.TryParse (string.Concat (hexString[len - 3], hexString[len - 3]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var r) ||
+					!byte.TryParse (string.Concat (hexString[len - 2], hexString[len - 2]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var g) ||
+					!byte.TryParse (string.Concat (hexString[len - 1], hexString[len - 1]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b)) {
 					// error
 					color = SKColor.Empty;
 					return false;
 				}
 
 				// success
-				color = new SKColor(r, g, b, a);
+				color = new SKColor (r, g, b, a);
 				return true;
 			}
 

@@ -24,9 +24,6 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
 		// Default
 
 		public static SKTypeface Default =>
@@ -206,6 +203,115 @@ namespace SkiaSharp
 				SkiaApi.sk_typeface_unichars_to_glyphs (Handle, up, codepoints.Length, gp);
 			}
 		}
+
+		// GetGlyphs
+
+		public ushort[] GetGlyphs (string text)
+		{
+			using var font = ToFont ();
+			return font.GetGlyphs (text);
+		}
+
+		public ushort[] GetGlyphs (ReadOnlySpan<char> text)
+		{
+			using var font = ToFont ();
+			return font.GetGlyphs (text);
+		}
+
+		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
+		{
+			using var font = ToFont ();
+			return font.GetGlyphs (text, encoding);
+		}
+
+		public ushort[] GetGlyphs (IntPtr text, int length, SKTextEncoding encoding)
+		{
+			using var font = ToFont ();
+			return font.GetGlyphs (text, length, encoding);
+		}
+
+		public void GetGlyphs (string text, Span<ushort> glyphs)
+		{
+			using var font = ToFont ();
+			font.GetGlyphs (text, glyphs);
+		}
+
+		public void GetGlyphs (ReadOnlySpan<char> text, Span<ushort> glyphs)
+		{
+			using var font = ToFont ();
+			font.GetGlyphs (text, glyphs);
+		}
+
+		public void GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding, Span<ushort> glyphs)
+		{
+			using var font = ToFont ();
+			font.GetGlyphs (text, encoding, glyphs);
+		}
+
+		public void GetGlyphs (IntPtr text, int length, SKTextEncoding encoding, Span<ushort> glyphs)
+		{
+			using var font = ToFont ();
+			font.GetGlyphs (text, length, encoding, glyphs);
+		}
+
+		// ContainsGlyph
+
+		public bool ContainsGlyph (int codepoint) =>
+			GetGlyph (codepoint) != 0;
+
+		// ContainsGlyphs
+
+		public bool ContainsGlyphs (ReadOnlySpan<int> codepoints) =>
+			ContainsGlyphs (GetGlyphs (codepoints));
+
+		public bool ContainsGlyphs (string text) =>
+			ContainsGlyphs (GetGlyphs (text));
+
+		public bool ContainsGlyphs (ReadOnlySpan<char> text) =>
+			ContainsGlyphs (GetGlyphs (text));
+
+		public bool ContainsGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
+			ContainsGlyphs (GetGlyphs (text, encoding));
+
+		public bool ContainsGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
+			ContainsGlyphs (GetGlyphs (text, length, encoding));
+
+		private bool ContainsGlyphs (ushort[] glyphs) =>
+			Array.IndexOf (glyphs, 0) != -1;
+
+		// CountGlyphs
+
+		public int CountGlyphs (string text)
+		{
+			using var font = ToFont ();
+			return font.CountGlyphs (text);
+		}
+
+		public int CountGlyphs (ReadOnlySpan<char> text)
+		{
+			using var font = ToFont ();
+			return font.CountGlyphs (text);
+		}
+
+		public int CountGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
+		{
+			using var font = ToFont ();
+			return font.CountGlyphs (text, encoding);
+		}
+
+		public int CountGlyphs (IntPtr text, int length, SKTextEncoding encoding)
+		{
+			using var font = ToFont ();
+			return font.CountGlyphs (text, length, encoding);
+		}
+
+		// ToFont
+
+		public SKFont ToFont () =>
+			new SKFont (this);
+
+		public SKFont ToFont (float size, float scaleX = SKFont.DefaultScaleX, float skewX = SKFont.DefaultSkewX) =>
+			new SKFont (this, size, scaleX, skewX);
 
 		// OpenStream
 

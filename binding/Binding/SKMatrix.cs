@@ -1,13 +1,16 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public unsafe partial struct SKMatrix
+	public unsafe partial struct SKMatrix : IEquatable<SKMatrix>
 	{
-		internal const float DegreesToRadians = (float)System.Math.PI / 180.0f;
+		internal const float DegreesToRadians = (float)Math.PI / 180.0f;
 
-		private class Indices {
+		public static readonly SKMatrix Empty;
+		public static readonly SKMatrix Identity = new SKMatrix (1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f);
+
+		private class Indices
+		{
 			public const int ScaleX = 0;
 			public const int SkewX = 1;
 			public const int TransX = 2;
@@ -19,7 +22,40 @@ namespace SkiaSharp
 			public const int Persp2 = 8;
 
 			public const int Count = 9;
-		};
+		}
+
+		public SKMatrix (float value)
+		{
+			scaleX = value;
+			skewX = value;
+			transX = value;
+
+			skewY = value;
+			scaleY = value;
+			transY = value;
+
+			persp0 = value;
+			persp1 = value;
+			persp2 = value;
+		}
+
+		public SKMatrix (ReadOnlySpan<float> values)
+		{
+			if (values.Length != Indices.Count)
+				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
+
+			scaleX = values[Indices.ScaleX];
+			skewX = values[Indices.SkewX];
+			transX = values[Indices.TransX];
+
+			skewY = values[Indices.SkewY];
+			scaleY = values[Indices.ScaleY];
+			transY = values[Indices.TransY];
+
+			persp0 = values[Indices.Persp0];
+			persp1 = values[Indices.Persp1];
+			persp2 = values[Indices.Persp2];
+		}
 
 		public SKMatrix (
 			float scaleX, float skewX, float transX,
@@ -29,289 +65,75 @@ namespace SkiaSharp
 			this.scaleX = scaleX;
 			this.skewX = skewX;
 			this.transX = transX;
+
 			this.skewY = skewY;
 			this.scaleY = scaleY;
-            this.transY = transY;
+			this.transY = transY;
+
 			this.persp0 = persp0;
 			this.persp1 = persp1;
 			this.persp2 = persp2;
 		}
 
-		public float [] Values {
-			get {
-				return new float [9] {
-					scaleX, skewX, transX,
-					skewY, scaleY, transY,
-					persp0, persp1, persp2 };
-			}
+		public readonly bool IsIdentity => Equals (Identity);
+
+		// Values
+
+		public float[] Values {
+			readonly get => new float[9] {
+				scaleX, skewX, transX,
+				skewY, scaleY, transY,
+				persp0, persp1, persp2
+			};
 			set {
 				if (value == null)
 					throw new ArgumentNullException (nameof (Values));
 				if (value.Length != Indices.Count)
 					throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (Values));
 
-				scaleX = value [Indices.ScaleX];
-				skewX = value [Indices.SkewX];
-				transX = value [Indices.TransX];
+				scaleX = value[Indices.ScaleX];
+				skewX = value[Indices.SkewX];
+				transX = value[Indices.TransX];
 
-				skewY = value [Indices.SkewY];
-				scaleY = value [Indices.ScaleY];
-				transY = value [Indices.TransY];
+				skewY = value[Indices.SkewY];
+				scaleY = value[Indices.ScaleY];
+				transY = value[Indices.TransY];
 
-				persp0 = value [Indices.Persp0];
-				persp1 = value [Indices.Persp1];
-				persp2 = value [Indices.Persp2];
+				persp0 = value[Indices.Persp0];
+				persp1 = value[Indices.Persp1];
+				persp2 = value[Indices.Persp2];
 			}
 		}
 
-		public void GetValues(float[] values)
+		public readonly void GetValues (Span<float> values)
 		{
-			if (values == null)
-				throw new ArgumentNullException (nameof (values));
 			if (values.Length != Indices.Count)
 				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
 
-			values [Indices.ScaleX] = scaleX;
-			values [Indices.SkewX] = skewX;
-			values [Indices.TransX] = transX;
-			values [Indices.SkewY] = skewY;
-			values [Indices.ScaleY] = scaleY;
-			values [Indices.TransY] = transY;
-			values [Indices.Persp0] = persp0;
-			values [Indices.Persp1] = persp1;
-			values [Indices.Persp2] = persp2;
+			values[Indices.ScaleX] = scaleX;
+			values[Indices.SkewX] = skewX;
+			values[Indices.TransX] = transX;
+
+			values[Indices.SkewY] = skewY;
+			values[Indices.ScaleY] = scaleY;
+			values[Indices.TransY] = transY;
+
+			values[Indices.Persp0] = persp0;
+			values[Indices.Persp1] = persp1;
+			values[Indices.Persp2] = persp2;
 		}
 
-#if OPTIMIZED_SKMATRIX
+		// Invert
 
-		//
-		// If we manage to get an sk_matrix_t that contains the extra
-		// the fTypeMask flag, we could accelerate various operations
-		// as well, as this caches state of what is needed to be done.
-		//
-	
-		[Flags]
-		enum Mask : uint {
-			Identity = 0,
-			Translate = 1,
-			Scale = 2,
-			Affine = 4,
-			Perspective = 8,
-			RectStaysRect = 0x10,
-			OnlyPerspectiveValid = 0x40,
-			Unknown = 0x80,
-			OrableMasks = Translate | Scale | Affine | Perspective,
-			AllMasks = OrableMasks | RectStaysRect
-		}
-		Mask typeMask;
-
-		Mask GetMask ()
-		{
-			if (typeMask.HasFlag (Mask.Unknown))
-				typeMask = (Mask) SkiaApi.sk_matrix_get_type (ref this);
-
-		        // only return the public masks
-			return (Mask) ((uint)typeMask & 0xf);
-		}
-#endif
-
-		static float sdot (float a, float b, float c, float d) => a * b + c * d;
-		static float scross(float a, float b, float c, float d) => a * b - c * d;
-
-		public static SKMatrix MakeIdentity ()
-		{
-			return new SKMatrix () { scaleX = 1, scaleY = 1, persp2 = 1
-#if OPTIMIZED_SKMATRIX
-					, typeMask = Mask.Identity | Mask.RectStaysRect
-#endif
-			};
+		public readonly bool IsInvertible {
+			get {
+				fixed (SKMatrix* t = &this) {
+					return SkiaApi.sk_matrix_try_invert (t, null);
+				}
+			}
 		}
 
-		public void SetScaleTranslate (float sx, float sy, float tx, float ty)
-		{
-			scaleX = sx;
-			skewX = 0;
-			transX = tx;
-
-			skewY = 0;
-			scaleY = sy;
-			transY = ty;
-
-			persp0 = 0;
-			persp1 = 0;
-			persp2 = 1;
-
-#if OPTIMIZED_SKMATRIX
-			typeMask = Mask.RectStaysRect | 
-				((sx != 1 || sy != 1) ? Mask.Scale : 0) |
-				((tx != 0 || ty != 0) ? Mask.Translate : 0);
-#endif
-		}
-
-		public static SKMatrix MakeScale (float sx, float sy)
-		{
-			if (sx == 1 && sy == 1)
-				return MakeIdentity ();
-			return new SKMatrix () { scaleX = sx, scaleY = sy, persp2 = 1, 
-#if OPTIMIZED_SKMATRIX
-typeMask = Mask.Scale | Mask.RectStaysRect
-#endif
-			};
-				
-		}
-
-		/// <summary>
-		/// Set the matrix to scale by sx and sy, with a pivot point at (px, py).
-		/// The pivot point is the coordinate that should remain unchanged by the
-		/// specified transformation.
-		public static SKMatrix MakeScale (float sx, float sy, float pivotX, float pivotY)
-		{
-			if (sx == 1 && sy == 1)
-				return MakeIdentity ();
-			float tx = pivotX - sx * pivotX;
-			float ty = pivotY - sy * pivotY;
-
-#if OPTIMIZED_SKMATRIX
-			Mask mask = Mask.RectStaysRect | 
-				((sx != 1 || sy != 1) ? Mask.Scale : 0) |
-				((tx != 0 || ty != 0) ? Mask.Translate : 0);
-#endif
-			return new SKMatrix () { 
-				scaleX = sx, scaleY = sy, 
-				transX = tx, transY = ty,
-				persp2 = 1,
-#if OPTIMIZED_SKMATRIX
-				typeMask = mask
-#endif
-			};
-		}
-
-		public static SKMatrix MakeTranslation (float dx, float dy)
-		{
-			if (dx == 0 && dy == 0)
-				return MakeIdentity ();
-			
-			return new SKMatrix () { 
-				scaleX = 1, scaleY = 1,
-				transX = dx, transY = dy,
-				persp2 = 1,
-#if OPTIMIZED_SKMATRIX
-				typeMask = Mask.Translate | Mask.RectStaysRect
-#endif
-			};
-		}
-
-		public static SKMatrix MakeRotation (float radians)
-		{
-			var sin = (float) Math.Sin (radians);
-			var cos = (float) Math.Cos (radians);
-
-			var matrix = new SKMatrix ();
-			SetSinCos (ref matrix, sin, cos);
-			return matrix;
-		}
-
-		public static SKMatrix MakeRotation (float radians, float pivotx, float pivoty)
-		{
-			var sin = (float) Math.Sin (radians);
-			var cos = (float) Math.Cos (radians);
-
-			var matrix = new SKMatrix ();
-			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
-			return matrix;
-		}
-
-		public static SKMatrix MakeRotationDegrees (float degrees)
-		{
-			return MakeRotation (degrees * DegreesToRadians);
-		}
-
-		public static SKMatrix MakeRotationDegrees (float degrees, float pivotx, float pivoty)
-		{
-			return MakeRotation (degrees * DegreesToRadians, pivotx, pivoty);
-		}
-
-		private static void SetSinCos (ref SKMatrix matrix, float sin, float cos)
-		{
-			matrix.scaleX = cos;
-			matrix.skewX = -sin;
-			matrix.transX = 0;
-			matrix.skewY = sin;
-			matrix.scaleY = cos;
-			matrix.transY = 0;
-			matrix.persp0 = 0;
-			matrix.persp1 = 0;
-			matrix.persp2 = 1;
-#if OPTIMIZED_SKMATRIX
-			matrix.typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid;
-#endif
-		}
-
-		private static void SetSinCos (ref SKMatrix matrix, float sin, float cos, float pivotx, float pivoty)
-		{
-			float oneMinusCos = 1-cos;
-			
-			matrix.scaleX = cos;
-			matrix.skewX = -sin;
-			matrix.transX = sdot(sin, pivoty, oneMinusCos, pivotx);
-			matrix.skewY = sin;
-			matrix.scaleY = cos;
-			matrix.transY = sdot(-sin, pivotx, oneMinusCos, pivoty);
-			matrix.persp0 = 0;
-			matrix.persp1 = 0;
-			matrix.persp2 = 1;
-#if OPTIMIZED_SKMATRIX
-			matrix.typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid;
-#endif
-		}
-		
-		public static void Rotate (ref SKMatrix matrix, float radians, float pivotx, float pivoty)
-		{
-			var sin = (float) Math.Sin (radians);
-			var cos = (float) Math.Cos (radians);
-			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
-		}
-
-		public static void RotateDegrees (ref SKMatrix matrix, float degrees, float pivotx, float pivoty)
-		{
-			var sin = (float) Math.Sin (degrees * DegreesToRadians);
-			var cos = (float) Math.Cos (degrees * DegreesToRadians);
-			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
-		}
-
-		public static void Rotate (ref SKMatrix matrix, float radians)
-		{
-			var sin = (float) Math.Sin (radians);
-			var cos = (float) Math.Cos (radians);
-			SetSinCos (ref matrix, sin, cos);
-		}
-
-		public static void RotateDegrees (ref SKMatrix matrix, float degrees)
-		{
-			var sin = (float) Math.Sin (degrees * DegreesToRadians);
-			var cos = (float) Math.Cos (degrees * DegreesToRadians);
-			SetSinCos (ref matrix, sin, cos);
-		}
-
-		public static SKMatrix MakeSkew (float sx, float sy)
-		{
-			return new SKMatrix () {
-				scaleX = 1,
-				skewX = sx,
-				transX = 0,
-				skewY = sy,
-				scaleY = 1,
-				transY = 0,
-				persp0 = 0,
-				persp1 = 0,
-				persp2 = 1,
-#if OPTIMIZED_SKMATRIX
-				typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid
-#endif
-			};
-		}
-
-		public bool TryInvert (out SKMatrix inverse)
+		public readonly bool TryInvert (out SKMatrix inverse)
 		{
 			fixed (SKMatrix* i = &inverse)
 			fixed (SKMatrix* t = &this) {
@@ -319,14 +141,33 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			}
 		}
 
-		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
+		public readonly SKMatrix Invert ()
 		{
-			fixed (SKMatrix* t = &target) {
-				SkiaApi.sk_matrix_concat (t, &first, &second);
+			if (TryInvert (out var matrix))
+				return matrix;
+
+			return Empty;
+		}
+
+		// *Concat
+
+		public void PreConcat (in SKMatrix matrix)
+		{
+			fixed (SKMatrix* t = &this)
+			fixed (SKMatrix* m = &matrix) {
+				SkiaApi.sk_matrix_pre_concat (t, m);
 			}
 		}
 
-		public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second)
+		public void PostConcat (in SKMatrix matrix)
+		{
+			fixed (SKMatrix* t = &this)
+			fixed (SKMatrix* m = &matrix) {
+				SkiaApi.sk_matrix_post_concat (t, m);
+			}
+		}
+
+		public static void Concat (ref SKMatrix target, in SKMatrix first, in SKMatrix second)
 		{
 			fixed (SKMatrix* t = &target)
 			fixed (SKMatrix* f = &first)
@@ -335,14 +176,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			}
 		}
 
-		public static void PreConcat (ref SKMatrix target, SKMatrix matrix)
-		{
-			fixed (SKMatrix* t = &target) {
-				SkiaApi.sk_matrix_pre_concat (t, &matrix);
-			}
-		}
-
-		public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix)
+		public static void PreConcat (ref SKMatrix target, in SKMatrix matrix)
 		{
 			fixed (SKMatrix* t = &target)
 			fixed (SKMatrix* m = &matrix) {
@@ -350,14 +184,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			}
 		}
 
-		public static void PostConcat (ref SKMatrix target, SKMatrix matrix)
-		{
-			fixed (SKMatrix* t = &target) {
-				SkiaApi.sk_matrix_post_concat (t, &matrix);
-			}
-		}
-
-		public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix)
+		public static void PostConcat (ref SKMatrix target, in SKMatrix matrix)
 		{
 			fixed (SKMatrix* t = &target)
 			fixed (SKMatrix* m = &matrix) {
@@ -365,27 +192,21 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			}
 		}
 
-		public static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
+		// MapRect
+
+		public readonly SKRect MapRect (SKRect source)
 		{
-			fixed (SKMatrix* m = &matrix)
-			fixed (SKRect* d = &dest)
-			fixed (SKRect* s = &source) {
-				SkiaApi.sk_matrix_map_rect (m, d, s);
+			SKRect dest;
+			fixed (SKMatrix* m = &this) {
+				SkiaApi.sk_matrix_map_rect (m, &dest, &source);
 			}
+			return dest;
 		}
 
-		public SKRect MapRect (SKRect source)
-		{
-			MapRect (ref this, out var result, ref source);
-			return result;
-		}
+		// MapPoints
 
-		public void MapPoints (SKPoint [] result, SKPoint [] points)
+		public readonly void MapPoints (ReadOnlySpan<SKPoint> points, Span<SKPoint> result)
 		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
 			if (result.Length != points.Length)
 				throw new ArgumentException ("Buffers must be the same size.");
 
@@ -396,22 +217,29 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			}
 		}
 
-		public SKPoint [] MapPoints (SKPoint [] points)
+		public readonly SKPoint[] MapPoints (ReadOnlySpan<SKPoint> points)
 		{
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
-
-			var res = new SKPoint [points.Length];
-			MapPoints (res, points);
+			var res = new SKPoint[points.Length];
+			MapPoints (points, res);
 			return res;
 		}
 
-		public void MapVectors (SKPoint [] result, SKPoint [] vectors)
+		public readonly SKPoint MapPoint (SKPoint point) =>
+			MapPoint (point.X, point.Y);
+
+		public readonly SKPoint MapPoint (float x, float y)
 		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-			if (vectors == null)
-				throw new ArgumentNullException (nameof (vectors));
+			SKPoint result;
+			fixed (SKMatrix* t = &this) {
+				SkiaApi.sk_matrix_map_xy (t, x, y, &result);
+			}
+			return result;
+		}
+
+		// MapVectors
+
+		public readonly void MapVectors (ReadOnlySpan<SKPoint> vectors, Span<SKPoint> result)
+		{
 			if (result.Length != vectors.Length)
 				throw new ArgumentException ("Buffers must be the same size.");
 
@@ -422,31 +250,17 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			}
 		}
 
-		public SKPoint [] MapVectors (SKPoint [] vectors)
+		public readonly SKPoint[] MapVectors (ReadOnlySpan<SKPoint> vectors)
 		{
-			if (vectors == null)
-				throw new ArgumentNullException (nameof (vectors));
-
-			var res = new SKPoint [vectors.Length];
-			MapVectors (res, vectors);
+			var res = new SKPoint[vectors.Length];
+			MapVectors (vectors, res);
 			return res;
 		}
 
-		public SKPoint MapPoint (SKPoint point)
-		{
-			return MapPoint (point.X, point.Y);
-		}
+		public readonly SKPoint MapVector (SKPoint point) =>
+			MapVector (point.X, point.Y);
 
-		public SKPoint MapPoint (float x, float y)
-		{
-			SKPoint result;
-			fixed (SKMatrix* t = &this) {
-				SkiaApi.sk_matrix_map_xy (t, x, y, &result);
-			}
-			return result;
-		}
-
-		public SKPoint MapVector (float x, float y)
+		public readonly SKPoint MapVector (float x, float y)
 		{
 			SKPoint result;
 			fixed (SKMatrix* t = &this) {
@@ -455,599 +269,165 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return result;
 		}
 
-		public float MapRadius (float radius)
+		// MapRadius
+
+		public readonly float MapRadius (float radius)
 		{
 			fixed (SKMatrix* t = &this) {
 				return SkiaApi.sk_matrix_map_radius (t, radius);
 			}
 		}
-	}
 
-	public unsafe class SK3dView : SKObject
-	{
-		[Preserve]
-		internal SK3dView (IntPtr x, bool owns)
-			: base (x, owns)
-		{
-		}
+		// equality
 
-		public SK3dView ()
-			: this (SkiaApi.sk_3dview_new (), true)
-		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SK3dView instance.");
-			}
-		}
+		public readonly bool Equals (SKMatrix other) =>
+			scaleX == other.scaleX &&
+			skewX == other.skewX &&
+			transX == other.transX &&
+			skewY == other.skewY &&
+			scaleY == other.scaleY &&
+			transY == other.transY &&
+			persp0 == other.persp0 &&
+			persp1 == other.persp1 &&
+			persp2 == other.persp2;
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
+		// Create*
 
-		protected override void DisposeNative () =>
-			SkiaApi.sk_3dview_destroy (Handle);
+		public static SKMatrix CreateTranslation (float dx, float dy)
+		{
+			if (dx == 0 && dy == 0)
+				return Identity;
 
-		public SKMatrix Matrix {
-			get {
-				SKMatrix matrix = SKMatrix.MakeIdentity ();
-				GetMatrix (ref matrix);
-				return matrix;
-			}
-		}
-		
-		public void GetMatrix (ref SKMatrix matrix)
-		{
-			fixed (SKMatrix* m = &matrix) {
-				SkiaApi.sk_3dview_get_matrix (Handle, m);
-			}
-		}
-		
-		public void Save ()
-		{
-			SkiaApi.sk_3dview_save (Handle);
-		}
-		
-		public void Restore ()
-		{
-			SkiaApi.sk_3dview_restore (Handle);
-		}
-		
-		public void Translate (float x, float y, float z)
-		{
-			SkiaApi.sk_3dview_translate (Handle, x, y, z);
-		}
-		
-		public void TranslateX (float x)
-		{
-			Translate (x, 0, 0);
-		}
-		
-		public void TranslateY (float y)
-		{
-			Translate (0, y, 0);
-		}
-		
-		public void TranslateZ (float z)
-		{
-			Translate (0, 0, z);
-		}
-		
-		public void RotateXDegrees (float degrees)
-		{
-			SkiaApi.sk_3dview_rotate_x_degrees (Handle, degrees);
-		}
-		
-		public void RotateXRadians (float radians)
-		{
-			SkiaApi.sk_3dview_rotate_x_radians (Handle, radians);
-		}
-		
-		public void RotateYDegrees (float degrees)
-		{
-			SkiaApi.sk_3dview_rotate_y_degrees (Handle, degrees);
-		}
-		
-		public void RotateYRadians (float radians)
-		{
-			SkiaApi.sk_3dview_rotate_y_radians (Handle, radians);
-		}
-		
-		public void RotateZDegrees (float degrees)
-		{
-			SkiaApi.sk_3dview_rotate_z_degrees (Handle, degrees);
-		}
-		
-		public void RotateZRadians (float radians)
-		{
-			SkiaApi.sk_3dview_rotate_z_radians (Handle, radians);
-		}
-		
-		public void ApplyToCanvas (SKCanvas canvas)
-		{
-			if (canvas == null)
-				throw new ArgumentNullException (nameof (canvas));
-
-			SkiaApi.sk_3dview_apply_to_canvas (Handle, canvas.Handle);
+			return new SKMatrix {
+				scaleX = 1,
+				scaleY = 1,
+				transX = dx,
+				transY = dy,
+				persp2 = 1,
+			};
 		}
 
-		public float DotWithNormal (float dx, float dy, float dz)
+		public static SKMatrix CreateScale (float sx, float sy)
 		{
-			return SkiaApi.sk_3dview_dot_with_normal (Handle, dx, dy, dz);
-		}
-	}
+			if (sx == 1 && sy == 1)
+				return Identity;
 
-	public unsafe class SKMatrix44 : SKObject
-	{
-		[Preserve]
-		internal SKMatrix44 (IntPtr x, bool owns)
-			: base (x, owns)
-		{
+			return new SKMatrix {
+				scaleX = sx,
+				scaleY = sy,
+				persp2 = 1,
+			};
 		}
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
-		protected override void DisposeNative () =>
-			SkiaApi.sk_matrix44_destroy (Handle);
-
-		public SKMatrix44 ()
-			: this (SkiaApi.sk_matrix44_new(), true)
+		public static SKMatrix CreateScale (float sx, float sy, float pivotX, float pivotY)
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
-			}
+			if (sx == 1 && sy == 1)
+				return Identity;
+
+			var tx = pivotX - sx * pivotX;
+			var ty = pivotY - sy * pivotY;
+
+			return new SKMatrix {
+				scaleX = sx,
+				scaleY = sy,
+				transX = tx,
+				transY = ty,
+				persp2 = 1,
+			};
 		}
 
-		public SKMatrix44 (SKMatrix44 src)
-			: this (IntPtr.Zero, true)
+		public static SKMatrix CreateRotation (float radians)
 		{
-			if (src == null) {
-				throw new ArgumentNullException (nameof (src));
-			}
-			Handle = SkiaApi.sk_matrix44_new_copy (src.Handle);
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
-			}
-		}
+			if (radians == 0)
+				return Identity;
 
-		public SKMatrix44 (SKMatrix44 a, SKMatrix44 b)
-			: this (IntPtr.Zero, true)
-		{
-			if (a == null) {
-				throw new ArgumentNullException (nameof (a));
-			}
-			if (b == null) {
-				throw new ArgumentNullException (nameof (b));
-			}
+			var sin = (float)Math.Sin (radians);
+			var cos = (float)Math.Cos (radians);
 
-			Handle = SkiaApi.sk_matrix44_new_concat (a.Handle, b.Handle);
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
-			}
-		}
-
-		public SKMatrix44 (SKMatrix src)
-			: this (CreateNew (ref src), true)
-		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
-			}
-		}
-
-		private static IntPtr CreateNew (ref SKMatrix src)
-		{
-			fixed (SKMatrix* s = &src) {
-				return SkiaApi.sk_matrix44_new_matrix (s);
-			}
-		}
-
-		public static SKMatrix44 CreateIdentity ()
-		{
-			var matrix = new SKMatrix44();
-			matrix.SetIdentity ();
+			var matrix = Identity;
+			SetSinCos (ref matrix, sin, cos);
 			return matrix;
 		}
 
-		public static SKMatrix44 CreateTranslate (float x, float y, float z)
+		public static SKMatrix CreateRotation (float radians, float pivotx, float pivoty)
 		{
-			var matrix = new SKMatrix44();
-			matrix.SetTranslate (x, y, z);
+			if (radians == 0)
+				return Identity;
+
+			var sin = (float)Math.Sin (radians);
+			var cos = (float)Math.Cos (radians);
+
+			var matrix = Identity;
+			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
 			return matrix;
 		}
 
-		public static SKMatrix44 CreateScale (float x, float y, float z)
+		public static SKMatrix CreateRotationDegrees (float degrees)
 		{
-			var matrix = new SKMatrix44();
-			matrix.SetScale (x, y, z);
-			return matrix;
+			if (degrees == 0)
+				return Identity;
+
+			return CreateRotation (degrees * DegreesToRadians);
 		}
 
-		public static SKMatrix44 CreateRotation (float x, float y, float z, float radians)
+		public static SKMatrix CreateRotationDegrees (float degrees, float pivotx, float pivoty)
 		{
-			var matrix = new SKMatrix44();
-			matrix.SetRotationAbout (x, y, z, radians);
-			return matrix;
+			if (degrees == 0)
+				return Identity;
+
+			return CreateRotation (degrees * DegreesToRadians, pivotx, pivoty);
 		}
 
-		public static SKMatrix44 CreateRotationDegrees (float x, float y, float z, float degrees)
+		public static SKMatrix CreateSkew (float sx, float sy)
 		{
-			var matrix = new SKMatrix44();
-			matrix.SetRotationAboutDegrees (x, y, z, degrees);
-			return matrix;
+			if (sx == 0 && sy == 0)
+				return Identity;
+
+			return new SKMatrix {
+				scaleX = 1,
+				skewX = sx,
+				skewY = sy,
+				scaleY = 1,
+				persp2 = 1,
+			};
 		}
 
-		public static SKMatrix44 FromRowMajor (float [] src)
+		// private
+
+		private static void SetSinCos (ref SKMatrix matrix, float sin, float cos)
 		{
-			var matrix = new SKMatrix44();
-			matrix.SetRowMajor (src);
-			return matrix;
+			matrix.scaleX = cos;
+			matrix.skewX = -sin;
+			matrix.transX = 0;
+
+			matrix.skewY = sin;
+			matrix.scaleY = cos;
+			matrix.transY = 0;
+
+			matrix.persp0 = 0;
+			matrix.persp1 = 0;
+			matrix.persp2 = 1;
 		}
 
-		public static SKMatrix44 FromColumnMajor (float [] src)
+		private static void SetSinCos (ref SKMatrix matrix, float sin, float cos, float pivotx = 0f, float pivoty = 0f)
 		{
-			var matrix = new SKMatrix44();
-			matrix.SetColumnMajor (src);
-			return matrix;
+			var oneMinusCos = 1 - cos;
+
+			matrix.scaleX = cos;
+			matrix.skewX = -sin;
+			matrix.transX = Dot (sin, pivoty, oneMinusCos, pivotx);
+
+			matrix.skewY = sin;
+			matrix.scaleY = cos;
+			matrix.transY = Dot (-sin, pivotx, oneMinusCos, pivoty);
+
+			matrix.persp0 = 0;
+			matrix.persp1 = 0;
+			matrix.persp2 = 1;
 		}
 
-		public static bool Equal (SKMatrix44 left, SKMatrix44 right)
-		{
-			if (left == null) {
-				throw new ArgumentNullException (nameof (left));
-			}
-			if (right == null) {
-				throw new ArgumentNullException (nameof (right));
-			}
+		private static float Dot (float a, float b, float c, float d) => a * b + c * d;
 
-			return SkiaApi.sk_matrix44_equals (left.Handle, right.Handle);
-		}
-
-		public SKMatrix Matrix {
-			get {
-				SKMatrix matrix;
-				SkiaApi.sk_matrix44_to_matrix (Handle, &matrix);
-				return matrix;
-			}
-		}
-
-		public SKMatrix44TypeMask Type => SkiaApi.sk_matrix44_get_type (Handle);
-
-		public void SetIdentity ()
-		{
-			SkiaApi.sk_matrix44_set_identity (Handle);
-		}
-
-		public float this [int row, int column] {
-			get {
-				return SkiaApi.sk_matrix44_get (Handle, row, column);
-			}
-			set {
-				SkiaApi.sk_matrix44_set (Handle, row, column, value);
-			}
-		}
-
-		public float [] ToColumnMajor ()
-		{
-			var dst = new float [16];
-			ToColumnMajor (dst);
-			return dst;
-		}
-
-		public void ToColumnMajor (float [] dst)
-		{
-			if (dst == null) {
-				throw new ArgumentNullException (nameof (dst));
-			}
-			if (dst.Length != 16) {
-				throw new ArgumentException ("The destination array must be 16 entries.", nameof (dst));
-			}
-			fixed (float* d = dst) {
-				SkiaApi.sk_matrix44_as_col_major (Handle, d);
-			}
-		}
-
-		public float [] ToRowMajor ()
-		{
-			var dst = new float [16];
-			ToRowMajor (dst);
-			return dst;
-		}
-
-		public void ToRowMajor (float [] dst)
-		{
-			if (dst == null) {
-				throw new ArgumentNullException (nameof (dst));
-			}
-			if (dst.Length != 16) {
-				throw new ArgumentException ("The destination array must be 16 entries.", nameof (dst));
-			}
-			fixed (float* d = dst) {
-				SkiaApi.sk_matrix44_as_row_major (Handle, d);
-			}
-		}
-
-		public void SetColumnMajor (float [] src)
-		{
-			if (src == null) {
-				throw new ArgumentNullException (nameof (src));
-			}
-			if (src.Length != 16) {
-				throw new ArgumentException ("The source array must be 16 entries.", nameof (src));
-			}
-			fixed (float* s = src) {
-				SkiaApi.sk_matrix44_set_col_major (Handle, s);
-			}
-		}
-
-		public void SetRowMajor (float [] src)
-		{
-			if (src == null) {
-				throw new ArgumentNullException (nameof (src));
-			}
-			if (src.Length != 16) {
-				throw new ArgumentException ("The source array must be 16 entries.", nameof (src));
-			}
-			fixed (float* s = src) {
-				SkiaApi.sk_matrix44_set_row_major (Handle, s);
-			}
-		}
-
-		public void SetTranslate (float dx, float dy, float dz)
-		{
-			SkiaApi.sk_matrix44_set_translate (Handle, dx, dy, dz);
-		}
-
-		public void PreTranslate (float dx, float dy, float dz)
-		{
-			SkiaApi.sk_matrix44_pre_translate (Handle, dx, dy, dz);
-		}
-
-		public void PostTranslate (float dx, float dy, float dz)
-		{
-			SkiaApi.sk_matrix44_post_translate (Handle, dx, dy, dz);
-		}
-
-		public void SetScale (float sx, float sy, float sz)
-		{
-			SkiaApi.sk_matrix44_set_scale (Handle, sx, sy, sz);
-		}
-
-		public void PreScale (float sx, float sy, float sz)
-		{
-			SkiaApi.sk_matrix44_pre_scale (Handle, sx, sy, sz);
-		}
-
-		public void PostScale (float sx, float sy, float sz)
-		{
-			SkiaApi.sk_matrix44_post_scale (Handle, sx, sy, sz);
-		}
-
-		public void SetRotationAboutDegrees (float x, float y, float z, float degrees)
-		{
-			SkiaApi.sk_matrix44_set_rotate_about_degrees (Handle, x, y, z, degrees);
-		}
-
-		public void SetRotationAbout (float x, float y, float z, float radians)
-		{
-			SkiaApi.sk_matrix44_set_rotate_about_radians (Handle, x, y, z, radians);
-		}
-
-		public void SetRotationAboutUnit (float x, float y, float z, float radians)
-		{
-			SkiaApi.sk_matrix44_set_rotate_about_radians_unit (Handle, x, y, z, radians);
-		}
-
-		public void SetConcat (SKMatrix44 a, SKMatrix44 b)
-		{
-			if (a == null) {
-				throw new ArgumentNullException (nameof (a));
-			}
-			if (b == null) {
-				throw new ArgumentNullException (nameof (b));
-			}
-
-			SkiaApi.sk_matrix44_set_concat (Handle, a.Handle, b.Handle);
-		}
-
-		public void PreConcat (SKMatrix44 m)
-		{
-			if (m == null) {
-				throw new ArgumentNullException (nameof (m));
-			}
-
-			SkiaApi.sk_matrix44_pre_concat (Handle, m.Handle);
-		}
-
-		public void PostConcat (SKMatrix44 m)
-		{
-			if (m == null) {
-				throw new ArgumentNullException (nameof (m));
-			}
-
-			SkiaApi.sk_matrix44_post_concat (Handle, m.Handle);
-		}
-
-		public SKMatrix44 Invert ()
-		{
-			var inverse = new SKMatrix44 ();
-			if (Invert (inverse)) {
-				return inverse;
-			} else {
-				inverse.Dispose ();
-				return null;
-			}
-		}
-
-		public bool Invert (SKMatrix44 inverse)
-		{
-			if (inverse == null) {
-				throw new ArgumentNullException (nameof (inverse));
-			}
-
-			return SkiaApi.sk_matrix44_invert (Handle, inverse.Handle);
-		}
-
-		public void Transpose ()
-		{
-			SkiaApi.sk_matrix44_transpose (Handle);
-		}
-
-		public float [] MapScalars (float x, float y, float z, float w)
-		{
-			var srcVector4 = new float [4] { x, y, z, w };
-			var dstVector4 = new float [4];
-			MapScalars (srcVector4, dstVector4);
-			return dstVector4;
-		}
-
-		public float [] MapScalars (float [] srcVector4)
-		{
-			var dstVector4 = new float [4];
-			MapScalars (srcVector4, dstVector4);
-			return dstVector4;
-		}
-
-		public void MapScalars (float [] srcVector4, float [] dstVector4)
-		{
-			if (srcVector4 == null) {
-				throw new ArgumentNullException (nameof (srcVector4));
-			}
-			if (srcVector4.Length != 4) {
-				throw new ArgumentException ("The source vector array must be 4 entries.", nameof (srcVector4));
-			}
-			if (dstVector4 == null) {
-				throw new ArgumentNullException (nameof (dstVector4));
-			}
-			if (dstVector4.Length != 4) {
-				throw new ArgumentException ("The destination vector array must be 4 entries.", nameof (dstVector4));
-			}
-
-			fixed (float* s = srcVector4)
-			fixed (float* d = dstVector4) {
-				SkiaApi.sk_matrix44_map_scalars (Handle, s, d);
-			}
-		}
-
-		public SKPoint MapPoint (SKPoint src)
-		{
-			return MapPoints (new [] { src }) [0];
-		}
-
-		public SKPoint [] MapPoints (SKPoint[] src)
-		{
-			if (src == null) {
-				throw new ArgumentNullException (nameof (src));
-			}
-			
-			var count = src.Length;
-			var src2Length = count * 2;
-			//var src4Length = count * 4;
-
-			var src2 = new float [src2Length];
-			for (int i = 0, i2 = 0; i < count; i++, i2 += 2) {
-				src2 [i2] = src [i].X;
-				src2 [i2 + 1] = src [i].Y;
-			}
-
-			var dst4 = MapVector2 (src2);
-
-			var dst = new SKPoint [count];
-			for (int i = 0, i4 = 0; i < count; i++, i4 += 4) {
-				dst [i].X = dst4 [i4];
-				dst [i].Y = dst4 [i4 + 1];
-			}
-
-			return dst;
-		}
-		
-		public float [] MapVector2 (float [] src2)
-		{
-			if (src2 == null) {
-				throw new ArgumentNullException (nameof (src2));
-			}
-			if (src2.Length % 2 != 0) {
-				throw new ArgumentException ("The source vector array must be a set of pairs.", nameof (src2));
-			}
-
-			var dst4 = new float [src2.Length * 2];
-			MapVector2 (src2, dst4);
-			return dst4;
-		}
-
-		public void MapVector2 (float [] src2, float [] dst4)
-		{
-			if (src2 == null) {
-				throw new ArgumentNullException (nameof (src2));
-			}
-			if (src2.Length % 2 != 0) {
-				throw new ArgumentException ("The source vector array must be a set of pairs.", nameof (src2));
-			}
-			if (dst4 == null) {
-				throw new ArgumentNullException (nameof (dst4));
-			}
-			if (dst4.Length % 4 != 0) {
-				throw new ArgumentException ("The destination vector array must be a set quads.", nameof (dst4));
-			}
-			if (src2.Length / 2 != dst4.Length / 4) {
-				throw new ArgumentException ("The source vector array must have the same number of pairs as the destination vector array has quads.", nameof (dst4));
-			}
-
-			fixed (float* s = src2)
-			fixed (float* d = dst4) {
-				SkiaApi.sk_matrix44_map2 (Handle, s, src2.Length / 2, d);
-			}
-		}
-
-		public bool Preserves2DAxisAlignment (float epsilon)
-		{
-			return SkiaApi.sk_matrix44_preserves_2d_axis_alignment (Handle, epsilon);
-		}
-
-		public double Determinant ()
-		{
-			return SkiaApi.sk_matrix44_determinant (Handle);
-		}
-	}
-
-	public unsafe partial struct SKRotationScaleMatrix
-	{
-		public static readonly SKRotationScaleMatrix Empty;
-
-		public SKRotationScaleMatrix (float scos, float ssin, float tx, float ty)
-		{
-			fSCos = scos;
-			fSSin = ssin;
-			fTX = tx;
-			fTY = ty;
-		}
-
-		public SKMatrix ToMatrix () =>
-			new SKMatrix (fSCos, -fSSin, fTX, fSSin, fSCos, fTY, 0, 0, 1);
-
-		public static SKRotationScaleMatrix FromDegrees (float scale, float degrees, float tx, float ty, float anchorX, float anchorY) =>
-			FromRadians (scale, degrees * SKMatrix.DegreesToRadians, tx, ty, anchorX, anchorY);
-
-		public static SKRotationScaleMatrix FromRadians (float scale, float radians, float tx, float ty, float anchorX, float anchorY)
-		{
-			var s = (float)Math.Sin (radians) * scale;
-			var c = (float)Math.Cos (radians) * scale;
-			var x = tx + -c * anchorX + s * anchorY;
-			var y = ty + -s * anchorX - c * anchorY;
-
-			return new SKRotationScaleMatrix (c, s, x, y);
-		}
-
-		public static SKRotationScaleMatrix CreateIdentity () =>
-			new SKRotationScaleMatrix (1, 0, 0, 0);
-
-		public static SKRotationScaleMatrix CreateTranslate (float x, float y) =>
-			new SKRotationScaleMatrix (1, 0, x, y);
-
-		public static SKRotationScaleMatrix CreateScale (float s) =>
-			new SKRotationScaleMatrix (s, 0, 0, 0);
-
-		public static SKRotationScaleMatrix CreateRotation (float radians, float anchorX, float anchorY) =>
-			FromRadians (1, radians, 0, 0, anchorX, anchorY);
-
-		public static SKRotationScaleMatrix CreateRotationDegrees (float degrees, float anchorX, float anchorY) =>
-			FromDegrees (1, degrees, 0, 0, anchorX, anchorY);
+		private static float Cross (float a, float b, float c, float d) => a * b - c * d;
 	}
 }

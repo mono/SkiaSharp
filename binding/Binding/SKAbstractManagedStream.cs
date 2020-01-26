@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SkiaSharp
@@ -41,9 +40,6 @@ namespace SkiaSharp
 			var ctx = DelegateProxies.CreateUserData (this, true);
 			Handle = SkiaApi.sk_managedstream_new ((void*)ctx);
 		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
 
 		protected override void DisposeNative ()
 		{

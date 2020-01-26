@@ -1,24 +1,7 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-
-using GRBackendObject = System.IntPtr;
 
 namespace SkiaSharp
 {
-	[Obsolete ("Use GRBackendRenderTarget instead.")]
-	public struct GRBackendRenderTargetDesc
-	{
-		public int Width { get; set; }
-		public int Height { get; set; }
-		public GRPixelConfig Config { get; set; }
-		public GRSurfaceOrigin Origin { get; set; }
-		public int SampleCount { get; set; }
-		public int StencilBits { get; set; }
-		public GRBackendObject RenderTargetHandle { get; set; }
-		public SKSizeI Size => new SKSizeI (Width, Height);
-		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
-	}
-
 	[Flags]
 	public enum GRGlBackendState : UInt32
 	{
@@ -49,14 +32,14 @@ namespace SkiaSharp
 	{
 		public GRGlFramebufferInfo (uint fboId)
 		{
-			this.fFBOID = fboId;
-			this.fFormat = 0;
+			fFBOID = fboId;
+			fFormat = 0;
 		}
 
 		public GRGlFramebufferInfo (uint fboId, uint format)
 		{
-			this.fFBOID = fboId;
-			this.fFormat = format;
+			fFBOID = fboId;
+			fFormat = format;
 		}
 	}
 
@@ -64,72 +47,10 @@ namespace SkiaSharp
 	{
 		public GRGlTextureInfo (uint target, uint id, uint format)
 		{
-			this.fTarget = target;
-			this.fID = id;
-			this.fFormat = format;
+			fTarget = target;
+			fID = id;
+			fFormat = format;
 		}
-	};
-
-	[Flags]
-	[Obsolete]
-	public enum GRBackendTextureDescFlags
-	{
-		None = 0,
-		RenderTarget = 1,
-	}
-
-	[Obsolete ("Use GRBackendTexture instead.")]
-	[StructLayout (LayoutKind.Sequential)]
-	public struct GRBackendTextureDesc
-	{
-		private GRBackendTextureDescFlags flags;
-		private GRSurfaceOrigin origin;
-		private int width;
-		private int height;
-		private GRPixelConfig config;
-		private int sampleCount;
-		private GRBackendObject textureHandle;
-
-		public GRBackendTextureDescFlags Flags {
-			get { return flags; }
-			set { flags = value; }
-		}
-		public GRSurfaceOrigin Origin {
-			get { return origin; }
-			set { origin = value; }
-		}
-		public int Width {
-			get { return width; }
-			set { width = value; }
-		}
-		public int Height {
-			get { return height; }
-			set { height = value; }
-		}
-		public GRPixelConfig Config {
-			get { return config; }
-			set { config = value; }
-		}
-		public int SampleCount {
-			get { return sampleCount; }
-			set { sampleCount = value; }
-		}
-		public GRBackendObject TextureHandle {
-			get { return textureHandle; }
-			set { textureHandle = value; }
-		}
-	}
-
-	[Obsolete ("Use GRBackendTexture instead.")]
-	public struct GRGlBackendTextureDesc
-	{
-		public GRBackendTextureDescFlags Flags { get; set; }
-		public GRSurfaceOrigin Origin { get; set; }
-		public int Width { get; set; }
-		public int Height { get; set; }
-		public GRPixelConfig Config { get; set; }
-		public int SampleCount { get; set; }
-		public GRGlTextureInfo TextureHandle { get; set; }
 	}
 
 	public static partial class SkiaExtensions

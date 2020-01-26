@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -7,6 +8,11 @@ namespace SkiaSharp
 {
 	public class SKManagedStream : SKAbstractManagedStream
 	{
+		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
+		// The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
+		// improvement in Copy performance.
+		private const int CopyBufferSize = 81920;
+
 		private Stream stream;
 
 		private bool isAsEnd;
@@ -33,27 +39,27 @@ namespace SkiaSharp
 			if (destination == null)
 				throw new ArgumentNullException (nameof (destination));
 
-			var buffer = new byte[SKData.CopyBufferSize];
 			var total = 0;
-			int len;
-			while ((len = stream.Read (buffer, 0, buffer.Length)) > 0) {
-				destination.Write (buffer, len);
-				total += len;
+			var buffer = ArrayPool<byte>.Shared.Rent (CopyBufferSize);
+			try {
+				int len;
+				while ((len = stream.Read (buffer, 0, buffer.Length)) > 0) {
+					destination.Write (buffer, len);
+					total += len;
+				}
+				destination.Flush ();
+			} finally {
+				ArrayPool<byte>.Shared.Return (buffer);
 			}
-			destination.Flush ();
 			return total;
 		}
 
 		public SKStreamAsset ToMemoryStream ()
 		{
-			using (var native = new SKDynamicMemoryWStream ()) {
-				CopyTo (native);
-				return native.DetachAsStream ();
-			}
+			using var native = new SKDynamicMemoryWStream ();
+			CopyTo (native);
+			return native.DetachAsStream ();
 		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
 
 		protected override void DisposeManaged ()
 		{
@@ -94,12 +100,10 @@ namespace SkiaSharp
 				managedBuffer = reader.ReadBytes ((int)size);
 			}
 			var result = managedBuffer.Length;
-			if (buffer != IntPtr.Zero) {
+			if (buffer != IntPtr.Zero)
 				Marshal.Copy (managedBuffer, 0, buffer, result);
-			}
-			if (!stream.CanSeek && (int)size > 0 && result <= (int)size) {
+			if (!stream.CanSeek && (int)size > 0 && result <= (int)size)
 				isAsEnd = true;
-			}
 			return (IntPtr)result;
 		}
 
@@ -114,9 +118,9 @@ namespace SkiaSharp
 		{
 			VerifyOriginal ();
 
-			if (!stream.CanSeek) {
+			if (!stream.CanSeek)
 				return (IntPtr)0;
-			}
+
 			var oldPos = stream.Position;
 			var result = OnReadManagedStream (buffer, size);
 			stream.Position = oldPos;
@@ -127,9 +131,9 @@ namespace SkiaSharp
 		{
 			VerifyOriginal ();
 
-			if (!stream.CanSeek) {
+			if (!stream.CanSeek)
 				return isAsEnd;
-			}
+
 			return stream.Position >= stream.Length;
 		}
 
@@ -151,9 +155,9 @@ namespace SkiaSharp
 		{
 			VerifyOriginal ();
 
-			if (!stream.CanSeek) {
+			if (!stream.CanSeek)
 				return false;
-			}
+
 			stream.Position = 0;
 			return true;
 		}
@@ -162,9 +166,9 @@ namespace SkiaSharp
 		{
 			VerifyOriginal ();
 
-			if (!stream.CanSeek) {
+			if (!stream.CanSeek)
 				return (IntPtr)0;
-			}
+
 			return (IntPtr)stream.Position;
 		}
 
@@ -172,9 +176,9 @@ namespace SkiaSharp
 		{
 			VerifyOriginal ();
 
-			if (!stream.CanSeek) {
+			if (!stream.CanSeek)
 				return (IntPtr)0;
-			}
+
 			return (IntPtr)stream.Length;
 		}
 
@@ -182,9 +186,9 @@ namespace SkiaSharp
 		{
 			VerifyOriginal ();
 
-			if (!stream.CanSeek) {
+			if (!stream.CanSeek)
 				return false;
-			}
+
 			stream.Position = (long)position;
 			return true;
 		}
@@ -193,9 +197,9 @@ namespace SkiaSharp
 		{
 			VerifyOriginal ();
 
-			if (!stream.CanSeek) {
+			if (!stream.CanSeek)
 				return false;
-			}
+
 			stream.Position += offset;
 			return true;
 		}

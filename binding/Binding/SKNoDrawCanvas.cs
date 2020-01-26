@@ -11,9 +11,8 @@ namespace SkiaSharp
 		}
 
 		public SKNoDrawCanvas (int width, int height)
-			: this (IntPtr.Zero, true)
+			: this (SkiaApi.sk_nodraw_canvas_new (width, height), true)
 		{
-			Handle = SkiaApi.sk_nodraw_canvas_new (width, height);
 		}
 	}
 }

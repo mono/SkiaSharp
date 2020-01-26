@@ -17,19 +17,15 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
 		public int Count => SkiaApi.sk_fontstyleset_get_count (Handle);
 
 		public SKFontStyle this[int index] => GetStyle (index);
 
 		public string GetStyleName (int index)
 		{
-			using (var str = new SKString ()) {
-				SkiaApi.sk_fontstyleset_get_style (Handle, index, IntPtr.Zero, str.Handle);
-				return (string)str;
-			}
+			using var str = new SKString ();
+			SkiaApi.sk_fontstyleset_get_style (Handle, index, IntPtr.Zero, str.Handle);
+			return (string)str;
 		}
 
 		public SKTypeface CreateTypeface (int index)

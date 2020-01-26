@@ -10,12 +10,6 @@ namespace SkiaSharp
 		{
 		}
 
-		[Obsolete]
-		public SKSurfaceProperties (SKSurfaceProps props)
-			: this (props.Flags, props.PixelGeometry)
-		{
-		}
-
 		public SKSurfaceProperties (SKPixelGeometry pixelGeometry)
 			: this ((uint)0, pixelGeometry)
 		{
@@ -30,9 +24,6 @@ namespace SkiaSharp
 			: this (SkiaApi.sk_surfaceprops_new ((uint)flags, pixelGeometry), true)
 		{
 		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_surfaceprops_delete (Handle);

@@ -1,11 +1,15 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public abstract class SKTest : BaseTest, IAssemblyFixture<GarbageCleanupFixture>
 	{
+		protected const float EPSILON = 0.0001f;
+		protected const int PRECISION = 4;
+
 		private static readonly Random random = new Random();
 
 		protected static Stream CreateTestStream(int length = 1024)
@@ -13,6 +17,13 @@ namespace SkiaSharp.Tests
 			var bytes = new byte[length];
 			random.NextBytes(bytes);
 			return new MemoryStream(bytes);
+		}
+
+		protected static byte[] CreateTestData(int length = 1024)
+		{
+			var bytes = new byte[length];
+			random.NextBytes(bytes);
+			return bytes;
 		}
 
 		protected static SKStreamAsset CreateTestSKStream(int length = 1024)
@@ -24,20 +35,18 @@ namespace SkiaSharp.Tests
 
 		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
 		{
-			using (var bitmap = new SKBitmap(bmp.Width, bmp.Height))
-			using (var canvas = new SKCanvas(bitmap))
-			{
-				canvas.Clear(SKColors.Transparent);
-				canvas.DrawBitmap(bmp, 0, 0);
-				canvas.Flush();
+			using var bitmap = new SKBitmap(bmp.Width, bmp.Height);
+			using var canvas = new SKCanvas(bitmap);
 
-				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
-				using (var image = SKImage.FromBitmap(bitmap))
-				using (var data = image.Encode())
-				{
-					data.SaveTo(stream);
-				}
-			}
+			canvas.Clear(SKColors.Transparent);
+			canvas.DrawBitmap(bmp, 0, 0);
+			canvas.Flush();
+
+			using var stream = File.OpenWrite(Path.Combine(PathToImages, filename));
+			using var image = SKImage.FromBitmap(bitmap);
+			using var data = image.Encode();
+
+			data.SaveTo(stream);
 		}
 
 		protected static SKBitmap CreateTestBitmap(byte alpha = 255)
@@ -92,26 +101,29 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Yellow.WithAlpha(alpha), pix.GetPixelColor(30, 30));
 		}
 
+		protected static void AssertSimilar(ReadOnlySpan<float> expected, ReadOnlySpan<float> actual, int precision = PRECISION)
+		{
+			var eTrimmed = expected.ToArray()
+				.Select(v => (int)(v * precision) / precision);
+
+			var aTrimmed = actual.ToArray()
+				.Select(v => (int)(v * precision) / precision);
+
+			Assert.Equal(eTrimmed, aTrimmed);
+		}
+
 		protected GlContext CreateGlContext()
 		{
 			try
 			{
 				if (IsLinux)
-				{
 					return new GlxContext();
-				}
 				else if (IsMac)
-				{
 					return new CglContext();
-				}
 				else if (IsWindows)
-				{
 					return new WglContext();
-				}
 				else
-				{
 					throw new PlatformNotSupportedException();
-				}
 			}
 			catch (Exception ex)
 			{

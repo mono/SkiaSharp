@@ -322,14 +322,14 @@ namespace SkiaSharpGenerator
 						if (cppT == "bool")
 						{
 							writer.WriteLine($"\t\tpublic bool {propertyName} {{");
-							writer.WriteLine($"\t\t\tget => {fieldName} > 0;");
+							writer.WriteLine($"\t\t\treadonly get => {fieldName} > 0;");
 							writer.WriteLine($"\t\t\tset => {fieldName} = value ? (byte)1 : (byte)0;");
 							writer.WriteLine($"\t\t}}");
 						}
 						else
 						{
 							writer.WriteLine($"\t\tpublic {type} {propertyName} {{");
-							writer.WriteLine($"\t\t\tget => {fieldName};");
+							writer.WriteLine($"\t\t\treadonly get => {fieldName};");
 							writer.WriteLine($"\t\t\tset => {fieldName} = value;");
 							writer.WriteLine($"\t\t}}");
 						}

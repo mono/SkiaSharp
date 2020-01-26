@@ -14,6 +14,7 @@ namespace SkiaSharp
 	using sk_canvas_t = IntPtr;
 	using sk_codec_t = IntPtr;
 	using sk_colorfilter_t = IntPtr;
+	using sk_colorspace_icc_profile_t = IntPtr;
 	using sk_colorspace_t = IntPtr;
 	using sk_colortable_t = IntPtr;
 	using sk_data_t = IntPtr;
@@ -468,6 +469,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_matrix44_set (sk_matrix44_t matrix, Int32 row, Int32 col, Single value);
 
+		// void sk_matrix44_set_3x3_row_major(sk_matrix44_t* matrix, float* dst)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_matrix44_set_3x3_row_major (sk_matrix44_t matrix, Single* dst);
+
 		// void sk_matrix44_set_col_major(sk_matrix44_t* matrix, float* dst)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_matrix44_set_col_major (sk_matrix44_t matrix, Single* dst);
@@ -607,6 +612,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_is_volatile (sk_bitmap_t cbitmap);
+
+		// sk_shader_t* sk_bitmap_make_shader(sk_bitmap_t* cbitmap, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, const sk_matrix_t* cmatrix)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_bitmap_make_shader (sk_bitmap_t cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix* cmatrix);
 
 		// sk_bitmap_t* sk_bitmap_new()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1211,6 +1220,28 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_gamma_is_linear (sk_colorspace_t colorspace);
 
+		// void sk_colorspace_icc_profile_delete(sk_colorspace_icc_profile_t* profile)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_icc_profile_delete (sk_colorspace_icc_profile_t profile);
+
+		// const uint8_t* sk_colorspace_icc_profile_get_buffer(const sk_colorspace_icc_profile_t* profile, uint32_t* size)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Byte* sk_colorspace_icc_profile_get_buffer (sk_colorspace_icc_profile_t profile, UInt32* size);
+
+		// bool sk_colorspace_icc_profile_get_to_xyzd50(const sk_colorspace_icc_profile_t* profile, sk_colorspace_xyz_t* toXYZD50)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_colorspace_icc_profile_get_to_xyzd50 (sk_colorspace_icc_profile_t profile, SKColorSpaceXyz* toXYZD50);
+
+		// sk_colorspace_icc_profile_t* sk_colorspace_icc_profile_new()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorspace_icc_profile_t sk_colorspace_icc_profile_new ();
+
+		// bool sk_colorspace_icc_profile_parse(const void* buffer, size_t length, sk_colorspace_icc_profile_t* profile)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, sk_colorspace_icc_profile_t profile);
+
 		// bool sk_colorspace_is_numerical_transfer_fn(const sk_colorspace_t* colorspace, sk_colorspace_transfer_fn_t* transferFn)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
@@ -1221,17 +1252,21 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_is_srgb (sk_colorspace_t colorspace);
 
-		// sk_colorspace_t* sk_colorspace_new_icc(const void* input, size_t len)
+		// sk_colorspace_t* sk_colorspace_make_linear_gamma(const sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorspace_t sk_colorspace_new_icc (void* input, /* size_t */ IntPtr len);
+		internal static extern sk_colorspace_t sk_colorspace_make_linear_gamma (sk_colorspace_t colorspace);
 
-		// sk_colorspace_t* sk_colorspace_new_rgb_matrix44(const sk_colorspace_transfer_fn_t* transferFn, const sk_matrix44_t* toXYZD50)
+		// sk_colorspace_t* sk_colorspace_make_srgb_gamma(const sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorspace_t sk_colorspace_new_rgb_matrix44 (SKColorSpaceTransferFn* transferFn, sk_matrix44_t toXYZD50);
+		internal static extern sk_colorspace_t sk_colorspace_make_srgb_gamma (sk_colorspace_t colorspace);
 
-		// sk_colorspace_t* sk_colorspace_new_rgb_named(sk_named_transfer_fn_t transferFn, sk_named_gamut_t toXYZD50)
+		// sk_colorspace_t* sk_colorspace_new_icc(const sk_colorspace_icc_profile_t* profile)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorspace_t sk_colorspace_new_rgb_named (SKNamedTransferFn transferFn, SKNamedGamut toXYZD50);
+		internal static extern sk_colorspace_t sk_colorspace_new_icc (sk_colorspace_icc_profile_t profile);
+
+		// sk_colorspace_t* sk_colorspace_new_rgb(const sk_colorspace_transfer_fn_t* transferFn, const sk_colorspace_xyz_t* toXYZD50)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorspace_t sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50);
 
 		// sk_colorspace_t* sk_colorspace_new_srgb()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1241,15 +1276,28 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_colorspace_new_srgb_linear ();
 
-		// bool sk_colorspace_primaries_to_xyzd50(const sk_colorspace_primaries_t* primaries, sk_matrix44_t* toXYZD50)
+		// bool sk_colorspace_primaries_to_xyzd50(const sk_colorspace_primaries_t* primaries, sk_colorspace_xyz_t* toXYZD50)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_primaries_to_xyzd50 (SKColorSpacePrimaries* primaries, sk_matrix44_t toXYZD50);
+		internal static extern bool sk_colorspace_primaries_to_xyzd50 (SKColorSpacePrimaries* primaries, SKColorSpaceXyz* toXYZD50);
 
-		// bool sk_colorspace_to_xyzd50(const sk_colorspace_t* colorspace, sk_matrix44_t* toXYZD50)
+		// void sk_colorspace_ref(sk_colorspace_t* colorspace)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_ref (sk_colorspace_t colorspace);
+
+		// void sk_colorspace_to_profile(const sk_colorspace_t* colorspace, sk_colorspace_icc_profile_t* profile)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_to_profile (sk_colorspace_t colorspace, sk_colorspace_icc_profile_t profile);
+
+		// bool sk_colorspace_to_xyzd50(const sk_colorspace_t* colorspace, sk_colorspace_xyz_t* toXYZD50)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, sk_matrix44_t toXYZD50);
+		internal static extern bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, SKColorSpaceXyz* toXYZD50);
+
+		// bool sk_colorspace_to_xyzd50_matrix44(const sk_colorspace_t* colorspace, sk_matrix44_t* toXYZD50)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_colorspace_to_xyzd50_matrix44 (sk_colorspace_t colorspace, sk_matrix44_t toXYZD50);
 
 		// float sk_colorspace_transfer_fn_eval(const sk_colorspace_transfer_fn_t* transferFn, float x)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1260,9 +1308,62 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_transfer_fn_invert (SKColorSpaceTransferFn* src, SKColorSpaceTransferFn* dst);
 
+		// void sk_colorspace_transfer_fn_named_2dot2(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_2dot2 (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_transfer_fn_named_hlg(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_hlg (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_transfer_fn_named_linear(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_linear (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_transfer_fn_named_pq(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_pq (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_transfer_fn_named_rec2020(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_rec2020 (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_transfer_fn_named_srgb(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_srgb (SKColorSpaceTransferFn* transferFn);
+
 		// void sk_colorspace_unref(sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_unref (sk_colorspace_t colorspace);
+
+		// void sk_colorspace_xyz_concat(const sk_colorspace_xyz_t* a, const sk_colorspace_xyz_t* b, sk_colorspace_xyz_t* result)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_concat (SKColorSpaceXyz* a, SKColorSpaceXyz* b, SKColorSpaceXyz* result);
+
+		// bool sk_colorspace_xyz_invert(const sk_colorspace_xyz_t* src, sk_colorspace_xyz_t* dst)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_colorspace_xyz_invert (SKColorSpaceXyz* src, SKColorSpaceXyz* dst);
+
+		// void sk_colorspace_xyz_named_adobe_rgb(sk_colorspace_xyz_t* xyz)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_named_adobe_rgb (SKColorSpaceXyz* xyz);
+
+		// void sk_colorspace_xyz_named_dcip3(sk_colorspace_xyz_t* xyz)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_named_dcip3 (SKColorSpaceXyz* xyz);
+
+		// void sk_colorspace_xyz_named_rec2020(sk_colorspace_xyz_t* xyz)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_named_rec2020 (SKColorSpaceXyz* xyz);
+
+		// void sk_colorspace_xyz_named_srgb(sk_colorspace_xyz_t* xyz)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_named_srgb (SKColorSpaceXyz* xyz);
+
+		// void sk_colorspace_xyz_named_xyz(sk_colorspace_xyz_t* xyz)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_named_xyz (SKColorSpaceXyz* xyz);
 
 		#endregion
 
@@ -2366,21 +2467,21 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* sk_mask_get_addr (SKMask* cmask, Int32 x, Int32 y);
 
-		// uint8_t sk_mask_get_addr_1(sk_mask_t* cmask, int x, int y)
+		// uint8_t* sk_mask_get_addr_1(sk_mask_t* cmask, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte sk_mask_get_addr_1 (SKMask* cmask, Int32 x, Int32 y);
+		internal static extern Byte* sk_mask_get_addr_1 (SKMask* cmask, Int32 x, Int32 y);
 
-		// uint32_t sk_mask_get_addr_32(sk_mask_t* cmask, int x, int y)
+		// uint32_t* sk_mask_get_addr_32(sk_mask_t* cmask, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 sk_mask_get_addr_32 (SKMask* cmask, Int32 x, Int32 y);
+		internal static extern UInt32* sk_mask_get_addr_32 (SKMask* cmask, Int32 x, Int32 y);
 
-		// uint8_t sk_mask_get_addr_8(sk_mask_t* cmask, int x, int y)
+		// uint8_t* sk_mask_get_addr_8(sk_mask_t* cmask, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte sk_mask_get_addr_8 (SKMask* cmask, Int32 x, Int32 y);
+		internal static extern Byte* sk_mask_get_addr_8 (SKMask* cmask, Int32 x, Int32 y);
 
-		// uint16_t sk_mask_get_addr_lcd_16(sk_mask_t* cmask, int x, int y)
+		// uint16_t* sk_mask_get_addr_lcd_16(sk_mask_t* cmask, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt16 sk_mask_get_addr_lcd_16 (SKMask* cmask, Int32 x, Int32 y);
+		internal static extern UInt16* sk_mask_get_addr_lcd_16 (SKMask* cmask, Int32 x, Int32 y);
 
 		// bool sk_mask_is_empty(sk_mask_t* cmask)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2982,6 +3083,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_picture_get_unique_id (sk_picture_t param0);
 
+		// sk_shader_t* sk_picture_make_shader(sk_picture_t* src, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, const sk_matrix_t* localMatrix, const sk_rect_t* tile)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_picture_make_shader (sk_picture_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix* localMatrix, SKRect* tile);
+
 		// sk_canvas_t* sk_picture_recorder_begin_recording(sk_picture_recorder_t*, const sk_rect_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_canvas_t sk_picture_recorder_begin_recording (sk_picture_recorder_t param0, SKRect* param1);
@@ -3166,37 +3271,29 @@ namespace SkiaSharp
 
 		#region sk_shader.h
 
-		// sk_shader_t* sk_shader_new_bitmap(const sk_bitmap_t* src, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, const sk_matrix_t* localMatrix)
+		// sk_shader_t* sk_shader_new_blend(sk_blendmode_t mode, sk_shader_t* dst, sk_shader_t* src, const sk_matrix_t* localMatrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_bitmap (sk_bitmap_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_blend (SKBlendMode mode, sk_shader_t dst, sk_shader_t src, SKMatrix* localMatrix);
 
 		// sk_shader_t* sk_shader_new_color(sk_color_t color)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_color (UInt32 color);
 
-		// sk_shader_t* sk_shader_new_color_filter(sk_shader_t* proxy, sk_colorfilter_t* filter)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_color_filter (sk_shader_t proxy, sk_colorfilter_t filter);
-
-		// sk_shader_t* sk_shader_new_compose(sk_shader_t* shaderA, sk_shader_t* shaderB)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_compose (sk_shader_t shaderA, sk_shader_t shaderB);
-
-		// sk_shader_t* sk_shader_new_compose_with_mode(sk_shader_t* shaderA, sk_shader_t* shaderB, sk_blendmode_t mode)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_compose_with_mode (sk_shader_t shaderA, sk_shader_t shaderB, SKBlendMode mode);
-
 		// sk_shader_t* sk_shader_new_empty()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_empty ();
 
+		// sk_shader_t* sk_shader_new_lerp(float t, sk_shader_t* dst, sk_shader_t* src, const sk_matrix_t* localMatrix)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_shader_new_lerp (Single t, sk_shader_t dst, sk_shader_t src, SKMatrix* localMatrix);
+
+		// sk_shader_t* sk_shader_new_lerp_red(sk_shader_t* red, sk_shader_t* dst, sk_shader_t* src, const sk_matrix_t* localMatrix)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_shader_new_lerp_red (sk_shader_t red, sk_shader_t dst, sk_shader_t src, SKMatrix* localMatrix);
+
 		// sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t[2] points = 2, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
-
-		// sk_shader_t* sk_shader_new_local_matrix(sk_shader_t* proxy, const sk_matrix_t* localMatrix)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_local_matrix (sk_shader_t proxy, SKMatrix* localMatrix);
 
 		// sk_shader_t* sk_shader_new_perlin_noise_fractal_noise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, const sk_isize_t* tileSize)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -3210,29 +3307,33 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
 
-		// sk_shader_t* sk_shader_new_picture(sk_picture_t* src, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, const sk_matrix_t* localMatrix, const sk_rect_t* tile)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_picture (sk_picture_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix* localMatrix, SKRect* tile);
-
 		// sk_shader_t* sk_shader_new_radial_gradient(const sk_point_t* center, float radius, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 
-		// sk_shader_t* sk_shader_new_sweep_gradient(const sk_point_t* center, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, float startAngle, float endAngle, const sk_matrix_t* localMatrix)
+		// sk_shader_t* sk_shader_new_sweep_gradient(float cx, float cy, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, float startAngle, float endAngle, const sk_matrix_t* localMatrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_sweep_gradient (Single cx, Single cy, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
 
 		// sk_shader_t* sk_shader_new_two_point_conical_gradient(const sk_point_t* start, float startRadius, const sk_point_t* end, float endRadius, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
 
-		// void sk_shader_ref(sk_shader_t*)
+		// void sk_shader_ref(sk_shader_t* shader)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_shader_ref (sk_shader_t param0);
+		internal static extern void sk_shader_ref (sk_shader_t shader);
 
-		// void sk_shader_unref(sk_shader_t*)
+		// void sk_shader_unref(sk_shader_t* shader)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_shader_unref (sk_shader_t param0);
+		internal static extern void sk_shader_unref (sk_shader_t shader);
+
+		// sk_shader_t* sk_shader_with_color_filter(sk_shader_t* shader, sk_colorfilter_t* filter)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_shader_with_color_filter (sk_shader_t shader, sk_colorfilter_t filter);
+
+		// sk_shader_t* sk_shader_with_local_matrix(sk_shader_t* shader, const sk_matrix_t* localMatrix)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_shader_with_local_matrix (sk_shader_t shader, SKMatrix* localMatrix);
 
 		#endregion
 
@@ -3551,14 +3652,14 @@ namespace SkiaSharp
 		// public unsigned int fFBOID
 		private UInt32 fFBOID;
 		public UInt32 FramebufferObjectId {
-			get => fFBOID;
+			readonly get => fFBOID;
 			set => fFBOID = value;
 		}
 
 		// public unsigned int fFormat
 		private UInt32 fFormat;
 		public UInt32 Format {
-			get => fFormat;
+			readonly get => fFormat;
 			set => fFormat = value;
 		}
 
@@ -3570,21 +3671,21 @@ namespace SkiaSharp
 		// public unsigned int fTarget
 		private UInt32 fTarget;
 		public UInt32 Target {
-			get => fTarget;
+			readonly get => fTarget;
 			set => fTarget = value;
 		}
 
 		// public unsigned int fID
 		private UInt32 fID;
 		public UInt32 Id {
-			get => fID;
+			readonly get => fID;
 			set => fID = value;
 		}
 
 		// public unsigned int fFormat
 		private UInt32 fFormat;
 		public UInt32 Format {
-			get => fFormat;
+			readonly get => fFormat;
 			set => fFormat = value;
 		}
 
@@ -3596,35 +3697,35 @@ namespace SkiaSharp
 		// public int fRequiredFrame
 		private Int32 fRequiredFrame;
 		public Int32 RequiredFrame {
-			get => fRequiredFrame;
+			readonly get => fRequiredFrame;
 			set => fRequiredFrame = value;
 		}
 
 		// public int fDuration
 		private Int32 fDuration;
 		public Int32 Duration {
-			get => fDuration;
+			readonly get => fDuration;
 			set => fDuration = value;
 		}
 
 		// public bool fFullyReceived
 		private Byte fFullyReceived;
 		public bool FullyRecieved {
-			get => fFullyReceived > 0;
+			readonly get => fFullyReceived > 0;
 			set => fFullyReceived = value ? (byte)1 : (byte)0;
 		}
 
 		// public sk_alphatype_t fAlphaType
 		private SKAlphaType fAlphaType;
 		public SKAlphaType AlphaType {
-			get => fAlphaType;
+			readonly get => fAlphaType;
 			set => fAlphaType = value;
 		}
 
 		// public sk_codecanimation_disposalmethod_t fDisposalMethod
 		private SKCodecAnimationDisposalMethod fDisposalMethod;
 		public SKCodecAnimationDisposalMethod DisposalMethod {
-			get => fDisposalMethod;
+			readonly get => fDisposalMethod;
 			set => fDisposalMethod = value;
 		}
 
@@ -3649,56 +3750,56 @@ namespace SkiaSharp
 		// public float fRX
 		private Single fRX;
 		public Single RX {
-			get => fRX;
+			readonly get => fRX;
 			set => fRX = value;
 		}
 
 		// public float fRY
 		private Single fRY;
 		public Single RY {
-			get => fRY;
+			readonly get => fRY;
 			set => fRY = value;
 		}
 
 		// public float fGX
 		private Single fGX;
 		public Single GX {
-			get => fGX;
+			readonly get => fGX;
 			set => fGX = value;
 		}
 
 		// public float fGY
 		private Single fGY;
 		public Single GY {
-			get => fGY;
+			readonly get => fGY;
 			set => fGY = value;
 		}
 
 		// public float fBX
 		private Single fBX;
 		public Single BX {
-			get => fBX;
+			readonly get => fBX;
 			set => fBX = value;
 		}
 
 		// public float fBY
 		private Single fBY;
 		public Single BY {
-			get => fBY;
+			readonly get => fBY;
 			set => fBY = value;
 		}
 
 		// public float fWX
 		private Single fWX;
 		public Single WX {
-			get => fWX;
+			readonly get => fWX;
 			set => fWX = value;
 		}
 
 		// public float fWY
 		private Single fWY;
 		public Single WY {
-			get => fWY;
+			readonly get => fWY;
 			set => fWY = value;
 		}
 
@@ -3710,52 +3811,75 @@ namespace SkiaSharp
 		// public float fG
 		private Single fG;
 		public Single G {
-			get => fG;
+			readonly get => fG;
 			set => fG = value;
 		}
 
 		// public float fA
 		private Single fA;
 		public Single A {
-			get => fA;
+			readonly get => fA;
 			set => fA = value;
 		}
 
 		// public float fB
 		private Single fB;
 		public Single B {
-			get => fB;
+			readonly get => fB;
 			set => fB = value;
 		}
 
 		// public float fC
 		private Single fC;
 		public Single C {
-			get => fC;
+			readonly get => fC;
 			set => fC = value;
 		}
 
 		// public float fD
 		private Single fD;
 		public Single D {
-			get => fD;
+			readonly get => fD;
 			set => fD = value;
 		}
 
 		// public float fE
 		private Single fE;
 		public Single E {
-			get => fE;
+			readonly get => fE;
 			set => fE = value;
 		}
 
 		// public float fF
 		private Single fF;
 		public Single F {
-			get => fF;
+			readonly get => fF;
 			set => fF = value;
 		}
 
+	}
+
+	// sk_colorspace_xyz_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKColorSpaceXyz {
+		// public float fM00
+		private Single fM00;
+		// public float fM01
+		private Single fM01;
+		// public float fM02
+		private Single fM02;
+		// public float fM10
+		private Single fM10;
+		// public float fM11
+		private Single fM11;
+		// public float fM12
+		private Single fM12;
+		// public float fM20
+		private Single fM20;
+		// public float fM21
+		private Single fM21;
+		// public float fM22
+		private Single fM22;
 	}
 
 	// sk_document_pdf_metadata_t
@@ -3828,21 +3952,21 @@ namespace SkiaSharp
 		// public bool fGrayscale
 		private Byte fGrayscale;
 		public bool Grayscale {
-			get => fGrayscale > 0;
+			readonly get => fGrayscale > 0;
 			set => fGrayscale = value ? (byte)1 : (byte)0;
 		}
 
 		// public sk_highcontrastconfig_invertstyle_t fInvertStyle
 		private SKHighContrastConfigInvertStyle fInvertStyle;
 		public SKHighContrastConfigInvertStyle InvertStyle {
-			get => fInvertStyle;
+			readonly get => fInvertStyle;
 			set => fInvertStyle = value;
 		}
 
 		// public float fContrast
 		private Single fContrast;
 		public Single Contrast {
-			get => fContrast;
+			readonly get => fContrast;
 			set => fContrast = value;
 		}
 
@@ -3869,14 +3993,14 @@ namespace SkiaSharp
 		// public int32_t x
 		private Int32 x;
 		public Int32 X {
-			get => x;
+			readonly get => x;
 			set => x = value;
 		}
 
 		// public int32_t y
 		private Int32 y;
 		public Int32 Y {
-			get => y;
+			readonly get => y;
 			set => y = value;
 		}
 
@@ -3888,28 +4012,28 @@ namespace SkiaSharp
 		// public int32_t left
 		private Int32 left;
 		public Int32 Left {
-			get => left;
+			readonly get => left;
 			set => left = value;
 		}
 
 		// public int32_t top
 		private Int32 top;
 		public Int32 Top {
-			get => top;
+			readonly get => top;
 			set => top = value;
 		}
 
 		// public int32_t right
 		private Int32 right;
 		public Int32 Right {
-			get => right;
+			readonly get => right;
 			set => right = value;
 		}
 
 		// public int32_t bottom
 		private Int32 bottom;
 		public Int32 Bottom {
-			get => bottom;
+			readonly get => bottom;
 			set => bottom = value;
 		}
 
@@ -3921,14 +4045,14 @@ namespace SkiaSharp
 		// public int32_t w
 		private Int32 w;
 		public Int32 Width {
-			get => w;
+			readonly get => w;
 			set => w = value;
 		}
 
 		// public int32_t h
 		private Int32 h;
 		public Int32 Height {
-			get => h;
+			readonly get => h;
 			set => h = value;
 		}
 
@@ -3940,21 +4064,21 @@ namespace SkiaSharp
 		// public int fQuality
 		private Int32 fQuality;
 		public Int32 Quality {
-			get => fQuality;
+			readonly get => fQuality;
 			set => fQuality = value;
 		}
 
 		// public sk_jpegencoder_downsample_t fDownsample
 		private SKJpegEncoderDownsample fDownsample;
 		public SKJpegEncoderDownsample Downsample {
-			get => fDownsample;
+			readonly get => fDownsample;
 			set => fDownsample = value;
 		}
 
 		// public sk_jpegencoder_alphaoption_t fAlphaOption
 		private SKJpegEncoderAlphaOption fAlphaOption;
 		public SKJpegEncoderAlphaOption AlphaOption {
-			get => fAlphaOption;
+			readonly get => fAlphaOption;
 			set => fAlphaOption = value;
 		}
 
@@ -4055,63 +4179,63 @@ namespace SkiaSharp
 		// public float scaleX
 		private Single scaleX;
 		public Single ScaleX {
-			get => scaleX;
+			readonly get => scaleX;
 			set => scaleX = value;
 		}
 
 		// public float skewX
 		private Single skewX;
 		public Single SkewX {
-			get => skewX;
+			readonly get => skewX;
 			set => skewX = value;
 		}
 
 		// public float transX
 		private Single transX;
 		public Single TransX {
-			get => transX;
+			readonly get => transX;
 			set => transX = value;
 		}
 
 		// public float skewY
 		private Single skewY;
 		public Single SkewY {
-			get => skewY;
+			readonly get => skewY;
 			set => skewY = value;
 		}
 
 		// public float scaleY
 		private Single scaleY;
 		public Single ScaleY {
-			get => scaleY;
+			readonly get => scaleY;
 			set => scaleY = value;
 		}
 
 		// public float transY
 		private Single transY;
 		public Single TransY {
-			get => transY;
+			readonly get => transY;
 			set => transY = value;
 		}
 
 		// public float persp0
 		private Single persp0;
 		public Single Persp0 {
-			get => persp0;
+			readonly get => persp0;
 			set => persp0 = value;
 		}
 
 		// public float persp1
 		private Single persp1;
 		public Single Persp1 {
-			get => persp1;
+			readonly get => persp1;
 			set => persp1 = value;
 		}
 
 		// public float persp2
 		private Single persp2;
 		public Single Persp2 {
-			get => persp2;
+			readonly get => persp2;
 			set => persp2 = value;
 		}
 
@@ -4134,14 +4258,14 @@ namespace SkiaSharp
 		// public float x
 		private Single x;
 		public Single X {
-			get => x;
+			readonly get => x;
 			set => x = value;
 		}
 
 		// public float y
 		private Single y;
 		public Single Y {
-			get => y;
+			readonly get => y;
 			set => y = value;
 		}
 
@@ -4153,21 +4277,21 @@ namespace SkiaSharp
 		// public float x
 		private Single x;
 		public Single X {
-			get => x;
+			readonly get => x;
 			set => x = value;
 		}
 
 		// public float y
 		private Single y;
 		public Single Y {
-			get => y;
+			readonly get => y;
 			set => y = value;
 		}
 
 		// public float z
 		private Single z;
 		public Single Z {
-			get => z;
+			readonly get => z;
 			set => z = value;
 		}
 
@@ -4179,28 +4303,28 @@ namespace SkiaSharp
 		// public float left
 		private Single left;
 		public Single Left {
-			get => left;
+			readonly get => left;
 			set => left = value;
 		}
 
 		// public float top
 		private Single top;
 		public Single Top {
-			get => top;
+			readonly get => top;
 			set => top = value;
 		}
 
 		// public float right
 		private Single right;
 		public Single Right {
-			get => right;
+			readonly get => right;
 			set => right = value;
 		}
 
 		// public float bottom
 		private Single bottom;
 		public Single Bottom {
-			get => bottom;
+			readonly get => bottom;
 			set => bottom = value;
 		}
 
@@ -4212,28 +4336,28 @@ namespace SkiaSharp
 		// public float fSCos
 		private Single fSCos;
 		public Single SCos {
-			get => fSCos;
+			readonly get => fSCos;
 			set => fSCos = value;
 		}
 
 		// public float fSSin
 		private Single fSSin;
 		public Single SSin {
-			get => fSSin;
+			readonly get => fSSin;
 			set => fSSin = value;
 		}
 
 		// public float fTX
 		private Single fTX;
 		public Single TX {
-			get => fTX;
+			readonly get => fTX;
 			set => fTX = value;
 		}
 
 		// public float fTY
 		private Single fTY;
 		public Single TY {
-			get => fTY;
+			readonly get => fTY;
 			set => fTY = value;
 		}
 
@@ -4245,14 +4369,14 @@ namespace SkiaSharp
 		// public float w
 		private Single w;
 		public Single Width {
-			get => w;
+			readonly get => w;
 			set => w = value;
 		}
 
 		// public float h
 		private Single h;
 		public Single Height {
-			get => h;
+			readonly get => h;
 			set => h = value;
 		}
 
@@ -4298,14 +4422,14 @@ namespace SkiaSharp
 		// public sk_webpencoder_compression_t fCompression
 		private SKWebpEncoderCompression fCompression;
 		public SKWebpEncoderCompression Compression {
-			get => fCompression;
+			readonly get => fCompression;
 			set => fCompression = value;
 		}
 
 		// public float fQuality
 		private Single fQuality;
 		public Single Quality {
-			get => fQuality;
+			readonly get => fQuality;
 			set => fQuality = value;
 		}
 
@@ -4777,6 +4901,8 @@ namespace SkiaSharp
 		Argb32 = 3,
 		// LCD16_SK_MASK_FORMAT = 4
 		Lcd16 = 4,
+		// SDF_SK_MASK_FORMAT = 5
+		Sdf = 5,
 	}
 
 	// sk_matrix_convolution_tilemode_t
@@ -4802,36 +4928,6 @@ namespace SkiaSharp
 		Affine = 4,
 		// PERSPECTIVE_SK_MATRIX44_TYPE_MASK = 0x08
 		Perspective = 8,
-	}
-
-	// sk_named_gamut_t
-	public enum SKNamedGamut {
-		// SRGB_SK_NAMED_GAMUT = 0
-		Srgb = 0,
-		// ADOBE_RGB_SK_NAMED_GAMUT = 1
-		AdobeRgb = 1,
-		// DCIP3_D65_SK_NAMED_GAMUT = 2
-		Dcip3D65 = 2,
-		// REC2020_SK_NAMED_GAMUT = 3
-		Rec2020 = 3,
-		// XYZ_SK_NAMED_GAMUT = 4
-		Xyz = 4,
-	}
-
-	// sk_named_transfer_fn_t
-	public enum SKNamedTransferFn {
-		// SRGB_SK_NAMED_TRANSFER_FN = 0
-		Srgb = 0,
-		// TWO_DOT_TWO_SK_NAMED_TRANSFER_FN = 1
-		TwoDotTwo = 1,
-		// LINEAR_SK_NAMED_TRANSFER_FN = 2
-		Linear = 2,
-		// REC2020_SK_NAMED_TRANSFER_FN = 3
-		Rec2020 = 3,
-		// PQ_SK_NAMED_TRANSFER_FN = 4
-		Pq = 4,
-		// HLG_SK_NAMED_TRANSFER_FN = 5
-		Hlg = 5,
 	}
 
 	// sk_paint_style_t

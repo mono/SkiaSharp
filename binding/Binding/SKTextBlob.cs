@@ -10,9 +10,6 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
 		void ISKNonVirtualReferenceCounted.ReferenceNative () =>
 			SkiaApi.sk_textblob_ref (Handle);
 
@@ -42,6 +39,9 @@ namespace SkiaSharp
 			return builder.Build ();
 		}
 
+		public static SKTextBlob Create (IntPtr text, int length, SKTextEncoding encoding, SKFont font, SKPoint origin = default) =>
+			Create (text.AsReadOnlySpan (length), encoding, font, origin);
+
 		public static SKTextBlob Create (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, SKPoint origin = default)
 		{
 			using var builder = new SKTextBlobBuilder ();
@@ -60,6 +60,9 @@ namespace SkiaSharp
 			builder.AddHorizontalRun (text, font, positions, y);
 			return builder.Build ();
 		}
+
+		public static SKTextBlob CreateHorizontal (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y) =>
+			CreateHorizontal (text.AsReadOnlySpan (length), encoding, font, positions, y);
 
 		public static SKTextBlob CreateHorizontal (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
@@ -80,6 +83,9 @@ namespace SkiaSharp
 			return builder.Build ();
 		}
 
+		public static SKTextBlob CreatePositioned (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions) =>
+			CreatePositioned (text.AsReadOnlySpan (length), encoding, font, positions);
+
 		public static SKTextBlob CreatePositioned (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
 			using var builder = new SKTextBlobBuilder ();
@@ -98,6 +104,9 @@ namespace SkiaSharp
 			builder.AddRotationScaleRun (text, font, positions);
 			return builder.Build ();
 		}
+
+		public static SKTextBlob CreateRotationScale (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions) =>
+			CreateRotationScale (text.AsReadOnlySpan (length), encoding, font, positions);
 
 		public static SKTextBlob CreateRotationScale (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
 		{
@@ -150,9 +159,6 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
 		protected override void DisposeNative () =>
 			SkiaApi.sk_textblob_builder_delete (Handle);
 
@@ -179,6 +185,9 @@ namespace SkiaSharp
 				AddRun (t, text.Length, encoding, font, origin);
 			}
 		}
+
+		public void AddRun (IntPtr text, int length, SKTextEncoding encoding, SKFont font, SKPoint origin = default) =>
+			AddRun ((void*)text, length, encoding, font, origin);
 
 		internal void AddRun (void* text, int length, SKTextEncoding encoding, SKFont font, SKPoint origin = default)
 		{
@@ -222,6 +231,9 @@ namespace SkiaSharp
 			}
 		}
 
+		public void AddHorizontalRun (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y) =>
+			AddHorizontalRun ((void*)text, length, encoding, font, positions, y);
+
 		internal void AddHorizontalRun (void* text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
 			if (font == null)
@@ -264,6 +276,9 @@ namespace SkiaSharp
 			}
 		}
 
+		public void AddPositionedRun (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions) =>
+			AddPositionedRun ((void*)text, length, encoding, font, positions);
+
 		internal void AddPositionedRun (void* text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
 			if (font == null)
@@ -305,6 +320,9 @@ namespace SkiaSharp
 				AddRotationScaleRun (t, text.Length, encoding, font, positions);
 			}
 		}
+
+		public void AddRotationScaleRun (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions) =>
+			AddRotationScaleRun ((void*)text, length, encoding, font, positions);
 
 		internal void AddRotationScaleRun (void* text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
 		{

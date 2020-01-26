@@ -5,18 +5,18 @@ namespace SkiaSharp
 	public unsafe class SKRegion : SKObject
 	{
 		[Preserve]
-		internal SKRegion(IntPtr handle,  bool owns)
+		internal SKRegion (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
-		public SKRegion()
-			: this (SkiaApi.sk_region_new(), true)
+		public SKRegion ()
+			: this (SkiaApi.sk_region_new (), true)
 		{
 		}
 
-		public SKRegion(SKRegion region)
-			: this(SkiaApi.sk_region_new2(region.Handle), true)
+		public SKRegion (SKRegion region)
+			: this (SkiaApi.sk_region_new2 (region.Handle), true)
 		{
 		}
 
@@ -32,9 +32,6 @@ namespace SkiaSharp
 			SetPath (path);
 		}
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
 		protected override void DisposeNative () =>
 			SkiaApi.sk_region_delete (Handle);
 
@@ -46,55 +43,59 @@ namespace SkiaSharp
 			}
 		}
 
-		public bool Contains(SKRegion src)
+		public bool Contains (SKRegion src)
 		{
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
-			return SkiaApi.sk_region_contains(Handle, src.Handle);
+
+			return SkiaApi.sk_region_contains (Handle, src.Handle);
 		}
 
-		public bool Contains(SKPointI xy) =>
-			SkiaApi.sk_region_contains2(Handle, xy.X, xy.Y);
+		public bool Contains (SKPointI xy) =>
+			SkiaApi.sk_region_contains2 (Handle, xy.X, xy.Y);
 
-		public bool Contains(int x, int y) =>
-			SkiaApi.sk_region_contains2(Handle, x, y);
+		public bool Contains (int x, int y) =>
+			SkiaApi.sk_region_contains2 (Handle, x, y);
 
 		public bool Intersects (SKPath path)
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
-			using (var pathRegion = new SKRegion (path)) {
-				return Intersects (pathRegion);
-			}
+
+			using var pathRegion = new SKRegion (path);
+			return Intersects (pathRegion);
 		}
 
-		public bool Intersects(SKRegion region)
+		public bool Intersects (SKRegion region)
 		{
 			if (region == null)
 				throw new ArgumentNullException (nameof (region));
-			return SkiaApi.sk_region_intersects(Handle, region.Handle);
+
+			return SkiaApi.sk_region_intersects (Handle, region.Handle);
 		}
 
-		public bool Intersects(SKRectI rect) =>
-			SkiaApi.sk_region_intersects_rect(Handle, &rect);
+		public bool Intersects (SKRectI rect) =>
+			SkiaApi.sk_region_intersects_rect (Handle, &rect);
 
-		public bool SetRegion(SKRegion region)
+		public bool SetRegion (SKRegion region)
 		{
 			if (region == null)
 				throw new ArgumentNullException (nameof (region));
-			return SkiaApi.sk_region_set_region(Handle, region.Handle);
+
+			return SkiaApi.sk_region_set_region (Handle, region.Handle);
 		}
 
-		public bool SetRect(SKRectI rect) =>
+		public bool SetRect (SKRectI rect) =>
 			SkiaApi.sk_region_set_rect (Handle, &rect);
 
-		public bool SetPath(SKPath path, SKRegion clip)
+		public bool SetPath (SKPath path, SKRegion clip)
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 			if (clip == null)
 				throw new ArgumentNullException (nameof (clip));
-			return SkiaApi.sk_region_set_path(Handle, path.Handle, clip.Handle);
+
+			return SkiaApi.sk_region_set_path (Handle, path.Handle, clip.Handle);
 		}
 
 		public bool SetPath (SKPath path)
@@ -102,14 +103,12 @@ namespace SkiaSharp
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 
-			using (var clip = new SKRegion ()) {
-				var rect = SKRectI.Ceiling (path.Bounds);
-				if (!rect.IsEmpty) {
-					clip.SetRect (rect);
-				}
+			using var clip = new SKRegion ();
+			var rect = SKRectI.Ceiling (path.Bounds);
+			if (!rect.IsEmpty)
+				clip.SetRect (rect);
 
-				return SkiaApi.sk_region_set_path (Handle, path.Handle, clip.Handle);
-			}
+			return SkiaApi.sk_region_set_path (Handle, path.Handle, clip.Handle);
 		}
 
 		public bool Op (SKRectI rect, SKRegionOperation op) =>
@@ -123,9 +122,8 @@ namespace SkiaSharp
 
 		public bool Op (SKPath path, SKRegionOperation op)
 		{
-			using (var pathRegion = new SKRegion (path)) {
-				return Op (pathRegion, op);
-			}
+			using var pathRegion = new SKRegion (path);
+			return Op (pathRegion, op);
 		}
 	}
 }

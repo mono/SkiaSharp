@@ -109,7 +109,7 @@ namespace SkiaSharp.Tests
 
 				using (var picture = pictureRecorder.EndRecording())
 				{
-					p.Shader = SKShader.CreatePicture(picture, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, SKMatrix.MakeIdentity(), tile);
+					p.Shader = SKShader.CreatePicture(picture, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, SKMatrix.Identity, tile);
 					var r = SKRect.Create(bitmap.Width, bitmap.Height);
 					canvas.DrawRect(r, p);
 				}

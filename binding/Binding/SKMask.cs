@@ -1,135 +1,141 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
 	public unsafe partial struct SKMask
 	{
-		public SKMask(IntPtr image, SKRectI bounds, UInt32 rowBytes, SKMaskFormat format)
+		public SKMask (IntPtr image, SKRectI bounds, uint rowBytes, SKMaskFormat format)
 		{
-			this.fBounds = bounds;
-			this.fRowBytes = rowBytes;
-			this.fFormat = format;
-			this.fImage = (byte*)image;
+			fBounds = bounds;
+			fRowBytes = rowBytes;
+			fFormat = format;
+			fImage = (byte*)image;
 		}
 
-		public SKMask(SKRectI bounds, UInt32 rowBytes, SKMaskFormat format)
+		public SKMask (SKRectI bounds, uint rowBytes, SKMaskFormat format)
 		{
-			this.fBounds = bounds;
-			this.fRowBytes = rowBytes;
-			this.fFormat = format;
-			this.fImage = null;
+			fBounds = bounds;
+			fRowBytes = rowBytes;
+			fFormat = format;
+			fImage = null;
 		}
 
 		public IntPtr Image {
-			get => (IntPtr)fImage;
+			readonly get => (IntPtr)fImage;
 			set => fImage = (byte*)value;
 		}
+
 		public SKRectI Bounds {
-			get => fBounds;
+			readonly get => fBounds;
 			set => fBounds = value;
 		}
-		public UInt32 RowBytes {
-			get => fRowBytes;
+
+		public uint RowBytes {
+			readonly get => fRowBytes;
 			set => fRowBytes = value;
 		}
+
 		public SKMaskFormat Format {
-			get => fFormat;
+			readonly get => fFormat;
 			set => fFormat = value;
 		}
-		public bool IsEmpty {
+
+		public readonly bool IsEmpty {
 			get {
 				fixed (SKMask* t = &this) {
-					return SkiaApi.sk_mask_is_empty(t);
+					return SkiaApi.sk_mask_is_empty (t);
 				}
 			}
 		}
 
-		public long AllocateImage()
+		public readonly long ComputeImageSize ()
 		{
 			fixed (SKMask* t = &this) {
-				var size = SkiaApi.sk_mask_compute_total_image_size(t);
-				fImage = SkiaApi.sk_mask_alloc_image(size);
+				return (long)SkiaApi.sk_mask_compute_image_size (t);
+			}
+		}
+
+		public readonly long ComputeTotalImageSize ()
+		{
+			fixed (SKMask* t = &this) {
+				return (long)SkiaApi.sk_mask_compute_total_image_size (t);
+			}
+		}
+
+		public readonly byte GetImage1 (int x, int y)
+		{
+			fixed (SKMask* t = &this) {
+				return *SkiaApi.sk_mask_get_addr_1 (t, x, y);
+			}
+		}
+
+		public readonly byte GetImage8 (int x, int y)
+		{
+			fixed (SKMask* t = &this) {
+				return *SkiaApi.sk_mask_get_addr_8 (t, x, y);
+			}
+		}
+
+		public readonly ushort GetImage16 (int x, int y)
+		{
+			fixed (SKMask* t = &this) {
+				return *SkiaApi.sk_mask_get_addr_lcd_16 (t, x, y);
+			}
+		}
+
+		public readonly uint GetImage32 (int x, int y)
+		{
+			fixed (SKMask* t = &this) {
+				return *SkiaApi.sk_mask_get_addr_32 (t, x, y);
+			}
+		}
+
+		public readonly IntPtr GetAddress (int x, int y)
+		{
+			fixed (SKMask* t = &this) {
+				return (IntPtr)SkiaApi.sk_mask_get_addr (t, x, y);
+			}
+		}
+
+		public long AllocateImage ()
+		{
+			fixed (SKMask* t = &this) {
+				var size = SkiaApi.sk_mask_compute_total_image_size (t);
+				fImage = SkiaApi.sk_mask_alloc_image (size);
 				return (long)size;
 			}
 		}
-		public void FreeImage()
+
+		public void FreeImage ()
 		{
 			if (fImage != null) {
-				SKMask.FreeImage((IntPtr)fImage);
+				SKMask.FreeImage ((IntPtr)fImage);
 				fImage = null;
 			}
 		}
 
-		public long ComputeImageSize()
-		{
-			fixed (SKMask* t = &this) {
-				return (long)SkiaApi.sk_mask_compute_image_size(t);
-			}
-		}
+		public static IntPtr AllocateImage (long size) =>
+			(IntPtr)SkiaApi.sk_mask_alloc_image ((IntPtr)size);
 
-		public long ComputeTotalImageSize()
-		{
-			fixed (SKMask* t = &this) {
-				return (long)SkiaApi.sk_mask_compute_total_image_size(t);
-			}
-		}
+		public static void FreeImage (IntPtr image) =>
+			SkiaApi.sk_mask_free_image ((byte*)image);
 
-		public byte GetAddr1(int x, int y)
-		{
-			fixed (SKMask* t = &this) {
-				return SkiaApi.sk_mask_get_addr_1(t, x, y);
-			}
-		}
-
-		public byte GetAddr8(int x, int y)
-		{
-			fixed (SKMask* t = &this) {
-				return SkiaApi.sk_mask_get_addr_8(t, x, y);
-			}
-		}
-
-		public UInt16 GetAddr16(int x, int y)
-		{
-			fixed (SKMask* t = &this) {
-				return SkiaApi.sk_mask_get_addr_lcd_16(t, x, y);
-			}
-		}
-
-		public UInt32 GetAddr32 (int x, int y)
-		{
-			fixed (SKMask* t = &this) {
-				return SkiaApi.sk_mask_get_addr_32 (t, x, y);
-			}
-		}
-
-		public IntPtr GetAddr(int x, int y)
-		{
-			fixed (SKMask* t = &this) {
-				return (IntPtr)SkiaApi.sk_mask_get_addr(t, x, y);
-			}
-		}
-
-		public static IntPtr AllocateImage(long size) => (IntPtr)SkiaApi.sk_mask_alloc_image((IntPtr)size);
-		public static void FreeImage(IntPtr image) => SkiaApi.sk_mask_free_image((byte*)image);
-
-		public static SKMask Create(byte[] image, SKRectI bounds, UInt32 rowBytes, SKMaskFormat format)
+		public static SKMask Create (ReadOnlySpan<byte> image, SKRectI bounds, uint rowBytes, SKMaskFormat format)
 		{
 			// create the mask
-			var mask = new SKMask(bounds, rowBytes, format);
+			var mask = new SKMask (bounds, rowBytes, format);
 
 			// is there the right amount of space in the mask
-			if (image.Length != mask.ComputeTotalImageSize())
-			{
+			if (image.Length != mask.ComputeTotalImageSize ()) {
 				// Note: buffer.Length must match bounds.Height * rowBytes
 				var expectedHeight = bounds.Height * rowBytes;
-				var message = $"Length of image ({image.Length}) does not match the computed size of the mask ({expectedHeight}). Check the {nameof(bounds)} and {nameof(rowBytes)}.";
-				throw new ArgumentException(message);
+				var message = $"Length of image ({image.Length}) does not match the computed size of the mask ({expectedHeight}). Check the {nameof (bounds)} and {nameof (rowBytes)}.";
+				throw new ArgumentException (message);
 			}
 
 			// copy the image data
-			mask.AllocateImage();
-			Marshal.Copy(image, 0, (IntPtr)mask.fImage, image.Length);
+			mask.AllocateImage ();
+			image.CopyTo (new Span<byte> (mask.fImage, image.Length));
 
 			// return the mask
 			return mask;
@@ -140,16 +146,15 @@ namespace SkiaSharp
 	{
 		private IntPtr image;
 
-		public SKAutoMaskFreeImage(IntPtr maskImage)
+		public SKAutoMaskFreeImage (IntPtr maskImage)
 		{
 			image = maskImage;
 		}
 
-		public void Dispose()
+		public void Dispose ()
 		{
-			if (image != IntPtr.Zero)
-			{
-				SKMask.FreeImage(image);
+			if (image != IntPtr.Zero) {
+				SKMask.FreeImage (image);
 				image = IntPtr.Zero;
 			}
 		}

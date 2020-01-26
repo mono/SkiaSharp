@@ -10,9 +10,6 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
 		void ISKNonVirtualReferenceCounted.ReferenceNative () =>
 			SkiaApi.sk_vertices_ref (Handle);
 

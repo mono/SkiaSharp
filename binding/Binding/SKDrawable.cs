@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SkiaSharp
@@ -33,9 +32,8 @@ namespace SkiaSharp
 			var ctx = DelegateProxies.CreateUserData (this, true);
 			Handle = SkiaApi.sk_manageddrawable_new ((void*)ctx);
 
-			if (Handle == IntPtr.Zero) {
+			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKDrawable instance.");
-			}
 		}
 
 		[Preserve]
@@ -43,9 +41,6 @@ namespace SkiaSharp
 			: base (x, owns)
 		{
 		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
 
 		protected override void DisposeNative ()
 		{
@@ -63,7 +58,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public void Draw (SKCanvas canvas, ref SKMatrix matrix)
+		public void Draw (SKCanvas canvas, in SKMatrix matrix)
 		{
 			fixed (SKMatrix* m = &matrix) {
 				SkiaApi.sk_drawable_draw (Handle, canvas.Handle, m);
@@ -72,8 +67,8 @@ namespace SkiaSharp
 
 		public void Draw (SKCanvas canvas, float x, float y)
 		{
-			var matrix = SKMatrix.MakeTranslation (x, y);
-			Draw (canvas, ref matrix);
+			var matrix = SKMatrix.CreateTranslation (x, y);
+			Draw (canvas, matrix);
 		}
 
 		// do not unref as this is a plain pointer return, not a reference counted pointer
@@ -91,11 +86,10 @@ namespace SkiaSharp
 
 		protected virtual SKPicture OnSnapshot ()
 		{
-			using (var recorder = new SKPictureRecorder ()) {
-				var canvas = recorder.BeginRecording (Bounds);
-				Draw (canvas, 0, 0);
-				return recorder.EndRecording ();
-			}
+			using var recorder = new SKPictureRecorder ();
+			using var canvas = recorder.BeginRecording (Bounds);
+			Draw (canvas, 0, 0);
+			return recorder.EndRecording ();
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableDrawProxyDelegate))]

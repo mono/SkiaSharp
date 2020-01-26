@@ -13,21 +13,15 @@ namespace SkiaSharp
 		public SKPaint ()
 			: this (SkiaApi.sk_paint_new (), true)
 		{
-			if (Handle == IntPtr.Zero) {
+			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
-			}
 		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_paint_delete (Handle);
 
-		public void Reset ()
-		{
+		public void Reset () =>
 			SkiaApi.sk_paint_reset (Handle);
-		}
 
 		public bool IsAntialias {
 			get => SkiaApi.sk_paint_is_antialias (Handle);
@@ -114,40 +108,27 @@ namespace SkiaSharp
 
 		// GetFillPath
 
-		public SKPath GetFillPath (SKPath src)
-			=> GetFillPath (src, 1f);
-
-		public SKPath GetFillPath (SKPath src, float resScale)
+		public SKPath GetFillPath (SKPath src, float resScale = 1f)
 		{
 			var dst = new SKPath ();
-
-			if (GetFillPath (src, dst, resScale)) {
-				return dst;
-			} else {
+			if (!GetFillPath (src, dst, resScale)) {
 				dst.Dispose ();
-				return null;
+				dst = null;
 			}
+			return dst;
 		}
 
-		public SKPath GetFillPath (SKPath src, SKRect cullRect)
-			=> GetFillPath (src, cullRect, 1f);
-
-		public SKPath GetFillPath (SKPath src, SKRect cullRect, float resScale)
+		public SKPath GetFillPath (SKPath src, SKRect cullRect, float resScale = 1f)
 		{
 			var dst = new SKPath ();
-
-			if (GetFillPath (src, dst, cullRect, resScale)) {
-				return dst;
-			} else {
+			if (!GetFillPath (src, dst, cullRect, resScale)) {
 				dst.Dispose ();
-				return null;
+				dst = null;
 			}
+			return dst;
 		}
 
-		public bool GetFillPath (SKPath src, SKPath dst)
-			=> GetFillPath (src, dst, 1f);
-
-		public bool GetFillPath (SKPath src, SKPath dst, float resScale)
+		public bool GetFillPath (SKPath src, SKPath dst, float resScale = 1f)
 		{
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
@@ -157,10 +138,7 @@ namespace SkiaSharp
 			return SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, null, resScale);
 		}
 
-		public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect)
-			=> GetFillPath (src, dst, cullRect, 1f);
-
-		public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, float resScale)
+		public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, float resScale = 1f)
 		{
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));

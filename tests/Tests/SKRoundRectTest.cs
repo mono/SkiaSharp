@@ -228,7 +228,7 @@ namespace SkiaSharp.Tests
 			offset.Offset(2, 2);
 
 			var rrect = new SKRoundRect(rect, 5, 5);
-			var transformed = rrect.Transform(SKMatrix.MakeRotationDegrees(30));
+			var transformed = rrect.Transform(SKMatrix.CreateRotationDegrees(30));
 
 			Assert.Null(transformed);
 		}
@@ -243,7 +243,7 @@ namespace SkiaSharp.Tests
 			offset.Offset(2, 2);
 
 			var rrect = new SKRoundRect(rect, 5, 5);
-			var transformed = rrect.Transform(SKMatrix.MakeTranslation(2, 2));
+			var transformed = rrect.Transform(SKMatrix.CreateTranslation(2, 2));
 
 			Assert.Equal(offset, transformed.Rect);
 			Assert.Equal(radii, transformed.Radii);

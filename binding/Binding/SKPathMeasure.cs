@@ -13,41 +13,28 @@ namespace SkiaSharp
 		public SKPathMeasure ()
 			: this (SkiaApi.sk_pathmeasure_new (), true)
 		{
-			if (Handle == IntPtr.Zero) {
+			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKPathMeasure instance.");
-			}
 		}
 
 		public SKPathMeasure (SKPath path, bool forceClosed = false, float resScale = 1)
-			: this (SkiaApi.sk_pathmeasure_new_with_path (path == null ? IntPtr.Zero : path.Handle, forceClosed, resScale), true)
+			: this (SkiaApi.sk_pathmeasure_new_with_path (path?.Handle ?? IntPtr.Zero, forceClosed, resScale), true)
 		{
-			if (Handle == IntPtr.Zero) {
+			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKPathMeasure instance.");
-			}
 		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_pathmeasure_destroy (Handle);
 
-		public float Length {
-			get {
-				return SkiaApi.sk_pathmeasure_get_length (Handle);
-			}
-		}
+		public float Length =>
+			SkiaApi.sk_pathmeasure_get_length (Handle);
 
-		public bool IsClosed {
-			get {
-				return SkiaApi.sk_pathmeasure_is_closed (Handle);
-			}
-		}
+		public bool IsClosed =>
+			SkiaApi.sk_pathmeasure_is_closed (Handle);
 
-		public void SetPath (SKPath path, bool forceClosed)
-		{
-			SkiaApi.sk_pathmeasure_set_path (Handle, path == null ? IntPtr.Zero : path.Handle, forceClosed);
-		}
+		public void SetPath (SKPath path, bool forceClosed = false) =>
+			SkiaApi.sk_pathmeasure_set_path (Handle, path?.Handle ?? IntPtr.Zero, forceClosed);
 
 		public bool GetPositionAndTangent (float distance, out SKPoint position, out SKPoint tangent)
 		{
@@ -82,13 +69,21 @@ namespace SkiaSharp
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
+
 			return SkiaApi.sk_pathmeasure_get_segment (Handle, start, stop, dst.Handle, startWithMoveTo);
 		}
 
-		public bool NextContour ()
+		public SKPath GetSegment (float start, float stop, bool startWithMoveTo)
 		{
-			return SkiaApi.sk_pathmeasure_next_contour (Handle);
+			var dst = new SKPath ();
+			if (!SkiaApi.sk_pathmeasure_get_segment (Handle, start, stop, dst.Handle, startWithMoveTo)) {
+				dst.Dispose ();
+				dst = null;
+			}
+			return dst;
 		}
+
+		public bool NextContour () =>
+			SkiaApi.sk_pathmeasure_next_contour (Handle);
 	}
 }
-

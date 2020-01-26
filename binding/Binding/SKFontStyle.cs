@@ -10,12 +10,10 @@ namespace SkiaSharp
 		{
 		}
 
-		public SKFontStyle ()
-			: this (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
-		{
-		}
-
-		public SKFontStyle (SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
+		public SKFontStyle (
+			SKFontStyleWeight weight = SKFontStyleWeight.Normal,
+			SKFontStyleWidth width = SKFontStyleWidth.Normal,
+			SKFontStyleSlant slant = SKFontStyleSlant.Upright)
 			: this ((int)weight, (int)width, slant)
 		{
 		}
@@ -24,9 +22,6 @@ namespace SkiaSharp
 			: this (SkiaApi.sk_fontstyle_new (weight, width, slant), true)
 		{
 		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_fontstyle_delete (Handle);
