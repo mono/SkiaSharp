@@ -9,6 +9,7 @@ using Xunit;
 
 #if SYSTEM_DRAWING
 using System.Drawing;
+using System.Drawing.Imaging;
 #endif
 
 namespace SkiaSharp.Tests
