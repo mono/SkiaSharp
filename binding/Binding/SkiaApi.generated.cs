@@ -1115,47 +1115,19 @@ namespace SkiaSharp
 
 		#endregion
 
-		#region sk_colorfilter.h
-
-		// sk_colorfilter_t* sk_colorfilter_new_color_matrix(const float[20] array = 20)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorfilter_t sk_colorfilter_new_color_matrix (Single* array);
-
-		// sk_colorfilter_t* sk_colorfilter_new_compose(sk_colorfilter_t* outer, sk_colorfilter_t* inner)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorfilter_t sk_colorfilter_new_compose (sk_colorfilter_t outer, sk_colorfilter_t inner);
-
-		// sk_colorfilter_t* sk_colorfilter_new_high_contrast(const sk_highcontrastconfig_t* config)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorfilter_t sk_colorfilter_new_high_contrast (SKHighContrastConfig* config);
-
-		// sk_colorfilter_t* sk_colorfilter_new_lighting(sk_color_t mul, sk_color_t add)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorfilter_t sk_colorfilter_new_lighting (UInt32 mul, UInt32 add);
-
-		// sk_colorfilter_t* sk_colorfilter_new_luma_color()
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorfilter_t sk_colorfilter_new_luma_color ();
-
-		// sk_colorfilter_t* sk_colorfilter_new_mode(sk_color_t c, sk_blendmode_t mode)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorfilter_t sk_colorfilter_new_mode (UInt32 c, SKBlendMode mode);
-
-		// sk_colorfilter_t* sk_colorfilter_new_table(const uint8_t[256] table = 256)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorfilter_t sk_colorfilter_new_table (Byte* table);
-
-		// sk_colorfilter_t* sk_colorfilter_new_table_argb(const uint8_t[256] tableA = 256, const uint8_t[256] tableR = 256, const uint8_t[256] tableG = 256, const uint8_t[256] tableB = 256)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorfilter_t sk_colorfilter_new_table_argb (Byte* tableA, Byte* tableR, Byte* tableG, Byte* tableB);
-
-		// void sk_colorfilter_unref(sk_colorfilter_t* filter)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_colorfilter_unref (sk_colorfilter_t filter);
-
-		#endregion
-
 		#region sk_colorspace.h
+
+		// void sk_color4f_from_color(sk_color_t color, sk_color4f_t* color4f)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_color4f_from_color (UInt32 color, SKColorF* color4f);
+
+		// void sk_color4f_pin(const sk_color4f_t* color4f, sk_color4f_t* pinned)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_color4f_pin (SKColorF* color4f, SKColorF* pinned);
+
+		// sk_color_t sk_color4f_to_color(const sk_color4f_t* color4f)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 sk_color4f_to_color (SKColorF* color4f);
 
 		// const sk_matrix44_t* sk_colorspace_as_from_xyzd50(const sk_colorspace_t* cColorSpace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1255,6 +1227,46 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspaceprimaries_to_xyzd50 (SKColorSpacePrimaries* primaries, sk_matrix44_t toXYZD50);
+
+		#endregion
+
+		#region sk_colorfilter.h
+
+		// sk_colorfilter_t* sk_colorfilter_new_color_matrix(const float[20] array = 20)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_color_matrix (Single* array);
+
+		// sk_colorfilter_t* sk_colorfilter_new_compose(sk_colorfilter_t* outer, sk_colorfilter_t* inner)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_compose (sk_colorfilter_t outer, sk_colorfilter_t inner);
+
+		// sk_colorfilter_t* sk_colorfilter_new_high_contrast(const sk_highcontrastconfig_t* config)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_high_contrast (SKHighContrastConfig* config);
+
+		// sk_colorfilter_t* sk_colorfilter_new_lighting(sk_color_t mul, sk_color_t add)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_lighting (UInt32 mul, UInt32 add);
+
+		// sk_colorfilter_t* sk_colorfilter_new_luma_color()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_luma_color ();
+
+		// sk_colorfilter_t* sk_colorfilter_new_mode(sk_color_t c, sk_blendmode_t mode)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_mode (UInt32 c, SKBlendMode mode);
+
+		// sk_colorfilter_t* sk_colorfilter_new_table(const uint8_t[256] table = 256)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_table (Byte* table);
+
+		// sk_colorfilter_t* sk_colorfilter_new_table_argb(const uint8_t[256] tableA = 256, const uint8_t[256] tableR = 256, const uint8_t[256] tableG = 256, const uint8_t[256] tableB = 256)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_table_argb (Byte* tableA, Byte* tableR, Byte* tableG, Byte* tableB);
+
+		// void sk_colorfilter_unref(sk_colorfilter_t* filter)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorfilter_unref (sk_colorfilter_t filter);
 
 		#endregion
 
@@ -3666,6 +3678,39 @@ namespace SkiaSharp
 		public Int32 fPriorFrame;
 		// public sk_transfer_function_behavior_t fPremulBehavior
 		public SKTransferFunctionBehavior fPremulBehavior;
+	}
+
+	// sk_color4f_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKColorF {
+		// public float fR
+		private Single fR;
+		public Single Red {
+			get => fR;
+			set => fR = value;
+		}
+
+		// public float fG
+		private Single fG;
+		public Single Green {
+			get => fG;
+			set => fG = value;
+		}
+
+		// public float fB
+		private Single fB;
+		public Single Blue {
+			get => fB;
+			set => fB = value;
+		}
+
+		// public float fA
+		private Single fA;
+		public Single Alpha {
+			get => fA;
+			set => fA = value;
+		}
+
 	}
 
 	// sk_colorspace_transfer_fn_t
