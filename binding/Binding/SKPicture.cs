@@ -13,7 +13,8 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public uint UniqueId => SkiaApi.sk_picture_get_unique_id (Handle);
+		public uint UniqueId =>
+			SkiaApi.sk_picture_get_unique_id (Handle);
 
 		public SKRect CullRect {
 			get {
@@ -22,5 +23,19 @@ namespace SkiaSharp
 				return rect;
 			}
 		}
+
+		// ToShader
+
+		public SKShader ToShader () =>
+			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
+			SKShader.CreatePicture (this, tmx, tmy);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile) =>
+			SKShader.CreatePicture (this, tmx, tmy, tile);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile) =>
+			SKShader.CreatePicture (this, tmx, tmy, localMatrix, tile);
 	}
 }
