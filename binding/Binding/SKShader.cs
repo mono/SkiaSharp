@@ -13,7 +13,7 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		// With*
+		// WithColorFilter
 
 		public SKShader WithColorFilter (SKColorFilter filter)
 		{
@@ -22,6 +22,8 @@ namespace SkiaSharp
 
 			return GetObject<SKShader> (SkiaApi.sk_shader_with_color_filter (Handle, filter.Handle));
 		}
+
+		// WithLocalMatrix
 
 		public SKShader WithLocalMatrix (SKMatrix localMatrix) =>
 			GetObject<SKShader> (SkiaApi.sk_shader_with_local_matrix (Handle, &localMatrix));
@@ -46,6 +48,9 @@ namespace SkiaSharp
 
 		// CreateBitmap
 
+		public static SKShader CreateBitmap (SKBitmap src) =>
+			CreateBitmap (src, SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
 		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy)
 		{
 			if (src == null)
@@ -62,7 +67,31 @@ namespace SkiaSharp
 			return GetObject<SKShader> (SkiaApi.sk_shader_new_bitmap (src.Handle, tmx, tmy, &localMatrix));
 		}
 
+		// CreateImage
+
+		public static SKShader CreateImage (SKImage src) =>
+			CreateImage (src, SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy)
+		{
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return src.ToShader (tmx, tmy);
+		}
+
+		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix)
+		{
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return src.ToShader (tmx, tmy, localMatrix);
+		}
+
 		// CreatePicture
+
+		public static SKShader CreatePicture (SKPicture src) =>
+			CreatePicture (src, SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
 
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy)
 		{
@@ -86,28 +115,6 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (src));
 
 			return GetObject<SKShader> (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, &localMatrix, &tile));
-		}
-
-		// CreateColorFilter
-
-		public static SKShader CreateColorFilter (SKShader shader, SKColorFilter filter)
-		{
-			if (shader == null)
-				throw new ArgumentNullException (nameof (shader));
-			if (filter == null)
-				throw new ArgumentNullException (nameof (filter));
-
-			return shader.WithColorFilter (filter);
-		}
-
-		// CreateLocalMatrix
-
-		public static SKShader CreateLocalMatrix (SKShader shader, SKMatrix localMatrix)
-		{
-			if (shader == null)
-				throw new ArgumentNullException (nameof (shader));
-
-			return shader.WithLocalMatrix (localMatrix);
 		}
 
 		// CreateLinearGradient
@@ -237,7 +244,7 @@ namespace SkiaSharp
 		// CreateSweepGradient
 
 		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors) =>
-			CreateSweepGradient (center, colors, null);
+			CreateSweepGradient (center, colors, null, SKShaderTileMode.Clamp, 0, 360);
 
 		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos) =>
 			CreateSweepGradient (center, colors, colorPos, SKShaderTileMode.Clamp, 0, 360);
@@ -275,7 +282,7 @@ namespace SkiaSharp
 		}
 
 		public static SKShader CreateSweepGradient (SKPoint center, SKColorF[] colors, SKColorSpace colorspace) =>
-			CreateSweepGradient (center, colors, colorspace, null);
+			CreateSweepGradient (center, colors, colorspace, null, SKShaderTileMode.Clamp, 0, 360);
 
 		public static SKShader CreateSweepGradient (SKPoint center, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos) =>
 			CreateSweepGradient (center, colors, colorspace, colorPos, SKShaderTileMode.Clamp, 0, 360);
@@ -410,7 +417,30 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (shaderA));
 			if (shaderB == null)
 				throw new ArgumentNullException (nameof (shaderB));
+
 			return GetObject<SKShader> (SkiaApi.sk_shader_new_compose (shaderA.Handle, shaderB.Handle, mode));
+		}
+
+		// CreateColorFilter
+
+		public static SKShader CreateColorFilter (SKShader shader, SKColorFilter filter)
+		{
+			if (shader == null)
+				throw new ArgumentNullException (nameof (shader));
+			if (filter == null)
+				throw new ArgumentNullException (nameof (filter));
+
+			return shader.WithColorFilter (filter);
+		}
+
+		// CreateLocalMatrix
+
+		public static SKShader CreateLocalMatrix (SKShader shader, SKMatrix localMatrix)
+		{
+			if (shader == null)
+				throw new ArgumentNullException (nameof (shader));
+
+			return shader.WithLocalMatrix (localMatrix);
 		}
 	}
 }
