@@ -38,7 +38,9 @@ namespace SkiaSharp.Views.Forms
 					break;
 			}
 
-			return handler.LoadImageAsync(image, newSource, cancelationToken);
+			// TODO: until we update to 4.4
+			dynamic placeholder = image;
+			return handler.LoadImageAsync(placeholder, newSource, cancelationToken);
 		}
 
 		public Task<bool> LoadImageAsync(NativeImage image, ImageSource imageSource, CancellationToken cancelationToken = default(CancellationToken))
