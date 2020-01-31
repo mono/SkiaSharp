@@ -80,6 +80,7 @@ jobs:
               echo "deb https://download.mono-project.com/repo/ubuntu $(MONO_VERSION_LINUX) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
               sudo apt update
               sudo apt install -y mono-complete msbuild
+              mono --version
             displayName: Install Mono and MSBuild
         - task: UseDotNet@2
           inputs:
