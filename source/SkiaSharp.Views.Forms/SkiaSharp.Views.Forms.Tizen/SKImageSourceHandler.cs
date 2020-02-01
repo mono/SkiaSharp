@@ -5,7 +5,6 @@ using Xamarin.Forms;
 using Xamarin.Forms.Platform.Tizen;
 
 using ElmImage = ElmSharp.Image;
-using NativeImage = Xamarin.Forms.Platform.Tizen.Native.Image;
 
 [assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKImageImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
 [assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKBitmapImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
@@ -19,31 +18,6 @@ namespace SkiaSharp.Views.Forms
 		private StreamImageSourceHandler handler = new StreamImageSourceHandler();
 
 		public Task<bool> LoadImageAsync(ElmImage image, ImageSource imageSource, CancellationToken cancelationToken = default(CancellationToken))
-		{
-			ImageSource newSource = null;
-
-			switch (imageSource)
-			{
-				case SKImageImageSource imageImageSource:
-					newSource = ImageSource.FromStream(() => ToStream(imageImageSource.Image));
-					break;
-				case SKBitmapImageSource bitmapImageSource:
-					newSource = ImageSource.FromStream(() => ToStream(SKImage.FromBitmap(bitmapImageSource.Bitmap)));
-					break;
-				case SKPixmapImageSource pixmapImageSource:
-					newSource = ImageSource.FromStream(() => ToStream(SKImage.FromPixels(pixmapImageSource.Pixmap)));
-					break;
-				case SKPictureImageSource pictureImageSource:
-					newSource = ImageSource.FromStream(() => ToStream(SKImage.FromPicture(pictureImageSource.Picture, pictureImageSource.Dimensions)));
-					break;
-			}
-
-			// TODO: until we update to 4.4
-			dynamic placeholder = image;
-			return handler.LoadImageAsync(placeholder, newSource, cancelationToken);
-		}
-
-		public Task<bool> LoadImageAsync(NativeImage image, ImageSource imageSource, CancellationToken cancelationToken = default(CancellationToken))
 		{
 			ImageSource newSource = null;
 
