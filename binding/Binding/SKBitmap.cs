@@ -802,5 +802,16 @@ namespace SkiaSharp
 		{
 			SkiaApi.sk_bitmap_swap (Handle, other.Handle);
 		}
+
+		// ToShader
+
+		public SKShader ToShader () =>
+			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
+			SKShader.CreateBitmap (this, tmx, tmy);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
+			SKShader.CreateBitmap (this, tmx, tmy, localMatrix);
 	}
 }

@@ -418,7 +418,9 @@ namespace SkiaSharpGenerator
 
 			var functionGroups = compilation.Functions
 				.OrderBy(f => f.Name)
-				.GroupBy(f => f.Span.Start.File);
+				.GroupBy(f => f.Span.Start.File.ToLower().Replace("\\", "/"))
+				.OrderBy(g => Path.GetDirectoryName(g.Key) + "/" + Path.GetFileName(g.Key));
+
 			foreach (var group in functionGroups)
 			{
 				writer.WriteLine($"\t\t#region {Path.GetFileName(group.Key)}");
