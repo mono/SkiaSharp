@@ -83,7 +83,6 @@ jobs:
             displayName: Install LLVM
       # install extra bits for the manged builds
       - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-        - ${{ if endsWith(parameters.name, '_linux') }}:
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
