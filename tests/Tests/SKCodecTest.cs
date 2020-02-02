@@ -283,9 +283,9 @@ namespace SkiaSharp.Tests
 				for (var y = 0; y < info.Height; y++)
 				{
 					if (y % 2 == 0)
-						Assert.Equal(correctBitmap.GetPixel(x, y), scanlineBitmap.GetPixel(x, y));
+						Assert.Equal(correctBitmap.GetPixelColor(x, y), scanlineBitmap.GetPixelColor(x, y));
 					else
-						Assert.Equal(SKColors.Fuchsia, scanlineBitmap.GetPixel(x, y));
+						Assert.Equal(SKColors.Fuchsia, scanlineBitmap.GetPixelColor(x, y));
 				}
 			}
 		}

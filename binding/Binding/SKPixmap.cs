@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
+using System.IO;
 
 namespace SkiaSharp
 {
@@ -86,6 +88,8 @@ namespace SkiaSharp
 		public SKColor GetPixelColor (int x, int y) =>
 			SkiaApi.sk_pixmap_get_pixel_color (Handle, x, y);
 
+		// ScalePixels
+
 		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality)
 		{
 			if (destination == null)
@@ -94,44 +98,72 @@ namespace SkiaSharp
 			return SkiaApi.sk_pixmap_scale_pixels (Handle, destination.Handle, quality);
 		}
 
-		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX = 0, int srcY = 0)
+		// ReadPixels
+
+		public bool ReadPixels (SKPixmap pixmap) =>
+			ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, 0, 0);
+
+		public bool ReadPixels (SKPixmap pixmap, int srcX, int srcY) =>
+			ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, srcX, srcY);
+
+		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels) =>
+			ReadPixels (dstInfo, dstPixels, dstInfo.RowBytes, 0, 0);
+
+		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes) =>
+			ReadPixels (dstInfo, dstPixels, dstRowBytes, 0, 0);
+
+		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
 			return SkiaApi.sk_pixmap_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
 		}
 
-		public bool ReadPixels (SKPixmap pixmap, int srcX = 0, int srcY = 0) =>
-			ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, srcX, srcY);
+		// Encode
 
-		public SKData Encode (SKEncodedImageFormat encoder, int quality)
+		public SKData Encode (SKEncodedImageFormat format, int quality)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
-			var result = Encode (stream, this, encoder, quality);
+			var result = Encode (stream, this, format, quality);
 			return result ? stream.DetachAsData () : null;
 		}
 
-		public bool Encode (SKWStream dst, SKEncodedImageFormat encoder, int quality) =>
-			Encode (dst, this, encoder, quality);
+		public bool Encode (Stream dst, SKEncodedImageFormat format, int quality) =>
+			Encode (dst, this, format, quality);
 
-		public static bool Encode (SKWStream dst, SKBitmap src, SKEncodedImageFormat format, int quality)
+		public bool Encode (SKWStream dst, SKEncodedImageFormat format, int quality) =>
+			Encode (dst, this, format, quality);
+
+		public static bool Encode (Stream dst, SKPixmap src, SKEncodedImageFormat format, int quality)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
 
-			using var pixmap = new SKPixmap ();
-			return src.PeekPixels (pixmap) && Encode (dst, pixmap, format, quality);
+			using var wrapped = new SKManagedWStream (dst);
+			return Encode (wrapped, src, format, quality);
 		}
 
-		public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality)
+		public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat format, int quality)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return SkiaApi.sk_pixmap_encode_image (dst.Handle, src.Handle, encoder, quality);
+			return SkiaApi.sk_pixmap_encode_image (dst.Handle, src.Handle, format, quality);
+		}
+
+		// Encode (webp)
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use ScalePixels(SKPixmap, SKFilterQuality) instead.")]
+		public static bool Resize (SKPixmap dst, SKPixmap src, SKBitmapResizeMethod method)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return src.ScalePixels (dst, method.ToFilterQuality ());
 		}
 
 		public SKData Encode (SKWebpEncoderOptions options)
@@ -141,8 +173,20 @@ namespace SkiaSharp
 			return result ? stream.DetachAsData () : null;
 		}
 
+		public bool Encode (Stream dst, SKWebpEncoderOptions options) =>
+			Encode (dst, this, options);
+
 		public bool Encode (SKWStream dst, SKWebpEncoderOptions options) =>
 			Encode (dst, this, options);
+
+		public static bool Encode (Stream dst, SKPixmap src, SKWebpEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var wrapped = new SKManagedWStream (dst);
+			return Encode (wrapped, src, options);
+		}
 
 		public static bool Encode (SKWStream dst, SKPixmap src, SKWebpEncoderOptions options)
 		{
@@ -154,6 +198,8 @@ namespace SkiaSharp
 			return SkiaApi.sk_webpencoder_encode (dst.Handle, src.Handle, options);
 		}
 
+		// Encode (jpeg)
+
 		public SKData Encode (SKJpegEncoderOptions options)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
@@ -161,8 +207,20 @@ namespace SkiaSharp
 			return result ? stream.DetachAsData () : null;
 		}
 
+		public bool Encode (Stream dst, SKJpegEncoderOptions options) =>
+			Encode (dst, this, options);
+
 		public bool Encode (SKWStream dst, SKJpegEncoderOptions options) =>
 			Encode (dst, this, options);
+
+		public static bool Encode (Stream dst, SKPixmap src, SKJpegEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var wrapped = new SKManagedWStream (dst);
+			return Encode (wrapped, src, options);
+		}
 
 		public static bool Encode (SKWStream dst, SKPixmap src, SKJpegEncoderOptions options)
 		{
@@ -174,6 +232,8 @@ namespace SkiaSharp
 			return SkiaApi.sk_jpegencoder_encode (dst.Handle, src.Handle, options);
 		}
 
+		// Encode (png)
+
 		public SKData Encode (SKPngEncoderOptions options)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
@@ -181,8 +241,20 @@ namespace SkiaSharp
 			return result ? stream.DetachAsData () : null;
 		}
 
+		public bool Encode (Stream dst, SKPngEncoderOptions options) =>
+			Encode (dst, this, options);
+
 		public bool Encode (SKWStream dst, SKPngEncoderOptions options) =>
 			Encode (dst, this, options);
+
+		public static bool Encode (Stream dst, SKPixmap src, SKPngEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var wrapped = new SKManagedWStream (dst);
+			return Encode (wrapped, src, options);
+		}
 
 		public static bool Encode (SKWStream dst, SKPixmap src, SKPngEncoderOptions options)
 		{
@@ -193,6 +265,8 @@ namespace SkiaSharp
 
 			return SkiaApi.sk_pngencoder_encode (dst.Handle, src.Handle, options);
 		}
+
+		// ExtractSubset
 
 		public SKPixmap ExtractSubset (SKRectI subset)
 		{
@@ -212,11 +286,15 @@ namespace SkiaSharp
 			return SkiaApi.sk_pixmap_extract_subset (Handle, result.Handle, &subset);
 		}
 
+		// Erase
+
 		public bool Erase (SKColor color) =>
 			Erase (color, Rect);
 
 		public bool Erase (SKColor color, SKRectI subset) =>
 			SkiaApi.sk_pixmap_erase_color (Handle, (uint)color, &subset);
+
+		// With*
 
 		public SKPixmap WithColorType (SKColorType newColorType) =>
 			new SKPixmap (Info.WithColorType (newColorType), GetPixels (), RowBytes);

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -10,12 +9,20 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void CreateDefaultContextIsValid()
 		{
-			using (var ctx = CreateGlContext()) {
-				ctx.MakeCurrent();
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
 
-				var grContext = GRContext.CreateGl();
+			var grContext = GRContext.CreateGl();
 
-				Assert.NotNull(grContext);
+			Assert.NotNull(grContext);
+		}
+
+		[SkippableFact]
+		public void ToGlSizedFormat()
+		{
+			foreach (GRPixelConfig value in Enum.GetValues(typeof(GRPixelConfig)))
+			{
+				value.ToGlSizedFormat();
 			}
 		}
 
@@ -23,36 +30,34 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void CreateSpecificContextIsValid()
 		{
-			using (var ctx = CreateGlContext()) {
-				ctx.MakeCurrent();
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
 
-				var glInterface = GRGlInterface.CreateNativeGlInterface();
+			var glInterface = GRGlInterface.CreateNativeGlInterface();
 
-				Assert.True(glInterface.Validate());
+			Assert.True(glInterface.Validate());
 
-				var grContext = GRContext.CreateGl(glInterface);
+			var grContext = GRContext.CreateGl(glInterface);
 
-				Assert.NotNull(grContext);
-			}
+			Assert.NotNull(grContext);
 		}
 
 		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void GpuSurfaceIsCreated()
 		{
-			using (var ctx = CreateGlContext()) {
-				ctx.MakeCurrent();
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
 
-				using (var grContext = GRContext.CreateGl())
-				using (var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100))) {
-					Assert.NotNull(surface);
+			using var grContext = GRContext.CreateGl();
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
 
-					var canvas = surface.Canvas;
-					Assert.NotNull(canvas);
+			Assert.NotNull(surface);
 
-					canvas.Clear(SKColors.Transparent);
-				}
-			}
+			var canvas = surface.Canvas;
+			Assert.NotNull(canvas);
+
+			canvas.Clear(SKColors.Transparent);
 		}
 	}
 }

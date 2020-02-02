@@ -1,8 +1,41 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 
 namespace SkiaSharp
 {
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete]
+	public enum SKBitmapResizeMethod
+	{
+		Box,
+		Triangle,
+		Lanczos3,
+		Hamming,
+		Mitchell
+	}
+
+	public static partial class SkiaExtensions
+	{
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public static SKFilterQuality ToFilterQuality (this SKBitmapResizeMethod method)
+		{
+			switch (method) {
+				case SKBitmapResizeMethod.Box:
+				case SKBitmapResizeMethod.Triangle:
+					return SKFilterQuality.Low;
+				case SKBitmapResizeMethod.Lanczos3:
+					return SKFilterQuality.Medium;
+				case SKBitmapResizeMethod.Hamming:
+				case SKBitmapResizeMethod.Mitchell:
+					return SKFilterQuality.High;
+				default:
+					return SKFilterQuality.Medium;
+			}
+		}
+	}
+
 	// TODO: keep in mind SKBitmap may be going away (according to Google)
 	// TODO: `ComputeIsOpaque` may be useful
 	// TODO: `GenerationID` may be useful
@@ -20,25 +53,49 @@ namespace SkiaSharp
 		public SKBitmap ()
 			: this (SkiaApi.sk_bitmap_new (), true)
 		{
-			if (Handle == IntPtr.Zero) {
+			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKBitmap instance.");
-			}
 		}
 
-		public SKBitmap (int width, int height, bool isOpaque = false)
-			: this (width, height, SKImageInfo.PlatformColorType, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul)
+		public SKBitmap (int width, int height)
+			: this (new SKImageInfo (width, height))
 		{
 		}
 
-		public SKBitmap (int width, int height, SKColorType colorType, SKAlphaType alphaType = SKAlphaType.Premul)
-			: this (new SKImageInfo (width, height, colorType, alphaType))
+		public SKBitmap (int width, int height, bool isOpaque)
+			: this (new SKImageInfo (width, height, SKImageInfo.PlatformColorType, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul))
 		{
 		}
 
-		public SKBitmap (SKImageInfo info, int rowBytes = 0)
+		public SKBitmap (int width, int height, SKColorType colorType)
+			: this (new SKImageInfo (width, height, colorType, null))
+		{
+		}
+
+		public SKBitmap (int width, int height, SKColorType colorType, SKColorSpace colorspace)
+			: this (new SKImageInfo (width, height, colorType, colorspace))
+		{
+		}
+
+		public SKBitmap (int width, int height, SKColorType colorType, SKAlphaType alphaType)
+			: this (new SKImageInfo (width, height, colorType, alphaType, null))
+		{
+		}
+
+		public SKBitmap (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorspace)
+			: this (new SKImageInfo (width, height, colorType, alphaType, colorspace))
+		{
+		}
+
+		public SKBitmap (SKImageInfo info)
+			: this (info, info.RowBytes)
+		{
+		}
+
+		public SKBitmap (SKImageInfo info, int rowBytes)
 			: this ()
 		{
-			if (!TryAllocPixels (info, rowBytes == 0 ? info.RowBytes : rowBytes))
+			if (!TryAllocPixels (info, rowBytes))
 				throw new Exception (UnableToAllocatePixelsMessage);
 		}
 
@@ -103,10 +160,13 @@ namespace SkiaSharp
 
 		// TryAllocPixels
 
-		public bool TryAllocPixels (SKImageInfo info, int rowBytes = 0)
+		public bool TryAllocPixels (SKImageInfo info) =>
+			TryAllocPixels (info, info.RowBytes);
+
+		public bool TryAllocPixels (SKImageInfo info, int rowBytes)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_bitmap_try_alloc_pixels (Handle, &cinfo, (IntPtr)(rowBytes == 0 ? info.RowBytes : rowBytes));
+			return SkiaApi.sk_bitmap_try_alloc_pixels (Handle, &cinfo, (IntPtr)rowBytes);
 		}
 
 		public bool TryAllocPixels (SKImageInfo info, SKBitmapAllocFlags flags)
@@ -130,7 +190,12 @@ namespace SkiaSharp
 
 		// Pixels (color)
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetPixelColor(int, int) instead.")]
 		public SKColor GetPixel (int x, int y) =>
+			GetPixelColor (x, y);
+
+		public SKColor GetPixelColor (int x, int y) =>
 			SkiaApi.sk_bitmap_get_pixel_color (Handle, x, y);
 
 		public void SetPixel (int x, int y, SKColor color) =>
@@ -154,29 +219,61 @@ namespace SkiaSharp
 
 		// Copy
 
+		public bool CanCopyTo (SKColorType colorType)
+		{
+			// TODO: optimize as this does more work that we really want
+
+			if (colorType == SKColorType.Unknown)
+				return false;
+
+			using var bmp = new SKBitmap ();
+
+			var info = Info
+				.WithColorType (colorType)
+				.WithSize (1, 1);
+			return bmp.TryAllocPixels (info);
+		}
+
 		public SKBitmap Copy () =>
 			Copy (ColorType);
 
 		public SKBitmap Copy (SKColorType colorType)
 		{
-			var destination = new SKBitmap (Info.WithColorType (colorType));
-
-			if (!CopyTo (destination)) {
+			var destination = new SKBitmap ();
+			if (!CopyTo (destination, colorType)) {
 				destination.Dispose ();
 				destination = null;
 			}
-
 			return destination;
 		}
 
-		public bool CopyTo (SKBitmap destination)
+		public bool CopyTo (SKBitmap destination) =>
+			CopyTo (destination, ColorType);
+
+		public bool CopyTo (SKBitmap destination, SKColorType colorType)
 		{
 			if (destination == null)
 				throw new ArgumentNullException (nameof (destination));
 
-			using var destPixmap = destination.PeekPixels ();
-			using var pixmap = PeekPixels ();
-			return pixmap.ReadPixels (destPixmap);
+			using var srcPixmap = PeekPixels ();
+			if (srcPixmap == null)
+				return false;
+
+			using var temp = new SKBitmap ();
+
+			var dstInfo = srcPixmap.Info.WithColorType (colorType);
+			if (!temp.TryAllocPixels (dstInfo))
+				return false;
+
+			using var tempPixmap = temp.PeekPixels ();
+			if (tempPixmap == null)
+				return false;
+
+			if (!srcPixmap.ReadPixels (tempPixmap))
+				return false;
+
+			destination.Swap (temp);
+			return true;
 		}
 
 		// ExtractSubset
@@ -415,6 +512,12 @@ namespace SkiaSharp
 			return Decode (codec, bitmapInfo);
 		}
 
+		public static SKBitmap Decode (byte[] buffer) =>
+			Decode (buffer.AsSpan ());
+
+		public static SKBitmap Decode (byte[] buffer, SKImageInfo bitmapInfo) =>
+			Decode (buffer.AsSpan (), bitmapInfo);
+
 		public static SKBitmap Decode (ReadOnlySpan<byte> buffer)
 		{
 			using var stream = new SKMemoryStream (buffer);
@@ -432,14 +535,17 @@ namespace SkiaSharp
 
 		// InstallPixels
 
-		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes = 0, SKBitmapReleaseDelegate releaseProc = null, object context = null)
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, SKBitmapReleaseDelegate releaseProc = null, object context = null) =>
+			InstallPixels (info, pixels, info.RowBytes, releaseProc, context);
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc = null, object context = null)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			var del = releaseProc != null && context != null
 				? new SKBitmapReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKBitmapReleaseDelegateProxy, out _, out var ctx);
-			return SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)(rowBytes == 0 ? info.RowBytes : rowBytes), proxy, (void*)ctx);
+			return SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
 		}
 
 		public bool InstallPixels (SKPixmap pixmap) =>
@@ -476,6 +582,21 @@ namespace SkiaSharp
 		}
 
 		// Resize
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Resize(SKImageInfo, SKFilterQuality) instead.")]
+		public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method) =>
+			Resize (info, method.ToFilterQuality ());
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
+		public bool Resize (SKBitmap dst, SKBitmapResizeMethod method) =>
+			ScalePixels (dst, method.ToFilterQuality ());
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
+		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method) =>
+			src.ScalePixels (dst, method.ToFilterQuality ());
 
 		public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality)
 		{
@@ -522,11 +643,20 @@ namespace SkiaSharp
 		public SKData Encode (SKEncodedImageFormat format, int quality)
 		{
 			using var pixmap = PeekPixels ();
-			return pixmap.Encode (format, quality);
+			return pixmap?.Encode (format, quality);
 		}
 
-		public bool Encode (SKWStream dst, SKEncodedImageFormat format, int quality) =>
-			SKPixmap.Encode (dst, this, format, quality);
+		public bool Encode (Stream dst, SKEncodedImageFormat format, int quality)
+		{
+			using var pixmap = new SKPixmap ();
+			return PeekPixels (pixmap) && pixmap.Encode (dst, format, quality);
+		}
+
+		public bool Encode (SKWStream dst, SKEncodedImageFormat format, int quality)
+		{
+			using var pixmap = new SKPixmap ();
+			return PeekPixels (pixmap) && pixmap.Encode (dst, format, quality);
+		}
 
 		// Swap
 
@@ -535,7 +665,10 @@ namespace SkiaSharp
 
 		// ToShader
 
-		public SKShader ToShader (SKShaderTileMode tmx = SKShaderTileMode.Clamp, SKShaderTileMode tmy = SKShaderTileMode.Clamp) =>
+		public SKShader ToShader () =>
+			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
 			GetObject<SKShader> (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, null));
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, in SKMatrix localMatrix)

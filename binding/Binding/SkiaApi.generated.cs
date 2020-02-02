@@ -82,7 +82,7 @@ namespace SkiaSharp
 
 		// gr_backend_t gr_backendrendertarget_get_backend(const gr_backendrendertarget_t* rendertarget)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRBackend gr_backendrendertarget_get_backend (gr_backendrendertarget_t rendertarget);
+		internal static extern GRBackendNative gr_backendrendertarget_get_backend (gr_backendrendertarget_t rendertarget);
 
 		// bool gr_backendrendertarget_get_gl_framebufferinfo(const gr_backendrendertarget_t* rendertarget, gr_gl_framebufferinfo_t* glInfo)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -120,7 +120,7 @@ namespace SkiaSharp
 
 		// gr_backend_t gr_backendtexture_get_backend(const gr_backendtexture_t* texture)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRBackend gr_backendtexture_get_backend (gr_backendtexture_t texture);
+		internal static extern GRBackendNative gr_backendtexture_get_backend (gr_backendtexture_t texture);
 
 		// bool gr_backendtexture_get_gl_textureinfo(const gr_backendtexture_t* texture, gr_gl_textureinfo_t* glInfo)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -159,7 +159,7 @@ namespace SkiaSharp
 
 		// gr_backend_t gr_context_get_backend(gr_context_t* context)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRBackend gr_context_get_backend (gr_context_t context);
+		internal static extern GRBackendNative gr_context_get_backend (gr_context_t context);
 
 		// int gr_context_get_max_surface_sample_count_for_color_type(gr_context_t* context, sk_colortype_t colorType)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -229,7 +229,7 @@ namespace SkiaSharp
 
 		// sk_colortype_t gr_pixelconfig_to_sk_colortype(gr_pixelconfig_t pixelConfig)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorType gr_pixelconfig_to_sk_colortype (GRPixelConfig pixelConfig);
+		internal static extern SKColorType gr_pixelconfig_to_sk_colortype (GRPixelConfigNative pixelConfig);
 
 		// sk_colortype_t sk_colortype_get_default_8888()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -237,7 +237,7 @@ namespace SkiaSharp
 
 		// gr_pixelconfig_t sk_colortype_to_gr_pixelconfig(sk_colortype_t colorType)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRPixelConfig sk_colortype_to_gr_pixelconfig (SKColorType colorType);
+		internal static extern GRPixelConfigNative sk_colortype_to_gr_pixelconfig (SKColorType colorType);
 
 		// int sk_nvrefcnt_get_ref_count(const sk_nvrefcnt_t* refcnt)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -4440,7 +4440,7 @@ namespace SkiaSharp
 	#region Enums
 
 	// gr_backend_t
-	public enum GRBackend {
+	internal enum GRBackendNative {
 		// METAL_GR_BACKEND = 0
 		Metal = 0,
 		// DAWN_GR_BACKEND = 1
@@ -4452,7 +4452,7 @@ namespace SkiaSharp
 	}
 
 	// gr_pixelconfig_t
-	public enum GRPixelConfig {
+	internal enum GRPixelConfigNative {
 		// UNKNOWN_GR_PIXEL_CONFIG = 0
 		Unknown = 0,
 		// ALPHA_8_GR_PIXEL_CONFIG = 1

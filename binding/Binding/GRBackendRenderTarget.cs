@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -8,6 +9,28 @@ namespace SkiaSharp
 		internal GRBackendRenderTarget (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GRBackendRenderTarget(int, int, int, int, GRGlFramebufferInfo) instead.")]
+		public GRBackendRenderTarget (GRBackend backend, GRBackendRenderTargetDesc desc)
+				: this (IntPtr.Zero, true)
+		{
+			switch (backend) {
+				case GRBackend.OpenGL:
+					var glInfo = new GRGlFramebufferInfo ((uint)desc.RenderTargetHandle, desc.Config.ToGlSizedFormat ());
+					Handle = SkiaApi.gr_backendrendertarget_new_gl (desc.Width, desc.Height, desc.SampleCount, desc.StencilBits, &glInfo);
+					break;
+				case GRBackend.Metal:
+				case GRBackend.Dawn:
+				case GRBackend.Vulkan:
+					throw new NotSupportedException ();
+				default:
+					throw new ArgumentOutOfRangeException (nameof (backend));
+			}
+
+			if (Handle == IntPtr.Zero)
+				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
 		}
 
 		public GRBackendRenderTarget (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
@@ -32,7 +55,7 @@ namespace SkiaSharp
 
 		public int StencilBits => SkiaApi.gr_backendrendertarget_get_stencils (Handle);
 
-		public GRBackend Backend => SkiaApi.gr_backendrendertarget_get_backend (Handle);
+		public GRBackend Backend => SkiaApi.gr_backendrendertarget_get_backend (Handle).FromNative();
 
 		public SKSizeI Size => new SKSizeI (Width, Height);
 

@@ -94,13 +94,7 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
 		}
 
-		public static SKData Create (IntPtr address, long length) =>
-			Create (address, length, null, null);
-
-		public static SKData Create (IntPtr address, long length, SKDataReleaseDelegate releaseProc) =>
-			Create (address, length, releaseProc, null);
-
-		public static SKData Create (IntPtr address, long length, SKDataReleaseDelegate releaseProc, object context)
+		public static SKData Create (IntPtr address, long length, SKDataReleaseDelegate releaseProc = null, object context = null)
 		{
 			var del = releaseProc != null && context != null
 				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))

@@ -1,7 +1,26 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+
+using GRBackendObject = System.IntPtr;
 
 namespace SkiaSharp
 {
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use GRBackendRenderTarget instead.")]
+	public struct GRBackendRenderTargetDesc
+	{
+		public int Width { get; set; }
+		public int Height { get; set; }
+		public GRPixelConfig Config { get; set; }
+		public GRSurfaceOrigin Origin { get; set; }
+		public int SampleCount { get; set; }
+		public int StencilBits { get; set; }
+		public GRBackendObject RenderTargetHandle { get; set; }
+		public SKSizeI Size => new SKSizeI (Width, Height);
+		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
+	}
+
 	[Flags]
 	public enum GRGlBackendState : UInt32
 	{
@@ -45,12 +64,55 @@ namespace SkiaSharp
 
 	public partial struct GRGlTextureInfo
 	{
+		public GRGlTextureInfo (uint target, uint id)
+		{
+			fTarget = target;
+			fID = id;
+			fFormat = 0;
+		}
+
 		public GRGlTextureInfo (uint target, uint id, uint format)
 		{
 			fTarget = target;
 			fID = id;
 			fFormat = format;
 		}
+	}
+
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Flags]
+	[Obsolete]
+	public enum GRBackendTextureDescFlags
+	{
+		None = 0,
+		RenderTarget = 1,
+	}
+
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use GRBackendTexture instead.")]
+	[StructLayout (LayoutKind.Sequential)]
+	public struct GRBackendTextureDesc
+	{
+		public GRBackendTextureDescFlags Flags { get; set; }
+		public GRSurfaceOrigin Origin { get; set; }
+		public int Width { get; set; }
+		public int Height { get; set; }
+		public GRPixelConfig Config { get; set; }
+		public int SampleCount { get; set; }
+		public GRBackendObject TextureHandle { get; set; }
+	}
+
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use GRBackendTexture instead.")]
+	public struct GRGlBackendTextureDesc
+	{
+		public GRBackendTextureDescFlags Flags { get; set; }
+		public GRSurfaceOrigin Origin { get; set; }
+		public int Width { get; set; }
+		public int Height { get; set; }
+		public GRPixelConfig Config { get; set; }
+		public int SampleCount { get; set; }
+		public GRGlTextureInfo TextureHandle { get; set; }
 	}
 
 	public static partial class SkiaExtensions
@@ -91,10 +153,10 @@ namespace SkiaSharp
 			};
 
 		public static GRPixelConfig ToPixelConfig (this SKColorType colorType) =>
-			SkiaApi.sk_colortype_to_gr_pixelconfig (colorType);
+			SkiaApi.sk_colortype_to_gr_pixelconfig (colorType).FromNative ();
 
 		public static SKColorType ToColorType (this GRPixelConfig config) =>
-			SkiaApi.gr_pixelconfig_to_sk_colortype (config);
+			SkiaApi.gr_pixelconfig_to_sk_colortype (config.ToNative ());
 	}
 
 	internal static class GRGlSizedFormat

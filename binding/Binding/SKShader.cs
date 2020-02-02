@@ -41,7 +41,10 @@ namespace SkiaSharp
 
 		// CreateBitmap
 
-		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx = SKShaderTileMode.Clamp, SKShaderTileMode tmy = SKShaderTileMode.Clamp)
+		public static SKShader CreateBitmap (SKBitmap src) =>
+			CreateBitmap (src, SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy)
 		{
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
@@ -59,7 +62,10 @@ namespace SkiaSharp
 
 		// CreateImage
 
-		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx = SKShaderTileMode.Clamp, SKShaderTileMode tmy = SKShaderTileMode.Clamp)
+		public static SKShader CreateImage (SKImage src) =>
+			CreateImage (src, SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy)
 		{
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
@@ -77,7 +83,10 @@ namespace SkiaSharp
 
 		// CreatePicture
 
-		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx = SKShaderTileMode.Clamp, SKShaderTileMode tmy = SKShaderTileMode.Clamp)
+		public static SKShader CreatePicture (SKPicture src) =>
+			CreatePicture (src, SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy)
 		{
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
@@ -163,7 +172,25 @@ namespace SkiaSharp
 
 		// CreateSweepGradient
 
-		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos = default, SKShaderTileMode tileMode = SKShaderTileMode.Clamp, float startAngle = 0f, float endAngle = 360f)
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors) =>
+			CreateSweepGradient (center, colors, ReadOnlySpan<float>.Empty, SKShaderTileMode.Clamp, 0, 360);
+
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos) =>
+			CreateSweepGradient (center, colors, colorPos, SKShaderTileMode.Clamp, 0, 360);
+
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, SKShaderTileMode tileMode, float startAngle, float endAngle) =>
+			CreateSweepGradient (center, colors, ReadOnlySpan<float>.Empty, tileMode, startAngle, endAngle);
+
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, in SKMatrix localMatrix) =>
+			CreateSweepGradient (center, colors, ReadOnlySpan<float>.Empty, SKShaderTileMode.Clamp, 0, 360, localMatrix);
+
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, in SKMatrix localMatrix) =>
+			CreateSweepGradient (center, colors, colorPos, SKShaderTileMode.Clamp, 0, 360, localMatrix);
+
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, SKShaderTileMode tileMode, float startAngle, float endAngle, in SKMatrix localMatrix) =>
+			CreateSweepGradient (center, colors, ReadOnlySpan<float>.Empty, tileMode, startAngle, endAngle, localMatrix);
+
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle)
 		{
 			if (!colorPos.IsEmpty && colors.Length != colorPos.Length)
 				throw new ArgumentException ("The number of colors must match the number of color positions.");
@@ -237,26 +264,56 @@ namespace SkiaSharp
 
 		// CreateBlend
 
-		public static SKShader CreateBlend (SKShader shaderA, SKShader shaderB, SKBlendMode mode = SKBlendMode.SrcOver)
+		public static SKShader CreateBlend (SKBlendMode mode, SKShader dst, SKShader src)
 		{
-			if (shaderA == null)
-				throw new ArgumentNullException (nameof (shaderA));
-			if (shaderB == null)
-				throw new ArgumentNullException (nameof (shaderB));
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
 
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle, null));
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_blend (mode, dst.Handle, src.Handle, null));
 		}
 
-		public static SKShader CreateBlend (SKShader shaderA, SKShader shaderB, SKBlendMode mode, in SKMatrix localMatrix)
+		public static SKShader CreateBlend (SKBlendMode mode, SKShader dst, SKShader src, in SKMatrix localMatrix)
 		{
-			if (shaderA == null)
-				throw new ArgumentNullException (nameof (shaderA));
-			if (shaderB == null)
-				throw new ArgumentNullException (nameof (shaderB));
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
 
 			fixed (SKMatrix* m = &localMatrix) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle, m));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_blend (mode, dst.Handle, src.Handle, m));
 			}
+		}
+
+		// CreateCompose
+
+		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB) =>
+			CreateBlend (SKBlendMode.SrcOver, shaderA, shaderB);
+
+		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKBlendMode mode) =>
+			CreateBlend (mode, shaderA, shaderB);
+
+		// CreateColorFilter
+
+		public static SKShader CreateColorFilter (SKShader shader, SKColorFilter filter)
+		{
+			if (shader == null)
+				throw new ArgumentNullException (nameof (shader));
+			if (filter == null)
+				throw new ArgumentNullException (nameof (filter));
+
+			return shader.WithColorFilter (filter);
+		}
+
+		// CreateLocalMatrix
+
+		public static SKShader CreateLocalMatrix (SKShader shader, in SKMatrix localMatrix)
+		{
+			if (shader == null)
+				throw new ArgumentNullException (nameof (shader));
+
+			return shader.WithLocalMatrix (localMatrix);
 		}
 	}
 }

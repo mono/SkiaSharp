@@ -108,13 +108,16 @@ namespace SkiaSharp
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels) =>
 			GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default);
 
-		public SKCodecResult GetPixels (SKImageInfo info, Span<byte> pixels, SKCodecOptions options)
+		public SKCodecResult GetPixels (SKImageInfo info, Span<byte> pixels, SKCodecOptions options) =>
+			GetPixels (info, pixels, info.RowBytes, options);
+
+		public SKCodecResult GetPixels (SKImageInfo info, Span<byte> pixels, int rowBytes, SKCodecOptions options)
 		{
 			if (pixels.Length < info.BytesSize)
 				throw new ArgumentException ("There is insufficient space for the pixel data.", nameof (pixels));
 
 			fixed (byte* p = pixels) {
-				return GetPixels (info, (IntPtr)p, info.RowBytes, options);
+				return GetPixels (info, (IntPtr)p, rowBytes, options);
 			}
 		}
 

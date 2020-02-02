@@ -22,9 +22,16 @@ namespace SkiaSharp
 
 		public SKMatrix Matrix {
 			get {
-				SKMatrix matrix;
-				SkiaApi.sk_3dview_get_matrix (Handle, &matrix);
+				var matrix = SKMatrix.Empty;
+				GetMatrix (ref matrix);
 				return matrix;
+			}
+		}
+
+		public void GetMatrix (ref SKMatrix matrix)
+		{
+			fixed (SKMatrix* m = &matrix) {
+				SkiaApi.sk_3dview_get_matrix (Handle, m);
 			}
 		}
 

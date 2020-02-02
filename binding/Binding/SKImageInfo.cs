@@ -64,16 +64,16 @@ namespace SkiaSharp
 		public SKColorSpace ColorSpace { get; set; }
 
 		public SKImageInfo (int width, int height)
-			: this (width, height, PlatformColorType)
+			: this (width, height, PlatformColorType, SKAlphaType.Premul, null)
 		{
 		}
 
-		public SKImageInfo (
-			int width,
-			int height,
-			SKColorType colorType,
-			SKAlphaType alphaType = SKAlphaType.Premul,
-			SKColorSpace colorspace = null)
+		public SKImageInfo (int width, int height, SKColorType colorType, SKColorSpace colorspace = null)
+			: this (width, height, colorType, SKAlphaType.Premul, colorspace)
+		{
+		}
+
+		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorspace = null)
 		{
 			Width = width;
 			Height = height;

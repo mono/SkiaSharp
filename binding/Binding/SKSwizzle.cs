@@ -9,27 +9,26 @@ namespace SkiaSharp
 
 		public static void SwapRedBlue (IntPtr dest, IntPtr src, int count)
 		{
-			if (dest == IntPtr.Zero) {
+			if (dest == IntPtr.Zero)
 				throw new ArgumentException (nameof (dest));
-			}
-			if (src == IntPtr.Zero) {
+			if (src == IntPtr.Zero)
 				throw new ArgumentException (nameof (src));
-			}
 
 			SkiaApi.sk_swizzle_swap_rb ((uint*)dest, (uint*)src, count);
 		}
 
-		public static void SwapRedBlue (ReadOnlySpan<byte> pixels, int count) =>
+		public static void SwapRedBlue (Span<byte> pixels) =>
+			SwapRedBlue (pixels, pixels, pixels.Length);
+
+		public static void SwapRedBlue (Span<byte> pixels, int count) =>
 			SwapRedBlue (pixels, pixels, count);
 
-		public static void SwapRedBlue (ReadOnlySpan<byte> dest, ReadOnlySpan<byte> src, int count)
+		public static void SwapRedBlue (Span<byte> dest, ReadOnlySpan<byte> src, int count)
 		{
-			if (dest == null) {
-				throw new ArgumentNullException (nameof (dest));
-			}
-			if (src == null) {
-				throw new ArgumentNullException (nameof (src));
-			}
+			if (dest.Length != count)
+				throw new ArgumentException ("The number of pixels in the destination does not match the number of pixels being swapped.", nameof (dest));
+			if (src.Length != count)
+				throw new ArgumentException ("The number of pixels in the source does not match the number of pixels being swapped.", nameof (src));
 
 			fixed (byte* d = dest)
 			fixed (byte* s = src) {

@@ -178,7 +178,7 @@ namespace SkiaSharp.Tests
 				Assert.False(raster.IsTextureBacked);
 
 				using var bmp = SKBitmap.FromImage(raster);
-				Assert.Equal(SKColors.Red, bmp.GetPixel(0, 0));
+				Assert.Equal(SKColors.Red, bmp.GetPixelColor(0, 0));
 			});
 		}
 

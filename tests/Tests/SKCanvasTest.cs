@@ -182,28 +182,6 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void CanDrawNullPointerZeroLengthText()
-		{
-			using var bmp = new SKBitmap(new SKImageInfo(300, 300));
-			using var canvas = new SKCanvas(bmp);
-			using var font = new SKFont();
-			using var paint = new SKPaint();
-
-			canvas.DrawText(IntPtr.Zero, 0, SKTextEncoding.Utf16, 150, 175, font, paint);
-		}
-
-		[SkippableFact]
-		public void ThrowsOnDrawNullPointerText()
-		{
-			using var bmp = new SKBitmap(new SKImageInfo(300, 300));
-			using var canvas = new SKCanvas(bmp);
-			using var font = new SKFont();
-			using var paint = new SKPaint();
-
-			Assert.Throws<ArgumentNullException>(() => canvas.DrawText(IntPtr.Zero, 123, SKTextEncoding.Utf16, 150, 175, font, paint));
-		}
-
-		[SkippableFact]
 		public void CanvasCanClipRoundRect()
 		{
 			using var canvas = new SKNWayCanvas(100, 100);
@@ -246,14 +224,14 @@ namespace SkiaSharp.Tests
 
 				canvas.Clear(SKColors.Blue);
 
-				Assert.Equal(SKColors.Blue, firstBitmap.GetPixel(0, 0));
-				Assert.Equal(SKColors.Blue, secondBitmap.GetPixel(0, 0));
+				Assert.Equal(SKColors.Blue, firstBitmap.GetPixelColor(0, 0));
+				Assert.Equal(SKColors.Blue, secondBitmap.GetPixelColor(0, 0));
 
 				canvas.Clear(SKColors.Orange);
 			}
 
-			Assert.Equal(SKColors.Orange, firstBitmap.GetPixel(0, 0));
-			Assert.Equal(SKColors.Orange, secondBitmap.GetPixel(0, 0));
+			Assert.Equal(SKColors.Orange, firstBitmap.GetPixelColor(0, 0));
+			Assert.Equal(SKColors.Orange, secondBitmap.GetPixelColor(0, 0));
 		}
 
 		[SkippableFact]
@@ -268,10 +246,10 @@ namespace SkiaSharp.Tests
 			overdraw.DrawRect(SKRect.Create(10, 10, 30, 30), new SKPaint());
 			overdraw.DrawRect(SKRect.Create(20, 20, 30, 30), new SKPaint());
 
-			Assert.Equal(0, bitmap.GetPixel(5, 5).Alpha);
-			Assert.Equal(1, bitmap.GetPixel(15, 15).Alpha);
-			Assert.Equal(2, bitmap.GetPixel(25, 25).Alpha);
-			Assert.Equal(1, bitmap.GetPixel(45, 45).Alpha);
+			Assert.Equal(0, bitmap.GetPixelColor(5, 5).Alpha);
+			Assert.Equal(1, bitmap.GetPixelColor(15, 15).Alpha);
+			Assert.Equal(2, bitmap.GetPixelColor(25, 25).Alpha);
+			Assert.Equal(1, bitmap.GetPixelColor(45, 45).Alpha);
 		}
 
 		[SkippableFact]
@@ -314,15 +292,15 @@ namespace SkiaSharp.Tests
 			canvas.Translate(0, 100);
 			canvas.DrawAtlas(atlas, tex, xform, colors, SKBlendMode.SrcIn, paint);
 
-			Assert.Equal(SKColors.Blue, bitmap.GetPixel(32, 41));
-			Assert.Equal(SKColors.Blue, bitmap.GetPixel(156, 77));
-			Assert.Equal(SKColors.Blue, bitmap.GetPixel(201, 45));
-			Assert.Equal(SKColors.Blue, bitmap.GetPixel(374, 80));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixelColor(32, 41));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixelColor(156, 77));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixelColor(201, 45));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixelColor(374, 80));
 
-			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(32, 141));
-			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(156, 177));
-			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(201, 145));
-			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(374, 180));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixelColor(32, 141));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixelColor(156, 177));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixelColor(201, 145));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixelColor(374, 180));
 
 			static SKRotationScaleMatrix Apply((float Scale, float Degrees, float TX, float TY) rec)
 			{

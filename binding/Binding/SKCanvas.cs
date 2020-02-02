@@ -53,12 +53,8 @@ namespace SkiaSharp
 		public int SaveCount =>
 			SkiaApi.sk_canvas_get_save_count (Handle);
 
-		public int Save ()
-		{
-			if (Handle == IntPtr.Zero)
-				throw new ObjectDisposedException ("SKCanvas");
-			return SkiaApi.sk_canvas_save (Handle);
-		}
+		public int Save () =>
+			SkiaApi.sk_canvas_save (Handle);
 
 		public int SaveLayer (SKRect limit, SKPaint paint = null) =>
 			SkiaApi.sk_canvas_save_layer (Handle, &limit, paint?.Handle ?? IntPtr.Zero);
@@ -533,30 +529,7 @@ namespace SkiaSharp
 
 		public void DrawText (ReadOnlySpan<char> text, float x, float y, SKFont font, SKPaint paint, SKTextAlign align = SKTextAlign.Left)
 		{
-			fixed (void* t = text) {
-				DrawText (t, text.Length, SKTextEncoding.Utf16, x, y, font, paint, align);
-			}
-		}
-
-		public void DrawText (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKPoint p, SKFont font, SKPaint paint, SKTextAlign align = SKTextAlign.Left) =>
-			DrawText (text, encoding, p.X, p.Y, font, paint, align);
-
-		public void DrawText (ReadOnlySpan<byte> text, SKTextEncoding encoding, float x, float y, SKFont font, SKPaint paint, SKTextAlign align = SKTextAlign.Left)
-		{
-			fixed (void* t = text) {
-				DrawText (t, text.Length, encoding, x, y, font, paint, align);
-			}
-		}
-
-		public void DrawText (IntPtr text, int length, SKTextEncoding encoding, SKPoint p, SKFont font, SKPaint paint, SKTextAlign align = SKTextAlign.Left) =>
-			DrawText ((void*)text, length, encoding, p.X, p.Y, font, paint, align);
-
-		public void DrawText (IntPtr text, int length, SKTextEncoding encoding, float x, float y, SKFont font, SKPaint paint, SKTextAlign align = SKTextAlign.Left) =>
-			DrawText ((void*)text, length, encoding, x, y, font, paint, align);
-
-		private void DrawText (void* text, int length, SKTextEncoding encoding, float x, float y, SKFont font, SKPaint paint, SKTextAlign align = SKTextAlign.Left)
-		{
-			if (text == null || length <= 0)
+			if (text.IsEmpty)
 				return;
 
 			if (font == null)
@@ -566,14 +539,14 @@ namespace SkiaSharp
 
 			// adjust for alignment
 			if (align != SKTextAlign.Left) {
-				var width = font.MeasureText (text, length, encoding, null, paint);
+				var width = font.MeasureText (text, paint);
 				if (align == SKTextAlign.Center)
 					width *= 0.5f;
 				x -= width;
 			}
 
 			using var builder = new SKTextBlobBuilder ();
-			builder.AddRun (text, length, encoding, font);
+			builder.AddRun (text, font);
 			using var blob = builder.Build ();
 			DrawText (blob, x, y, paint);
 		}
@@ -653,20 +626,20 @@ namespace SkiaSharp
 
 		// DrawLattice
 
-		public void DrawBitmapLattice (SKBitmap bitmap, int[] xDivs, int[] yDivs, SKRect dst, SKPaint paint = null)
+		public void DrawBitmapLattice (SKBitmap bitmap, ReadOnlySpan<int> xDivs, ReadOnlySpan<int> yDivs, SKRect dst, SKPaint paint = null)
 		{
 			var lattice = new SKLattice {
-				XDivs = xDivs,
-				YDivs = yDivs
+				XDivs = xDivs.ToArray(),
+				YDivs = yDivs.ToArray ()
 			};
 			DrawBitmapLattice (bitmap, lattice, dst, paint);
 		}
 
-		public void DrawImageLattice (SKImage image, int[] xDivs, int[] yDivs, SKRect dst, SKPaint paint = null)
+		public void DrawImageLattice (SKImage image, ReadOnlySpan<int> xDivs, ReadOnlySpan<int> yDivs, SKRect dst, SKPaint paint = null)
 		{
 			var lattice = new SKLattice {
-				XDivs = xDivs,
-				YDivs = yDivs
+				XDivs = xDivs.ToArray (),
+				YDivs = yDivs.ToArray ()
 			};
 			DrawImageLattice (image, lattice, dst, paint);
 		}

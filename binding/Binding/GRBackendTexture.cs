@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -8,6 +10,36 @@ namespace SkiaSharp
 		internal GRBackendTexture (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.")]
+		public GRBackendTexture (GRGlBackendTextureDesc desc)
+			: this (IntPtr.Zero, true)
+		{
+			var glInfo = desc.TextureHandle;
+			if (glInfo.Format == 0)
+				glInfo.Format = desc.Config.ToGlSizedFormat ();
+
+			Handle = SkiaApi.gr_backendtexture_new_gl (desc.Width, desc.Height, false, &glInfo);
+
+			if (Handle == IntPtr.Zero)
+				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.")]
+		public GRBackendTexture (GRBackendTextureDesc desc)
+			: this (IntPtr.Zero, true)
+		{
+			var handlePtr = desc.TextureHandle;
+			var oldHandle = PtrToStructure<GRTextureInfoObsolete> (handlePtr);
+			var glInfo = new GRGlTextureInfo (oldHandle.fTarget, oldHandle.fID, desc.Config.ToGlSizedFormat ());
+
+			Handle = SkiaApi.gr_backendtexture_new_gl (desc.Width, desc.Height, false, &glInfo);
+
+			if (Handle == IntPtr.Zero)
+				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
 		}
 
 		public GRBackendTexture (int width, int height, bool mipmapped, GRGlTextureInfo glInfo)
@@ -30,7 +62,7 @@ namespace SkiaSharp
 
 		public bool HasMipMaps => SkiaApi.gr_backendtexture_has_mipmaps (Handle);
 
-		public GRBackend Backend => SkiaApi.gr_backendtexture_get_backend (Handle);
+		public GRBackend Backend => SkiaApi.gr_backendtexture_get_backend (Handle).FromNative ();
 
 		public SKSizeI Size => new SKSizeI (Width, Height);
 
@@ -44,6 +76,14 @@ namespace SkiaSharp
 			fixed (GRGlTextureInfo* g = &glInfo) {
 				return SkiaApi.gr_backendtexture_get_gl_textureinfo (Handle, g);
 			}
+		}
+
+		[Obsolete]
+		[StructLayout (LayoutKind.Sequential)]
+		internal struct GRTextureInfoObsolete
+		{
+			public uint fTarget;
+			public uint fID;
 		}
 	}
 }

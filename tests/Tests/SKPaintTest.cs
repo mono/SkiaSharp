@@ -79,9 +79,9 @@ namespace SkiaSharp.Tests
 				canvas.Scale(1, 2);
 				canvas.DrawText("Skia", 10, 60, font, paint);
 
-				Assert.Equal(SKColors.Black, bitmap.GetPixel(49, 92));
-				Assert.Equal(SKColors.White, bitmap.GetPixel(73, 63));
-				Assert.Equal(SKColors.Black, bitmap.GetPixel(100, 89));
+				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(49, 92));
+				Assert.Equal(SKColors.White, bitmap.GetPixelColor(73, 63));
+				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(100, 89));
 			}
 
 			using (var bitmap = new SKBitmap(new SKImageInfo(200, 200)))
@@ -94,9 +94,9 @@ namespace SkiaSharp.Tests
 				canvas.Scale(1, 2);
 				canvas.DrawText("Skia", 10, 60, font, paint);
 
-				Assert.Equal(SKColors.Black, bitmap.GetPixel(49, 92));
-				Assert.Equal(SKColors.White, bitmap.GetPixel(73, 63));
-				Assert.Equal(SKColors.Black, bitmap.GetPixel(100, 89));
+				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(49, 92));
+				Assert.Equal(SKColors.White, bitmap.GetPixelColor(73, 63));
+				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(100, 89));
 			}
 		}
 
@@ -126,8 +126,8 @@ namespace SkiaSharp.Tests
 				}
 
 				// check values
-				Assert.Equal(oceanColor, bitmap.GetPixel(30, 30));
-				Assert.Equal(landColor, bitmap.GetPixel(270, 270));
+				Assert.Equal(oceanColor, bitmap.GetPixelColor(30, 30));
+				Assert.Equal(landColor, bitmap.GetPixelColor(270, 270));
 			}
 		}
 
@@ -158,8 +158,8 @@ namespace SkiaSharp.Tests
 			}
 
 			// check values
-			Assert.Equal(oceanColor, bitmap.GetPixel(30, 30));
-			Assert.Equal(landColor, bitmap.GetPixel(270, 270));
+			Assert.Equal(oceanColor, bitmap.GetPixelColor(30, 30));
+			Assert.Equal(landColor, bitmap.GetPixelColor(270, 270));
 		}
 	}
 }

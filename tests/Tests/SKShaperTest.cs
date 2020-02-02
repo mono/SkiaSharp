@@ -25,13 +25,13 @@ namespace SkiaSharp.HarfBuzz.Tests
 
 			canvas.Flush();
 
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(110, 210));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(127, 196));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(142, 197));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(155, 195));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(131, 181));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(155, 190));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(110, 200));
+			Assert.Equal(SKColors.Black, bitmap.GetPixelColor(110, 210));
+			Assert.Equal(SKColors.Black, bitmap.GetPixelColor(127, 196));
+			Assert.Equal(SKColors.Black, bitmap.GetPixelColor(142, 197));
+			Assert.Equal(SKColors.Black, bitmap.GetPixelColor(155, 195));
+			Assert.Equal(SKColors.Black, bitmap.GetPixelColor(131, 181));
+			Assert.Equal(SKColors.White, bitmap.GetPixelColor(155, 190));
+			Assert.Equal(SKColors.White, bitmap.GetPixelColor(110, 200));
 		}
 
 		[SkippableFact]

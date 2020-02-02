@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -43,6 +44,14 @@ namespace SkiaSharp
 
 		public static bool IsHorizontal (this SKPixelGeometry pg) =>
 			pg == SKPixelGeometry.BgrHorizontal || pg == SKPixelGeometry.RgbHorizontal;
+	}
+
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use SKSurfaceProperties instead.")]
+	public struct SKSurfaceProps
+	{
+		public SKPixelGeometry PixelGeometry { get; set; }
+		public SKSurfacePropsFlags Flags { get; set; }
 	}
 
 	public struct SKCodecOptions
