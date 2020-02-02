@@ -293,7 +293,10 @@ namespace SkiaSharp
 
 		// ToShader
 
-		public SKShader ToShader (SKShaderTileMode tileX = SKShaderTileMode.Clamp, SKShaderTileMode tileY = SKShaderTileMode.Clamp) =>
+		public SKShader ToShader () =>
+			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY) =>
 			GetObject<SKShader> (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, null));
 
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, in SKMatrix localMatrix)

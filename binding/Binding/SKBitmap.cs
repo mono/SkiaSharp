@@ -677,5 +677,16 @@ namespace SkiaSharp
 				return GetObject<SKShader> (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, m));
 			}
 		}
+
+		// ToShader
+
+		public SKShader ToShader () =>
+			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
+			SKShader.CreateBitmap (this, tmx, tmy);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
+			SKShader.CreateBitmap (this, tmx, tmy, localMatrix);
 	}
 }

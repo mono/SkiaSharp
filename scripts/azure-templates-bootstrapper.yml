@@ -47,6 +47,18 @@ jobs:
             sudo apt install -y ${{ parameters.packages }}
           displayName: Install additional package dependencies
           condition: ne('${{ parameters.packages }}', '')
+      # make sure mono/msbuild is the correct version
+      - ${{ if endsWith(parameters.name, '_linux') }}:
+        - bash: |
+            sudo apt remove -y mono-complete msbuild
+            sudo apt autoremove -y
+            sudo rm /etc/mono/config
+            sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+            echo "deb https://download.mono-project.com/repo/ubuntu $(MONO_VERSION_LINUX) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+            sudo apt update
+            sudo apt install -y mono-complete msbuild
+            mono --version
+          displayName: Install Mono and MSBuild
       # install tizen
       - ${{ if contains(parameters.name, '_tizen_') }}:
         - pwsh: .\scripts\install-openjdk.ps1
@@ -71,16 +83,6 @@ jobs:
             displayName: Install LLVM
       # install extra bits for the manged builds
       - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-        - ${{ if endsWith(parameters.name, '_linux') }}:
-          - bash: |
-              sudo apt remove -y mono-complete msbuild
-              sudo apt autoremove -y
-              sudo rm /etc/mono/config
-              sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-              echo "deb https://download.mono-project.com/repo/ubuntu $(MONO_VERSION_LINUX) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
-              sudo apt update
-              sudo apt install -y mono-complete msbuild
-            displayName: Install Mono and MSBuild
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'

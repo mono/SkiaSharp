@@ -107,6 +107,32 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void EraseWithColor()
+		{
+			var info = new SKImageInfo(1, 1);
+
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			pixmap.Erase(SKColors.Red);
+
+			Assert.Equal(SKColors.Red, pixmap.GetPixelColor(0, 0));
+		}
+
+		[SkippableFact]
+		public void EraseWithColorF()
+		{
+			var info = new SKImageInfo(1, 1);
+
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			pixmap.Erase(new SKColorF(1, 0, 0));
+
+			Assert.Equal(SKColors.Red, pixmap.GetPixelColor(0, 0));
+		}
+
+		[SkippableFact]
 		public void EncodeWithPngEncoder()
 		{
 			var bitmap = CreateTestBitmap();
