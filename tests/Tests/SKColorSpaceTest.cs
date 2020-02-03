@@ -206,6 +206,10 @@ namespace SkiaSharp.Tests
 			};
 			AssertMatrix(toXYZ, colorspace.ToXyzD50());
 
+			var matrix = new SKMatrix44();
+			Assert.True(colorspace.ToXyzD50(matrix));
+			AssertMatrix(toXYZ, matrix);
+
 			var fromXYZ = new[]
 			{
 				1.96253f, -0.61068f, -0.34137f, 0f,

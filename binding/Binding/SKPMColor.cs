@@ -11,10 +11,10 @@ namespace SkiaSharp
 			color = value;
 		}
 
-		public byte Alpha => (byte)((color >> SKImageInfo.PlatformColorAlphaShift) & 0xff);
-		public byte Red => (byte)((color >> SKImageInfo.PlatformColorRedShift) & 0xff);
-		public byte Green => (byte)((color >> SKImageInfo.PlatformColorGreenShift) & 0xff);
-		public byte Blue => (byte)((color >> SKImageInfo.PlatformColorBlueShift) & 0xff);
+		public readonly byte Alpha => (byte)((color >> SKImageInfo.PlatformColorAlphaShift) & 0xff);
+		public readonly byte Red => (byte)((color >> SKImageInfo.PlatformColorRedShift) & 0xff);
+		public readonly byte Green => (byte)((color >> SKImageInfo.PlatformColorGreenShift) & 0xff);
+		public readonly byte Blue => (byte)((color >> SKImageInfo.PlatformColorBlueShift) & 0xff);
 
 		// PreMultiply
 
@@ -52,13 +52,13 @@ namespace SkiaSharp
 		public static explicit operator SKColor (SKPMColor color) =>
 			SKPMColor.UnPreMultiply (color);
 
-		public override string ToString () =>
+		public readonly override string ToString () =>
 			$"#{Alpha:x2}{Red:x2}{Green:x2}{Blue:x2}";
 
-		public bool Equals (SKPMColor obj) =>
+		public readonly bool Equals (SKPMColor obj) =>
 			obj.color == color;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKPMColor f && Equals (f);
 
 		public static bool operator == (SKPMColor left, SKPMColor right) =>
@@ -67,7 +67,7 @@ namespace SkiaSharp
 		public static bool operator != (SKPMColor left, SKPMColor right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode () =>
+		public readonly override int GetHashCode () =>
 			color.GetHashCode ();
 
 		public static implicit operator SKPMColor (uint color) =>

@@ -17,8 +17,8 @@ namespace SkiaSharp
 		public int SampleCount { get; set; }
 		public int StencilBits { get; set; }
 		public GRBackendObject RenderTargetHandle { get; set; }
-		public SKSizeI Size => new SKSizeI (Width, Height);
-		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
+		public readonly SKSizeI Size => new SKSizeI (Width, Height);
+		public readonly SKRectI Rect => new SKRectI (0, 0, Width, Height);
 	}
 
 	[Flags]
@@ -64,6 +64,13 @@ namespace SkiaSharp
 
 	public partial struct GRGlTextureInfo
 	{
+		public GRGlTextureInfo (uint target, uint id)
+		{
+			fTarget = target;
+			fID = id;
+			fFormat = 0;
+		}
+
 		public GRGlTextureInfo (uint target, uint id, uint format)
 		{
 			fTarget = target;

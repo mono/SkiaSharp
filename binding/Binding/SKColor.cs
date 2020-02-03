@@ -24,24 +24,24 @@ namespace SkiaSharp
 			color = (0xff000000u | (uint)(red << 16) | (uint)(green << 8) | blue);
 		}
 
-		public SKColor WithRed (byte red) =>
+		public readonly SKColor WithRed (byte red) =>
 			new SKColor (red, Green, Blue, Alpha);
 
-		public SKColor WithGreen (byte green) =>
+		public readonly SKColor WithGreen (byte green) =>
 			new SKColor (Red, green, Blue, Alpha);
 
-		public SKColor WithBlue (byte blue) =>
+		public readonly SKColor WithBlue (byte blue) =>
 			new SKColor (Red, Green, blue, Alpha);
 
-		public SKColor WithAlpha (byte alpha) =>
+		public readonly SKColor WithAlpha (byte alpha) =>
 			new SKColor (Red, Green, Blue, alpha);
 
-		public byte Alpha => (byte)((color >> 24) & 0xff);
-		public byte Red => (byte)((color >> 16) & 0xff);
-		public byte Green => (byte)((color >> 8) & 0xff);
-		public byte Blue => (byte)((color) & 0xff);
+		public readonly byte Alpha => (byte)((color >> 24) & 0xff);
+		public readonly byte Red => (byte)((color >> 16) & 0xff);
+		public readonly byte Green => (byte)((color >> 8) & 0xff);
+		public readonly byte Blue => (byte)((color) & 0xff);
 
-		public float Hue {
+		public readonly float Hue {
 			get {
 				ToHsv (out var h, out _, out _);
 				return h;
@@ -72,7 +72,7 @@ namespace SkiaSharp
 			return new SKColor ((byte)r, (byte)g, (byte)b, a);
 		}
 
-		public void ToHsl (out float h, out float s, out float l)
+		public readonly void ToHsl (out float h, out float s, out float l)
 		{
 			// RGB from 0 to 255
 			var r = Red / 255f;
@@ -83,7 +83,7 @@ namespace SkiaSharp
 			colorf.ToHsl (out h, out s, out l);
 		}
 
-		public void ToHsv (out float h, out float s, out float v)
+		public readonly void ToHsv (out float h, out float s, out float v)
 		{
 			// RGB from 0 to 255
 			var r = Red / 255f;
@@ -94,13 +94,13 @@ namespace SkiaSharp
 			colorf.ToHsv (out h, out s, out v);
 		}
 
-		public override string ToString () =>
+		public readonly override string ToString () =>
 			$"#{Alpha:x2}{Red:x2}{Green:x2}{Blue:x2}";
 
-		public bool Equals (SKColor obj) =>
+		public readonly bool Equals (SKColor obj) =>
 			obj.color == color;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKColor f && Equals (f);
 
 		public static bool operator == (SKColor left, SKColor right) =>
@@ -109,7 +109,7 @@ namespace SkiaSharp
 		public static bool operator != (SKColor left, SKColor right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode () =>
+		public readonly override int GetHashCode () =>
 			color.GetHashCode ();
 
 		public static implicit operator SKColor (uint color) =>

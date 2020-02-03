@@ -116,7 +116,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public IntPtr GetAddr (int x, int y)
+		public readonly IntPtr GetAddr (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
 				return (IntPtr)SkiaApi.sk_mask_get_addr (t, x, y);

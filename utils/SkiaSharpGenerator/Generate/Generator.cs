@@ -361,12 +361,12 @@ namespace SkiaSharpGenerator
 					{
 						equalityFields.Add($"{f} == obj.{f}");
 					}
-					writer.WriteLine($"\t\tpublic bool Equals ({name} obj) =>");
+					writer.WriteLine($"\t\tpublic readonly bool Equals ({name} obj) =>");
 					writer.WriteLine($"\t\t\t{string.Join(" && ", equalityFields)};");
 					writer.WriteLine();
 
 					// Equals
-					writer.WriteLine($"\t\tpublic override bool Equals (object obj) =>");
+					writer.WriteLine($"\t\tpublic readonly override bool Equals (object obj) =>");
 					writer.WriteLine($"\t\t\tobj is {name} f && Equals (f);");
 					writer.WriteLine();
 
@@ -379,7 +379,7 @@ namespace SkiaSharpGenerator
 					writer.WriteLine();
 
 					// GetHashCode
-					writer.WriteLine($"\t\tpublic override int GetHashCode ()");
+					writer.WriteLine($"\t\tpublic readonly override int GetHashCode ()");
 					writer.WriteLine($"\t\t{{");
 					writer.WriteLine($"\t\t\tvar hash = new HashCode ();");
 					foreach (var f in allFields)
