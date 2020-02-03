@@ -229,6 +229,15 @@ namespace SkiaSharp.Tests
 			Assert.Equal(color, paint.Color);
 		}
 
+		[SkippableFact]
+		public void GetHashCodeIsConsistent()
+		{
+			var color1 = new SKColor(100, 0, 0, 100);
+			var color2 = new SKColor(100, 0, 0, 100);
+
+			Assert.Equal(color1.GetHashCode(), color2.GetHashCode());
+		}
+
 		[Obsolete]
 		[SkippableFact]
 		public void CanPreMultiplyArrays()

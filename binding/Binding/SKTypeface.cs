@@ -1,15 +1,17 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Flags]
-	[Obsolete("Use SKFontStyleWeight and SKFontStyleSlant instead.")]
-	public enum SKTypefaceStyle {
-		Normal     = 0,
-		Bold       = 0x01,
-		Italic     = 0x02,
+	[Obsolete ("Use SKFontStyleWeight and SKFontStyleSlant instead.")]
+	public enum SKTypefaceStyle
+	{
+		Normal = 0,
+		Bold = 0x01,
+		Italic = 0x02,
 		BoldItalic = 0x03
 	}
 
@@ -44,6 +46,7 @@ namespace SkiaSharp
 			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_default ());
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use FromFamilyName(string, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant) instead.")]
 		public static SKTypeface FromFamilyName (string familyName, SKTypefaceStyle style)
 		{
@@ -73,9 +76,10 @@ namespace SkiaSharp
 
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
 		{
-			return FromFamilyName(familyName, (int)weight, (int)width, slant);
+			return FromFamilyName (familyName, (int)weight, (int)width, slant);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style)
 		{
@@ -128,12 +132,14 @@ namespace SkiaSharp
 			return SKTypeface.FromStream (new SKMemoryStream (data), index);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use GetGlyphs(string, out ushort[]) instead.")]
 		public int CharsToGlyphs (string chars, out ushort[] glyphs)
 			=> GetGlyphs (chars, out glyphs);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use GetGlyphs(IntPtr, int, SKEncoding, out ushort[]) instead.")]
-		public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort [] glyphs)
+		public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort[] glyphs)
 			=> GetGlyphs (str, strlen, encoding, out glyphs);
 
 		public string FamilyName => (string)GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
@@ -152,6 +158,7 @@ namespace SkiaSharp
 
 		public bool IsFixedPitch => SkiaApi.sk_typeface_is_fixed_pitch (Handle);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use FontWeight and FontSlant instead.")]
 		public SKTypefaceStyle Style {
 			get {
@@ -164,7 +171,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public int UnitsPerEm => SkiaApi.sk_typeface_get_units_per_em(Handle);
+		public int UnitsPerEm => SkiaApi.sk_typeface_get_units_per_em (Handle);
 
 		public int TableCount => SkiaApi.sk_typeface_count_tables (Handle);
 
@@ -252,9 +259,9 @@ namespace SkiaSharp
 			return SkiaApi.sk_typeface_chars_to_glyphs (Handle, (byte*)str, encoding, null, strLen);
 		}
 
-		public int GetGlyphs (string text, out ushort [] glyphs) => GetGlyphs (text, SKEncoding.Utf16, out glyphs);
+		public int GetGlyphs (string text, out ushort[] glyphs) => GetGlyphs (text, SKEncoding.Utf16, out glyphs);
 
-		public int GetGlyphs (string text, SKEncoding encoding, out ushort [] glyphs)
+		public int GetGlyphs (string text, SKEncoding encoding, out ushort[] glyphs)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -276,7 +283,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public int GetGlyphs (IntPtr text, int length, SKEncoding encoding, out ushort [] glyphs)
+		public int GetGlyphs (IntPtr text, int length, SKEncoding encoding, out ushort[] glyphs)
 		{
 			if (text == IntPtr.Zero && length != 0)
 				throw new ArgumentNullException (nameof (text));
@@ -294,9 +301,9 @@ namespace SkiaSharp
 			}
 		}
 
-		public ushort [] GetGlyphs (string text) => GetGlyphs (text, SKEncoding.Utf16);
+		public ushort[] GetGlyphs (string text) => GetGlyphs (text, SKEncoding.Utf16);
 
-		public ushort [] GetGlyphs (string text, SKEncoding encoding)
+		public ushort[] GetGlyphs (string text, SKEncoding encoding)
 		{
 			GetGlyphs (text, encoding, out var glyphs);
 			return glyphs;
@@ -311,7 +318,7 @@ namespace SkiaSharp
 			return glyphs;
 		}
 
-		public ushort [] GetGlyphs (IntPtr text, int length, SKEncoding encoding)
+		public ushort[] GetGlyphs (IntPtr text, int length, SKEncoding encoding)
 		{
 			GetGlyphs (text, length, encoding, out var glyphs);
 			return glyphs;

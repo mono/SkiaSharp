@@ -25,27 +25,27 @@ namespace SkiaSharp
 		}
 
 		public SKColorF WithRed (float red) =>
-			new SKColorF (red, Green, Blue, Alpha);
+			new SKColorF (red, fG, fB, fA);
 
 		public SKColorF WithGreen (float green) =>
-			new SKColorF (Red, green, Blue, Alpha);
+			new SKColorF (fR, green, fB, fA);
 
 		public SKColorF WithBlue (float blue) =>
-			new SKColorF (Red, Green, blue, Alpha);
+			new SKColorF (fR, fG, blue, fA);
 
 		public SKColorF WithAlpha (float alpha) =>
-			new SKColorF (Red, Green, Blue, alpha);
+			new SKColorF (fR, fG, fB, alpha);
 
 		public float Hue {
 			get {
-				ToHsv (out var h, out var s, out var v);
+				ToHsv (out var h, out _, out _);
 				return h;
 			}
 		}
 
 		public SKColorF Clamp ()
 		{
-			return new SKColorF (Clamp (Red), Clamp (Green), Clamp (Blue), Clamp (Alpha));
+			return new SKColorF (Clamp (fR), Clamp (fG), Clamp (fB), Clamp (fA));
 
 			static float Clamp (float v)
 			{
@@ -159,9 +159,9 @@ namespace SkiaSharp
 		public void ToHsl (out float h, out float s, out float l)
 		{
 			// RGB from 0 to 1
-			var r = Red;
-			var g = Green;
-			var b = Blue;
+			var r = fR;
+			var g = fG;
+			var b = fB;
 
 			var min = Math.Min (Math.Min (r, g), b); // min value of RGB
 			var max = Math.Max (Math.Max (r, g), b); // max value of RGB
@@ -205,9 +205,9 @@ namespace SkiaSharp
 		public void ToHsv (out float h, out float s, out float v)
 		{
 			// RGB from 0 to 1
-			var r = Red;
-			var g = Green;
-			var b = Blue;
+			var r = fR;
+			var g = fG;
+			var b = fB;
 
 			var min = Math.Min (Math.Min (r, g), b); // min value of RGB
 			var max = Math.Max (Math.Max (r, g), b); // max value of RGB
@@ -248,16 +248,6 @@ namespace SkiaSharp
 		public override string ToString () =>
 			((SKColor)this).ToString ();
 
-		public override bool Equals (object other) =>
-			other is SKColorF c &&
-			c.fR == fR &&
-			c.fG == fG &&
-			c.fB == fB &&
-			c.fA == fA;
-
-		public override int GetHashCode () =>
-			((SKColor)this).GetHashCode ();
-
 		public static implicit operator SKColorF (SKColor color)
 		{
 			SKColorF colorF;
@@ -267,14 +257,5 @@ namespace SkiaSharp
 
 		public static explicit operator SKColor (SKColorF color) =>
 			SkiaApi.sk_color4f_to_color (&color);
-
-		public static bool operator == (SKColorF left, SKColorF right) =>
-			left.fR == right.fR &&
-			left.fG == right.fG &&
-			left.fB == right.fB &&
-			left.fA == right.fA;
-
-		public static bool operator != (SKColorF left, SKColorF right) =>
-			!(left == right);
 	}
 }

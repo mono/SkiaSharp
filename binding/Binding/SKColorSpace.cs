@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -186,18 +186,22 @@ namespace SkiaSharp
 			}
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateRgb (SKColorSpaceRenderTargetGamma, SKMatrix44) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKMatrix44 toXyzD50, SKColorSpaceFlags flags) =>
 			CreateRgb (gamma, toXyzD50);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateRgb (SKColorSpaceRenderTargetGamma, SKColorSpaceGamut) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut, SKColorSpaceFlags flags) =>
 			CreateRgb (gamma, gamut);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateRgb (SKColorSpaceTransferFn, SKMatrix44) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKMatrix44 toXyzD50, SKColorSpaceFlags flags) =>
 			CreateRgb (coeffs, toXyzD50);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateRgb (SKColorSpaceTransferFn, SKColorSpaceGamut) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut, SKColorSpaceFlags flags) =>
 			CreateRgb (coeffs, gamut);

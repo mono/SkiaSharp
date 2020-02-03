@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -359,6 +360,7 @@ namespace SkiaSharp
 		public void AddRoundRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise) =>
 			SkiaApi.sk_path_add_rounded_rect (Handle, &rect, rx, ry, dir);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use AddRoundRect instead.")]
 		public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise) =>
 			AddRoundRect (rect, rx, ry, dir);
