@@ -8,7 +8,7 @@ namespace SkiaSharp
 {
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use GRBackendRenderTarget instead.")]
-	public struct GRBackendRenderTargetDesc
+	public struct GRBackendRenderTargetDesc : IEquatable<GRBackendRenderTargetDesc>
 	{
 		public int Width { get; set; }
 		public int Height { get; set; }
@@ -19,6 +19,37 @@ namespace SkiaSharp
 		public GRBackendObject RenderTargetHandle { get; set; }
 		public readonly SKSizeI Size => new SKSizeI (Width, Height);
 		public readonly SKRectI Rect => new SKRectI (0, 0, Width, Height);
+
+		public readonly bool Equals (GRBackendRenderTargetDesc obj) =>
+			Width == obj.Width &&
+			Height == obj.Height &&
+			Config == obj.Config &&
+			Origin == obj.Origin &&
+			SampleCount == obj.SampleCount &&
+			StencilBits == obj.StencilBits &&
+			RenderTargetHandle == obj.RenderTargetHandle;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRBackendRenderTargetDesc f && Equals (f);
+
+		public static bool operator == (GRBackendRenderTargetDesc left, GRBackendRenderTargetDesc right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRBackendRenderTargetDesc left, GRBackendRenderTargetDesc right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (Width);
+			hash.Add (Height);
+			hash.Add (Config);
+			hash.Add (Origin);
+			hash.Add (SampleCount);
+			hash.Add (StencilBits);
+			hash.Add (RenderTargetHandle);
+			return hash.ToHashCode ();
+		}
 	}
 
 	[Flags]
@@ -91,7 +122,7 @@ namespace SkiaSharp
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use GRBackendTexture instead.")]
 	[StructLayout (LayoutKind.Sequential)]
-	public struct GRBackendTextureDesc
+	public struct GRBackendTextureDesc : IEquatable<GRBackendTextureDesc>
 	{
 		public GRBackendTextureDescFlags Flags { get; set; }
 		public GRSurfaceOrigin Origin { get; set; }
@@ -100,11 +131,44 @@ namespace SkiaSharp
 		public GRPixelConfig Config { get; set; }
 		public int SampleCount { get; set; }
 		public GRBackendObject TextureHandle { get; set; }
+		public readonly SKSizeI Size => new SKSizeI (Width, Height);
+		public readonly SKRectI Rect => new SKRectI (0, 0, Width, Height);
+
+		public readonly bool Equals (GRBackendTextureDesc obj) =>
+			Flags == obj.Flags &&
+			Origin == obj.Origin &&
+			Width == obj.Width &&
+			Height == obj.Height &&
+			Config == obj.Config &&
+			SampleCount == obj.SampleCount &&
+			TextureHandle == obj.TextureHandle;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRBackendTextureDesc f && Equals (f);
+
+		public static bool operator == (GRBackendTextureDesc left, GRBackendTextureDesc right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRBackendTextureDesc left, GRBackendTextureDesc right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (Flags);
+			hash.Add (Origin);
+			hash.Add (Width);
+			hash.Add (Height);
+			hash.Add (Config);
+			hash.Add (SampleCount);
+			hash.Add (TextureHandle);
+			return hash.ToHashCode ();
+		}
 	}
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use GRBackendTexture instead.")]
-	public struct GRGlBackendTextureDesc
+	public struct GRGlBackendTextureDesc : IEquatable<GRGlBackendTextureDesc>
 	{
 		public GRBackendTextureDescFlags Flags { get; set; }
 		public GRSurfaceOrigin Origin { get; set; }
@@ -113,6 +177,39 @@ namespace SkiaSharp
 		public GRPixelConfig Config { get; set; }
 		public int SampleCount { get; set; }
 		public GRGlTextureInfo TextureHandle { get; set; }
+		public readonly SKSizeI Size => new SKSizeI (Width, Height);
+		public readonly SKRectI Rect => new SKRectI (0, 0, Width, Height);
+
+		public readonly bool Equals (GRGlBackendTextureDesc obj) =>
+			Flags == obj.Flags &&
+			Origin == obj.Origin &&
+			Width == obj.Width &&
+			Height == obj.Height &&
+			Config == obj.Config &&
+			SampleCount == obj.SampleCount &&
+			TextureHandle == obj.TextureHandle;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRGlBackendTextureDesc f && Equals (f);
+
+		public static bool operator == (GRGlBackendTextureDesc left, GRGlBackendTextureDesc right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRGlBackendTextureDesc left, GRGlBackendTextureDesc right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (Flags);
+			hash.Add (Origin);
+			hash.Add (Width);
+			hash.Add (Height);
+			hash.Add (Config);
+			hash.Add (SampleCount);
+			hash.Add (TextureHandle);
+			return hash.ToHashCode ();
+		}
 	}
 
 	public static partial class SkiaExtensions

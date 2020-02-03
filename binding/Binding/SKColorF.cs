@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public unsafe partial struct SKColorF
+	public readonly unsafe partial struct SKColorF
 	{
 		private const float EPSILON = 0.001f;
 

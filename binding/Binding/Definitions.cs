@@ -62,10 +62,31 @@ namespace SkiaSharp
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use SKSurfaceProperties instead.")]
-	public struct SKSurfaceProps
+	public struct SKSurfaceProps : IEquatable<SKSurfaceProps>
 	{
 		public SKPixelGeometry PixelGeometry { get; set; }
 		public SKSurfacePropsFlags Flags { get; set; }
+
+		public readonly bool Equals (SKSurfaceProps obj) =>
+			PixelGeometry == obj.PixelGeometry &&
+			Flags == obj.Flags;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKSurfaceProps f && Equals (f);
+
+		public static bool operator == (SKSurfaceProps left, SKSurfaceProps right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKSurfaceProps left, SKSurfaceProps right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (PixelGeometry);
+			hash.Add (Flags);
+			return hash.ToHashCode ();
+		}
 	}
 
 	public struct SKCodecOptions : IEquatable<SKCodecOptions>
