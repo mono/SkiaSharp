@@ -3603,817 +3603,1586 @@ namespace SkiaSharp
 
 	// gr_gl_framebufferinfo_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct GRGlFramebufferInfo {
+	public unsafe partial struct GRGlFramebufferInfo : IEquatable<GRGlFramebufferInfo> {
 		// public unsigned int fFBOID
 		private UInt32 fFBOID;
 		public UInt32 FramebufferObjectId {
-			get => fFBOID;
+			readonly get => fFBOID;
 			set => fFBOID = value;
 		}
 
 		// public unsigned int fFormat
 		private UInt32 fFormat;
 		public UInt32 Format {
-			get => fFormat;
+			readonly get => fFormat;
 			set => fFormat = value;
+		}
+
+		public bool Equals (GRGlFramebufferInfo obj) =>
+			fFBOID == obj.fFBOID && fFormat == obj.fFormat;
+
+		public override bool Equals (object obj) =>
+			obj is GRGlFramebufferInfo f && Equals (f);
+
+		public static bool operator == (GRGlFramebufferInfo left, GRGlFramebufferInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRGlFramebufferInfo left, GRGlFramebufferInfo right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fFBOID);
+			hash.Add (fFormat);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// gr_gl_textureinfo_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct GRGlTextureInfo {
+	public unsafe partial struct GRGlTextureInfo : IEquatable<GRGlTextureInfo> {
 		// public unsigned int fTarget
 		private UInt32 fTarget;
 		public UInt32 Target {
-			get => fTarget;
+			readonly get => fTarget;
 			set => fTarget = value;
 		}
 
 		// public unsigned int fID
 		private UInt32 fID;
 		public UInt32 Id {
-			get => fID;
+			readonly get => fID;
 			set => fID = value;
 		}
 
 		// public unsigned int fFormat
 		private UInt32 fFormat;
 		public UInt32 Format {
-			get => fFormat;
+			readonly get => fFormat;
 			set => fFormat = value;
+		}
+
+		public bool Equals (GRGlTextureInfo obj) =>
+			fTarget == obj.fTarget && fID == obj.fID && fFormat == obj.fFormat;
+
+		public override bool Equals (object obj) =>
+			obj is GRGlTextureInfo f && Equals (f);
+
+		public static bool operator == (GRGlTextureInfo left, GRGlTextureInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRGlTextureInfo left, GRGlTextureInfo right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fTarget);
+			hash.Add (fID);
+			hash.Add (fFormat);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_codec_frameinfo_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKCodecFrameInfo {
+	public unsafe partial struct SKCodecFrameInfo : IEquatable<SKCodecFrameInfo> {
 		// public int fRequiredFrame
 		private Int32 fRequiredFrame;
 		public Int32 RequiredFrame {
-			get => fRequiredFrame;
+			readonly get => fRequiredFrame;
 			set => fRequiredFrame = value;
 		}
 
 		// public int fDuration
 		private Int32 fDuration;
 		public Int32 Duration {
-			get => fDuration;
+			readonly get => fDuration;
 			set => fDuration = value;
 		}
 
 		// public bool fFullyReceived
 		private Byte fFullyReceived;
 		public bool FullyRecieved {
-			get => fFullyReceived > 0;
+			readonly get => fFullyReceived > 0;
 			set => fFullyReceived = value ? (byte)1 : (byte)0;
 		}
 
 		// public sk_alphatype_t fAlphaType
 		private SKAlphaType fAlphaType;
 		public SKAlphaType AlphaType {
-			get => fAlphaType;
+			readonly get => fAlphaType;
 			set => fAlphaType = value;
 		}
 
 		// public sk_codecanimation_disposalmethod_t fDisposalMethod
 		private SKCodecAnimationDisposalMethod fDisposalMethod;
 		public SKCodecAnimationDisposalMethod DisposalMethod {
-			get => fDisposalMethod;
+			readonly get => fDisposalMethod;
 			set => fDisposalMethod = value;
+		}
+
+		public bool Equals (SKCodecFrameInfo obj) =>
+			fRequiredFrame == obj.fRequiredFrame && fDuration == obj.fDuration && fFullyReceived == obj.fFullyReceived && fAlphaType == obj.fAlphaType && fDisposalMethod == obj.fDisposalMethod;
+
+		public override bool Equals (object obj) =>
+			obj is SKCodecFrameInfo f && Equals (f);
+
+		public static bool operator == (SKCodecFrameInfo left, SKCodecFrameInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKCodecFrameInfo left, SKCodecFrameInfo right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fRequiredFrame);
+			hash.Add (fDuration);
+			hash.Add (fFullyReceived);
+			hash.Add (fAlphaType);
+			hash.Add (fDisposalMethod);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_codec_options_t
 	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKCodecOptionsInternal {
+	internal unsafe partial struct SKCodecOptionsInternal : IEquatable<SKCodecOptionsInternal> {
 		// public sk_codec_zero_initialized_t fZeroInitialized
 		public SKZeroInitialized fZeroInitialized;
+
 		// public sk_irect_t* fSubset
 		public SKRectI* fSubset;
+
 		// public int fFrameIndex
 		public Int32 fFrameIndex;
+
 		// public int fPriorFrame
 		public Int32 fPriorFrame;
+
 		// public sk_transfer_function_behavior_t fPremulBehavior
 		public SKTransferFunctionBehavior fPremulBehavior;
+
+		public bool Equals (SKCodecOptionsInternal obj) =>
+			fZeroInitialized == obj.fZeroInitialized && fSubset == obj.fSubset && fFrameIndex == obj.fFrameIndex && fPriorFrame == obj.fPriorFrame && fPremulBehavior == obj.fPremulBehavior;
+
+		public override bool Equals (object obj) =>
+			obj is SKCodecOptionsInternal f && Equals (f);
+
+		public static bool operator == (SKCodecOptionsInternal left, SKCodecOptionsInternal right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKCodecOptionsInternal left, SKCodecOptionsInternal right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fZeroInitialized);
+			hash.Add (fSubset);
+			hash.Add (fFrameIndex);
+			hash.Add (fPriorFrame);
+			hash.Add (fPremulBehavior);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_color4f_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKColorF {
+	public readonly unsafe partial struct SKColorF : IEquatable<SKColorF> {
 		// public float fR
-		private Single fR;
-		public Single Red {
-			get => fR;
-			set => fR = value;
-		}
+		private readonly Single fR;
+		public readonly Single Red => fR;
 
 		// public float fG
-		private Single fG;
-		public Single Green {
-			get => fG;
-			set => fG = value;
-		}
+		private readonly Single fG;
+		public readonly Single Green => fG;
 
 		// public float fB
-		private Single fB;
-		public Single Blue {
-			get => fB;
-			set => fB = value;
-		}
+		private readonly Single fB;
+		public readonly Single Blue => fB;
 
 		// public float fA
-		private Single fA;
-		public Single Alpha {
-			get => fA;
-			set => fA = value;
+		private readonly Single fA;
+		public readonly Single Alpha => fA;
+
+		public bool Equals (SKColorF obj) =>
+			fR == obj.fR && fG == obj.fG && fB == obj.fB && fA == obj.fA;
+
+		public override bool Equals (object obj) =>
+			obj is SKColorF f && Equals (f);
+
+		public static bool operator == (SKColorF left, SKColorF right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKColorF left, SKColorF right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fR);
+			hash.Add (fG);
+			hash.Add (fB);
+			hash.Add (fA);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_colorspace_transfer_fn_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKColorSpaceTransferFn {
+	public unsafe partial struct SKColorSpaceTransferFn : IEquatable<SKColorSpaceTransferFn> {
 		// public float fG
 		private Single fG;
 		public Single G {
-			get => fG;
+			readonly get => fG;
 			set => fG = value;
 		}
 
 		// public float fA
 		private Single fA;
 		public Single A {
-			get => fA;
+			readonly get => fA;
 			set => fA = value;
 		}
 
 		// public float fB
 		private Single fB;
 		public Single B {
-			get => fB;
+			readonly get => fB;
 			set => fB = value;
 		}
 
 		// public float fC
 		private Single fC;
 		public Single C {
-			get => fC;
+			readonly get => fC;
 			set => fC = value;
 		}
 
 		// public float fD
 		private Single fD;
 		public Single D {
-			get => fD;
+			readonly get => fD;
 			set => fD = value;
 		}
 
 		// public float fE
 		private Single fE;
 		public Single E {
-			get => fE;
+			readonly get => fE;
 			set => fE = value;
 		}
 
 		// public float fF
 		private Single fF;
 		public Single F {
-			get => fF;
+			readonly get => fF;
 			set => fF = value;
+		}
+
+		public bool Equals (SKColorSpaceTransferFn obj) =>
+			fG == obj.fG && fA == obj.fA && fB == obj.fB && fC == obj.fC && fD == obj.fD && fE == obj.fE && fF == obj.fF;
+
+		public override bool Equals (object obj) =>
+			obj is SKColorSpaceTransferFn f && Equals (f);
+
+		public static bool operator == (SKColorSpaceTransferFn left, SKColorSpaceTransferFn right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKColorSpaceTransferFn left, SKColorSpaceTransferFn right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fG);
+			hash.Add (fA);
+			hash.Add (fB);
+			hash.Add (fC);
+			hash.Add (fD);
+			hash.Add (fE);
+			hash.Add (fF);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_colorspaceprimaries_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKColorSpacePrimaries {
+	public unsafe partial struct SKColorSpacePrimaries : IEquatable<SKColorSpacePrimaries> {
 		// public float fRX
 		private Single fRX;
 		public Single RX {
-			get => fRX;
+			readonly get => fRX;
 			set => fRX = value;
 		}
 
 		// public float fRY
 		private Single fRY;
 		public Single RY {
-			get => fRY;
+			readonly get => fRY;
 			set => fRY = value;
 		}
 
 		// public float fGX
 		private Single fGX;
 		public Single GX {
-			get => fGX;
+			readonly get => fGX;
 			set => fGX = value;
 		}
 
 		// public float fGY
 		private Single fGY;
 		public Single GY {
-			get => fGY;
+			readonly get => fGY;
 			set => fGY = value;
 		}
 
 		// public float fBX
 		private Single fBX;
 		public Single BX {
-			get => fBX;
+			readonly get => fBX;
 			set => fBX = value;
 		}
 
 		// public float fBY
 		private Single fBY;
 		public Single BY {
-			get => fBY;
+			readonly get => fBY;
 			set => fBY = value;
 		}
 
 		// public float fWX
 		private Single fWX;
 		public Single WX {
-			get => fWX;
+			readonly get => fWX;
 			set => fWX = value;
 		}
 
 		// public float fWY
 		private Single fWY;
 		public Single WY {
-			get => fWY;
+			readonly get => fWY;
 			set => fWY = value;
+		}
+
+		public bool Equals (SKColorSpacePrimaries obj) =>
+			fRX == obj.fRX && fRY == obj.fRY && fGX == obj.fGX && fGY == obj.fGY && fBX == obj.fBX && fBY == obj.fBY && fWX == obj.fWX && fWY == obj.fWY;
+
+		public override bool Equals (object obj) =>
+			obj is SKColorSpacePrimaries f && Equals (f);
+
+		public static bool operator == (SKColorSpacePrimaries left, SKColorSpacePrimaries right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKColorSpacePrimaries left, SKColorSpacePrimaries right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fRX);
+			hash.Add (fRY);
+			hash.Add (fGX);
+			hash.Add (fGY);
+			hash.Add (fBX);
+			hash.Add (fBY);
+			hash.Add (fWX);
+			hash.Add (fWY);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_document_pdf_metadata_t
 	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKDocumentPdfMetadataInternal {
+	internal unsafe partial struct SKDocumentPdfMetadataInternal : IEquatable<SKDocumentPdfMetadataInternal> {
 		// public sk_string_t* fTitle
 		public sk_string_t fTitle;
+
 		// public sk_string_t* fAuthor
 		public sk_string_t fAuthor;
+
 		// public sk_string_t* fSubject
 		public sk_string_t fSubject;
+
 		// public sk_string_t* fKeywords
 		public sk_string_t fKeywords;
+
 		// public sk_string_t* fCreator
 		public sk_string_t fCreator;
+
 		// public sk_string_t* fProducer
 		public sk_string_t fProducer;
+
 		// public sk_time_datetime_t* fCreation
 		public SKTimeDateTimeInternal* fCreation;
+
 		// public sk_time_datetime_t* fModified
 		public SKTimeDateTimeInternal* fModified;
+
 		// public float fRasterDPI
 		public Single fRasterDPI;
+
 		// public bool fPDFA
 		public Byte fPDFA;
+
 		// public int fEncodingQuality
 		public Int32 fEncodingQuality;
+
+		public bool Equals (SKDocumentPdfMetadataInternal obj) =>
+			fTitle == obj.fTitle && fAuthor == obj.fAuthor && fSubject == obj.fSubject && fKeywords == obj.fKeywords && fCreator == obj.fCreator && fProducer == obj.fProducer && fCreation == obj.fCreation && fModified == obj.fModified && fRasterDPI == obj.fRasterDPI && fPDFA == obj.fPDFA && fEncodingQuality == obj.fEncodingQuality;
+
+		public override bool Equals (object obj) =>
+			obj is SKDocumentPdfMetadataInternal f && Equals (f);
+
+		public static bool operator == (SKDocumentPdfMetadataInternal left, SKDocumentPdfMetadataInternal right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKDocumentPdfMetadataInternal left, SKDocumentPdfMetadataInternal right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fTitle);
+			hash.Add (fAuthor);
+			hash.Add (fSubject);
+			hash.Add (fKeywords);
+			hash.Add (fCreator);
+			hash.Add (fProducer);
+			hash.Add (fCreation);
+			hash.Add (fModified);
+			hash.Add (fRasterDPI);
+			hash.Add (fPDFA);
+			hash.Add (fEncodingQuality);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_fontmetrics_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKFontMetrics {
+	public unsafe partial struct SKFontMetrics : IEquatable<SKFontMetrics> {
 		// public uint32_t fFlags
 		private UInt32 fFlags;
+
 		// public float fTop
 		private Single fTop;
+
 		// public float fAscent
 		private Single fAscent;
+
 		// public float fDescent
 		private Single fDescent;
+
 		// public float fBottom
 		private Single fBottom;
+
 		// public float fLeading
 		private Single fLeading;
+
 		// public float fAvgCharWidth
 		private Single fAvgCharWidth;
+
 		// public float fMaxCharWidth
 		private Single fMaxCharWidth;
+
 		// public float fXMin
 		private Single fXMin;
+
 		// public float fXMax
 		private Single fXMax;
+
 		// public float fXHeight
 		private Single fXHeight;
+
 		// public float fCapHeight
 		private Single fCapHeight;
+
 		// public float fUnderlineThickness
 		private Single fUnderlineThickness;
+
 		// public float fUnderlinePosition
 		private Single fUnderlinePosition;
+
 		// public float fStrikeoutThickness
 		private Single fStrikeoutThickness;
+
 		// public float fStrikeoutPosition
 		private Single fStrikeoutPosition;
+
+		public bool Equals (SKFontMetrics obj) =>
+			fFlags == obj.fFlags && fTop == obj.fTop && fAscent == obj.fAscent && fDescent == obj.fDescent && fBottom == obj.fBottom && fLeading == obj.fLeading && fAvgCharWidth == obj.fAvgCharWidth && fMaxCharWidth == obj.fMaxCharWidth && fXMin == obj.fXMin && fXMax == obj.fXMax && fXHeight == obj.fXHeight && fCapHeight == obj.fCapHeight && fUnderlineThickness == obj.fUnderlineThickness && fUnderlinePosition == obj.fUnderlinePosition && fStrikeoutThickness == obj.fStrikeoutThickness && fStrikeoutPosition == obj.fStrikeoutPosition;
+
+		public override bool Equals (object obj) =>
+			obj is SKFontMetrics f && Equals (f);
+
+		public static bool operator == (SKFontMetrics left, SKFontMetrics right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKFontMetrics left, SKFontMetrics right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fFlags);
+			hash.Add (fTop);
+			hash.Add (fAscent);
+			hash.Add (fDescent);
+			hash.Add (fBottom);
+			hash.Add (fLeading);
+			hash.Add (fAvgCharWidth);
+			hash.Add (fMaxCharWidth);
+			hash.Add (fXMin);
+			hash.Add (fXMax);
+			hash.Add (fXHeight);
+			hash.Add (fCapHeight);
+			hash.Add (fUnderlineThickness);
+			hash.Add (fUnderlinePosition);
+			hash.Add (fStrikeoutThickness);
+			hash.Add (fStrikeoutPosition);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_highcontrastconfig_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKHighContrastConfig {
+	public unsafe partial struct SKHighContrastConfig : IEquatable<SKHighContrastConfig> {
 		// public bool fGrayscale
 		private Byte fGrayscale;
 		public bool Grayscale {
-			get => fGrayscale > 0;
+			readonly get => fGrayscale > 0;
 			set => fGrayscale = value ? (byte)1 : (byte)0;
 		}
 
 		// public sk_highcontrastconfig_invertstyle_t fInvertStyle
 		private SKHighContrastConfigInvertStyle fInvertStyle;
 		public SKHighContrastConfigInvertStyle InvertStyle {
-			get => fInvertStyle;
+			readonly get => fInvertStyle;
 			set => fInvertStyle = value;
 		}
 
 		// public float fContrast
 		private Single fContrast;
 		public Single Contrast {
-			get => fContrast;
+			readonly get => fContrast;
 			set => fContrast = value;
+		}
+
+		public bool Equals (SKHighContrastConfig obj) =>
+			fGrayscale == obj.fGrayscale && fInvertStyle == obj.fInvertStyle && fContrast == obj.fContrast;
+
+		public override bool Equals (object obj) =>
+			obj is SKHighContrastConfig f && Equals (f);
+
+		public static bool operator == (SKHighContrastConfig left, SKHighContrastConfig right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKHighContrastConfig left, SKHighContrastConfig right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fGrayscale);
+			hash.Add (fInvertStyle);
+			hash.Add (fContrast);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_imageinfo_t
 	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKImageInfoNative {
+	internal unsafe partial struct SKImageInfoNative : IEquatable<SKImageInfoNative> {
 		// public sk_colorspace_t* colorspace
 		public sk_colorspace_t colorspace;
+
 		// public int32_t width
 		public Int32 width;
+
 		// public int32_t height
 		public Int32 height;
+
 		// public sk_colortype_t colorType
 		public SKColorType colorType;
+
 		// public sk_alphatype_t alphaType
 		public SKAlphaType alphaType;
+
+		public bool Equals (SKImageInfoNative obj) =>
+			colorspace == obj.colorspace && width == obj.width && height == obj.height && colorType == obj.colorType && alphaType == obj.alphaType;
+
+		public override bool Equals (object obj) =>
+			obj is SKImageInfoNative f && Equals (f);
+
+		public static bool operator == (SKImageInfoNative left, SKImageInfoNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKImageInfoNative left, SKImageInfoNative right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (colorspace);
+			hash.Add (width);
+			hash.Add (height);
+			hash.Add (colorType);
+			hash.Add (alphaType);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_ipoint_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKPointI {
+	public unsafe partial struct SKPointI : IEquatable<SKPointI> {
 		// public int32_t x
 		private Int32 x;
 		public Int32 X {
-			get => x;
+			readonly get => x;
 			set => x = value;
 		}
 
 		// public int32_t y
 		private Int32 y;
 		public Int32 Y {
-			get => y;
+			readonly get => y;
 			set => y = value;
+		}
+
+		public bool Equals (SKPointI obj) =>
+			x == obj.x && y == obj.y;
+
+		public override bool Equals (object obj) =>
+			obj is SKPointI f && Equals (f);
+
+		public static bool operator == (SKPointI left, SKPointI right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKPointI left, SKPointI right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (x);
+			hash.Add (y);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_irect_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKRectI {
+	public unsafe partial struct SKRectI : IEquatable<SKRectI> {
 		// public int32_t left
 		private Int32 left;
 		public Int32 Left {
-			get => left;
+			readonly get => left;
 			set => left = value;
 		}
 
 		// public int32_t top
 		private Int32 top;
 		public Int32 Top {
-			get => top;
+			readonly get => top;
 			set => top = value;
 		}
 
 		// public int32_t right
 		private Int32 right;
 		public Int32 Right {
-			get => right;
+			readonly get => right;
 			set => right = value;
 		}
 
 		// public int32_t bottom
 		private Int32 bottom;
 		public Int32 Bottom {
-			get => bottom;
+			readonly get => bottom;
 			set => bottom = value;
+		}
+
+		public bool Equals (SKRectI obj) =>
+			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
+
+		public override bool Equals (object obj) =>
+			obj is SKRectI f && Equals (f);
+
+		public static bool operator == (SKRectI left, SKRectI right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKRectI left, SKRectI right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (left);
+			hash.Add (top);
+			hash.Add (right);
+			hash.Add (bottom);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_isize_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKSizeI {
+	public unsafe partial struct SKSizeI : IEquatable<SKSizeI> {
 		// public int32_t w
 		private Int32 w;
 		public Int32 Width {
-			get => w;
+			readonly get => w;
 			set => w = value;
 		}
 
 		// public int32_t h
 		private Int32 h;
 		public Int32 Height {
-			get => h;
+			readonly get => h;
 			set => h = value;
+		}
+
+		public bool Equals (SKSizeI obj) =>
+			w == obj.w && h == obj.h;
+
+		public override bool Equals (object obj) =>
+			obj is SKSizeI f && Equals (f);
+
+		public static bool operator == (SKSizeI left, SKSizeI right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKSizeI left, SKSizeI right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (w);
+			hash.Add (h);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_jpegencoder_options_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKJpegEncoderOptions {
+	public unsafe partial struct SKJpegEncoderOptions : IEquatable<SKJpegEncoderOptions> {
 		// public int fQuality
 		private Int32 fQuality;
 		public Int32 Quality {
-			get => fQuality;
+			readonly get => fQuality;
 			set => fQuality = value;
 		}
 
 		// public sk_jpegencoder_downsample_t fDownsample
 		private SKJpegEncoderDownsample fDownsample;
 		public SKJpegEncoderDownsample Downsample {
-			get => fDownsample;
+			readonly get => fDownsample;
 			set => fDownsample = value;
 		}
 
 		// public sk_jpegencoder_alphaoption_t fAlphaOption
 		private SKJpegEncoderAlphaOption fAlphaOption;
 		public SKJpegEncoderAlphaOption AlphaOption {
-			get => fAlphaOption;
+			readonly get => fAlphaOption;
 			set => fAlphaOption = value;
 		}
 
 		// public sk_transfer_function_behavior_t fBlendBehavior
 		private SKTransferFunctionBehavior fBlendBehavior;
 		public SKTransferFunctionBehavior BlendBehavior {
-			get => fBlendBehavior;
+			readonly get => fBlendBehavior;
 			set => fBlendBehavior = value;
+		}
+
+		public bool Equals (SKJpegEncoderOptions obj) =>
+			fQuality == obj.fQuality && fDownsample == obj.fDownsample && fAlphaOption == obj.fAlphaOption && fBlendBehavior == obj.fBlendBehavior;
+
+		public override bool Equals (object obj) =>
+			obj is SKJpegEncoderOptions f && Equals (f);
+
+		public static bool operator == (SKJpegEncoderOptions left, SKJpegEncoderOptions right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKJpegEncoderOptions left, SKJpegEncoderOptions right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fQuality);
+			hash.Add (fDownsample);
+			hash.Add (fAlphaOption);
+			hash.Add (fBlendBehavior);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_lattice_t
 	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKLatticeInternal {
+	internal unsafe partial struct SKLatticeInternal : IEquatable<SKLatticeInternal> {
 		// public const int* fXDivs
 		public Int32* fXDivs;
+
 		// public const int* fYDivs
 		public Int32* fYDivs;
+
 		// public const sk_lattice_recttype_t* fRectTypes
 		public SKLatticeRectType* fRectTypes;
+
 		// public int fXCount
 		public Int32 fXCount;
+
 		// public int fYCount
 		public Int32 fYCount;
+
 		// public const sk_irect_t* fBounds
 		public SKRectI* fBounds;
+
 		// public const sk_color_t* fColors
 		public UInt32* fColors;
+
+		public bool Equals (SKLatticeInternal obj) =>
+			fXDivs == obj.fXDivs && fYDivs == obj.fYDivs && fRectTypes == obj.fRectTypes && fXCount == obj.fXCount && fYCount == obj.fYCount && fBounds == obj.fBounds && fColors == obj.fColors;
+
+		public override bool Equals (object obj) =>
+			obj is SKLatticeInternal f && Equals (f);
+
+		public static bool operator == (SKLatticeInternal left, SKLatticeInternal right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKLatticeInternal left, SKLatticeInternal right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fXDivs);
+			hash.Add (fYDivs);
+			hash.Add (fRectTypes);
+			hash.Add (fXCount);
+			hash.Add (fYCount);
+			hash.Add (fBounds);
+			hash.Add (fColors);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_manageddrawable_procs_t
 	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKManagedDrawableDelegates {
+	internal unsafe partial struct SKManagedDrawableDelegates : IEquatable<SKManagedDrawableDelegates> {
 		// public sk_manageddrawable_draw_proc fDraw
 		public SKManagedDrawableDrawProxyDelegate fDraw;
+
 		// public sk_manageddrawable_getBounds_proc fGetBounds
 		public SKManagedDrawableGetBoundsProxyDelegate fGetBounds;
+
 		// public sk_manageddrawable_newPictureSnapshot_proc fNewPictureSnapshot
 		public SKManagedDrawableNewPictureSnapshotProxyDelegate fNewPictureSnapshot;
+
 		// public sk_manageddrawable_destroy_proc fDestroy
 		public SKManagedDrawableDestroyProxyDelegate fDestroy;
+
+		public bool Equals (SKManagedDrawableDelegates obj) =>
+			fDraw == obj.fDraw && fGetBounds == obj.fGetBounds && fNewPictureSnapshot == obj.fNewPictureSnapshot && fDestroy == obj.fDestroy;
+
+		public override bool Equals (object obj) =>
+			obj is SKManagedDrawableDelegates f && Equals (f);
+
+		public static bool operator == (SKManagedDrawableDelegates left, SKManagedDrawableDelegates right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKManagedDrawableDelegates left, SKManagedDrawableDelegates right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fDraw);
+			hash.Add (fGetBounds);
+			hash.Add (fNewPictureSnapshot);
+			hash.Add (fDestroy);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_managedstream_procs_t
 	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKManagedStreamDelegates {
+	internal unsafe partial struct SKManagedStreamDelegates : IEquatable<SKManagedStreamDelegates> {
 		// public sk_managedstream_read_proc fRead
 		public SKManagedStreamReadProxyDelegate fRead;
+
 		// public sk_managedstream_peek_proc fPeek
 		public SKManagedStreamPeekProxyDelegate fPeek;
+
 		// public sk_managedstream_isAtEnd_proc fIsAtEnd
 		public SKManagedStreamIsAtEndProxyDelegate fIsAtEnd;
+
 		// public sk_managedstream_hasPosition_proc fHasPosition
 		public SKManagedStreamHasPositionProxyDelegate fHasPosition;
+
 		// public sk_managedstream_hasLength_proc fHasLength
 		public SKManagedStreamHasLengthProxyDelegate fHasLength;
+
 		// public sk_managedstream_rewind_proc fRewind
 		public SKManagedStreamRewindProxyDelegate fRewind;
+
 		// public sk_managedstream_getPosition_proc fGetPosition
 		public SKManagedStreamGetPositionProxyDelegate fGetPosition;
+
 		// public sk_managedstream_seek_proc fSeek
 		public SKManagedStreamSeekProxyDelegate fSeek;
+
 		// public sk_managedstream_move_proc fMove
 		public SKManagedStreamMoveProxyDelegate fMove;
+
 		// public sk_managedstream_getLength_proc fGetLength
 		public SKManagedStreamGetLengthProxyDelegate fGetLength;
+
 		// public sk_managedstream_duplicate_proc fDuplicate
 		public SKManagedStreamDuplicateProxyDelegate fDuplicate;
+
 		// public sk_managedstream_fork_proc fFork
 		public SKManagedStreamForkProxyDelegate fFork;
+
 		// public sk_managedstream_destroy_proc fDestroy
 		public SKManagedStreamDestroyProxyDelegate fDestroy;
+
+		public bool Equals (SKManagedStreamDelegates obj) =>
+			fRead == obj.fRead && fPeek == obj.fPeek && fIsAtEnd == obj.fIsAtEnd && fHasPosition == obj.fHasPosition && fHasLength == obj.fHasLength && fRewind == obj.fRewind && fGetPosition == obj.fGetPosition && fSeek == obj.fSeek && fMove == obj.fMove && fGetLength == obj.fGetLength && fDuplicate == obj.fDuplicate && fFork == obj.fFork && fDestroy == obj.fDestroy;
+
+		public override bool Equals (object obj) =>
+			obj is SKManagedStreamDelegates f && Equals (f);
+
+		public static bool operator == (SKManagedStreamDelegates left, SKManagedStreamDelegates right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKManagedStreamDelegates left, SKManagedStreamDelegates right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fRead);
+			hash.Add (fPeek);
+			hash.Add (fIsAtEnd);
+			hash.Add (fHasPosition);
+			hash.Add (fHasLength);
+			hash.Add (fRewind);
+			hash.Add (fGetPosition);
+			hash.Add (fSeek);
+			hash.Add (fMove);
+			hash.Add (fGetLength);
+			hash.Add (fDuplicate);
+			hash.Add (fFork);
+			hash.Add (fDestroy);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_managedwstream_procs_t
 	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKManagedWStreamDelegates {
+	internal unsafe partial struct SKManagedWStreamDelegates : IEquatable<SKManagedWStreamDelegates> {
 		// public sk_managedwstream_write_proc fWrite
 		public SKManagedWStreamWriteProxyDelegate fWrite;
+
 		// public sk_managedwstream_flush_proc fFlush
 		public SKManagedWStreamFlushProxyDelegate fFlush;
+
 		// public sk_managedwstream_bytesWritten_proc fBytesWritten
 		public SKManagedWStreamBytesWrittenProxyDelegate fBytesWritten;
+
 		// public sk_managedwstream_destroy_proc fDestroy
 		public SKManagedWStreamDestroyProxyDelegate fDestroy;
+
+		public bool Equals (SKManagedWStreamDelegates obj) =>
+			fWrite == obj.fWrite && fFlush == obj.fFlush && fBytesWritten == obj.fBytesWritten && fDestroy == obj.fDestroy;
+
+		public override bool Equals (object obj) =>
+			obj is SKManagedWStreamDelegates f && Equals (f);
+
+		public static bool operator == (SKManagedWStreamDelegates left, SKManagedWStreamDelegates right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKManagedWStreamDelegates left, SKManagedWStreamDelegates right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fWrite);
+			hash.Add (fFlush);
+			hash.Add (fBytesWritten);
+			hash.Add (fDestroy);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_mask_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKMask {
+	public unsafe partial struct SKMask : IEquatable<SKMask> {
 		// public uint8_t* fImage
 		private Byte* fImage;
+
 		// public sk_irect_t fBounds
 		private SKRectI fBounds;
+
 		// public uint32_t fRowBytes
 		private UInt32 fRowBytes;
+
 		// public sk_mask_format_t fFormat
 		private SKMaskFormat fFormat;
+
+		public bool Equals (SKMask obj) =>
+			fImage == obj.fImage && fBounds == obj.fBounds && fRowBytes == obj.fRowBytes && fFormat == obj.fFormat;
+
+		public override bool Equals (object obj) =>
+			obj is SKMask f && Equals (f);
+
+		public static bool operator == (SKMask left, SKMask right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKMask left, SKMask right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fImage);
+			hash.Add (fBounds);
+			hash.Add (fRowBytes);
+			hash.Add (fFormat);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_matrix_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKMatrix {
+	public unsafe partial struct SKMatrix : IEquatable<SKMatrix> {
 		// public float scaleX
 		private Single scaleX;
 		public Single ScaleX {
-			get => scaleX;
+			readonly get => scaleX;
 			set => scaleX = value;
 		}
 
 		// public float skewX
 		private Single skewX;
 		public Single SkewX {
-			get => skewX;
+			readonly get => skewX;
 			set => skewX = value;
 		}
 
 		// public float transX
 		private Single transX;
 		public Single TransX {
-			get => transX;
+			readonly get => transX;
 			set => transX = value;
 		}
 
 		// public float skewY
 		private Single skewY;
 		public Single SkewY {
-			get => skewY;
+			readonly get => skewY;
 			set => skewY = value;
 		}
 
 		// public float scaleY
 		private Single scaleY;
 		public Single ScaleY {
-			get => scaleY;
+			readonly get => scaleY;
 			set => scaleY = value;
 		}
 
 		// public float transY
 		private Single transY;
 		public Single TransY {
-			get => transY;
+			readonly get => transY;
 			set => transY = value;
 		}
 
 		// public float persp0
 		private Single persp0;
 		public Single Persp0 {
-			get => persp0;
+			readonly get => persp0;
 			set => persp0 = value;
 		}
 
 		// public float persp1
 		private Single persp1;
 		public Single Persp1 {
-			get => persp1;
+			readonly get => persp1;
 			set => persp1 = value;
 		}
 
 		// public float persp2
 		private Single persp2;
 		public Single Persp2 {
-			get => persp2;
+			readonly get => persp2;
 			set => persp2 = value;
+		}
+
+		public bool Equals (SKMatrix obj) =>
+			scaleX == obj.scaleX && skewX == obj.skewX && transX == obj.transX && skewY == obj.skewY && scaleY == obj.scaleY && transY == obj.transY && persp0 == obj.persp0 && persp1 == obj.persp1 && persp2 == obj.persp2;
+
+		public override bool Equals (object obj) =>
+			obj is SKMatrix f && Equals (f);
+
+		public static bool operator == (SKMatrix left, SKMatrix right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKMatrix left, SKMatrix right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (scaleX);
+			hash.Add (skewX);
+			hash.Add (transX);
+			hash.Add (skewY);
+			hash.Add (scaleY);
+			hash.Add (transY);
+			hash.Add (persp0);
+			hash.Add (persp1);
+			hash.Add (persp2);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_pngencoder_options_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKPngEncoderOptions {
+	public unsafe partial struct SKPngEncoderOptions : IEquatable<SKPngEncoderOptions> {
 		// public sk_pngencoder_filterflags_t fFilterFlags
 		private SKPngEncoderFilterFlags fFilterFlags;
+
 		// public int fZLibLevel
 		private Int32 fZLibLevel;
+
 		// public sk_transfer_function_behavior_t fUnpremulBehavior
 		private SKTransferFunctionBehavior fUnpremulBehavior;
+
 		// public void* fComments
 		private void* fComments;
+
+		public bool Equals (SKPngEncoderOptions obj) =>
+			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fUnpremulBehavior == obj.fUnpremulBehavior && fComments == obj.fComments;
+
+		public override bool Equals (object obj) =>
+			obj is SKPngEncoderOptions f && Equals (f);
+
+		public static bool operator == (SKPngEncoderOptions left, SKPngEncoderOptions right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKPngEncoderOptions left, SKPngEncoderOptions right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fFilterFlags);
+			hash.Add (fZLibLevel);
+			hash.Add (fUnpremulBehavior);
+			hash.Add (fComments);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_point_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKPoint {
+	public unsafe partial struct SKPoint : IEquatable<SKPoint> {
 		// public float x
 		private Single x;
 		public Single X {
-			get => x;
+			readonly get => x;
 			set => x = value;
 		}
 
 		// public float y
 		private Single y;
 		public Single Y {
-			get => y;
+			readonly get => y;
 			set => y = value;
+		}
+
+		public bool Equals (SKPoint obj) =>
+			x == obj.x && y == obj.y;
+
+		public override bool Equals (object obj) =>
+			obj is SKPoint f && Equals (f);
+
+		public static bool operator == (SKPoint left, SKPoint right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKPoint left, SKPoint right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (x);
+			hash.Add (y);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_point3_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKPoint3 {
+	public unsafe partial struct SKPoint3 : IEquatable<SKPoint3> {
 		// public float x
 		private Single x;
 		public Single X {
-			get => x;
+			readonly get => x;
 			set => x = value;
 		}
 
 		// public float y
 		private Single y;
 		public Single Y {
-			get => y;
+			readonly get => y;
 			set => y = value;
 		}
 
 		// public float z
 		private Single z;
 		public Single Z {
-			get => z;
+			readonly get => z;
 			set => z = value;
+		}
+
+		public bool Equals (SKPoint3 obj) =>
+			x == obj.x && y == obj.y && z == obj.z;
+
+		public override bool Equals (object obj) =>
+			obj is SKPoint3 f && Equals (f);
+
+		public static bool operator == (SKPoint3 left, SKPoint3 right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKPoint3 left, SKPoint3 right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (x);
+			hash.Add (y);
+			hash.Add (z);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_rect_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKRect {
+	public unsafe partial struct SKRect : IEquatable<SKRect> {
 		// public float left
 		private Single left;
 		public Single Left {
-			get => left;
+			readonly get => left;
 			set => left = value;
 		}
 
 		// public float top
 		private Single top;
 		public Single Top {
-			get => top;
+			readonly get => top;
 			set => top = value;
 		}
 
 		// public float right
 		private Single right;
 		public Single Right {
-			get => right;
+			readonly get => right;
 			set => right = value;
 		}
 
 		// public float bottom
 		private Single bottom;
 		public Single Bottom {
-			get => bottom;
+			readonly get => bottom;
 			set => bottom = value;
+		}
+
+		public bool Equals (SKRect obj) =>
+			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
+
+		public override bool Equals (object obj) =>
+			obj is SKRect f && Equals (f);
+
+		public static bool operator == (SKRect left, SKRect right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKRect left, SKRect right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (left);
+			hash.Add (top);
+			hash.Add (right);
+			hash.Add (bottom);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_rsxform_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKRotationScaleMatrix {
+	public unsafe partial struct SKRotationScaleMatrix : IEquatable<SKRotationScaleMatrix> {
 		// public float fSCos
 		private Single fSCos;
 		public Single SCos {
-			get => fSCos;
+			readonly get => fSCos;
 			set => fSCos = value;
 		}
 
 		// public float fSSin
 		private Single fSSin;
 		public Single SSin {
-			get => fSSin;
+			readonly get => fSSin;
 			set => fSSin = value;
 		}
 
 		// public float fTX
 		private Single fTX;
 		public Single TX {
-			get => fTX;
+			readonly get => fTX;
 			set => fTX = value;
 		}
 
 		// public float fTY
 		private Single fTY;
 		public Single TY {
-			get => fTY;
+			readonly get => fTY;
 			set => fTY = value;
+		}
+
+		public bool Equals (SKRotationScaleMatrix obj) =>
+			fSCos == obj.fSCos && fSSin == obj.fSSin && fTX == obj.fTX && fTY == obj.fTY;
+
+		public override bool Equals (object obj) =>
+			obj is SKRotationScaleMatrix f && Equals (f);
+
+		public static bool operator == (SKRotationScaleMatrix left, SKRotationScaleMatrix right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKRotationScaleMatrix left, SKRotationScaleMatrix right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fSCos);
+			hash.Add (fSSin);
+			hash.Add (fTX);
+			hash.Add (fTY);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_size_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKSize {
+	public unsafe partial struct SKSize : IEquatable<SKSize> {
 		// public float w
 		private Single w;
 		public Single Width {
-			get => w;
+			readonly get => w;
 			set => w = value;
 		}
 
 		// public float h
 		private Single h;
 		public Single Height {
-			get => h;
+			readonly get => h;
 			set => h = value;
+		}
+
+		public bool Equals (SKSize obj) =>
+			w == obj.w && h == obj.h;
+
+		public override bool Equals (object obj) =>
+			obj is SKSize f && Equals (f);
+
+		public static bool operator == (SKSize left, SKSize right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKSize left, SKSize right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (w);
+			hash.Add (h);
+			return hash.ToHashCode ();
 		}
 
 	}
 
 	// sk_textblob_builder_runbuffer_t
 	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKRunBufferInternal {
+	internal unsafe partial struct SKRunBufferInternal : IEquatable<SKRunBufferInternal> {
 		// public void* glyphs
 		public void* glyphs;
+
 		// public void* pos
 		public void* pos;
+
 		// public void* utf8text
 		public void* utf8text;
+
 		// public void* clusters
 		public void* clusters;
+
+		public bool Equals (SKRunBufferInternal obj) =>
+			glyphs == obj.glyphs && pos == obj.pos && utf8text == obj.utf8text && clusters == obj.clusters;
+
+		public override bool Equals (object obj) =>
+			obj is SKRunBufferInternal f && Equals (f);
+
+		public static bool operator == (SKRunBufferInternal left, SKRunBufferInternal right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKRunBufferInternal left, SKRunBufferInternal right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (glyphs);
+			hash.Add (pos);
+			hash.Add (utf8text);
+			hash.Add (clusters);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_time_datetime_t
 	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKTimeDateTimeInternal {
+	internal unsafe partial struct SKTimeDateTimeInternal : IEquatable<SKTimeDateTimeInternal> {
 		// public int16_t fTimeZoneMinutes
 		public Int16 fTimeZoneMinutes;
+
 		// public uint16_t fYear
 		public UInt16 fYear;
+
 		// public uint8_t fMonth
 		public Byte fMonth;
+
 		// public uint8_t fDayOfWeek
 		public Byte fDayOfWeek;
+
 		// public uint8_t fDay
 		public Byte fDay;
+
 		// public uint8_t fHour
 		public Byte fHour;
+
 		// public uint8_t fMinute
 		public Byte fMinute;
+
 		// public uint8_t fSecond
 		public Byte fSecond;
+
+		public bool Equals (SKTimeDateTimeInternal obj) =>
+			fTimeZoneMinutes == obj.fTimeZoneMinutes && fYear == obj.fYear && fMonth == obj.fMonth && fDayOfWeek == obj.fDayOfWeek && fDay == obj.fDay && fHour == obj.fHour && fMinute == obj.fMinute && fSecond == obj.fSecond;
+
+		public override bool Equals (object obj) =>
+			obj is SKTimeDateTimeInternal f && Equals (f);
+
+		public static bool operator == (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fTimeZoneMinutes);
+			hash.Add (fYear);
+			hash.Add (fMonth);
+			hash.Add (fDayOfWeek);
+			hash.Add (fDay);
+			hash.Add (fHour);
+			hash.Add (fMinute);
+			hash.Add (fSecond);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// sk_webpencoder_options_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKWebpEncoderOptions {
+	public unsafe partial struct SKWebpEncoderOptions : IEquatable<SKWebpEncoderOptions> {
 		// public sk_webpencoder_compression_t fCompression
 		private SKWebpEncoderCompression fCompression;
 		public SKWebpEncoderCompression Compression {
-			get => fCompression;
+			readonly get => fCompression;
 			set => fCompression = value;
 		}
 
 		// public float fQuality
 		private Single fQuality;
 		public Single Quality {
-			get => fQuality;
+			readonly get => fQuality;
 			set => fQuality = value;
 		}
 
 		// public sk_transfer_function_behavior_t fUnpremulBehavior
 		private SKTransferFunctionBehavior fUnpremulBehavior;
 		public SKTransferFunctionBehavior UnpremulBehavior {
-			get => fUnpremulBehavior;
+			readonly get => fUnpremulBehavior;
 			set => fUnpremulBehavior = value;
+		}
+
+		public bool Equals (SKWebpEncoderOptions obj) =>
+			fCompression == obj.fCompression && fQuality == obj.fQuality && fUnpremulBehavior == obj.fUnpremulBehavior;
+
+		public override bool Equals (object obj) =>
+			obj is SKWebpEncoderOptions f && Equals (f);
+
+		public static bool operator == (SKWebpEncoderOptions left, SKWebpEncoderOptions right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKWebpEncoderOptions left, SKWebpEncoderOptions right) =>
+			!left.Equals (right);
+
+		public override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fCompression);
+			hash.Add (fQuality);
+			hash.Add (fUnpremulBehavior);
+			return hash.ToHashCode ();
 		}
 
 	}

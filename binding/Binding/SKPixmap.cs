@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -25,6 +26,7 @@ namespace SkiaSharp
 		{
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKPixmap(SKImageInfo, IntPtr, int) instead.")]
 		public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable)
 			: this (info, addr, info.RowBytes)
@@ -52,6 +54,7 @@ namespace SkiaSharp
 			SkiaApi.sk_pixmap_reset (Handle);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use Reset(SKImageInfo, IntPtr, int) instead.")]
 		public void Reset (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable)
 		{
@@ -108,9 +111,11 @@ namespace SkiaSharp
 			return SkiaApi.sk_pixmap_get_pixel_color (Handle, x, y);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported.")]
 		public SKColorTable ColorTable => null;
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use ScalePixels(SKPixmap, SKFilterQuality) instead.")]
 		public static bool Resize (SKPixmap dst, SKPixmap src, SKBitmapResizeMethod method)
 		{

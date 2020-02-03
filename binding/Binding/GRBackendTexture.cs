@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -11,6 +12,7 @@ namespace SkiaSharp
 		{
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.")]
 		public GRBackendTexture (GRGlBackendTextureDesc desc)
 			: this (IntPtr.Zero, true)
@@ -22,6 +24,7 @@ namespace SkiaSharp
 			CreateGl (desc.Width, desc.Height, false, handle);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.")]
 		public GRBackendTexture (GRBackendTextureDesc desc)
 			: this (IntPtr.Zero, true)
@@ -62,12 +65,9 @@ namespace SkiaSharp
 		public SKSizeI Size => new SKSizeI (Width, Height);
 		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 
-		public GRGlTextureInfo GetGlTextureInfo ()
-		{
-			if (GetGlTextureInfo (out var info))
-				return info;
-			return default (GRGlTextureInfo);
-		}
+		public GRGlTextureInfo GetGlTextureInfo () =>
+			GetGlTextureInfo (out var info) ? info : default;
+
 		public bool GetGlTextureInfo (out GRGlTextureInfo glInfo)
 		{
 			fixed (GRGlTextureInfo* g = &glInfo) {
