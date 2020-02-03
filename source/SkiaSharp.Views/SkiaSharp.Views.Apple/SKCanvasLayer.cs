@@ -1,6 +1,7 @@
 ﻿#if !__WATCHOS__
 
 using System;
+using System.ComponentModel;
 using CoreAnimation;
 using CoreGraphics;
 
@@ -25,6 +26,7 @@ namespace SkiaSharp.Views.Mac
 			NeedsDisplayOnBoundsChange = true;
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use PaintSurface instead.")]
 		public ISKCanvasLayerDelegate SKDelegate { get; set; }
 
@@ -69,6 +71,7 @@ namespace SkiaSharp.Views.Mac
 			PaintSurface?.Invoke(this, e);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
 		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
 		{

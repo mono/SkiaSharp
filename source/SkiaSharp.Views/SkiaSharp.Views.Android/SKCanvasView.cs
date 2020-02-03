@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Android.Content;
 using Android.Graphics;
 using Android.Runtime;
@@ -136,6 +137,7 @@ namespace SkiaSharp.Views.Android
 			PaintSurface?.Invoke(this, e);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
 		protected virtual void OnDraw(SKSurface surface, SKImageInfo info)
 		{

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Android.Opengl;
 using Javax.Microedition.Khronos.Opengles;
 
@@ -25,6 +26,7 @@ namespace SkiaSharp.Views.Android
 		{
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 		protected virtual void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{

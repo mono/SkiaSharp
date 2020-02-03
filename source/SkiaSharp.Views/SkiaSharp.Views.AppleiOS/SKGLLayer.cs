@@ -1,6 +1,7 @@
 ﻿#if !__WATCHOS__
 
 using System;
+using System.ComponentModel;
 using CoreAnimation;
 using CoreGraphics;
 using OpenGLES;
@@ -30,6 +31,7 @@ namespace SkiaSharp.Views.iOS
 			Opaque = true;
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use PaintSurface instead.")]
 		public ISKGLLayerDelegate SKDelegate { get; set; }
 
@@ -110,6 +112,7 @@ namespace SkiaSharp.Views.iOS
 			PaintSurface?.Invoke(this, e);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{
