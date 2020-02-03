@@ -34,8 +34,16 @@ namespace SkiaSharp
 		public static SKData Empty =>
 			empty.Value;
 
+		// CreateCopy
+
 		public static SKData CreateCopy (IntPtr bytes, long length) =>
 			GetObject<SKData> (SkiaApi.sk_data_new_with_copy ((void*)bytes, (IntPtr)length));
+
+		public static SKData CreateCopy (byte[] bytes) =>
+			CreateCopy (bytes.AsSpan ());
+
+		public static SKData CreateCopy (byte[] bytes, long length) =>
+			CreateCopy (bytes.AsSpan (), length);
 
 		public static SKData CreateCopy (ReadOnlySpan<byte> bytes) =>
 			CreateCopy (bytes, bytes.Length);
@@ -46,6 +54,8 @@ namespace SkiaSharp
 				return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (b, (IntPtr)length));
 			}
 		}
+
+		// Create
 
 		public static SKData Create (long size) =>
 			GetObject<SKData> (SkiaApi.sk_data_new_uninitialized ((IntPtr)size));
@@ -134,8 +144,8 @@ namespace SkiaSharp
 		public Stream AsStream (bool streamDisposesData) =>
 			new SKDataStream (this, streamDisposesData);
 
-		public ReadOnlySpan<byte> AsSpan () =>
-			new ReadOnlySpan<byte> ((void*)Data, (int)Size);
+		public Span<byte> AsSpan () =>
+			new Span<byte> ((void*)Data, (int)Size);
 
 		public void SaveTo (Stream target)
 		{

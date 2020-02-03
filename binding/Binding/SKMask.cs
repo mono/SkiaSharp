@@ -48,6 +48,8 @@ namespace SkiaSharp
 			}
 		}
 
+		// Compute*
+
 		public readonly long ComputeImageSize ()
 		{
 			fixed (SKMask* t = &this) {
@@ -61,6 +63,8 @@ namespace SkiaSharp
 				return (long)SkiaApi.sk_mask_compute_total_image_size (t);
 			}
 		}
+
+		// GetImage*
 
 		public readonly byte GetImage1 (int x, int y)
 		{
@@ -90,12 +94,16 @@ namespace SkiaSharp
 			}
 		}
 
+		// GetAddress
+
 		public readonly IntPtr GetAddress (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
 				return (IntPtr)SkiaApi.sk_mask_get_addr (t, x, y);
 			}
 		}
+
+		// AllocateImage
 
 		public long AllocateImage ()
 		{
@@ -106,6 +114,11 @@ namespace SkiaSharp
 			}
 		}
 
+		public static IntPtr AllocateImage (long size) =>
+			(IntPtr)SkiaApi.sk_mask_alloc_image ((IntPtr)size);
+
+		// FreeImage
+
 		public void FreeImage ()
 		{
 			if (fImage != null) {
@@ -114,11 +127,13 @@ namespace SkiaSharp
 			}
 		}
 
-		public static IntPtr AllocateImage (long size) =>
-			(IntPtr)SkiaApi.sk_mask_alloc_image ((IntPtr)size);
-
 		public static void FreeImage (IntPtr image) =>
 			SkiaApi.sk_mask_free_image ((byte*)image);
+
+		// Create
+
+		public static SKMask Create (byte[] image, SKRectI bounds, uint rowBytes, SKMaskFormat format) =>
+			Create (image.AsSpan (), bounds, rowBytes, format);
 
 		public static SKMask Create (ReadOnlySpan<byte> image, SKRectI bounds, uint rowBytes, SKMaskFormat format)
 		{

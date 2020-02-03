@@ -20,14 +20,20 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_picture_recorder_delete (Handle);
 
+		// BeginRecording
+
 		public SKCanvas BeginRecording (SKRect cullRect) =>
 			GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, &cullRect), false);
+
+		// EndRecording
 
 		public SKPicture EndRecording () =>
 			GetObject<SKPicture> (SkiaApi.sk_picture_recorder_end_recording (Handle));
 
 		public SKDrawable EndRecordingAsDrawable () =>
 			GetObject<SKDrawable> (SkiaApi.sk_picture_recorder_end_recording_as_drawable (Handle));
+
+		// RecordingCanvas
 
 		public SKCanvas RecordingCanvas =>
 			GetObject<SKCanvas> (SkiaApi.sk_picture_get_recording_canvas (Handle), false);

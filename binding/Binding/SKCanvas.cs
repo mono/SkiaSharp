@@ -120,22 +120,14 @@ namespace SkiaSharp
 		public void Skew (SKPoint skew) =>
 			SkiaApi.sk_canvas_skew (Handle, skew.X, skew.Y);
 
-		public void Concat (in SKMatrix m)
-		{
-			fixed (SKMatrix* ptr = &m) {
-				SkiaApi.sk_canvas_concat (Handle, ptr);
-			}
-		}
+		public void Concat (SKMatrix m) =>
+			SkiaApi.sk_canvas_concat (Handle, &m);
 
 		public void ResetMatrix () =>
 			SkiaApi.sk_canvas_reset_matrix (Handle);
 
-		public void SetMatrix (in SKMatrix matrix)
-		{
-			fixed (SKMatrix* ptr = &matrix) {
-				SkiaApi.sk_canvas_set_matrix (Handle, ptr);
-			}
-		}
+		public void SetMatrix (SKMatrix matrix) =>
+			SkiaApi.sk_canvas_set_matrix (Handle, &matrix);
 
 		public SKMatrix TotalMatrix {
 			get {
@@ -406,14 +398,12 @@ namespace SkiaSharp
 		public void DrawPicture (SKPicture picture, SKPoint p, SKPaint paint = null) =>
 			DrawPicture (picture, p.X, p.Y, paint);
 
-		public void DrawPicture (SKPicture picture, in SKMatrix matrix, SKPaint paint = null)
+		public void DrawPicture (SKPicture picture, SKMatrix matrix, SKPaint paint = null)
 		{
 			if (picture == null)
 				throw new ArgumentNullException (nameof (picture));
 
-			fixed (SKMatrix* m = &matrix) {
-				SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, m, paint?.Handle ?? IntPtr.Zero);
-			}
+			SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, &matrix, paint?.Handle ?? IntPtr.Zero);
 		}
 
 		public void DrawPicture (SKPicture picture, SKPaint paint = null)
@@ -426,14 +416,12 @@ namespace SkiaSharp
 
 		// DrawDrawable
 
-		public void DrawDrawable (SKDrawable drawable, in SKMatrix matrix)
+		public void DrawDrawable (SKDrawable drawable, SKMatrix matrix)
 		{
 			if (drawable == null)
 				throw new ArgumentNullException (nameof (drawable));
 
-			fixed (SKMatrix* m = &matrix) {
-				SkiaApi.sk_canvas_draw_drawable (Handle, drawable.Handle, m);
-			}
+			SkiaApi.sk_canvas_draw_drawable (Handle, drawable.Handle, &matrix);
 		}
 
 		public void DrawDrawable (SKDrawable drawable, float x, float y)
@@ -629,7 +617,7 @@ namespace SkiaSharp
 		public void DrawBitmapLattice (SKBitmap bitmap, ReadOnlySpan<int> xDivs, ReadOnlySpan<int> yDivs, SKRect dst, SKPaint paint = null)
 		{
 			var lattice = new SKLattice {
-				XDivs = xDivs.ToArray(),
+				XDivs = xDivs.ToArray (),
 				YDivs = yDivs.ToArray ()
 			};
 			DrawBitmapLattice (bitmap, lattice, dst, paint);

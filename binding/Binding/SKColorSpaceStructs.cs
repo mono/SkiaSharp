@@ -6,6 +6,11 @@ namespace SkiaSharp
 	{
 		public static readonly SKColorSpacePrimaries Empty;
 
+		public SKColorSpacePrimaries (float[] values)
+			: this (values.AsSpan ())
+		{
+		}
+
 		public SKColorSpacePrimaries (ReadOnlySpan<float> values)
 		{
 			if (values.Length != 8)
@@ -33,7 +38,8 @@ namespace SkiaSharp
 			fWY = wy;
 		}
 
-		public readonly float[] Values => new[] { fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY };
+		public readonly float[] Values =>
+			new[] { fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY };
 
 		public readonly SKMatrix44 ToMatrix44 () =>
 			ToMatrix44 (out var toXYZ) ? toXYZ : null;
@@ -218,6 +224,11 @@ namespace SkiaSharp
 			fM22 = value;
 		}
 
+		public SKColorSpaceXyz (float[] values)
+			: this (values.AsSpan ())
+		{
+		}
+
 		public SKColorSpaceXyz (ReadOnlySpan<float> values)
 		{
 			if (values.Length != 9)
@@ -373,6 +384,9 @@ namespace SkiaSharp
 			ToXyzD50 (out var toXYZ) ? toXYZ : SKColorSpaceXyz.Empty;
 
 		// Create
+
+		public static SKColorSpaceIccProfile Create (byte[] data) =>
+			Create (data.AsSpan ());
 
 		public static SKColorSpaceIccProfile Create (ReadOnlySpan<byte> data)
 		{

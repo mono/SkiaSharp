@@ -15,11 +15,17 @@ namespace SkiaSharp
 		{
 		}
 
+		// CreateBlendMode
+
 		public static SKColorFilter CreateBlendMode (SKColor c, SKBlendMode mode) =>
 			GetObject<SKColorFilter> (SkiaApi.sk_colorfilter_new_mode ((uint)c, mode));
 
+		// CreateLighting
+
 		public static SKColorFilter CreateLighting (SKColor mul, SKColor add) =>
 			GetObject<SKColorFilter> (SkiaApi.sk_colorfilter_new_lighting ((uint)mul, (uint)add));
+
+		// CreateCompose
 
 		public static SKColorFilter CreateCompose (SKColorFilter outer, SKColorFilter inner)
 		{
@@ -31,6 +37,8 @@ namespace SkiaSharp
 			return GetObject<SKColorFilter> (SkiaApi.sk_colorfilter_new_compose (outer.Handle, inner.Handle));
 		}
 
+		// CreateColorMatrix
+
 		public static SKColorFilter CreateColorMatrix (ReadOnlySpan<float> matrix)
 		{
 			if (matrix.Length != 20)
@@ -41,8 +49,18 @@ namespace SkiaSharp
 			}
 		}
 
+		// CreateLumaColor
+
 		public static SKColorFilter CreateLumaColor () =>
 			GetObject<SKColorFilter> (SkiaApi.sk_colorfilter_new_luma_color ());
+
+		// CreateTable
+
+		public static SKColorFilter CreateTable (byte[] table) =>
+			CreateTable (table.AsSpan ());
+
+		public static SKColorFilter CreateTable (byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB) =>
+			CreateTable (tableA.AsSpan (), tableR.AsSpan (), tableG.AsSpan (), tableB.AsSpan ());
 
 		public static SKColorFilter CreateTable (ReadOnlySpan<byte> table)
 		{
@@ -72,6 +90,8 @@ namespace SkiaSharp
 				return GetObject<SKColorFilter> (SkiaApi.sk_colorfilter_new_table_argb (a, r, g, b));
 			}
 		}
+
+		// CreateHighContrast
 
 		public static SKColorFilter CreateHighContrast (SKHighContrastConfig config) =>
 			GetObject<SKColorFilter> (SkiaApi.sk_colorfilter_new_high_contrast (&config));

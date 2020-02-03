@@ -17,11 +17,13 @@ namespace SkiaSharp
 		public byte Green => (byte)((color >> SKImageInfo.PlatformColorGreenShift) & 0xff);
 		public byte Blue => (byte)((color >> SKImageInfo.PlatformColorBlueShift) & 0xff);
 
+		// PreMultiply
+
 		public static SKPMColor PreMultiply (SKColor color) =>
 			SkiaApi.sk_color_premultiply ((uint)color);
 
-		public static SKColor UnPreMultiply (SKPMColor pmcolor) =>
-			SkiaApi.sk_color_unpremultiply ((uint)pmcolor);
+		public static SKPMColor[] PreMultiply (SKColor[] colors) =>
+			PreMultiply (colors.AsSpan ());
 
 		public static SKPMColor[] PreMultiply (ReadOnlySpan<SKColor> colors)
 		{
@@ -41,6 +43,14 @@ namespace SkiaSharp
 			}
 		}
 
+		// UnPreMultiply
+
+		public static SKColor UnPreMultiply (SKPMColor pmcolor) =>
+			SkiaApi.sk_color_unpremultiply ((uint)pmcolor);
+
+		public static SKColor[] UnPreMultiply (SKPMColor[] pmcolors) =>
+			UnPreMultiply (pmcolors.AsSpan ());
+
 		public static SKColor[] UnPreMultiply (ReadOnlySpan<SKPMColor> pmcolors)
 		{
 			var colors = new SKColor[pmcolors.Length];
@@ -58,6 +68,8 @@ namespace SkiaSharp
 				SkiaApi.sk_color_unpremultiply_array ((uint*)pm, pmcolors.Length, (uint*)c);
 			}
 		}
+
+		// 
 
 		public bool Equals (SKPMColor other) =>
 			other.color == color;

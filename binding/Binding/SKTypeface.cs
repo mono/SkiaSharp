@@ -1,8 +1,20 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 
 namespace SkiaSharp
 {
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Flags]
+	[Obsolete ("Use SKFontStyleWeight and SKFontStyleSlant instead.")]
+	public enum SKTypefaceStyle
+	{
+		Normal = 0,
+		Bold = 0x01,
+		Italic = 0x02,
+		BoldItalic = 0x03
+	}
+
 	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
 	{
 		private static readonly Lazy<SKTypeface> defaultTypeface;
@@ -93,6 +105,20 @@ namespace SkiaSharp
 			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_data (data.Handle, index));
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style)
+		{
+			if (typeface == null)
+				throw new ArgumentNullException (nameof (typeface));
+
+			var weight = style.HasFlag (SKTypefaceStyle.Bold) ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
+			var width = SKFontStyleWidth.Normal;
+			var slant = style.HasFlag (SKTypefaceStyle.Italic) ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright;
+
+			return SKFontManager.Default.MatchTypeface (typeface, new SKFontStyle (weight, width, slant));
+		}
+
 		// Properties
 
 		public string FamilyName => (string)GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
@@ -180,6 +206,24 @@ namespace SkiaSharp
 			fixed (byte* b = tableData) {
 				return SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)start, (IntPtr)tableData.Length, b) != IntPtr.Zero;
 			}
+		}
+
+		// CharsToGlyphs
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(string, out ushort[]) instead.")]
+		public int CharsToGlyphs (string chars, out ushort[] glyphs)
+		{
+			glyphs = GetGlyphs (chars);
+			return glyphs.Length;
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(IntPtr, int, SKEncoding, out ushort[]) instead.")]
+		public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort[] glyphs)
+		{
+			glyphs = GetGlyphs (str, strlen, encoding.ToTextEncoding ());
+			return glyphs.Length;
 		}
 
 		// GetGlyph

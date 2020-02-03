@@ -253,17 +253,17 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* sk_bitmap_get_addr (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 
-		// uint16_t sk_bitmap_get_addr_16(sk_bitmap_t* cbitmap, int x, int y)
+		// uint16_t* sk_bitmap_get_addr_16(sk_bitmap_t* cbitmap, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt16 sk_bitmap_get_addr_16 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		internal static extern UInt16* sk_bitmap_get_addr_16 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 
-		// uint32_t sk_bitmap_get_addr_32(sk_bitmap_t* cbitmap, int x, int y)
+		// uint32_t* sk_bitmap_get_addr_32(sk_bitmap_t* cbitmap, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 sk_bitmap_get_addr_32 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		internal static extern UInt32* sk_bitmap_get_addr_32 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 
-		// uint8_t sk_bitmap_get_addr_8(sk_bitmap_t* cbitmap, int x, int y)
+		// uint8_t* sk_bitmap_get_addr_8(sk_bitmap_t* cbitmap, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte sk_bitmap_get_addr_8 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		internal static extern Byte* sk_bitmap_get_addr_8 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 
 		// size_t sk_bitmap_get_byte_count(sk_bitmap_t* cbitmap)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -806,10 +806,6 @@ namespace SkiaSharp
 		// void sk_color4f_from_color(sk_color_t color, sk_color4f_t* color4f)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_color4f_from_color (UInt32 color, SKColorF* color4f);
-
-		// void sk_color4f_pin(const sk_color4f_t* color4f, sk_color4f_t* pinned)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_color4f_pin (SKColorF* color4f, SKColorF* pinned);
 
 		// sk_color_t sk_color4f_to_color(const sk_color4f_t* color4f)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -3239,6 +3235,10 @@ namespace SkiaSharp
 		// sk_canvas_t* sk_svgcanvas_create(const sk_rect_t* bounds, sk_wstream_t* stream)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_canvas_t sk_svgcanvas_create (SKRect* bounds, sk_wstream_t stream);
+
+		// sk_canvas_t* sk_svgcanvas_create_with_writer(const sk_rect_t* bounds, sk_xmlstreamwriter_t* writer)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_canvas_t sk_svgcanvas_create_with_writer (SKRect* bounds, sk_xmlstreamwriter_t writer);
 
 		#endregion
 

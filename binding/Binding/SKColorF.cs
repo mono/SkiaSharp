@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public unsafe partial struct SKColorF
+	public unsafe readonly partial struct SKColorF : IEquatable<SKColorF>
 	{
 		private const float EPSILON = 0.001f;
 
@@ -24,17 +24,22 @@ namespace SkiaSharp
 			fA = alpha;
 		}
 
+		public readonly float Red => fR;
+		public readonly float Green => fG;
+		public readonly float Blue => fB;
+		public readonly float Alpha => fA;
+
 		public SKColorF WithRed (float red) =>
-			new SKColorF (red, Green, Blue, Alpha);
+			new SKColorF (red, fG, fB, fA);
 
 		public SKColorF WithGreen (float green) =>
-			new SKColorF (Red, green, Blue, Alpha);
+			new SKColorF (fR, green, fB, fA);
 
 		public SKColorF WithBlue (float blue) =>
-			new SKColorF (Red, Green, blue, Alpha);
+			new SKColorF (fR, fG, blue, fA);
 
 		public SKColorF WithAlpha (float alpha) =>
-			new SKColorF (Red, Green, Blue, alpha);
+			new SKColorF (fR, fG, fB, alpha);
 
 		public float Hue {
 			get {
@@ -45,7 +50,7 @@ namespace SkiaSharp
 
 		public SKColorF Clamp ()
 		{
-			return new SKColorF (Clamp (Red), Clamp (Green), Clamp (Blue), Clamp (Alpha));
+			return new SKColorF (Clamp (fR), Clamp (fG), Clamp (fB), Clamp (fA));
 
 			static float Clamp (float v)
 			{
@@ -159,9 +164,9 @@ namespace SkiaSharp
 		public void ToHsl (out float h, out float s, out float l)
 		{
 			// RGB from 0 to 1
-			var r = Red;
-			var g = Green;
-			var b = Blue;
+			var r = fR;
+			var g = fG;
+			var b = fB;
 
 			var min = Math.Min (Math.Min (r, g), b); // min value of RGB
 			var max = Math.Max (Math.Max (r, g), b); // max value of RGB
@@ -205,9 +210,9 @@ namespace SkiaSharp
 		public void ToHsv (out float h, out float s, out float v)
 		{
 			// RGB from 0 to 1
-			var r = Red;
-			var g = Green;
-			var b = Blue;
+			var r = fR;
+			var g = fG;
+			var b = fB;
 
 			var min = Math.Min (Math.Min (r, g), b); // min value of RGB
 			var max = Math.Max (Math.Max (r, g), b); // max value of RGB
@@ -247,6 +252,12 @@ namespace SkiaSharp
 
 		public override string ToString () =>
 			((SKColor)this).ToString ();
+
+		public bool Equals (SKColorF other) =>
+			other.fR == fR &&
+			other.fG == fG &&
+			other.fB == fB &&
+			other.fA == fA;
 
 		public override bool Equals (object other) =>
 			other is SKColorF c &&

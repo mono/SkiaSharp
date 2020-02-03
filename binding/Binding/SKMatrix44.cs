@@ -404,7 +404,7 @@ namespace SkiaSharp
 
 		// operators
 
-		public static implicit operator SKMatrix44 (in SKMatrix matrix) =>
+		public static implicit operator SKMatrix44 (SKMatrix matrix) =>
 			new SKMatrix44 (matrix);
 	}
 }

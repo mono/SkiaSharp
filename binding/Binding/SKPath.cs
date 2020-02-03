@@ -313,14 +313,12 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_path_offset (Handle, other.Handle, dx, dy, mode);
 		}
 
-		public void AddPath (SKPath other, in SKMatrix matrix, SKPathAddMode mode = SKPathAddMode.Append)
+		public void AddPath (SKPath other, SKMatrix matrix, SKPathAddMode mode = SKPathAddMode.Append)
 		{
 			if (other == null)
 				throw new ArgumentNullException (nameof (other));
 
-			fixed (SKMatrix* m = &matrix) {
-				SkiaApi.sk_path_add_path_matrix (Handle, other.Handle, m, mode);
-			}
+			SkiaApi.sk_path_add_path_matrix (Handle, other.Handle, &matrix, mode);
 		}
 
 		public void AddPath (SKPath other, SKPathAddMode mode = SKPathAddMode.Append)

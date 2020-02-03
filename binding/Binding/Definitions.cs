@@ -3,6 +3,29 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use SKEncodedOrigin instead.")]
+	public enum SKCodecOrigin
+	{
+		TopLeft = 1,
+		TopRight = 2,
+		BottomRight = 3,
+		BottomLeft = 4,
+		LeftTop = 5,
+		RightTop = 6,
+		RightBottom = 7,
+		LeftBottom = 8,
+	}
+
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use SKTextEncoding instead.")]
+	public enum SKEncoding
+	{
+		Utf8 = 0,
+		Utf16 = 1,
+		Utf32 = 2,
+	}
+
 	public enum SKFontStyleWeight
 	{
 		Invisible = 0,
@@ -44,6 +67,17 @@ namespace SkiaSharp
 
 		public static bool IsHorizontal (this SKPixelGeometry pg) =>
 			pg == SKPixelGeometry.BgrHorizontal || pg == SKPixelGeometry.RgbHorizontal;
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public static SKTextEncoding ToTextEncoding (this SKEncoding encoding) =>
+			encoding switch
+			{
+				SKEncoding.Utf8 => SKTextEncoding.Utf8,
+				SKEncoding.Utf16 => SKTextEncoding.Utf16,
+				SKEncoding.Utf32 => SKTextEncoding.Utf32,
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding)),
+			};
 	}
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
@@ -62,7 +96,6 @@ namespace SkiaSharp
 		{
 			Default = new SKCodecOptions (SKZeroInitialized.No);
 		}
-
 		public SKCodecOptions (SKZeroInitialized zeroInitialized)
 		{
 			ZeroInitialized = zeroInitialized;
@@ -191,6 +224,7 @@ namespace SkiaSharp
 			PdfA = false;
 			EncodingQuality = DefaultEncodingQuality;
 		}
+
 		public SKDocumentPdfMetadata (int encodingQuality)
 		{
 			Title = null;
@@ -205,6 +239,7 @@ namespace SkiaSharp
 			PdfA = false;
 			EncodingQuality = encodingQuality;
 		}
+
 		public SKDocumentPdfMetadata (float rasterDpi, int encodingQuality)
 		{
 			Title = null;
@@ -231,6 +266,15 @@ namespace SkiaSharp
 		public float RasterDpi { get; set; }
 		public bool PdfA { get; set; }
 		public int EncodingQuality { get; set; }
+	}
+
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete]
+	[Flags]
+	public enum SKColorSpaceFlags
+	{
+		None = 0,
+		NonLinearBlending = 0x1,
 	}
 
 	public partial struct SKHighContrastConfig

@@ -9,6 +9,8 @@ namespace SkiaSharp
 		{
 		}
 
+		// Create
+
 		public static SKCanvas Create (SKRect bounds, Stream stream)
 		{
 			if (stream == null)
@@ -26,7 +28,17 @@ namespace SkiaSharp
 			return Referenced (SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create (&bounds, stream.Handle)), stream);
 		}
 
-		private static SKCanvas Owned (SKCanvas canvas, SKWStream stream)
+		public static SKCanvas Create (SKRect bounds, SKXmlWriter writer)
+		{
+			if (writer == null)
+				throw new ArgumentNullException (nameof (writer));
+
+			return Referenced (SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create_with_writer (&bounds, writer.Handle)), writer);
+		}
+
+		//
+
+		private static SKCanvas Owned (SKCanvas canvas, SKObject stream)
 		{
 			if (stream != null) {
 				if (canvas != null)
@@ -38,7 +50,7 @@ namespace SkiaSharp
 			return canvas;
 		}
 
-		private static SKCanvas Referenced (SKCanvas canvas, SKWStream stream)
+		private static SKCanvas Referenced (SKCanvas canvas, SKObject stream)
 		{
 			if (stream != null && canvas != null)
 				canvas.KeepAlive (stream);

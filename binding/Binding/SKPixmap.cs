@@ -82,8 +82,8 @@ namespace SkiaSharp
 		public IntPtr GetPixels (int x, int y) =>
 			(IntPtr)SkiaApi.sk_pixmap_get_pixels_with_xy (Handle, x, y);
 
-		public ReadOnlySpan<byte> GetPixelSpan () =>
-			new ReadOnlySpan<byte> ((void*)GetPixels (), BytesSize);
+		public Span<byte> GetPixelSpan () =>
+			new Span<byte> ((void*)GetPixels (), BytesSize);
 
 		public SKColor GetPixelColor (int x, int y) =>
 			SkiaApi.sk_pixmap_get_pixel_color (Handle, x, y);

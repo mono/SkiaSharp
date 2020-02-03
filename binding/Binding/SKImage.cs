@@ -251,14 +251,12 @@ namespace SkiaSharp
 			return GetObject<SKImage> (SkiaApi.sk_image_new_from_picture (picture.Handle, &dimensions, null, paint?.Handle ?? IntPtr.Zero));
 		}
 
-		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, in SKMatrix matrix, SKPaint paint = null)
+		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, SKMatrix matrix, SKPaint paint = null)
 		{
 			if (picture == null)
 				throw new ArgumentNullException (nameof (picture));
 
-			fixed (SKMatrix* m = &matrix) {
-				return GetObject<SKImage> (SkiaApi.sk_image_new_from_picture (picture.Handle, &dimensions, m, paint?.Handle ?? IntPtr.Zero));
-			}
+			return GetObject<SKImage> (SkiaApi.sk_image_new_from_picture (picture.Handle, &dimensions, &matrix, paint?.Handle ?? IntPtr.Zero));
 		}
 
 		// Encode
@@ -299,12 +297,8 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY) =>
 			GetObject<SKShader> (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, null));
 
-		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, in SKMatrix localMatrix)
-		{
-			fixed (SKMatrix* m = &localMatrix) {
-				return GetObject<SKShader> (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, m));
-			}
-		}
+		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKMatrix localMatrix) =>
+			GetObject<SKShader> (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, &localMatrix));
 
 		// PeekPixels
 

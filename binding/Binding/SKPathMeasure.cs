@@ -27,14 +27,20 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_pathmeasure_destroy (Handle);
 
+		// properties
+
 		public float Length =>
 			SkiaApi.sk_pathmeasure_get_length (Handle);
 
 		public bool IsClosed =>
 			SkiaApi.sk_pathmeasure_is_closed (Handle);
 
+		// SetPath
+
 		public void SetPath (SKPath path, bool forceClosed = false) =>
 			SkiaApi.sk_pathmeasure_set_path (Handle, path?.Handle ?? IntPtr.Zero, forceClosed);
+
+		// GetPositionAndTangent
 
 		public bool GetPositionAndTangent (float distance, out SKPoint position, out SKPoint tangent)
 		{
@@ -44,12 +50,16 @@ namespace SkiaSharp
 			}
 		}
 
+		// GetPosition
+
 		public bool GetPosition (float distance, out SKPoint position)
 		{
 			fixed (SKPoint* p = &position) {
 				return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, p, null);
 			}
 		}
+
+		// GetTangent
 
 		public bool GetTangent (float distance, out SKPoint tangent)
 		{
@@ -58,12 +68,16 @@ namespace SkiaSharp
 			}
 		}
 
+		// GetMatrix
+
 		public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasureMatrixFlags flags)
 		{
 			fixed (SKMatrix* m = &matrix) {
 				return SkiaApi.sk_pathmeasure_get_matrix (Handle, distance, m, flags);
 			}
 		}
+
+		// GetSegment
 
 		public bool GetSegment (float start, float stop, SKPath dst, bool startWithMoveTo)
 		{
@@ -82,6 +96,8 @@ namespace SkiaSharp
 			}
 			return dst;
 		}
+
+		// NextContour
 
 		public bool NextContour () =>
 			SkiaApi.sk_pathmeasure_next_contour (Handle);

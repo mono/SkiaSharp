@@ -32,11 +32,7 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile) =>
 			GetObject<SKShader> (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, null, &tile));
 
-		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, in SKMatrix localMatrix, SKRect tile)
-		{
-			fixed (SKMatrix* m = &localMatrix) {
-				return GetObject<SKShader> (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, m, &tile));
-			}
-		}
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile) =>
+			GetObject<SKShader> (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, &localMatrix, &tile));
 	}
 }

@@ -151,7 +151,7 @@ namespace SkiaSharp
 
 		// *Concat
 
-		public void PreConcat (in SKMatrix matrix)
+		public void PreConcat (ref SKMatrix matrix)
 		{
 			fixed (SKMatrix* t = &this)
 			fixed (SKMatrix* m = &matrix) {
@@ -159,7 +159,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public void PostConcat (in SKMatrix matrix)
+		public void PostConcat (ref SKMatrix matrix)
 		{
 			fixed (SKMatrix* t = &this)
 			fixed (SKMatrix* m = &matrix) {
@@ -167,7 +167,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static void Concat (ref SKMatrix target, in SKMatrix first, in SKMatrix second)
+		public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second)
 		{
 			fixed (SKMatrix* t = &target)
 			fixed (SKMatrix* f = &first)
@@ -176,7 +176,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static void PreConcat (ref SKMatrix target, in SKMatrix matrix)
+		public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix)
 		{
 			fixed (SKMatrix* t = &target)
 			fixed (SKMatrix* m = &matrix) {
@@ -184,7 +184,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static void PostConcat (ref SKMatrix target, in SKMatrix matrix)
+		public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix)
 		{
 			fixed (SKMatrix* t = &target)
 			fixed (SKMatrix* m = &matrix) {

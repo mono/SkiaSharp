@@ -19,9 +19,9 @@ namespace SkiaSharp
 			backend switch
 			{
 				GRBackend.Metal => throw new NotSupportedException (),
-				GRBackend.Dawn => throw new NotSupportedException (),
 				GRBackend.OpenGL => CreateGl (),
 				GRBackend.Vulkan => throw new NotSupportedException (),
+				GRBackend.Dawn => throw new NotSupportedException (),
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
@@ -31,9 +31,9 @@ namespace SkiaSharp
 			backend switch
 			{
 				GRBackend.Metal => throw new NotSupportedException (),
-				GRBackend.Dawn => throw new NotSupportedException (),
 				GRBackend.OpenGL => CreateGl (backendContext),
 				GRBackend.Vulkan => throw new NotSupportedException (),
+				GRBackend.Dawn => throw new NotSupportedException (),
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
@@ -43,9 +43,9 @@ namespace SkiaSharp
 			backend switch
 			{
 				GRBackend.Metal => throw new NotSupportedException (),
-				GRBackend.Dawn => throw new NotSupportedException (),
 				GRBackend.OpenGL => GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext)),
 				GRBackend.Vulkan => throw new NotSupportedException (),
+				GRBackend.Dawn => throw new NotSupportedException (),
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
@@ -91,10 +91,13 @@ namespace SkiaSharp
 			maxResourceBytes = (long)maxResBytes;
 		}
 
+		public void ResetContext () =>
+			ResetContext ((uint)GRBackendState.All);
+
 		public void ResetContext (GRGlBackendState state) =>
 			ResetContext ((uint)state);
 
-		public void ResetContext (GRBackendState state = GRBackendState.All) =>
+		public void ResetContext (GRBackendState state) =>
 			ResetContext ((uint)state);
 
 		public void ResetContext (uint state) =>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 
 namespace SkiaSharp
@@ -17,6 +18,8 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_codec_destroy (Handle);
 
+		// properties
+
 		public static int MinBufferedBytesNeeded =>
 			(int)SkiaApi.sk_codec_min_buffered_bytes_needed ();
 
@@ -27,6 +30,11 @@ namespace SkiaSharp
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use EncodedOrigin instead.")]
+		public SKCodecOrigin Origin =>
+			(SKCodecOrigin)EncodedOrigin;
 
 		public SKEncodedOrigin EncodedOrigin =>
 			SkiaApi.sk_codec_get_origin (Handle);
@@ -95,6 +103,9 @@ namespace SkiaSharp
 			return GetPixels (info, pixels);
 		}
 
+		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels) =>
+			GetPixels (info, pixels.AsSpan ());
+
 		public SKCodecResult GetPixels (SKImageInfo info, Span<byte> pixels)
 		{
 			if (pixels.Length < info.BytesSize)
@@ -108,8 +119,14 @@ namespace SkiaSharp
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels) =>
 			GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default);
 
+		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels, SKCodecOptions options) =>
+			GetPixels (info, pixels.AsSpan (), options);
+
 		public SKCodecResult GetPixels (SKImageInfo info, Span<byte> pixels, SKCodecOptions options) =>
 			GetPixels (info, pixels, info.RowBytes, options);
+
+		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels, int rowBytes, SKCodecOptions options) =>
+			GetPixels (info, pixels.AsSpan (), rowBytes, options);
 
 		public SKCodecResult GetPixels (SKImageInfo info, Span<byte> pixels, int rowBytes, SKCodecOptions options)
 		{
@@ -144,6 +161,36 @@ namespace SkiaSharp
 			return SkiaApi.sk_codec_get_pixels (Handle, &nInfo, (void*)pixels, (IntPtr)rowBytes, &nOptions);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount) =>
+			GetPixels (info, pixels, rowBytes, options);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.")]
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount) =>
+			GetPixels (info, pixels, info.RowBytes, options);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.")]
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, IntPtr colorTable, ref int colorTableCount) =>
+			GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount) =>
+			GetPixels (info, pixels, rowBytes, options);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.")]
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount) =>
+			GetPixels (info, pixels, info.RowBytes, options);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.")]
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKColorTable colorTable, ref int colorTableCount) =>
+			GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default);
+
 		// incremental (start)
 
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options)
@@ -172,6 +219,16 @@ namespace SkiaSharp
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			return SkiaApi.sk_codec_start_incremental_decode (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, null);
 		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
+		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount) =>
+			StartIncrementalDecode (info, pixels, rowBytes, options);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
+		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount) =>
+			StartIncrementalDecode (info, pixels, rowBytes, options);
 
 		// incremental (step)
 
@@ -210,6 +267,16 @@ namespace SkiaSharp
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			return SkiaApi.sk_codec_start_scanline_decode (Handle, &cinfo, null);
 		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.")]
+		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount) =>
+			StartScanlineDecode (info, options);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.")]
+		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount) =>
+			StartScanlineDecode (info, options);
 
 		// scanline (step)
 

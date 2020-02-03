@@ -16,20 +16,28 @@ namespace SkiaSharp
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () =>
 			SkiaApi.sk_vertices_unref (Handle);
 
-		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKColor> colors)
-			=> CreateCopy (vmode, positions, null, colors, null);
+		// CreateCopy
+
+		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKColor[] colors) =>
+			CreateCopy (vmode, positions.AsSpan (), null, colors.AsSpan (), null);
+
+		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors) =>
+			CreateCopy (vmode, positions.AsSpan (), texs.AsSpan (), colors.AsSpan (), null);
+
+		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors, UInt16[] indices) =>
+			CreateCopy (vmode, positions.AsSpan (), texs.AsSpan (), colors.AsSpan (), indices.AsSpan ());
+		
+		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKColor> colors) =>
+			CreateCopy (vmode, positions, null, colors, null);
 
 		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors) =>
 			CreateCopy (vmode, positions, texs, colors, null);
 
 		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, ReadOnlySpan<UInt16> indices)
 		{
-			if (positions == null)
-				throw new ArgumentNullException (nameof (positions));
-
-			if (texs != null && positions.Length != texs.Length)
+			if (!texs.IsEmpty && positions.Length != texs.Length)
 				throw new ArgumentException ("The number of texture coordinates must match the number of vertices.", nameof (texs));
-			if (colors != null && positions.Length != colors.Length)
+			if (!colors.IsEmpty && positions.Length != colors.Length)
 				throw new ArgumentException ("The number of colors must match the number of vertices.", nameof (colors));
 
 			var vertexCount = positions.Length;

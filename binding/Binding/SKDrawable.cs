@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SkiaSharp
@@ -58,7 +59,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public void Draw (SKCanvas canvas, in SKMatrix matrix)
+		public void Draw (SKCanvas canvas, ref SKMatrix matrix)
 		{
 			fixed (SKMatrix* m = &matrix) {
 				SkiaApi.sk_drawable_draw (Handle, canvas.Handle, m);
@@ -68,7 +69,7 @@ namespace SkiaSharp
 		public void Draw (SKCanvas canvas, float x, float y)
 		{
 			var matrix = SKMatrix.CreateTranslation (x, y);
-			Draw (canvas, matrix);
+			Draw (canvas, ref matrix);
 		}
 
 		// do not unref as this is a plain pointer return, not a reference counted pointer

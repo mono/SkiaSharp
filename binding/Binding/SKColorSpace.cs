@@ -79,6 +79,9 @@ namespace SkiaSharp
 
 		// CreateIcc
 
+		public static SKColorSpace CreateIcc (byte[] data) =>
+			CreateIcc (data.AsSpan ());
+
 		public static SKColorSpace CreateIcc (ReadOnlySpan<byte> data) =>
 			CreateIcc (SKColorSpaceIccProfile.Create (data));
 

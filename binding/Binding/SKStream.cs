@@ -3,6 +3,7 @@
 namespace SkiaSharp
 {
 	// Read Only Streams
+
 	public unsafe abstract class SKStream : SKObject
 	{
 		internal SKStream (IntPtr handle, bool owns)
@@ -83,6 +84,12 @@ namespace SkiaSharp
 			buffer = b > 0;
 			return result;
 		}
+
+		public int Read (byte[] buffer) =>
+			Read (buffer.AsSpan ());
+
+		public int Read (byte[] buffer, int size) =>
+			Read (buffer.AsSpan (), size);
 
 		public int Read (Span<byte> buffer) =>
 			Read (buffer, buffer.Length);
@@ -268,6 +275,11 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");
 		}
 
+		public SKMemoryStream (byte[] data)
+			: this (data.AsSpan ())
+		{
+		}
+
 		public SKMemoryStream (ReadOnlySpan<byte> data)
 			: this (IntPtr.Zero, true)
 		{
@@ -281,6 +293,9 @@ namespace SkiaSharp
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_memorystream_destroy (Handle);
+
+		public void SetMemory (byte[] data) =>
+			SetMemory (data.AsSpan ());
 
 		public void SetMemory (ReadOnlySpan<byte> data)
 		{
@@ -301,6 +316,19 @@ namespace SkiaSharp
 
 		public virtual int BytesWritten =>
 			(int)SkiaApi.sk_wstream_bytes_written (Handle);
+
+		public bool Write (byte[] buffer) =>
+			Write (buffer.AsSpan ());
+
+		public virtual bool Write (byte[] buffer, int size)
+		{
+			fixed (byte* b = buffer) {
+				return SkiaApi.sk_wstream_write (Handle, (void*)b, (IntPtr)size);
+			}
+		}
+
+		public bool Write (ReadOnlySpan<byte> buffer) =>
+			Write (buffer, buffer.Length);
 
 		public virtual bool Write (ReadOnlySpan<byte> buffer, int size)
 		{
@@ -434,6 +462,9 @@ namespace SkiaSharp
 
 		public void CopyTo (IntPtr data) =>
 			SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, (void*)data);
+
+		public void CopyTo (byte[] data) =>
+			CopyTo (data.AsSpan ());
 
 		public void CopyTo (Span<byte> data)
 		{

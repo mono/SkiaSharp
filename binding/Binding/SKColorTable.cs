@@ -54,9 +54,6 @@ namespace SkiaSharp
 			}
 		}
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
 		public int Count =>
 			SkiaApi.sk_colortable_count (Handle);
 
@@ -80,23 +77,15 @@ namespace SkiaSharp
 
 		public SKPMColor this[int index] {
 			get {
-				var count = Count;
-				var pointer = ReadColors ();
-
-				if (index < 0 || index >= count || pointer == IntPtr.Zero)
-					throw new ArgumentOutOfRangeException (nameof (index));
-
-				return PtrToStructure<SKPMColor> (pointer, index);
 				var count = SkiaApi.sk_colortable_count (Handle);
-				if (count == 0)
-					return new SKPMColor[0];
+				if (index < 0 || index >= count)
+					throw new ArgumentOutOfRangeException (nameof (index));
 
 				uint* colors;
 				SkiaApi.sk_colortable_read_colors (Handle, &colors);
-				if (colors == null)
-					return new SKPMColor[0];
+				var span = new ReadOnlySpan<uint> (colors, count);
 
-				return new ReadOnlySpan<SKPMColor> (colors, count).ToArray ();
+				return span[index];
 			}
 		}
 

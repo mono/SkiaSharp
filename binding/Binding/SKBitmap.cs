@@ -42,6 +42,7 @@ namespace SkiaSharp
 
 	public unsafe class SKBitmap : SKObject
 	{
+		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";
 
 		[Preserve]
@@ -106,10 +107,28 @@ namespace SkiaSharp
 				throw new Exception (UnableToAllocatePixelsMessage);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo) instead.")]
+		public SKBitmap (SKImageInfo info, SKColorTable ctable)
+			: this (info)
+		{
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo, SKBitmapAllocFlags) instead.")]
+		public SKBitmap (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags)
+			: this (info, SKBitmapAllocFlags.None)
+		{
+		}
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_bitmap_destructor (Handle);
 
 		// properties
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported.")]
+		public SKColorTable ColorTable => null;
 
 		public bool ReadyToDraw =>
 			SkiaApi.sk_bitmap_ready_to_draw (Handle);
@@ -197,6 +216,11 @@ namespace SkiaSharp
 
 		public SKColor GetPixelColor (int x, int y) =>
 			SkiaApi.sk_bitmap_get_pixel_color (Handle, x, y);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixel(int, int) instead.")]
+		public SKPMColor GetIndex8Color (int x, int y) =>
+			(SKPMColor)GetPixel (x, y);
 
 		public void SetPixel (int x, int y, SKColor color) =>
 			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, (uint)color);
@@ -312,22 +336,33 @@ namespace SkiaSharp
 		public IntPtr GetAddress (int x, int y) =>
 			(IntPtr)SkiaApi.sk_bitmap_get_addr (Handle, x, y);
 
-		public IntPtr GetAddress8 (int x, int y) =>
-			(IntPtr)SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetAddress(int, int) instead.")]
+		public IntPtr GetAddr (int x, int y) =>
+			GetAddress (x, y);
 
-		public IntPtr GetAddress16 (int x, int y) =>
-			(IntPtr)SkiaApi.sk_bitmap_get_addr_16 (Handle, x, y);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public ushort GetAddr16 (int x, int y) =>
+			*SkiaApi.sk_bitmap_get_addr_16 (Handle, x, y);
 
-		public IntPtr GetAddress32 (int x, int y) =>
-			(IntPtr)SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public uint GetAddr32 (int x, int y) =>
+			*SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public byte GetAddr8 (int x, int y) =>
+			*SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
 
 		// Pixels (bytes)
 
 		public IntPtr GetPixels () =>
 			GetPixels (out _);
 
-		public ReadOnlySpan<byte> GetPixelSpan () =>
-			new ReadOnlySpan<byte> ((void*)GetPixels (out var length), (int)length);
+		public Span<byte> GetPixelSpan () =>
+			new Span<byte> ((void*)GetPixels (out var length), (int)length);
 
 		public IntPtr GetPixels (out IntPtr length)
 		{
@@ -338,6 +373,18 @@ namespace SkiaSharp
 
 		public void SetPixels (IntPtr pixels) =>
 			SkiaApi.sk_bitmap_set_pixels (Handle, (void*)pixels);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use SetPixels(IntPtr) instead.")]
+		public void SetPixels (IntPtr pixels, SKColorTable ct) =>
+			SetPixels (pixels);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The Index8 color type and color table is no longer supported.")]
+		public void SetColorTable (SKColorTable ct)
+		{
+			// no-op due to unsupperted action
+		}
 
 		public byte[] Bytes {
 			get {
@@ -384,6 +431,9 @@ namespace SkiaSharp
 			using var codec = SKCodec.Create (filename);
 			return codec?.Info ?? SKImageInfo.Empty;
 		}
+
+		public static SKImageInfo DecodeBounds (byte[] buffer) =>
+			DecodeBounds (buffer.AsSpan ());
 
 		public static SKImageInfo DecodeBounds (ReadOnlySpan<byte> buffer)
 		{
@@ -535,10 +585,30 @@ namespace SkiaSharp
 
 		// InstallPixels
 
-		public bool InstallPixels (SKImageInfo info, IntPtr pixels, SKBitmapReleaseDelegate releaseProc = null, object context = null) =>
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int) instead.")]
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable) =>
+			InstallPixels (info, pixels, rowBytes, null, null);
+
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int, SKBitmapReleaseDelegate, object) instead.")]
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context) =>
+			InstallPixels (info, pixels, rowBytes, releaseProc, context);
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels) =>
+			InstallPixels (info, pixels, info.RowBytes, null, null);
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, SKBitmapReleaseDelegate releaseProc) =>
+			InstallPixels (info, pixels, info.RowBytes, releaseProc, null);
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, SKBitmapReleaseDelegate releaseProc, object context) =>
 			InstallPixels (info, pixels, info.RowBytes, releaseProc, context);
 
-		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc = null, object context = null)
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes) =>
+			InstallPixels (info, pixels, rowBytes, null, null);
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc) =>
+			InstallPixels (info, pixels, rowBytes, releaseProc, null);
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc, object context)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			var del = releaseProc != null && context != null
@@ -671,22 +741,7 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
 			GetObject<SKShader> (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, null));
 
-		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, in SKMatrix localMatrix)
-		{
-			fixed (SKMatrix* m = &localMatrix) {
-				return GetObject<SKShader> (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, m));
-			}
-		}
-
-		// ToShader
-
-		public SKShader ToShader () =>
-			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
-
-		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
-			SKShader.CreateBitmap (this, tmx, tmy);
-
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
-			SKShader.CreateBitmap (this, tmx, tmy, localMatrix);
+			GetObject<SKShader> (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &localMatrix));
 	}
 }

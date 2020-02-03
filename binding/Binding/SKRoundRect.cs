@@ -104,8 +104,10 @@ namespace SkiaSharp
 		public void SetNinePatch (SKRect rect, float leftRadius, float topRadius, float rightRadius, float bottomRadius) =>
 			SkiaApi.sk_rrect_set_nine_patch (Handle, &rect, leftRadius, topRadius, rightRadius, bottomRadius);
 
-		public void SetRectRadii (SKRect rect, ReadOnlySpan<SKPoint> radii)
+		public void SetRectRadii (SKRect rect, SKPoint[] radii)
 		{
+			if (radii == null)
+				throw new ArgumentNullException (nameof (radii));
 			if (radii.Length != 4)
 				throw new ArgumentException ("Radii must have a length of 4.", nameof (radii));
 
