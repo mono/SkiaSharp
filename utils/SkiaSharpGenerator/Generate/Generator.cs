@@ -289,10 +289,11 @@ namespace SkiaSharpGenerator
 				writer.WriteLine();
 				writer.WriteLine($"\t// {klass.GetDisplayName()}");
 				writer.WriteLine($"\t[StructLayout (LayoutKind.Sequential)]");
-				var visibility = "public";
-				if (map?.IsInternal == true)
-					visibility = "internal";
-				writer.WriteLine($"\t{visibility} unsafe partial struct {name} {{");
+				var visibility = map?.IsInternal == true ? "internal" : "public";
+				var isReadonly = map?.IsReadOnly == true ? " readonly" : "";
+				var equatable = map?.GenerateEquality == true ? $" : IEquatable<{name}>" : "";
+				writer.WriteLine($"\t{visibility}{isReadonly} unsafe partial struct {name}{equatable} {{");
+				var allFields = new List<string>();
 				foreach (var field in klass.Fields)
 				{
 					var type = GetType(field.Type);
@@ -302,14 +303,14 @@ namespace SkiaSharpGenerator
 
 					var fieldName = field.Name;
 					var isPrivate = fieldName.StartsWith("_private_", StringComparison.OrdinalIgnoreCase);
-					if (isPrivate) {
+					if (isPrivate)
 						fieldName = fieldName.Substring(9);
-					}
 
-					var vis = "private";
-					if (map?.IsInternal == true)
-						vis = "public";
-					writer.WriteLine($"\t\t{vis} {type} {fieldName};");
+					allFields.Add(fieldName);
+
+					var vis = map?.IsInternal == true ? "public" : "private";
+					var ro = map?.IsReadOnly == true ? " readonly" : "";
+					writer.WriteLine($"\t\t{vis}{ro} {type} {fieldName};");
 
 					if (!isPrivate && (map == null || (map.GenerateProperties && !map.IsInternal)))
 					{
@@ -321,20 +322,73 @@ namespace SkiaSharpGenerator
 
 						if (cppT == "bool")
 						{
-							writer.WriteLine($"\t\tpublic bool {propertyName} {{");
-							writer.WriteLine($"\t\t\tget => {fieldName} > 0;");
-							writer.WriteLine($"\t\t\tset => {fieldName} = value ? (byte)1 : (byte)0;");
-							writer.WriteLine($"\t\t}}");
+							if (map?.IsReadOnly == true)
+							{
+								writer.WriteLine($"\t\tpublic readonly bool {propertyName} => {fieldName} > 0;");
+							}
+							else
+							{
+								writer.WriteLine($"\t\tpublic bool {propertyName} {{");
+								writer.WriteLine($"\t\t\treadonly get => {fieldName} > 0;");
+								writer.WriteLine($"\t\t\tset => {fieldName} = value ? (byte)1 : (byte)0;");
+								writer.WriteLine($"\t\t}}");
+							}
 						}
 						else
 						{
-							writer.WriteLine($"\t\tpublic {type} {propertyName} {{");
-							writer.WriteLine($"\t\t\tget => {fieldName};");
-							writer.WriteLine($"\t\t\tset => {fieldName} = value;");
-							writer.WriteLine($"\t\t}}");
+							if (map?.IsReadOnly == true)
+							{
+								writer.WriteLine($"\t\tpublic readonly {type} {propertyName} => {fieldName};");
+							}
+							else
+							{
+								writer.WriteLine($"\t\tpublic {type} {propertyName} {{");
+								writer.WriteLine($"\t\t\treadonly get => {fieldName};");
+								writer.WriteLine($"\t\t\tset => {fieldName} = value;");
+								writer.WriteLine($"\t\t}}");
+							}
 						}
-						writer.WriteLine();
 					}
+
+					writer.WriteLine();
+				}
+
+				if (map?.GenerateEquality == true)
+				{
+					// IEquatable
+					var equalityFields = new List<string>();
+					foreach (var f in allFields)
+					{
+						equalityFields.Add($"{f} == obj.{f}");
+					}
+					writer.WriteLine($"\t\tpublic bool Equals ({name} obj) =>");
+					writer.WriteLine($"\t\t\t{string.Join(" && ", equalityFields)};");
+					writer.WriteLine();
+
+					// Equals
+					writer.WriteLine($"\t\tpublic override bool Equals (object obj) =>");
+					writer.WriteLine($"\t\t\tobj is {name} f && Equals (f);");
+					writer.WriteLine();
+
+					// equality operators
+					writer.WriteLine($"\t\tpublic static bool operator == ({name} left, {name} right) =>");
+					writer.WriteLine($"\t\t\tleft.Equals (right);");
+					writer.WriteLine();
+					writer.WriteLine($"\t\tpublic static bool operator != ({name} left, {name} right) =>");
+					writer.WriteLine($"\t\t\t!left.Equals (right);");
+					writer.WriteLine();
+
+					// GetHashCode
+					writer.WriteLine($"\t\tpublic override int GetHashCode ()");
+					writer.WriteLine($"\t\t{{");
+					writer.WriteLine($"\t\t\tvar hash = new HashCode ();");
+					foreach (var f in allFields)
+					{
+						writer.WriteLine($"\t\t\thash.Add ({f});");
+					}
+					writer.WriteLine($"\t\t\treturn hash.ToHashCode ();");
+					writer.WriteLine($"\t\t}}");
+					writer.WriteLine();
 				}
 				writer.WriteLine($"\t}}");
 			}
