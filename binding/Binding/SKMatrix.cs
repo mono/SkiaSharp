@@ -339,8 +339,6 @@ namespace SkiaSharp
 			return target;
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use SKMatrix.Concat(SKMatrix, SKMatrix) instead.")]
 		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
 		{
 			fixed (SKMatrix* t = &target) {
@@ -348,8 +346,6 @@ namespace SkiaSharp
 			}
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use SKMatrix.Concat(SKMatrix, SKMatrix) instead.")]
 		public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second)
 		{
 			fixed (SKMatrix* t = &target)
