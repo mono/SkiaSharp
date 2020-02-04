@@ -144,16 +144,9 @@ Added methods:
 ```csharp
 public void DrawArc (SKRect oval, float startAngle, float sweepAngle, bool useCenter, SKPaint paint);
 public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint);
-public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKBlendMode mode, SKPaint paint);
-public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKRect cullRect, SKPaint paint);
-public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKBlendMode mode, SKRect cullRect, SKPaint paint);
 public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint);
 public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint);
-public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPaint paint);
-public void DrawPatch (SKPoint[] cubics, SKPoint[] texCoords, SKPaint paint);
-public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKBlendMode mode, SKPaint paint);
 public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKPaint paint);
-public void DrawPatch (SKPoint[] cubics, SKPoint[] texCoords, SKBlendMode mode, SKPaint paint);
 public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKBlendMode mode, SKPaint paint);
 public void DrawRoundRectDifference (SKRoundRect outer, SKRoundRect inner, SKPaint paint);
 ```
