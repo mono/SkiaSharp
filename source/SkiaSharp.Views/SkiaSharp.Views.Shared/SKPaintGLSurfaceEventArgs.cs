@@ -1,5 +1,6 @@
 ﻿#if !__WATCHOS__
 using System;
+using System.ComponentModel;
 
 #if __ANDROID__
 namespace SkiaSharp.Views.Android
@@ -19,9 +20,11 @@ namespace SkiaSharp.Views.Tizen
 {
 	public class SKPaintGLSurfaceEventArgs : EventArgs
 	{
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		private GRBackendRenderTargetDesc? rtDesc;
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{
@@ -47,6 +50,7 @@ namespace SkiaSharp.Views.Tizen
 
 		public SKSurface Surface { get; private set; }
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use BackendRenderTarget instead.")]
 		public GRBackendRenderTargetDesc RenderTarget
 		{

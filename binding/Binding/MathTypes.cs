@@ -12,11 +12,11 @@ namespace SkiaSharp
 			this.y = y;
 		}
 
-		public bool IsEmpty => this == Empty;
+		public readonly bool IsEmpty => this == Empty;
 
-		public float Length => (float)Math.Sqrt (x * x + y * y);
+		public readonly float Length => (float)Math.Sqrt (x * x + y * y);
 
-		public float LengthSquared => x * x + y * y;
+		public readonly float LengthSquared => x * x + y * y;
 
 		public void Offset (SKPoint p)
 		{
@@ -30,7 +30,7 @@ namespace SkiaSharp
 			y += dy;
 		}
 
-		public override string ToString () => $"{{X={x}, Y={y}}}";
+		public readonly override string ToString () => $"{{X={x}, Y={y}}}";
 
 		public static SKPoint Normalize (SKPoint point)
 		{
@@ -107,11 +107,11 @@ namespace SkiaSharp
 			this.y = y;
 		}
 
-		public bool IsEmpty => this == Empty;
+		public readonly bool IsEmpty => this == Empty;
 
-		public int Length => (int)Math.Sqrt (x * x + y * y);
+		public readonly int Length => (int)Math.Sqrt (x * x + y * y);
 
-		public int LengthSquared => x * x + y * y;
+		public readonly int LengthSquared => x * x + y * y;
 
 		public void Offset (SKPointI p)
 		{
@@ -125,7 +125,7 @@ namespace SkiaSharp
 			y += dy;
 		}
 
-		public override string ToString () => $"{{X={x},Y={y}}}";
+		public readonly override string ToString () => $"{{X={x},Y={y}}}";
 
 		public static SKPointI Normalize (SKPointI point)
 		{
@@ -223,9 +223,9 @@ namespace SkiaSharp
 			this.z = z;
 		}
 
-		public bool IsEmpty => this == Empty;
+		public readonly bool IsEmpty => this == Empty;
 
-		public override string ToString () => $"{{X={x}, Y={y}, Z={z}}}";
+		public readonly override string ToString () => $"{{X={x}, Y={y}, Z={z}}}";
 
 		public static SKPoint3 Add (SKPoint3 pt, SKPoint3 sz) => pt + sz;
 
@@ -254,12 +254,12 @@ namespace SkiaSharp
 			h = pt.Y;
 		}
 
-		public bool IsEmpty => this == Empty;
+		public readonly bool IsEmpty => this == Empty;
 
-		public SKPoint ToPoint () =>
+		public readonly SKPoint ToPoint () =>
 			new SKPoint (w, h);
 
-		public SKSizeI ToSizeI ()
+		public readonly SKSizeI ToSizeI ()
 		{
 			int w, h;
 			checked {
@@ -270,7 +270,7 @@ namespace SkiaSharp
 			return new SKSizeI (w, h);
 		}
 
-		public override string ToString () =>
+		public readonly override string ToString () =>
 			$"{{Width={w}, Height={h}}}";
 
 		public static SKSize Add (SKSize sz1, SKSize sz2) => sz1 + sz2;
@@ -305,11 +305,11 @@ namespace SkiaSharp
 			h = pt.Y;
 		}
 
-		public bool IsEmpty => this == Empty;
+		public readonly bool IsEmpty => this == Empty;
 
-		public SKPointI ToPointI () => new SKPointI (w, h);
+		public readonly SKPointI ToPointI () => new SKPointI (w, h);
 
-		public override string ToString () =>
+		public readonly override string ToString () =>
 			$"{{Width={w}, Height={h}}}";
 
 		public static SKSizeI Add (SKSizeI sz1, SKSizeI sz2) => sz1 + sz2;
@@ -338,18 +338,18 @@ namespace SkiaSharp
 			this.bottom = bottom;
 		}
 
-		public float MidX => left + (Width / 2f);
+		public readonly float MidX => left + (Width / 2f);
 
-		public float MidY => top + (Height / 2f);
+		public readonly float MidY => top + (Height / 2f);
 
-		public float Width => right - left;
+		public readonly float Width => right - left;
 
-		public float Height => bottom - top;
+		public readonly float Height => bottom - top;
 
-		public bool IsEmpty => this == Empty;
+		public readonly bool IsEmpty => this == Empty;
 
 		public SKSize Size {
-			get => new SKSize (Width, Height);
+			readonly get => new SKSize (Width, Height);
 			set {
 				right = left + value.Width;
 				bottom = top + value.Height;
@@ -357,11 +357,11 @@ namespace SkiaSharp
 		}
 
 		public SKPoint Location {
-			get => new SKPoint (left, top);
+			readonly get => new SKPoint (left, top);
 			set => this = SKRect.Create (value, Size);
 		}
 
-		public SKRect Standardized {
+		public readonly SKRect Standardized {
 			get {
 				if (left > right) {
 					if (top > bottom) {
@@ -379,11 +379,11 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKRect AspectFit (SKSize size) => AspectResize (size, true);
+		public readonly SKRect AspectFit (SKSize size) => AspectResize (size, true);
 
-		public SKRect AspectFill (SKSize size) => AspectResize (size, false);
+		public readonly SKRect AspectFill (SKSize size) => AspectResize (size, false);
 
-		private SKRect AspectResize (SKSize size, bool fit)
+		private readonly SKRect AspectResize (SKSize size, bool fit)
 		{
 			if (size.Width == 0 || size.Height == 0 || Width == 0 || Height == 0)
 				return Create (MidX, MidY, 0, 0);
@@ -453,20 +453,20 @@ namespace SkiaSharp
 		public static implicit operator SKRect (SKRectI r) =>
 			new SKRect (r.Left, r.Top, r.Right, r.Bottom);
 
-		public bool Contains (float x, float y) =>
+		public readonly bool Contains (float x, float y) =>
 			(x >= left) && (x < right) && (y >= top) && (y < bottom);
 
-		public bool Contains (SKPoint pt) =>
+		public readonly bool Contains (SKPoint pt) =>
 			Contains (pt.X, pt.Y);
 
-		public bool Contains (SKRect rect) =>
+		public readonly bool Contains (SKRect rect) =>
 			(left <= rect.left) && (right >= rect.right) &&
 			(top <= rect.top) && (bottom >= rect.bottom);
 
-		public bool IntersectsWith (SKRect rect) =>
+		public readonly bool IntersectsWith (SKRect rect) =>
 			(left < rect.right) && (right > rect.left) && (top < rect.bottom) && (bottom > rect.top);
 
-		public bool IntersectsWithInclusive (SKRect rect) =>
+		public readonly bool IntersectsWithInclusive (SKRect rect) =>
 			(left <= rect.right) && (right >= rect.left) && (top <= rect.bottom) && (bottom >= rect.top);
 
 		public void Offset (float x, float y)
@@ -479,7 +479,7 @@ namespace SkiaSharp
 
 		public void Offset (SKPoint pos) => Offset (pos.X, pos.Y);
 
-		public override string ToString () =>
+		public readonly override string ToString () =>
 			$"{{Left={Left},Top={Top},Width={Width},Height={Height}}}";
 
 		public static SKRect Create (SKPoint location, SKSize size) =>
@@ -507,18 +507,18 @@ namespace SkiaSharp
 			this.bottom = bottom;
 		}
 
-		public int MidX => left + (Width / 2);
+		public readonly int MidX => left + (Width / 2);
 
-		public int MidY => top + (Height / 2);
+		public readonly int MidY => top + (Height / 2);
 
-		public int Width => right - left;
+		public readonly int Width => right - left;
 
-		public int Height => bottom - top;
+		public readonly int Height => bottom - top;
 
-		public bool IsEmpty => this == Empty;
+		public readonly bool IsEmpty => this == Empty;
 
 		public SKSizeI Size {
-			get => new SKSizeI (Width, Height);
+			readonly get => new SKSizeI (Width, Height);
 			set {
 				right = left + value.Width;
 				bottom = top + value.Height;
@@ -526,11 +526,11 @@ namespace SkiaSharp
 		}
 
 		public SKPointI Location {
-			get => new SKPointI (left, top);
+			readonly get => new SKPointI (left, top);
 			set => this = SKRectI.Create (value, Size);
 		}
 
-		public SKRectI Standardized {
+		public readonly SKRectI Standardized {
 			get {
 				if (left > right) {
 					if (top > bottom) {
@@ -548,10 +548,10 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKRectI AspectFit (SKSizeI size) =>
+		public readonly SKRectI AspectFit (SKSizeI size) =>
 			Truncate (((SKRect)this).AspectFit (size));
 
-		public SKRectI AspectFill (SKSizeI size) =>
+		public readonly SKRectI AspectFill (SKSizeI size) =>
 			Truncate (((SKRect)this).AspectFill (size));
 
 		public static SKRectI Ceiling (SKRect value) =>
@@ -654,20 +654,20 @@ namespace SkiaSharp
 		public void Union (SKRectI rect) =>
 			this = Union (this, rect);
 
-		public bool Contains (int x, int y) =>
+		public readonly bool Contains (int x, int y) =>
 			(x >= left) && (x < right) && (y >= top) && (y < bottom);
 
-		public bool Contains (SKPointI pt) =>
+		public readonly bool Contains (SKPointI pt) =>
 			Contains (pt.X, pt.Y);
 
-		public bool Contains (SKRectI rect) =>
+		public readonly bool Contains (SKRectI rect) =>
 			(left <= rect.left) && (right >= rect.right) &&
 			(top <= rect.top) && (bottom >= rect.bottom);
 
-		public bool IntersectsWith (SKRectI rect) =>
+		public readonly bool IntersectsWith (SKRectI rect) =>
 			(left < rect.right) && (right > rect.left) && (top < rect.bottom) && (bottom > rect.top);
 
-		public bool IntersectsWithInclusive (SKRectI rect) =>
+		public readonly bool IntersectsWithInclusive (SKRectI rect) =>
 			(left <= rect.right) && (right >= rect.left) && (top <= rect.bottom) && (bottom >= rect.top);
 
 		public void Offset (int x, int y)
@@ -680,7 +680,7 @@ namespace SkiaSharp
 
 		public void Offset (SKPointI pos) => Offset (pos.X, pos.Y);
 
-		public override string ToString () =>
+		public readonly override string ToString () =>
 			$"{{Left={Left},Top={Top},Width={Width},Height={Height}}}";
 
 		public static SKRectI Create (SKSizeI size) =>

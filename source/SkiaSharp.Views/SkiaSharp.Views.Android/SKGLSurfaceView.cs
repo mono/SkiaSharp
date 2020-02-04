@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Android.Content;
 using Android.Opengl;
 using Android.Util;
@@ -9,6 +10,7 @@ namespace SkiaSharp.Views.Android
 	{
 		private SKGLSurfaceViewRenderer renderer;
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		private ISKRenderer skRenderer;
 
@@ -44,12 +46,14 @@ namespace SkiaSharp.Views.Android
 			PaintSurface?.Invoke(this, e);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use PaintSurface instead.")]
 		public virtual void SetRenderer(ISKRenderer renderer)
 		{
 			skRenderer = renderer;
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use SKGLSurfaceView.PaintSurface instead.")]
 		public interface ISKRenderer
 		{
@@ -70,6 +74,7 @@ namespace SkiaSharp.Views.Android
 				surfaceView.OnPaintSurface(e);
 			}
 
+			[EditorBrowsable (EditorBrowsableState.Never)]
 			[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 			protected override void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 			{

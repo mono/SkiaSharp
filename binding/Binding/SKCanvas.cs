@@ -851,23 +851,14 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_drrect (Handle, outer.Handle, inner.Handle, paint.Handle);
 		}
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint)
-			=> DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, null, paint);
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint) =>
+			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, null, paint);
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKRect cullRect, SKPaint paint)
-			=> DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, &cullRect, paint);
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint) =>
+			DrawAtlas (atlas, sprites, transforms, colors, mode, null, paint);
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKBlendMode mode, SKPaint paint)
-			=> DrawAtlas (atlas, sprites, transforms, null, mode, null, paint);
-
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKBlendMode mode, SKRect cullRect, SKPaint paint)
-			=> DrawAtlas (atlas, sprites, transforms, null, mode, &cullRect, paint);
-
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint)
-			=> DrawAtlas (atlas, sprites, transforms, colors, mode, null, paint);
-
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint)
-			=> DrawAtlas (atlas, sprites, transforms, colors, mode, &cullRect, paint);
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint) =>
+			DrawAtlas (atlas, sprites, transforms, colors, mode, &cullRect, paint);
 
 		private void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect* cullRect, SKPaint paint)
 		{
@@ -890,20 +881,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPaint paint)
-			=> DrawPatch (cubics, colors, null, SKBlendMode.Modulate, paint);
-
-		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKBlendMode mode, SKPaint paint)
-			=> DrawPatch (cubics, colors, null, mode, paint);
-
-		public void DrawPatch (SKPoint[] cubics, SKPoint[] texCoords, SKPaint paint)
-			=> DrawPatch (cubics, null, texCoords, SKBlendMode.Modulate, paint);
-
-		public void DrawPatch (SKPoint[] cubics, SKPoint[] texCoords, SKBlendMode mode, SKPaint paint)
-			=> DrawPatch (cubics, null, texCoords, mode, paint);
-
-		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKPaint paint)
-			=> DrawPatch (cubics, colors, texCoords, SKBlendMode.Modulate, paint);
+		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKPaint paint) =>
+			DrawPatch (cubics, colors, texCoords, SKBlendMode.Modulate, paint);
 
 		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKBlendMode mode, SKPaint paint)
 		{

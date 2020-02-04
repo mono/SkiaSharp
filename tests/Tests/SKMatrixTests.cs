@@ -158,9 +158,8 @@ namespace SkiaSharp.Tests
 		{
 			var a = SKMatrix.MakeTranslation(10, 20);
 			var b = SKMatrix.MakeTranslation(5, 7);
-			var c = new SKMatrix();
 
-			SKMatrix.Concat(ref c, ref a, ref b);
+			var c = SKMatrix.Concat(a, b);
 			
 			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, c.Values);
 		}
@@ -171,9 +170,9 @@ namespace SkiaSharp.Tests
 			var a = SKMatrix.MakeTranslation(10, 20);
 			var b = SKMatrix.MakeTranslation(5, 7);
 
-			SKMatrix.PreConcat(ref a, ref b);
+			var c = a.PreConcat(b);
 			
-			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, a.Values);
+			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, c.Values);
 		}
 
 		[SkippableFact]
@@ -182,16 +181,16 @@ namespace SkiaSharp.Tests
 			var a = SKMatrix.MakeTranslation(10, 20);
 			var b = SKMatrix.MakeTranslation(5, 7);
 
-			SKMatrix.PostConcat(ref a, ref b);
+			var c = a.PostConcat(b);
 			
-			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, a.Values);
+			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, c.Values);
 		}
 
 		[SkippableFact]
 		public void SKRotationScaleMatrixTranslationToMatrixIsCorrect()
 		{
 			var m = SKMatrix.MakeTranslation(5, 7);
-			var rsm = SKRotationScaleMatrix.CreateTranslate(5, 7).ToMatrix();
+			var rsm = SKRotationScaleMatrix.CreateTranslation(5, 7).ToMatrix();
 
 			Assert.Equal(m.Values, rsm.Values);
 		}

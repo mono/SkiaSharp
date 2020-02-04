@@ -3618,10 +3618,10 @@ namespace SkiaSharp
 			set => fFormat = value;
 		}
 
-		public bool Equals (GRGlFramebufferInfo obj) =>
+		public readonly bool Equals (GRGlFramebufferInfo obj) =>
 			fFBOID == obj.fFBOID && fFormat == obj.fFormat;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is GRGlFramebufferInfo f && Equals (f);
 
 		public static bool operator == (GRGlFramebufferInfo left, GRGlFramebufferInfo right) =>
@@ -3630,7 +3630,7 @@ namespace SkiaSharp
 		public static bool operator != (GRGlFramebufferInfo left, GRGlFramebufferInfo right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fFBOID);
@@ -3664,10 +3664,10 @@ namespace SkiaSharp
 			set => fFormat = value;
 		}
 
-		public bool Equals (GRGlTextureInfo obj) =>
+		public readonly bool Equals (GRGlTextureInfo obj) =>
 			fTarget == obj.fTarget && fID == obj.fID && fFormat == obj.fFormat;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is GRGlTextureInfo f && Equals (f);
 
 		public static bool operator == (GRGlTextureInfo left, GRGlTextureInfo right) =>
@@ -3676,7 +3676,7 @@ namespace SkiaSharp
 		public static bool operator != (GRGlTextureInfo left, GRGlTextureInfo right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fTarget);
@@ -3725,10 +3725,10 @@ namespace SkiaSharp
 			set => fDisposalMethod = value;
 		}
 
-		public bool Equals (SKCodecFrameInfo obj) =>
+		public readonly bool Equals (SKCodecFrameInfo obj) =>
 			fRequiredFrame == obj.fRequiredFrame && fDuration == obj.fDuration && fFullyReceived == obj.fFullyReceived && fAlphaType == obj.fAlphaType && fDisposalMethod == obj.fDisposalMethod;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKCodecFrameInfo f && Equals (f);
 
 		public static bool operator == (SKCodecFrameInfo left, SKCodecFrameInfo right) =>
@@ -3737,7 +3737,7 @@ namespace SkiaSharp
 		public static bool operator != (SKCodecFrameInfo left, SKCodecFrameInfo right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fRequiredFrame);
@@ -3768,10 +3768,10 @@ namespace SkiaSharp
 		// public sk_transfer_function_behavior_t fPremulBehavior
 		public SKTransferFunctionBehavior fPremulBehavior;
 
-		public bool Equals (SKCodecOptionsInternal obj) =>
+		public readonly bool Equals (SKCodecOptionsInternal obj) =>
 			fZeroInitialized == obj.fZeroInitialized && fSubset == obj.fSubset && fFrameIndex == obj.fFrameIndex && fPriorFrame == obj.fPriorFrame && fPremulBehavior == obj.fPremulBehavior;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKCodecOptionsInternal f && Equals (f);
 
 		public static bool operator == (SKCodecOptionsInternal left, SKCodecOptionsInternal right) =>
@@ -3780,7 +3780,7 @@ namespace SkiaSharp
 		public static bool operator != (SKCodecOptionsInternal left, SKCodecOptionsInternal right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fZeroInitialized);
@@ -3812,10 +3812,10 @@ namespace SkiaSharp
 		private readonly Single fA;
 		public readonly Single Alpha => fA;
 
-		public bool Equals (SKColorF obj) =>
+		public readonly bool Equals (SKColorF obj) =>
 			fR == obj.fR && fG == obj.fG && fB == obj.fB && fA == obj.fA;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKColorF f && Equals (f);
 
 		public static bool operator == (SKColorF left, SKColorF right) =>
@@ -3824,7 +3824,7 @@ namespace SkiaSharp
 		public static bool operator != (SKColorF left, SKColorF right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fR);
@@ -3888,10 +3888,10 @@ namespace SkiaSharp
 			set => fF = value;
 		}
 
-		public bool Equals (SKColorSpaceTransferFn obj) =>
+		public readonly bool Equals (SKColorSpaceTransferFn obj) =>
 			fG == obj.fG && fA == obj.fA && fB == obj.fB && fC == obj.fC && fD == obj.fD && fE == obj.fE && fF == obj.fF;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKColorSpaceTransferFn f && Equals (f);
 
 		public static bool operator == (SKColorSpaceTransferFn left, SKColorSpaceTransferFn right) =>
@@ -3900,7 +3900,7 @@ namespace SkiaSharp
 		public static bool operator != (SKColorSpaceTransferFn left, SKColorSpaceTransferFn right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fG);
@@ -3974,10 +3974,10 @@ namespace SkiaSharp
 			set => fWY = value;
 		}
 
-		public bool Equals (SKColorSpacePrimaries obj) =>
+		public readonly bool Equals (SKColorSpacePrimaries obj) =>
 			fRX == obj.fRX && fRY == obj.fRY && fGX == obj.fGX && fGY == obj.fGY && fBX == obj.fBX && fBY == obj.fBY && fWX == obj.fWX && fWY == obj.fWY;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKColorSpacePrimaries f && Equals (f);
 
 		public static bool operator == (SKColorSpacePrimaries left, SKColorSpacePrimaries right) =>
@@ -3986,7 +3986,7 @@ namespace SkiaSharp
 		public static bool operator != (SKColorSpacePrimaries left, SKColorSpacePrimaries right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fRX);
@@ -4038,10 +4038,10 @@ namespace SkiaSharp
 		// public int fEncodingQuality
 		public Int32 fEncodingQuality;
 
-		public bool Equals (SKDocumentPdfMetadataInternal obj) =>
+		public readonly bool Equals (SKDocumentPdfMetadataInternal obj) =>
 			fTitle == obj.fTitle && fAuthor == obj.fAuthor && fSubject == obj.fSubject && fKeywords == obj.fKeywords && fCreator == obj.fCreator && fProducer == obj.fProducer && fCreation == obj.fCreation && fModified == obj.fModified && fRasterDPI == obj.fRasterDPI && fPDFA == obj.fPDFA && fEncodingQuality == obj.fEncodingQuality;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKDocumentPdfMetadataInternal f && Equals (f);
 
 		public static bool operator == (SKDocumentPdfMetadataInternal left, SKDocumentPdfMetadataInternal right) =>
@@ -4050,7 +4050,7 @@ namespace SkiaSharp
 		public static bool operator != (SKDocumentPdfMetadataInternal left, SKDocumentPdfMetadataInternal right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fTitle);
@@ -4120,10 +4120,10 @@ namespace SkiaSharp
 		// public float fStrikeoutPosition
 		private Single fStrikeoutPosition;
 
-		public bool Equals (SKFontMetrics obj) =>
+		public readonly bool Equals (SKFontMetrics obj) =>
 			fFlags == obj.fFlags && fTop == obj.fTop && fAscent == obj.fAscent && fDescent == obj.fDescent && fBottom == obj.fBottom && fLeading == obj.fLeading && fAvgCharWidth == obj.fAvgCharWidth && fMaxCharWidth == obj.fMaxCharWidth && fXMin == obj.fXMin && fXMax == obj.fXMax && fXHeight == obj.fXHeight && fCapHeight == obj.fCapHeight && fUnderlineThickness == obj.fUnderlineThickness && fUnderlinePosition == obj.fUnderlinePosition && fStrikeoutThickness == obj.fStrikeoutThickness && fStrikeoutPosition == obj.fStrikeoutPosition;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKFontMetrics f && Equals (f);
 
 		public static bool operator == (SKFontMetrics left, SKFontMetrics right) =>
@@ -4132,7 +4132,7 @@ namespace SkiaSharp
 		public static bool operator != (SKFontMetrics left, SKFontMetrics right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fFlags);
@@ -4180,10 +4180,10 @@ namespace SkiaSharp
 			set => fContrast = value;
 		}
 
-		public bool Equals (SKHighContrastConfig obj) =>
+		public readonly bool Equals (SKHighContrastConfig obj) =>
 			fGrayscale == obj.fGrayscale && fInvertStyle == obj.fInvertStyle && fContrast == obj.fContrast;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKHighContrastConfig f && Equals (f);
 
 		public static bool operator == (SKHighContrastConfig left, SKHighContrastConfig right) =>
@@ -4192,7 +4192,7 @@ namespace SkiaSharp
 		public static bool operator != (SKHighContrastConfig left, SKHighContrastConfig right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fGrayscale);
@@ -4221,10 +4221,10 @@ namespace SkiaSharp
 		// public sk_alphatype_t alphaType
 		public SKAlphaType alphaType;
 
-		public bool Equals (SKImageInfoNative obj) =>
+		public readonly bool Equals (SKImageInfoNative obj) =>
 			colorspace == obj.colorspace && width == obj.width && height == obj.height && colorType == obj.colorType && alphaType == obj.alphaType;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKImageInfoNative f && Equals (f);
 
 		public static bool operator == (SKImageInfoNative left, SKImageInfoNative right) =>
@@ -4233,7 +4233,7 @@ namespace SkiaSharp
 		public static bool operator != (SKImageInfoNative left, SKImageInfoNative right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (colorspace);
@@ -4263,10 +4263,10 @@ namespace SkiaSharp
 			set => y = value;
 		}
 
-		public bool Equals (SKPointI obj) =>
+		public readonly bool Equals (SKPointI obj) =>
 			x == obj.x && y == obj.y;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKPointI f && Equals (f);
 
 		public static bool operator == (SKPointI left, SKPointI right) =>
@@ -4275,7 +4275,7 @@ namespace SkiaSharp
 		public static bool operator != (SKPointI left, SKPointI right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (x);
@@ -4316,10 +4316,10 @@ namespace SkiaSharp
 			set => bottom = value;
 		}
 
-		public bool Equals (SKRectI obj) =>
+		public readonly bool Equals (SKRectI obj) =>
 			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKRectI f && Equals (f);
 
 		public static bool operator == (SKRectI left, SKRectI right) =>
@@ -4328,7 +4328,7 @@ namespace SkiaSharp
 		public static bool operator != (SKRectI left, SKRectI right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (left);
@@ -4357,10 +4357,10 @@ namespace SkiaSharp
 			set => h = value;
 		}
 
-		public bool Equals (SKSizeI obj) =>
+		public readonly bool Equals (SKSizeI obj) =>
 			w == obj.w && h == obj.h;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKSizeI f && Equals (f);
 
 		public static bool operator == (SKSizeI left, SKSizeI right) =>
@@ -4369,7 +4369,7 @@ namespace SkiaSharp
 		public static bool operator != (SKSizeI left, SKSizeI right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (w);
@@ -4410,10 +4410,10 @@ namespace SkiaSharp
 			set => fBlendBehavior = value;
 		}
 
-		public bool Equals (SKJpegEncoderOptions obj) =>
+		public readonly bool Equals (SKJpegEncoderOptions obj) =>
 			fQuality == obj.fQuality && fDownsample == obj.fDownsample && fAlphaOption == obj.fAlphaOption && fBlendBehavior == obj.fBlendBehavior;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKJpegEncoderOptions f && Equals (f);
 
 		public static bool operator == (SKJpegEncoderOptions left, SKJpegEncoderOptions right) =>
@@ -4422,7 +4422,7 @@ namespace SkiaSharp
 		public static bool operator != (SKJpegEncoderOptions left, SKJpegEncoderOptions right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fQuality);
@@ -4458,10 +4458,10 @@ namespace SkiaSharp
 		// public const sk_color_t* fColors
 		public UInt32* fColors;
 
-		public bool Equals (SKLatticeInternal obj) =>
+		public readonly bool Equals (SKLatticeInternal obj) =>
 			fXDivs == obj.fXDivs && fYDivs == obj.fYDivs && fRectTypes == obj.fRectTypes && fXCount == obj.fXCount && fYCount == obj.fYCount && fBounds == obj.fBounds && fColors == obj.fColors;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKLatticeInternal f && Equals (f);
 
 		public static bool operator == (SKLatticeInternal left, SKLatticeInternal right) =>
@@ -4470,7 +4470,7 @@ namespace SkiaSharp
 		public static bool operator != (SKLatticeInternal left, SKLatticeInternal right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fXDivs);
@@ -4500,10 +4500,10 @@ namespace SkiaSharp
 		// public sk_manageddrawable_destroy_proc fDestroy
 		public SKManagedDrawableDestroyProxyDelegate fDestroy;
 
-		public bool Equals (SKManagedDrawableDelegates obj) =>
+		public readonly bool Equals (SKManagedDrawableDelegates obj) =>
 			fDraw == obj.fDraw && fGetBounds == obj.fGetBounds && fNewPictureSnapshot == obj.fNewPictureSnapshot && fDestroy == obj.fDestroy;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKManagedDrawableDelegates f && Equals (f);
 
 		public static bool operator == (SKManagedDrawableDelegates left, SKManagedDrawableDelegates right) =>
@@ -4512,7 +4512,7 @@ namespace SkiaSharp
 		public static bool operator != (SKManagedDrawableDelegates left, SKManagedDrawableDelegates right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fDraw);
@@ -4566,10 +4566,10 @@ namespace SkiaSharp
 		// public sk_managedstream_destroy_proc fDestroy
 		public SKManagedStreamDestroyProxyDelegate fDestroy;
 
-		public bool Equals (SKManagedStreamDelegates obj) =>
+		public readonly bool Equals (SKManagedStreamDelegates obj) =>
 			fRead == obj.fRead && fPeek == obj.fPeek && fIsAtEnd == obj.fIsAtEnd && fHasPosition == obj.fHasPosition && fHasLength == obj.fHasLength && fRewind == obj.fRewind && fGetPosition == obj.fGetPosition && fSeek == obj.fSeek && fMove == obj.fMove && fGetLength == obj.fGetLength && fDuplicate == obj.fDuplicate && fFork == obj.fFork && fDestroy == obj.fDestroy;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKManagedStreamDelegates f && Equals (f);
 
 		public static bool operator == (SKManagedStreamDelegates left, SKManagedStreamDelegates right) =>
@@ -4578,7 +4578,7 @@ namespace SkiaSharp
 		public static bool operator != (SKManagedStreamDelegates left, SKManagedStreamDelegates right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fRead);
@@ -4614,10 +4614,10 @@ namespace SkiaSharp
 		// public sk_managedwstream_destroy_proc fDestroy
 		public SKManagedWStreamDestroyProxyDelegate fDestroy;
 
-		public bool Equals (SKManagedWStreamDelegates obj) =>
+		public readonly bool Equals (SKManagedWStreamDelegates obj) =>
 			fWrite == obj.fWrite && fFlush == obj.fFlush && fBytesWritten == obj.fBytesWritten && fDestroy == obj.fDestroy;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKManagedWStreamDelegates f && Equals (f);
 
 		public static bool operator == (SKManagedWStreamDelegates left, SKManagedWStreamDelegates right) =>
@@ -4626,7 +4626,7 @@ namespace SkiaSharp
 		public static bool operator != (SKManagedWStreamDelegates left, SKManagedWStreamDelegates right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fWrite);
@@ -4653,10 +4653,10 @@ namespace SkiaSharp
 		// public sk_mask_format_t fFormat
 		private SKMaskFormat fFormat;
 
-		public bool Equals (SKMask obj) =>
+		public readonly bool Equals (SKMask obj) =>
 			fImage == obj.fImage && fBounds == obj.fBounds && fRowBytes == obj.fRowBytes && fFormat == obj.fFormat;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKMask f && Equals (f);
 
 		public static bool operator == (SKMask left, SKMask right) =>
@@ -4665,7 +4665,7 @@ namespace SkiaSharp
 		public static bool operator != (SKMask left, SKMask right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fImage);
@@ -4743,10 +4743,10 @@ namespace SkiaSharp
 			set => persp2 = value;
 		}
 
-		public bool Equals (SKMatrix obj) =>
+		public readonly bool Equals (SKMatrix obj) =>
 			scaleX == obj.scaleX && skewX == obj.skewX && transX == obj.transX && skewY == obj.skewY && scaleY == obj.scaleY && transY == obj.transY && persp0 == obj.persp0 && persp1 == obj.persp1 && persp2 == obj.persp2;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKMatrix f && Equals (f);
 
 		public static bool operator == (SKMatrix left, SKMatrix right) =>
@@ -4755,7 +4755,7 @@ namespace SkiaSharp
 		public static bool operator != (SKMatrix left, SKMatrix right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (scaleX);
@@ -4787,10 +4787,10 @@ namespace SkiaSharp
 		// public void* fComments
 		private void* fComments;
 
-		public bool Equals (SKPngEncoderOptions obj) =>
+		public readonly bool Equals (SKPngEncoderOptions obj) =>
 			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fUnpremulBehavior == obj.fUnpremulBehavior && fComments == obj.fComments;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKPngEncoderOptions f && Equals (f);
 
 		public static bool operator == (SKPngEncoderOptions left, SKPngEncoderOptions right) =>
@@ -4799,7 +4799,7 @@ namespace SkiaSharp
 		public static bool operator != (SKPngEncoderOptions left, SKPngEncoderOptions right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fFilterFlags);
@@ -4828,10 +4828,10 @@ namespace SkiaSharp
 			set => y = value;
 		}
 
-		public bool Equals (SKPoint obj) =>
+		public readonly bool Equals (SKPoint obj) =>
 			x == obj.x && y == obj.y;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKPoint f && Equals (f);
 
 		public static bool operator == (SKPoint left, SKPoint right) =>
@@ -4840,7 +4840,7 @@ namespace SkiaSharp
 		public static bool operator != (SKPoint left, SKPoint right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (x);
@@ -4874,10 +4874,10 @@ namespace SkiaSharp
 			set => z = value;
 		}
 
-		public bool Equals (SKPoint3 obj) =>
+		public readonly bool Equals (SKPoint3 obj) =>
 			x == obj.x && y == obj.y && z == obj.z;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKPoint3 f && Equals (f);
 
 		public static bool operator == (SKPoint3 left, SKPoint3 right) =>
@@ -4886,7 +4886,7 @@ namespace SkiaSharp
 		public static bool operator != (SKPoint3 left, SKPoint3 right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (x);
@@ -4928,10 +4928,10 @@ namespace SkiaSharp
 			set => bottom = value;
 		}
 
-		public bool Equals (SKRect obj) =>
+		public readonly bool Equals (SKRect obj) =>
 			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKRect f && Equals (f);
 
 		public static bool operator == (SKRect left, SKRect right) =>
@@ -4940,7 +4940,7 @@ namespace SkiaSharp
 		public static bool operator != (SKRect left, SKRect right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (left);
@@ -4983,10 +4983,10 @@ namespace SkiaSharp
 			set => fTY = value;
 		}
 
-		public bool Equals (SKRotationScaleMatrix obj) =>
+		public readonly bool Equals (SKRotationScaleMatrix obj) =>
 			fSCos == obj.fSCos && fSSin == obj.fSSin && fTX == obj.fTX && fTY == obj.fTY;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKRotationScaleMatrix f && Equals (f);
 
 		public static bool operator == (SKRotationScaleMatrix left, SKRotationScaleMatrix right) =>
@@ -4995,7 +4995,7 @@ namespace SkiaSharp
 		public static bool operator != (SKRotationScaleMatrix left, SKRotationScaleMatrix right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fSCos);
@@ -5024,10 +5024,10 @@ namespace SkiaSharp
 			set => h = value;
 		}
 
-		public bool Equals (SKSize obj) =>
+		public readonly bool Equals (SKSize obj) =>
 			w == obj.w && h == obj.h;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKSize f && Equals (f);
 
 		public static bool operator == (SKSize left, SKSize right) =>
@@ -5036,7 +5036,7 @@ namespace SkiaSharp
 		public static bool operator != (SKSize left, SKSize right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (w);
@@ -5061,10 +5061,10 @@ namespace SkiaSharp
 		// public void* clusters
 		public void* clusters;
 
-		public bool Equals (SKRunBufferInternal obj) =>
+		public readonly bool Equals (SKRunBufferInternal obj) =>
 			glyphs == obj.glyphs && pos == obj.pos && utf8text == obj.utf8text && clusters == obj.clusters;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKRunBufferInternal f && Equals (f);
 
 		public static bool operator == (SKRunBufferInternal left, SKRunBufferInternal right) =>
@@ -5073,7 +5073,7 @@ namespace SkiaSharp
 		public static bool operator != (SKRunBufferInternal left, SKRunBufferInternal right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (glyphs);
@@ -5112,10 +5112,10 @@ namespace SkiaSharp
 		// public uint8_t fSecond
 		public Byte fSecond;
 
-		public bool Equals (SKTimeDateTimeInternal obj) =>
+		public readonly bool Equals (SKTimeDateTimeInternal obj) =>
 			fTimeZoneMinutes == obj.fTimeZoneMinutes && fYear == obj.fYear && fMonth == obj.fMonth && fDayOfWeek == obj.fDayOfWeek && fDay == obj.fDay && fHour == obj.fHour && fMinute == obj.fMinute && fSecond == obj.fSecond;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKTimeDateTimeInternal f && Equals (f);
 
 		public static bool operator == (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
@@ -5124,7 +5124,7 @@ namespace SkiaSharp
 		public static bool operator != (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fTimeZoneMinutes);
@@ -5164,10 +5164,10 @@ namespace SkiaSharp
 			set => fUnpremulBehavior = value;
 		}
 
-		public bool Equals (SKWebpEncoderOptions obj) =>
+		public readonly bool Equals (SKWebpEncoderOptions obj) =>
 			fCompression == obj.fCompression && fQuality == obj.fQuality && fUnpremulBehavior == obj.fUnpremulBehavior;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKWebpEncoderOptions f && Equals (f);
 
 		public static bool operator == (SKWebpEncoderOptions left, SKWebpEncoderOptions right) =>
@@ -5176,7 +5176,7 @@ namespace SkiaSharp
 		public static bool operator != (SKWebpEncoderOptions left, SKWebpEncoderOptions right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (fCompression);

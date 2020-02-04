@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public unsafe partial struct SKColorF
+	public readonly unsafe partial struct SKColorF
 	{
 		private const float EPSILON = 0.001f;
 
@@ -24,26 +24,26 @@ namespace SkiaSharp
 			fA = alpha;
 		}
 
-		public SKColorF WithRed (float red) =>
+		public readonly SKColorF WithRed (float red) =>
 			new SKColorF (red, fG, fB, fA);
 
-		public SKColorF WithGreen (float green) =>
+		public readonly SKColorF WithGreen (float green) =>
 			new SKColorF (fR, green, fB, fA);
 
-		public SKColorF WithBlue (float blue) =>
+		public readonly SKColorF WithBlue (float blue) =>
 			new SKColorF (fR, fG, blue, fA);
 
-		public SKColorF WithAlpha (float alpha) =>
+		public readonly SKColorF WithAlpha (float alpha) =>
 			new SKColorF (fR, fG, fB, alpha);
 
-		public float Hue {
+		public readonly float Hue {
 			get {
 				ToHsv (out var h, out _, out _);
 				return h;
 			}
 		}
 
-		public SKColorF Clamp ()
+		public readonly SKColorF Clamp ()
 		{
 			return new SKColorF (Clamp (fR), Clamp (fG), Clamp (fB), Clamp (fA));
 
@@ -156,7 +156,7 @@ namespace SkiaSharp
 			return new SKColorF (r, g, b, a);
 		}
 
-		public void ToHsl (out float h, out float s, out float l)
+		public readonly void ToHsl (out float h, out float s, out float l)
 		{
 			// RGB from 0 to 1
 			var r = fR;
@@ -202,7 +202,7 @@ namespace SkiaSharp
 			l = l * 100f;
 		}
 
-		public void ToHsv (out float h, out float s, out float v)
+		public readonly void ToHsv (out float h, out float s, out float v)
 		{
 			// RGB from 0 to 1
 			var r = fR;
@@ -245,7 +245,7 @@ namespace SkiaSharp
 			v = v * 100f;
 		}
 
-		public override string ToString () =>
+		public readonly override string ToString () =>
 			((SKColor)this).ToString ();
 
 		public static implicit operator SKColorF (SKColor color)

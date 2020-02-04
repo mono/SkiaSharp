@@ -128,7 +128,7 @@ namespace SkiaSharp.Tests
 			var sprites = new[] { SKRect.Empty, SKRect.Empty };
 			var transforms = new[] { SKRotationScaleMatrix.Empty };
 
-			Assert.Throws<ArgumentException>("transforms", () => canvas.DrawAtlas(img, sprites, transforms, SKBlendMode.Src, paint));
+			Assert.Throws<ArgumentException>("transforms", () => canvas.DrawAtlas(img, sprites, transforms, paint));
 		}
 
 		[SkippableFact]
@@ -161,7 +161,7 @@ namespace SkiaSharp.Tests
 				Shader = baboon.ToShader(),
 			};
 
-			canvas.DrawPatch(cubics, tex, paint);
+			canvas.DrawPatch(cubics, null, tex, paint);
 		}
 
 		[SkippableFact]

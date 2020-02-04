@@ -138,6 +138,7 @@ namespace SkiaSharp.Views.iOS
 			PaintSurface?.Invoke(this, e);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{

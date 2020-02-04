@@ -134,7 +134,7 @@ namespace SkiaSharp
 
 		public readonly SKRectI Rect => SKRectI.Create (Width, Height);
 
-		public SKImageInfo WithSize (int width, int height)
+		public readonly SKImageInfo WithSize (int width, int height)
 		{
 			var copy = this;
 			copy.Width = width;
@@ -142,35 +142,35 @@ namespace SkiaSharp
 			return copy;
 		}
 
-		public SKImageInfo WithColorType (SKColorType newColorType)
+		public readonly SKImageInfo WithColorType (SKColorType newColorType)
 		{
 			var copy = this;
 			copy.ColorType = newColorType;
 			return copy;
 		}
 
-		public SKImageInfo WithColorSpace (SKColorSpace newColorSpace)
+		public readonly SKImageInfo WithColorSpace (SKColorSpace newColorSpace)
 		{
 			var copy = this;
 			copy.ColorSpace = newColorSpace;
 			return copy;
 		}
 
-		public SKImageInfo WithAlphaType (SKAlphaType newAlphaType)
+		public readonly SKImageInfo WithAlphaType (SKAlphaType newAlphaType)
 		{
 			var copy = this;
 			copy.AlphaType = newAlphaType;
 			return copy;
 		}
 
-		public bool Equals (SKImageInfo obj) =>
+		public readonly bool Equals (SKImageInfo obj) =>
 			ColorSpace == obj.ColorSpace &&
 			Width == obj.Width &&
 			Height == obj.Height &&
 			ColorType == obj.ColorType &&
 			AlphaType == obj.AlphaType;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKImageInfo f && Equals (f);
 
 		public static bool operator == (SKImageInfo left, SKImageInfo right) =>
@@ -179,7 +179,7 @@ namespace SkiaSharp
 		public static bool operator != (SKImageInfo left, SKImageInfo right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (ColorSpace);

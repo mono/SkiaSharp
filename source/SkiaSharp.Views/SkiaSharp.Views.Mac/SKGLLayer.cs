@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using CoreAnimation;
 using CoreVideo;
 using OpenGL;
@@ -21,6 +22,7 @@ namespace SkiaSharp.Views.Mac
 			NeedsDisplayOnBoundsChange = true;
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use PaintSurface instead.")]
 		public ISKGLLayerDelegate SKDelegate { get; set; }
 
@@ -35,6 +37,7 @@ namespace SkiaSharp.Views.Mac
 			PaintSurface?.Invoke(this, e);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{

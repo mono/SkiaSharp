@@ -368,6 +368,31 @@ Task ("docs-format-docs")
             .Where (e => !e.Elements ().Any ())
             .Remove ();
 
+        // special case for Android resources: don't process
+        if (xdoc.Root.Name == "Type") {
+            var nameAttr = xdoc.Root.Attribute ("FullName")?.Value;
+            if (nameAttr == "SkiaSharp.Views.Android.Resource" || nameAttr?.StartsWith ("SkiaSharp.Views.Android.Resource+") == true) {
+                DeleteFile (file);
+                continue;
+            }
+        }
+        if (xdoc.Root.Name == "Overview") {
+            foreach (var type in xdoc.Root.Descendants ("Type").ToArray ()) {
+                var nameAttr = type.Attribute ("Name")?.Value;
+                if (nameAttr == "Resource" || nameAttr?.StartsWith ("Resource+") == true) {
+                    type.Remove ();
+                }
+            }
+        }
+        if (xdoc.Root.Name == "Framework") {
+            foreach (var type in xdoc.Root.Descendants ("Type").ToArray ()) {
+                var nameAttr = type.Attribute ("Name")?.Value;
+                if (nameAttr == "SkiaSharp.Views.Android.Resource" || nameAttr?.StartsWith ("SkiaSharp.Views.Android.Resource/") == true) {
+                    type.Remove ();
+                }
+            }
+        }
+
         // count the types without docs
         var typesWithDocs = xdoc.Root
             .Elements ("Docs");

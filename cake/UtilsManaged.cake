@@ -113,6 +113,8 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
             yield return (dir, "watchos");
         else if (d.StartsWith("tizen"))
             yield return (dir, "tizen");
+        else if (d.StartsWith("netcoreapp"))
+            ; // skip this one for now
         else
             throw new Exception($"Unknown platform '{d}' found at '{dir}'.");
     }
@@ -163,7 +165,9 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Xamarin.Forms", "tizen40");
     await AddDep("Xamarin.Forms", "uap10.0");
     await AddDep("Xamarin.Forms.Platform.WPF", "net45");
+    await AddDep("Xamarin.Forms.Platform.GTK", "net45");
     await AddDep("GtkSharp", "netstandard2.0");
+    await AddDep("GdkSharp", "netstandard2.0");
     await AddDep("GLibSharp", "netstandard2.0");
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");

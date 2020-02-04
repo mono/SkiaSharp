@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Android.Content;
 using Android.Opengl;
 using Xamarin.Forms;
@@ -17,6 +18,7 @@ namespace SkiaSharp.Views.Forms
 		{
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("This constructor is obsolete as of version 2.5. Please use SKGLViewRenderer(Context) instead.")]
 		public SKGLViewRenderer()
 			: base()

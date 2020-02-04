@@ -1,5 +1,6 @@
 ﻿#if !__WATCHOS__
 using System;
+using System.ComponentModel;
 
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
@@ -9,6 +10,7 @@ namespace SkiaSharp.Views.iOS
 namespace SkiaSharp.Views.Mac
 #endif
 {
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete("Use SKGLLayer.PaintSurface instead.")]
 	public interface ISKGLLayerDelegate
 	{

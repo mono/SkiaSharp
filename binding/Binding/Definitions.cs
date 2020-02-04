@@ -62,10 +62,31 @@ namespace SkiaSharp
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use SKSurfaceProperties instead.")]
-	public struct SKSurfaceProps
+	public struct SKSurfaceProps : IEquatable<SKSurfaceProps>
 	{
 		public SKPixelGeometry PixelGeometry { get; set; }
 		public SKSurfacePropsFlags Flags { get; set; }
+
+		public readonly bool Equals (SKSurfaceProps obj) =>
+			PixelGeometry == obj.PixelGeometry &&
+			Flags == obj.Flags;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKSurfaceProps f && Equals (f);
+
+		public static bool operator == (SKSurfaceProps left, SKSurfaceProps right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKSurfaceProps left, SKSurfaceProps right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (PixelGeometry);
+			hash.Add (Flags);
+			return hash.ToHashCode ();
+		}
 	}
 
 	public struct SKCodecOptions : IEquatable<SKCodecOptions>
@@ -120,19 +141,19 @@ namespace SkiaSharp
 
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
-		public bool HasSubset => Subset != null;
+		public readonly bool HasSubset => Subset != null;
 		public int FrameIndex { get; set; }
 		public int PriorFrame { get; set; }
 		public SKTransferFunctionBehavior PremulBehavior { get; set; }
 
-		public bool Equals (SKCodecOptions obj) =>
+		public readonly bool Equals (SKCodecOptions obj) =>
 			ZeroInitialized == obj.ZeroInitialized &&
 			Subset == obj.Subset &&
 			FrameIndex == obj.FrameIndex &&
 			PriorFrame == obj.PriorFrame &&
 			PremulBehavior == obj.PremulBehavior;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKCodecOptions f && Equals (f);
 
 		public static bool operator == (SKCodecOptions left, SKCodecOptions right) =>
@@ -141,7 +162,7 @@ namespace SkiaSharp
 		public static bool operator != (SKCodecOptions left, SKCodecOptions right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (ZeroInitialized);
@@ -199,14 +220,14 @@ namespace SkiaSharp
 		public SKRectI? Bounds { get; set; }
 		public SKColor[] Colors { get; set; }
 
-		public bool Equals (SKLattice obj) =>
+		public readonly bool Equals (SKLattice obj) =>
 			XDivs == obj.XDivs &&
 			YDivs == obj.YDivs &&
 			RectTypes == obj.RectTypes &&
 			Bounds == obj.Bounds &&
 			Colors == obj.Colors;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKLattice f && Equals (f);
 
 		public static bool operator == (SKLattice left, SKLattice right) =>
@@ -215,7 +236,7 @@ namespace SkiaSharp
 		public static bool operator != (SKLattice left, SKLattice right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (XDivs);
@@ -318,7 +339,7 @@ namespace SkiaSharp
 		public bool PdfA { get; set; }
 		public int EncodingQuality { get; set; }
 
-		public bool Equals (SKDocumentPdfMetadata obj) =>
+		public readonly bool Equals (SKDocumentPdfMetadata obj) =>
 			Title == obj.Title &&
 			Author == obj.Author &&
 			Subject == obj.Subject &&
@@ -331,7 +352,7 @@ namespace SkiaSharp
 			PdfA == obj.PdfA &&
 			EncodingQuality == obj.EncodingQuality;
 
-		public override bool Equals (object obj) =>
+		public readonly override bool Equals (object obj) =>
 			obj is SKDocumentPdfMetadata f && Equals (f);
 
 		public static bool operator == (SKDocumentPdfMetadata left, SKDocumentPdfMetadata right) =>
@@ -340,7 +361,7 @@ namespace SkiaSharp
 		public static bool operator != (SKDocumentPdfMetadata left, SKDocumentPdfMetadata right) =>
 			!left.Equals (right);
 
-		public override int GetHashCode ()
+		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
 			hash.Add (Title);
