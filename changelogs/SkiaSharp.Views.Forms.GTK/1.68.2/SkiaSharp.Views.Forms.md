@@ -49,6 +49,20 @@ public interface ISKCanvasViewController : Xamarin.Forms.IElementController, Xam
 }
 ```
 
+#### New Type: SkiaSharp.Views.Forms.ISKGLViewController
+
+```csharp
+public interface ISKGLViewController : Xamarin.Forms.IElementController, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController {
+	// events
+	public event System.EventHandler<SkiaSharp.Views.Forms.GetPropertyValueEventArgs<SkiaSharp.SKSize>> GetCanvasSize;
+	public event System.EventHandler<SkiaSharp.Views.Forms.GetPropertyValueEventArgs<SkiaSharp.GRContext>> GetGRContext;
+	public event System.EventHandler SurfaceInvalidated;
+	// methods
+	public virtual void OnPaintSurface (SKPaintGLSurfaceEventArgs e);
+	public virtual void OnTouch (SKTouchEventArgs e);
+}
+```
+
 #### New Type: SkiaSharp.Views.Forms.SKBitmapImageSource
 
 ```csharp
@@ -117,7 +131,7 @@ public abstract class SKCanvasViewRendererBase`2 : Xamarin.Forms.Platform.GTK.Vi
 #### New Type: SkiaSharp.Views.Forms.SKGLView
 
 ```csharp
-public class SKGLView : Xamarin.Forms.View, System.ComponentModel.INotifyPropertyChanged, Xamarin.Forms.IAnimatable, Xamarin.Forms.IElementController, Xamarin.Forms.ITabStopElement, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController, Xamarin.Forms.Internals.IDynamicResourceHandler, Xamarin.Forms.Internals.IGestureController, Xamarin.Forms.Internals.INameScope, Xamarin.Forms.Internals.INavigationProxy {
+public class SKGLView : Xamarin.Forms.View, ISKGLViewController, System.ComponentModel.INotifyPropertyChanged, Xamarin.Forms.IAnimatable, Xamarin.Forms.IElementController, Xamarin.Forms.ITabStopElement, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController, Xamarin.Forms.Internals.IDynamicResourceHandler, Xamarin.Forms.Internals.IGestureController, Xamarin.Forms.Internals.INameScope, Xamarin.Forms.Internals.INavigationProxy {
 	// constructors
 	public SKGLView ();
 	// fields
