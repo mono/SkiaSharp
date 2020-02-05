@@ -32,6 +32,49 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ToRasterImageReturnsSameRaster()
+		{
+			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			using var image = SKImage.FromEncodedData(data);
+
+			Assert.True(image.IsLazyGenerated);
+			Assert.Null(image.PeekPixels());
+			Assert.Equal(image, image.ToRasterImage());
+		}
+
+		[SkippableFact]
+		public void LazyRasterCanReadToNonLazy()
+		{
+			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			using var image = SKImage.FromEncodedData(data);
+			Assert.True(image.IsLazyGenerated);
+
+			var info = new SKImageInfo(image.Width, image.Height);
+			using var copy = SKImage.Create(info);
+			using var pix = copy.PeekPixels();
+
+			Assert.True(image.ReadPixels(pix));
+			Assert.False(copy.IsLazyGenerated);
+			Assert.NotNull(copy.PeekPixels());
+		}
+
+		[SkippableFact]
+		public void ToRasterImageFalseReturnsNonLazy()
+		{
+			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			using var image = SKImage.FromEncodedData(data);
+
+			Assert.True(image.IsLazyGenerated);
+			Assert.Null(image.PeekPixels());
+
+			using var nonLazy = image.ToRasterImage(false);
+			Assert.NotEqual(image, nonLazy);
+			Assert.False(nonLazy.IsLazyGenerated);
+			Assert.NotNull(nonLazy.PeekPixels());
+			Assert.Equal(nonLazy, nonLazy.ToRasterImage());
+		}
+
+		[SkippableFact]
 		public void ImmutableBitmapsAreNotCopied()
 		{
 			// this is a really weird test as it is a mutable bitmap that is marked as immutable
@@ -525,6 +568,71 @@ namespace SkiaSharp.Tests
 
 				return result.Handle;
 			}
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void RasterImageIsValidAlways()
+		{
+			using var image = SKImage.FromEncodedData(Path.Combine(PathToImages, "baboon.jpg"));
+
+			Assert.True(image.IsValid(null));
+
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+			using var grContext = GRContext.CreateGl();
+
+			Assert.True(image.IsValid(grContext));
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void TextureImageIsValidOnContext()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+			using var grContext = GRContext.CreateGl();
+
+			using var image = SKImage.FromEncodedData(Path.Combine(PathToImages, "baboon.jpg"));
+			using var texture = image.ToTextureImage(grContext);
+
+			Assert.True(texture.IsValid(grContext));
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void RasterImageCanBecomeTexture()
+		{
+			using var image = SKImage.FromEncodedData(Path.Combine(PathToImages, "baboon.jpg"));
+
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+			using var grContext = GRContext.CreateGl();
+
+			Assert.False(image.IsTextureBacked);
+
+			using var texture = image.ToTextureImage(grContext);
+
+			Assert.NotNull(texture);
+			Assert.True(texture.IsTextureBacked);
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void TextureImageCanBecomeRaster()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+			using var grContext = GRContext.CreateGl();
+
+			using var image = SKImage.FromEncodedData(Path.Combine(PathToImages, "baboon.jpg"));
+			using var texture = image.ToTextureImage(grContext);
+
+			using var raster = texture.ToRasterImage();
+
+			Assert.NotNull(raster);
+			Assert.False(raster.IsTextureBacked);
+			Assert.False(raster.IsLazyGenerated);
 		}
 
 		[Trait(CategoryKey, GpuCategory)]

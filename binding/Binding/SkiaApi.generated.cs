@@ -1152,9 +1152,18 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_image_is_texture_backed (sk_image_t image);
 
+		// bool sk_image_is_valid(const sk_image_t* image, gr_context_t* context)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_image_is_valid (sk_image_t image, gr_context_t context);
+
 		// sk_image_t* sk_image_make_non_texture_image(const sk_image_t* cimage)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_make_non_texture_image (sk_image_t cimage);
+
+		// sk_image_t* sk_image_make_raster_image(const sk_image_t* cimage)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_image_t sk_image_make_raster_image (sk_image_t cimage);
 
 		// sk_shader_t* sk_image_make_shader(const sk_image_t*, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, const sk_matrix_t* localMatrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1163,6 +1172,10 @@ namespace SkiaSharp
 		// sk_image_t* sk_image_make_subset(const sk_image_t* cimage, const sk_irect_t* subset)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_make_subset (sk_image_t cimage, SKRectI* subset);
+
+		// sk_image_t* sk_image_make_texture_image(const sk_image_t* cimage, gr_context_t* context, sk_colorspace_t* colorspace)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_image_t sk_image_make_texture_image (sk_image_t cimage, gr_context_t context, sk_colorspace_t colorspace);
 
 		// sk_image_t* sk_image_make_with_filter(const sk_image_t* cimage, const sk_imagefilter_t* filter, const sk_irect_t* subset, const sk_irect_t* clipBounds, sk_irect_t* outSubset, sk_ipoint_t* outOffset)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
