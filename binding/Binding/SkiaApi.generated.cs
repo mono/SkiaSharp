@@ -44,6 +44,9 @@ namespace SkiaSharp
 	using sk_pixelref_factory_t = IntPtr;
 	using sk_pixmap_t = IntPtr;
 	using sk_refcnt_t = IntPtr;
+	using sk_region_cliperator_t = IntPtr;
+	using sk_region_iterator_t = IntPtr;
+	using sk_region_spanerator_t = IntPtr;
 	using sk_region_t = IntPtr;
 	using sk_rrect_t = IntPtr;
 	using sk_shader_t = IntPtr;
@@ -2567,66 +2570,176 @@ namespace SkiaSharp
 
 		#region sk_region.h
 
-		// bool sk_region_contains(sk_region_t* r, const sk_region_t* region)
+		// void sk_region_cliperator_delete(sk_region_cliperator_t* iter)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_region_cliperator_delete (sk_region_cliperator_t iter);
+
+		// bool sk_region_cliperator_done(sk_region_cliperator_t* iter)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_cliperator_done (sk_region_cliperator_t iter);
+
+		// sk_region_cliperator_t* sk_region_cliperator_new(const sk_region_t* region, const sk_irect_t* clip)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_region_cliperator_t sk_region_cliperator_new (sk_region_t region, SKRectI* clip);
+
+		// void sk_region_cliperator_next(sk_region_cliperator_t* iter)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_region_cliperator_next (sk_region_cliperator_t iter);
+
+		// void sk_region_cliperator_rect(const sk_region_cliperator_t* iter, sk_irect_t* rect)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_region_cliperator_rect (sk_region_cliperator_t iter, SKRectI* rect);
+
+		// bool sk_region_contains(const sk_region_t* r, const sk_region_t* region)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_contains (sk_region_t r, sk_region_t region);
 
-		// bool sk_region_contains2(sk_region_t* r, int x, int y)
+		// bool sk_region_contains_point(const sk_region_t* r, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_contains2 (sk_region_t r, Int32 x, Int32 y);
+		internal static extern bool sk_region_contains_point (sk_region_t r, Int32 x, Int32 y);
 
-		// void sk_region_delete(sk_region_t* cpath)
+		// bool sk_region_contains_rect(const sk_region_t* r, const sk_irect_t* rect)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_region_delete (sk_region_t cpath);
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_contains_rect (sk_region_t r, SKRectI* rect);
 
-		// void sk_region_get_bounds(sk_region_t* r, sk_irect_t* rect)
+		// void sk_region_delete(sk_region_t* r)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_region_delete (sk_region_t r);
+
+		// bool sk_region_get_boundary_path(const sk_region_t* r, sk_path_t* path)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_get_boundary_path (sk_region_t r, sk_path_t path);
+
+		// void sk_region_get_bounds(const sk_region_t* r, sk_irect_t* rect)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_get_bounds (sk_region_t r, SKRectI* rect);
 
-		// bool sk_region_intersects(sk_region_t* r, const sk_region_t* src)
+		// bool sk_region_intersects(const sk_region_t* r, const sk_region_t* src)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_intersects (sk_region_t r, sk_region_t src);
 
-		// bool sk_region_intersects_rect(sk_region_t* r, const sk_irect_t* rect)
+		// bool sk_region_intersects_rect(const sk_region_t* r, const sk_irect_t* rect)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_intersects_rect (sk_region_t r, SKRectI* rect);
+
+		// bool sk_region_is_complex(const sk_region_t* r)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_is_complex (sk_region_t r);
+
+		// bool sk_region_is_empty(const sk_region_t* r)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_is_empty (sk_region_t r);
+
+		// bool sk_region_is_rect(const sk_region_t* r)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_is_rect (sk_region_t r);
+
+		// void sk_region_iterator_delete(sk_region_iterator_t* iter)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_region_iterator_delete (sk_region_iterator_t iter);
+
+		// bool sk_region_iterator_done(const sk_region_iterator_t* iter)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_iterator_done (sk_region_iterator_t iter);
+
+		// sk_region_iterator_t* sk_region_iterator_new(const sk_region_t* region)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_region_iterator_t sk_region_iterator_new (sk_region_t region);
+
+		// void sk_region_iterator_next(sk_region_iterator_t* iter)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_region_iterator_next (sk_region_iterator_t iter);
+
+		// void sk_region_iterator_rect(const sk_region_iterator_t* iter, sk_irect_t* rect)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_region_iterator_rect (sk_region_iterator_t iter, SKRectI* rect);
+
+		// bool sk_region_iterator_rewind(sk_region_iterator_t* iter)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_iterator_rewind (sk_region_iterator_t iter);
 
 		// sk_region_t* sk_region_new()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_region_t sk_region_new ();
 
-		// sk_region_t* sk_region_new2(const sk_region_t* region)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_region_t sk_region_new2 (sk_region_t region);
-
-		// bool sk_region_op(sk_region_t* dst, int left, int top, int right, int bottom, sk_region_op_t op)
+		// bool sk_region_op(sk_region_t* r, const sk_region_t* region, sk_region_op_t op)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_op (sk_region_t dst, Int32 left, Int32 top, Int32 right, Int32 bottom, SKRegionOperation op);
+		internal static extern bool sk_region_op (sk_region_t r, sk_region_t region, SKRegionOperation op);
 
-		// bool sk_region_op2(sk_region_t* dst, sk_region_t* src, sk_region_op_t op)
+		// bool sk_region_op_rect(sk_region_t* r, const sk_irect_t* rect, sk_region_op_t op)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_op2 (sk_region_t dst, sk_region_t src, SKRegionOperation op);
+		internal static extern bool sk_region_op_rect (sk_region_t r, SKRectI* rect, SKRegionOperation op);
 
-		// bool sk_region_set_path(sk_region_t* dst, const sk_path_t* t, const sk_region_t* clip)
+		// bool sk_region_quick_contains(const sk_region_t* r, const sk_irect_t* rect)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_set_path (sk_region_t dst, sk_path_t t, sk_region_t clip);
+		internal static extern bool sk_region_quick_contains (sk_region_t r, SKRectI* rect);
 
-		// bool sk_region_set_rect(sk_region_t* dst, const sk_irect_t* rect)
+		// bool sk_region_quick_reject(const sk_region_t* r, const sk_region_t* region)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_region_set_rect (sk_region_t dst, SKRectI* rect);
+		internal static extern bool sk_region_quick_reject (sk_region_t r, sk_region_t region);
+
+		// bool sk_region_quick_reject_rect(const sk_region_t* r, const sk_irect_t* rect)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_quick_reject_rect (sk_region_t r, SKRectI* rect);
+
+		// bool sk_region_set_empty(sk_region_t* r)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_set_empty (sk_region_t r);
+
+		// bool sk_region_set_path(sk_region_t* r, const sk_path_t* t, const sk_region_t* clip)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_set_path (sk_region_t r, sk_path_t t, sk_region_t clip);
+
+		// bool sk_region_set_rect(sk_region_t* r, const sk_irect_t* rect)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_set_rect (sk_region_t r, SKRectI* rect);
+
+		// bool sk_region_set_rects(sk_region_t* r, const sk_irect_t* rects, int count)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_set_rects (sk_region_t r, SKRectI* rects, Int32 count);
 
 		// bool sk_region_set_region(sk_region_t* r, const sk_region_t* region)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_set_region (sk_region_t r, sk_region_t region);
+
+		// void sk_region_spanerator_delete(sk_region_spanerator_t* iter)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_region_spanerator_delete (sk_region_spanerator_t iter);
+
+		// sk_region_spanerator_t* sk_region_spanerator_new(const sk_region_t* region, int y, int left, int right)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_region_spanerator_t sk_region_spanerator_new (sk_region_t region, Int32 y, Int32 left, Int32 right);
+
+		// bool sk_region_spanerator_next(sk_region_spanerator_t* iter, int* left, int* right)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_region_spanerator_next (sk_region_spanerator_t iter, Int32* left, Int32* right);
+
+		// void sk_region_translate(sk_region_t* r, int x, int y)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_region_translate (sk_region_t r, Int32 x, Int32 y);
 
 		#endregion
 

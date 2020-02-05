@@ -628,6 +628,35 @@ public virtual bool Equals (SKRectI obj);
 ```
 
 
+#### Type Changed: SkiaSharp.SKRegion
+
+Added properties:
+
+```csharp
+public bool IsComplex { get; }
+public bool IsEmpty { get; }
+public bool IsRect { get; }
+```
+
+Added methods:
+
+```csharp
+public bool Contains (SKPath path);
+public bool Contains (SKRectI rect);
+public SKRegion.ClipIterator CreateClipIterator (SKRectI clip);
+public SKRegion.RectIterator CreateRectIterator ();
+public SKRegion.SpanIterator CreateSpanIterator (int y, int left, int right);
+public SKPath GetBoundaryPath ();
+public bool QuickContains (SKRectI rect);
+public bool QuickReject (SKPath path);
+public bool QuickReject (SKRectI rect);
+public bool QuickReject (SKRegion region);
+public void SetEmpty ();
+public bool SetRects (SKRectI[] rects);
+public void Translate (int x, int y);
+```
+
+
 #### Type Changed: SkiaSharp.SKRoundRect
 
 Added constructor:
