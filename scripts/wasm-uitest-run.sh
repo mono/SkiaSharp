@@ -1,8 +1,9 @@
 #!/bin/bash
+set -e
 
 cd $BUILD_SOURCESDIRECTORY
 
-source /emsdk/emsdk_env.sh
+source ~/emsdk/emsdk_env.sh
 msbuild /r /p:Configuration=Release $BUILD_SOURCESDIRECTORY/source/SkiaSharpSample/SkiaSharpSample.Wasm/SkiaSharpSample.Wasm.csproj
 msbuild /r /p:Configuration=Release $BUILD_SOURCESDIRECTORY/source/SkiaSharpSample/SkiaSharpSample.UITests/SkiaSharpSample.UITests.csproj
 
