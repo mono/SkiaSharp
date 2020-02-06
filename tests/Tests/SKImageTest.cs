@@ -67,7 +67,7 @@ namespace SkiaSharp.Tests
 			Assert.True(image.IsLazyGenerated);
 			Assert.Null(image.PeekPixels());
 
-			using var nonLazy = image.ToRasterImage(false);
+			using var nonLazy = image.ToRasterImage(true);
 			Assert.NotEqual(image, nonLazy);
 			Assert.False(nonLazy.IsLazyGenerated);
 			Assert.NotNull(nonLazy.PeekPixels());

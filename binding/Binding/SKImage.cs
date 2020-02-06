@@ -601,12 +601,12 @@ namespace SkiaSharp
 		// ToRasterImage
 
 		public SKImage ToRasterImage () =>
-			ToRasterImage (true);
+			ToRasterImage (false);
 
-		public SKImage ToRasterImage (bool preserveLazy) =>
-			preserveLazy
-				? GetObject<SKImage> (SkiaApi.sk_image_make_non_texture_image (Handle))
-				: GetObject<SKImage> (SkiaApi.sk_image_make_raster_image (Handle));
+		public SKImage ToRasterImage (bool ensurePixelData) =>
+			ensurePixelData
+				? GetObject<SKImage> (SkiaApi.sk_image_make_raster_image (Handle))
+				: GetObject<SKImage> (SkiaApi.sk_image_make_non_texture_image (Handle));
 
 		// ToTextureImage
 
