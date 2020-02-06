@@ -321,10 +321,17 @@ public static bool op_Inequality (SKHighContrastConfig left, SKHighContrastConfi
 
 #### Type Changed: SkiaSharp.SKImage
 
-Added method:
+Added methods:
 
 ```csharp
+public bool IsValid (GRContext context);
+public bool ReadPixels (SKPixmap pixmap);
+public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels);
+public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes);
+public SKImage ToRasterImage (bool ensurePixelData);
 public SKShader ToShader ();
+public SKImage ToTextureImage (GRContext context);
+public SKImage ToTextureImage (GRContext context, SKColorSpace colorspace);
 ```
 
 
