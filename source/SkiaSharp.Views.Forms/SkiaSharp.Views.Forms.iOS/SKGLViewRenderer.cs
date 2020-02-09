@@ -55,7 +55,7 @@ namespace SkiaSharp.Views.Forms
 			if (oneShot)
 			{
 				var nativeView = Control;
-				nativeView?.Display();
+				nativeView?.BeginInvokeOnMainThread(() => nativeView?.Display());
 				return;
 			}
 
