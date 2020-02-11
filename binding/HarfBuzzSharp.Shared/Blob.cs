@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 
 namespace HarfBuzzSharp
@@ -14,7 +15,8 @@ namespace HarfBuzzSharp
 		{
 		}
 
-		[Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate releaseDelegate) instead.")]
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate) instead.")]
 		public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
 			: this (data, (int)length, mode, () => releaseDelegate?.Invoke (userData))
 		{

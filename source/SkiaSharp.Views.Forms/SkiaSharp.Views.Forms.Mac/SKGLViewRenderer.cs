@@ -46,7 +46,7 @@ namespace SkiaSharp.Views.Forms
 			if (oneShot)
 			{
 				var nativeView = Control;
-				nativeView?.Display();
+				nativeView?.BeginInvokeOnMainThread(() => nativeView?.Display());
 				return;
 			}
 
@@ -58,7 +58,7 @@ namespace SkiaSharp.Views.Forms
 				var formsView = Element;
 
 				// redraw the view
-				nativeView?.Display();
+				nativeView?.BeginInvokeOnMainThread(() => nativeView?.Display());
 
 				// stop the render loop if this was a one-shot, or the views are disposed
 				if (nativeView == null || formsView == null || !formsView.HasRenderLoop)

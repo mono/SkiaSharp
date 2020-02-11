@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -117,6 +118,7 @@ namespace SkiaSharp
 			}
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use CreateMerge(SKImageFilter, SKImageFilter, SKImageFilter.CropRect) instead.")]
 		public static SKImageFilter CreateMerge(SKImageFilter first, SKImageFilter second, SKBlendMode mode, SKImageFilter.CropRect cropRect = null)
 		{
@@ -128,6 +130,7 @@ namespace SkiaSharp
 			return CreateMerge(new [] { first, second }, cropRect);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use CreateMerge(SKImageFilter[], SKImageFilter.CropRect) instead.")]
 		public static SKImageFilter CreateMerge(SKImageFilter[] filters, SKBlendMode[] modes, SKImageFilter.CropRect cropRect = null)
 		{

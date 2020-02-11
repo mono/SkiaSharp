@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 
 namespace SkiaSharp
@@ -76,6 +77,7 @@ namespace SkiaSharp
 
 		// CreatePdf
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
 		public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi)
 		{

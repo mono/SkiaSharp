@@ -17,6 +17,12 @@ namespace SkiaSharpGenerator
 		[JsonPropertyName("properties")]
 		public bool GenerateProperties { get; set; } = true;
 
+		[JsonPropertyName("readonly")]
+		public bool IsReadOnly { get; set; } = false;
+
+		[JsonPropertyName("equality")]
+		public bool GenerateEquality { get; set; } = true;
+
 		[JsonPropertyName("members")]
 		public Dictionary<string, string> Members { get; set; } = new Dictionary<string, string>();
 	}

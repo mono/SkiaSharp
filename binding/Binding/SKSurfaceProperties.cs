@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -10,6 +11,7 @@ namespace SkiaSharp
 		{
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public SKSurfaceProperties (SKSurfaceProps props)
 			: this (props.Flags, props.PixelGeometry)
