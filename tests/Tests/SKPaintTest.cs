@@ -416,6 +416,42 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void AllCharactersGetGlyphWidthsByString()
+		{
+			// all ISO 10646 chars 
+			const int maxChar = (char)65534;
+			var s = string.Empty;
+			for (var c = (char)0; c <= maxChar; c++)
+			{
+				s += c;
+			}
+
+			using var newPaint = new SKPaint();
+			var glyphWidths = newPaint.GetGlyphWidths(s);
+
+			Assert.Equal(s.Length, glyphWidths.Length);
+		}
+
+		[SkippableFact]
+		public void AllCharactersGetGlyphWidthsByChar()
+		{
+			// all ISO 10646 chars 
+			const int maxChar = (char)65534;
+			var s = string.Empty;
+			for (var c = (char)0; c <= maxChar; c++)
+			{
+				s += c;
+			}
+
+			foreach (var c in s)
+			{
+				using var newPaint = new SKPaint();
+				var glyphWidths = newPaint.GetGlyphWidths(c.ToString());
+				Assert.Equal(1, glyphWidths.Length);
+			}
+		}
+
+		[SkippableFact]
 		public unsafe void TextInterceptsAreFoundCorrectly()
 		{
 			var text = "|";
