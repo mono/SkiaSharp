@@ -21,6 +21,7 @@ namespace SkiaSharpGenerator
 				"",
 				"Available commands:",
 				new GenerateCommand(),
+				new VerifyCommand(),
 			};
 			return commands.Run(args);
 		}
