@@ -11,7 +11,7 @@ namespace HarfBuzzSharp
 
 	public delegate Blob GetTableDelegate (Face face, Tag tag);
 
-	[EditorBrowsable(EditorBrowsableState.Never)]
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use ReleaseDelegate instead.")]
 	public delegate void BlobReleaseDelegate (object context);
 

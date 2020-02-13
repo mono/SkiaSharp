@@ -5,6 +5,7 @@ namespace SkiaSharp
 	public unsafe partial struct SKRotationScaleMatrix
 	{
 		public static readonly SKRotationScaleMatrix Empty;
+
 		public static readonly SKRotationScaleMatrix Identity = new SKRotationScaleMatrix (1, 0, 0, 0);
 
 		public SKRotationScaleMatrix (float scos, float ssin, float tx, float ty)
@@ -15,7 +16,7 @@ namespace SkiaSharp
 			fTY = ty;
 		}
 
-		public SKMatrix ToMatrix () =>
+		public readonly SKMatrix ToMatrix () =>
 			new SKMatrix (fSCos, -fSSin, fTX, fSSin, fSCos, fTY, 0, 0, 1);
 
 		public static SKRotationScaleMatrix FromDegrees (float scale, float degrees, float tx, float ty, float anchorX, float anchorY) =>
@@ -25,12 +26,14 @@ namespace SkiaSharp
 		{
 			var s = (float)Math.Sin (radians) * scale;
 			var c = (float)Math.Cos (radians) * scale;
-
 			var x = tx + -c * anchorX + s * anchorY;
 			var y = ty + -s * anchorX - c * anchorY;
 
 			return new SKRotationScaleMatrix (c, s, x, y);
 		}
+
+		public static SKRotationScaleMatrix CreateIdentity () =>
+			new SKRotationScaleMatrix (1, 0, 0, 0);
 
 		public static SKRotationScaleMatrix CreateTranslation (float x, float y) =>
 			new SKRotationScaleMatrix (1, 0, x, y);

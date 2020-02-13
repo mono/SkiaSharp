@@ -54,6 +54,7 @@ namespace SkiaSharp.Views.Forms
 #endif
 
 #if __ANDROID__
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("This constructor is obsolete as of version 2.5. Please use SKCanvasViewRendererBase(Context) instead.")]
 #endif
 		protected SKCanvasViewRendererBase()

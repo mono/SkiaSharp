@@ -15,8 +15,8 @@ namespace HarfBuzzSharp
 		{
 		}
 
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate releaseDelegate) instead.")]
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate) instead.")]
 		public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
 			: this (data, (int)length, mode, () => releaseDelegate?.Invoke (userData))
 		{
@@ -31,6 +31,9 @@ namespace HarfBuzzSharp
 			: this (Create (data, length, mode, releaseDelegate))
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeHandler ()
 		{

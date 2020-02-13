@@ -1,14 +1,21 @@
-﻿using System;
+﻿﻿using System;
+using System.Runtime.InteropServices;
 using System.IO;
 using System.Text;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
 	public unsafe class SKData : SKObject, ISKNonVirtualReferenceCounted
 	{
+		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
+		// The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
+		// improvement in Copy performance.
+		internal const int CopyBufferSize = 81920;
+
 		private static readonly Lazy<SKData> empty;
 
-		static SKData ()
+		static SKData()
 		{
 			empty = new Lazy<SKData> (() => new SKDataStatic (SkiaApi.sk_data_new_empty ()));
 		}
@@ -25,47 +32,58 @@ namespace SkiaSharp
 		{
 		}
 
-		void ISKNonVirtualReferenceCounted.ReferenceNative () =>
-			SkiaApi.sk_data_ref (Handle);
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
-		void ISKNonVirtualReferenceCounted.UnreferenceNative () =>
-			SkiaApi.sk_data_unref (Handle);
+		void ISKNonVirtualReferenceCounted.ReferenceNative () => SkiaApi.sk_data_ref (Handle);
 
-		public static SKData Empty =>
-			empty.Value;
+		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_data_unref (Handle);
 
-		// CreateCopy
+		public static SKData Empty => empty.Value;
 
-		public static SKData CreateCopy (IntPtr bytes, long length) =>
-			GetObject<SKData> (SkiaApi.sk_data_new_with_copy ((void*)bytes, (IntPtr)length));
+		public static SKData CreateCopy (IntPtr bytes, ulong length)
+		{
+			if (SizeOf <IntPtr> () == 4 && length > UInt32.MaxValue)
+				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
+			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy ((void*)bytes, (IntPtr) length));
+		}
 
 		public static SKData CreateCopy (byte[] bytes) =>
-			CreateCopy (bytes.AsSpan ());
+			CreateCopy (bytes, (ulong)bytes.Length);
 
-		public static SKData CreateCopy (byte[] bytes, long length) =>
-			CreateCopy (bytes.AsSpan (), length);
-
-		public static SKData CreateCopy (ReadOnlySpan<byte> bytes) =>
-			CreateCopy (bytes, bytes.Length);
-
-		public static SKData CreateCopy (ReadOnlySpan<byte> bytes, long length)
+		public static SKData CreateCopy (byte[] bytes, ulong length)
 		{
 			fixed (byte* b = bytes) {
 				return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (b, (IntPtr)length));
 			}
 		}
 
-		// Create
+		public static SKData CreateCopy (ReadOnlySpan<byte> bytes)
+		{
+			fixed (byte* b = bytes) {
+				return CreateCopy ((IntPtr)b, (ulong)bytes.Length);
+			}
+		}
 
-		public static SKData Create (long size) =>
-			GetObject<SKData> (SkiaApi.sk_data_new_uninitialized ((IntPtr)size));
+		public static SKData Create (int size)
+		{
+			return GetObject<SKData> (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
+		}
+
+		public static SKData Create (ulong size)
+		{
+			if (SizeOf <IntPtr> () == 4 && size > UInt32.MaxValue)
+				throw new ArgumentOutOfRangeException (nameof (size), "The size exceeds the size of pointers.");
+				
+			return GetObject<SKData> (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
+		}
 
 		public static SKData Create (string filename)
 		{
 			if (string.IsNullOrEmpty (filename))
 				throw new ArgumentException ("The filename cannot be empty.", nameof (filename));
 
-			var utf8path = StringUtilities.GetEncodedText (filename, SKTextEncoding.Utf8);
+			var utf8path = StringUtilities.GetEncodedText (filename, SKEncoding.Utf8);
 			fixed (byte* u = utf8path) {
 				return GetObject<SKData> (SkiaApi.sk_data_new_from_file (u));
 			}
@@ -75,8 +93,25 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
-
 			return Create (stream, stream.Length);
+		}
+
+		public static SKData Create (Stream stream, int length)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			using (var managed = new SKManagedStream (stream))
+				return Create (managed, length);
+		}
+
+		public static SKData Create (Stream stream, ulong length)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			using (var managed = new SKManagedStream (stream))
+				return Create (managed, length);
 		}
 
 		public static SKData Create (Stream stream, long length)
@@ -84,8 +119,8 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			using var managed = new SKManagedStream (stream);
-			return Create (managed, length);
+			using (var managed = new SKManagedStream (stream))
+				return Create (managed, length);
 		}
 
 		public static SKData Create (SKStream stream)
@@ -96,15 +131,41 @@ namespace SkiaSharp
 			return Create (stream, stream.Length);
 		}
 
+		public static SKData Create (SKStream stream, int length)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
+		}
+
+		public static SKData Create (SKStream stream, ulong length)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
+		}
+
 		public static SKData Create (SKStream stream, long length)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
+			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
 		}
 
-		public static SKData Create (IntPtr address, long length, SKDataReleaseDelegate releaseProc = null, object context = null)
+		public static SKData Create (IntPtr address, int length)
+		{
+			return Create (address, length, null, null);
+		}
+
+		public static SKData Create (IntPtr address, int length, SKDataReleaseDelegate releaseProc)
+		{
+			return Create (address, length, releaseProc, null);
+		}
+
+		public static SKData Create (IntPtr address, int length, SKDataReleaseDelegate releaseProc, object context)
 		{
 			var del = releaseProc != null && context != null
 				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))
@@ -116,11 +177,19 @@ namespace SkiaSharp
 		internal static SKData FromCString (string str)
 		{
 			var bytes = Encoding.ASCII.GetBytes (str ?? string.Empty);
-			return CreateCopy (bytes, bytes.Length + 1); // + 1 for the terminating char
+			return SKData.CreateCopy (bytes, (ulong)(bytes.Length + 1)); // + 1 for the terminating char
 		}
 
-		public SKData Subset (long offset, long length) =>
-			GetObject<SKData> (SkiaApi.sk_data_new_subset (Handle, (IntPtr)offset, (IntPtr)length));
+		public SKData Subset (ulong offset, ulong length)
+		{
+			if (SizeOf <IntPtr> () == 4) {
+				if (length > UInt32.MaxValue)
+					throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
+				if (offset > UInt32.MaxValue)
+					throw new ArgumentOutOfRangeException (nameof (offset), "The offset exceeds the size of pointers.");
+			}
+			return GetObject<SKData> (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
+		}
 
 		public byte[] ToArray ()
 		{
@@ -129,14 +198,11 @@ namespace SkiaSharp
 			return array;
 		}
 
-		public bool IsEmpty =>
-			Size == 0;
+		public bool IsEmpty => Size == 0;
 
-		public long Size =>
-			(long)SkiaApi.sk_data_get_size (Handle);
+		public long Size => (long)SkiaApi.sk_data_get_size (Handle);
 
-		public IntPtr Data =>
-			(IntPtr)SkiaApi.sk_data_get_data (Handle);
+		public IntPtr Data => (IntPtr)SkiaApi.sk_data_get_data (Handle);
 
 		public Stream AsStream () =>
 			new SKDataStream (this, false);
@@ -144,15 +210,27 @@ namespace SkiaSharp
 		public Stream AsStream (bool streamDisposesData) =>
 			new SKDataStream (this, streamDisposesData);
 
-		public Span<byte> AsSpan () =>
-			new Span<byte> ((void*)Data, (int)Size);
+		public ReadOnlySpan<byte> AsSpan ()
+		{
+			return new ReadOnlySpan<byte> ((void*)Data, (int)Size);
+		}
 
 		public void SaveTo (Stream target)
 		{
 			if (target == null)
 				throw new ArgumentNullException (nameof (target));
 
-			AsStream ().CopyTo (target);
+			var buffer = new byte [CopyBufferSize];
+			var ptr = Data;
+			var total = Size;
+
+			for (var left = total; left > 0; ) {
+				var copyCount = (int) Math.Min (CopyBufferSize, left);
+				Marshal.Copy (ptr, buffer, 0, copyCount);
+				left -= copyCount;
+				ptr += copyCount;
+				target.Write (buffer, 0, copyCount);
+			}
 		}
 
 		private class SKDataStream : UnmanagedMemoryStream
@@ -161,7 +239,7 @@ namespace SkiaSharp
 			private readonly bool disposeHost;
 
 			public unsafe SKDataStream (SKData host, bool disposeHost = false)
-				: base ((byte*)host.Data, host.Size)
+				: base((byte *) host.Data, host.Size)
 			{
 				this.host = host;
 				this.disposeHost = disposeHost;
@@ -171,9 +249,9 @@ namespace SkiaSharp
 			{
 				base.Dispose (disposing);
 
-				if (disposeHost && host != null)
-					host.Dispose ();
-
+				if (disposeHost) {
+					host?.Dispose ();
+				}
 				host = null;
 			}
 		}

@@ -37,6 +37,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public override IntPtr Handle {
 			get => base.Handle;
 			protected set {
@@ -220,7 +223,7 @@ namespace SkiaSharp
 		}
 
 		// indicate that the child must not by GC-ed while this object lives
-		internal void KeepAlive(SKObject child)
+		internal void KeepAlive (SKObject child)
 		{
 			if (child == null)
 				return;

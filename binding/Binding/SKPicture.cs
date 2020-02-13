@@ -10,6 +10,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public uint UniqueId =>
 			SkiaApi.sk_picture_get_unique_id (Handle);
 
@@ -27,12 +30,12 @@ namespace SkiaSharp
 			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
-			GetObject<SKShader> (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, null, null));
+			SKShader.CreatePicture (this, tmx, tmy);
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile) =>
-			GetObject<SKShader> (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, null, &tile));
+			SKShader.CreatePicture (this, tmx, tmy, tile);
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile) =>
-			GetObject<SKShader> (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, &localMatrix, &tile));
+			SKShader.CreatePicture (this, tmx, tmy, localMatrix, tile);
 	}
 }

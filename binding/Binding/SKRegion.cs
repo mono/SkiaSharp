@@ -16,8 +16,9 @@ namespace SkiaSharp
 		}
 
 		public SKRegion (SKRegion region)
-			: this (SkiaApi.sk_region_new2 (region.Handle), true)
+			: this ()
 		{
+			SetRegion (region);
 		}
 
 		public SKRegion (SKRectI rect)
@@ -27,13 +28,27 @@ namespace SkiaSharp
 		}
 
 		public SKRegion (SKPath path)
-			: this (SKRectI.Ceiling (path.Bounds))
+			: this ()
 		{
 			SetPath (path);
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_region_delete (Handle);
+
+		// properties
+
+		public bool IsEmpty =>
+			SkiaApi.sk_region_is_empty (Handle);
+
+		public bool IsRect =>
+			SkiaApi.sk_region_is_rect (Handle);
+
+		public bool IsComplex =>
+			SkiaApi.sk_region_is_complex (Handle);
 
 		public SKRectI Bounds {
 			get {
@@ -41,6 +56,29 @@ namespace SkiaSharp
 				SkiaApi.sk_region_get_bounds (Handle, &rect);
 				return rect;
 			}
+		}
+
+		// GetBoundaryPath
+
+		public SKPath GetBoundaryPath ()
+		{
+			var path = new SKPath ();
+			if (!SkiaApi.sk_region_get_boundary_path (Handle, path.Handle)) {
+				path.Dispose ();
+				path = null;
+			}
+			return path;
+		}
+
+		// Contains
+
+		public bool Contains (SKPath path)
+		{
+			if (path == null)
+				throw new ArgumentNullException (nameof (path));
+
+			using var pathRegion = new SKRegion (path);
+			return Contains (pathRegion);
 		}
 
 		public bool Contains (SKRegion src)
@@ -52,10 +90,42 @@ namespace SkiaSharp
 		}
 
 		public bool Contains (SKPointI xy) =>
-			SkiaApi.sk_region_contains2 (Handle, xy.X, xy.Y);
+			SkiaApi.sk_region_contains_point (Handle, xy.X, xy.Y);
 
 		public bool Contains (int x, int y) =>
-			SkiaApi.sk_region_contains2 (Handle, x, y);
+			SkiaApi.sk_region_contains_point (Handle, x, y);
+
+		public bool Contains (SKRectI rect) =>
+			SkiaApi.sk_region_contains_rect (Handle, &rect);
+
+		// QuickContains
+
+		public bool QuickContains (SKRectI rect) =>
+			SkiaApi.sk_region_quick_contains (Handle, &rect);
+
+		// QuickReject
+
+		public bool QuickReject (SKRectI rect) =>
+			SkiaApi.sk_region_quick_reject_rect (Handle, &rect);
+
+		public bool QuickReject (SKRegion region)
+		{
+			if (region == null)
+				throw new ArgumentNullException (nameof (region));
+
+			return SkiaApi.sk_region_quick_reject (Handle, region.Handle);
+		}
+
+		public bool QuickReject (SKPath path)
+		{
+			if (path == null)
+				throw new ArgumentNullException (nameof (path));
+
+			using var pathRegion = new SKRegion (path);
+			return QuickReject (pathRegion);
+		}
+
+		// Intersects
 
 		public bool Intersects (SKPath path)
 		{
@@ -77,6 +147,11 @@ namespace SkiaSharp
 		public bool Intersects (SKRectI rect) =>
 			SkiaApi.sk_region_intersects_rect (Handle, &rect);
 
+		// Set*
+
+		public void SetEmpty () =>
+			SkiaApi.sk_region_set_empty (Handle);
+
 		public bool SetRegion (SKRegion region)
 		{
 			if (region == null)
@@ -87,6 +162,16 @@ namespace SkiaSharp
 
 		public bool SetRect (SKRectI rect) =>
 			SkiaApi.sk_region_set_rect (Handle, &rect);
+
+		public bool SetRects (SKRectI[] rects)
+		{
+			if (rects == null)
+				throw new ArgumentNullException (nameof (rects));
+
+			fixed (SKRectI* r = rects) {
+				return SkiaApi.sk_region_set_rects (Handle, r, rects.Length);
+			}
+		}
 
 		public bool SetPath (SKPath path, SKRegion clip)
 		{
@@ -111,19 +196,136 @@ namespace SkiaSharp
 			return SkiaApi.sk_region_set_path (Handle, path.Handle, clip.Handle);
 		}
 
+		// Translate
+
+		public void Translate (int x, int y) =>
+			SkiaApi.sk_region_translate (Handle, x, y);
+
+		// Op
+
 		public bool Op (SKRectI rect, SKRegionOperation op) =>
-			SkiaApi.sk_region_op (Handle, rect.Left, rect.Top, rect.Right, rect.Bottom, op);
+			SkiaApi.sk_region_op_rect (Handle, &rect, op);
 
 		public bool Op (int left, int top, int right, int bottom, SKRegionOperation op) =>
-			SkiaApi.sk_region_op (Handle, left, top, right, bottom, op);
+			Op (new SKRectI (left, top, right, bottom), op);
 
 		public bool Op (SKRegion region, SKRegionOperation op) =>
-			SkiaApi.sk_region_op2 (Handle, region.Handle, op);
+			SkiaApi.sk_region_op (Handle, region.Handle, op);
 
 		public bool Op (SKPath path, SKRegionOperation op)
 		{
 			using var pathRegion = new SKRegion (path);
 			return Op (pathRegion, op);
+		}
+
+		// Iterators
+
+		public RectIterator CreateRectIterator () =>
+			new RectIterator (this);
+
+		public ClipIterator CreateClipIterator (SKRectI clip) =>
+			new ClipIterator (this, clip);
+
+		public SpanIterator CreateSpanIterator (int y, int left, int right) =>
+			new SpanIterator (this, y, left, right);
+
+		// classes
+
+		public class RectIterator : SKObject
+		{
+			private readonly SKRegion region;
+
+			internal RectIterator (SKRegion region)
+				: base (SkiaApi.sk_region_iterator_new (region.Handle), true)
+			{
+				this.region = region;
+			}
+
+			protected override void DisposeNative () =>
+				SkiaApi.sk_region_iterator_delete (Handle);
+
+			public bool Next (out SKRectI rect)
+			{
+				if (SkiaApi.sk_region_iterator_done (Handle)) {
+					rect = SKRectI.Empty;
+					return false;
+				}
+
+				fixed (SKRectI* r = &rect) {
+					SkiaApi.sk_region_iterator_rect (Handle, r);
+				}
+
+				SkiaApi.sk_region_iterator_next (Handle);
+
+				return true;
+			}
+		}
+
+		public class ClipIterator : SKObject
+		{
+			private readonly SKRegion region;
+			private readonly SKRectI clip;
+
+			internal ClipIterator (SKRegion region, SKRectI clip)
+				: base (SkiaApi.sk_region_cliperator_new (region.Handle, &clip), true)
+			{
+				this.region = region;
+				this.clip = clip;
+			}
+
+			protected override void DisposeNative () =>
+				SkiaApi.sk_region_cliperator_delete (Handle);
+
+			public bool Next (out SKRectI rect)
+			{
+				if (SkiaApi.sk_region_cliperator_done (Handle)) {
+					rect = SKRectI.Empty;
+					return false;
+				}
+
+				fixed (SKRectI* r = &rect) {
+					SkiaApi.sk_region_iterator_rect (Handle, r);
+				}
+
+				SkiaApi.sk_region_cliperator_next (Handle);
+
+				return true;
+			}
+		}
+
+		public class SpanIterator : SKObject
+		{
+			private readonly SKRegion region;
+			private readonly int y;
+			private readonly int left;
+			private readonly int right;
+
+			internal SpanIterator (SKRegion region, int y, int left, int right)
+				: base (SkiaApi.sk_region_spanerator_new (region.Handle, y, left, right), true)
+			{
+				this.region = region;
+				this.y = y;
+				this.left = left;
+				this.right = right;
+			}
+
+			protected override void DisposeNative () =>
+				SkiaApi.sk_region_spanerator_delete (Handle);
+
+			public bool Next (out int left, out int right)
+			{
+				int l;
+				int r;
+				if (SkiaApi.sk_region_spanerator_next (Handle, &l, &r)) {
+					left = l;
+					right = r;
+					return true;
+				}
+
+				left = 0;
+				right = 0;
+				return false;
+			}
 		}
 	}
 }

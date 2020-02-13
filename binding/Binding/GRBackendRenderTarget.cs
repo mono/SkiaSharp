@@ -21,28 +21,32 @@ namespace SkiaSharp
 					throw new NotSupportedException ();
 				case GRBackend.OpenGL:
 					var glInfo = new GRGlFramebufferInfo ((uint)desc.RenderTargetHandle, desc.Config.ToGlSizedFormat ());
-					Handle = SkiaApi.gr_backendrendertarget_new_gl (desc.Width, desc.Height, desc.SampleCount, desc.StencilBits, &glInfo);
+					CreateGl (desc.Width, desc.Height, desc.SampleCount, desc.StencilBits, glInfo);
 					break;
 				case GRBackend.Vulkan:
-					throw new NotSupportedException ();
-				case GRBackend.Dawn:
 					throw new NotSupportedException ();
 				default:
 					throw new ArgumentOutOfRangeException (nameof (backend));
 			}
-
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
 		}
 
 		public GRBackendRenderTarget (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
 			: this (IntPtr.Zero, true)
 		{
+			CreateGl (width, height, sampleCount, stencilBits, glInfo);
+		}
+
+		private void CreateGl (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
+		{
 			Handle = SkiaApi.gr_backendrendertarget_new_gl (width, height, sampleCount, stencilBits, &glInfo);
 
-			if (Handle == IntPtr.Zero)
+			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
+			}
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.gr_backendrendertarget_delete (Handle);
@@ -52,7 +56,7 @@ namespace SkiaSharp
 		public int Height => SkiaApi.gr_backendrendertarget_get_height (Handle);
 		public int SampleCount => SkiaApi.gr_backendrendertarget_get_samples (Handle);
 		public int StencilBits => SkiaApi.gr_backendrendertarget_get_stencils (Handle);
-		public GRBackend Backend => SkiaApi.gr_backendrendertarget_get_backend (Handle).FromNative ();
+		public GRBackend Backend => SkiaApi.gr_backendrendertarget_get_backend (Handle);
 		public SKSizeI Size => new SKSizeI (Width, Height);
 		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 

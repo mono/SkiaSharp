@@ -17,15 +17,6 @@ namespace SkiaSharp
 		LeftBottom = 8,
 	}
 
-	[EditorBrowsable (EditorBrowsableState.Never)]
-	[Obsolete ("Use SKTextEncoding instead.")]
-	public enum SKEncoding
-	{
-		Utf8 = 0,
-		Utf16 = 1,
-		Utf32 = 2,
-	}
-
 	public enum SKFontStyleWeight
 	{
 		Invisible = 0,
@@ -67,28 +58,38 @@ namespace SkiaSharp
 
 		public static bool IsHorizontal (this SKPixelGeometry pg) =>
 			pg == SKPixelGeometry.BgrHorizontal || pg == SKPixelGeometry.RgbHorizontal;
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public static SKTextEncoding ToTextEncoding (this SKEncoding encoding) =>
-			encoding switch
-			{
-				SKEncoding.Utf8 => SKTextEncoding.Utf8,
-				SKEncoding.Utf16 => SKTextEncoding.Utf16,
-				SKEncoding.Utf32 => SKTextEncoding.Utf32,
-				_ => throw new ArgumentOutOfRangeException (nameof (encoding)),
-			};
 	}
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use SKSurfaceProperties instead.")]
-	public struct SKSurfaceProps
+	public struct SKSurfaceProps : IEquatable<SKSurfaceProps>
 	{
 		public SKPixelGeometry PixelGeometry { get; set; }
 		public SKSurfacePropsFlags Flags { get; set; }
+
+		public readonly bool Equals (SKSurfaceProps obj) =>
+			PixelGeometry == obj.PixelGeometry &&
+			Flags == obj.Flags;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKSurfaceProps f && Equals (f);
+
+		public static bool operator == (SKSurfaceProps left, SKSurfaceProps right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKSurfaceProps left, SKSurfaceProps right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (PixelGeometry);
+			hash.Add (Flags);
+			return hash.ToHashCode ();
+		}
 	}
 
-	public struct SKCodecOptions
+	public struct SKCodecOptions : IEquatable<SKCodecOptions>
 	{
 		public static readonly SKCodecOptions Default;
 
@@ -96,12 +97,14 @@ namespace SkiaSharp
 		{
 			Default = new SKCodecOptions (SKZeroInitialized.No);
 		}
+
 		public SKCodecOptions (SKZeroInitialized zeroInitialized)
 		{
 			ZeroInitialized = zeroInitialized;
 			Subset = null;
 			FrameIndex = 0;
 			PriorFrame = -1;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset)
 		{
@@ -109,6 +112,7 @@ namespace SkiaSharp
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKRectI subset)
 		{
@@ -116,6 +120,7 @@ namespace SkiaSharp
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (int frameIndex)
 		{
@@ -123,6 +128,7 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = -1;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (int frameIndex, int priorFrame)
 		{
@@ -130,6 +136,7 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = priorFrame;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 
 		public SKZeroInitialized ZeroInitialized { get; set; }
@@ -137,6 +144,34 @@ namespace SkiaSharp
 		public readonly bool HasSubset => Subset != null;
 		public int FrameIndex { get; set; }
 		public int PriorFrame { get; set; }
+		public SKTransferFunctionBehavior PremulBehavior { get; set; }
+
+		public readonly bool Equals (SKCodecOptions obj) =>
+			ZeroInitialized == obj.ZeroInitialized &&
+			Subset == obj.Subset &&
+			FrameIndex == obj.FrameIndex &&
+			PriorFrame == obj.PriorFrame &&
+			PremulBehavior == obj.PremulBehavior;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKCodecOptions f && Equals (f);
+
+		public static bool operator == (SKCodecOptions left, SKCodecOptions right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKCodecOptions left, SKCodecOptions right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (ZeroInitialized);
+			hash.Add (Subset);
+			hash.Add (FrameIndex);
+			hash.Add (PriorFrame);
+			hash.Add (PremulBehavior);
+			return hash.ToHashCode ();
+		}
 	}
 
 	public partial struct SKFontMetrics
@@ -147,15 +182,25 @@ namespace SkiaSharp
 		private const uint flagsStrikeoutPositionIsValid = (1U << 3);
 
 		public readonly float Top => fTop;
+
 		public readonly float Ascent => fAscent;
+
 		public readonly float Descent => fDescent;
+
 		public readonly float Bottom => fBottom;
+
 		public readonly float Leading => fLeading;
+
 		public readonly float AverageCharacterWidth => fAvgCharWidth;
+
 		public readonly float MaxCharacterWidth => fMaxCharWidth;
+
 		public readonly float XMin => fXMin;
+
 		public readonly float XMax => fXMax;
+
 		public readonly float XHeight => fXHeight;
+
 		public readonly float CapHeight => fCapHeight;
 
 		public readonly float? UnderlineThickness => GetIfValid (fUnderlineThickness, flagsUnderlineThicknessIsValid);
@@ -167,13 +212,40 @@ namespace SkiaSharp
 			(fFlags & flag) == flag ? value : (float?)null;
 	}
 
-	public struct SKLattice
+	public struct SKLattice : IEquatable<SKLattice>
 	{
 		public int[] XDivs { get; set; }
 		public int[] YDivs { get; set; }
 		public SKLatticeRectType[] RectTypes { get; set; }
 		public SKRectI? Bounds { get; set; }
 		public SKColor[] Colors { get; set; }
+
+		public readonly bool Equals (SKLattice obj) =>
+			XDivs == obj.XDivs &&
+			YDivs == obj.YDivs &&
+			RectTypes == obj.RectTypes &&
+			Bounds == obj.Bounds &&
+			Colors == obj.Colors;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKLattice f && Equals (f);
+
+		public static bool operator == (SKLattice left, SKLattice right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKLattice left, SKLattice right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (XDivs);
+			hash.Add (YDivs);
+			hash.Add (RectTypes);
+			hash.Add (Bounds);
+			hash.Add (Colors);
+			return hash.ToHashCode ();
+		}
 	}
 
 	internal partial struct SKTimeDateTimeInternal
@@ -194,7 +266,7 @@ namespace SkiaSharp
 		}
 	}
 
-	public struct SKDocumentPdfMetadata
+	public struct SKDocumentPdfMetadata : IEquatable<SKDocumentPdfMetadata>
 	{
 		public const float DefaultRasterDpi = SKDocument.DefaultRasterDpi;
 		public const int DefaultEncodingQuality = 101;
@@ -266,6 +338,45 @@ namespace SkiaSharp
 		public float RasterDpi { get; set; }
 		public bool PdfA { get; set; }
 		public int EncodingQuality { get; set; }
+
+		public readonly bool Equals (SKDocumentPdfMetadata obj) =>
+			Title == obj.Title &&
+			Author == obj.Author &&
+			Subject == obj.Subject &&
+			Keywords == obj.Keywords &&
+			Creator == obj.Creator &&
+			Producer == obj.Producer &&
+			Creation == obj.Creation &&
+			Modified == obj.Modified &&
+			RasterDpi == obj.RasterDpi &&
+			PdfA == obj.PdfA &&
+			EncodingQuality == obj.EncodingQuality;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKDocumentPdfMetadata f && Equals (f);
+
+		public static bool operator == (SKDocumentPdfMetadata left, SKDocumentPdfMetadata right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKDocumentPdfMetadata left, SKDocumentPdfMetadata right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (Title);
+			hash.Add (Author);
+			hash.Add (Subject);
+			hash.Add (Keywords);
+			hash.Add (Creator);
+			hash.Add (Producer);
+			hash.Add (Creation);
+			hash.Add (Modified);
+			hash.Add (RasterDpi);
+			hash.Add (PdfA);
+			hash.Add (EncodingQuality);
+			return hash.ToHashCode ();
+		}
 	}
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
@@ -306,23 +417,36 @@ namespace SkiaSharp
 
 		static SKPngEncoderOptions ()
 		{
-			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.AllFilters, 6);
+			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.AllFilters, 6, SKTransferFunctionBehavior.Respect);
 		}
 
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel)
 		{
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
+			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
 			fComments = null;
 		}
+
+		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel, SKTransferFunctionBehavior unpremulBehavior)
+		{
+			fFilterFlags = filterFlags;
+			fZLibLevel = zLibLevel;
+			fUnpremulBehavior = unpremulBehavior;
+			fComments = null;
+		}
+
 		public SKPngEncoderFilterFlags FilterFlags {
 			readonly get => fFilterFlags;
 			set => fFilterFlags = value;
 		}
-
 		public int ZLibLevel {
 			readonly get => fZLibLevel;
 			set => fZLibLevel = value;
+		}
+		public SKTransferFunctionBehavior UnpremulBehavior {
+			readonly get => fUnpremulBehavior;
+			set => fUnpremulBehavior = value;
 		}
 	}
 
@@ -332,7 +456,7 @@ namespace SkiaSharp
 
 		static SKJpegEncoderOptions ()
 		{
-			Default = new SKJpegEncoderOptions (100, SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore);
+			Default = new SKJpegEncoderOptions (100, SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore, SKTransferFunctionBehavior.Respect);
 		}
 
 		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption)
@@ -340,6 +464,15 @@ namespace SkiaSharp
 			fQuality = quality;
 			fDownsample = downsample;
 			fAlphaOption = alphaOption;
+			fBlendBehavior = SKTransferFunctionBehavior.Respect;
+		}
+
+		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption, SKTransferFunctionBehavior blendBehavior)
+		{
+			fQuality = quality;
+			fDownsample = downsample;
+			fAlphaOption = alphaOption;
+			fBlendBehavior = blendBehavior;
 		}
 	}
 
@@ -349,13 +482,21 @@ namespace SkiaSharp
 
 		static SKWebpEncoderOptions ()
 		{
-			Default = new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossy, 100);
+			Default = new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossy, 100, SKTransferFunctionBehavior.Respect);
 		}
 
 		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality)
 		{
 			fCompression = compression;
 			fQuality = quality;
+			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
+		}
+
+		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality, SKTransferFunctionBehavior unpremulBehavior)
+		{
+			fCompression = compression;
+			fQuality = quality;
+			fUnpremulBehavior = unpremulBehavior;
 		}
 	}
 }

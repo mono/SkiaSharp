@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
 	public unsafe partial struct SKMask
 	{
-		public SKMask (IntPtr image, SKRectI bounds, uint rowBytes, SKMaskFormat format)
+		public SKMask (IntPtr image, SKRectI bounds, UInt32 rowBytes, SKMaskFormat format)
 		{
 			fBounds = bounds;
 			fRowBytes = rowBytes;
@@ -12,13 +13,15 @@ namespace SkiaSharp
 			fImage = (byte*)image;
 		}
 
-		public SKMask (SKRectI bounds, uint rowBytes, SKMaskFormat format)
+		public SKMask (SKRectI bounds, UInt32 rowBytes, SKMaskFormat format)
 		{
 			fBounds = bounds;
 			fRowBytes = rowBytes;
 			fFormat = format;
 			fImage = null;
 		}
+
+		// properties
 
 		public IntPtr Image {
 			readonly get => (IntPtr)fImage;
@@ -30,7 +33,7 @@ namespace SkiaSharp
 			set => fBounds = value;
 		}
 
-		public uint RowBytes {
+		public UInt32 RowBytes {
 			readonly get => fRowBytes;
 			set => fRowBytes = value;
 		}
@@ -45,6 +48,25 @@ namespace SkiaSharp
 				fixed (SKMask* t = &this) {
 					return SkiaApi.sk_mask_is_empty (t);
 				}
+			}
+		}
+
+		// allocate / free
+
+		public long AllocateImage ()
+		{
+			fixed (SKMask* t = &this) {
+				var size = SkiaApi.sk_mask_compute_total_image_size (t);
+				fImage = SkiaApi.sk_mask_alloc_image (size);
+				return (long)size;
+			}
+		}
+
+		public void FreeImage ()
+		{
+			if (fImage != null) {
+				SKMask.FreeImage ((IntPtr)fImage);
+				fImage = null;
 			}
 		}
 
@@ -64,78 +86,52 @@ namespace SkiaSharp
 			}
 		}
 
-		// GetImage*
+		// GetAddr*
 
-		public readonly byte GetImage1 (int x, int y)
+		public readonly byte GetAddr1 (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
-				return *SkiaApi.sk_mask_get_addr_1 (t, x, y);
+				return SkiaApi.sk_mask_get_addr_1 (t, x, y);
 			}
 		}
 
-		public readonly byte GetImage8 (int x, int y)
+		public readonly byte GetAddr8 (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
-				return *SkiaApi.sk_mask_get_addr_8 (t, x, y);
+				return SkiaApi.sk_mask_get_addr_8 (t, x, y);
 			}
 		}
 
-		public readonly ushort GetImage16 (int x, int y)
+		public readonly UInt16 GetAddr16 (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
-				return *SkiaApi.sk_mask_get_addr_lcd_16 (t, x, y);
+				return SkiaApi.sk_mask_get_addr_lcd_16 (t, x, y);
 			}
 		}
 
-		public readonly uint GetImage32 (int x, int y)
+		public readonly UInt32 GetAddr32 (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
-				return *SkiaApi.sk_mask_get_addr_32 (t, x, y);
+				return SkiaApi.sk_mask_get_addr_32 (t, x, y);
 			}
 		}
 
-		// GetAddress
-
-		public readonly IntPtr GetAddress (int x, int y)
+		public readonly IntPtr GetAddr (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
 				return (IntPtr)SkiaApi.sk_mask_get_addr (t, x, y);
 			}
 		}
 
-		// AllocateImage
-
-		public long AllocateImage ()
-		{
-			fixed (SKMask* t = &this) {
-				var size = SkiaApi.sk_mask_compute_total_image_size (t);
-				fImage = SkiaApi.sk_mask_alloc_image (size);
-				return (long)size;
-			}
-		}
+		// statics
 
 		public static IntPtr AllocateImage (long size) =>
 			(IntPtr)SkiaApi.sk_mask_alloc_image ((IntPtr)size);
 
-		// FreeImage
-
-		public void FreeImage ()
-		{
-			if (fImage != null) {
-				SKMask.FreeImage ((IntPtr)fImage);
-				fImage = null;
-			}
-		}
-
 		public static void FreeImage (IntPtr image) =>
 			SkiaApi.sk_mask_free_image ((byte*)image);
 
-		// Create
-
-		public static SKMask Create (byte[] image, SKRectI bounds, uint rowBytes, SKMaskFormat format) =>
-			Create (image.AsSpan (), bounds, rowBytes, format);
-
-		public static SKMask Create (ReadOnlySpan<byte> image, SKRectI bounds, uint rowBytes, SKMaskFormat format)
+		public static SKMask Create (byte[] image, SKRectI bounds, UInt32 rowBytes, SKMaskFormat format)
 		{
 			// create the mask
 			var mask = new SKMask (bounds, rowBytes, format);
@@ -150,7 +146,7 @@ namespace SkiaSharp
 
 			// copy the image data
 			mask.AllocateImage ();
-			image.CopyTo (new Span<byte> (mask.fImage, image.Length));
+			Marshal.Copy (image, 0, (IntPtr)mask.fImage, image.Length);
 
 			// return the mask
 			return mask;

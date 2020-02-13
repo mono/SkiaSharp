@@ -13,29 +13,32 @@ namespace SkiaSharp
 		public SKPictureRecorder ()
 			: this (SkiaApi.sk_picture_recorder_new (), true)
 		{
-			if (Handle == IntPtr.Zero)
+			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPictureRecorder instance.");
+			}
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_picture_recorder_delete (Handle);
 
-		// BeginRecording
+		public SKCanvas BeginRecording (SKRect cullRect)
+		{
+			return GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, &cullRect), false);
+		}
 
-		public SKCanvas BeginRecording (SKRect cullRect) =>
-			GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, &cullRect), false);
+		public SKPicture EndRecording ()
+		{
+			return GetObject<SKPicture> (SkiaApi.sk_picture_recorder_end_recording (Handle));
+		}
 
-		// EndRecording
+		public SKDrawable EndRecordingAsDrawable ()
+		{
+			return GetObject<SKDrawable> (SkiaApi.sk_picture_recorder_end_recording_as_drawable (Handle));
+		}
 
-		public SKPicture EndRecording () =>
-			GetObject<SKPicture> (SkiaApi.sk_picture_recorder_end_recording (Handle));
-
-		public SKDrawable EndRecordingAsDrawable () =>
-			GetObject<SKDrawable> (SkiaApi.sk_picture_recorder_end_recording_as_drawable (Handle));
-
-		// RecordingCanvas
-
-		public SKCanvas RecordingCanvas =>
-			GetObject<SKCanvas> (SkiaApi.sk_picture_get_recording_canvas (Handle), false);
+		public SKCanvas RecordingCanvas => GetObject<SKCanvas> (SkiaApi.sk_picture_get_recording_canvas (Handle), false);
 	}
 }

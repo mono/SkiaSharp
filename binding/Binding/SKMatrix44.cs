@@ -1,14 +1,18 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKMatrix44 : SKObject, IEquatable<SKMatrix44>
+	public unsafe class SKMatrix44 : SKObject
 	{
 		[Preserve]
 		internal SKMatrix44 (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_matrix44_destroy (Handle);
@@ -47,10 +51,17 @@ namespace SkiaSharp
 		}
 
 		public SKMatrix44 (SKMatrix src)
-			: this (SkiaApi.sk_matrix44_new_matrix (&src), true)
+			: this (CreateNew (ref src), true)
 		{
 			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
+		}
+
+		private static IntPtr CreateNew (ref SKMatrix src)
+		{
+			fixed (SKMatrix* s = &src) {
+				return SkiaApi.sk_matrix44_new_matrix (s);
+			}
 		}
 
 		// properties
@@ -71,21 +82,6 @@ namespace SkiaSharp
 			set => SkiaApi.sk_matrix44_set (Handle, row, column, value);
 		}
 
-		// Equal
-
-		public static bool Equal (SKMatrix44 left, SKMatrix44 right)
-		{
-			if (left == null)
-				throw new ArgumentNullException (nameof (left));
-			if (right == null)
-				throw new ArgumentNullException (nameof (right));
-
-			return SkiaApi.sk_matrix44_equals (left.Handle, right.Handle);
-		}
-
-		public bool Equals (SKMatrix44 other) =>
-			Equal (this, other);
-
 		// Create*
 
 		public static SKMatrix44 CreateIdentity ()
@@ -94,6 +90,10 @@ namespace SkiaSharp
 			matrix.SetIdentity ();
 			return matrix;
 		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static SKMatrix44 CreateTranslate (float x, float y, float z) =>
+			CreateTranslation (x, y, z);
 
 		public static SKMatrix44 CreateTranslation (float x, float y, float z)
 		{
@@ -123,16 +123,16 @@ namespace SkiaSharp
 			return matrix;
 		}
 
-		// From*
+		// From
 
-		public static SKMatrix44 FromRowMajor (ReadOnlySpan<float> src)
+		public static SKMatrix44 FromRowMajor (float[] src)
 		{
 			var matrix = new SKMatrix44 ();
 			matrix.SetRowMajor (src);
 			return matrix;
 		}
 
-		public static SKMatrix44 FromColumnMajor (ReadOnlySpan<float> src)
+		public static SKMatrix44 FromColumnMajor (float[] src)
 		{
 			var matrix = new SKMatrix44 ();
 			matrix.SetColumnMajor (src);
@@ -148,8 +148,10 @@ namespace SkiaSharp
 			return dst;
 		}
 
-		public void ToColumnMajor (Span<float> dst)
+		public void ToColumnMajor (float[] dst)
 		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
 			if (dst.Length != 16)
 				throw new ArgumentException ("The destination array must be 16 entries.", nameof (dst));
 
@@ -165,8 +167,10 @@ namespace SkiaSharp
 			return dst;
 		}
 
-		public void ToRowMajor (Span<float> dst)
+		public void ToRowMajor (float[] dst)
 		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
 			if (dst.Length != 16)
 				throw new ArgumentException ("The destination array must be 16 entries.", nameof (dst));
 
@@ -175,13 +179,27 @@ namespace SkiaSharp
 			}
 		}
 
+		// Equal
+
+		public static bool Equal (SKMatrix44 left, SKMatrix44 right)
+		{
+			if (left == null)
+				throw new ArgumentNullException (nameof (left));
+			if (right == null)
+				throw new ArgumentNullException (nameof (right));
+
+			return SkiaApi.sk_matrix44_equals (left.Handle, right.Handle);
+		}
+
 		// Set*
 
 		public void SetIdentity () =>
 			SkiaApi.sk_matrix44_set_identity (Handle);
 
-		public void SetColumnMajor (ReadOnlySpan<float> src)
+		public void SetColumnMajor (float[] src)
 		{
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
 			if (src.Length != 16)
 				throw new ArgumentException ("The source array must be 16 entries.", nameof (src));
 
@@ -190,32 +208,15 @@ namespace SkiaSharp
 			}
 		}
 
-		public void SetRowMajor (ReadOnlySpan<float> src)
+		public void SetRowMajor (float[] src)
 		{
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
 			if (src.Length != 16)
 				throw new ArgumentException ("The source array must be 16 entries.", nameof (src));
 
 			fixed (float* s = src) {
 				SkiaApi.sk_matrix44_set_row_major (Handle, s);
-			}
-		}
-
-		public void Set3x3ColumnMajor (ReadOnlySpan<float> src)
-		{
-			if (src.Length != 9)
-				throw new ArgumentException ("The source array must be 9 entries.", nameof (src));
-
-			Span<float> row = stackalloc float[9] { src[0], src[3], src[6], src[1], src[4], src[7], src[2], src[5], src[8] };
-			Set3x3RowMajor (row);
-		}
-
-		public void Set3x3RowMajor (ReadOnlySpan<float> src)
-		{
-			if (src.Length != 9)
-				throw new ArgumentException ("The source array must be 9 entries.", nameof (src));
-
-			fixed (float* s = src) {
-				SkiaApi.sk_matrix44_set_3x3_row_major (Handle, s);
 			}
 		}
 
@@ -276,6 +277,9 @@ namespace SkiaSharp
 
 		// Invert
 
+		public bool IsInvertible =>
+			SkiaApi.sk_matrix44_invert (Handle, IntPtr.Zero);
+
 		public SKMatrix44 Invert ()
 		{
 			var inverse = new SKMatrix44 ();
@@ -303,23 +307,27 @@ namespace SkiaSharp
 
 		public float[] MapScalars (float x, float y, float z, float w)
 		{
-			Span<float> srcVector4 = stackalloc float[4] { x, y, z, w };
+			var srcVector4 = new float[4] { x, y, z, w };
 			var dstVector4 = new float[4];
 			MapScalars (srcVector4, dstVector4);
 			return dstVector4;
 		}
 
-		public float[] MapScalars (ReadOnlySpan<float> srcVector4)
+		public float[] MapScalars (float[] srcVector4)
 		{
 			var dstVector4 = new float[4];
 			MapScalars (srcVector4, dstVector4);
 			return dstVector4;
 		}
 
-		public void MapScalars (ReadOnlySpan<float> srcVector4, Span<float> dstVector4)
+		public void MapScalars (float[] srcVector4, float[] dstVector4)
 		{
+			if (srcVector4 == null)
+				throw new ArgumentNullException (nameof (srcVector4));
 			if (srcVector4.Length != 4)
 				throw new ArgumentException ("The source vector array must be 4 entries.", nameof (srcVector4));
+			if (dstVector4 == null)
+				throw new ArgumentNullException (nameof (dstVector4));
 			if (dstVector4.Length != 4)
 				throw new ArgumentException ("The destination vector array must be 4 entries.", nameof (dstVector4));
 
@@ -331,43 +339,41 @@ namespace SkiaSharp
 
 		// MapPoints
 
-		public SKPoint MapPoint (float x, float y) =>
-			MapPoint (new SKPoint (x, y));
+		public SKPoint MapPoint (SKPoint src) =>
+			MapPoints (new[] { src })[0];
 
-		public SKPoint MapPoint (SKPoint src)
+		public SKPoint[] MapPoints (SKPoint[] src)
 		{
-			Span<SKPoint> s = stackalloc SKPoint[1] { src };
-			return MapPoints (s)[0];
-		}
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
 
-		public SKPoint[] MapPoints (Span<SKPoint> src)
-		{
-			var dst = new SKPoint[src.Length];
-			MapPoints (src, dst);
-			return dst;
-		}
-
-		public void MapPoints (Span<SKPoint> src, Span<SKPoint> dst)
-		{
 			var count = src.Length;
+			var src2Length = count * 2;
+			//var src4Length = count * 4;
 
-			var src2 = new float[count * 2];
+			var src2 = new float[src2Length];
 			for (int i = 0, i2 = 0; i < count; i++, i2 += 2) {
 				src2[i2] = src[i].X;
 				src2[i2 + 1] = src[i].Y;
 			}
 
 			var dst4 = MapVector2 (src2);
+
+			var dst = new SKPoint[count];
 			for (int i = 0, i4 = 0; i < count; i++, i4 += 4) {
 				dst[i].X = dst4[i4];
 				dst[i].Y = dst4[i4 + 1];
 			}
+
+			return dst;
 		}
 
 		// MapVector2
 
-		public float[] MapVector2 (ReadOnlySpan<float> src2)
+		public float[] MapVector2 (float[] src2)
 		{
+			if (src2 == null)
+				throw new ArgumentNullException (nameof (src2));
 			if (src2.Length % 2 != 0)
 				throw new ArgumentException ("The source vector array must be a set of pairs.", nameof (src2));
 
@@ -376,13 +382,16 @@ namespace SkiaSharp
 			return dst4;
 		}
 
-		public void MapVector2 (ReadOnlySpan<float> src2, Span<float> dst4)
+		public void MapVector2 (float[] src2, float[] dst4)
 		{
+			if (src2 == null)
+				throw new ArgumentNullException (nameof (src2));
 			if (src2.Length % 2 != 0)
 				throw new ArgumentException ("The source vector array must be a set of pairs.", nameof (src2));
+			if (dst4 == null)
+				throw new ArgumentNullException (nameof (dst4));
 			if (dst4.Length % 4 != 0)
 				throw new ArgumentException ("The destination vector array must be a set quads.", nameof (dst4));
-
 			if (src2.Length / 2 != dst4.Length / 4)
 				throw new ArgumentException ("The source vector array must have the same number of pairs as the destination vector array has quads.", nameof (dst4));
 

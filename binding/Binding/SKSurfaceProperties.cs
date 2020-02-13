@@ -14,7 +14,7 @@ namespace SkiaSharp
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public SKSurfaceProperties (SKSurfaceProps props)
-				: this (props.Flags, props.PixelGeometry)
+			: this (props.Flags, props.PixelGeometry)
 		{
 		}
 
@@ -32,6 +32,9 @@ namespace SkiaSharp
 			: this (SkiaApi.sk_surfaceprops_new ((uint)flags, pixelGeometry), true)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_surfaceprops_delete (Handle);

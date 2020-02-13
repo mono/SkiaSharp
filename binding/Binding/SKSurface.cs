@@ -5,33 +5,27 @@ namespace SkiaSharp
 {
 	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(SKImageInfo) instead.")]
+		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType) => Create (new SKImageInfo (width, height, colorType, alphaType));
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
+		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), props);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(SKImageInfo, IntPtr, int) instead.")]
+		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.")]
+		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props);
+
 		[Preserve]
 		internal SKSurface (IntPtr h, bool owns)
 			: base (h, owns)
 		{
 		}
 
-		// convenience
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Create(SKImageInfo) instead.")]
-		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType) =>
-			Create (new SKImageInfo (width, height, colorType, alphaType));
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKSurfaceProps props) =>
-			Create (new SKImageInfo (width, height, colorType, alphaType), props);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Create(SKImageInfo, IntPtr, int) instead.")]
-		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes) =>
-			Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.")]
-		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) =>
-			Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props);
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		// RASTER surface
 
@@ -274,7 +268,7 @@ namespace SkiaSharp
 			Create (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft, null, false);
 
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin) =>
-			Create (context, budgeted, info, sampleCount, origin, null, false);
+			Create (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft, null, false);
 
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, SKSurfaceProperties props) =>
 			Create (context, budgeted, info, 0, GRSurfaceOrigin.BottomLeft, props, false);
@@ -331,11 +325,12 @@ namespace SkiaSharp
 		{
 			var pixmap = new SKPixmap ();
 			var result = PeekPixels (pixmap);
-			if (!result) {
+			if (result) {
+				return pixmap;
+			} else {
 				pixmap.Dispose ();
-				pixmap = null;
+				return null;
 			}
-			return pixmap;
 		}
 
 		public bool PeekPixels (SKPixmap pixmap)

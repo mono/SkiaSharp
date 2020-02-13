@@ -15,10 +15,11 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_codec_destroy (Handle);
-
-		// properties
 
 		public static int MinBufferedBytesNeeded =>
 			(int)SkiaApi.sk_codec_min_buffered_bytes_needed ();
@@ -103,13 +104,10 @@ namespace SkiaSharp
 			return GetPixels (info, pixels);
 		}
 
-		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels) =>
-			GetPixels (info, pixels.AsSpan ());
-
-		public SKCodecResult GetPixels (SKImageInfo info, Span<byte> pixels)
+		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels)
 		{
-			if (pixels.Length < info.BytesSize)
-				throw new ArgumentException ("There is insufficient space for the pixel data.", nameof (pixels));
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
 
 			fixed (byte* p = pixels) {
 				return GetPixels (info, (IntPtr)p, info.RowBytes, SKCodecOptions.Default);
@@ -118,25 +116,6 @@ namespace SkiaSharp
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels) =>
 			GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default);
-
-		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels, SKCodecOptions options) =>
-			GetPixels (info, pixels.AsSpan (), options);
-
-		public SKCodecResult GetPixels (SKImageInfo info, Span<byte> pixels, SKCodecOptions options) =>
-			GetPixels (info, pixels, info.RowBytes, options);
-
-		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels, int rowBytes, SKCodecOptions options) =>
-			GetPixels (info, pixels.AsSpan (), rowBytes, options);
-
-		public SKCodecResult GetPixels (SKImageInfo info, Span<byte> pixels, int rowBytes, SKCodecOptions options)
-		{
-			if (pixels.Length < info.BytesSize)
-				throw new ArgumentException ("There is insufficient space for the pixel data.", nameof (pixels));
-
-			fixed (byte* p = pixels) {
-				return GetPixels (info, (IntPtr)p, rowBytes, options);
-			}
-		}
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options) =>
 			GetPixels (info, pixels, info.RowBytes, options);
@@ -152,8 +131,9 @@ namespace SkiaSharp
 				fSubset = null,
 				fFrameIndex = options.FrameIndex,
 				fPriorFrame = options.PriorFrame,
+				fPremulBehavior = options.PremulBehavior,
 			};
-			SKRectI subset;
+			var subset = default (SKRectI);
 			if (options.HasSubset) {
 				subset = options.Subset.Value;
 				nOptions.fSubset = &subset;
@@ -204,8 +184,9 @@ namespace SkiaSharp
 				fSubset = null,
 				fFrameIndex = options.FrameIndex,
 				fPriorFrame = options.PriorFrame,
+				fPremulBehavior = options.PremulBehavior,
 			};
-			SKRectI subset;
+			var subset = default (SKRectI);
 			if (options.HasSubset) {
 				subset = options.Subset.Value;
 				nOptions.fSubset = &subset;
@@ -252,8 +233,9 @@ namespace SkiaSharp
 				fSubset = null,
 				fFrameIndex = options.FrameIndex,
 				fPriorFrame = options.PriorFrame,
+				fPremulBehavior = options.PremulBehavior,
 			};
-			SKRectI subset;
+			var subset = default (SKRectI);
 			if (options.HasSubset) {
 				subset = options.Subset.Value;
 				nOptions.fSubset = &subset;
@@ -302,7 +284,7 @@ namespace SkiaSharp
 		// create (streams)
 
 		public static SKCodec Create (string filename) =>
-			Create (filename, out _);
+			Create (filename, out var result);
 
 		public static SKCodec Create (string filename, out SKCodecResult result)
 		{
@@ -316,13 +298,13 @@ namespace SkiaSharp
 		}
 
 		public static SKCodec Create (Stream stream) =>
-			Create (stream, out _);
+			Create (stream, out var result);
 
 		public static SKCodec Create (Stream stream, out SKCodecResult result) =>
 			Create (WrapManagedStream (stream), out result);
 
 		public static SKCodec Create (SKStream stream) =>
-			Create (stream, out _);
+			Create (stream, out var result);
 
 		public static SKCodec Create (SKStream stream, out SKCodecResult result)
 		{
@@ -350,13 +332,16 @@ namespace SkiaSharp
 
 		internal static SKStream WrapManagedStream (Stream stream)
 		{
-			if (stream == null)
+			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
+			}
 
 			// we will need a seekable stream, so buffer it if need be
-			return stream.CanSeek
-				? new SKManagedStream (stream, true)
-				: (SKStream)new SKFrontBufferedManagedStream (stream, MinBufferedBytesNeeded, true);
+			if (stream.CanSeek) {
+				return new SKManagedStream (stream, true);
+			} else {
+				return new SKFrontBufferedManagedStream (stream, MinBufferedBytesNeeded, true);
+			}
 		}
 	}
 }

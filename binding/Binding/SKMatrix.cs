@@ -1,13 +1,15 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe partial struct SKMatrix : IEquatable<SKMatrix>
+	public unsafe partial struct SKMatrix
 	{
 		internal const float DegreesToRadians = (float)Math.PI / 180.0f;
 
-		public static readonly SKMatrix Empty;
-		public static readonly SKMatrix Identity = new SKMatrix (1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f);
+		public readonly static SKMatrix Empty;
+
+		public readonly static SKMatrix Identity = new SKMatrix { scaleX = 1, scaleY = 1, persp2 = 1 };
 
 		private class Indices
 		{
@@ -24,39 +26,6 @@ namespace SkiaSharp
 			public const int Count = 9;
 		}
 
-		public SKMatrix (float value)
-		{
-			scaleX = value;
-			skewX = value;
-			transX = value;
-
-			skewY = value;
-			scaleY = value;
-			transY = value;
-
-			persp0 = value;
-			persp1 = value;
-			persp2 = value;
-		}
-
-		public SKMatrix (ReadOnlySpan<float> values)
-		{
-			if (values.Length != Indices.Count)
-				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
-
-			scaleX = values[Indices.ScaleX];
-			skewX = values[Indices.SkewX];
-			transX = values[Indices.TransX];
-
-			skewY = values[Indices.SkewY];
-			scaleY = values[Indices.ScaleY];
-			transY = values[Indices.TransY];
-
-			persp0 = values[Indices.Persp0];
-			persp1 = values[Indices.Persp1];
-			persp2 = values[Indices.Persp2];
-		}
-
 		public SKMatrix (
 			float scaleX, float skewX, float transX,
 			float skewY, float scaleY, float transY,
@@ -65,26 +34,23 @@ namespace SkiaSharp
 			this.scaleX = scaleX;
 			this.skewX = skewX;
 			this.transX = transX;
-
 			this.skewY = skewY;
 			this.scaleY = scaleY;
 			this.transY = transY;
-
 			this.persp0 = persp0;
 			this.persp1 = persp1;
 			this.persp2 = persp2;
 		}
 
-		public readonly bool IsIdentity => Equals (Identity);
-
 		// Values
 
 		public float[] Values {
-			readonly get => new float[9] {
-				scaleX, skewX, transX,
-				skewY, scaleY, transY,
-				persp0, persp1, persp2
-			};
+			readonly get =>
+				new float[9] {
+					scaleX, skewX, transX,
+					skewY, scaleY, transY,
+					persp0, persp1, persp2
+				};
 			set {
 				if (value == null)
 					throw new ArgumentNullException (nameof (Values));
@@ -105,8 +71,10 @@ namespace SkiaSharp
 			}
 		}
 
-		public readonly void GetValues (Span<float> values)
+		public readonly void GetValues (float[] values)
 		{
+			if (values == null)
+				throw new ArgumentNullException (nameof (values));
 			if (values.Length != Indices.Count)
 				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
 
@@ -121,6 +89,205 @@ namespace SkiaSharp
 			values[Indices.Persp0] = persp0;
 			values[Indices.Persp1] = persp1;
 			values[Indices.Persp2] = persp2;
+		}
+
+		// Create*
+
+		public static SKMatrix CreateIdentity () =>
+			new SKMatrix { scaleX = 1, scaleY = 1, persp2 = 1 };
+
+		public static SKMatrix CreateTranslation (float x, float y)
+		{
+			if (x == 0 && y == 0)
+				return Identity;
+
+			return new SKMatrix {
+				scaleX = 1,
+				scaleY = 1,
+				transX = x,
+				transY = y,
+				persp2 = 1,
+			};
+		}
+
+		public static SKMatrix CreateScale (float x, float y)
+		{
+			if (x == 1 && y == 1)
+				return Identity;
+
+			return new SKMatrix {
+				scaleX = x,
+				scaleY = y,
+				persp2 = 1,
+			};
+		}
+
+		public static SKMatrix CreateScale (float x, float y, float pivotX, float pivotY)
+		{
+			if (x == 1 && y == 1)
+				return Identity;
+
+			var tx = pivotX - x * pivotX;
+			var ty = pivotY - y * pivotY;
+
+			return new SKMatrix {
+				scaleX = x,
+				scaleY = y,
+				transX = tx,
+				transY = ty,
+				persp2 = 1,
+			};
+		}
+
+		public static SKMatrix CreateRotation (float radians)
+		{
+			if (radians == 0)
+				return Identity;
+
+			var sin = (float)Math.Sin (radians);
+			var cos = (float)Math.Cos (radians);
+
+			var matrix = Identity;
+			SetSinCos (ref matrix, sin, cos);
+			return matrix;
+		}
+
+		public static SKMatrix CreateRotation (float radians, float pivotX, float pivotY)
+		{
+			if (radians == 0)
+				return Identity;
+
+			var sin = (float)Math.Sin (radians);
+			var cos = (float)Math.Cos (radians);
+
+			var matrix = Identity;
+			SetSinCos (ref matrix, sin, cos, pivotX, pivotY);
+			return matrix;
+		}
+
+		public static SKMatrix CreateRotationDegrees (float degrees)
+		{
+			if (degrees == 0)
+				return Identity;
+
+			return CreateRotation (degrees * DegreesToRadians);
+		}
+
+		public static SKMatrix CreateRotationDegrees (float degrees, float pivotX, float pivotY)
+		{
+			if (degrees == 0)
+				return Identity;
+
+			return CreateRotation (degrees * DegreesToRadians, pivotX, pivotY);
+		}
+
+		public static SKMatrix CreateSkew (float x, float y)
+		{
+			if (x == 0 && y == 0)
+				return Identity;
+
+			return new SKMatrix {
+				scaleX = 1,
+				skewX = x,
+				skewY = y,
+				scaleY = 1,
+				persp2 = 1,
+			};
+		}
+
+		// Make*
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static SKMatrix MakeIdentity () =>
+			CreateIdentity ();
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static SKMatrix MakeScale (float sx, float sy) =>
+			CreateScale (sx, sy);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static SKMatrix MakeScale (float sx, float sy, float pivotX, float pivotY) =>
+			CreateScale (sx, sy, pivotX, pivotY);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static SKMatrix MakeTranslation (float dx, float dy) =>
+			CreateTranslation (dx, dy);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static SKMatrix MakeRotation (float radians) =>
+			CreateRotation (radians);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static SKMatrix MakeRotation (float radians, float pivotx, float pivoty) =>
+			CreateRotation (radians, pivotx, pivoty);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static SKMatrix MakeRotationDegrees (float degrees) =>
+			CreateRotationDegrees (degrees);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static SKMatrix MakeRotationDegrees (float degrees, float pivotx, float pivoty) =>
+			CreateRotationDegrees (degrees, pivotx, pivoty);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		public static SKMatrix MakeSkew (float sx, float sy) =>
+			CreateSkew (sx, sy);
+
+		// Set*
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public void SetScaleTranslate (float sx, float sy, float tx, float ty)
+		{
+			scaleX = sx;
+			skewX = 0;
+			transX = tx;
+
+			skewY = 0;
+			scaleY = sy;
+			transY = ty;
+
+			persp0 = 0;
+			persp1 = 0;
+			persp2 = 1;
+		}
+
+		// Rotate
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRotation(float, float, float) instead.")]
+		public static void Rotate (ref SKMatrix matrix, float radians, float pivotx, float pivoty)
+		{
+			var sin = (float)Math.Sin (radians);
+			var cos = (float)Math.Cos (radians);
+			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRotationDegrees(float, float, float) instead.")]
+		public static void RotateDegrees (ref SKMatrix matrix, float degrees, float pivotx, float pivoty)
+		{
+			var sin = (float)Math.Sin (degrees * DegreesToRadians);
+			var cos = (float)Math.Cos (degrees * DegreesToRadians);
+			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRotation(float) instead.")]
+		public static void Rotate (ref SKMatrix matrix, float radians)
+		{
+			var sin = (float)Math.Sin (radians);
+			var cos = (float)Math.Cos (radians);
+			SetSinCos (ref matrix, sin, cos);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRotationDegrees(float) instead.")]
+		public static void RotateDegrees (ref SKMatrix matrix, float degrees)
+		{
+			var sin = (float)Math.Sin (degrees * DegreesToRadians);
+			var cos = (float)Math.Cos (degrees * DegreesToRadians);
+			SetSinCos (ref matrix, sin, cos);
 		}
 
 		// Invert
@@ -151,19 +318,31 @@ namespace SkiaSharp
 
 		// *Concat
 
-		public void PreConcat (ref SKMatrix matrix)
+		public static SKMatrix Concat (SKMatrix first, SKMatrix second)
 		{
-			fixed (SKMatrix* t = &this)
-			fixed (SKMatrix* m = &matrix) {
-				SkiaApi.sk_matrix_pre_concat (t, m);
-			}
+			SKMatrix target;
+			SkiaApi.sk_matrix_concat (&target, &first, &second);
+			return target;
 		}
 
-		public void PostConcat (ref SKMatrix matrix)
+		public readonly SKMatrix PreConcat (SKMatrix matrix)
 		{
-			fixed (SKMatrix* t = &this)
-			fixed (SKMatrix* m = &matrix) {
-				SkiaApi.sk_matrix_post_concat (t, m);
+			var target = this;
+			SkiaApi.sk_matrix_pre_concat (&target, &matrix);
+			return target;
+		}
+
+		public readonly SKMatrix PostConcat (SKMatrix matrix)
+		{
+			var target = this;
+			SkiaApi.sk_matrix_post_concat (&target, &matrix);
+			return target;
+		}
+
+		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
+		{
+			fixed (SKMatrix* t = &target) {
+				SkiaApi.sk_matrix_concat (t, &first, &second);
 			}
 		}
 
@@ -176,6 +355,17 @@ namespace SkiaSharp
 			}
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use PreConcat(SKMatrix) instead.")]
+		public static void PreConcat (ref SKMatrix target, SKMatrix matrix)
+		{
+			fixed (SKMatrix* t = &target) {
+				SkiaApi.sk_matrix_pre_concat (t, &matrix);
+			}
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use PreConcat(SKMatrix) instead.")]
 		public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix)
 		{
 			fixed (SKMatrix* t = &target)
@@ -184,6 +374,17 @@ namespace SkiaSharp
 			}
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use PostConcat(SKMatrix) instead.")]
+		public static void PostConcat (ref SKMatrix target, SKMatrix matrix)
+		{
+			fixed (SKMatrix* t = &target) {
+				SkiaApi.sk_matrix_post_concat (t, &matrix);
+			}
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use PostConcat(SKMatrix) instead.")]
 		public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix)
 		{
 			fixed (SKMatrix* t = &target)
@@ -203,26 +404,18 @@ namespace SkiaSharp
 			return dest;
 		}
 
-		// MapPoints
-
-		public readonly void MapPoints (ReadOnlySpan<SKPoint> points, Span<SKPoint> result)
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use MapRect(SKRect) instead.")]
+		public static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
 		{
-			if (result.Length != points.Length)
-				throw new ArgumentException ("Buffers must be the same size.");
-
-			fixed (SKMatrix* t = &this)
-			fixed (SKPoint* rp = result)
-			fixed (SKPoint* pp = points) {
-				SkiaApi.sk_matrix_map_points (t, rp, pp, result.Length);
+			fixed (SKMatrix* m = &matrix)
+			fixed (SKRect* d = &dest)
+			fixed (SKRect* s = &source) {
+				SkiaApi.sk_matrix_map_rect (m, d, s);
 			}
 		}
 
-		public readonly SKPoint[] MapPoints (ReadOnlySpan<SKPoint> points)
-		{
-			var res = new SKPoint[points.Length];
-			MapPoints (points, res);
-			return res;
-		}
+		// MapPoints
 
 		public readonly SKPoint MapPoint (SKPoint point) =>
 			MapPoint (point.X, point.Y);
@@ -236,10 +429,49 @@ namespace SkiaSharp
 			return result;
 		}
 
+		public readonly void MapPoints (SKPoint[] result, SKPoint[] points)
+		{
+			if (result == null)
+				throw new ArgumentNullException (nameof (result));
+			if (points == null)
+				throw new ArgumentNullException (nameof (points));
+			if (result.Length != points.Length)
+				throw new ArgumentException ("Buffers must be the same size.");
+
+			fixed (SKMatrix* t = &this)
+			fixed (SKPoint* rp = result)
+			fixed (SKPoint* pp = points) {
+				SkiaApi.sk_matrix_map_points (t, rp, pp, result.Length);
+			}
+		}
+
+		public readonly SKPoint[] MapPoints (SKPoint[] points)
+		{
+			if (points == null)
+				throw new ArgumentNullException (nameof (points));
+
+			var res = new SKPoint[points.Length];
+			MapPoints (res, points);
+			return res;
+		}
+
 		// MapVectors
 
-		public readonly void MapVectors (ReadOnlySpan<SKPoint> vectors, Span<SKPoint> result)
+		public readonly SKPoint MapVector (float x, float y)
 		{
+			SKPoint result;
+			fixed (SKMatrix* t = &this) {
+				SkiaApi.sk_matrix_map_vector (t, x, y, &result);
+			}
+			return result;
+		}
+
+		public readonly void MapVectors (SKPoint[] result, SKPoint[] vectors)
+		{
+			if (result == null)
+				throw new ArgumentNullException (nameof (result));
+			if (vectors == null)
+				throw new ArgumentNullException (nameof (vectors));
 			if (result.Length != vectors.Length)
 				throw new ArgumentException ("Buffers must be the same size.");
 
@@ -250,23 +482,14 @@ namespace SkiaSharp
 			}
 		}
 
-		public readonly SKPoint[] MapVectors (ReadOnlySpan<SKPoint> vectors)
+		public readonly SKPoint[] MapVectors (SKPoint[] vectors)
 		{
+			if (vectors == null)
+				throw new ArgumentNullException (nameof (vectors));
+
 			var res = new SKPoint[vectors.Length];
-			MapVectors (vectors, res);
+			MapVectors (res, vectors);
 			return res;
-		}
-
-		public readonly SKPoint MapVector (SKPoint point) =>
-			MapVector (point.X, point.Y);
-
-		public readonly SKPoint MapVector (float x, float y)
-		{
-			SKPoint result;
-			fixed (SKMatrix* t = &this) {
-				SkiaApi.sk_matrix_map_vector (t, x, y, &result);
-			}
-			return result;
 		}
 
 		// MapRadius
@@ -278,120 +501,6 @@ namespace SkiaSharp
 			}
 		}
 
-		// equality
-
-		public readonly bool Equals (SKMatrix other) =>
-			scaleX == other.scaleX &&
-			skewX == other.skewX &&
-			transX == other.transX &&
-			skewY == other.skewY &&
-			scaleY == other.scaleY &&
-			transY == other.transY &&
-			persp0 == other.persp0 &&
-			persp1 == other.persp1 &&
-			persp2 == other.persp2;
-
-		// Create*
-
-		public static SKMatrix CreateTranslation (float dx, float dy)
-		{
-			if (dx == 0 && dy == 0)
-				return Identity;
-
-			return new SKMatrix {
-				scaleX = 1,
-				scaleY = 1,
-				transX = dx,
-				transY = dy,
-				persp2 = 1,
-			};
-		}
-
-		public static SKMatrix CreateScale (float sx, float sy)
-		{
-			if (sx == 1 && sy == 1)
-				return Identity;
-
-			return new SKMatrix {
-				scaleX = sx,
-				scaleY = sy,
-				persp2 = 1,
-			};
-		}
-
-		public static SKMatrix CreateScale (float sx, float sy, float pivotX, float pivotY)
-		{
-			if (sx == 1 && sy == 1)
-				return Identity;
-
-			var tx = pivotX - sx * pivotX;
-			var ty = pivotY - sy * pivotY;
-
-			return new SKMatrix {
-				scaleX = sx,
-				scaleY = sy,
-				transX = tx,
-				transY = ty,
-				persp2 = 1,
-			};
-		}
-
-		public static SKMatrix CreateRotation (float radians)
-		{
-			if (radians == 0)
-				return Identity;
-
-			var sin = (float)Math.Sin (radians);
-			var cos = (float)Math.Cos (radians);
-
-			var matrix = Identity;
-			SetSinCos (ref matrix, sin, cos);
-			return matrix;
-		}
-
-		public static SKMatrix CreateRotation (float radians, float pivotx, float pivoty)
-		{
-			if (radians == 0)
-				return Identity;
-
-			var sin = (float)Math.Sin (radians);
-			var cos = (float)Math.Cos (radians);
-
-			var matrix = Identity;
-			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
-			return matrix;
-		}
-
-		public static SKMatrix CreateRotationDegrees (float degrees)
-		{
-			if (degrees == 0)
-				return Identity;
-
-			return CreateRotation (degrees * DegreesToRadians);
-		}
-
-		public static SKMatrix CreateRotationDegrees (float degrees, float pivotx, float pivoty)
-		{
-			if (degrees == 0)
-				return Identity;
-
-			return CreateRotation (degrees * DegreesToRadians, pivotx, pivoty);
-		}
-
-		public static SKMatrix CreateSkew (float sx, float sy)
-		{
-			if (sx == 0 && sy == 0)
-				return Identity;
-
-			return new SKMatrix {
-				scaleX = 1,
-				skewX = sx,
-				skewY = sy,
-				scaleY = 1,
-				persp2 = 1,
-			};
-		}
-
 		// private
 
 		private static void SetSinCos (ref SKMatrix matrix, float sin, float cos)
@@ -399,35 +508,33 @@ namespace SkiaSharp
 			matrix.scaleX = cos;
 			matrix.skewX = -sin;
 			matrix.transX = 0;
-
 			matrix.skewY = sin;
 			matrix.scaleY = cos;
 			matrix.transY = 0;
-
 			matrix.persp0 = 0;
 			matrix.persp1 = 0;
 			matrix.persp2 = 1;
 		}
 
-		private static void SetSinCos (ref SKMatrix matrix, float sin, float cos, float pivotx = 0f, float pivoty = 0f)
+		private static void SetSinCos (ref SKMatrix matrix, float sin, float cos, float pivotx, float pivoty)
 		{
-			var oneMinusCos = 1 - cos;
+			float oneMinusCos = 1 - cos;
 
 			matrix.scaleX = cos;
 			matrix.skewX = -sin;
 			matrix.transX = Dot (sin, pivoty, oneMinusCos, pivotx);
-
 			matrix.skewY = sin;
 			matrix.scaleY = cos;
 			matrix.transY = Dot (-sin, pivotx, oneMinusCos, pivoty);
-
 			matrix.persp0 = 0;
 			matrix.persp1 = 0;
 			matrix.persp2 = 1;
 		}
 
-		private static float Dot (float a, float b, float c, float d) => a * b + c * d;
+		private static float Dot (float a, float b, float c, float d) =>
+			a * b + c * d;
 
-		private static float Cross (float a, float b, float c, float d) => a * b - c * d;
+		private static float Cross (float a, float b, float c, float d) =>
+			a * b - c * d;
 	}
 }

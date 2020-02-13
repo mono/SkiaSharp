@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Text;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -10,38 +14,35 @@ namespace SkiaSharp
 		{
 		}
 
-		void ISKNonVirtualReferenceCounted.ReferenceNative () =>
-			SkiaApi.sk_vertices_ref (Handle);
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
-		void ISKNonVirtualReferenceCounted.UnreferenceNative () =>
-			SkiaApi.sk_vertices_unref (Handle);
+		void ISKNonVirtualReferenceCounted.ReferenceNative () => SkiaApi.sk_vertices_ref (Handle);
 
-		// CreateCopy
+		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_vertices_unref (Handle);
 
-		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKColor[] colors) =>
-			CreateCopy (vmode, positions.AsSpan (), null, colors.AsSpan (), null);
-
-		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors) =>
-			CreateCopy (vmode, positions.AsSpan (), texs.AsSpan (), colors.AsSpan (), null);
-
-		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors, UInt16[] indices) =>
-			CreateCopy (vmode, positions.AsSpan (), texs.AsSpan (), colors.AsSpan (), indices.AsSpan ());
-		
-		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKColor> colors) =>
-			CreateCopy (vmode, positions, null, colors, null);
-
-		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors) =>
-			CreateCopy (vmode, positions, texs, colors, null);
-
-		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, ReadOnlySpan<UInt16> indices)
+		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKColor[] colors)
 		{
-			if (!texs.IsEmpty && positions.Length != texs.Length)
+			return CreateCopy (vmode, positions, null, colors, null);
+		}
+
+		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors)
+		{
+			return CreateCopy (vmode, positions, texs, colors, null);
+		}
+
+		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors, UInt16[] indices)
+		{
+			if (positions == null)
+				throw new ArgumentNullException (nameof (positions));
+
+			if (texs != null && positions.Length != texs.Length)
 				throw new ArgumentException ("The number of texture coordinates must match the number of vertices.", nameof (texs));
-			if (!colors.IsEmpty && positions.Length != colors.Length)
+			if (colors != null && positions.Length != colors.Length)
 				throw new ArgumentException ("The number of colors must match the number of vertices.", nameof (colors));
 
 			var vertexCount = positions.Length;
-			var indexCount = indices.Length;
+			var indexCount = indices?.Length ?? 0;
 
 			fixed (SKPoint* p = positions)
 			fixed (SKPoint* t = texs)

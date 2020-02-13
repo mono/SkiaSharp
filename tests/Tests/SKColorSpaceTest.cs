@@ -218,8 +218,20 @@ namespace SkiaSharp.Tests
 				0.31111f, 0.62567f, 0.06322f,
 				0.01947f, 0.06087f, 0.74457f,
 			};
-			var csXYZ = colorspace.ToXyzD50();
-			AssertSimilar(toXYZ, csXYZ.Values);
+			AssertMatrix(toXYZ, colorspace.ToXyzD50());
+
+			var matrix = new SKMatrix44();
+			Assert.True(colorspace.ToXyzD50(matrix));
+			AssertMatrix(toXYZ, matrix);
+
+			var fromXYZ = new[]
+			{
+				1.96253f, -0.61068f, -0.34137f, 0f,
+				-0.97876f, 1.91615f, 0.03342f, 0f,
+				0.02869f, -0.14067f, 1.34926f, 0f,
+				0f, 0f, 0f, 1f,
+			};
+			AssertMatrix(fromXYZ, colorspace.FromXyzD50());
 		}
 
 		[SkippableFact]

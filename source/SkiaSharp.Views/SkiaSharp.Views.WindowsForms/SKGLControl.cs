@@ -70,6 +70,8 @@ namespace SkiaSharp.Views.Desktop
 
 			base.OnPaint(e);
 
+			MakeCurrent();
+
 			// create the contexts if not done already
 			if (grContext == null)
 			{

@@ -13,9 +13,13 @@ namespace SkiaSharp
 		public SK3dView ()
 			: this (SkiaApi.sk_3dview_new (), true)
 		{
-			if (Handle == IntPtr.Zero)
+			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SK3dView instance.");
+			}
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_3dview_destroy (Handle);
@@ -24,7 +28,7 @@ namespace SkiaSharp
 
 		public SKMatrix Matrix {
 			get {
-				var matrix = SKMatrix.Empty;
+				var matrix = SKMatrix.MakeIdentity ();
 				GetMatrix (ref matrix);
 				return matrix;
 			}
@@ -37,10 +41,12 @@ namespace SkiaSharp
 			}
 		}
 
-		// Save / Restore
+		// Save
 
 		public void Save () =>
 			SkiaApi.sk_3dview_save (Handle);
+
+		// Restore
 
 		public void Restore () =>
 			SkiaApi.sk_3dview_restore (Handle);
@@ -81,6 +87,11 @@ namespace SkiaSharp
 		public void RotateZRadians (float radians) =>
 			SkiaApi.sk_3dview_rotate_z_radians (Handle, radians);
 
+		// DotWithNormal
+
+		public float DotWithNormal (float dx, float dy, float dz) =>
+			SkiaApi.sk_3dview_dot_with_normal (Handle, dx, dy, dz);
+
 		// Apply
 
 		public void ApplyToCanvas (SKCanvas canvas)
@@ -90,10 +101,5 @@ namespace SkiaSharp
 
 			SkiaApi.sk_3dview_apply_to_canvas (Handle, canvas.Handle);
 		}
-
-		// DotWithNormal
-
-		public float DotWithNormal (float dx, float dy, float dz) =>
-			SkiaApi.sk_3dview_dot_with_normal (Handle, dx, dy, dz);
 	}
 }

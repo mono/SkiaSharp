@@ -1,4 +1,6 @@
-﻿namespace SkiaSharp
+﻿using System;
+
+namespace SkiaSharp
 {
 	public struct SKColors
 	{
@@ -144,5 +146,6 @@
 		public static SKColor Yellow = new SKColor (0xFFFFFF00);
 		public static SKColor YellowGreen = new SKColor (0xFF9ACD32);
 		public static SKColor Transparent = new SKColor (0x00FFFFFF);
+		
 	}
 }

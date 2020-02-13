@@ -15,7 +15,7 @@ namespace SkiaSharp
 
 		public static SKImageInfoNative FromManaged (ref SKImageInfo managed) =>
 			new SKImageInfoNative {
-				colorspace = managed.ColorSpace == null ? IntPtr.Zero : managed.ColorSpace.Handle,
+				colorspace = managed.ColorSpace?.Handle ?? IntPtr.Zero,
 				width = managed.Width,
 				height = managed.Height,
 				colorType = managed.ColorType,
@@ -32,7 +32,7 @@ namespace SkiaSharp
 			};
 	}
 
-	public unsafe struct SKImageInfo
+	public unsafe struct SKImageInfo : IEquatable<SKImageInfo>
 	{
 		public static readonly SKImageInfo Empty;
 		public static readonly SKColorType PlatformColorType;
@@ -64,16 +64,33 @@ namespace SkiaSharp
 		public SKColorSpace ColorSpace { get; set; }
 
 		public SKImageInfo (int width, int height)
-			: this (width, height, PlatformColorType, SKAlphaType.Premul, null)
 		{
+			Width = width;
+			Height = height;
+			ColorType = PlatformColorType;
+			AlphaType = SKAlphaType.Premul;
+			ColorSpace = null;
 		}
 
-		public SKImageInfo (int width, int height, SKColorType colorType, SKColorSpace colorspace = null)
-			: this (width, height, colorType, SKAlphaType.Premul, colorspace)
+		public SKImageInfo (int width, int height, SKColorType colorType)
 		{
+			Width = width;
+			Height = height;
+			ColorType = colorType;
+			AlphaType = SKAlphaType.Premul;
+			ColorSpace = null;
 		}
 
-		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorspace = null)
+		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType)
+		{
+			Width = width;
+			Height = height;
+			ColorType = colorType;
+			AlphaType = alphaType;
+			ColorSpace = null;
+		}
+
+		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorspace)
 		{
 			Width = width;
 			Height = height;
@@ -90,20 +107,12 @@ namespace SkiaSharp
 				SKColorType.Gray8 => 1,
 				SKColorType.Rgb565 => 2,
 				SKColorType.Argb4444 => 2,
-				SKColorType.R8g8Unnormalized => 2,
-				SKColorType.A16Unnormalized => 2,
-				SKColorType.A16Float => 2,
 				SKColorType.Bgra8888 => 4,
 				SKColorType.Rgba8888 => 4,
 				SKColorType.Rgb888x => 4,
 				SKColorType.Rgba1010102 => 4,
 				SKColorType.Rgb101010x => 4,
-				SKColorType.R16g16Unnormalized => 4,
-				SKColorType.R16g16Float => 4,
-				SKColorType.RgbaF16Normalized => 8,
 				SKColorType.RgbaF16 => 8,
-				SKColorType.R16g16b16a16Unnormalized => 8,
-				SKColorType.RgbaF32 => 16,
 				_ => throw new ArgumentOutOfRangeException (nameof (ColorType)),
 			};
 
@@ -152,6 +161,33 @@ namespace SkiaSharp
 			var copy = this;
 			copy.AlphaType = newAlphaType;
 			return copy;
+		}
+
+		public readonly bool Equals (SKImageInfo obj) =>
+			ColorSpace == obj.ColorSpace &&
+			Width == obj.Width &&
+			Height == obj.Height &&
+			ColorType == obj.ColorType &&
+			AlphaType == obj.AlphaType;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKImageInfo f && Equals (f);
+
+		public static bool operator == (SKImageInfo left, SKImageInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKImageInfo left, SKImageInfo right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (ColorSpace);
+			hash.Add (Width);
+			hash.Add (Height);
+			hash.Add (ColorType);
+			hash.Add (AlphaType);
+			return hash.ToHashCode ();
 		}
 	}
 }

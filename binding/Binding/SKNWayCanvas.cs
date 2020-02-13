@@ -11,8 +11,9 @@ namespace SkiaSharp
 		}
 
 		public SKNWayCanvas (int width, int height)
-			: this (SkiaApi.sk_nway_canvas_new (width, height), true)
+			: this (IntPtr.Zero, true)
 		{
+			Handle = SkiaApi.sk_nway_canvas_new (width, height);
 		}
 
 		public void AddCanvas (SKCanvas canvas)
@@ -31,7 +32,9 @@ namespace SkiaSharp
 			SkiaApi.sk_nway_canvas_remove_canvas (Handle, canvas.Handle);
 		}
 
-		public void RemoveAll () =>
+		public void RemoveAll ()
+		{
 			SkiaApi.sk_nway_canvas_remove_all (Handle);
+		}
 	}
 }

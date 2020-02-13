@@ -30,11 +30,6 @@ namespace SkiaSharp
 			y += dy;
 		}
 
-		public readonly override bool Equals (object obj) =>
-			obj is SKPoint p && this == p;
-
-		public readonly override int GetHashCode () => (int)x ^ (int)y;
-
 		public readonly override string ToString () => $"{{X={x}, Y={y}}}";
 
 		public static SKPoint Normalize (SKPoint point)
@@ -94,11 +89,6 @@ namespace SkiaSharp
 			new SKPoint (pt.X - sz.X, pt.Y - sz.Y);
 		public static SKPoint operator - (SKPoint pt, SKPoint sz) =>
 			new SKPoint (pt.X - sz.X, pt.Y - sz.Y);
-
-		public static bool operator == (SKPoint left, SKPoint right) =>
-			(left.x == right.x) && (left.y == right.y);
-		public static bool operator != (SKPoint left, SKPoint right) =>
-			(left.x != right.x) || (left.y != right.y);
 	}
 
 	public partial struct SKPointI
@@ -134,11 +124,6 @@ namespace SkiaSharp
 			x += dx;
 			y += dy;
 		}
-
-		public readonly override bool Equals (object obj) =>
-			obj is SKPointI p && this == p;
-
-		public readonly override int GetHashCode () => x ^ y;
 
 		public readonly override string ToString () => $"{{X={x},Y={y}}}";
 
@@ -216,11 +201,6 @@ namespace SkiaSharp
 		public static SKPointI operator + (SKPointI pt, SKPointI sz) =>
 			new SKPointI (pt.X + sz.X, pt.Y + sz.Y);
 
-		public static bool operator == (SKPointI left, SKPointI right) =>
-			(left.X == right.X) && (left.Y == right.Y);
-		public static bool operator != (SKPointI left, SKPointI right) =>
-			!(left == right);
-
 		public static SKPointI operator - (SKPointI pt, SKSizeI sz) =>
 			new SKPointI (pt.X - sz.Width, pt.Y - sz.Height);
 		public static SKPointI operator - (SKPointI pt, SKPointI sz) =>
@@ -245,11 +225,6 @@ namespace SkiaSharp
 
 		public readonly bool IsEmpty => this == Empty;
 
-		public override bool Equals (object obj) =>
-			obj is SKPoint3 p && this == p;
-
-		public readonly override int GetHashCode () => (int)x ^ (int)y ^ (int)z;
-
 		public readonly override string ToString () => $"{{X={x}, Y={y}, Z={z}}}";
 
 		public static SKPoint3 Add (SKPoint3 pt, SKPoint3 sz) => pt + sz;
@@ -258,13 +233,9 @@ namespace SkiaSharp
 
 		public static SKPoint3 operator + (SKPoint3 pt, SKPoint3 sz) =>
 			new SKPoint3 (pt.X + sz.X, pt.Y + sz.Y, pt.Z + sz.Z);
+
 		public static SKPoint3 operator - (SKPoint3 pt, SKPoint3 sz) =>
 			new SKPoint3 (pt.X - sz.X, pt.Y - sz.Y, pt.Z - sz.Z);
-
-		public static bool operator == (SKPoint3 left, SKPoint3 right) =>
-			(left.x == right.x) && (left.y == right.y) && (left.z == right.z);
-		public static bool operator != (SKPoint3 left, SKPoint3 right) =>
-			!(left == right);
 	}
 
 	public partial struct SKSize
@@ -299,11 +270,6 @@ namespace SkiaSharp
 			return new SKSizeI (w, h);
 		}
 
-		public readonly override bool Equals (object obj) =>
-			obj is SKSize s && this == s;
-
-		public readonly override int GetHashCode () => (int)w ^ (int)h;
-
 		public readonly override string ToString () =>
 			$"{{Width={w}, Height={h}}}";
 
@@ -313,13 +279,9 @@ namespace SkiaSharp
 
 		public static SKSize operator + (SKSize sz1, SKSize sz2) =>
 			new SKSize (sz1.Width + sz2.Width, sz1.Height + sz2.Height);
+
 		public static SKSize operator - (SKSize sz1, SKSize sz2) =>
 			new SKSize (sz1.Width - sz2.Width, sz1.Height - sz2.Height);
-
-		public static bool operator == (SKSize sz1, SKSize sz2) =>
-			(sz1.Width == sz2.Width) && (sz1.Height == sz2.Height);
-		public static bool operator != (SKSize sz1, SKSize sz2) =>
-			!(sz1 == sz2);
 
 		public static explicit operator SKPoint (SKSize size) =>
 			new SKPoint (size.Width, size.Height);
@@ -347,11 +309,6 @@ namespace SkiaSharp
 
 		public readonly SKPointI ToPointI () => new SKPointI (w, h);
 
-		public readonly override bool Equals (object obj) =>
-			obj is SKSizeI s && this == s;
-
-		public readonly override int GetHashCode () => w ^ h;
-
 		public readonly override string ToString () =>
 			$"{{Width={w}, Height={h}}}";
 
@@ -361,13 +318,9 @@ namespace SkiaSharp
 
 		public static SKSizeI operator + (SKSizeI sz1, SKSizeI sz2) =>
 			new SKSizeI (sz1.Width + sz2.Width, sz1.Height + sz2.Height);
+
 		public static SKSizeI operator - (SKSizeI sz1, SKSizeI sz2) =>
 			new SKSizeI (sz1.Width - sz2.Width, sz1.Height - sz2.Height);
-
-		public static bool operator == (SKSizeI sz1, SKSizeI sz2) =>
-			(sz1.Width == sz2.Width) && (sz1.Height == sz2.Height);
-		public static bool operator != (SKSizeI sz1, SKSizeI sz2) =>
-			!(sz1 == sz2);
 
 		public static explicit operator SKPointI (SKSizeI size) =>
 			new SKPointI (size.Width, size.Height);
@@ -386,9 +339,13 @@ namespace SkiaSharp
 		}
 
 		public readonly float MidX => left + (Width / 2f);
+
 		public readonly float MidY => top + (Height / 2f);
+
 		public readonly float Width => right - left;
+
 		public readonly float Height => bottom - top;
+
 		public readonly bool IsEmpty => this == Empty;
 
 		public SKSize Size {
@@ -407,15 +364,17 @@ namespace SkiaSharp
 		public readonly SKRect Standardized {
 			get {
 				if (left > right) {
-					if (top > bottom)
+					if (top > bottom) {
 						return new SKRect (right, bottom, left, top);
-					else
+					} else {
 						return new SKRect (right, top, left, bottom);
+					}
 				} else {
-					if (top > bottom)
+					if (top > bottom) {
 						return new SKRect (left, bottom, right, top);
-					else
+					} else {
 						return new SKRect (left, top, right, bottom);
+					}
 				}
 			}
 		}
@@ -468,9 +427,9 @@ namespace SkiaSharp
 
 		public static SKRect Intersect (SKRect a, SKRect b)
 		{
-			if (!a.IntersectsWithInclusive (b))
+			if (!a.IntersectsWithInclusive (b)) {
 				return Empty;
-
+			}
 			return new SKRect (
 				Math.Max (a.left, b.left),
 				Math.Max (a.top, b.top),
@@ -491,13 +450,6 @@ namespace SkiaSharp
 		public void Union (SKRect rect) =>
 			this = Union (this, rect);
 
-		public static bool operator == (SKRect left, SKRect right) =>
-			(left.left == right.left) && (left.top == right.top) &&
-			(left.right == right.right) && (left.bottom == right.bottom);
-
-		public static bool operator != (SKRect left, SKRect right) =>
-			!(left == right);
-
 		public static implicit operator SKRect (SKRectI r) =>
 			new SKRect (r.Left, r.Top, r.Right, r.Bottom);
 
@@ -510,16 +462,6 @@ namespace SkiaSharp
 		public readonly bool Contains (SKRect rect) =>
 			(left <= rect.left) && (right >= rect.right) &&
 			(top <= rect.top) && (bottom >= rect.bottom);
-
-		public readonly override bool Equals (object obj) =>
-			obj is SKRect r && this == r;
-
-		public readonly override int GetHashCode () =>
-			unchecked((int)(
-				(((uint)Left)) ^
-				(((uint)Top << 13) | ((uint)Top >> 19)) ^
-				(((uint)Width << 26) | ((uint)Width >> 6)) ^
-				(((uint)Height << 7) | ((uint)Height >> 25))));
 
 		public readonly bool IntersectsWith (SKRect rect) =>
 			(left < rect.right) && (right > rect.left) && (top < rect.bottom) && (bottom > rect.top);
@@ -566,11 +508,14 @@ namespace SkiaSharp
 		}
 
 		public readonly int MidX => left + (Width / 2);
+
 		public readonly int MidY => top + (Height / 2);
+
 		public readonly int Width => right - left;
+
 		public readonly int Height => bottom - top;
 
-		public bool IsEmpty => this == Empty;
+		public readonly bool IsEmpty => this == Empty;
 
 		public SKSizeI Size {
 			readonly get => new SKSizeI (Width, Height);
@@ -588,15 +533,17 @@ namespace SkiaSharp
 		public readonly SKRectI Standardized {
 			get {
 				if (left > right) {
-					if (top > bottom)
+					if (top > bottom) {
 						return new SKRectI (right, bottom, left, top);
-					else
+					} else {
 						return new SKRectI (right, top, left, bottom);
+					}
 				} else {
-					if (top > bottom)
+					if (top > bottom) {
 						return new SKRectI (left, bottom, right, top);
-					else
+					} else {
 						return new SKRectI (left, top, right, bottom);
+					}
 				}
 			}
 		}
@@ -717,16 +664,6 @@ namespace SkiaSharp
 			(left <= rect.left) && (right >= rect.right) &&
 			(top <= rect.top) && (bottom >= rect.bottom);
 
-		public readonly override bool Equals (object obj) =>
-			obj is SKRectI r && this == r;
-
-		public readonly override int GetHashCode () =>
-			unchecked((int)(
-				(((uint)Left)) ^
-				(((uint)Top << 13) | ((uint)Top >> 19)) ^
-				(((uint)Width << 26) | ((uint)Width >> 6)) ^
-				(((uint)Height << 7) | ((uint)Height >> 25))));
-
 		public readonly bool IntersectsWith (SKRectI rect) =>
 			(left < rect.right) && (right > rect.left) && (top < rect.bottom) && (bottom > rect.top);
 
@@ -745,13 +682,6 @@ namespace SkiaSharp
 
 		public readonly override string ToString () =>
 			$"{{Left={Left},Top={Top},Width={Width},Height={Height}}}";
-
-		public static bool operator == (SKRectI left, SKRectI right) =>
-			(left.left == right.left) && (left.top == right.top) &&
-			(left.right == right.right) && (left.bottom == right.bottom);
-
-		public static bool operator != (SKRectI left, SKRectI right) =>
-			!(left == right);
 
 		public static SKRectI Create (SKSizeI size) =>
 			Create (SKPointI.Empty.X, SKPointI.Empty.Y, size.Width, size.Height);
