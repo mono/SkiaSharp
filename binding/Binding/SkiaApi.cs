@@ -258,7 +258,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_oval (sk_canvas_t t, ref SKRect rect, sk_paint_t paint);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static IntPtr sk_canvas_draw_circle (sk_canvas_t t, sk_paint_t paint, float cx, float cy, float radius);
+		public extern static IntPtr sk_canvas_draw_circle (sk_canvas_t t, sk_paint_t paint, float cx, float cy, float radius, float unused = 0.0f/*padding*/);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_path (sk_canvas_t t, sk_path_t path, sk_paint_t paint);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
