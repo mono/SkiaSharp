@@ -71,7 +71,7 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, style.Handle));
+			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name (familyName, style.Handle));
 		}
 
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
@@ -98,7 +98,7 @@ namespace SkiaSharp
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 
-			var utf8path = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
+			var utf8path = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
 			fixed (byte* u = utf8path) {
 				return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file (u, index));
 			}
@@ -138,7 +138,7 @@ namespace SkiaSharp
 			=> GetGlyphs (chars, out glyphs);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use GetGlyphs(IntPtr, int, SKEncoding, out ushort[]) instead.")]
+		[Obsolete ("Use GetGlyphs(IntPtr, int, SKTextEncoding, out ushort[]) instead.")]
 		public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort[] glyphs)
 			=> GetGlyphs (str, strlen, encoding, out glyphs);
 
@@ -259,7 +259,7 @@ namespace SkiaSharp
 			return SkiaApi.sk_typeface_chars_to_glyphs (Handle, (byte*)str, encoding, null, strLen);
 		}
 
-		public int GetGlyphs (string text, out ushort[] glyphs) => GetGlyphs (text, SKEncoding.Utf16, out glyphs);
+		public int GetGlyphs (string text, out ushort[] glyphs) => GetGlyphs (text, SKTextEncoding.Utf16, out glyphs);
 
 		public int GetGlyphs (string text, SKEncoding encoding, out ushort[] glyphs)
 		{

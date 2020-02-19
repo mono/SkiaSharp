@@ -273,7 +273,7 @@ namespace SkiaSharp
 
 		private static IntPtr CreateNew (string path)
 		{
-			var bytes = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
+			var bytes = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
 			fixed (byte* p = bytes) {
 				return SkiaApi.sk_filestream_new (p);
 			}
@@ -488,7 +488,7 @@ namespace SkiaSharp
 
 		private static IntPtr CreateNew (string path)
 		{
-			var bytes = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
+			var bytes = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
 			fixed (byte* p = bytes) {
 				return SkiaApi.sk_filewstream_new (p);
 			}
@@ -553,11 +553,31 @@ namespace SkiaSharp
 			SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, (void*)data);
 		}
 
+		public void CopyTo (Span<byte> data)
+		{
+			var size = BytesWritten;
+			if (data.Length < size)
+				throw new Exception ($"Not enough space to copy. Expected at least {size}, but received {data.Length}.");
+
+			fixed (void* d = data) {
+				SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, d);
+			}
+		}
+
 		public bool CopyTo (SKWStream dst)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
 			return SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
+		}
+
+		public bool CopyTo (Stream dst)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var wrapped = new SKManagedWStream (dst);
+			return CopyTo (wrapped);
 		}
 
 		protected override void Dispose (bool disposing) =>

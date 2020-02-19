@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -56,7 +57,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_bitmap (src.Handle, tmx, tmy, null));
+			return src.ToShader (tmx, tmy);
 		}
 
 		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix)
@@ -64,7 +65,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_bitmap (src.Handle, tmx, tmy, &localMatrix));
+			return src.ToShader (tmx, tmy, localMatrix);
 		}
 
 		// CreateImage
@@ -98,7 +99,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, null, null));
+			return src.ToShader (tmx, tmy);
 		}
 
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile)
@@ -106,7 +107,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, null, &tile));
+			return src.ToShader (tmx, tmy, tile);
 		}
 
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile)
@@ -114,7 +115,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, &localMatrix, &tile));
+			return src.ToShader (tmx, tmy, localMatrix, tile);
 		}
 
 		// CreateLinearGradient
@@ -406,20 +407,39 @@ namespace SkiaSharp
 		public static SKShader CreatePerlinNoiseTurbulence (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKSizeI tileSize) =>
 			GetObject<SKShader> (SkiaApi.sk_shader_new_perlin_noise_turbulence (baseFrequencyX, baseFrequencyY, numOctaves, seed, &tileSize));
 
+		// CreateBlend
+
+		public static SKShader CreateBlend (SKBlendMode mode, SKShader dst, SKShader src)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_blend (mode, dst.Handle, src.Handle, null));
+		}
+
+		public static SKShader CreateBlend (SKBlendMode mode, SKShader dst, SKShader src, SKMatrix localMatrix)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_blend (mode, dst.Handle, src.Handle, &localMatrix));
+		}
+
 		// CreateCompose
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateBlend(SKBlendMode.SrcOver, SKShader, SKShader) instead.")]
 		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB) =>
-			CreateCompose (shaderA, shaderB, SKBlendMode.SrcOver);
+			CreateBlend (SKBlendMode.SrcOver, shaderA, shaderB);
 
-		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKBlendMode mode)
-		{
-			if (shaderA == null)
-				throw new ArgumentNullException (nameof (shaderA));
-			if (shaderB == null)
-				throw new ArgumentNullException (nameof (shaderB));
-
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_compose (shaderA.Handle, shaderB.Handle, mode));
-		}
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateBlend(SKBlendMode.SrcOver, SKShader, SKShader) instead.")]
+		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKBlendMode mode) =>
+			CreateBlend (mode, shaderA, shaderB);
 
 		// CreateColorFilter
 

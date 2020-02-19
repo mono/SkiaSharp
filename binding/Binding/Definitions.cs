@@ -17,6 +17,15 @@ namespace SkiaSharp
 		LeftBottom = 8,
 	}
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use SKTextEncoding instead.")]
+	public enum SKEncoding
+	{
+		Utf8 = 0,
+		Utf16 = 1,
+		Utf32 = 2,
+	}
+
 	public enum SKFontStyleWeight
 	{
 		Invisible = 0,
@@ -58,6 +67,17 @@ namespace SkiaSharp
 
 		public static bool IsHorizontal (this SKPixelGeometry pg) =>
 			pg == SKPixelGeometry.BgrHorizontal || pg == SKPixelGeometry.RgbHorizontal;
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public static SKTextEncoding ToTextEncoding (this SKEncoding encoding) =>
+			encoding switch
+			{
+				SKEncoding.Utf8 => SKTextEncoding.Utf8,
+				SKEncoding.Utf16 => SKTextEncoding.Utf16,
+				SKEncoding.Utf32 => SKTextEncoding.Utf32,
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding)),
+			};
 	}
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
@@ -144,6 +164,9 @@ namespace SkiaSharp
 		public readonly bool HasSubset => Subset != null;
 		public int FrameIndex { get; set; }
 		public int PriorFrame { get; set; }
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
 		public SKTransferFunctionBehavior PremulBehavior { get; set; }
 
 		public readonly bool Equals (SKCodecOptions obj) =>
@@ -388,6 +411,14 @@ namespace SkiaSharp
 		NonLinearBlending = 0x1,
 	}
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete]
+	public enum SKTransferFunctionBehavior
+	{
+		Ignore = 1,
+		Respect = 0,
+	}
+
 	public partial struct SKHighContrastConfig
 	{
 		public static readonly SKHighContrastConfig Default;
@@ -417,22 +448,22 @@ namespace SkiaSharp
 
 		static SKPngEncoderOptions ()
 		{
-			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.AllFilters, 6, SKTransferFunctionBehavior.Respect);
+			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.AllFilters, 6);
 		}
 
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel)
 		{
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
-			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
 			fComments = null;
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Using SKPngEncoderOptions(SKPngEncoderFilterFlags, int) instead.")]
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel, SKTransferFunctionBehavior unpremulBehavior)
 		{
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
-			fUnpremulBehavior = unpremulBehavior;
 			fComments = null;
 		}
 
@@ -444,9 +475,12 @@ namespace SkiaSharp
 			readonly get => fZLibLevel;
 			set => fZLibLevel = value;
 		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
 		public SKTransferFunctionBehavior UnpremulBehavior {
-			readonly get => fUnpremulBehavior;
-			set => fUnpremulBehavior = value;
+			readonly get => SKTransferFunctionBehavior.Respect;
+			set { }
 		}
 	}
 
@@ -456,7 +490,7 @@ namespace SkiaSharp
 
 		static SKJpegEncoderOptions ()
 		{
-			Default = new SKJpegEncoderOptions (100, SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore, SKTransferFunctionBehavior.Respect);
+			Default = new SKJpegEncoderOptions (100, SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore);
 		}
 
 		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption)
@@ -464,15 +498,22 @@ namespace SkiaSharp
 			fQuality = quality;
 			fDownsample = downsample;
 			fAlphaOption = alphaOption;
-			fBlendBehavior = SKTransferFunctionBehavior.Respect;
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use SKJpegEncoderOptions(int, SKJpegEncoderDownsample, SKJpegEncoderAlphaOption) instead.")]
 		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption, SKTransferFunctionBehavior blendBehavior)
 		{
 			fQuality = quality;
 			fDownsample = downsample;
 			fAlphaOption = alphaOption;
-			fBlendBehavior = blendBehavior;
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public SKTransferFunctionBehavior UnpremulBehavior {
+			readonly get => SKTransferFunctionBehavior.Respect;
+			set { }
 		}
 	}
 
@@ -482,21 +523,28 @@ namespace SkiaSharp
 
 		static SKWebpEncoderOptions ()
 		{
-			Default = new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossy, 100, SKTransferFunctionBehavior.Respect);
+			Default = new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossy, 100);
 		}
 
 		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality)
 		{
 			fCompression = compression;
 			fQuality = quality;
-			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use SKWebpEncoderOptions(SKWebpEncoderCompression, float) instead.")]
 		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality, SKTransferFunctionBehavior unpremulBehavior)
 		{
 			fCompression = compression;
 			fQuality = quality;
-			fUnpremulBehavior = unpremulBehavior;
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public SKTransferFunctionBehavior UnpremulBehavior {
+			readonly get => SKTransferFunctionBehavior.Respect;
+			set { }
 		}
 	}
 }

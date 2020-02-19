@@ -61,7 +61,7 @@ namespace SkiaSharp
 		public int Width => SkiaApi.gr_backendtexture_get_width (Handle);
 		public int Height => SkiaApi.gr_backendtexture_get_height (Handle);
 		public bool HasMipMaps => SkiaApi.gr_backendtexture_has_mipmaps (Handle);
-		public GRBackend Backend => SkiaApi.gr_backendtexture_get_backend (Handle);
+		public GRBackend Backend => SkiaApi.gr_backendtexture_get_backend (Handle).FromNative ();
 		public SKSizeI Size => new SKSizeI (Width, Height);
 		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 
@@ -75,6 +75,7 @@ namespace SkiaSharp
 			}
 		}
 
+		[Obsolete]
 		[StructLayout (LayoutKind.Sequential)]
 		internal struct GRTextureInfoObsolete
 		{

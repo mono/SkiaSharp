@@ -26,6 +26,26 @@ namespace SkiaSharp
 			public const int Count = 9;
 		}
 
+		public SKMatrix (float[] values)
+		{
+			if (values == null)
+				throw new ArgumentNullException (nameof (values));
+			if (values.Length != Indices.Count)
+				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
+
+			scaleX = values[Indices.ScaleX];
+			skewX = values[Indices.SkewX];
+			transX = values[Indices.TransX];
+
+			skewY = values[Indices.SkewY];
+			scaleY = values[Indices.ScaleY];
+			transY = values[Indices.TransY];
+
+			persp0 = values[Indices.Persp0];
+			persp1 = values[Indices.Persp1];
+			persp2 = values[Indices.Persp2];
+		}
+
 		public SKMatrix (
 			float scaleX, float skewX, float transX,
 			float skewY, float scaleY, float transY,
@@ -41,6 +61,8 @@ namespace SkiaSharp
 			this.persp1 = persp1;
 			this.persp2 = persp2;
 		}
+
+		public readonly bool IsIdentity => Equals (Identity);
 
 		// Values
 
@@ -198,38 +220,47 @@ namespace SkiaSharp
 		// Make*
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateIdentity() instead.")]
 		public static SKMatrix MakeIdentity () =>
 			CreateIdentity ();
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateScale(float, float) instead.")]
 		public static SKMatrix MakeScale (float sx, float sy) =>
 			CreateScale (sx, sy);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateScale(float, float, float, float) instead.")]
 		public static SKMatrix MakeScale (float sx, float sy, float pivotX, float pivotY) =>
 			CreateScale (sx, sy, pivotX, pivotY);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateTranslation(float, float) instead.")]
 		public static SKMatrix MakeTranslation (float dx, float dy) =>
 			CreateTranslation (dx, dy);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRotation(float) instead.")]
 		public static SKMatrix MakeRotation (float radians) =>
 			CreateRotation (radians);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRotation(float, float, float) instead.")]
 		public static SKMatrix MakeRotation (float radians, float pivotx, float pivoty) =>
 			CreateRotation (radians, pivotx, pivoty);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRotationDegrees(float) instead.")]
 		public static SKMatrix MakeRotationDegrees (float degrees) =>
 			CreateRotationDegrees (degrees);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRotationDegrees(float, float, float) instead.")]
 		public static SKMatrix MakeRotationDegrees (float degrees, float pivotx, float pivoty) =>
 			CreateRotationDegrees (degrees, pivotx, pivoty);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateSkew(float, float) instead.")]
 		public static SKMatrix MakeSkew (float sx, float sy) =>
 			CreateSkew (sx, sy);
 
@@ -456,6 +487,9 @@ namespace SkiaSharp
 		}
 
 		// MapVectors
+
+		public readonly SKPoint MapVector (SKPoint vector) =>
+			MapVector (vector.X, vector.Y);
 
 		public readonly SKPoint MapVector (float x, float y)
 		{

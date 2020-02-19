@@ -177,7 +177,7 @@ namespace SkiaSharp
 			Offset (offset.X, offset.Y);
 
 		public void Offset (float dx, float dy) =>
-			Transform (SKMatrix.MakeTranslation (dx, dy));
+			Transform (SKMatrix.CreateTranslation (dx, dy));
 
 		public void MoveTo (SKPoint point) =>
 			SkiaApi.sk_path_move_to (Handle, point.X, point.Y);
@@ -322,6 +322,14 @@ namespace SkiaSharp
 
 		public void Transform (SKMatrix matrix) =>
 			SkiaApi.sk_path_transform (Handle, &matrix);
+
+		public void Transform (SKMatrix matrix, SKPath destination)
+		{
+			if (destination == null)
+				throw new ArgumentNullException (nameof (destination));
+
+			SkiaApi.sk_path_transform_to_dest (Handle, &matrix, destination.Handle);
+		}
 
 		public void AddPath (SKPath other, float dx, float dy, SKPathAddMode mode = SKPathAddMode.Append)
 		{

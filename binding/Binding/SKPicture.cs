@@ -30,12 +30,12 @@ namespace SkiaSharp
 			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
-			SKShader.CreatePicture (this, tmx, tmy);
+			GetObject<SKShader> (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, null, null));
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile) =>
-			SKShader.CreatePicture (this, tmx, tmy, tile);
+			GetObject<SKShader> (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, null, &tile));
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile) =>
-			SKShader.CreatePicture (this, tmx, tmy, localMatrix, tile);
+			GetObject<SKShader> (SkiaApi.sk_picture_make_shader (Handle, tmx, tmy, &localMatrix, &tile));
 	}
 }

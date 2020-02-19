@@ -134,6 +134,9 @@ namespace SkiaSharp
 
 		public readonly SKRectI Rect => SKRectI.Create (Width, Height);
 
+		public readonly SKImageInfo WithSize (SKSizeI size) =>
+			WithSize (size.Width, size.Height);
+
 		public readonly SKImageInfo WithSize (int width, int height)
 		{
 			var copy = this;

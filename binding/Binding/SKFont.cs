@@ -308,7 +308,7 @@ namespace SkiaSharp
 			}
 		}
 
-		internal float MeasureText (void* text, int length, SKTextEncoding encoding, SKRect* bounds, SKPaint paint = null)
+		internal float MeasureText (void* text, int length, SKTextEncoding encoding, SKRect* bounds, SKPaint paint)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
 				return 0;
@@ -358,7 +358,7 @@ namespace SkiaSharp
 		public void GetGlyphPositions (IntPtr text, int length, SKTextEncoding encoding, Span<SKPoint> offsets, SKPoint origin = default) =>
 			GetGlyphPositions ((void*)text, length, encoding, offsets, origin);
 
-		internal SKPoint[] GetGlyphPositions (void* text, int length, SKTextEncoding encoding, SKPoint origin = default)
+		internal SKPoint[] GetGlyphPositions (void* text, int length, SKTextEncoding encoding, SKPoint origin)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
 				return new SKPoint[0];
@@ -372,7 +372,7 @@ namespace SkiaSharp
 			return positions;
 		}
 
-		internal void GetGlyphPositions (void* text, int length, SKTextEncoding encoding, Span<SKPoint> offsets, SKPoint origin = default)
+		internal void GetGlyphPositions (void* text, int length, SKTextEncoding encoding, Span<SKPoint> offsets, SKPoint origin)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
 				return;
@@ -452,7 +452,7 @@ namespace SkiaSharp
 		public void GetGlyphOffsets (IntPtr text, int length, SKTextEncoding encoding, Span<float> offsets, float origin = 0f) =>
 			GetGlyphOffsets ((void*)text, length, encoding, offsets, origin);
 
-		internal float[] GetGlyphOffsets (void* text, int length, SKTextEncoding encoding, float origin = 0f)
+		internal float[] GetGlyphOffsets (void* text, int length, SKTextEncoding encoding, float origin)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
 				return new float[0];
@@ -466,7 +466,7 @@ namespace SkiaSharp
 			return offsets;
 		}
 
-		internal void GetGlyphOffsets (void* text, int length, SKTextEncoding encoding, Span<float> offsets, float origin = 0f)
+		internal void GetGlyphOffsets (void* text, int length, SKTextEncoding encoding, Span<float> offsets, float origin)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
 				return;
@@ -566,7 +566,7 @@ namespace SkiaSharp
 		public void GetGlyphWidths (IntPtr text, int length, SKTextEncoding encoding, Span<float> widths, Span<SKRect> bounds, SKPaint paint = null) =>
 			GetGlyphWidths ((void*)text, length, encoding, widths, bounds, paint);
 
-		internal float[] GetGlyphWidths (void* text, int length, SKTextEncoding encoding, SKPaint paint = null)
+		internal float[] GetGlyphWidths (void* text, int length, SKTextEncoding encoding, SKPaint paint)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
 				return new float[0];
@@ -580,7 +580,7 @@ namespace SkiaSharp
 			return widths;
 		}
 
-		internal float[] GetGlyphWidths (void* text, int length, SKTextEncoding encoding, out SKRect[] bounds, SKPaint paint = null)
+		internal float[] GetGlyphWidths (void* text, int length, SKTextEncoding encoding, out SKRect[] bounds, SKPaint paint)
 		{
 			if (!ValidateTextArgs (text, length, encoding)) {
 				bounds = new SKRect[0];
@@ -599,7 +599,7 @@ namespace SkiaSharp
 			return widths;
 		}
 
-		internal void GetGlyphWidths (void* text, int length, SKTextEncoding encoding, Span<float> widths, Span<SKRect> bounds, SKPaint paint = null)
+		internal void GetGlyphWidths (void* text, int length, SKTextEncoding encoding, Span<float> widths, Span<SKRect> bounds, SKPaint paint)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
 				return;
@@ -685,7 +685,7 @@ namespace SkiaSharp
 		public SKPath GetPath (IntPtr text, int length, SKTextEncoding encoding, SKPoint origin = default) =>
 			GetPath ((void*)text, length, encoding, origin);
 
-		internal SKPath GetPath (void* text, int length, SKTextEncoding encoding, SKPoint origin = default)
+		internal SKPath GetPath (void* text, int length, SKTextEncoding encoding, SKPoint origin)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
 				return new SKPath ();
@@ -695,11 +695,51 @@ namespace SkiaSharp
 			return path;
 		}
 
+		// GetPath (positioned)
+
+		internal SKPath GetPath (string text, SKPoint[] positions) =>
+			GetPath (text.AsSpan (), positions);
+
+		internal SKPath GetPath (ReadOnlySpan<char> text, SKPoint[] positions)
+		{
+			fixed (void* t = text) {
+				return GetPath (t, text.Length, SKTextEncoding.Utf16, positions);
+			}
+		}
+
+		internal SKPath GetPath (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKPoint[] positions)
+		{
+			fixed (void* t = text) {
+				return GetPath (t, text.Length, encoding, positions);
+			}
+		}
+
+		internal SKPath GetPath (IntPtr text, int length, SKTextEncoding encoding, SKPoint[] positions) =>
+			GetPath ((void*)text, length, encoding, positions);
+
+		internal SKPath GetPath (void* text, int length, SKTextEncoding encoding, SKPoint[] positions)
+		{
+			if (!ValidateTextArgs (text, length, encoding))
+				return new SKPath ();
+
+			var path = new SKPath ();
+			fixed (SKPoint* p = positions) {
+				SkiaApi.sk_text_utils_get_pos_path (text, (IntPtr)length, encoding, p, Handle, path.Handle);
+			}
+			return path;
+		}
+
 		// GetPaths
 
-		public void GetPaths (ReadOnlySpan<ushort> glyphs, SKGlyphPathDelegate glyphPathDelegate)
+		public void GetPaths (ReadOnlySpan<ushort> glyphs, SKGlyphPathDelegate glyphPathDelegate) =>
+			GetPaths (glyphs, glyphPathDelegate, null);
+
+		public void GetPaths (ReadOnlySpan<ushort> glyphs, SKGlyphPathDelegate glyphPathDelegate, object context)
 		{
-			var proxy = DelegateProxies.Create (glyphPathDelegate, DelegateProxies.SKGlyphPathDelegateProxy, out var gch, out var ctx);
+			var del = glyphPathDelegate != null && context != null
+				? new SKGlyphPathDelegate ((p, m, _) => glyphPathDelegate (p, m, context))
+				: glyphPathDelegate;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.SKGlyphPathDelegateProxy, out var gch, out var ctx);
 			try {
 				fixed (ushort* g = glyphs) {
 					SkiaApi.sk_font_get_paths (Handle, g, glyphs.Length, proxy, (void*)ctx);

@@ -48,6 +48,9 @@ namespace SkiaSharp
 
 		// SetPath
 
+		public void SetPath (SKPath path) =>
+			SetPath (path, false);
+
 		public void SetPath (SKPath path, bool forceClosed)
 		{
 			SkiaApi.sk_pathmeasure_set_path (Handle, path == null ? IntPtr.Zero : path.Handle, forceClosed);
@@ -65,6 +68,13 @@ namespace SkiaSharp
 
 		// GetPosition
 
+		public SKPoint GetPosition (float distance)
+		{
+			if (!GetPosition (distance, out var position))
+				position = SKPoint.Empty;
+			return position;
+		}
+
 		public bool GetPosition (float distance, out SKPoint position)
 		{
 			fixed (SKPoint* p = &position) {
@@ -74,6 +84,13 @@ namespace SkiaSharp
 
 		// GetTangent
 
+		public SKPoint GetTangent (float distance)
+		{
+			if (!GetTangent (distance, out var tangent))
+				tangent = SKPoint.Empty;
+			return tangent;
+		}
+
 		public bool GetTangent (float distance, out SKPoint tangent)
 		{
 			fixed (SKPoint* t = &tangent) {
@@ -82,6 +99,13 @@ namespace SkiaSharp
 		}
 
 		// GetMatrix
+
+		public SKMatrix GetMatrix (float distance, SKPathMeasureMatrixFlags flags)
+		{
+			if (!GetMatrix (distance, out var matrix, flags))
+				matrix = SKMatrix.Empty;
+			return matrix;
+		}
 
 		public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasureMatrixFlags flags)
 		{

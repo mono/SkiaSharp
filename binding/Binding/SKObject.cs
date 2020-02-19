@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -230,16 +229,38 @@ namespace SkiaSharp
 			keepAliveObjects.Add (child);
 		}
 
+		internal static T Owned<T> (T owner, SKObject child)
+			where T : SKObject
+		{
+			if (child != null) {
+				if (owner != null)
+					owner.SetDisposeChild (child);
+				else
+					child.Dispose ();
+			}
+
+			return owner;
+		}
+
+		internal static T Referenced<T> (T owner, SKObject child)
+			where T : SKObject
+		{
+			if (child != null && owner != null)
+				owner.KeepAlive (child);
+
+			return owner;
+		}
+
 		internal static int SizeOf<T> () =>
 #if WINDOWS_UWP || NET_STANDARD
-			Marshal.SizeOf <T> ();
+			Marshal.SizeOf<T> ();
 #else
 			Marshal.SizeOf (typeof (T));
 #endif
 
 		internal static T PtrToStructure<T> (IntPtr intPtr) =>
 #if WINDOWS_UWP || NET_STANDARD
-			Marshal.PtrToStructure <T> (intPtr);
+			Marshal.PtrToStructure<T> (intPtr);
 #else
 			(T)Marshal.PtrToStructure (intPtr, typeof (T));
 #endif

@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKColorSpace : SKObject, ISKReferenceCounted
+	public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 	{
 		private static readonly SKColorSpace srgb;
 		private static readonly SKColorSpace srgbLinear;
@@ -26,8 +26,16 @@ namespace SkiaSharp
 		{
 		}
 
+		void ISKNonVirtualReferenceCounted.ReferenceNative () =>
+			SkiaApi.sk_colorspace_ref (Handle);
+
+		void ISKNonVirtualReferenceCounted.UnreferenceNative () =>
+			SkiaApi.sk_colorspace_unref (Handle);
+
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
+
+		// properties
 
 		public bool GammaIsCloseToSrgb =>
 			SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
@@ -38,11 +46,25 @@ namespace SkiaSharp
 		public bool IsSrgb =>
 			SkiaApi.sk_colorspace_is_srgb (Handle);
 
-		public SKColorSpaceType Type =>
-			SkiaApi.sk_colorspace_gamma_get_type (Handle);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public SKColorSpaceType Type => SKColorSpaceType.Rgb;
 
-		public SKNamedGamma NamedGamma =>
-			SkiaApi.sk_colorspace_gamma_get_gamma_named (Handle);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetNumericalTransferFunction() instead.")]
+		public SKNamedGamma NamedGamma {
+			get {
+				var tf = GetNumericalTransferFunction ();
+				return tf switch
+				{
+					_ when tf == SKColorSpaceTransferFn.Empty => SKNamedGamma.NonStandard,
+					_ when tf == SKColorSpaceTransferFn.Linear => SKNamedGamma.Linear,
+					_ when tf == SKColorSpaceTransferFn.Srgb => SKNamedGamma.Srgb,
+					_ when tf == SKColorSpaceTransferFn.TwoDotTwo => SKNamedGamma.TwoDotTwoCurve,
+					_ => SKNamedGamma.NonStandard,
+				};
+			}
+		}
 
 		public bool IsNumericalTransferFunction =>
 			GetNumericalTransferFunction (out _);
@@ -57,17 +79,18 @@ namespace SkiaSharp
 			return SkiaApi.sk_colorspace_equals (left.Handle, right.Handle);
 		}
 
+		// CreateSrgb*
+
 		public static SKColorSpace CreateSrgb () => srgb;
+
+		// CreateSrgbLinear
 
 		public static SKColorSpace CreateSrgbLinear () => srgbLinear;
 
-		public static SKColorSpace CreateIcc (IntPtr input, long length)
-		{
-			if (input == IntPtr.Zero)
-				throw new ArgumentNullException (nameof (input));
+		// CreateIcc
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc ((void*)input, (IntPtr)length));
-		}
+		public static SKColorSpace CreateIcc (IntPtr input, long length) =>
+			CreateIcc (SKColorSpaceIccProfile.Create (input, length));
 
 		public static SKColorSpace CreateIcc (byte[] input, long length)
 		{
@@ -75,80 +98,107 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (input));
 
 			fixed (byte* i = input) {
-				return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (i, (IntPtr)length));
+				return CreateIcc (SKColorSpaceIccProfile.Create ((IntPtr)i, length));
 			}
 		}
 
-		public static SKColorSpace CreateIcc (byte[] input)
+		public static SKColorSpace CreateIcc (byte[] input) =>
+			CreateIcc (input.AsSpan ());
+
+		public static SKColorSpace CreateIcc (ReadOnlySpan<byte> input) =>
+			CreateIcc (SKColorSpaceIccProfile.Create (input));
+
+		public static SKColorSpace CreateIcc (SKData input) =>
+			CreateIcc (SKColorSpaceIccProfile.Create (input));
+
+		public static SKColorSpace CreateIcc (SKColorSpaceIccProfile profile)
 		{
-			if (input == null)
-				throw new ArgumentNullException (nameof (input));
+			if (profile == null)
+				throw new ArgumentNullException (nameof (profile));
 
-			fixed (byte* i = input) {
-				return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (i, (IntPtr)input.Length));
-			}
+			var cs = GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (profile.Handle));
+			if (cs != null)
+				cs.KeepAlive (profile);
+
+			return cs;
 		}
+
+		// CreateRgb
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRgb(SKColorSpaceRenderTargetGamma, SKMatrix44) instead.")]
+		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKMatrix44 toXyzD50, SKColorSpaceFlags flags) =>
 			CreateRgb (gamma, toXyzD50);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRgb(SKColorSpaceRenderTargetGamma, SKColorSpaceGamut) instead.")]
+		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut, SKColorSpaceFlags flags) =>
 			CreateRgb (gamma, gamut);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKMatrix44) instead.")]
+		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKMatrix44 toXyzD50, SKColorSpaceFlags flags) =>
 			CreateRgb (coeffs, toXyzD50);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceGamut) instead.")]
+		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut, SKColorSpaceFlags flags) =>
 			CreateRgb (coeffs, gamut);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKMatrix44 toXyzD50)
 		{
 			if (toXyzD50 == null)
 				throw new ArgumentNullException (nameof (toXyzD50));
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma (gamma, toXyzD50.Handle));
+			return CreateRgb (gamma.ToColorSpaceTransferFn (), toXyzD50.ToColorSpaceXyz ());
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma_and_gamut (gamma, gamut));
+			CreateRgb (gamma.ToColorSpaceTransferFn (), gamut.ToColorSpaceXyz ());
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKMatrix44 toXyzD50)
 		{
 			if (toXyzD50 == null)
 				throw new ArgumentNullException (nameof (toXyzD50));
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_coeffs (&coeffs, toXyzD50.Handle));
+			return CreateRgb (coeffs, toXyzD50.ToColorSpaceXyz ());
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.")]
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_coeffs_and_gamut (&coeffs, gamut));
+			CreateRgb (coeffs, gamut.ToColorSpaceXyz ());
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.")]
 		public static SKColorSpace CreateRgb (SKNamedGamma gamma, SKMatrix44 toXyzD50)
 		{
 			if (toXyzD50 == null)
 				throw new ArgumentNullException (nameof (toXyzD50));
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma_named (gamma, toXyzD50.Handle));
+			return CreateRgb (gamma.ToColorSpaceTransferFn (), toXyzD50.ToColorSpaceXyz ());
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.")]
 		public static SKColorSpace CreateRgb (SKNamedGamma gamma, SKColorSpaceGamut gamut) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma_named_and_gamut (gamma, gamut));
+			CreateRgb (gamma.ToColorSpaceTransferFn (), gamut.ToColorSpaceXyz ());
 
-		public bool ToXyzD50 (SKMatrix44 toXyzD50)
-		{
-			if (toXyzD50 == null)
-				throw new ArgumentNullException (nameof (toXyzD50));
+		// CreateRgb
 
-			return SkiaApi.sk_colorspace_to_xyzd50 (Handle, toXyzD50.Handle);
-		}
+		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn transferFn, SKColorSpaceXyz toXyzD50) =>
+			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb (&transferFn, &toXyzD50));
+
+		// GetNumericalTransferFunction
+
+		public SKColorSpaceTransferFn GetNumericalTransferFunction () =>
+			GetNumericalTransferFunction (out var fn) ? fn : SKColorSpaceTransferFn.Empty;
 
 		public bool GetNumericalTransferFunction (out SKColorSpaceTransferFn fn)
 		{
@@ -157,11 +207,59 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKMatrix44 ToXyzD50 () =>
-			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_to_xyzd50 (Handle), false);
+		// ToProfile
 
+		public SKColorSpaceIccProfile ToProfile ()
+		{
+			var profile = new SKColorSpaceIccProfile ();
+			SkiaApi.sk_colorspace_to_profile (Handle, profile.Handle);
+			return profile;
+		}
+
+		// ToColorSpaceXyz
+
+		public bool ToColorSpaceXyz (out SKColorSpaceXyz toXyzD50)
+		{
+			fixed (SKColorSpaceXyz* xyz = &toXyzD50) {
+				return SkiaApi.sk_colorspace_to_xyzd50 (Handle, xyz);
+			}
+		}
+
+		public SKColorSpaceXyz ToColorSpaceXyz () =>
+			ToColorSpaceXyz (out var toXYZ) ? toXYZ : SKColorSpaceXyz.Empty;
+
+		// To*Gamma
+
+		public SKColorSpace ToLinearGamma () =>
+			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_make_linear_gamma (Handle));
+
+		public SKColorSpace ToSrgbGamma () =>
+			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_make_srgb_gamma (Handle));
+
+		// *XyzD50
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use ToColorSpaceXyz() instead.")]
+		public SKMatrix44 ToXyzD50 () =>
+			ToColorSpaceXyz ().ToMatrix44 ();
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use ToColorSpaceXyz(out SKColorSpaceXyz) instead.")]
+		public bool ToXyzD50 (SKMatrix44 toXyzD50)
+		{
+			if (toXyzD50 == null)
+				throw new ArgumentNullException (nameof (toXyzD50));
+
+			if (ToColorSpaceXyz (out var xyz) && xyz.ToMatrix44 () is SKMatrix44 m) {
+				toXyzD50.SetColumnMajor (m.ToColumnMajor ());
+			}
+			return false;
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
 		public SKMatrix44 FromXyzD50 () =>
-			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_from_xyzd50 (Handle), false);
+			ToXyzD50 ()?.Invert ();
 
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{
