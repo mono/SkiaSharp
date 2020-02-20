@@ -35,18 +35,20 @@ namespace SkiaSharp.Tests
 
 		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
 		{
-			using var bitmap = new SKBitmap(bmp.Width, bmp.Height);
-			using var canvas = new SKCanvas(bitmap);
+			using (var bitmap = new SKBitmap(bmp.Width, bmp.Height))
+			using (var canvas = new SKCanvas(bitmap))
+			{
+				canvas.Clear(SKColors.Transparent);
+				canvas.DrawBitmap(bmp, 0, 0);
+				canvas.Flush();
 
-			canvas.Clear(SKColors.Transparent);
-			canvas.DrawBitmap(bmp, 0, 0);
-			canvas.Flush();
-
-			using var stream = File.OpenWrite(Path.Combine(PathToImages, filename));
-			using var image = SKImage.FromBitmap(bitmap);
-			using var data = image.Encode();
-
-			data.SaveTo(stream);
+				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
+				using (var image = SKImage.FromBitmap(bitmap))
+				using (var data = image.Encode())
+				{
+					data.SaveTo(stream);
+				}
+			}
 		}
 
 		protected static SKBitmap CreateTestBitmap(byte alpha = 255)
@@ -83,10 +85,10 @@ namespace SkiaSharp.Tests
 			Assert.Equal(40, bmp.Width);
 			Assert.Equal(40, bmp.Height);
 
-			Assert.Equal(SKColors.Red.WithAlpha(alpha), bmp.GetPixelColor(10, 10));
-			Assert.Equal(SKColors.Green.WithAlpha(alpha), bmp.GetPixelColor(30, 10));
-			Assert.Equal(SKColors.Blue.WithAlpha(alpha), bmp.GetPixelColor(10, 30));
-			Assert.Equal(SKColors.Yellow.WithAlpha(alpha), bmp.GetPixelColor(30, 30));
+			Assert.Equal(SKColors.Red.WithAlpha(alpha), bmp.GetPixel(10, 10));
+			Assert.Equal(SKColors.Green.WithAlpha(alpha), bmp.GetPixel(30, 10));
+			Assert.Equal(SKColors.Blue.WithAlpha(alpha), bmp.GetPixel(10, 30));
+			Assert.Equal(SKColors.Yellow.WithAlpha(alpha), bmp.GetPixel(30, 30));
 		}
 
 		protected static void ValidateTestPixmap(SKPixmap pix, byte alpha = 255)
@@ -117,13 +119,21 @@ namespace SkiaSharp.Tests
 			try
 			{
 				if (IsLinux)
+				{
 					return new GlxContext();
+				}
 				else if (IsMac)
+				{
 					return new CglContext();
+				}
 				else if (IsWindows)
+				{
 					return new WglContext();
+				}
 				else
+				{
 					throw new PlatformNotSupportedException();
+				}
 			}
 			catch (Exception ex)
 			{

@@ -37,7 +37,7 @@ namespace SkiaSharp.Tests
 			{
 				drawable.Draw(canvas, 0, 0);
 
-				Assert.Equal(SKColors.Blue, bmp.GetPixelColor(50, 50));
+				Assert.Equal(SKColors.Blue, bmp.GetPixel(50, 50));
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace SkiaSharp.Tests
 			{
 				canvas.DrawDrawable(drawable, 0, 0);
 
-				Assert.Equal(SKColors.Blue, bmp.GetPixelColor(50, 50));
+				Assert.Equal(SKColors.Blue, bmp.GetPixel(50, 50));
 			}
 		}
 	}

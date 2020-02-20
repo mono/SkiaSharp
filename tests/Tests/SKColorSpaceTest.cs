@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -81,7 +82,7 @@ namespace SkiaSharp.Tests
 				Assert.Same(cs1, cs2);
 			}
 
-			static SKImage DoWork(out IntPtr handle)
+			SKImage DoWork(out IntPtr handle)
 			{
 				var colorspace = SKColorSpace.CreateRgb(
 					new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
@@ -137,7 +138,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(2, csh.GetReferenceCount(false));
 			}
 
-			static void CheckExistingImage(int expected, SKImage image, IntPtr csh)
+			void CheckExistingImage(int expected, SKImage image, IntPtr csh)
 			{
 				var peek = image.PeekPixels();
 				Assert.Equal(expected, csh.GetReferenceCount(false));
@@ -150,7 +151,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(cs);
 			}
 
-			static SKImage DoWork(out IntPtr handle, out WeakReference weak)
+			SKImage DoWork(out IntPtr handle, out WeakReference weak)
 			{
 				var colorspace = SKColorSpace.CreateRgb(
 					new SKColorSpaceTransferFn { A = 0.1f, B = 0.2f, C = 0.3f, D = 0.4f, E = 0.5f, F = 0.6f },
@@ -176,27 +177,12 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void SrgbColorSpaceIsCorrect()
+		public void SrgbColorsSpaceIsNamedSrgb()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
 
-			Assert.True(colorspace.IsSrgb);
-			Assert.True(colorspace.GammaIsCloseToSrgb);
-			Assert.False(colorspace.GammaIsLinear);
-			Assert.Equal(SKColorSpaceTransferFn.Srgb, colorspace.GetNumericalTransferFunction());
-			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToXyzD50());
-		}
-
-		[SkippableFact]
-		public void LinearSrgbColorSpaceIsCorrect()
-		{
-			var colorspace = SKColorSpace.CreateSrgbLinear();
-
-			Assert.False(colorspace.IsSrgb);
-			Assert.False(colorspace.GammaIsCloseToSrgb);
-			Assert.True(colorspace.GammaIsLinear);
-			Assert.Equal(SKColorSpaceTransferFn.Linear, colorspace.GetNumericalTransferFunction());
-			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToXyzD50());
+			Assert.Equal(SKNamedGamma.Srgb, colorspace.NamedGamma);
+			Assert.Equal(SKColorSpaceType.Rgb, colorspace.Type);
 		}
 
 		[SkippableFact]
@@ -206,7 +192,9 @@ namespace SkiaSharp.Tests
 
 			var colorspace = SKColorSpace.CreateIcc(File.ReadAllBytes(icc));
 
-			Assert.Equal(SKColorSpaceXyz.AdobeRgb, colorspace.ToXyzD50());
+			Assert.Equal(SKColorSpaceXyz.AdobeRgb, colorspace.ToColorSpaceXyz());
+			Assert.Equal(SKNamedGamma.TwoDotTwoCurve, colorspace.NamedGamma);
+			Assert.Equal(SKColorSpaceType.Rgb, colorspace.Type);
 
 			var fnValues = new[] { 2.2f, 1f, 0f, 0f, 0f, 0f, 0f };
 			Assert.True(colorspace.GetNumericalTransferFunction(out var fn));
@@ -214,15 +202,24 @@ namespace SkiaSharp.Tests
 
 			var toXYZ = new[]
 			{
-				0.60974f, 0.20528f, 0.14919f,
-				0.31111f, 0.62567f, 0.06322f,
-				0.01947f, 0.06087f, 0.74457f,
+				0.60974f, 0.20528f, 0.14919f, 0f,
+				0.31111f, 0.62567f, 0.06322f, 0f,
+				0.01947f, 0.06087f, 0.74457f, 0f,
+				0f, 0f, 0f, 1f,
 			};
 			AssertMatrix(toXYZ, colorspace.ToXyzD50());
 
 			var matrix = new SKMatrix44();
 			Assert.True(colorspace.ToXyzD50(matrix));
 			AssertMatrix(toXYZ, matrix);
+
+			var toXYZ33 = new[]
+			{
+				0.60974f, 0.20528f, 0.14919f,
+				0.31111f, 0.62567f, 0.06322f,
+				0.01947f, 0.06087f, 0.74457f,
+			};
+			AssertMatrix(toXYZ33, colorspace.ToXyzD50());
 
 			var fromXYZ = new[]
 			{
@@ -232,6 +229,23 @@ namespace SkiaSharp.Tests
 				0f, 0f, 0f, 1f,
 			};
 			AssertMatrix(fromXYZ, colorspace.FromXyzD50());
+		}
+
+		[SkippableFact]
+		public void USWebCoatedSWOPIsCMYK()
+		{
+			var icc = Path.Combine(PathToImages, "USWebCoatedSWOP.icc");
+
+			var colorspace = SKColorSpace.CreateIcc(File.ReadAllBytes(icc));
+
+			Assert.Equal(SKNamedGamma.NonStandard, colorspace.NamedGamma);
+			Assert.Equal(SKColorSpaceType.Cmyk, colorspace.Type);
+
+			var fnValues = new[] { 0f, 0f, 0f, 0f, 0f, 0f, 0f };
+			Assert.False(colorspace.GetNumericalTransferFunction(out var fn));
+			Assert.Equal(fnValues, fn.Values);
+
+			Assert.Null(colorspace.ToXyzD50());
 		}
 
 		[SkippableFact]
@@ -277,13 +291,37 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void SrgbColorSpaceIsCorrect()
+		{
+			var colorspace = SKColorSpace.CreateSrgb();
+
+			Assert.True(colorspace.IsSrgb);
+			Assert.True(colorspace.GammaIsCloseToSrgb);
+			Assert.False(colorspace.GammaIsLinear);
+			Assert.Equal(SKColorSpaceTransferFn.Srgb, colorspace.GetNumericalTransferFunction());
+			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
+		}
+
+		[SkippableFact]
+		public void LinearSrgbColorSpaceIsCorrect()
+		{
+			var colorspace = SKColorSpace.CreateSrgbLinear();
+
+			Assert.False(colorspace.IsSrgb);
+			Assert.False(colorspace.GammaIsCloseToSrgb);
+			Assert.True(colorspace.GammaIsLinear);
+			Assert.Equal(SKColorSpaceTransferFn.Linear, colorspace.GetNumericalTransferFunction());
+			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
+		}
+
+		[SkippableFact]
 		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
 		{
 			var colorspace1 = SKColorSpace.CreateSrgbLinear();
 			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace1.GetType().FullName);
 			Assert.Equal(2, colorspace1.GetReferenceCount());
 
-			var colorspace2 = SKColorSpace.CreateRgb(SKColorSpaceTransferFn.Linear, SKColorSpaceXyz.Srgb);
+			var colorspace2 = SKColorSpace.CreateRgb(SKNamedGamma.Linear, SKColorSpaceGamut.Srgb);
 			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace2.GetType().FullName);
 			Assert.Equal(2, colorspace2.GetReferenceCount());
 
@@ -305,6 +343,16 @@ namespace SkiaSharp.Tests
 			colorspace1.Dispose();
 			Assert.False(colorspace1.IsDisposed);
 			Assert.Equal(2, colorspace1.GetReferenceCount());
+		}
+
+		private static void AssertMatrix(float[] expected, SKMatrix44 actual)
+		{
+			var actualArray = actual
+				.ToRowMajor()
+				.Select(x => (float)Math.Round(x, 5))
+				.ToArray();
+
+			Assert.Equal(expected, actualArray);
 		}
 	}
 }

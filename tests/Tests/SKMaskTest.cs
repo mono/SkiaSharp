@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -17,7 +19,7 @@ namespace SkiaSharp.Tests
 
 			var mask = SKMask.Create(buffer, bounds, rowBytes, format);
 
-			Assert.Equal(rawMask, mask.GetImage1(0, 0));
+			Assert.Equal(rawMask, mask.GetAddr1(0, 0));
 
 			mask.FreeImage();
 		}
@@ -33,7 +35,7 @@ namespace SkiaSharp.Tests
 
 			var mask = SKMask.Create(buffer, bounds, rowBytes, format);
 
-			Assert.Equal(rawMask, mask.GetImage1(0, 0));
+			Assert.Equal(rawMask, mask.GetAddr1(0, 0));
 
 			mask.FreeImage();
 		}
@@ -56,7 +58,7 @@ namespace SkiaSharp.Tests
 
 			using (new SKAutoMaskFreeImage(mask.Image))
 			{
-				Assert.Equal(rawMask, mask.GetImage1(0, 0));
+				Assert.Equal(rawMask, mask.GetAddr1(0, 0));
 			}
 		}
 
@@ -70,14 +72,14 @@ namespace SkiaSharp.Tests
 
 			var mask = SKMask.Create(buffer, bounds, rowBytes, format);
 
-			Assert.Equal(buffer[0], mask.GetImage8(0, 0));
-			Assert.Equal(buffer[1], mask.GetImage8(1, 0));
-			Assert.Equal(buffer[2], mask.GetImage8(2, 0));
-			Assert.Equal(buffer[3], mask.GetImage8(3, 0));
-			Assert.Equal(buffer[4], mask.GetImage8(0, 1));
-			Assert.Equal(buffer[5], mask.GetImage8(1, 1));
-			Assert.Equal(buffer[6], mask.GetImage8(2, 1));
-			Assert.Equal(buffer[7], mask.GetImage8(3, 1));
+			Assert.Equal(buffer[0], mask.GetAddr8(0, 0));
+			Assert.Equal(buffer[1], mask.GetAddr8(1, 0));
+			Assert.Equal(buffer[2], mask.GetAddr8(2, 0));
+			Assert.Equal(buffer[3], mask.GetAddr8(3, 0));
+			Assert.Equal(buffer[4], mask.GetAddr8(0, 1));
+			Assert.Equal(buffer[5], mask.GetAddr8(1, 1));
+			Assert.Equal(buffer[6], mask.GetAddr8(2, 1));
+			Assert.Equal(buffer[7], mask.GetAddr8(3, 1));
 
 			mask.FreeImage();
 		}
@@ -104,14 +106,14 @@ namespace SkiaSharp.Tests
 
 			var red = SKColors.Red;
 			var blue = SKColors.Blue;
-			Assert.Equal((uint)red, mask.GetImage32(0, 0));
-			Assert.Equal((uint)blue, mask.GetImage32(1, 0));
-			Assert.Equal((uint)red, mask.GetImage32(2, 0));
-			Assert.Equal((uint)blue, mask.GetImage32(3, 0));
-			Assert.Equal((uint)red, mask.GetImage32(0, 1));
-			Assert.Equal((uint)blue, mask.GetImage32(1, 1));
-			Assert.Equal((uint)red, mask.GetImage32(2, 1));
-			Assert.Equal((uint)blue, mask.GetImage32(3, 1));
+			Assert.Equal((uint)red, mask.GetAddr32(0, 0));
+			Assert.Equal((uint)blue, mask.GetAddr32(1, 0));
+			Assert.Equal((uint)red, mask.GetAddr32(2, 0));
+			Assert.Equal((uint)blue, mask.GetAddr32(3, 0));
+			Assert.Equal((uint)red, mask.GetAddr32(0, 1));
+			Assert.Equal((uint)blue, mask.GetAddr32(1, 1));
+			Assert.Equal((uint)red, mask.GetAddr32(2, 1));
+			Assert.Equal((uint)blue, mask.GetAddr32(3, 1));
 
 			mask.FreeImage();
 		}

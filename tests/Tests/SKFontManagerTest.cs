@@ -13,16 +13,16 @@ namespace SkiaSharp.Tests
 			var fonts = SKFontManager.Default;
 			var emoji = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(emoji, SKTextEncoding.Utf32);
-
-			using var typeface = fonts.MatchCharacter(emojiChar);
-			Assert.NotNull(typeface);
-
-			if (IsLinux)
-				Assert.Equal("Symbola", typeface.FamilyName);
-			else if (IsMac)
-				Assert.Equal("Apple Color Emoji", typeface.FamilyName);
-			else if (IsWindows)
-				Assert.Contains(typeface.FamilyName, new[] { "Segoe UI Emoji", "Segoe UI Symbol" });
+			using (var typeface = fonts.MatchCharacter(emojiChar))
+			{
+				Assert.NotNull(typeface);
+				if (IsLinux)
+					Assert.Equal("Symbola", typeface.FamilyName);
+				else if (IsMac)
+					Assert.Equal("Apple Color Emoji", typeface.FamilyName);
+				else if (IsWindows)
+					Assert.Contains(typeface.FamilyName, new[] { "Segoe UI Emoji", "Segoe UI Symbol" });
+			}
 		}
 
 		[SkippableFact]
@@ -110,9 +110,10 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			using var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
-
-			Assert.Equal("Roboto2", typeface.FamilyName);
+			using (var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
+			{
+				Assert.Equal("Roboto2", typeface.FamilyName);
+			}
 		}
 
 
@@ -121,9 +122,10 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			using var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "上田雅美.ttf"));
-
-			Assert.Equal("Roboto2", typeface.FamilyName);
+			using (var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "上田雅美.ttf")))
+			{
+				Assert.Equal("Roboto2", typeface.FamilyName);
+			}
 		}
 
 		[SkippableFact]
@@ -132,10 +134,11 @@ namespace SkiaSharp.Tests
 			var fonts = SKFontManager.Default;
 
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
-			using var data = SKData.CreateCopy(bytes);
-			using var typeface = fonts.CreateTypeface(data);
-
-			Assert.NotNull(typeface);
+			using (var data = SKData.CreateCopy(bytes))
+			using (var typeface = fonts.CreateTypeface(data))
+			{
+				Assert.NotNull(typeface);
+			}
 		}
 
 		[SkippableFact]
@@ -143,7 +146,7 @@ namespace SkiaSharp.Tests
 		{
 			VerifyImmediateFinalizers();
 
-			var paint = CreateFont(out var typefaceHandle);
+			var paint = CreatePaint(out var typefaceHandle);
 
 			CollectGarbage();
 
@@ -155,7 +158,7 @@ namespace SkiaSharp.Tests
 			Assert.True(tf.TryGetTableTags(out var tags));
 			Assert.NotEmpty(tags);
 
-			static SKFont CreateFont(out IntPtr handle)
+			SKPaint CreatePaint(out IntPtr handle)
 			{
 				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
 				var dotnet = new MemoryStream(bytes);
@@ -164,7 +167,7 @@ namespace SkiaSharp.Tests
 				var typeface = SKFontManager.Default.CreateTypeface(stream);
 				handle = typeface.Handle;
 
-				return new SKFont
+				return new SKPaint
 				{
 					Typeface = typeface
 				};
@@ -176,11 +179,12 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			using var stream = File.OpenRead(Path.Combine(PathToFonts, "Distortable.ttf"));
-			using var nonSeekable = new NonSeekableReadOnlyStream(stream);
-			using var typeface = fonts.CreateTypeface(nonSeekable);
-
-			Assert.NotNull(typeface);
+			using (var stream = File.OpenRead(Path.Combine(PathToFonts, "Distortable.ttf")))
+			using (var nonSeekable = new NonSeekableReadOnlyStream(stream))
+			using (var typeface = fonts.CreateTypeface(nonSeekable))
+			{
+				Assert.NotNull(typeface);
+			}
 		}
 
 		[SkippableFact]

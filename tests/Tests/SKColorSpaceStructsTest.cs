@@ -29,7 +29,7 @@ namespace SkiaSharp.Tests
 			};
 			var csp = new SKColorSpacePrimaries(primaries);
 
-			var xyz = csp.ToXyzD50();
+			var xyz = csp.ToColorSpaceXyz();
 
 			AssertSimilar(SKColorSpaceXyz.Srgb.Values, xyz.Values, PRECISION);
 		}
@@ -209,7 +209,7 @@ namespace SkiaSharp.Tests
 			using var data = SKData.Create(path);
 
 			using var icc = SKColorSpaceIccProfile.Create(data);
-			var xyz = icc.ToXyzD50();
+			var xyz = icc.ToColorSpaceXyz();
 
 			Assert.Equal(SKColorSpaceXyz.AdobeRgb, xyz);
 		}

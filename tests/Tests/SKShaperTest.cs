@@ -12,62 +12,64 @@ namespace SkiaSharp.HarfBuzz.Tests
 		[SkippableFact]
 		public void DrawShapedTextExtensionMethodDraws()
 		{
-			using var bitmap = new SKBitmap(new SKImageInfo(512, 512));
-			using var canvas = new SKCanvas(bitmap);
-			using var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
-			using var shaper = new SKShaper(tf);
-			using var font = new SKFont { Size = 64, Typeface = tf };
-			using var paint = new SKPaint { IsAntialias = true };
+			using (var bitmap = new SKBitmap(new SKImageInfo(512, 512)))
+			using (var canvas = new SKCanvas(bitmap))
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var shaper = new SKShaper(tf))
+			using (var paint = new SKPaint { IsAntialias = true, TextSize = 64, Typeface = tf })
+			{
+				canvas.Clear(SKColors.White);
 
-			canvas.Clear(SKColors.White);
+				canvas.DrawShapedText(shaper, "متن", 100, 200, paint);
 
-			canvas.DrawShapedText(shaper, "متن", 100, 200, font, paint);
+				canvas.Flush();
 
-			canvas.Flush();
-
-			Assert.Equal(SKColors.Black, bitmap.GetPixelColor(110, 210));
-			Assert.Equal(SKColors.Black, bitmap.GetPixelColor(127, 196));
-			Assert.Equal(SKColors.Black, bitmap.GetPixelColor(142, 197));
-			Assert.Equal(SKColors.Black, bitmap.GetPixelColor(155, 195));
-			Assert.Equal(SKColors.Black, bitmap.GetPixelColor(131, 181));
-			Assert.Equal(SKColors.White, bitmap.GetPixelColor(155, 190));
-			Assert.Equal(SKColors.White, bitmap.GetPixelColor(110, 200));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(110, 210));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(127, 196));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(142, 197));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(155, 195));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(131, 181));
+				Assert.Equal(SKColors.White, bitmap.GetPixel(155, 190));
+				Assert.Equal(SKColors.White, bitmap.GetPixel(110, 200));
+			}
 		}
 
 		[SkippableFact]
 		public void CorrectlyShapesArabicScriptAtAnOffset()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
-			var codepoints = new ushort[] { 629, 668, 891 };
+			var codepoints = new uint[] { 629, 668, 891 };
 			var points = new SKPoint[] { new SKPoint(100, 200), new SKPoint(128.25f, 200), new SKPoint(142, 200) };
 
-			using var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
-			using var shaper = new SKShaper(tf);
-			using var font = new SKFont { Size = 64, Typeface = tf };
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var shaper = new SKShaper(tf))
+			using (var paint = new SKPaint { IsAntialias = true, TextSize = 64, Typeface = tf })
+			{
+				var result = shaper.Shape("متن", 100, 200, paint);
 
-			var result = shaper.Shape("متن", 100, 200, font);
-
-			Assert.Equal(clusters, result.Clusters);
-			Assert.Equal(codepoints, result.Codepoints);
-			Assert.Equal(points, result.Points);
+				Assert.Equal(clusters, result.Clusters);
+				Assert.Equal(codepoints, result.Codepoints);
+				Assert.Equal(points, result.Points);
+			}
 		}
 
 		[SkippableFact]
 		public void CorrectlyShapesArabicScript()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
-			var codepoints = new ushort[] { 629, 668, 891 };
+			var codepoints = new uint[] { 629, 668, 891 };
 			var points = new SKPoint[] { new SKPoint(0, 0), new SKPoint(28.25f, 0), new SKPoint(42, 0) };
 
-			using var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
-			using var shaper = new SKShaper(tf);
-			using var font = new SKFont { Size = 64, Typeface = tf };
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var shaper = new SKShaper(tf))
+			using (var paint = new SKPaint { IsAntialias = true, TextSize = 64, Typeface = tf })
+			{
+				var result = shaper.Shape("متن", paint);
 
-			var result = shaper.Shape("متن", font);
-
-			Assert.Equal(clusters, result.Clusters);
-			Assert.Equal(codepoints, result.Codepoints);
-			Assert.Equal(points, result.Points);
+				Assert.Equal(clusters, result.Clusters);
+				Assert.Equal(codepoints, result.Codepoints);
+				Assert.Equal(points, result.Points);
+			}
 		}
 
 		[SkippableFact]

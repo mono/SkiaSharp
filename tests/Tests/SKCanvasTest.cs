@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 using Xunit;
 
@@ -11,22 +12,26 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void CanvasCanRestoreOnGpu()
 		{
-			using var ctx = CreateGlContext();
-			ctx.MakeCurrent();
-
-			using var grContext = GRContext.CreateGl();
-			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
-			var canvas = surface.Canvas;
-
-			Assert.Equal(SKMatrix.Identity, canvas.TotalMatrix);
-
-			using (new SKAutoCanvasRestore(canvas))
+			using (var ctx = CreateGlContext())
 			{
-				canvas.Translate(10, 10);
-				Assert.Equal(SKMatrix.CreateTranslation(10, 10), canvas.TotalMatrix);
-			}
+				ctx.MakeCurrent();
 
-			Assert.Equal(SKMatrix.Identity, canvas.TotalMatrix);
+				using (var grContext = GRContext.CreateGl())
+				using (var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100)))
+				{
+					var canvas = surface.Canvas;
+
+					Assert.Equal(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
+
+					using (new SKAutoCanvasRestore(canvas))
+					{
+						canvas.Translate(10, 10);
+						Assert.Equal(SKMatrix.MakeTranslation(10, 10), canvas.TotalMatrix);
+					}
+
+					Assert.Equal(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
+				}
+			}
 		}
 
 		[SkippableFact]
@@ -38,13 +43,13 @@ namespace SkiaSharp.Tests
 			byte[] textPixels;
 			using (var bmp = new SKBitmap(info))
 			using (var canvas = new SKCanvas(bmp))
-			using (var font = new SKFont())
 			using (var paint = new SKPaint())
 			{
-				font.Size = 50;
+				paint.TextSize = 50;
+				paint.TextAlign = SKTextAlign.Center;
 
 				canvas.Clear(SKColors.White);
-				canvas.DrawText(text, 150, 175, font, paint, SKTextAlign.Center);
+				canvas.DrawText(text, 150, 175, paint);
 
 				textPixels = bmp.Bytes;
 			}
@@ -52,21 +57,21 @@ namespace SkiaSharp.Tests
 			byte[] glyphsPixels;
 			using (var bmp = new SKBitmap(info))
 			using (var canvas = new SKCanvas(bmp))
-			using (var font = new SKFont())
 			using (var paint = new SKPaint())
 			{
-				font.Size = 50;
-
 				ushort[] glyphs;
-				using (var glyphsp = new SKFont())
+				using (var glyphsp = new SKPaint())
 					glyphs = glyphsp.GetGlyphs(text);
+
+				paint.TextSize = 50;
+				paint.TextAlign = SKTextAlign.Center;
+				paint.TextEncoding = SKTextEncoding.GlyphId;
 
 				canvas.Clear(SKColors.White);
 				using (var builder = new SKTextBlobBuilder())
-				using (var blob = builder.Build())
 				{
-					builder.AddRun(glyphs, font);
-					canvas.DrawText(blob, 150, 175, paint, SKTextAlign.Center);
+					builder.AddRun(paint, 0, 0, glyphs);
+					canvas.DrawText(builder.Build(), 150, 175, paint);
 				}
 
 				glyphsPixels = bmp.Bytes;
@@ -162,94 +167,121 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void CanDrawText()
 		{
-			using var bmp = new SKBitmap(new SKImageInfo(300, 300));
-			using var canvas = new SKCanvas(bmp);
-			using var font = new SKFont();
-			using var paint = new SKPaint();
-
-			canvas.DrawText("text", 150, 175, font, paint);
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawText("text", 150, 175, paint);
+			}
 		}
 
 		[SkippableFact]
 		public void CanDrawEmptyText()
 		{
-			using var bmp = new SKBitmap(new SKImageInfo(300, 300));
-			using var canvas = new SKCanvas(bmp);
-			using var font = new SKFont();
-			using var paint = new SKPaint();
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawText("", 150, 175, paint);
+			}
+		}
 
-			canvas.DrawText("", 150, 175, font, paint);
+		[SkippableFact]
+		public void CanDrawNullPointerZeroLengthText()
+		{
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawText(IntPtr.Zero, 0, 150, 175, paint);
+			}
+		}
+
+		[SkippableFact]
+		public void ThrowsOnDrawNullPointerText()
+		{
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				Assert.Throws<ArgumentNullException>(() => canvas.DrawText(IntPtr.Zero, 123, 150, 175, paint));
+			}
 		}
 
 		[SkippableFact]
 		public void CanvasCanClipRoundRect()
 		{
-			using var canvas = new SKNWayCanvas(100, 100);
-
-			canvas.ClipRoundRect(new SKRoundRect(new SKRect(10, 10, 50, 50), 5, 5));
+			using (var canvas = new SKNWayCanvas(100, 100))
+			{
+				canvas.ClipRoundRect(new SKRoundRect(new SKRect(10, 10, 50, 50), 5, 5));
+			}
 		}
 
 		[SkippableFact]
 		public void CanvasCanDrawRoundRect()
 		{
-			using var canvas = new SKNWayCanvas(100, 100);
-			using var paint = new SKPaint();
-
-			canvas.DrawRoundRect(new SKRoundRect(new SKRect(10, 10, 50, 50), 5, 5), paint);
+			using (var canvas = new SKNWayCanvas(100, 100))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawRoundRect(new SKRoundRect(new SKRect(10, 10, 50, 50), 5, 5), paint);
+			}
 		}
 
 		[SkippableFact]
 		public void NWayCanvasCanBeConstructed()
 		{
-			using var canvas = new SKNWayCanvas(100, 100);
-
-			Assert.NotNull(canvas);
+			using (var canvas = new SKNWayCanvas(100, 100))
+			{
+				Assert.NotNull(canvas);
+			}
 		}
 
 		[SkippableFact]
 		public void NWayCanvasDrawsToMultipleCanvases()
 		{
-			using var firstBitmap = new SKBitmap(new SKImageInfo(100, 100));
-			using var first = new SKCanvas(firstBitmap);
-			using var secondBitmap = new SKBitmap(new SKImageInfo(100, 100));
-			using var second = new SKCanvas(secondBitmap);
-
-			first.Clear(SKColors.Red);
-			second.Clear(SKColors.Green);
-
-			using (var canvas = new SKNWayCanvas(100, 100))
+			using (var firstBitmap = new SKBitmap(new SKImageInfo(100, 100)))
+			using (var first = new SKCanvas(firstBitmap))
+			using (var secondBitmap = new SKBitmap(new SKImageInfo(100, 100)))
+			using (var second = new SKCanvas(secondBitmap))
 			{
-				canvas.AddCanvas(first);
-				canvas.AddCanvas(second);
+				first.Clear(SKColors.Red);
+				second.Clear(SKColors.Green);
 
-				canvas.Clear(SKColors.Blue);
+				using (var canvas = new SKNWayCanvas(100, 100))
+				{
+					canvas.AddCanvas(first);
+					canvas.AddCanvas(second);
 
-				Assert.Equal(SKColors.Blue, firstBitmap.GetPixelColor(0, 0));
-				Assert.Equal(SKColors.Blue, secondBitmap.GetPixelColor(0, 0));
+					canvas.Clear(SKColors.Blue);
 
-				canvas.Clear(SKColors.Orange);
+					Assert.Equal(SKColors.Blue, firstBitmap.GetPixel(0, 0));
+					Assert.Equal(SKColors.Blue, secondBitmap.GetPixel(0, 0));
+
+					canvas.Clear(SKColors.Orange);
+				}
+
+				Assert.Equal(SKColors.Orange, firstBitmap.GetPixel(0, 0));
+				Assert.Equal(SKColors.Orange, secondBitmap.GetPixel(0, 0));
 			}
-
-			Assert.Equal(SKColors.Orange, firstBitmap.GetPixelColor(0, 0));
-			Assert.Equal(SKColors.Orange, secondBitmap.GetPixelColor(0, 0));
 		}
 
 		[SkippableFact]
 		public void OverdrawCanvasDrawsProperly()
 		{
-			using var bitmap = new SKBitmap(new SKImageInfo(100, 100));
-			using var canvas = new SKCanvas(bitmap);
-			using var overdraw = new SKOverdrawCanvas(canvas);
+			using (var bitmap = new SKBitmap(new SKImageInfo(100, 100)))
+			using (var canvas = new SKCanvas(bitmap))
+			using (var overdraw = new SKOverdrawCanvas(canvas))
+			{
+				bitmap.Erase(SKColors.Transparent);
 
-			bitmap.Erase(SKColors.Transparent);
+				overdraw.DrawRect(SKRect.Create(10, 10, 30, 30), new SKPaint());
+				overdraw.DrawRect(SKRect.Create(20, 20, 30, 30), new SKPaint());
 
-			overdraw.DrawRect(SKRect.Create(10, 10, 30, 30), new SKPaint());
-			overdraw.DrawRect(SKRect.Create(20, 20, 30, 30), new SKPaint());
-
-			Assert.Equal(0, bitmap.GetPixelColor(5, 5).Alpha);
-			Assert.Equal(1, bitmap.GetPixelColor(15, 15).Alpha);
-			Assert.Equal(2, bitmap.GetPixelColor(25, 25).Alpha);
-			Assert.Equal(1, bitmap.GetPixelColor(45, 45).Alpha);
+				Assert.Equal(0, bitmap.GetPixel(5, 5).Alpha);
+				Assert.Equal(1, bitmap.GetPixel(15, 15).Alpha);
+				Assert.Equal(2, bitmap.GetPixel(25, 25).Alpha);
+				Assert.Equal(1, bitmap.GetPixel(45, 45).Alpha);
+			}
 		}
 
 		[SkippableFact]
@@ -292,15 +324,15 @@ namespace SkiaSharp.Tests
 			canvas.Translate(0, 100);
 			canvas.DrawAtlas(atlas, tex, xform, colors, SKBlendMode.SrcIn, paint);
 
-			Assert.Equal(SKColors.Blue, bitmap.GetPixelColor(32, 41));
-			Assert.Equal(SKColors.Blue, bitmap.GetPixelColor(156, 77));
-			Assert.Equal(SKColors.Blue, bitmap.GetPixelColor(201, 45));
-			Assert.Equal(SKColors.Blue, bitmap.GetPixelColor(374, 80));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(32, 41));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(156, 77));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(201, 45));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(374, 80));
 
-			Assert.Equal(0xFF7F7FFF, bitmap.GetPixelColor(32, 141));
-			Assert.Equal(0xFF7F7FFF, bitmap.GetPixelColor(156, 177));
-			Assert.Equal(0xFF7F7FFF, bitmap.GetPixelColor(201, 145));
-			Assert.Equal(0xFF7F7FFF, bitmap.GetPixelColor(374, 180));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(32, 141));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(156, 177));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(201, 145));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(374, 180));
 
 			static SKRotationScaleMatrix Apply((float Scale, float Degrees, float TX, float TY) rec)
 			{
@@ -349,10 +381,10 @@ namespace SkiaSharp.Tests
 			using (var canvas = new SKCanvas(bitmap))
 			{
 				canvas.Translate(10, 20);
-				Assert.Equal(SKMatrix.CreateTranslation(10, 20).Values, canvas.TotalMatrix.Values);
+				Assert.Equal(SKMatrix.MakeTranslation(10, 20).Values, canvas.TotalMatrix.Values);
 
 				canvas.Translate(10, 20);
-				Assert.Equal(SKMatrix.CreateTranslation(20, 40).Values, canvas.TotalMatrix.Values);
+				Assert.Equal(SKMatrix.MakeTranslation(20, 40).Values, canvas.TotalMatrix.Values);
 			}
 		}
 
@@ -361,7 +393,9 @@ namespace SkiaSharp.Tests
 		{
 			var stream = new MemoryStream();
 
-			using (var svg = SKSvgCanvas.Create(SKRect.Create(100, 100), stream))
+			using (var wstream = new SKManagedWStream(stream))
+			using (var writer = new SKXmlStreamWriter(wstream))
+			using (var svg = SKSvgCanvas.Create(SKRect.Create(100, 100), writer))
 			{
 				var paint = new SKPaint
 				{

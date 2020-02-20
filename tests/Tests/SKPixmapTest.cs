@@ -22,16 +22,16 @@ namespace SkiaSharp.Tests
 				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
 			}
 
-			Assert.Equal(SKColors.Green, srcBmp.GetPixelColor(75, 75));
-			Assert.Equal(SKColors.Blue, srcBmp.GetPixelColor(175, 175));
+			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
+			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
 
 			var srcPix = srcBmp.PeekPixels();
 			var dstPix = dstBmp.PeekPixels();
 
 			Assert.True(srcPix.ScalePixels(dstPix, SKFilterQuality.High));
 
-			Assert.Equal(SKColors.Green, dstBmp.GetPixelColor(25, 25));
-			Assert.Equal(SKColors.Blue, dstBmp.GetPixelColor(75, 75));
+			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
+			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
 		[SkippableFact]

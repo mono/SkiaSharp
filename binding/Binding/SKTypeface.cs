@@ -36,6 +36,8 @@ namespace SkiaSharp
 		{
 		}
 
+		// Default
+
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
@@ -45,6 +47,8 @@ namespace SkiaSharp
 		{
 			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_default ());
 		}
+
+		// FromFamilyName
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use FromFamilyName(string, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant) instead.")]
@@ -78,6 +82,8 @@ namespace SkiaSharp
 		{
 			return FromFamilyName (familyName, (int)weight, (int)width, slant);
 		}
+
+		// From*
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
@@ -129,8 +135,13 @@ namespace SkiaSharp
 
 		public static SKTypeface FromData (SKData data, int index = 0)
 		{
-			return SKTypeface.FromStream (new SKMemoryStream (data), index);
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+
+			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_data (data.Handle, index));
 		}
+
+		// CharsToGlyphs
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use GetGlyphs(string, out ushort[]) instead.")]
@@ -138,9 +149,11 @@ namespace SkiaSharp
 			=> GetGlyphs (chars, out glyphs);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use GetGlyphs(IntPtr, int, SKTextEncoding, out ushort[]) instead.")]
+		[Obsolete ("Use GetGlyphs(IntPtr, int, SKEncoding, out ushort[]) instead.")]
 		public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort[] glyphs)
 			=> GetGlyphs (str, strlen, encoding, out glyphs);
+
+		// Properties
 
 		public string FamilyName => (string)GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
 
@@ -173,6 +186,10 @@ namespace SkiaSharp
 
 		public int UnitsPerEm => SkiaApi.sk_typeface_get_units_per_em (Handle);
 
+		public int GlyphsCount => SkiaApi.sk_typeface_count_glyphs (Handle);
+
+		// GetTableTags
+
 		public int TableCount => SkiaApi.sk_typeface_count_tables (Handle);
 
 		public UInt32[] GetTableTags ()
@@ -186,18 +203,27 @@ namespace SkiaSharp
 		public bool TryGetTableTags (out UInt32[] tags)
 		{
 			var buffer = new UInt32[TableCount];
-			fixed (UInt32* b = buffer) {
-				if (SkiaApi.sk_typeface_get_table_tags (Handle, b) == 0) {
-					tags = null;
-					return false;
-				}
+			if (TryGetTableTags (buffer)) {
+				tags = null;
+				return false;
 			}
 			tags = buffer;
 			return true;
 		}
 
+		public bool TryGetTableTags (Span<UInt32> tags)
+		{
+			fixed (UInt32* b = tags) {
+				return SkiaApi.sk_typeface_get_table_tags (Handle, b) != 0;
+			}
+		}
+
+		// GetTableSize
+
 		public int GetTableSize (UInt32 tag) =>
 			(int)SkiaApi.sk_typeface_get_table_size (Handle, tag);
+
+		// GetTableData
 
 		public byte[] GetTableData (UInt32 tag)
 		{
@@ -211,118 +237,216 @@ namespace SkiaSharp
 		{
 			var length = GetTableSize (tag);
 			var buffer = new byte[length];
-			fixed (byte* b = buffer) {
-				if (!TryGetTableData (tag, 0, length, (IntPtr)b)) {
-					tableData = null;
-					return false;
-				}
+			if (!TryGetTableData (tag, 0, buffer)) {
+				tableData = null;
+				return false;
 			}
 			tableData = buffer;
 			return true;
 		}
 
-		public bool TryGetTableData (UInt32 tag, int offset, int length, IntPtr tableData)
+		public bool TryGetTableData (UInt32 tag, int offset, int length, IntPtr tableData) =>
+			TryGetTableData (tag, offset, tableData.AsSpan (length));
+
+		public bool TryGetTableData (UInt32 tag, int offset, Span<byte> tableData)
 		{
-			var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)length, (byte*)tableData);
-			return actual != IntPtr.Zero;
-		}
-
-		public int CountGlyphs (string str) => CountGlyphs (str, SKEncoding.Utf16);
-
-		public int CountGlyphs (string str, SKEncoding encoding)
-		{
-			if (str == null)
-				throw new ArgumentNullException (nameof (str));
-
-			var bytes = StringUtilities.GetEncodedText (str, encoding);
-			return CountGlyphs (bytes, encoding);
-		}
-
-		public int CountGlyphs (byte[] str, SKEncoding encoding) =>
-			CountGlyphs (new ReadOnlySpan<byte> (str), encoding);
-
-		public int CountGlyphs (ReadOnlySpan<byte> str, SKEncoding encoding)
-		{
-			if (str == null)
-				throw new ArgumentNullException (nameof (str));
-
-			fixed (byte* p = str) {
-				return CountGlyphs ((IntPtr)p, str.Length, encoding);
+			fixed (byte* b = tableData) {
+				var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)tableData.Length, b);
+				return actual != IntPtr.Zero;
 			}
 		}
 
-		public int CountGlyphs (IntPtr str, int strLen, SKEncoding encoding)
-		{
-			if (str == IntPtr.Zero && strLen != 0)
-				throw new ArgumentNullException (nameof (str));
+		// CountGlyphs (string/char)
 
-			return SkiaApi.sk_typeface_chars_to_glyphs (Handle, (byte*)str, encoding, null, strLen);
+		public int CountGlyphs (string str) =>
+			CountGlyphs (str.AsSpan ());
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CountGlyphs(string) instead.")]
+		public int CountGlyphs (string str, SKEncoding encoding) =>
+			CountGlyphs (str.AsSpan ());
+
+		public int CountGlyphs (ReadOnlySpan<char> str)
+		{
+			using var font = ToFont ();
+			return font.CountGlyphs (str);
 		}
 
-		public int GetGlyphs (string text, out ushort[] glyphs) => GetGlyphs (text, SKTextEncoding.Utf16, out glyphs);
+		// CountGlyphs (byte[])
 
-		public int GetGlyphs (string text, SKEncoding encoding, out ushort[] glyphs)
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CountGlyphs(byte[], SKTextEncoding) instead.")]
+		public int CountGlyphs (byte[] str, SKEncoding encoding) =>
+			CountGlyphs (str.AsSpan (), encoding.ToTextEncoding ());
+
+		public int CountGlyphs (byte[] str, SKTextEncoding encoding) =>
+			CountGlyphs (str.AsSpan (), encoding);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CountGlyphs(ReadOnlySpan<byte>, SKTextEncoding) instead.")]
+		public int CountGlyphs (ReadOnlySpan<byte> str, SKEncoding encoding) =>
+			CountGlyphs (str, encoding.ToTextEncoding ());
+
+		public int CountGlyphs (ReadOnlySpan<byte> str, SKTextEncoding encoding)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			var bytes = StringUtilities.GetEncodedText (text, encoding);
-			return GetGlyphs (bytes, encoding, out glyphs);
+			using var font = ToFont ();
+			return font.CountGlyphs (str, encoding);
 		}
 
+		// CountGlyphs (IntPtr)
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CountGlyphs(ReadOnlySpan<byte>, SKTextEncoding) instead.")]
+		public int CountGlyphs (IntPtr str, int strLen, SKEncoding encoding) =>
+			CountGlyphs (str, strLen, encoding.ToTextEncoding ());
+
+		public int CountGlyphs (IntPtr str, int strLen, SKTextEncoding encoding)
+		{
+			using var font = ToFont ();
+			return font.CountGlyphs (str, strLen, encoding);
+		}
+
+		// GetGlyph (int)
+
+		public ushort GetGlyph (int codepoint) =>
+			SkiaApi.sk_typeface_unichar_to_glyph (Handle, codepoint);
+
+		// GetGlyphs (int)
+
+		public ushort[] GetGlyphs (ReadOnlySpan<int> codepoints)
+		{
+			var glyphs = new ushort[codepoints.Length];
+			GetGlyphs (codepoints, glyphs);
+			return glyphs;
+		}
+
+		public void GetGlyphs (ReadOnlySpan<int> codepoints, Span<ushort> glyphs)
+		{
+			fixed (int* up = codepoints)
+			fixed (ushort* gp = glyphs) {
+				SkiaApi.sk_typeface_unichars_to_glyphs (Handle, up, codepoints.Length, gp);
+			}
+		}
+
+		// GetGlyphs (string/char, out)
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(string) instead.")]
+		public int GetGlyphs (string text, out ushort[] glyphs)
+		{
+			glyphs = GetGlyphs (text);
+			return glyphs.Length;
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(string) instead.")]
+		public int GetGlyphs (string text, SKEncoding encoding, out ushort[] glyphs) =>
+			GetGlyphs (text, out glyphs);
+
+		// GetGlyphs (byte[], out)
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(byte[], SKTextEncoding) instead.")]
 		public int GetGlyphs (byte[] text, SKEncoding encoding, out ushort[] glyphs) =>
-			GetGlyphs (new ReadOnlySpan<byte> (text), encoding, out glyphs);
+			GetGlyphs (text.AsSpan (), encoding, out glyphs);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(ReadOnlySpan<byte>, SKTextEncoding) instead.")]
 		public int GetGlyphs (ReadOnlySpan<byte> text, SKEncoding encoding, out ushort[] glyphs)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (byte* p = text) {
-				return GetGlyphs ((IntPtr)p, text.Length, encoding, out glyphs);
-			}
+			glyphs = GetGlyphs (text, encoding);
+			return glyphs.Length;
 		}
 
+		// GetGlyphs (IntPtr, out)
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(IntPtr, int, SKTextEncoding) instead.")]
 		public int GetGlyphs (IntPtr text, int length, SKEncoding encoding, out ushort[] glyphs)
 		{
-			if (text == IntPtr.Zero && length != 0)
-				throw new ArgumentNullException (nameof (text));
-
-			var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, (void*)text, encoding, null, length);
-
-			if (n <= 0) {
-				glyphs = new ushort[0];
-				return 0;
-			}
-
-			glyphs = new ushort[n];
-			fixed (ushort* gp = glyphs) {
-				return SkiaApi.sk_typeface_chars_to_glyphs (Handle, (void*)text, encoding, gp, n);
-			}
+			glyphs = GetGlyphs (text, length, encoding);
+			return glyphs.Length;
 		}
 
-		public ushort[] GetGlyphs (string text) => GetGlyphs (text, SKEncoding.Utf16);
+		// GetGlyphs (string/char, out)
 
-		public ushort[] GetGlyphs (string text, SKEncoding encoding)
+		public ushort[] GetGlyphs (string text) =>
+			GetGlyphs (text.AsSpan ());
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(string) instead.")]
+		public ushort[] GetGlyphs (string text, SKEncoding encoding) =>
+			GetGlyphs (text.AsSpan ());
+
+		public ushort[] GetGlyphs (ReadOnlySpan<char> text)
 		{
-			GetGlyphs (text, encoding, out var glyphs);
-			return glyphs;
+			using var font = ToFont ();
+			return font.GetGlyphs (text);
 		}
 
+		// GetGlyphs (byte[], out)
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(ReadOnlySpan<byte>, SKTextEncoding) instead.")]
 		public ushort[] GetGlyphs (byte[] text, SKEncoding encoding) =>
-			GetGlyphs (new ReadOnlySpan<byte> (text), encoding);
+			GetGlyphs (text.AsSpan (), encoding.ToTextEncoding ());
 
-		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKEncoding encoding)
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(ReadOnlySpan<byte>, SKTextEncoding) instead.")]
+		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKEncoding encoding) =>
+			GetGlyphs (text, encoding.ToTextEncoding ());
+
+		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
 		{
-			GetGlyphs (text, encoding, out var glyphs);
-			return glyphs;
+			using var font = ToFont ();
+			return font.GetGlyphs (text, encoding);
 		}
 
-		public ushort[] GetGlyphs (IntPtr text, int length, SKEncoding encoding)
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetGlyphs(IntPtr, int, SKTextEncoding) instead.")]
+		public ushort[] GetGlyphs (IntPtr text, int length, SKEncoding encoding) =>
+			GetGlyphs (text, length, encoding.ToTextEncoding ());
+
+		public ushort[] GetGlyphs (IntPtr text, int length, SKTextEncoding encoding)
 		{
-			GetGlyphs (text, length, encoding, out var glyphs);
-			return glyphs;
+			using var font = ToFont ();
+			return font.GetGlyphs (text, length, encoding);
 		}
+
+		// ContainsGlyph
+
+		public bool ContainsGlyph (int codepoint) =>
+			GetGlyph (codepoint) != 0;
+
+		// ContainsGlyphs
+
+		public bool ContainsGlyphs (ReadOnlySpan<int> codepoints) =>
+			ContainsGlyphs (GetGlyphs (codepoints));
+
+		public bool ContainsGlyphs (string text) =>
+			ContainsGlyphs (GetGlyphs (text));
+
+		public bool ContainsGlyphs (ReadOnlySpan<char> text) =>
+			ContainsGlyphs (GetGlyphs (text));
+
+		public bool ContainsGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
+			ContainsGlyphs (GetGlyphs (text, encoding));
+
+		public bool ContainsGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
+			ContainsGlyphs (GetGlyphs (text, length, encoding));
+
+		private bool ContainsGlyphs (ushort[] glyphs) =>
+			Array.IndexOf (glyphs, 0) != -1;
+
+		// ToFont
+
+		public SKFont ToFont () =>
+			new SKFont (this);
+
+		public SKFont ToFont (float size, float scaleX = SKFont.DefaultScaleX, float skewX = SKFont.DefaultSkewX) =>
+			new SKFont (this, size, scaleX, skewX);
+
+		// OpenStream
 
 		public SKStreamAsset OpenStream () =>
 			OpenStream (out _);
@@ -333,6 +457,25 @@ namespace SkiaSharp
 				return GetObject<SKStreamAssetImplementation> (SkiaApi.sk_typeface_open_stream (Handle, ttc));
 			}
 		}
+
+		// GetKerningPairAdjustments
+
+		public int[] GetKerningPairAdjustments (ReadOnlySpan<ushort> glyphs)
+		{
+			var adjustments = new int[glyphs.Length];
+			GetKerningPairAdjustments (glyphs, adjustments);
+			return adjustments;
+		}
+
+		public void GetKerningPairAdjustments (ReadOnlySpan<ushort> glyphs, Span<int> adjustments)
+		{
+			fixed (ushort* gp = glyphs)
+			fixed (int* ap = adjustments) {
+				SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, gp, glyphs.Length, ap);
+			}
+		}
+
+		//
 
 		private sealed class SKTypefaceStatic : SKTypeface
 		{

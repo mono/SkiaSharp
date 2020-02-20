@@ -419,9 +419,9 @@ namespace SkiaSharp.Tests
 				}
 
 				// should be black
-				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(10, 50));
-				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(50, 50));
-				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(90, 50));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(10, 50));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(50, 50));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(90, 50));
 
 				// draw the path with an effect (reversed)
 				using (var paint = new SKPaint())
@@ -437,9 +437,9 @@ namespace SkiaSharp.Tests
 				}
 
 				// should be red
-				Assert.Equal(SKColors.Red, bitmap.GetPixelColor(10, 50));
-				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(50, 50));
-				Assert.Equal(SKColors.Red, bitmap.GetPixelColor(90, 50));
+				Assert.Equal(SKColors.Red, bitmap.GetPixel(10, 50));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(50, 50));
+				Assert.Equal(SKColors.Red, bitmap.GetPixel(90, 50));
 			}
 		}
 
@@ -465,9 +465,9 @@ namespace SkiaSharp.Tests
 				}
 
 				// should be black
-				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(10, 50));
-				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(50, 50));
-				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(90, 50));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(10, 50));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(50, 50));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(90, 50));
 
 				// draw the path with an effect
 				using (var paint = new SKPaint())
@@ -483,9 +483,9 @@ namespace SkiaSharp.Tests
 				}
 
 				// should be red
-				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(10, 50));
-				Assert.Equal(SKColors.Red, bitmap.GetPixelColor(50, 50));
-				Assert.Equal(SKColors.Black, bitmap.GetPixelColor(90, 50));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(10, 50));
+				Assert.Equal(SKColors.Red, bitmap.GetPixel(50, 50));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(90, 50));
 			}
 		}
 	}

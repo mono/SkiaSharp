@@ -8,54 +8,42 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MatrixCanInvert()
 		{
-			var m = SKMatrix.CreateTranslation(10, 20);
+			var m = SKMatrix.MakeTranslation(10, 20);
 			Assert.True(m.TryInvert(out var inverse));
-			Assert.Equal(SKMatrix.CreateTranslation(-10, -20).Values, inverse.Values);
+			Assert.Equal(SKMatrix.MakeTranslation(-10, -20).Values, inverse.Values);
 		}
 
 		[SkippableFact]
 		public void MatrixCanConcat()
 		{
-			var a = SKMatrix.CreateTranslation(10, 20);
-			var b = SKMatrix.CreateTranslation(5, 7);
-			var c = new SKMatrix();
+			var a = SKMatrix.MakeTranslation(10, 20);
+			var b = SKMatrix.MakeTranslation(5, 7);
 
-			SKMatrix.Concat(ref c, a, b);
-
-			Assert.Equal(SKMatrix.CreateTranslation(15, 27).Values, c.Values);
+			var c = SKMatrix.Concat(a, b);
+			
+			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, c.Values);
 		}
 
 		[SkippableFact]
 		public void MatrixCanPreConcat()
 		{
-			var a = SKMatrix.CreateTranslation(10, 20);
-			var b = SKMatrix.CreateTranslation(5, 7);
+			var a = SKMatrix.MakeTranslation(10, 20);
+			var b = SKMatrix.MakeTranslation(5, 7);
 
-			SKMatrix.PreConcat(ref a, b);
-
-			Assert.Equal(SKMatrix.CreateTranslation(15, 27).Values, a.Values);
+			var c = a.PreConcat(b);
+			
+			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, c.Values);
 		}
 
 		[SkippableFact]
 		public void MatrixCanPostConcat()
 		{
-			var a = SKMatrix.CreateTranslation(10, 20);
-			var b = SKMatrix.CreateTranslation(5, 7);
+			var a = SKMatrix.MakeTranslation(10, 20);
+			var b = SKMatrix.MakeTranslation(5, 7);
 
-			SKMatrix.PostConcat(ref a, b);
-
-			Assert.Equal(SKMatrix.CreateTranslation(15, 27).Values, a.Values);
-		}
-
-		[SkippableFact]
-		public void MapRectCreatesModifiedRect()
-		{
-			var rect = SKRect.Create(2, 4, 6, 8);
-
-			var matrix = SKMatrix.CreateTranslation(10, 12);
-			var mapped = matrix.MapRect(rect);
-
-			Assert.Equal(SKRect.Create(12, 16, 6, 8), mapped);
+			var c = a.PostConcat(b);
+			
+			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, c.Values);
 		}
 
 		[SkippableFact]
@@ -85,10 +73,21 @@ namespace SkiaSharp.Tests
 				new SKPoint(15, 15),
 			};
 
-			var matrix = SKMatrix.CreateTranslation(10, 10);
+			var matrix = SKMatrix.MakeTranslation(10, 10);
 			matrix.MapPoints(source, source);
 
 			Assert.Equal(expectedResult, source);
+		}
+
+		[SkippableFact]
+		public void MapRectCreatesModifiedRect()
+		{
+			var rect = SKRect.Create(2, 4, 6, 8);
+
+			var matrix = SKMatrix.CreateTranslation(10, 12);
+			var mapped = matrix.MapRect(rect);
+
+			Assert.Equal(SKRect.Create(12, 16, 6, 8), mapped);
 		}
 
 		[SkippableFact]
@@ -143,15 +142,6 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void SingleValueConstructorSetsAllValues()
-		{
-			var values = new float[] { 2, 2, 2, 2, 2, 2, 2, 2, 2 };
-			var matrix = new SKMatrix(2);
-
-			Assert.Equal(values, matrix.Values);
-		}
-
-		[SkippableFact]
 		public void ArrayConstructorSetsAllValues()
 		{
 			var values = new float[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -183,19 +173,6 @@ namespace SkiaSharp.Tests
 			var matrix = SKMatrix.Identity;
 
 			Assert.Throws<ArgumentException>(() => matrix.Values = new float[] { 1f, 2f, 3f });
-		}
-
-		[SkippableFact]
-		public void GetValuesOnlyChanges9Items()
-		{
-			var expected = new float[] { -1, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1 };
-
-			var buffer = new float[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-
-			var matrix = new SKMatrix(new float[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-			matrix.GetValues(buffer.AsSpan(2, 9));
-
-			Assert.Equal(expected, buffer);
 		}
 
 		[SkippableFact]

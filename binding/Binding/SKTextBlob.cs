@@ -688,6 +688,10 @@ namespace SkiaSharp
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
+			// backwards compat
+			if (font.TextEncoding != SKTextEncoding.GlyphId)
+				return new SKRunBuffer (new SKRunBufferInternal (), count, textByteCount);
+
 			using (var lang = new SKString ()) {
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
@@ -724,6 +728,10 @@ namespace SkiaSharp
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
+			// backwards compat
+			if (font.TextEncoding != SKTextEncoding.GlyphId)
+				return new SKHorizontalRunBuffer (new SKRunBufferInternal (), count, textByteCount);
+
 			using (var lang = new SKString ()) {
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
@@ -759,6 +767,10 @@ namespace SkiaSharp
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
+
+			// backwards compat
+			if (font.TextEncoding != SKTextEncoding.GlyphId)
+				return new SKPositionedRunBuffer (new SKRunBufferInternal (), count, textByteCount);
 
 			using (var lang = new SKString ()) {
 				SKRunBufferInternal runbuffer;
