@@ -258,11 +258,7 @@ namespace SkiaSharp
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			var originalEncoding = font.TextEncoding;
-			try {
-				font.TextEncoding = SKTextEncoding.GlyphId;
-
-				using var lang = new SKString ();
+			using (var lang = new SKString ()) {
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
 					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, &b, &runbuffer);
@@ -271,9 +267,6 @@ namespace SkiaSharp
 				}
 
 				return new SKRunBuffer (runbuffer, count, textByteCount);
-
-			} finally {
-				font.TextEncoding = originalEncoding;
 			}
 		}
 
@@ -293,11 +286,7 @@ namespace SkiaSharp
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			var originalEncoding = font.TextEncoding;
-			try {
-				font.TextEncoding = SKTextEncoding.GlyphId;
-
-				using var lang = new SKString ();
+			using (var lang = new SKString ()) {
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
 					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, &b, &runbuffer);
@@ -306,8 +295,6 @@ namespace SkiaSharp
 				}
 
 				return new SKHorizontalRunBuffer (runbuffer, count, textByteCount);
-			} finally {
-				font.TextEncoding = originalEncoding;
 			}
 		}
 
@@ -327,11 +314,7 @@ namespace SkiaSharp
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			var originalEncoding = font.TextEncoding;
-			try {
-				font.TextEncoding = SKTextEncoding.GlyphId;
-
-				using var lang = new SKString ();
+			using (var lang = new SKString ()) {
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
 					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, &b, &runbuffer);
@@ -340,8 +323,6 @@ namespace SkiaSharp
 				}
 
 				return new SKPositionedRunBuffer (runbuffer, count, textByteCount);
-			} finally {
-				font.TextEncoding = originalEncoding;
 			}
 		}
 	}
