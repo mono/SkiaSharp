@@ -242,9 +242,9 @@ namespace SkiaSharp.Tests
 			var rgbaF16 = bmp.Copy(SKColorType.RgbaF16);
 
 			Assert.Equal((SKColor)0x7fff0000, rgbaF16.GetPixel(10, 10));
-			Assert.Equal((SKColor)0x7f001a00, rgbaF16.GetPixel(30, 10));
-			Assert.Equal((SKColor)0x7f00006d, rgbaF16.GetPixel(10, 30));
-			Assert.Equal((SKColor)0x7f6d6d00, rgbaF16.GetPixel(30, 30));
+			Assert.Equal((SKColor)0x7f008100, rgbaF16.GetPixel(30, 10));
+			Assert.Equal((SKColor)0x7f0000ff, rgbaF16.GetPixel(10, 30));
+			Assert.Equal((SKColor)0x7fffff00, rgbaF16.GetPixel(30, 30));
 			Assert.Equal(SKColorType.RgbaF16, rgbaF16.ColorType);
 		}
 
