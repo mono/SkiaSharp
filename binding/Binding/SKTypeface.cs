@@ -203,19 +203,14 @@ namespace SkiaSharp
 		public bool TryGetTableTags (out UInt32[] tags)
 		{
 			var buffer = new UInt32[TableCount];
-			if (TryGetTableTags (buffer)) {
-				tags = null;
-				return false;
+			fixed (UInt32* b = buffer) {
+				if (SkiaApi.sk_typeface_get_table_tags (Handle, b) == 0) {
+					tags = null;
+					return false;
+				}
 			}
 			tags = buffer;
 			return true;
-		}
-
-		public bool TryGetTableTags (Span<UInt32> tags)
-		{
-			fixed (UInt32* b = tags) {
-				return SkiaApi.sk_typeface_get_table_tags (Handle, b) != 0;
-			}
 		}
 
 		// GetTableSize
@@ -237,23 +232,20 @@ namespace SkiaSharp
 		{
 			var length = GetTableSize (tag);
 			var buffer = new byte[length];
-			if (!TryGetTableData (tag, 0, buffer)) {
-				tableData = null;
-				return false;
+			fixed (byte* b = buffer) {
+				if (!TryGetTableData (tag, 0, length, (IntPtr)b)) {
+					tableData = null;
+					return false;
+				}
 			}
 			tableData = buffer;
 			return true;
 		}
 
-		public bool TryGetTableData (UInt32 tag, int offset, int length, IntPtr tableData) =>
-			TryGetTableData (tag, offset, tableData.AsSpan (length));
-
-		public bool TryGetTableData (UInt32 tag, int offset, Span<byte> tableData)
+		public bool TryGetTableData (UInt32 tag, int offset, int length, IntPtr tableData)
 		{
-			fixed (byte* b = tableData) {
-				var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)tableData.Length, b);
-				return actual != IntPtr.Zero;
-			}
+			var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)length, (byte*)tableData);
+			return actual != IntPtr.Zero;
 		}
 
 		// CountGlyphs (string/char)
@@ -440,16 +432,11 @@ namespace SkiaSharp
 		public int[] GetKerningPairAdjustments (ReadOnlySpan<ushort> glyphs)
 		{
 			var adjustments = new int[glyphs.Length];
-			GetKerningPairAdjustments (glyphs, adjustments);
-			return adjustments;
-		}
-
-		public void GetKerningPairAdjustments (ReadOnlySpan<ushort> glyphs, Span<int> adjustments)
-		{
 			fixed (ushort* gp = glyphs)
 			fixed (int* ap = adjustments) {
 				SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, gp, glyphs.Length, ap);
 			}
+			return adjustments;
 		}
 
 		//
