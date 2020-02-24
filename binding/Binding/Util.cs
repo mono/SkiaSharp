@@ -1,112 +1,129 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.ComponentModel;
 using System.Text;
 
 namespace SkiaSharp
 {
-	internal static class Utils
+	internal unsafe static class Utils
 	{
-		internal const float NearlyZero = (1.0f / (1 << 12));
+		internal const float NearlyZero = 1.0f / (1 << 12);
 
-		internal static bool NearlyEqual (float a, float b, float tolerance)
+		internal static Span<byte> AsSpan (this IntPtr ptr, int size) =>
+			new Span<byte> ((void*)ptr, size);
+
+		internal static ReadOnlySpan<byte> AsReadOnlySpan (this IntPtr ptr, int size) =>
+			new ReadOnlySpan<byte> ((void*)ptr, size);
+
+		internal static bool NearlyEqual (float a, float b, float tolerance) =>
+			Math.Abs (a - b) <= tolerance;
+
+		internal static byte[] GetBytes (this Encoding encoding, ReadOnlySpan<char> text)
 		{
-			return Math.Abs (a - b) <= tolerance;
+			fixed (char* t = text) {
+				var byteCount = encoding.GetByteCount (t, text.Length);
+				if (byteCount == 0)
+					return new byte[0];
+				var bytes = new byte[byteCount];
+				fixed (byte* b = bytes) {
+					encoding.GetBytes (t, text.Length, b, byteCount);
+				}
+				return bytes;
+			}
 		}
 	}
 
 	public unsafe static class StringUtilities
 	{
-		private static int GetUnicodeStringLength(SKTextEncoding encoding)
-		{
-			switch (encoding)
+		// GetUnicodeStringLength
+
+		private static int GetUnicodeStringLength (SKTextEncoding encoding) =>
+			encoding switch
 			{
-				case SKTextEncoding.Utf8:
-				case SKTextEncoding.Utf16:
-					return 1;
-				case SKTextEncoding.Utf32:
-					return 2;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(encoding), $"Encoding {encoding} is not supported.");
-			}
-		}
+				SKTextEncoding.Utf8 => 1,
+				SKTextEncoding.Utf16 => 1,
+				SKTextEncoding.Utf32 => 2,
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported.")
+			};
 
-		public static int GetUnicodeCharacterCode(string character, SKTextEncoding encoding)
+		// GetUnicodeCharacterCode
+
+		public static int GetUnicodeCharacterCode (string character, SKTextEncoding encoding)
 		{
-			if (GetUnicodeStringLength(encoding) != character.Length)
-				throw new ArgumentException(nameof(character), $"Only a single character can be specified.");
+			if (GetUnicodeStringLength (encoding) != character.Length)
+				throw new ArgumentException (nameof (character), $"Only a single character can be specified.");
 
-			var bytes = GetEncodedText(character, encoding);
-			return BitConverter.ToInt32(bytes, 0);
+			var bytes = GetEncodedText (character, encoding);
+			return BitConverter.ToInt32 (bytes, 0);
 		}
 
-		public static byte[] GetEncodedText(string text, SKEncoding encoding)
+		// GetEncodedText
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetEncodedText(string, SKTextEncoding) instead.")]
+		public static byte[] GetEncodedText (string text, SKEncoding encoding) =>
+			GetEncodedText (text.AsSpan (), encoding.ToTextEncoding ());
+
+		public static byte[] GetEncodedText (string text, SKTextEncoding encoding) =>
+			GetEncodedText (text.AsSpan (), encoding);
+
+		public static byte[] GetEncodedText (ReadOnlySpan<char> text, SKTextEncoding encoding)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
 
-			switch (encoding)
+			return encoding switch
 			{
-				case SKEncoding.Utf8:
-					return Encoding.UTF8.GetBytes(text);
-				case SKEncoding.Utf16:
-					return Encoding.Unicode.GetBytes(text);
-				case SKEncoding.Utf32:
-					return Encoding.UTF32.GetBytes(text);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(encoding), $"Encoding {encoding} is not supported.");
-			}
+				SKTextEncoding.Utf8 => Encoding.UTF8.GetBytes (text),
+				SKTextEncoding.Utf16 => Encoding.Unicode.GetBytes (text),
+				SKTextEncoding.Utf32 => Encoding.UTF32.GetBytes (text),
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
 		}
 
-		public static byte[] GetEncodedText(string text, SKTextEncoding encoding)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
+		// GetString
 
-			switch (encoding)
+		public static string GetString (IntPtr data, int dataLength, SKTextEncoding encoding) =>
+			GetString (data.AsReadOnlySpan (dataLength), encoding);
+
+		public static string GetString (byte[] data, SKTextEncoding encoding) =>
+			GetString (data, 0, data.Length, encoding);
+
+		public static string GetString (byte[] data, int index, int count, SKTextEncoding encoding) =>
+			encoding switch
 			{
-				case SKTextEncoding.Utf8:
-					return Encoding.UTF8.GetBytes(text);
-				case SKTextEncoding.Utf16:
-					return Encoding.Unicode.GetBytes(text);
-				case SKTextEncoding.Utf32:
-					return Encoding.UTF32.GetBytes(text);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(encoding), $"Encoding {encoding} is not supported.");
-			}
-		}
+				SKTextEncoding.Utf8 => Encoding.UTF8.GetString (data, index, count),
+				SKTextEncoding.Utf16 => Encoding.Unicode.GetString (data, index, count),
+				SKTextEncoding.Utf32 => Encoding.UTF32.GetString (data, index, count),
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
 
-		internal static string GetString(void* data, int dataLength, SKTextEncoding encoding) =>
-			GetString((IntPtr)data, dataLength, encoding);
+		public static string GetString (ReadOnlySpan<byte> data, SKTextEncoding encoding) =>
+			GetString (data, 0, data.Length, encoding);
 
-		public static string GetString(IntPtr data, int dataLength, SKTextEncoding encoding)
+		public static string GetString (ReadOnlySpan<byte> data, int index, int count, SKTextEncoding encoding)
 		{
-			if (data == IntPtr.Zero || dataLength <= 0)
-				return "";
-
-			byte[] result = new byte[dataLength];
-			Marshal.Copy(data, result, 0, dataLength);
-			return GetString(result, encoding);
-		}
-
-		public static string GetString(byte[] data, SKTextEncoding encoding)
-		{
-			return GetString(data, 0, data.Length, encoding);
-		}
-
-		public static string GetString(byte[] data, int index, int count, SKTextEncoding encoding)
-		{
-			switch (encoding)
+			data = data.Slice (index, count);
+#if __DESKTOP__
+			// TODO: improve this copy for old .NET 4.5
+			var array = data.ToArray ();
+			return encoding switch
 			{
-				case SKTextEncoding.Utf8:
-					return Encoding.UTF8.GetString(data, index, count);
-				case SKTextEncoding.Utf16:
-					return Encoding.Unicode.GetString(data, index, count);
-				case SKTextEncoding.Utf32:
-					return Encoding.UTF32.GetString(data, index, count);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(encoding), $"Encoding {encoding} is not supported.");
+				SKTextEncoding.Utf8 => Encoding.UTF8.GetString (array),
+				SKTextEncoding.Utf16 => Encoding.Unicode.GetString (array),
+				SKTextEncoding.Utf32 => Encoding.UTF32.GetString (array),
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
+#else
+			fixed (byte* bp = data) {
+				return encoding switch
+				{
+					SKTextEncoding.Utf8 => Encoding.UTF8.GetString (bp, data.Length),
+					SKTextEncoding.Utf16 => Encoding.Unicode.GetString (bp, data.Length),
+					SKTextEncoding.Utf32 => Encoding.UTF32.GetString (bp, data.Length),
+					_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+				};
 			}
+#endif
 		}
 	}
 }

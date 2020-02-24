@@ -85,7 +85,7 @@ namespace SkiaSharp
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 
-			var utf8path = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
+			var utf8path = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
 			fixed (byte* u = utf8path) {
 				return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_file (Handle, u, index));
 			}

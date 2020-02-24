@@ -24,10 +24,14 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_paint_delete (Handle);
 
+		// Reset
+
 		public void Reset ()
 		{
 			SkiaApi.sk_paint_reset (Handle);
 		}
+
+		// properties
 
 		public bool IsAntialias {
 			get => SkiaApi.sk_paint_is_antialias (Handle);
@@ -184,8 +188,12 @@ namespace SkiaSharp
 			set => SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
+		// FontSpacing
+
 		public float FontSpacing =>
 			SkiaApi.sk_paint_get_fontmetrics (Handle, null, 0);
+
+		// FontMetrics
 
 		public SKFontMetrics FontMetrics {
 			get {
@@ -200,6 +208,8 @@ namespace SkiaSharp
 				return SkiaApi.sk_paint_get_fontmetrics (Handle, m, scale);
 			}
 		}
+
+		// Clone
 
 		public SKPaint Clone () =>
 			GetObject<SKPaint> (SkiaApi.sk_paint_clone (Handle));

@@ -43,7 +43,7 @@ namespace SkiaSharp
 			if (pixels == null)
 				throw new ArgumentNullException (nameof (pixels));
 			using (var data = SKData.Create (pixels)) {
-				return FromPixelData (info, data, rowBytes);
+				return FromPixels (info, data, rowBytes);
 			}
 		}
 
@@ -55,7 +55,7 @@ namespace SkiaSharp
 			if (pixels == null)
 				throw new ArgumentNullException (nameof (pixels));
 			using (var data = SKData.Create (pixels)) {
-				return FromPixelData (info, data, rowBytes);
+				return FromPixels (info, data, rowBytes);
 			}
 		}
 
@@ -67,7 +67,7 @@ namespace SkiaSharp
 			if (pixels == null)
 				throw new ArgumentNullException (nameof (pixels));
 			using (var data = SKData.CreateCopy (pixels)) {
-				return FromPixelData (info, data, rowBytes);
+				return FromPixels (info, data, rowBytes);
 			}
 		}
 
@@ -103,12 +103,14 @@ namespace SkiaSharp
 			if (pixels == null)
 				throw new ArgumentNullException (nameof (pixels));
 			using (var data = SKData.CreateCopy (pixels)) {
-				return FromPixelData (info, data, rowBytes);
+				return FromPixels (info, data, rowBytes);
 			}
 		}
 
 		// create a new image around existing pixel data
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use FromPixels (SKImageInfo, SKData, int) instead.")]
 		public static SKImage FromPixelData (SKImageInfo info, SKData data, int rowBytes)
 		{
 			if (data == null)

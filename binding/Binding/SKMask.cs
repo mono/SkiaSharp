@@ -28,6 +28,9 @@ namespace SkiaSharp
 			set => fImage = (byte*)value;
 		}
 
+		public Span<byte> GetImageSpan () =>
+			new Span<byte> ((void*)Image, (int)ComputeTotalImageSize ());
+
 		public SKRectI Bounds {
 			readonly get => fBounds;
 			set => fBounds = value;
@@ -131,22 +134,28 @@ namespace SkiaSharp
 		public static void FreeImage (IntPtr image) =>
 			SkiaApi.sk_mask_free_image ((byte*)image);
 
-		public static SKMask Create (byte[] image, SKRectI bounds, UInt32 rowBytes, SKMaskFormat format)
+		public static SKMask Create (byte[] image, SKRectI bounds, UInt32 rowBytes, SKMaskFormat format) =>
+			Create (image.AsSpan (), bounds, rowBytes, format);
+
+		public static SKMask Create (ReadOnlySpan<byte> image, SKRectI bounds, UInt32 rowBytes, SKMaskFormat format)
 		{
 			// create the mask
 			var mask = new SKMask (bounds, rowBytes, format);
 
+			// calculate the size
+			var imageSize = (int)mask.ComputeTotalImageSize ();
+
 			// is there the right amount of space in the mask
-			if (image.Length != mask.ComputeTotalImageSize ()) {
+			if (image.Length != imageSize) {
 				// Note: buffer.Length must match bounds.Height * rowBytes
-				var expectedHeight = bounds.Height * rowBytes;
-				var message = $"Length of image ({image.Length}) does not match the computed size of the mask ({expectedHeight}). Check the {nameof (bounds)} and {nameof (rowBytes)}.";
+				var expectedSize = bounds.Height * rowBytes;
+				var message = $"Length of image ({image.Length}) does not match the computed size of the mask ({expectedSize}). Check the {nameof (bounds)} and {nameof (rowBytes)}.";
 				throw new ArgumentException (message);
 			}
 
-			// copy the image data
+			// allocate and copy the image data
 			mask.AllocateImage ();
-			Marshal.Copy (image, 0, (IntPtr)mask.fImage, image.Length);
+			image.CopyTo (new Span<byte> ((void*)mask.Image, imageSize));
 
 			// return the mask
 			return mask;

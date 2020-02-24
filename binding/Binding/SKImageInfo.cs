@@ -100,21 +100,7 @@ namespace SkiaSharp
 		}
 
 		public readonly int BytesPerPixel =>
-			ColorType switch
-			{
-				SKColorType.Unknown => 0,
-				SKColorType.Alpha8 => 1,
-				SKColorType.Gray8 => 1,
-				SKColorType.Rgb565 => 2,
-				SKColorType.Argb4444 => 2,
-				SKColorType.Bgra8888 => 4,
-				SKColorType.Rgba8888 => 4,
-				SKColorType.Rgb888x => 4,
-				SKColorType.Rgba1010102 => 4,
-				SKColorType.Rgb101010x => 4,
-				SKColorType.RgbaF16 => 8,
-				_ => throw new ArgumentOutOfRangeException (nameof (ColorType)),
-			};
+			ColorType.GetBytesPerPixel ();
 
 		public readonly int BitsPerPixel => BytesPerPixel * 8;
 
@@ -133,6 +119,9 @@ namespace SkiaSharp
 		public readonly SKSizeI Size => new SKSizeI (Width, Height);
 
 		public readonly SKRectI Rect => SKRectI.Create (Width, Height);
+
+		public readonly SKImageInfo WithSize (SKSizeI size) =>
+			WithSize (size.Width, size.Height);
 
 		public readonly SKImageInfo WithSize (int width, int height)
 		{
