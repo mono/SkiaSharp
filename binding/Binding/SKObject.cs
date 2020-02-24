@@ -17,7 +17,7 @@ namespace SkiaSharp
 		internal static readonly ConcurrentDictionary<IntPtr, WeakReference> instances;
 
 		internal readonly ConcurrentDictionary<IntPtr, SKObject> ownedObjects = new ConcurrentDictionary<IntPtr, SKObject> ();
-		internal readonly ConcurrentBag<SKObject> keepAliveObjects = new ConcurrentBag<SKObject> ();
+		internal readonly ConcurrentDictionary<IntPtr, SKObject> keepAliveObjects = new ConcurrentDictionary<IntPtr, SKObject> ();
 
 		static SKObject ()
 		{
@@ -58,6 +58,7 @@ namespace SkiaSharp
 				child.Value.DisposeInternal ();
 			}
 			ownedObjects.Clear ();
+			keepAliveObjects.Clear ();
 		}
 
 		protected override void DisposeNative ()
@@ -226,7 +227,7 @@ namespace SkiaSharp
 		{
 			if (child == null)
 				return;
-			keepAliveObjects.Add (child);
+			keepAliveObjects[child.Handle] = child;
 		}
 
 		internal static T Owned<T> (T owner, SKObject child)
