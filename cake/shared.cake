@@ -35,7 +35,7 @@ void RunCake(FilePath cake, string target = null, Dictionary<string, string> arg
     });
 }
 
-void RunProcess(FilePath process, string args)
+void RunProcess(FilePath process, string args = "")
 {
     var result = StartProcess(process, args);
     if (result != 0) {
