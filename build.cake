@@ -461,11 +461,6 @@ Task ("nuget")
             Information ("Metadata validation passed for: {0}", nupkgFile.GetFilename ());
         }
     }
-
-    // run the diff
-    if (PACK_ALL_PLATFORMS) {
-        RunTarget ("docs-api-diff");
-    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
