@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -33,12 +34,16 @@ namespace SkiaSharp
 			if (destination == null)
 				throw new ArgumentNullException (nameof (destination));
 
-			var buffer = new byte[SKData.CopyBufferSize];
 			var total = 0;
 			int len;
-			while ((len = stream.Read (buffer, 0, buffer.Length)) > 0) {
-				destination.Write (buffer, len);
-				total += len;
+			var buffer = ArrayPool<byte>.Shared.Rent (SKData.CopyBufferSize);
+			try {
+				while ((len = stream.Read (buffer, 0, buffer.Length)) > 0) {
+					destination.Write (buffer, len);
+					total += len;
+				}
+			} finally {
+				ArrayPool<byte>.Shared.Return (buffer);
 			}
 			destination.Flush ();
 			return total;

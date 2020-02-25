@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Text;
 using System.ComponentModel;
+using System.Buffers;
 
 namespace SkiaSharp
 {
@@ -236,16 +237,19 @@ namespace SkiaSharp
 			if (target == null)
 				throw new ArgumentNullException (nameof (target));
 
-			var buffer = new byte [CopyBufferSize];
 			var ptr = Data;
 			var total = Size;
-
-			for (var left = total; left > 0; ) {
-				var copyCount = (int) Math.Min (CopyBufferSize, left);
-				Marshal.Copy (ptr, buffer, 0, copyCount);
-				left -= copyCount;
-				ptr += copyCount;
-				target.Write (buffer, 0, copyCount);
+			var buffer = ArrayPool<byte>.Shared.Rent (CopyBufferSize);
+			try {
+				for (var left = total; left > 0;) {
+					var copyCount = (int)Math.Min (CopyBufferSize, left);
+					Marshal.Copy (ptr, buffer, 0, copyCount);
+					left -= copyCount;
+					ptr += copyCount;
+					target.Write (buffer, 0, copyCount);
+				}
+			} finally {
+				ArrayPool<byte>.Shared.Return (buffer);
 			}
 		}
 
