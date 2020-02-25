@@ -14,13 +14,13 @@ parameters:
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
-  buildExternals: '3497206'                            # the build number to download externals from
+  buildExternals: '3500647'                            # the build number to download externals from
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
 
 jobs:
 # - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
-- ${{ if and(ne(parameters.buildExternals, ''), ne(parameters.name, 'api_diff_windows'), ne(parameters.name, 'package_windows')) }}:
+- ${{ if and(ne(parameters.buildExternals, ''), ne(parameters.name, 'api_diff_windows')) }}:
   - template: azure-templates-download.yml
     parameters:
       name: ${{ parameters.name }}
@@ -29,7 +29,7 @@ jobs:
       condition: ${{ parameters.condition }}
       buildExternals: ${{ parameters.buildExternals }}
 
-- ${{ if or(eq(parameters.buildExternals, ''), eq(parameters.name, 'api_diff_windows'), eq(parameters.name, 'package_windows')) }}:
+- ${{ if or(eq(parameters.buildExternals, ''), eq(parameters.name, 'api_diff_windows')) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
