@@ -220,7 +220,7 @@ namespace SkiaSharp.Tests
 			var glyphs = typeface.GetGlyphs(text);
 
 			Assert.True(count > 0);
-			Assert.Equal(count, glyphs.Length);
+			Assert.True(glyphs.Length > 0);
 			Assert.DoesNotContain((ushort)0, glyphs);
 		}
 
