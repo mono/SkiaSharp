@@ -19,7 +19,8 @@ parameters:
   docker: ''                                    # the Docker image to build and use
 
 jobs:
-- ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
+# - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
+- ${{ if and(ne(parameters.buildExternals, ''), ne(parameters.name, 'api_diff_windows')) }}:
   - template: azure-templates-download.yml
     parameters:
       name: ${{ parameters.name }}
