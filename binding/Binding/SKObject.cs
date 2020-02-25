@@ -200,15 +200,6 @@ namespace SkiaSharp
 			return false;
 		}
 
-		// indicate that when this object is disposed on the managed side,
-		// dispose the child as well
-		internal void SetDisposeChild (SKObject child)
-		{
-			if (child == null)
-				return;
-			ownedObjects[child.Handle] = child;
-		}
-
 		// indicate that the ownership of this object is now in the hands of
 		// the native object
 		internal void RevokeOwnership (SKObject newOwner)
@@ -219,23 +210,17 @@ namespace SkiaSharp
 			if (newOwner == null)
 				DisposeInternal ();
 			else
-				newOwner.SetDisposeChild (this);
+				newOwner.ownedObjects[Handle] = this;
 		}
 
-		// indicate that the child must not by GC-ed while this object lives
-		internal void KeepAlive (SKObject child)
-		{
-			if (child == null)
-				return;
-			keepAliveObjects[child.Handle] = child;
-		}
-
+		// indicate that the child was created by the managed code and
+		// should be disposed when the owner is
 		internal static T Owned<T> (T owner, SKObject child)
 			where T : SKObject
 		{
 			if (child != null) {
 				if (owner != null)
-					owner.SetDisposeChild (child);
+					owner.ownedObjects[child.Handle] = child;
 				else
 					child.Dispose ();
 			}
@@ -243,11 +228,13 @@ namespace SkiaSharp
 			return owner;
 		}
 
+		// indicate that the chile should not be garbage collected while
+		// the owner still lives
 		internal static T Referenced<T> (T owner, SKObject child)
 			where T : SKObject
 		{
 			if (child != null && owner != null)
-				owner.KeepAlive (child);
+				owner.keepAliveObjects[child.Handle] = child;
 
 			return owner;
 		}
