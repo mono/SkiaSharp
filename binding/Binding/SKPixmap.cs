@@ -202,6 +202,30 @@ namespace SkiaSharp
 			return SkiaApi.sk_pixmap_encode_image (dst.Handle, Handle, encoder, quality);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Encode(SKWStream, SKEncodedImageFormat, int) instead.")]
+		public static bool Encode (SKWStream dst, SKBitmap src, SKEncodedImageFormat format, int quality)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return src.Encode (dst, format, quality);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Encode(SKWStream, SKEncodedImageFormat, int) instead.")]
+		public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return src.Encode (dst, encoder, quality);
+		}
+
 		// Encode (webp)
 
 		public SKData Encode (SKWebpEncoderOptions options)
@@ -226,6 +250,18 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (dst));
 
 			return SkiaApi.sk_webpencoder_encode (dst.Handle, Handle, &options);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Encode(SKWStream, SKWebpEncoderOptions) instead.")]
+		public static bool Encode (SKWStream dst, SKPixmap src, SKWebpEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return src.Encode (dst, options);
 		}
 
 		// Encode (jpeg)
@@ -254,6 +290,18 @@ namespace SkiaSharp
 			return SkiaApi.sk_jpegencoder_encode (dst.Handle, Handle, &options);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Encode(SKWStream, SKJpegEncoderOptions) instead.")]
+		public static bool Encode (SKWStream dst, SKPixmap src, SKJpegEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return src.Encode (dst, options);
+		}
+
 		// Encode (png)
 
 		public SKData Encode (SKPngEncoderOptions options)
@@ -278,6 +326,18 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (dst));
 
 			return SkiaApi.sk_pngencoder_encode (dst.Handle, Handle, &options);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Encode(SKWStream, SKPngEncoderOptions) instead.")]
+		public static bool Encode (SKWStream dst, SKPixmap src, SKPngEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return src.Encode (dst, options);
 		}
 
 		// ExtractSubset
