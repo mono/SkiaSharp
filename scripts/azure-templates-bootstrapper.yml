@@ -19,7 +19,7 @@ parameters:
   docker: ''                                    # the Docker image to build and use
 
 jobs:
-- ${{ if and(ne(parameters.buildExternals, ''), eq(parameters.name, 'api_diff_windows')) }}:
+- ${{ if and(ne(parameters.buildExternals, ''), ne(parameters.name, 'api_diff_windows')) }}:
   - template: azure-templates-download.yml
     parameters:
       name: ${{ parameters.name }}
@@ -28,7 +28,7 @@ jobs:
       condition: ${{ parameters.condition }}
       buildExternals: ${{ parameters.buildExternals }}
 
-- ${{ if or(eq(parameters.buildExternals, ''), not(eq(parameters.name, 'api_diff_windows'))) }}:
+- ${{ if or(eq(parameters.buildExternals, ''), not(ne(parameters.name, 'api_diff_windows'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
