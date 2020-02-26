@@ -23,8 +23,10 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
             var dllName = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
             if (file.GetFilenameWithoutExtension ().GetExtension () == ".breaking") {
                 // skip over breaking changes without any breaking changes
-                if (!FindTextInFiles (file.FullPath, "###").Any ())
+                if (!FindTextInFiles (file.FullPath, "###").Any ()) {
+                    DeleteFile (file);
                     continue;
+                }
 
                 dllName += ".breaking";
             }

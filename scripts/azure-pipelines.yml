@@ -328,8 +328,8 @@ stages:
             - package_windows
           preBuildSteps:
             - pwsh: |
-                $p = "$env:BUILD_SOURCESDIRECTORY\output\api-diff"
-                New-Item -ItemType Directory -Force -Path $p
+                $p = "$env:BUILD_SOURCESDIRECTORY\output\nugets\api-diff"
+                New-Item -ItemType Directory -Force -Path $p | Out-Null
                 $uri = 'https://xamarin.azureedge.net/GTKforWindows/Windows/gtk-sharp-2.12.45.msi'
                 .\scripts\download-file.ps1 -Uri $uri -OutFile gtk-sharp.msi
                 msiexec /i gtk-sharp.msi /norestart /quiet /l* $p\gtk-sharp-install.log
@@ -340,7 +340,7 @@ stages:
               condition: always()
               inputs:
                 artifactName: api-diff
-                pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
+                pathToPublish: '$(Build.SourcesDirectory)\output\nugets\api-diff'
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: signing
