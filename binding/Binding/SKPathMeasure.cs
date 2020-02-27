@@ -32,6 +32,8 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_pathmeasure_destroy (Handle);
 
+		// properties
+
 		public float Length {
 			get {
 				return SkiaApi.sk_pathmeasure_get_length (Handle);
@@ -44,10 +46,17 @@ namespace SkiaSharp
 			}
 		}
 
+		// SetPath
+
+		public void SetPath (SKPath path) =>
+			SetPath (path, false);
+
 		public void SetPath (SKPath path, bool forceClosed)
 		{
 			SkiaApi.sk_pathmeasure_set_path (Handle, path == null ? IntPtr.Zero : path.Handle, forceClosed);
 		}
+
+		// GetPositionAndTangent
 
 		public bool GetPositionAndTangent (float distance, out SKPoint position, out SKPoint tangent)
 		{
@@ -57,11 +66,29 @@ namespace SkiaSharp
 			}
 		}
 
+		// GetPosition
+
+		public SKPoint GetPosition (float distance)
+		{
+			if (!GetPosition (distance, out var position))
+				position = SKPoint.Empty;
+			return position;
+		}
+
 		public bool GetPosition (float distance, out SKPoint position)
 		{
 			fixed (SKPoint* p = &position) {
 				return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, p, null);
 			}
+		}
+
+		// GetTangent
+
+		public SKPoint GetTangent (float distance)
+		{
+			if (!GetTangent (distance, out var tangent))
+				tangent = SKPoint.Empty;
+			return tangent;
 		}
 
 		public bool GetTangent (float distance, out SKPoint tangent)
@@ -71,12 +98,23 @@ namespace SkiaSharp
 			}
 		}
 
+		// GetMatrix
+
+		public SKMatrix GetMatrix (float distance, SKPathMeasureMatrixFlags flags)
+		{
+			if (!GetMatrix (distance, out var matrix, flags))
+				matrix = SKMatrix.Empty;
+			return matrix;
+		}
+
 		public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasureMatrixFlags flags)
 		{
 			fixed (SKMatrix* m = &matrix) {
 				return SkiaApi.sk_pathmeasure_get_matrix (Handle, distance, m, flags);
 			}
 		}
+
+		// GetSegment
 
 		public bool GetSegment (float start, float stop, SKPath dst, bool startWithMoveTo)
 		{
@@ -85,10 +123,21 @@ namespace SkiaSharp
 			return SkiaApi.sk_pathmeasure_get_segment (Handle, start, stop, dst.Handle, startWithMoveTo);
 		}
 
+		public SKPath GetSegment (float start, float stop, bool startWithMoveTo)
+		{
+			var dst = new SKPath ();
+			if (!GetSegment (start, stop, dst, startWithMoveTo)) {
+				dst.Dispose ();
+				dst = null;
+			}
+			return dst;
+		}
+
+		// NextContour
+
 		public bool NextContour ()
 		{
 			return SkiaApi.sk_pathmeasure_next_contour (Handle);
 		}
 	}
 }
-

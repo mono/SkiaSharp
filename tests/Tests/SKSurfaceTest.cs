@@ -1,24 +1,11 @@
-﻿#if NET_STANDARD
-#else
-#define SYSTEM_DRAWING
-#endif
-
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using Xunit;
-
-#if SYSTEM_DRAWING
-using System.Drawing;
-using System.Drawing.Imaging;
-#endif
 
 namespace SkiaSharp.Tests
 {
 	public class SKSurfaceTest : SKTest
 	{
-		private const int width = 100;
-		private const int height = 100;
-
 		private void DrawGpuSurface(Action<SKSurface, SKImageInfo> draw)
 		{
 			using (var ctx = CreateGlContext())
@@ -485,60 +472,5 @@ namespace SkiaSharp.Tests
 				}
 			});
 		}
-
-#if SYSTEM_DRAWING
-		private void DrawBitmap(Action<SKSurface, BitmapData> draw)
-		{
-			using (var bitmap = new Bitmap(width, height, PixelFormat.Format32bppPArgb))
-			{
-				var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
-
-				var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
-				using (var surface = SKSurface.Create(info, data.Scan0, data.Stride))
-				{
-					Assert.NotNull(surface);
-
-					draw(surface, data);
-				}
-
-				bitmap.UnlockBits(data);
-			}
-		}
-
-		[SkippableFact]
-		public void SurfaceCanvasReturnTheSameInstance()
-		{
-			DrawBitmap((surface, data) =>
-			{
-				var skcanvas1 = surface.Canvas;
-				var skcanvas2 = surface.Canvas;
-
-				Assert.NotNull(skcanvas1);
-				Assert.NotNull(skcanvas2);
-
-				Assert.Equal(skcanvas1, skcanvas2);
-				Assert.True(skcanvas1 == skcanvas2);
-
-				Assert.Same(skcanvas1, skcanvas2);
-			});
-		}
-
-		[SkippableFact]
-		public void SecondSurfaceWasCreatedDifferent()
-		{
-			DrawBitmap((surface, data) =>
-			{
-				var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
-				var surface2 = SKSurface.Create(info, data.Scan0, data.Stride);
-
-				Assert.NotNull(surface2);
-
-				Assert.NotEqual(surface, surface2);
-				Assert.NotEqual(surface.Handle, surface2.Handle);
-
-				surface2.Dispose();
-			});
-		}
-#endif
 	}
 }

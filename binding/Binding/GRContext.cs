@@ -14,6 +14,8 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
+		// Create
+
 		public static GRContext Create (GRBackend backend) =>
 			backend switch
 			{
@@ -43,11 +45,15 @@ namespace SkiaSharp
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
+		// CreateGl
+
 		public static GRContext CreateGl () =>
 			CreateGl (null);
 
 		public static GRContext CreateGl (GRGlInterface backendContext) =>
 			GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+
+		//
 
 		public GRBackend Backend => SkiaApi.gr_context_get_backend (Handle);
 
@@ -96,7 +102,7 @@ namespace SkiaSharp
 			SkiaApi.gr_context_get_max_surface_sample_count_for_color_type (Handle, colorType);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use GetMaxSurfaceSampleCount(SKColorType) instead.")]
+		[Obsolete]
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
 	}
 }
