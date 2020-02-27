@@ -119,6 +119,9 @@ namespace SkiaSharp
 			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (&cinfo, data.Handle, (IntPtr)rowBytes));
 		}
 
+		public static SKImage FromPixels (SKImageInfo info, SKData data) =>
+			FromPixels (info, data, info.RowBytes);
+
 		public static SKImage FromPixels (SKImageInfo info, SKData data, int rowBytes)
 		{
 			if (data == null)
