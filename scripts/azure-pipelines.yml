@@ -106,13 +106,13 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
           additionalArgs: --buildarch=arm
-      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
-        parameters:
-          name: native_uwp_arm64_windows
-          displayName: Build Native UWP|arm64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
-          target: externals-uwp
-          additionalArgs: --buildarch=arm64
+      # - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
+      #   parameters:
+      #     name: native_uwp_arm64_windows
+      #     displayName: Build Native UWP|arm64 (Windows)
+      #     vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+      #     target: externals-uwp
+      #     additionalArgs: --buildarch=arm64
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
         parameters:
           name: native_win32_x86_windows
@@ -243,7 +243,7 @@ stages:
             - native_uwp_x86_windows
             - native_uwp_x64_windows
             - native_uwp_arm_windows
-            - native_uwp_arm64_windows
+            # - native_uwp_arm64_windows
             - native_win32_x86_windows
             - native_win32_x64_windows
             - native_win32_x64_nanoserver_windows
