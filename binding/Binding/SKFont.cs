@@ -92,10 +92,12 @@ namespace SkiaSharp
 			set => SkiaApi.sk_font_set_skew_x (Handle, value);
 		}
 
-		// FontMetrics
+		// FontSpacing
 
 		public float Spacing =>
 			SkiaApi.sk_font_get_metrics (Handle, null);
+
+		// FontMetrics
 
 		public SKFontMetrics Metrics {
 			get {

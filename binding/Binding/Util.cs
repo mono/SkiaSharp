@@ -26,6 +26,7 @@ namespace SkiaSharp
 				var byteCount = encoding.GetByteCount (t, text.Length);
 				if (byteCount == 0)
 					return new byte[0];
+
 				var bytes = new byte[byteCount];
 				fixed (byte* b = bytes) {
 					encoding.GetBytes (t, text.Length, b, byteCount);

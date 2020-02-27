@@ -58,7 +58,7 @@ namespace SkiaSharp
 			CreateGl (null);
 
 		public static GRContext CreateGl (GRGlInterface backendContext) =>
-			GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext?.Handle ?? IntPtr.Zero));
+			GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
 
 		//
 

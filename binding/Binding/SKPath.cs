@@ -177,7 +177,7 @@ namespace SkiaSharp
 			Offset (offset.X, offset.Y);
 
 		public void Offset (float dx, float dy) =>
-			Transform (SKMatrix.CreateTranslation (dx, dy));
+			Transform (SKMatrix.MakeTranslation (dx, dy));
 
 		public void MoveTo (SKPoint point) =>
 			SkiaApi.sk_path_move_to (Handle, point.X, point.Y);

@@ -211,11 +211,18 @@ namespace SkiaSharp
 			set => SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
-		public float FontSpacing => GetFont ().Spacing;
+		// FontSpacing
+
+		public float FontSpacing =>
+			GetFont ().Spacing;
 
 		// FontMetrics
 
-		public SKFontMetrics FontMetrics => GetFont ().Metrics;
+		public SKFontMetrics FontMetrics {
+			get {
+				return GetFont ().Metrics;
+			}
+		}
 
 		public float GetFontMetrics (out SKFontMetrics metrics) =>
 			GetFont ().GetFontMetrics (out metrics);

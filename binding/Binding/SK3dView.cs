@@ -28,7 +28,7 @@ namespace SkiaSharp
 
 		public SKMatrix Matrix {
 			get {
-				var matrix = SKMatrix.Identity;
+				var matrix = SKMatrix.MakeIdentity ();
 				GetMatrix (ref matrix);
 				return matrix;
 			}
