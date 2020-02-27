@@ -58,8 +58,8 @@ namespace SkiaSharp
 		public readonly bool Equals (SKPMColor obj) =>
 			obj.color == color;
 
-		public readonly override bool Equals (object obj) =>
-			obj is SKPMColor f && Equals (f);
+		public readonly override bool Equals (object other) =>
+			other is SKPMColor f && Equals (f);
 
 		public static bool operator == (SKPMColor left, SKPMColor right) =>
 			left.Equals (right);

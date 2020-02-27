@@ -174,58 +174,30 @@ namespace SkiaSharp
 
 		public SKData Encode (SKEncodedImageFormat encoder, int quality)
 		{
-			using (var stream = new SKDynamicMemoryWStream ()) {
-				var result = Encode (stream, this, encoder, quality);
-				return result ? stream.DetachAsData () : null;
-			}
+			using var stream = new SKDynamicMemoryWStream ();
+			var result = Encode (stream, encoder, quality);
+			return result ? stream.DetachAsData () : null;
 		}
 
 		public bool Encode (Stream dst, SKEncodedImageFormat encoder, int quality)
 		{
-			return Encode (dst, this, encoder, quality);
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var wrapped = new SKManagedWStream (dst);
+			return Encode (wrapped, encoder, quality);
 		}
 
 		public bool Encode (SKWStream dst, SKEncodedImageFormat encoder, int quality)
 		{
-			return Encode (dst, this, encoder, quality);
-		}
-
-		// Encode (SKPixmap)
-
-		public static bool Encode (Stream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality)
-		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
 
-			using var wrapped = new SKManagedWStream (dst);
-			return Encode (wrapped, src, encoder, quality);
+			return SkiaApi.sk_pixmap_encode_image (dst.Handle, Handle, encoder, quality);
 		}
 
-		public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality)
-		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-
-			return SkiaApi.sk_pixmap_encode_image (dst.Handle, src.Handle, encoder, quality);
-		}
-
-		// Encode (SKBitmap)
-
-		public static bool Encode (Stream dst, SKBitmap src, SKEncodedImageFormat encoder, int quality)
-		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-
-			using var wrapped = new SKManagedWStream (dst);
-			return Encode (wrapped, src, encoder, quality);
-		}
-
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Encode(SKWStream, SKEncodedImageFormat, int) instead.")]
 		public static bool Encode (SKWStream dst, SKBitmap src, SKEncodedImageFormat format, int quality)
 		{
 			if (dst == null)
@@ -233,42 +205,49 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			using (var pixmap = new SKPixmap ()) {
-				return src.PeekPixels (pixmap) && Encode (dst, pixmap, format, quality);
-			}
+			return src.Encode (dst, format, quality);
 		}
 
-		// Encode (webp)
-
-		public SKData Encode (SKWebpEncoderOptions options)
-		{
-			using (var stream = new SKDynamicMemoryWStream ()) {
-				var result = Encode (stream, this, options);
-				return result ? stream.DetachAsData () : null;
-			}
-		}
-
-		public bool Encode (Stream dst, SKWebpEncoderOptions options)
-		{
-			return Encode (dst, this, options);
-		}
-
-		public bool Encode (SKWStream dst, SKWebpEncoderOptions options)
-		{
-			return Encode (dst, this, options);
-		}
-
-		public static bool Encode (Stream dst, SKPixmap src, SKWebpEncoderOptions options)
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Encode(SKWStream, SKEncodedImageFormat, int) instead.")]
+		public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			using var wrapped = new SKManagedWStream (dst);
-			return Encode (wrapped, src, options);
+			return src.Encode (dst, encoder, quality);
 		}
 
+		// Encode (webp)
+
+		public SKData Encode (SKWebpEncoderOptions options)
+		{
+			using var stream = new SKDynamicMemoryWStream ();
+			var result = Encode (stream, options);
+			return result ? stream.DetachAsData () : null;
+		}
+
+		public bool Encode (Stream dst, SKWebpEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var wrapped = new SKManagedWStream (dst);
+			return Encode (wrapped, options);
+		}
+
+		public bool Encode (SKWStream dst, SKWebpEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			return SkiaApi.sk_webpencoder_encode (dst.Handle, Handle, &options);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Encode(SKWStream, SKWebpEncoderOptions) instead.")]
 		public static bool Encode (SKWStream dst, SKPixmap src, SKWebpEncoderOptions options)
 		{
 			if (dst == null)
@@ -276,40 +255,37 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return SkiaApi.sk_webpencoder_encode (dst.Handle, src.Handle, options);
+			return src.Encode (dst, options);
 		}
 
 		// Encode (jpeg)
 
 		public SKData Encode (SKJpegEncoderOptions options)
 		{
-			using (var stream = new SKDynamicMemoryWStream ()) {
-				var result = Encode (stream, this, options);
-				return result ? stream.DetachAsData () : null;
-			}
+			using var stream = new SKDynamicMemoryWStream ();
+			var result = Encode (stream, options);
+			return result ? stream.DetachAsData () : null;
 		}
 
 		public bool Encode (Stream dst, SKJpegEncoderOptions options)
 		{
-			return Encode (dst, this, options);
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var wrapped = new SKManagedWStream (dst);
+			return Encode (wrapped, options);
 		}
 
 		public bool Encode (SKWStream dst, SKJpegEncoderOptions options)
 		{
-			return Encode (dst, this, options);
-		}
-
-		public static bool Encode (Stream dst, SKPixmap src, SKJpegEncoderOptions options)
-		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
 
-			using var wrapped = new SKManagedWStream (dst);
-			return Encode (wrapped, src, options);
+			return SkiaApi.sk_jpegencoder_encode (dst.Handle, Handle, &options);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Encode(SKWStream, SKJpegEncoderOptions) instead.")]
 		public static bool Encode (SKWStream dst, SKPixmap src, SKJpegEncoderOptions options)
 		{
 			if (dst == null)
@@ -317,40 +293,37 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return SkiaApi.sk_jpegencoder_encode (dst.Handle, src.Handle, options);
+			return src.Encode (dst, options);
 		}
 
 		// Encode (png)
 
 		public SKData Encode (SKPngEncoderOptions options)
 		{
-			using (var stream = new SKDynamicMemoryWStream ()) {
-				var result = Encode (stream, this, options);
-				return result ? stream.DetachAsData () : null;
-			}
+			using var stream = new SKDynamicMemoryWStream ();
+			var result = Encode (stream, options);
+			return result ? stream.DetachAsData () : null;
 		}
 
 		public bool Encode (Stream dst, SKPngEncoderOptions options)
 		{
-			return Encode (dst, this, options);
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var wrapped = new SKManagedWStream (dst);
+			return Encode (wrapped, options);
 		}
 
 		public bool Encode (SKWStream dst, SKPngEncoderOptions options)
 		{
-			return Encode (dst, this, options);
-		}
-
-		public static bool Encode (Stream dst, SKPixmap src, SKPngEncoderOptions options)
-		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
 
-			using var wrapped = new SKManagedWStream (dst);
-			return Encode (wrapped, src, options);
+			return SkiaApi.sk_pngencoder_encode (dst.Handle, Handle, &options);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Encode(SKWStream, SKPngEncoderOptions) instead.")]
 		public static bool Encode (SKWStream dst, SKPixmap src, SKPngEncoderOptions options)
 		{
 			if (dst == null)
@@ -358,7 +331,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return SkiaApi.sk_pngencoder_encode (dst.Handle, src.Handle, options);
+			return src.Encode (dst, options);
 		}
 
 		// ExtractSubset

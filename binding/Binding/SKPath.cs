@@ -574,4 +574,3 @@ namespace SkiaSharp
 		}
 	}
 }
-

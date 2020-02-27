@@ -78,6 +78,51 @@ namespace SkiaSharp
 				SKEncoding.Utf32 => SKTextEncoding.Utf32,
 				_ => throw new ArgumentOutOfRangeException (nameof (encoding)),
 			};
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		internal static SKEncoding ToEncoding (this SKTextEncoding encoding) =>
+			encoding switch
+			{
+				SKTextEncoding.Utf8 => SKEncoding.Utf8,
+				SKTextEncoding.Utf16 => SKEncoding.Utf16,
+				SKTextEncoding.Utf32 => SKEncoding.Utf32,
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding)),
+			};
+
+		public static int GetBytesPerPixel (this SKColorType colorType) =>
+			colorType switch
+			{
+				SKColorType.Unknown => 0,
+				SKColorType.Alpha8 => 1,
+				SKColorType.Gray8 => 1,
+				SKColorType.Rgb565 => 2,
+				SKColorType.Argb4444 => 2,
+				SKColorType.Bgra8888 => 4,
+				SKColorType.Rgba8888 => 4,
+				SKColorType.Rgb888x => 4,
+				SKColorType.Rgba1010102 => 4,
+				SKColorType.Rgb101010x => 4,
+				SKColorType.RgbaF16 => 8,
+				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
+			};
+
+		public static SKAlphaType GetAlphaType (this SKColorType colorType, SKAlphaType alphaType = SKAlphaType.Premul) =>
+			colorType switch
+			{
+				SKColorType.Unknown => SKAlphaType.Unknown,
+				SKColorType.Alpha8 => SKAlphaType.Premul,
+				SKColorType.Gray8 => SKAlphaType.Opaque,
+				SKColorType.Rgb565 => SKAlphaType.Opaque,
+				SKColorType.Argb4444 => alphaType,
+				SKColorType.Bgra8888 => alphaType,
+				SKColorType.Rgba8888 => alphaType,
+				SKColorType.Rgb888x => SKAlphaType.Opaque,
+				SKColorType.Rgba1010102 => alphaType,
+				SKColorType.Rgb101010x => SKAlphaType.Opaque,
+				SKColorType.RgbaF16 => alphaType,
+				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
+			};
 	}
 
 	[EditorBrowsable (EditorBrowsableState.Never)]

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 
 namespace SkiaSharp
@@ -25,9 +26,12 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return SKObject.Referenced (SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create (&bounds, stream.Handle)), stream);
+			return SKObject.Referenced (SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create_with_stream (&bounds, stream.Handle)), stream);
 		}
 
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(SKRect, Stream) instead.")]
 		public static SKCanvas Create (SKRect bounds, SKXmlWriter writer)
 		{
 			if (writer == null)

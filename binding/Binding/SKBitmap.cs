@@ -191,6 +191,8 @@ namespace SkiaSharp
 
 		// Pixels (color)
 
+		// Pixels (color)
+
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixel(int, int) instead.")]
 		public SKPMColor GetIndex8Color (int x, int y)
@@ -253,6 +255,9 @@ namespace SkiaSharp
 			if (destination == null)
 				throw new ArgumentNullException (nameof (destination));
 
+			if (colorType == SKColorType.Unknown)
+				return false;
+
 			using var srcPixmap = PeekPixels ();
 			if (srcPixmap == null)
 				return false;
@@ -263,12 +268,14 @@ namespace SkiaSharp
 			if (!temp.TryAllocPixels (dstInfo))
 				return false;
 
-			using var tempPixmap = temp.PeekPixels ();
-			if (tempPixmap == null)
-				return false;
+			using var canvas = new SKCanvas (temp);
 
-			if (!srcPixmap.ReadPixels (tempPixmap))
-				return false;
+			using var paint = new SKPaint {
+				Shader = ToShader (),
+				BlendMode = SKBlendMode.Src
+			};
+
+			canvas.DrawPaint (paint);
 
 			destination.Swap (temp);
 			return true;
@@ -830,8 +837,8 @@ namespace SkiaSharp
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
 
-			using var pixmap = new SKPixmap ();
-			return PeekPixels (pixmap) && pixmap.Encode (dst, format, quality);
+			using var pixmap = PeekPixels ();
+			return pixmap?.Encode (dst, format, quality) ?? false;
 		}
 
 		// Swap

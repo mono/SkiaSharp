@@ -893,7 +893,7 @@ namespace SkiaSharp
 
 		public SKMatrix TotalMatrix {
 			get {
-				SKMatrix matrix = new SKMatrix ();
+				SKMatrix matrix;
 				SkiaApi.sk_canvas_get_total_matrix (Handle, &matrix);
 				return matrix;
 			}

@@ -19,6 +19,9 @@ namespace SkiaSharp
 
 		internal static byte[] GetBytes (this Encoding encoding, ReadOnlySpan<char> text)
 		{
+			if (text.Length == 0)
+				return new byte[0];
+
 			fixed (char* t = text) {
 				var byteCount = encoding.GetByteCount (t, text.Length);
 				if (byteCount == 0)
@@ -49,6 +52,8 @@ namespace SkiaSharp
 
 		public static int GetUnicodeCharacterCode (string character, SKTextEncoding encoding)
 		{
+			if (character == null)
+				throw new ArgumentNullException (nameof (character));
 			if (GetUnicodeStringLength (encoding) != character.Length)
 				throw new ArgumentException (nameof (character), $"Only a single character can be specified.");
 
@@ -66,36 +71,36 @@ namespace SkiaSharp
 		public static byte[] GetEncodedText (string text, SKTextEncoding encoding) =>
 			GetEncodedText (text.AsSpan (), encoding);
 
-		public static byte[] GetEncodedText (ReadOnlySpan<char> text, SKTextEncoding encoding)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			return encoding switch
+		public static byte[] GetEncodedText (ReadOnlySpan<char> text, SKTextEncoding encoding) =>
+			encoding switch
 			{
 				SKTextEncoding.Utf8 => Encoding.UTF8.GetBytes (text),
 				SKTextEncoding.Utf16 => Encoding.Unicode.GetBytes (text),
 				SKTextEncoding.Utf32 => Encoding.UTF32.GetBytes (text),
 				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
 			};
-		}
 
 		// GetString
 
 		public static string GetString (IntPtr data, int dataLength, SKTextEncoding encoding) =>
-			GetString (data.AsReadOnlySpan (dataLength), encoding);
+			GetString (data.AsReadOnlySpan (dataLength), 0, dataLength, encoding);
 
 		public static string GetString (byte[] data, SKTextEncoding encoding) =>
 			GetString (data, 0, data.Length, encoding);
 
-		public static string GetString (byte[] data, int index, int count, SKTextEncoding encoding) =>
-			encoding switch
+		public static string GetString (byte[] data, int index, int count, SKTextEncoding encoding)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+
+			return encoding switch
 			{
 				SKTextEncoding.Utf8 => Encoding.UTF8.GetString (data, index, count),
 				SKTextEncoding.Utf16 => Encoding.Unicode.GetString (data, index, count),
 				SKTextEncoding.Utf32 => Encoding.UTF32.GetString (data, index, count),
 				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
 			};
+		}
 
 		public static string GetString (ReadOnlySpan<byte> data, SKTextEncoding encoding) =>
 			GetString (data, 0, data.Length, encoding);
@@ -103,6 +108,10 @@ namespace SkiaSharp
 		public static string GetString (ReadOnlySpan<byte> data, int index, int count, SKTextEncoding encoding)
 		{
 			data = data.Slice (index, count);
+
+			if (data.Length == 0)
+				return string.Empty;
+
 #if __DESKTOP__
 			// TODO: improve this copy for old .NET 4.5
 			var array = data.ToArray ();

@@ -23,8 +23,10 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
             var dllName = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
             if (file.GetFilenameWithoutExtension ().GetExtension () == ".breaking") {
                 // skip over breaking changes without any breaking changes
-                if (!FindTextInFiles (file.FullPath, "###").Any ())
+                if (!FindTextInFiles (file.FullPath, "###").Any ()) {
+                    DeleteFile (file);
                     continue;
+                }
 
                 dllName += ".breaking";
             }
@@ -68,8 +70,13 @@ Task ("docs-download-output")
 Task ("docs-api-diff")
     .Does (async () =>
 {
+    // working version
     var baseDir = $"{OUTPUT_NUGETS_PATH}/api-diff";
     CleanDirectories (baseDir);
+
+    // pretty version
+    var diffDir = "./output/api-diff";
+    CleanDirectories (diffDir);
 
     Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
@@ -103,6 +110,16 @@ Task ("docs-api-diff")
             await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
         }
         CopyChangelogs (diffRoot, id, version);
+
+        // copy pretty version
+        foreach (var md in GetFiles ($"{diffRoot}/*/*.md")) {
+            var tfm = md.GetDirectory ().GetDirectoryName();
+            var prettyPath = ((DirectoryPath)diffDir).CombineWithFilePath ($"{id}/{tfm}/{md.GetFilename ()}");
+            if (!FindTextInFiles (md.FullPath, "No changes").Any ()) {
+                EnsureDirectoryExists (prettyPath.GetDirectory ());
+                CopyFile (md, prettyPath);
+            }
+        }
 
         Information ($"Diff complete of '{id}'.");
     }

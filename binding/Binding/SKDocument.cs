@@ -108,7 +108,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle));
+			return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle)), stream);
 		}
 
 		public static SKDocument CreatePdf (string path, float dpi) =>

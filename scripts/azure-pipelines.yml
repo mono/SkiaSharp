@@ -24,9 +24,6 @@ variables:
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
-  # # To speed up builds when debugging DevOps
-  # DOWNLOAD_EXTERNALS: ''
-
 resources:
   repositories:
     - repository: xamarin-templates
@@ -299,7 +296,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget
           additionalArgs: --packall=true --exclusive
-          shouldPublish: false
+          shouldPublish: true
           requiredArtifacts:
             - managed_linux
             - managed_macos
@@ -315,6 +312,35 @@ stages:
               inputs:
                 artifactName: nuget
                 pathToPublish: 'output/nugets'
+
+  - stage: api_diff
+    displayName: API Diff
+    dependsOn: package
+    jobs:
+      - template: azure-templates-bootstrapper.yml # API Diff
+        parameters:
+          name: api_diff_windows
+          displayName: API Diff
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          target: docs-api-diff
+          shouldPublish: false
+          requiredArtifacts:
+            - package_windows
+          preBuildSteps:
+            - pwsh: |
+                $p = "$env:BUILD_SOURCESDIRECTORY\output\nugets\api-diff"
+                New-Item -ItemType Directory -Force -Path $p | Out-Null
+                $uri = 'https://xamarin.azureedge.net/GTKforWindows/Windows/gtk-sharp-2.12.45.msi'
+                .\scripts\download-file.ps1 -Uri $uri -OutFile gtk-sharp.msi
+                msiexec /i gtk-sharp.msi /norestart /quiet /l* $p\gtk-sharp-install.log
+              displayName: Install GTK# 2.12
+          postBuildSteps:
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the API diffs
+              condition: always()
+              inputs:
+                artifactName: api-diff
+                pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: signing

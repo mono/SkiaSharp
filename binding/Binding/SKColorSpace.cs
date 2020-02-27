@@ -79,7 +79,7 @@ namespace SkiaSharp
 			return SkiaApi.sk_colorspace_equals (left.Handle, right.Handle);
 		}
 
-		// CreateSrgb*
+		// CreateSrgb
 
 		public static SKColorSpace CreateSrgb () => srgb;
 
@@ -260,6 +260,8 @@ namespace SkiaSharp
 		[Obsolete]
 		public SKMatrix44 FromXyzD50 () =>
 			ToXyzD50 ()?.Invert ();
+
+		//
 
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{

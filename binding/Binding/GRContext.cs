@@ -62,8 +62,7 @@ namespace SkiaSharp
 
 		//
 
-		public GRBackend Backend =>
-			SkiaApi.gr_context_get_backend (Handle).FromNative ();
+		public GRBackend Backend => SkiaApi.gr_context_get_backend (Handle).FromNative ();
 
 		public void AbandonContext (bool releaseResources = false)
 		{
