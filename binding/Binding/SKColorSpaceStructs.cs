@@ -507,10 +507,7 @@ namespace SkiaSharp
 			if (data.IsEmpty)
 				return null;
 
-			var icc = Create (data.Data, data.Size);
-			if (icc != null)
-				icc.KeepAlive (data);
-			return icc;
+			return Referenced (Create (data.Data, data.Size), data);
 		}
 
 		public static SKColorSpaceIccProfile Create (IntPtr data, long length)

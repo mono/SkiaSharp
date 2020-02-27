@@ -116,11 +116,7 @@ namespace SkiaSharp
 			if (profile == null)
 				throw new ArgumentNullException (nameof (profile));
 
-			var cs = GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (profile.Handle));
-			if (cs != null)
-				cs.KeepAlive (profile);
-
-			return cs;
+			return Referenced (GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (profile.Handle)), profile);
 		}
 
 		// CreateRgb
