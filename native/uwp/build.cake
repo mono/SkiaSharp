@@ -1,5 +1,5 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
-DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
+DirectoryPath VCPKG_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/vcpkg"));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/uwp"));
 
 #load "../../cake/native-shared.cake"
@@ -83,25 +83,30 @@ Task("SkiaSharp.Views.Interop.UWP")
 Task("ANGLE")
     .Does(() =>
 {
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("uwp/ANGLE.WindowsStore.nuspec"))) {
-        var id = "ANGLE.WindowsStore";
-        var version = GetVersion(id, "release");
-        var angleUrl = $"https://api.nuget.org/v3-flatcontainer/{id.ToLower()}/{version}/{id.ToLower()}.{version}.nupkg";
-        var angleRoot = ANGLE_PATH.Combine("uwp");
-        var angleNupkg = angleRoot.CombineWithFilePath($"angle_{version}.nupkg");
+    if (!DirectoryExists (VCPKG_PATH))
+        RunProcess ("git", $"clone --depth 1 https://github.com/microsoft/vcpkg.git --branch master --single-branch {VCPKG_PATH}");
 
-        EnsureDirectoryExists(angleRoot);
-        CleanDirectory(angleRoot);
+    var vcpkg = VCPKG_PATH.CombineWithFilePath ("vcpkg.exe");
+    if (!FileExists (vcpkg))
+        RunProcess (VCPKG_PATH.CombineWithFilePath ("bootstrap-vcpkg.bat"));
 
-        DownloadFile(angleUrl, angleNupkg);
-        Unzip(angleNupkg, angleRoot);
-    }
+    Build("x86");
+    Build("x64");
+    Build("arm");
+    // Build("arm64");
 
-    foreach (var arch in new[] { ("arm", "ARM"), ("x86", "Win32"), ("x64", "X64") }) {
-        var outDir = OUTPUT_PATH.Combine(arch.Item1);
+    void Build(string arch)
+    {
+        if (Skip(arch)) return;
+
+        RunProcess (vcpkg, $"install angle:{arch}-uwp");
+
+        var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"uwp/bin/UAP/{arch.Item2}/libEGL.dll"), outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"uwp/bin/UAP/{arch.Item2}/libGLESv2.dll"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/bin/libEGL.dll"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/bin/libEGL.pdb"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/bin/libGLESv2.dll"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/bin/libGLESv2.pdb"), outDir);
     }
 });
 
