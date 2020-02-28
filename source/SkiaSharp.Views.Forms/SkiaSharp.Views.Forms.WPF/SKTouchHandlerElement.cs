@@ -103,6 +103,10 @@ namespace SkiaSharp.Views.Forms
 
 			var view = sender as FrameworkElement;
 
+			// bail out if this view is not part the view hierarchy anymore
+			if (PresentationSource.FromVisual(view) == null)
+				return false;
+
 			var id = GetId(evt);
 			var action = GetTouchAction(touchActionType, view, evt);
 			var mouse = GetMouseButton(evt);

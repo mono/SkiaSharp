@@ -8,9 +8,6 @@ namespace SkiaSharp.Tests
 {
 	public class SKMaskTest : SKTest
 	{
-		private const float EPSILON = 0.0001f;
-		private const int PRECISION = 4;
-
 		[SkippableFact]
 		public unsafe void FixedImageMaskIsHandledCorrectly()
 		{
@@ -20,12 +17,11 @@ namespace SkiaSharp.Tests
 			UInt32 rowBytes = 1;
 			var format = SKMaskFormat.BW;
 
-			fixed (void* bufferPtr = buffer)
-			{
-				var mask = SKMask.Create(buffer, bounds, rowBytes, format);
+			var mask = SKMask.Create(buffer, bounds, rowBytes, format);
 
-				Assert.Equal(rawMask, mask.GetAddr1(0, 0));
-			}
+			Assert.Equal(rawMask, mask.GetAddr1(0, 0));
+
+			mask.FreeImage();
 		}
 
 		[SkippableFact]

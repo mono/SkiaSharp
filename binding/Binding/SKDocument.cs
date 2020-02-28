@@ -8,9 +8,6 @@ namespace SkiaSharp
 	{
 		public const float DefaultRasterDpi = 72.0f;
 
-		// keep the stream alive for as long as the document exists
-		private SKWStream underlyingStream;
-
 		[Preserve]
 		internal SKDocument (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -111,7 +108,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle));
+			return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle)), stream);
 		}
 
 		public static SKDocument CreatePdf (string path, float dpi) =>
@@ -167,37 +164,19 @@ namespace SkiaSharp
 					fEncodingQuality = metadata.EncodingQuality,
 				};
 
+				SKTimeDateTimeInternal creation;
 				if (metadata.Creation != null) {
-					var creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
+					creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
 					cmetadata.fCreation = &creation;
 				}
+				SKTimeDateTimeInternal modified;
 				if (metadata.Modified != null) {
-					var modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
+					modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
 					cmetadata.fModified = &modified;
 				}
 
 				return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, &cmetadata)), stream);
 			}
-		}
-
-		private static SKDocument Owned (SKDocument doc, SKWStream stream)
-		{
-			if (stream != null) {
-				if (doc != null)
-					doc.SetDisposeChild (stream);
-				else
-					stream.Dispose ();
-			}
-
-			return doc;
-		}
-
-		private static SKDocument Referenced (SKDocument doc, SKWStream stream)
-		{
-			if (stream != null && doc != null)
-				doc.underlyingStream = stream;
-
-			return doc;
 		}
 	}
 }

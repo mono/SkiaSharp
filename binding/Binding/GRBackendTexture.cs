@@ -75,6 +75,7 @@ namespace SkiaSharp
 			}
 		}
 
+		[Obsolete]
 		[StructLayout (LayoutKind.Sequential)]
 		internal struct GRTextureInfoObsolete
 		{

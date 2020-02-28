@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Text;
 using System.ComponentModel;
+using System.Buffers;
 
 namespace SkiaSharp
 {
@@ -41,6 +42,8 @@ namespace SkiaSharp
 
 		public static SKData Empty => empty.Value;
 
+		// CreateCopy
+
 		public static SKData CreateCopy (IntPtr bytes, ulong length)
 		{
 			if (SizeOf <IntPtr> () == 4 && length > UInt32.MaxValue)
@@ -65,6 +68,8 @@ namespace SkiaSharp
 			}
 		}
 
+		// Create
+
 		public static SKData Create (int size)
 		{
 			return GetObject<SKData> (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
@@ -83,7 +88,7 @@ namespace SkiaSharp
 			if (string.IsNullOrEmpty (filename))
 				throw new ArgumentException ("The filename cannot be empty.", nameof (filename));
 
-			var utf8path = StringUtilities.GetEncodedText (filename, SKEncoding.Utf8);
+			var utf8path = StringUtilities.GetEncodedText (filename, SKTextEncoding.Utf8);
 			fixed (byte* u = utf8path) {
 				return GetObject<SKData> (SkiaApi.sk_data_new_from_file (u));
 			}
@@ -180,6 +185,8 @@ namespace SkiaSharp
 			return SKData.CreateCopy (bytes, (ulong)(bytes.Length + 1)); // + 1 for the terminating char
 		}
 
+		// Subset
+
 		public SKData Subset (ulong offset, ulong length)
 		{
 			if (SizeOf <IntPtr> () == 4) {
@@ -191,6 +198,8 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
 		}
 
+		// ToArray
+
 		public byte[] ToArray ()
 		{
 			var array = AsSpan ().ToArray ();
@@ -198,11 +207,15 @@ namespace SkiaSharp
 			return array;
 		}
 
+		// properties
+
 		public bool IsEmpty => Size == 0;
 
 		public long Size => (long)SkiaApi.sk_data_get_size (Handle);
 
 		public IntPtr Data => (IntPtr)SkiaApi.sk_data_get_data (Handle);
+
+		// AsStream
 
 		public Stream AsStream () =>
 			new SKDataStream (this, false);
@@ -210,28 +223,37 @@ namespace SkiaSharp
 		public Stream AsStream (bool streamDisposesData) =>
 			new SKDataStream (this, streamDisposesData);
 
+		// AsSpan
+
 		public ReadOnlySpan<byte> AsSpan ()
 		{
 			return new ReadOnlySpan<byte> ((void*)Data, (int)Size);
 		}
+
+		// SaveTo
 
 		public void SaveTo (Stream target)
 		{
 			if (target == null)
 				throw new ArgumentNullException (nameof (target));
 
-			var buffer = new byte [CopyBufferSize];
 			var ptr = Data;
 			var total = Size;
-
-			for (var left = total; left > 0; ) {
-				var copyCount = (int) Math.Min (CopyBufferSize, left);
-				Marshal.Copy (ptr, buffer, 0, copyCount);
-				left -= copyCount;
-				ptr += copyCount;
-				target.Write (buffer, 0, copyCount);
+			var buffer = ArrayPool<byte>.Shared.Rent (CopyBufferSize);
+			try {
+				for (var left = total; left > 0;) {
+					var copyCount = (int)Math.Min (CopyBufferSize, left);
+					Marshal.Copy (ptr, buffer, 0, copyCount);
+					left -= copyCount;
+					ptr += copyCount;
+					target.Write (buffer, 0, copyCount);
+				}
+			} finally {
+				ArrayPool<byte>.Shared.Return (buffer);
 			}
 		}
+
+		//
 
 		private class SKDataStream : UnmanagedMemoryStream
 		{

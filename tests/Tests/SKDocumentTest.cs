@@ -177,7 +177,7 @@ namespace SkiaSharp.Tests
 
 			Assert.False(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
 
-			void DoWork(out IntPtr streamHandle)
+			static void DoWork(out IntPtr streamHandle)
 			{
 				using (var document = CreateDocument(out streamHandle))
 				{
@@ -188,15 +188,15 @@ namespace SkiaSharp.Tests
 
 					CollectGarbage();
 
-					Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
+					Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(streamHandle, out _));
 
 					document.Close();
 				}
 
-				Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
+				Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(streamHandle, out _));
 			}
 
-			SKDocument CreateDocument(out IntPtr streamHandle)
+			static SKDocument CreateDocument(out IntPtr streamHandle)
 			{
 				var stream = new SKDynamicMemoryWStream();
 				streamHandle = stream.Handle;

@@ -4,26 +4,6 @@
 
 ### Namespace SkiaSharp
 
-#### Type Changed: SkiaSharp.SKColor
-
-Modified methods:
-
-```diff
--public override bool Equals (object other)
-+public override bool Equals (object obj)
-```
-
-
-#### Type Changed: SkiaSharp.SKPMColor
-
-Modified methods:
-
-```diff
--public override bool Equals (object other)
-+public override bool Equals (object obj)
-```
-
-
 #### Type Changed: SkiaSharp.SKSize
 
 Modified methods:
