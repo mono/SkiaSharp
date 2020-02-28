@@ -92,6 +92,12 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
           additionalArgs: --buildarch=x86
+          postBuildSteps:
+            - task: PublishBuildArtifacts@1
+              condition: always()
+              inputs:
+                artifactName: angle-logs-x86
+                pathToPublish: 'externals\vcpkg\buildtrees\angle'
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Windows)
         parameters:
           name: native_uwp_x64_windows
@@ -99,6 +105,12 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
           additionalArgs: --buildarch=x64
+          postBuildSteps:
+            - task: PublishBuildArtifacts@1
+              condition: always()
+              inputs:
+                artifactName: angle-logs-x64
+                pathToPublish: 'externals\vcpkg\buildtrees\angle'
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
         parameters:
           name: native_uwp_arm_windows
@@ -106,6 +118,12 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
           additionalArgs: --buildarch=arm
+          postBuildSteps:
+            - task: PublishBuildArtifacts@1
+              condition: always()
+              inputs:
+                artifactName: angle-logs-arm
+                pathToPublish: 'externals\vcpkg\buildtrees\angle'
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
         parameters:
           name: native_uwp_arm64_windows
