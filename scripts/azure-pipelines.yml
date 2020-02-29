@@ -85,13 +85,34 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
-      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP (Windows)
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
         parameters:
-          name: native_uwp_angle_windows
-          displayName: Build ANGLE UWP (Windows)
+          name: native_uwp_angle_x86_windows
+          displayName: Build ANGLE UWP|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
-          additionalArgs: -Script .\native\uwp\build.cake
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Windows)
+        parameters:
+          name: native_uwp_angle_x64_windows
+          displayName: Build ANGLE UWP|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Windows)
+        parameters:
+          name: native_uwp_angle_arm_windows
+          displayName: Build ANGLE UWP|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Windows)
+        parameters:
+          name: native_uwp_angle_arm64_windows
+          displayName: Build ANGLE UWP|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
           name: native_uwp_x86_windows
@@ -248,7 +269,10 @@ stages:
             - native_android_arm64_windows
             # - native_tizen_windows
             - native_tizen_linux
-            - native_uwp_angle_windows
+            - native_uwp_angle_x86_windows
+            - native_uwp_angle_x64_windows
+            - native_uwp_angle_arm_windows
+            - native_uwp_angle_arm64_windows
             - native_uwp_x86_windows
             - native_uwp_x64_windows
             - native_uwp_arm_windows
