@@ -91,7 +91,7 @@ stages:
           displayName: Build ANGLE UWP (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
-          additionalArgs: --script=native\uwp\build.cake
+          additionalArgs: -Script .\native\uwp\build.cake
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
           name: native_uwp_x86_windows
