@@ -18,7 +18,7 @@ variables:
   XCODE_VERSION: 11.3
   DOTNET_VERSION: 3.0.x
   CONFIGURATION: 'Release'
-  VM_IMAGE_WINDOWS_NATIVE: Hosted Windows 2019 with VS2019
+  VM_IMAGE_WINDOWS_NATIVE: Hosted VS2017
   VM_IMAGE_WINDOWS: Hosted Windows 2019 with VS2019
   VM_IMAGE_MAC: Hosted macOS
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
@@ -85,52 +85,41 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP (Windows)
+        parameters:
+          name: native_uwp_angle_windows
+          displayName: Build ANGLE UWP (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          preBuildSteps:
+            - pwsh: dotnet cake .\native\uwp\build.cake --target=ANGLE
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
           name: native_uwp_x86_windows
           displayName: Build Native UWP|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
-          additionalArgs: --buildarch=x86
-          postBuildSteps:
-            - task: PublishBuildArtifacts@1
-              condition: always()
-              inputs:
-                artifactName: angle-logs-x86
-                pathToPublish: 'externals\vcpkg\buildtrees\angle'
+          additionalArgs: --buildarch=x86 --skipAngle=true
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Windows)
         parameters:
           name: native_uwp_x64_windows
           displayName: Build Native UWP|x64 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
-          additionalArgs: --buildarch=x64
-          postBuildSteps:
-            - task: PublishBuildArtifacts@1
-              condition: always()
-              inputs:
-                artifactName: angle-logs-x64
-                pathToPublish: 'externals\vcpkg\buildtrees\angle'
+          additionalArgs: --buildarch=x64 --skipAngle=true
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
         parameters:
           name: native_uwp_arm_windows
           displayName: Build Native UWP|arm (Windows)
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
-          additionalArgs: --buildarch=arm
-          postBuildSteps:
-            - task: PublishBuildArtifacts@1
-              condition: always()
-              inputs:
-                artifactName: angle-logs-arm
-                pathToPublish: 'externals\vcpkg\buildtrees\angle'
+          additionalArgs: --buildarch=arm --skipAngle=true
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
         parameters:
           name: native_uwp_arm64_windows
           displayName: Build Native UWP|arm64 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
-          additionalArgs: --buildarch=arm64
+          additionalArgs: --buildarch=arm64 --skipAngle=true
           condition: false # TODO: NOT YET SUPPORTED
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
         parameters:
@@ -259,6 +248,7 @@ stages:
             - native_android_arm64_windows
             # - native_tizen_windows
             - native_tizen_linux
+            - native_uwp_angle_windows
             - native_uwp_x86_windows
             - native_uwp_x64_windows
             - native_uwp_arm_windows

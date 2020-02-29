@@ -1,3 +1,5 @@
+var SKIP_ANGLE = Argument ("skipAngle", false);
+
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath VCPKG_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/vcpkg"));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/uwp"));
@@ -83,6 +85,9 @@ Task("SkiaSharp.Views.Interop.UWP")
 Task("ANGLE")
     .Does(() =>
 {
+    if (SKIP_ANGLE)
+        return;
+
     if (!DirectoryExists (VCPKG_PATH))
         RunProcess ("git", $"clone --depth 1 https://github.com/microsoft/vcpkg.git --branch master --single-branch {VCPKG_PATH}");
 
@@ -111,9 +116,9 @@ Task("ANGLE")
 });
 
 Task("Default")
-    .IsDependentOn("ANGLE")
     .IsDependentOn("libSkiaSharp")
     .IsDependentOn("libHarfBuzzSharp")
-    .IsDependentOn("SkiaSharp.Views.Interop.UWP");
+    .IsDependentOn("SkiaSharp.Views.Interop.UWP")
+    .IsDependentOn("ANGLE");
 
 RunTarget(TARGET);
