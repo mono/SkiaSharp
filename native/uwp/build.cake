@@ -54,7 +54,7 @@ Task("libHarfBuzzSharp")
     Build("Win32", "x86");
     Build("x64", "x64");
     Build("ARM", "arm");
-    // Build("ARM64", "arm64");
+    Build("ARM64", "arm64");
 
     void Build(string arch, string dir)
     {
@@ -107,7 +107,7 @@ Task("ANGLE")
     Build("x86");
     Build("x64");
     Build("arm");
-    // Build("arm64");
+    Build("arm64");
 
     void Build(string arch)
     {

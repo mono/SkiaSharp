@@ -113,7 +113,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
-          condition: false # TODO: NOT YET SUPPORTED
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
           name: native_uwp_x86_windows
@@ -142,7 +141,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
           additionalArgs: --buildarch=arm64 --skipAngle=true
-          condition: false # TODO: NOT YET SUPPORTED
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
         parameters:
           name: native_win32_x86_windows
@@ -273,11 +271,11 @@ stages:
             - native_uwp_angle_x86_windows
             - native_uwp_angle_x64_windows
             - native_uwp_angle_arm_windows
-            # - native_uwp_angle_arm64_windows
+            - native_uwp_angle_arm64_windows
             - native_uwp_x86_windows
             - native_uwp_x64_windows
             - native_uwp_arm_windows
-            # - native_uwp_arm64_windows
+            - native_uwp_arm64_windows
             - native_win32_x86_windows
             - native_win32_x64_windows
             - native_win32_x64_nanoserver_windows
