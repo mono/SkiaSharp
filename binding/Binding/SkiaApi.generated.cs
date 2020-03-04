@@ -167,7 +167,7 @@ namespace SkiaSharp
 
 		// int gr_context_get_max_surface_sample_count_for_color_type(gr_context_t* context, sk_colortype_t colorType)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_context_get_max_surface_sample_count_for_color_type (gr_context_t context, SKColorType colorType);
+		internal static extern Int32 gr_context_get_max_surface_sample_count_for_color_type (gr_context_t context, SKColorTypeNative colorType);
 
 		// void gr_context_get_resource_cache_limits(gr_context_t* context, int* maxResources, size_t* maxResourceBytes)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1284,15 +1284,15 @@ namespace SkiaSharp
 
 		// sk_colortype_t gr_pixelconfig_to_sk_colortype(gr_pixelconfig_t pixelConfig)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorType gr_pixelconfig_to_sk_colortype (GRPixelConfigNative pixelConfig);
+		internal static extern SKColorTypeNative gr_pixelconfig_to_sk_colortype (GRPixelConfigNative pixelConfig);
 
 		// sk_colortype_t sk_colortype_get_default_8888()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorType sk_colortype_get_default_8888 ();
+		internal static extern SKColorTypeNative sk_colortype_get_default_8888 ();
 
 		// gr_pixelconfig_t sk_colortype_to_gr_pixelconfig(sk_colortype_t colorType)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRPixelConfigNative sk_colortype_to_gr_pixelconfig (SKColorType colorType);
+		internal static extern GRPixelConfigNative sk_colortype_to_gr_pixelconfig (SKColorTypeNative colorType);
 
 		// int sk_nvrefcnt_get_ref_count(const sk_nvrefcnt_t* refcnt)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1346,7 +1346,7 @@ namespace SkiaSharp
 
 		// sk_colortype_t sk_image_get_color_type(const sk_image_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorType sk_image_get_color_type (sk_image_t param0);
+		internal static extern SKColorTypeNative sk_image_get_color_type (sk_image_t param0);
 
 		// sk_colorspace_t* sk_image_get_colorspace(const sk_image_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1410,7 +1410,7 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_from_adopted_texture(gr_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, sk_colorspace_t* colorSpace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_image_t sk_image_new_from_adopted_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, sk_colorspace_t colorSpace);
+		internal static extern sk_image_t sk_image_new_from_adopted_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorTypeNative colorType, SKAlphaType alpha, sk_colorspace_t colorSpace);
 
 		// sk_image_t* sk_image_new_from_bitmap(const sk_bitmap_t* cbitmap)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1426,7 +1426,7 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_from_texture(gr_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, sk_colorspace_t* colorSpace, sk_image_texture_release_proc releaseProc, void* releaseContext)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_image_t sk_image_new_from_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, sk_colorspace_t colorSpace, SKImageTextureReleaseProxyDelegate releaseProc, void* releaseContext);
+		internal static extern sk_image_t sk_image_new_from_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorTypeNative colorType, SKAlphaType alpha, sk_colorspace_t colorSpace, SKImageTextureReleaseProxyDelegate releaseProc, void* releaseContext);
 
 		// sk_image_t* sk_image_new_raster(const sk_pixmap_t* pixmap, sk_image_raster_release_proc releaseProc, void* context)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -3299,15 +3299,15 @@ namespace SkiaSharp
 
 		// sk_surface_t* sk_surface_new_backend_render_target(gr_context_t* context, const gr_backendrendertarget_t* target, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, gr_backendrendertarget_t target, GRSurfaceOrigin origin, SKColorType colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		internal static extern sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, gr_backendrendertarget_t target, GRSurfaceOrigin origin, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
 
 		// sk_surface_t* sk_surface_new_backend_texture(gr_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, int samples, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_surface_t sk_surface_new_backend_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, Int32 samples, SKColorType colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		internal static extern sk_surface_t sk_surface_new_backend_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, Int32 samples, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
 
 		// sk_surface_t* sk_surface_new_backend_texture_as_render_target(gr_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, int samples, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_surface_t sk_surface_new_backend_texture_as_render_target (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, Int32 samples, SKColorType colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		internal static extern sk_surface_t sk_surface_new_backend_texture_as_render_target (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, Int32 samples, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
 
 		// sk_image_t* sk_surface_new_image_snapshot(sk_surface_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -4560,7 +4560,7 @@ namespace SkiaSharp
 		public Int32 height;
 
 		// public sk_colortype_t colorType
-		public SKColorType colorType;
+		public SKColorTypeNative colorType;
 
 		// public sk_alphatype_t alphaType
 		public SKAlphaType alphaType;
@@ -5745,7 +5745,7 @@ namespace SkiaSharp
 	}
 
 	// sk_colortype_t
-	public enum SKColorType {
+	internal enum SKColorTypeNative {
 		// UNKNOWN_SK_COLORTYPE = 0
 		Unknown = 0,
 		// ALPHA_8_SK_COLORTYPE = 1

@@ -145,7 +145,7 @@ namespace SkiaSharp
 			if (renderTarget == null)
 				throw new ArgumentNullException (nameof (renderTarget));
 
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND TEXTURE surface
@@ -198,7 +198,7 @@ namespace SkiaSharp
 			if (texture == null)
 				throw new ArgumentNullException (nameof (texture));
 
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND TEXTURE AS RENDER TARGET surface
@@ -251,7 +251,7 @@ namespace SkiaSharp
 			if (texture == null)
 				throw new ArgumentNullException (nameof (texture));
 
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU NEW surface

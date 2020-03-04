@@ -32,5 +32,33 @@ namespace SkiaSharp.Tests
 				Assert.Equal(value.ToString(), value.FromNative().ToString());
 			}
 		}
+
+		[SkippableFact]
+		public void SKColorTypeMappings()
+		{
+			foreach (SKColorType value in Enum.GetValues(typeof(SKColorType)))
+			{
+				Assert.Equal(value.ToString(), value.ToNative().ToString());
+			}
+
+			foreach (SKColorTypeNative value in Enum.GetValues(typeof(SKColorTypeNative)))
+			{
+				Assert.Equal(value.ToString(), value.FromNative().ToString());
+			}
+		}
+
+		[SkippableFact]
+		public void GetAlphaTypeMappings()
+		{
+			foreach (SKColorType value in Enum.GetValues(typeof(SKColorType)))
+			{
+				var alphaType = value.GetAlphaType();
+
+				if (value == SKColorType.Unknown)
+					Assert.Equal(SKAlphaType.Unknown, alphaType);
+				else
+					Assert.NotEqual(SKAlphaType.Unknown, alphaType);
+			}
+		}
 	}
 }

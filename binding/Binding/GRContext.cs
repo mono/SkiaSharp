@@ -106,7 +106,7 @@ namespace SkiaSharp
 			SkiaApi.gr_context_flush (Handle);
 
 		public int GetMaxSurfaceSampleCount (SKColorType colorType) =>
-			SkiaApi.gr_context_get_max_surface_sample_count_for_color_type (Handle, colorType);
+			SkiaApi.gr_context_get_max_surface_sample_count_for_color_type (Handle, colorType.ToNative ());
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]

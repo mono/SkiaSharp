@@ -54,6 +54,29 @@ namespace SkiaSharp
 		UltraExpanded = 9,
 	}
 
+	public enum SKColorType
+	{
+		Unknown = 0,
+		Alpha8 = 1,
+		Rgb565 = 2,
+		Argb4444 = 3,
+		Rgba8888 = 4,
+		Rgb888x = 5,
+		Bgra8888 = 6,
+		Rgba1010102 = 7,
+		Rgb101010x = 8,
+		Gray8 = 9,
+		RgbaF16 = 10,
+		RgbaF16Normalized = 11,
+		RgbaF32 = 12,
+		R8g8Unnormalized = 13,
+		A16Float = 14,
+		R16g16Float = 15,
+		A16Unnormalized = 16,
+		R16g16Unnormalized = 17,
+		R16g16b16a16Unnormalized = 18,
+	}
+
 	public static partial class SkiaExtensions
 	{
 		public static bool IsBgr (this SKPixelGeometry pg) =>
@@ -90,39 +113,84 @@ namespace SkiaSharp
 				_ => throw new ArgumentOutOfRangeException (nameof (encoding)),
 			};
 
+		// SkImageInfo.cpp - SkColorTypeBytesPerPixel
 		public static int GetBytesPerPixel (this SKColorType colorType) =>
 			colorType switch
 			{
+				// 0
 				SKColorType.Unknown => 0,
+				// 1
 				SKColorType.Alpha8 => 1,
 				SKColorType.Gray8 => 1,
+				// 2
 				SKColorType.Rgb565 => 2,
 				SKColorType.Argb4444 => 2,
+				SKColorType.R8g8Unnormalized => 2,
+				SKColorType.A16Unnormalized => 2,
+				SKColorType.A16Float => 2,
+				// 4
 				SKColorType.Bgra8888 => 4,
 				SKColorType.Rgba8888 => 4,
 				SKColorType.Rgb888x => 4,
 				SKColorType.Rgba1010102 => 4,
 				SKColorType.Rgb101010x => 4,
+				SKColorType.R16g16Unnormalized => 4,
+				SKColorType.R16g16Float => 4,
+				// 8
+				SKColorType.RgbaF16Normalized => 8,
 				SKColorType.RgbaF16 => 8,
+				SKColorType.R16g16b16a16Unnormalized => 8,
+				// 16
+				SKColorType.RgbaF32 => 16,
+				//
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
 			};
 
-		public static SKAlphaType GetAlphaType (this SKColorType colorType, SKAlphaType alphaType = SKAlphaType.Premul) =>
-			colorType switch
-			{
-				SKColorType.Unknown => SKAlphaType.Unknown,
-				SKColorType.Alpha8 => SKAlphaType.Premul,
-				SKColorType.Gray8 => SKAlphaType.Opaque,
-				SKColorType.Rgb565 => SKAlphaType.Opaque,
-				SKColorType.Argb4444 => alphaType,
-				SKColorType.Bgra8888 => alphaType,
-				SKColorType.Rgba8888 => alphaType,
-				SKColorType.Rgb888x => SKAlphaType.Opaque,
-				SKColorType.Rgba1010102 => alphaType,
-				SKColorType.Rgb101010x => SKAlphaType.Opaque,
-				SKColorType.RgbaF16 => alphaType,
-				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
-			};
+		// SkImageInfo.cpp - SkColorTypeValidateAlphaType
+		public static SKAlphaType GetAlphaType (this SKColorType colorType, SKAlphaType alphaType = SKAlphaType.Premul)
+		{
+			switch (colorType) {
+				case SKColorType.Unknown:
+					alphaType = SKAlphaType.Unknown;
+					break;
+
+				// opaque or premul
+				case SKColorType.Alpha8:
+				case SKColorType.A16Unnormalized:
+				case SKColorType.A16Float:
+					if (SKAlphaType.Unpremul == alphaType) {
+						alphaType = SKAlphaType.Premul;
+					}
+					break;
+
+				// any
+				case SKColorType.Argb4444:
+				case SKColorType.Rgba8888:
+				case SKColorType.Bgra8888:
+				case SKColorType.Rgba1010102:
+				case SKColorType.RgbaF16Normalized:
+				case SKColorType.RgbaF16:
+				case SKColorType.RgbaF32:
+				case SKColorType.R16g16b16a16Unnormalized:
+					break;
+
+				// opaque
+				case SKColorType.Gray8:
+				case SKColorType.R8g8Unnormalized:
+				case SKColorType.R16g16Unnormalized:
+				case SKColorType.R16g16Float:
+				case SKColorType.Rgb565:
+				case SKColorType.Rgb888x:
+				case SKColorType.Rgb101010x:
+					alphaType = SKAlphaType.Opaque;
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException (nameof (colorType));
+			}
+
+			return alphaType;
+		}
 	}
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
@@ -556,7 +624,7 @@ namespace SkiaSharp
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
-		public SKTransferFunctionBehavior UnpremulBehavior {
+		public SKTransferFunctionBehavior BlendBehavior {
 			readonly get => SKTransferFunctionBehavior.Respect;
 			set { }
 		}

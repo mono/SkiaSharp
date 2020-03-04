@@ -357,7 +357,7 @@ namespace SkiaSharp
 				? new SKImageTextureReleaseDelegate ((_) => releaseProc (releaseContext))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageTextureReleaseDelegateProxy, out _, out var ctx);
-			return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs, proxy, (void*)ctx));
+			return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType.ToNative (), alpha, cs, proxy, (void*)ctx));
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -413,7 +413,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (texture));
 
 			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
-			return GetObject<SKImage> (SkiaApi.sk_image_new_from_adopted_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs));
+			return GetObject<SKImage> (SkiaApi.sk_image_new_from_adopted_texture (context.Handle, texture.Handle, origin, colorType.ToNative (), alpha, cs));
 		}
 
 		// create a new image from a picture
@@ -501,7 +501,7 @@ namespace SkiaSharp
 			SkiaApi.sk_image_get_alpha_type (Handle);
 
 		public SKColorType ColorType =>
-			SkiaApi.sk_image_get_color_type (Handle);
+			SkiaApi.sk_image_get_color_type (Handle).FromNative ();
 
 		public SKColorSpace ColorSpace =>
 			GetObject<SKColorSpace> (SkiaApi.sk_image_get_colorspace (Handle));
