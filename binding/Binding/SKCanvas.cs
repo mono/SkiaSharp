@@ -566,6 +566,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 
 			using var blob = SKTextBlob.Create (text, font);
+			if (blob == null)
+				return;
+
 			DrawText (blob, x, y, paint);
 		}
 
@@ -586,6 +589,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 
 			using var blob = SKTextBlob.Create (text, paint.TextEncoding, paint.GetFont ());
+			if (blob == null)
+				return;
+
 			DrawText (blob, x, y, paint);
 		}
 
@@ -606,6 +612,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 
 			using var blob = SKTextBlob.Create (buffer, length, paint.TextEncoding, paint.GetFont ());
+			if (blob == null)
+				return;
+
 			DrawText (blob, x, y, paint);
 		}
 
@@ -623,6 +632,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (points));
 
 			using var blob = SKTextBlob.CreatePositioned (text, paint.GetFont (), points);
+			if (blob == null)
+				return;
+
 			DrawText (blob, 0, 0, paint);
 		}
 
@@ -638,6 +650,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (points));
 
 			using var blob = SKTextBlob.CreatePositioned (text, paint.TextEncoding, paint.GetFont (), points);
+			if (blob == null)
+				return;
+
 			DrawText (blob, 0, 0, paint);
 		}
 
@@ -653,6 +668,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (points));
 
 			using var blob = SKTextBlob.CreatePositioned (buffer, length, paint.TextEncoding, paint.GetFont (), points);
+			if (blob == null)
+				return;
+
 			DrawText (blob, 0, 0, paint);
 		}
 

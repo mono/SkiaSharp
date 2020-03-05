@@ -179,7 +179,7 @@ namespace SkiaSharp
 		public void AddRun (ReadOnlySpan<char> text, SKFont font, SKPoint origin = default)
 		{
 			fixed (void* t = text) {
-				AddRun (t, text.Length, SKTextEncoding.Utf16, font, origin);
+				AddRun (t, text.Length * 2, SKTextEncoding.Utf16, font, origin);
 			}
 		}
 
@@ -224,7 +224,7 @@ namespace SkiaSharp
 		public void AddHorizontalRun (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
 			fixed (void* t = text) {
-				AddHorizontalRun (t, text.Length, SKTextEncoding.Utf16, font, positions, y);
+				AddHorizontalRun (t, text.Length * 2, SKTextEncoding.Utf16, font, positions, y);
 			}
 		}
 
@@ -269,7 +269,7 @@ namespace SkiaSharp
 		public void AddPositionedRun (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
 			fixed (void* t = text) {
-				AddPositionedRun (t, text.Length, SKTextEncoding.Utf16, font, positions);
+				AddPositionedRun (t, text.Length * 2, SKTextEncoding.Utf16, font, positions);
 			}
 		}
 
@@ -314,7 +314,7 @@ namespace SkiaSharp
 		public void AddRotationScaleRun (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
 		{
 			fixed (void* t = text) {
-				AddRotationScaleRun (t, text.Length, SKTextEncoding.Utf16, font, positions);
+				AddRotationScaleRun (t, text.Length * 2, SKTextEncoding.Utf16, font, positions);
 			}
 		}
 

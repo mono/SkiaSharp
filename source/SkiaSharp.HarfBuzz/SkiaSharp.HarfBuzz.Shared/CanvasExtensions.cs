@@ -43,9 +43,11 @@ namespace SkiaSharp.HarfBuzz
 
 			// copy the glyphs
 			var g = run.GetGlyphSpan();
+			var p = run.GetPositionSpan();
 			for (var i = 0; i < result.Codepoints.Length; i++)
 			{
 				g[i] = (ushort)result.Codepoints[i];
+				p[i] = result.Points[i];
 			}
 
 			// build

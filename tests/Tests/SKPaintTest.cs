@@ -14,9 +14,11 @@ namespace SkiaSharp.Tests
 
 			paint.IsStroke = true;
 			Assert.True(paint.IsStroke);
+			Assert.Equal(SKPaintStyle.Stroke, paint.Style);
 
 			paint.IsStroke = false;
 			Assert.False(paint.IsStroke);
+			Assert.Equal(SKPaintStyle.Fill, paint.Style);
 		}
 
 		[SkippableFact]

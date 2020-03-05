@@ -36,7 +36,9 @@ namespace SkiaSharp
 			if (writer == null)
 				throw new ArgumentNullException (nameof (writer));
 
-			return SKObject.Referenced (SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create_with_writer (&bounds, writer.Handle)), writer);
+			var canvas = SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create_with_writer (&bounds, writer.Handle));
+			writer.RevokeOwnership (canvas);
+			return SKObject.Referenced (canvas, writer);
 		}
 	}
 }

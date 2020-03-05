@@ -239,7 +239,8 @@ namespace SkiaSharp
 
 			var ptr = Data;
 			var total = Size;
-			var buffer = ArrayPool<byte>.Shared.Rent (CopyBufferSize);
+			var pool = ArrayPool<byte>.Shared;
+			var buffer = pool.Rent (CopyBufferSize);
 			try {
 				for (var left = total; left > 0;) {
 					var copyCount = (int)Math.Min (CopyBufferSize, left);
@@ -249,7 +250,7 @@ namespace SkiaSharp
 					target.Write (buffer, 0, copyCount);
 				}
 			} finally {
-				ArrayPool<byte>.Shared.Return (buffer);
+				pool.Return (buffer);
 			}
 		}
 

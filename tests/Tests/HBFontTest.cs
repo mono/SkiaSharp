@@ -163,10 +163,11 @@ namespace HarfBuzzSharp.Tests
 		public void GlyphToStringIsCorrectWithDelegate()
 		{
 			// get an array and fill it with things
-			var buffer = ArrayPool<byte>.Shared.Rent(Font.NameBufferLength);
+			var pool = ArrayPool<byte>.Shared;
+			var buffer = pool.Rent(Font.NameBufferLength);
 			for (int i = 0; i < buffer.Length; i++)
 				buffer[i] = (byte)i;
-			ArrayPool<byte>.Shared.Return(buffer);
+			pool.Return(buffer);
 
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
