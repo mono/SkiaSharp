@@ -28,7 +28,7 @@ namespace SkiaSharp.Tests
 
 			var bytes = StringUtilities.GetEncodedText("ä", encoding);
 			var count = font.CountGlyphs(bytes, encoding);
-			Assert.Equal(2, count);
+			Assert.Equal(1, count);
 		}
 
 		[SkippableFact]

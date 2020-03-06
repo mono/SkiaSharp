@@ -230,7 +230,7 @@ namespace SkiaSharp
 			ContainsGlyphs (GetGlyphs (text, length, encoding));
 
 		private bool ContainsGlyphs (ushort[] glyphs) =>
-			Array.IndexOf (glyphs, 0) == -1;
+			Array.IndexOf (glyphs, (ushort)0) == -1;
 
 		// CountGlyphs
 
