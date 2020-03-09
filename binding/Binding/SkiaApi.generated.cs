@@ -353,14 +353,6 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_set_immutable (sk_bitmap_t cbitmap);
 
-		// void sk_bitmap_set_pixel_color(sk_bitmap_t* cbitmap, int x, int y, sk_color_t color)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_set_pixel_color (sk_bitmap_t cbitmap, Int32 x, Int32 y, UInt32 color);
-
-		// void sk_bitmap_set_pixel_colors(sk_bitmap_t* cbitmap, const sk_color_t* colors)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_set_pixel_colors (sk_bitmap_t cbitmap, UInt32* colors);
-
 		// void sk_bitmap_set_pixels(sk_bitmap_t* cbitmap, void* pixels)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_set_pixels (sk_bitmap_t cbitmap, void* pixels);

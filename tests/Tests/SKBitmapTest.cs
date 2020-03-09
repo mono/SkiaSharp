@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
@@ -588,6 +589,90 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Green, bmp.GetPixel(1, 0));
 			Assert.Equal(SKColors.Blue, bmp.GetPixel(0, 1));
 			Assert.Equal(SKColors.Yellow, bmp.GetPixel(1, 1));
+		}
+
+		[SkippableFact]
+		public void PixelsPropertyReadsTheColors()
+		{
+			using var bitmap = CreateTestBitmap();
+			var pixels = bitmap.Pixels;
+
+			for (var i = 0; i < pixels.Length; i++)
+			{
+				var x = i % 40;
+				var y = i / 40;
+
+				if (x < 20)
+				{
+					if (y < 20)
+						Assert.Equal(SKColors.Red, pixels[i]);
+					else
+						Assert.Equal(SKColors.Blue, pixels[i]);
+				}
+				else
+				{
+					if (y < 20)
+						Assert.Equal(SKColors.Green, pixels[i]);
+					else
+						Assert.Equal(SKColors.Yellow, pixels[i]);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void IncorrectPixelSizeThrowsWhenWriting()
+		{
+			SKColor[] sourcePixels;
+			using (var sourceBitmap = CreateTestBitmap())
+			{
+				sourcePixels = sourceBitmap.Pixels;
+			}
+
+			using var bitmap = new SKBitmap(20, 40);
+			Assert.Throws<ArgumentException>(() => bitmap.Pixels = sourcePixels);
+		}
+
+		[SkippableFact]
+		public void PixelsPropertyWritesTheColors()
+		{
+			SKColor[] sourcePixels;
+			using (var sourceBitmap = CreateTestBitmap())
+			{
+				sourcePixels = sourceBitmap.Pixels;
+			}
+
+			using var bitmap = new SKBitmap(40, 40);
+			bitmap.Pixels = sourcePixels;
+			var pixels = bitmap.Pixels;
+
+			Assert.Equal(sourcePixels, pixels);
+		}
+
+		[SkippableFact]
+		public void IncorrectPixelLocationThrowsWhenWritingPixel()
+		{
+			using var bitmap = new SKBitmap(20, 40);
+			Assert.Throws<ArgumentOutOfRangeException>(() => bitmap.SetPixel(20, 100, SKColors.Red));
+		}
+
+		[SkippableFact]
+		public void SetPixelWritesTheColor()
+		{
+			SKColor[] expectedPixels =
+			{
+				SKColors.Red, SKColors.Red, SKColors.Red, SKColors.Red,
+				SKColors.Red, SKColors.Red, SKColors.Green, SKColors.Red,
+				SKColors.Red, SKColors.Blue, SKColors.Red, SKColors.Red,
+				SKColors.Red, SKColors.Red, SKColors.Red, SKColors.Red
+			};
+
+			using var bitmap = new SKBitmap(4, 4);
+			bitmap.Erase(SKColors.Red);
+
+			bitmap.SetPixel(2, 1, SKColors.Green);
+			bitmap.SetPixel(1, 2, SKColors.Blue);
+
+			Assert.Equal(expectedPixels, bitmap.Pixels);
 		}
 	}
 }

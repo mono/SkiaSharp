@@ -191,8 +191,6 @@ namespace SkiaSharp
 
 		// Pixels (color)
 
-		// Pixels (color)
-
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixel(int, int) instead.")]
 		public SKPMColor GetIndex8Color (int x, int y)
@@ -207,7 +205,14 @@ namespace SkiaSharp
 
 		public void SetPixel (int x, int y, SKColor color)
 		{
-			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, (uint)color);
+			var info = Info;
+			if (x < 0 || x >= info.Width)
+				throw new ArgumentOutOfRangeException (nameof (x));
+			if (y < 0 || y >= info.Height)
+				throw new ArgumentOutOfRangeException (nameof (y));
+
+			using var canvas = new SKCanvas (this);
+			canvas.DrawPoint (x, y, color);
 		}
 
 		// Copy
@@ -420,8 +425,26 @@ namespace SkiaSharp
 				return pixels;
 			}
 			set {
+				if (value == null)
+					throw new ArgumentNullException (nameof (value));
+
+				var info = Info;
+				if (info.Width * info.Height != value.Length)
+					throw new ArgumentException ($"The number of pixels must equal width*height, or {info.Width * info.Height}.", nameof (value));
+
 				fixed (SKColor* v = value) {
-					SkiaApi.sk_bitmap_set_pixel_colors (Handle, (uint*)v);
+					var tempInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+					using var temp = new SKBitmap ();
+					temp.InstallPixels (tempInfo, (IntPtr)v);
+
+					using var shader = temp.ToShader ();
+
+					using var canvas = new SKCanvas (this);
+					using var paint = new SKPaint {
+						Shader = shader,
+						BlendMode = SKBlendMode.Src
+					};
+					canvas.DrawPaint (paint);
 				}
 			}
 		}
