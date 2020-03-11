@@ -896,11 +896,6 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, SKColorSpaceXyz* toXYZD50);
 
-		// bool sk_colorspace_to_xyzd50_matrix44(const sk_colorspace_t* colorspace, sk_matrix44_t* toXYZD50)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_to_xyzd50_matrix44 (sk_colorspace_t colorspace, sk_matrix44_t toXYZD50);
-
 		// float sk_colorspace_transfer_fn_eval(const sk_colorspace_transfer_fn_t* transferFn, float x)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_colorspace_transfer_fn_eval (SKColorSpaceTransferFn* transferFn, Single x);
@@ -2275,9 +2270,9 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_path_iter_is_closed_contour (sk_path_iterator_t iterator);
 
-		// sk_path_verb_t sk_path_iter_next(sk_path_iterator_t* iterator, sk_point_t[4] points = 4, int doConsumeDegenerates, int exact)
+		// sk_path_verb_t sk_path_iter_next(sk_path_iterator_t* iterator, sk_point_t[4] points = 4)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKPathVerb sk_path_iter_next (sk_path_iterator_t iterator, SKPoint* points, Int32 doConsumeDegenerates, Int32 exact);
+		internal static extern SKPathVerb sk_path_iter_next (sk_path_iterator_t iterator, SKPoint* points);
 
 		// void sk_path_line_to(sk_path_t*, float x, float y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

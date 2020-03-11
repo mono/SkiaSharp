@@ -38,7 +38,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             clang +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT', '/EHsc', '/Z7' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT', '/EHsc', '/Z7', '-D_HAS_AUTO_PTR_ETC=1' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL' ] " +
             ADDITIONAL_GN_ARGS);
 
