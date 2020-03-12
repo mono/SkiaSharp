@@ -43,6 +43,13 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
     var quote = IsRunningOnWindows() || isCore ? "\"" : "'";
     var innerQuote = IsRunningOnWindows() || isCore ? "\\\"" : "\"";
 
+    // override win_vc with the command line args
+    if (!string.IsNullOrEmpty (VS_INSTALL)) {
+        DirectoryPath win_vc = VS_INSTALL;
+        win_vc = win_vc.Combine ("VC");
+        skiaArgs += $" win_vc='{win_vc}' ";
+    }
+
     // generate native skia build files
     RunProcess(SKIA_PATH.CombineWithFilePath($"bin/gn{exe}"), new ProcessSettings {
         Arguments = $"gen out/{outDir} --args={quote}{skiaArgs.Replace("'", innerQuote)}{quote}",
