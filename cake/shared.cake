@@ -5,6 +5,9 @@ var TARGET = Argument("t", Argument("target", "Default"));
 var VERBOSITY = Argument("v", Argument("verbosity", Verbosity.Normal));
 var CONFIGURATION = Argument("c", Argument("configuration", "Release"));
 
+var VS_INSTALL = Argument("vsinstall", EnvironmentVariable("VS_INSTALL"));
+var MSBUILD_EXE = Argument("msbuild", EnvironmentVariable("MSBUILD_EXE"));
+
 var CAKE_ARGUMENTS = (IReadOnlyDictionary<string, string>)Context.Arguments
     .GetType()
     .GetProperty("Arguments")
