@@ -96,6 +96,13 @@ jobs:
           displayName: Switch to the latest Xamarin SDK
         - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
           displayName: Switch to the latest Xcode
+      # install the older Windows SDKs
+      - ${{ if endsWith(parameters.name, '_windows') }}:
+        - pwsh: |
+            $uri = 'https://go.microsoft.com/fwlink/p/?LinkId=619296'
+            .\scripts\download-file.ps1 -Uri $uri -OutFile sdksetup.exe
+            .\sdksetup.exe /norestart /quiet | Out-Null
+          displayName: Install the Windows 10 SDK 10.0.10240
       # download artifacts
       - ${{ each dep in parameters.requiredArtifacts }}:
         - task: DownloadBuildArtifacts@0
