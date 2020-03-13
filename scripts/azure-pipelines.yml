@@ -2,6 +2,9 @@ trigger:
   - master
   - refs/tags/*
 
+pr:
+  - master
+
 variables:
   SKIASHARP_VERSION: 1.68.2
   FEATURE_NAME_PREFIX: 'feature/'
@@ -85,34 +88,64 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
+        parameters:
+          name: native_uwp_angle_x86_windows
+          displayName: Build ANGLE UWP|x86 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Windows)
+        parameters:
+          name: native_uwp_angle_x64_windows
+          displayName: Build ANGLE UWP|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Windows)
+        parameters:
+          name: native_uwp_angle_arm_windows
+          displayName: Build ANGLE UWP|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Windows)
+        parameters:
+          name: native_uwp_angle_arm64_windows
+          displayName: Build ANGLE UWP|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
+          condition: false # TODO: NOT YET SUPPORTED
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
           name: native_uwp_x86_windows
           displayName: Build Native UWP|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
-          additionalArgs: --buildarch=x86
+          additionalArgs: --buildarch=x86 --skipAngle=true
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Windows)
         parameters:
           name: native_uwp_x64_windows
           displayName: Build Native UWP|x64 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
-          additionalArgs: --buildarch=x64
+          additionalArgs: --buildarch=x64 --skipAngle=true
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
         parameters:
           name: native_uwp_arm_windows
           displayName: Build Native UWP|arm (Windows)
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
-          additionalArgs: --buildarch=arm
+          additionalArgs: --buildarch=arm --skipAngle=true
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
         parameters:
           name: native_uwp_arm64_windows
           displayName: Build Native UWP|arm64 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
-          additionalArgs: --buildarch=arm64
+          additionalArgs: --buildarch=arm64 --skipAngle=true
+          condition: false # TODO: NOT YET SUPPORTED
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
         parameters:
           name: native_win32_x86_windows
@@ -240,10 +273,14 @@ stages:
             - native_android_arm64_windows
             # - native_tizen_windows
             - native_tizen_linux
+            - native_uwp_angle_x86_windows
+            - native_uwp_angle_x64_windows
+            - native_uwp_angle_arm_windows
+            # - native_uwp_angle_arm64_windows
             - native_uwp_x86_windows
             - native_uwp_x64_windows
             - native_uwp_arm_windows
-            - native_uwp_arm64_windows
+            # - native_uwp_arm64_windows
             - native_win32_x86_windows
             - native_win32_x64_windows
             - native_win32_x64_nanoserver_windows
