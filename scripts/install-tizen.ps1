@@ -34,8 +34,8 @@ $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 
 # download
 Write-Host "Downloading SDK to '$install'..."
-# New-Item -ItemType Directory -Force -Path "$tsTemp" | Out-Null
-# (New-Object System.Net.WebClient).DownloadFile("$url", "$install")
+New-Item -ItemType Directory -Force -Path "$tsTemp" | Out-Null
+(New-Object System.Net.WebClient).DownloadFile("$url", "$install")
 
 # validation
 Write-Host "Validating Java install..."
@@ -43,13 +43,13 @@ Write-Host "JAVA_HOME is: $env:JAVA_HOME"
 Write-Host "PATH contains JAVA_HOME: $($env:PATH.Contains("$env:JAVA_HOME"))"
 & "java" -version
 
-# # install
-# Write-Host "Installing SDK to '$ts'..."
-# if ($IsMacOS -or $IsLinux) {
-#     & "bash" "$install" --accept-license --no-java-check "$ts"
-# } else {
-#     & "$install" --accept-license --no-java-check "$ts"
-# }
+# install
+Write-Host "Installing SDK to '$ts'..."
+if ($IsMacOS -or $IsLinux) {
+    & "bash" "$install" --accept-license --no-java-check "$ts"
+} else {
+    & "$install" --accept-license --no-java-check "$ts"
+}
 
 # install packages
 Write-Host "Installing Additional Packages: '$packages'..."
