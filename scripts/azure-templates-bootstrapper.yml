@@ -139,6 +139,8 @@ jobs:
             env:
               JavaSdkDirectory: $(JAVA_HOME)
               LLVM_HOME: $(LLVM_HOME)
+              # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
+              AppxSymbolPackageEnabled: false
             displayName: Run the bootstrapper for ${{ parameters.target }}
         - ${{ if not(endsWith(parameters.name, '_windows')) }}:
           - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
