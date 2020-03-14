@@ -17,6 +17,12 @@ void RunMSBuild(
         c.Verbosity = VERBOSITY;
         c.MaxCpuCount = 0;
 
+        if (!string.IsNullOrEmpty(MSBUILD_EXE)) {
+            c.ToolPath = MSBUILD_EXE;
+        } else if (IsRunningOnWindows() && !string.IsNullOrEmpty(VS_INSTALL)) {
+            c.ToolPath = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("MSBuild/Current/Bin/MSBuild.exe");
+        }
+
         c.NoLogo = VERBOSITY == Verbosity.Minimal;
 
         if (restoreOnly) {

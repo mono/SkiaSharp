@@ -38,9 +38,11 @@ jobs:
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     steps:
+      # prepare
       - checkout: self
         submodules: recursive
       - template: azure-templates-variables.yml
+
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |
@@ -48,6 +50,7 @@ jobs:
             sudo apt install -y ${{ parameters.packages }}
           displayName: Install additional package dependencies
           condition: ne('${{ parameters.packages }}', '')
+
       # make sure mono/msbuild is the correct version
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |
@@ -60,12 +63,10 @@ jobs:
             sudo apt install -y mono-complete msbuild
             mono --version
           displayName: Install Mono and MSBuild
-      # install tizen
-      - ${{ if contains(parameters.name, '_tizen_') }}:
-        - pwsh: .\scripts\install-openjdk.ps1
-          displayName: Install the OpenJDK
-        - pwsh: .\scripts\install-tizen.ps1
-          displayName: Install the Tizen SDK
+      - ${{ if endsWith(parameters.name, '_macos') }}:
+        - bash: sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION_MACOS)
+          displayName: Switch to the latest Xamarin SDK
+
       # install extra bits for the native builds
       - ${{ if startsWith(parameters.name, 'native_') }}:
         # switch to Python 2.7
@@ -74,14 +75,22 @@ jobs:
           inputs:
             versionSpec: '2.7'
             architecture: 'x64'
-        # install android ndk
-        - ${{ if contains(parameters.name, '_android_') }}:
-          - pwsh: .\scripts\install-android-ndk.ps1
-            displayName: Install the Android NDK
-        # install llvm
-        - ${{ if endsWith(parameters.name, '_windows') }}:
-          - pwsh: .\scripts\install-llvm.ps1
-            displayName: Install LLVM
+        - ${{ if not(contains(parameters.name, '_checks_')) }}:
+          # install android ndk
+          - ${{ if contains(parameters.name, '_android_') }}:
+            - pwsh: .\scripts\install-android-ndk.ps1
+              displayName: Install the Android NDK
+          # install tizen
+          - ${{ if contains(parameters.name, '_tizen_') }}:
+            - pwsh: .\scripts\install-openjdk.ps1
+              displayName: Install the OpenJDK
+            - pwsh: .\scripts\install-tizen.ps1
+              displayName: Install the Tizen SDK
+          # install llvm
+          - ${{ if contains(parameters.name, '_win32_') }}:
+            - pwsh: .\scripts\install-llvm.ps1
+              displayName: Install LLVM
+
       # install extra bits for the manged builds
       - ${{ if not(startsWith(parameters.name, 'native_')) }}:
         - task: UseDotNet@2
@@ -90,12 +99,23 @@ jobs:
             version: $(DOTNET_VERSION)
             performMultiLevelLookup: true
           displayName: Install the correct version of .NET Core
-      # switch to the correct mono version on mac
+
+      # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION_MACOS)
-          displayName: Switch to the latest Xamarin SDK
         - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
           displayName: Switch to the latest Xcode
+
+      # install the Windows tools
+      - ${{ if endsWith(parameters.name, '_windows') }}:
+        - ${{ if not(contains(parameters.name, '_checks_')) }}:
+          # install the older Windows SDKs
+          - ${{ if or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_')) }}:
+            - pwsh: |
+                $uri = 'https://go.microsoft.com/fwlink/p/?LinkId=619296'
+                .\scripts\download-file.ps1 -Uri $uri -OutFile sdksetup.exe
+                .\sdksetup.exe /norestart /quiet | Out-Null
+              displayName: Install the Windows 10 SDK 10.0.10240
+
       # download artifacts
       - ${{ each dep in parameters.requiredArtifacts }}:
         - task: DownloadBuildArtifacts@0
@@ -108,8 +128,10 @@ jobs:
             Get-ChildItem '.\download-temp\${{ dep }}\' | Copy-Item -Destination '.\output\' -Recurse -Force
             Remove-Item '.\download-temp\${{ dep }}\' -Recurse -Force
           displayName: Move the ${{ dep }} artifacts to the output directory
+
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
+
       # build
       - ${{ if eq(parameters.docker, '') }}:
         - ${{ if endsWith(parameters.name, '_windows') }}:
@@ -129,8 +151,10 @@ jobs:
           displayName: Build the Docker image for ${{ parameters.docker }}
         - bash: docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
+
       # post-build steps
       - ${{ parameters.postBuildSteps }}
+
       # publish artifacts
       - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
