@@ -8,7 +8,7 @@ void RunMSBuild(
     bool restore = true,
     bool restoreOnly = false)
 {
-    var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json", "https://aka.ms/xf-ci/index.json" };
+    var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
 
     EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
 
