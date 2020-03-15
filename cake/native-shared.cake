@@ -44,9 +44,9 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
     var innerQuote = IsRunningOnWindows() || isCore ? "\\\"" : "\"";
 
     // override win_vc with the command line args
-    if (!string.IsNullOrEmpty (VS_INSTALL)) {
+    if (!string.IsNullOrEmpty(VS_INSTALL)) {
         DirectoryPath win_vc = VS_INSTALL;
-        win_vc = win_vc.Combine ("VC");
+        win_vc = win_vc.Combine("VC");
         skiaArgs += $" win_vc='{win_vc}' ";
     }
 
