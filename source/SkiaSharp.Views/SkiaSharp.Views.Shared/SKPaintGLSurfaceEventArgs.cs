@@ -20,11 +20,11 @@ namespace SkiaSharp.Views.Tizen
 {
 	public class SKPaintGLSurfaceEventArgs : EventArgs
 	{
-		[EditorBrowsable (EditorBrowsableState.Never)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		[Obsolete]
 		private GRBackendRenderTargetDesc? rtDesc;
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		[Obsolete("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{
@@ -48,37 +48,35 @@ namespace SkiaSharp.Views.Tizen
 			Origin = origin;
 		}
 
+		internal SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, GRGlFramebufferInfo glInfo)
+		{
+			Surface = surface;
+			BackendRenderTarget = renderTarget;
+			ColorType = colorType;
+			Origin = origin;
+#pragma warning disable CS0612 // Type or member is obsolete
+			rtDesc = CreateDesc(glInfo);
+#pragma warning restore CS0612 // Type or member is obsolete
+		}
+
 		public SKSurface Surface { get; private set; }
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		[Obsolete("Use BackendRenderTarget instead.")]
-		public GRBackendRenderTargetDesc RenderTarget
-		{
-			get
+		public GRBackendRenderTargetDesc RenderTarget => rtDesc ??= CreateDesc(BackendRenderTarget.GetGlFramebufferInfo());
+
+		[Obsolete]
+		private GRBackendRenderTargetDesc CreateDesc(GRGlFramebufferInfo glInfo) =>
+			new GRBackendRenderTargetDesc
 			{
-				if (!rtDesc.HasValue)
-				{
-					var rth = IntPtr.Zero;
-					if (BackendRenderTarget.GetGlFramebufferInfo(out var glInfo))
-					{
-						rth = (IntPtr)glInfo.FramebufferObjectId;
-					}
-
-					rtDesc = new GRBackendRenderTargetDesc
-					{
-						Width = BackendRenderTarget.Width,
-						Height = BackendRenderTarget.Height,
-						RenderTargetHandle = rth,
-						SampleCount = BackendRenderTarget.SampleCount,
-						StencilBits = BackendRenderTarget.StencilBits,
-						Config = ColorType.ToPixelConfig(),
-						Origin = Origin,
-					};
-				}
-
-				return rtDesc.Value;
-			}
-		}
+				Width = BackendRenderTarget.Width,
+				Height = BackendRenderTarget.Height,
+				RenderTargetHandle = (IntPtr)glInfo.FramebufferObjectId,
+				SampleCount = BackendRenderTarget.SampleCount,
+				StencilBits = BackendRenderTarget.StencilBits,
+				Config = ColorType.ToPixelConfig(),
+				Origin = Origin,
+			};
 
 		public GRBackendRenderTarget BackendRenderTarget { get; private set; }
 
