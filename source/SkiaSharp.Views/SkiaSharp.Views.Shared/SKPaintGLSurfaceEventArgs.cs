@@ -48,7 +48,7 @@ namespace SkiaSharp.Views.Tizen
 			Origin = origin;
 		}
 
-		internal SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, GRGlFramebufferInfo glInfo)
+		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, GRGlFramebufferInfo glInfo)
 		{
 			Surface = surface;
 			BackendRenderTarget = renderTarget;

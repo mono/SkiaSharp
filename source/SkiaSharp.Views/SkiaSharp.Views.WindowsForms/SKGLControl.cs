@@ -113,7 +113,7 @@ namespace SkiaSharp.Views.Desktop
 			// create the surface
 			if (surface == null)
 			{
-				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
+				surface = SKSurface.Create(grContext, renderTarget, surfaceOrigin, colorType);
 				canvas = surface.Canvas;
 			}
 
