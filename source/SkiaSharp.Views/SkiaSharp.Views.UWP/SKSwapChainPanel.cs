@@ -11,14 +11,18 @@ namespace SkiaSharp.Views.UWP
 
 		private GRGlInterface glInterface;
 		private GRContext context;
+		private GRGlFramebufferInfo glInfo;
 		private GRBackendRenderTarget renderTarget;
 		private SKSurface surface;
+		private SKCanvas canvas;
+
+		private SKSizeI lastSize;
 
 		public SKSwapChainPanel()
 		{
 		}
 
-		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+		public SKSize CanvasSize => lastSize;
 
 		public GRContext GRContext => context;
 
@@ -42,11 +46,16 @@ namespace SkiaSharp.Views.UWP
 				context = GRContext.Create(GRBackend.OpenGL, glInterface);
 			}
 
+			// get the new surface size
+			var newSize = new SKSizeI((int)rect.Width, (int)rect.Height);
+
 			// manage the drawing surface
-			if (renderTarget == null || surface == null || renderTarget.Width != (int)rect.Width || renderTarget.Height != (int)rect.Height)
+			if (renderTarget == null || lastSize != newSize || !renderTarget.IsValid)
 			{
 				// create or update the dimensions
-				renderTarget?.Dispose();
+				lastSize = newSize;
+
+				// read the info from the buffer
 				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
 				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
 				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
@@ -54,22 +63,33 @@ namespace SkiaSharp.Views.UWP
 				if (samples > maxSamples)
 					samples = maxSamples;
 
-				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
-				renderTarget = new GRBackendRenderTarget((int)rect.Width, (int)rect.Height, samples, stencil, glInfo);
+				glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
 
-				// create the surface
+				// destroy the old surface
 				surface?.Dispose();
-				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
+				surface = null;
+				canvas = null;
+
+				// re-create the render target
+				renderTarget?.Dispose();
+				renderTarget = new GRBackendRenderTarget(newSize.Width, newSize.Height, samples, stencil, glInfo);
 			}
 
-			using (new SKAutoCanvasRestore(surface.Canvas, true))
+			// create the surface
+			if (surface == null)
+			{
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
+				canvas = surface.Canvas;
+			}
+
+			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
-				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType));
+				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo));
 			}
 
 			// update the control
-			surface.Canvas.Flush();
+			canvas.Flush();
 			context.Flush();
 		}
 	}
