@@ -70,7 +70,7 @@ namespace SkiaSharp.Views.Android
 
 				// re-create the render target
 				renderTarget?.Dispose();
-				renderTarget = new GRBackendRenderTarget(surfaceWidth, surfaceHeight, samples, buffer[1], glInfo);
+				renderTarget = new GRBackendRenderTarget(newSize.Width, newSize.Height, samples, buffer[1], glInfo);
 			}
 
 			// create the surface
