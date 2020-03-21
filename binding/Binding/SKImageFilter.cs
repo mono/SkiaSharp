@@ -168,7 +168,7 @@ namespace SkiaSharp
 			var handles = new IntPtr[filters.Length];
 			for (int i = 0; i < filters.Length; i++)
 			{
-				handles[i] = filters[i].Handle;
+				handles[i] = filters[i]?.Handle ?? IntPtr.Zero;
 			}
 			fixed (IntPtr* h = handles) {
 				return GetObject<SKImageFilter> (SkiaApi.sk_imagefilter_new_merge (h, filters.Length, cropRect == null ? IntPtr.Zero : cropRect.Handle));
