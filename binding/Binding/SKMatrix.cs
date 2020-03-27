@@ -26,6 +26,26 @@ namespace SkiaSharp
 			public const int Count = 9;
 		}
 
+		public SKMatrix (float[] values)
+		{
+			if (values == null)
+				throw new ArgumentNullException (nameof (values));
+			if (values.Length != Indices.Count)
+				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
+
+			scaleX = values[Indices.ScaleX];
+			skewX = values[Indices.SkewX];
+			transX = values[Indices.TransX];
+
+			skewY = values[Indices.SkewY];
+			scaleY = values[Indices.ScaleY];
+			transY = values[Indices.TransY];
+
+			persp0 = values[Indices.Persp0];
+			persp1 = values[Indices.Persp1];
+			persp2 = values[Indices.Persp2];
+		}
+
 		public SKMatrix (
 			float scaleX, float skewX, float transX,
 			float skewY, float scaleY, float transY,
@@ -41,6 +61,8 @@ namespace SkiaSharp
 			this.persp1 = persp1;
 			this.persp2 = persp2;
 		}
+
+		public readonly bool IsIdentity => Equals (Identity);
 
 		// Values
 
@@ -456,6 +478,9 @@ namespace SkiaSharp
 		}
 
 		// MapVectors
+
+		public readonly SKPoint MapVector (SKPoint vector) =>
+			MapVector (vector.X, vector.Y);
 
 		public readonly SKPoint MapVector (float x, float y)
 		{

@@ -11,6 +11,9 @@ namespace SkiaSharpGenerator
 		[JsonPropertyName("headers")]
 		public Dictionary<string, string[]> Headers { get; set; } = new Dictionary<string, string[]>();
 
+		[JsonPropertyName("source")]
+		public Dictionary<string, string[]> Source { get; set; } = new Dictionary<string, string[]>();
+
 		[JsonPropertyName("includeDirs")]
 		public List<string> IncludeDirs { get; set; } = new List<string>();
 

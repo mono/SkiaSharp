@@ -73,13 +73,13 @@ namespace SkiaSharp
 
 		public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, string text, uint[] clusters)
 		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
+			var utf8Text = StringUtilities.GetEncodedText (text, SKTextEncoding.Utf8);
 			AddRun (font, x, y, glyphs, utf8Text, clusters, null);
 		}
 
 		public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, string text, uint[] clusters, SKRect bounds)
 		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
+			var utf8Text = StringUtilities.GetEncodedText (text, SKTextEncoding.Utf8);
 			AddRun (font, x, y, glyphs, utf8Text, clusters, (SKRect?)bounds);
 		}
 
@@ -133,13 +133,13 @@ namespace SkiaSharp
 
 		public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, string text, uint[] clusters)
 		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
+			var utf8Text = StringUtilities.GetEncodedText (text, SKTextEncoding.Utf8);
 			AddHorizontalRun (font, y, glyphs, positions, utf8Text, clusters, null);
 		}
 
 		public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, string text, uint[] clusters, SKRect bounds)
 		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
+			var utf8Text = StringUtilities.GetEncodedText (text, SKTextEncoding.Utf8);
 			AddHorizontalRun (font, y, glyphs, positions, utf8Text, clusters, (SKRect?)bounds);
 		}
 
@@ -198,13 +198,13 @@ namespace SkiaSharp
 
 		public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, string text, uint[] clusters)
 		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
+			var utf8Text = StringUtilities.GetEncodedText (text, SKTextEncoding.Utf8);
 			AddPositionedRun (font, glyphs, positions, utf8Text, clusters, null);
 		}
 
 		public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, string text, uint[] clusters, SKRect bounds)
 		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
+			var utf8Text = StringUtilities.GetEncodedText (text, SKTextEncoding.Utf8);
 			AddPositionedRun (font, glyphs, positions, utf8Text, clusters, (SKRect?)bounds);
 		}
 
@@ -279,12 +279,11 @@ namespace SkiaSharp
 			try {
 				font.TextEncoding = SKTextEncoding.GlyphId;
 
-				using var lang = new SKString ();
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
-					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, &b, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, &b, &runbuffer);
 				} else {
-					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, null, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, null, &runbuffer);
 				}
 
 				return new SKRunBuffer (runbuffer, count, textByteCount);
@@ -314,12 +313,11 @@ namespace SkiaSharp
 			try {
 				font.TextEncoding = SKTextEncoding.GlyphId;
 
-				using var lang = new SKString ();
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, &b, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, &b, &runbuffer);
 				} else {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, null, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, null, &runbuffer);
 				}
 
 				return new SKHorizontalRunBuffer (runbuffer, count, textByteCount);
@@ -348,12 +346,11 @@ namespace SkiaSharp
 			try {
 				font.TextEncoding = SKTextEncoding.GlyphId;
 
-				using var lang = new SKString ();
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, &b, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, &b, &runbuffer);
 				} else {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, null, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, null, &runbuffer);
 				}
 
 				return new SKPositionedRunBuffer (runbuffer, count, textByteCount);

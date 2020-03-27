@@ -323,6 +323,14 @@ namespace SkiaSharp
 		public void Transform (SKMatrix matrix) =>
 			SkiaApi.sk_path_transform (Handle, &matrix);
 
+		public void Transform (SKMatrix matrix, SKPath destination)
+		{
+			if (destination == null)
+				throw new ArgumentNullException (nameof (destination));
+
+			SkiaApi.sk_path_transform_to_dest (Handle, &matrix, destination.Handle);
+		}
+
 		public void AddPath (SKPath other, float dx, float dy, SKPathAddMode mode = SKPathAddMode.Append)
 		{
 			if (other == null)
@@ -584,4 +592,3 @@ namespace SkiaSharp
 		}
 	}
 }
-

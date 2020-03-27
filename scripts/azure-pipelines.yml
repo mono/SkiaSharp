@@ -2,6 +2,9 @@ trigger:
   - master
   - refs/tags/*
 
+pr:
+  - master
+
 variables:
   SKIASHARP_VERSION: 1.68.2
   FEATURE_NAME_PREFIX: 'feature/'
@@ -18,14 +21,10 @@ variables:
   XCODE_VERSION: 11.3
   DOTNET_VERSION: 3.0.x
   CONFIGURATION: 'Release'
-  VM_IMAGE_WINDOWS_NATIVE: Hosted VS2017
   VM_IMAGE_WINDOWS: Hosted Windows 2019 with VS2019
   VM_IMAGE_MAC: Hosted macOS
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-
-  # # To speed up builds when debugging DevOps
-  # DOWNLOAD_EXTERNALS: ''
 
 resources:
   repositories:
@@ -57,84 +56,114 @@ stages:
         parameters:
           name: native_android_x86_windows
           displayName: Build Native Android|x86 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=x86
       - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Windows)
         parameters:
           name: native_android_x64_windows
           displayName: Build Native Android|x64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=x64
       - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Windows)
         parameters:
           name: native_android_arm_windows
           displayName: Build Native Android|arm (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=arm
       - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Windows)
         parameters:
           name: native_android_arm64_windows
           displayName: Build Native Android|arm64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=arm64
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
         parameters:
           name: native_tizen_windows
           displayName: Build Native Tizen (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
+        parameters:
+          name: native_uwp_angle_x86_windows
+          displayName: Build ANGLE UWP|x86 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Windows)
+        parameters:
+          name: native_uwp_angle_x64_windows
+          displayName: Build ANGLE UWP|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Windows)
+        parameters:
+          name: native_uwp_angle_arm_windows
+          displayName: Build ANGLE UWP|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Windows)
+        parameters:
+          name: native_uwp_angle_arm64_windows
+          displayName: Build ANGLE UWP|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
+          condition: false # TODO: NOT YET SUPPORTED
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
           name: native_uwp_x86_windows
           displayName: Build Native UWP|x86 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-          additionalArgs: --buildarch=x86
+          additionalArgs: --buildarch=x86 --skipAngle=true
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Windows)
         parameters:
           name: native_uwp_x64_windows
           displayName: Build Native UWP|x64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-          additionalArgs: --buildarch=x64
+          additionalArgs: --buildarch=x64 --skipAngle=true
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
         parameters:
           name: native_uwp_arm_windows
           displayName: Build Native UWP|arm (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-          additionalArgs: --buildarch=arm
+          additionalArgs: --buildarch=arm --skipAngle=true
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
         parameters:
           name: native_uwp_arm64_windows
           displayName: Build Native UWP|arm64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-          additionalArgs: --buildarch=arm64
+          additionalArgs: --buildarch=arm64 --skipAngle=true
+          condition: false # TODO: NOT YET SUPPORTED
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
         parameters:
           name: native_win32_x86_windows
           displayName: Build Native Win32|x86 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
           additionalArgs: --buildarch=x86
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
         parameters:
           name: native_win32_x64_windows
           displayName: Build Native Win32|x64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
           additionalArgs: --buildarch=x64
       - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Windows)
         parameters:
           name: native_win32_x64_nanoserver_windows
           displayName: Build Native NanoServer|x64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
           preBuildSteps:
@@ -243,19 +272,17 @@ stages:
             - native_android_arm64_windows
             # - native_tizen_windows
             - native_tizen_linux
+            - native_uwp_angle_x86_windows
+            - native_uwp_angle_x64_windows
+            - native_uwp_angle_arm_windows
+            # - native_uwp_angle_arm64_windows
             - native_uwp_x86_windows
             - native_uwp_x64_windows
             - native_uwp_arm_windows
-            - native_uwp_arm64_windows
+            # - native_uwp_arm64_windows
             - native_win32_x86_windows
             - native_win32_x64_windows
             - native_win32_x64_nanoserver_windows
-          preBuildSteps:
-            - pwsh: |
-                $uri = 'https://go.microsoft.com/fwlink/p/?LinkId=619296'
-                .\scripts\download-file.ps1 -Uri $uri -OutFile sdksetup.exe
-                .\sdksetup.exe /norestart /quiet | Out-Null
-              displayName: Install the Windows 10 SDK 10.0.10240
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
@@ -299,7 +326,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget
           additionalArgs: --packall=true --exclusive
-          shouldPublish: false
+          shouldPublish: true
           requiredArtifacts:
             - managed_linux
             - managed_macos
@@ -315,6 +342,35 @@ stages:
               inputs:
                 artifactName: nuget
                 pathToPublish: 'output/nugets'
+
+  - stage: api_diff
+    displayName: API Diff
+    dependsOn: package
+    jobs:
+      - template: azure-templates-bootstrapper.yml # API Diff
+        parameters:
+          name: api_diff_windows
+          displayName: API Diff
+          vmImage: Hosted VS2017
+          target: docs-api-diff
+          shouldPublish: false
+          requiredArtifacts:
+            - package_windows
+          preBuildSteps:
+            - pwsh: |
+                $p = "$env:BUILD_SOURCESDIRECTORY\output\nugets\api-diff"
+                New-Item -ItemType Directory -Force -Path $p | Out-Null
+                $uri = 'https://xamarin.azureedge.net/GTKforWindows/Windows/gtk-sharp-2.12.45.msi'
+                .\scripts\download-file.ps1 -Uri $uri -OutFile gtk-sharp.msi
+                msiexec /i gtk-sharp.msi /norestart /quiet /l* $p\gtk-sharp-install.log
+              displayName: Install GTK# 2.12
+          postBuildSteps:
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the API diffs
+              condition: always()
+              inputs:
+                artifactName: api-diff
+                pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: signing
@@ -495,7 +551,7 @@ stages:
             name: native_checks_windows
             displayName: Run Code Checks
             # condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
-            vmImage: $(VM_IMAGE_WINDOWS)
+            vmImage: Hosted VS2017
             target: git-sync-deps
             shouldPublish: false
             postBuildSteps:

@@ -29,6 +29,8 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
+		// properties
+
 		public bool GammaIsCloseToSrgb =>
 			SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
 
@@ -57,9 +59,15 @@ namespace SkiaSharp
 			return SkiaApi.sk_colorspace_equals (left.Handle, right.Handle);
 		}
 
+		// CreateSrgb
+
 		public static SKColorSpace CreateSrgb () => srgb;
 
+		// CreateSrgbLinear
+
 		public static SKColorSpace CreateSrgbLinear () => srgbLinear;
+
+		// CreateIcc
 
 		public static SKColorSpace CreateIcc (IntPtr input, long length)
 		{
@@ -88,6 +96,8 @@ namespace SkiaSharp
 				return GetObject (SkiaApi.sk_colorspace_new_icc (i, (IntPtr)input.Length));
 			}
 		}
+
+		// CreateRgb
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateRgb(SKColorSpaceRenderTargetGamma, SKMatrix44) instead.")]
@@ -142,13 +152,7 @@ namespace SkiaSharp
 		public static SKColorSpace CreateRgb (SKNamedGamma gamma, SKColorSpaceGamut gamut) =>
 			GetObject (SkiaApi.sk_colorspace_new_rgb_with_gamma_named_and_gamut (gamma, gamut));
 
-		public bool ToXyzD50 (SKMatrix44 toXyzD50)
-		{
-			if (toXyzD50 == null)
-				throw new ArgumentNullException (nameof (toXyzD50));
-
-			return SkiaApi.sk_colorspace_to_xyzd50 (Handle, toXyzD50.Handle);
-		}
+		// GetNumericalTransferFunction
 
 		public bool GetNumericalTransferFunction (out SKColorSpaceTransferFn fn)
 		{
@@ -157,8 +161,18 @@ namespace SkiaSharp
 			}
 		}
 
+		// *XyzD50
+
 		public SKMatrix44 ToXyzD50 () =>
 			SKMatrix44.GetObject (SkiaApi.sk_colorspace_as_to_xyzd50 (Handle), false);
+
+		public bool ToXyzD50 (SKMatrix44 toXyzD50)
+		{
+			if (toXyzD50 == null)
+				throw new ArgumentNullException (nameof (toXyzD50));
+
+			return SkiaApi.sk_colorspace_to_xyzd50 (Handle, toXyzD50.Handle);
+		}
 
 		public SKMatrix44 FromXyzD50 () =>
 			SKMatrix44.GetObject (SkiaApi.sk_colorspace_as_from_xyzd50 (Handle), false);
@@ -180,6 +194,8 @@ namespace SkiaSharp
 
 			return new SKColorSpace (ptr, owns);
 		}
+
+		//
 
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{

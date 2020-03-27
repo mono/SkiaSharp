@@ -19,6 +19,15 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableFact]
+		public void ToGlSizedFormat()
+		{
+			foreach (GRPixelConfig value in Enum.GetValues(typeof(GRPixelConfig)))
+			{
+				value.ToGlSizedFormat();
+			}
+		}
+
 		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void CreateSpecificContextIsValid()

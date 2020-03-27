@@ -293,7 +293,7 @@ namespace SkiaSharp
 		//
 
 		public SKCanvas Canvas =>
-			SKCanvas.GetObject (SkiaApi.sk_surface_get_canvas (Handle), false);
+			GetObject (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use SurfaceProperties instead.")]

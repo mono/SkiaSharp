@@ -216,6 +216,25 @@ namespace SkiaSharp.Tests
 			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
 			Assert.NotNull(typeface);
 
+			var count = typeface.CountGlyphs(text);
+			var glyphs = typeface.GetGlyphs(text);
+
+			Assert.True(count > 0);
+			Assert.True(glyphs.Length > 0);
+			Assert.DoesNotContain((ushort)0, glyphs);
+		}
+
+		[Obsolete]
+		[Trait(CategoryKey, MatchCharacterCategory)]
+		[SkippableFact]
+		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharactersObsolete()
+		{
+			const string text = "🚀";
+			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
+
+			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+			Assert.NotNull(typeface);
+
 			Assert.True(typeface.CountGlyphs(text) > 0);
 			Assert.True(typeface.CountGlyphs(text, SKEncoding.Utf32) > 0);
 			Assert.True(typeface.GetGlyphs(text).Length > 0);

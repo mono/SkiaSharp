@@ -51,17 +51,10 @@ namespace SkiaSharp
 		}
 
 		public SKMatrix44 (SKMatrix src)
-			: this (CreateNew (ref src), true)
+			: this (SkiaApi.sk_matrix44_new_matrix (&src), true)
 		{
 			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
-		}
-
-		private static IntPtr CreateNew (ref SKMatrix src)
-		{
-			fixed (SKMatrix* s = &src) {
-				return SkiaApi.sk_matrix44_new_matrix (s);
-			}
 		}
 
 		// properties
@@ -217,6 +210,25 @@ namespace SkiaSharp
 
 			fixed (float* s = src) {
 				SkiaApi.sk_matrix44_set_row_major (Handle, s);
+			}
+		}
+
+		public void Set3x3ColumnMajor (float[] src)
+		{
+			if (src.Length != 9)
+				throw new ArgumentException ("The source array must be 9 entries.", nameof (src));
+
+			var row = stackalloc float[9] { src[0], src[3], src[6], src[1], src[4], src[7], src[2], src[5], src[8] };
+			SkiaApi.sk_matrix44_set_3x3_row_major (Handle, row);
+		}
+
+		public void Set3x3RowMajor (float[] src)
+		{
+			if (src.Length != 9)
+				throw new ArgumentException ("The source array must be 9 entries.", nameof (src));
+
+			fixed (float* s = src) {
+				SkiaApi.sk_matrix44_set_3x3_row_major (Handle, s);
 			}
 		}
 

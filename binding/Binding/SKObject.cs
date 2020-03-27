@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -18,6 +17,7 @@ namespace SkiaSharp
 		internal static readonly ConcurrentDictionary<IntPtr, WeakReference> instances;
 
 		internal readonly ConcurrentDictionary<IntPtr, SKObject> ownedObjects = new ConcurrentDictionary<IntPtr, SKObject> ();
+		internal readonly ConcurrentDictionary<IntPtr, SKObject> keepAliveObjects = new ConcurrentDictionary<IntPtr, SKObject> ();
 
 		static SKObject ()
 		{
@@ -58,6 +58,7 @@ namespace SkiaSharp
 				child.Value.DisposeInternal ();
 			}
 			ownedObjects.Clear ();
+			keepAliveObjects.Clear ();
 		}
 
 		protected override void DisposeNative ()
@@ -193,15 +194,6 @@ namespace SkiaSharp
 			return false;
 		}
 
-		// indicate that when this object is disposed on the managed side,
-		// dispose the child as well
-		internal void SetDisposeChild (SKObject child)
-		{
-			if (child == null)
-				return;
-			ownedObjects[child.Handle] = child;
-		}
-
 		// indicate that the ownership of this object is now in the hands of
 		// the native object
 		internal void RevokeOwnership (SKObject newOwner)
@@ -212,7 +204,33 @@ namespace SkiaSharp
 			if (newOwner == null)
 				DisposeInternal ();
 			else
-				newOwner.SetDisposeChild (this);
+				newOwner.ownedObjects[Handle] = this;
+		}
+
+		// indicate that the child was created by the managed code and
+		// should be disposed when the owner is
+		internal static T Owned<T> (T owner, SKObject child)
+			where T : SKObject
+		{
+			if (child != null) {
+				if (owner != null)
+					owner.ownedObjects[child.Handle] = child;
+				else
+					child.Dispose ();
+			}
+
+			return owner;
+		}
+
+		// indicate that the chile should not be garbage collected while
+		// the owner still lives
+		internal static T Referenced<T> (T owner, SKObject child)
+			where T : SKObject
+		{
+			if (child != null && owner != null)
+				owner.keepAliveObjects[child.Handle] = child;
+
+			return owner;
 		}
 
 		internal static int SizeOf<T> () =>
