@@ -66,7 +66,7 @@ namespace SkiaSharp
 			if (input == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (input));
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc ((void*)input, (IntPtr)length));
+			return GetObject (SkiaApi.sk_colorspace_new_icc ((void*)input, (IntPtr)length));
 		}
 
 		public static SKColorSpace CreateIcc (byte[] input, long length)
@@ -75,7 +75,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (input));
 
 			fixed (byte* i = input) {
-				return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (i, (IntPtr)length));
+				return GetObject (SkiaApi.sk_colorspace_new_icc (i, (IntPtr)length));
 			}
 		}
 
@@ -85,7 +85,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (input));
 
 			fixed (byte* i = input) {
-				return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (i, (IntPtr)input.Length));
+				return GetObject (SkiaApi.sk_colorspace_new_icc (i, (IntPtr)input.Length));
 			}
 		}
 
@@ -114,33 +114,33 @@ namespace SkiaSharp
 			if (toXyzD50 == null)
 				throw new ArgumentNullException (nameof (toXyzD50));
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma (gamma, toXyzD50.Handle));
+			return GetObject (SkiaApi.sk_colorspace_new_rgb_with_gamma (gamma, toXyzD50.Handle));
 		}
 
 		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma_and_gamut (gamma, gamut));
+			GetObject (SkiaApi.sk_colorspace_new_rgb_with_gamma_and_gamut (gamma, gamut));
 
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKMatrix44 toXyzD50)
 		{
 			if (toXyzD50 == null)
 				throw new ArgumentNullException (nameof (toXyzD50));
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_coeffs (&coeffs, toXyzD50.Handle));
+			return GetObject (SkiaApi.sk_colorspace_new_rgb_with_coeffs (&coeffs, toXyzD50.Handle));
 		}
 
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_coeffs_and_gamut (&coeffs, gamut));
+			GetObject (SkiaApi.sk_colorspace_new_rgb_with_coeffs_and_gamut (&coeffs, gamut));
 
 		public static SKColorSpace CreateRgb (SKNamedGamma gamma, SKMatrix44 toXyzD50)
 		{
 			if (toXyzD50 == null)
 				throw new ArgumentNullException (nameof (toXyzD50));
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma_named (gamma, toXyzD50.Handle));
+			return GetObject (SkiaApi.sk_colorspace_new_rgb_with_gamma_named (gamma, toXyzD50.Handle));
 		}
 
 		public static SKColorSpace CreateRgb (SKNamedGamma gamma, SKColorSpaceGamut gamut) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma_named_and_gamut (gamma, gamut));
+			GetObject (SkiaApi.sk_colorspace_new_rgb_with_gamma_named_and_gamut (gamma, gamut));
 
 		public bool ToXyzD50 (SKMatrix44 toXyzD50)
 		{
@@ -158,10 +158,28 @@ namespace SkiaSharp
 		}
 
 		public SKMatrix44 ToXyzD50 () =>
-			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_to_xyzd50 (Handle), false);
+			SKMatrix44.GetObject (SkiaApi.sk_colorspace_as_to_xyzd50 (Handle), false);
 
 		public SKMatrix44 FromXyzD50 () =>
-			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_from_xyzd50 (Handle), false);
+			SKMatrix44.GetObject (SkiaApi.sk_colorspace_as_from_xyzd50 (Handle), false);
+
+		internal static SKColorSpace GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<SKColorSpace> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new SKColorSpace (ptr, owns);
+		}
 
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{

@@ -78,7 +78,7 @@ namespace SkiaSharp
 
 		// do not unref as this is a plain pointer return, not a reference counted pointer
 		public SKPicture Snapshot () =>
-			GetObject<SKPicture> (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
+			SKPicture.GetObject (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
 
 		public void NotifyDrawingChanged () =>
 			SkiaApi.sk_drawable_notify_drawing_changed (Handle);
@@ -102,7 +102,7 @@ namespace SkiaSharp
 		private static void DrawInternal (IntPtr d, void* context, IntPtr canvas)
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
-			drawable.OnDraw (GetObject<SKCanvas> (canvas, false));
+			drawable.OnDraw (SKCanvas.GetObject (canvas, false));
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableGetBoundsProxyDelegate))]
@@ -129,6 +129,24 @@ namespace SkiaSharp
 				drawable.Dispose ();
 			}
 			gch.Free ();
+		}
+
+		internal static SKDrawable GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<SKDrawable> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new SKDrawable (ptr, owns);
 		}
 	}
 }

@@ -14,7 +14,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (writer));
 			}
 
-			return SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create (&bounds, writer.Handle));
+			return SKCanvas.GetObject (SkiaApi.sk_svgcanvas_create (&bounds, writer.Handle));
 		}
 	}
 }

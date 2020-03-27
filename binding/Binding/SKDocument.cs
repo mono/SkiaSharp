@@ -24,10 +24,10 @@ namespace SkiaSharp
 			SkiaApi.sk_document_abort (Handle);
 
 		public SKCanvas BeginPage (float width, float height) =>
-			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, null), false);
+			SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, null), false);
 
 		public SKCanvas BeginPage (float width, float height, SKRect content) =>
-			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false);
+			SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false);
 
 		public void EndPage () =>
 			SkiaApi.sk_document_end_page (Handle);
@@ -72,7 +72,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi)), stream);
+			return Referenced (GetObject (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi)), stream);
 		}
 
 		// CreatePdf
@@ -111,7 +111,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle));
+			return GetObject (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle));
 		}
 
 		public static SKDocument CreatePdf (string path, float dpi) =>
@@ -176,7 +176,7 @@ namespace SkiaSharp
 					cmetadata.fModified = &modified;
 				}
 
-				return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, &cmetadata)), stream);
+				return Referenced (GetObject (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, &cmetadata)), stream);
 			}
 		}
 
@@ -198,6 +198,23 @@ namespace SkiaSharp
 				doc.underlyingStream = stream;
 
 			return doc;
+		}
+		internal static SKDocument GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<SKDocument> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new SKDocument (ptr, owns);
 		}
 	}
 }

@@ -44,5 +44,23 @@ namespace SkiaSharp
 		public static SKFontStyle Italic => new SKFontStyle (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
 
 		public static SKFontStyle BoldItalic => new SKFontStyle (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
+
+		internal static SKFontStyle GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<SKFontStyle> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new SKFontStyle (ptr, owns);
+		}
 	}
 }

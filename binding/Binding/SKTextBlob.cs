@@ -26,6 +26,23 @@ namespace SkiaSharp
 		}
 
 		public uint UniqueId => SkiaApi.sk_textblob_get_unique_id (Handle);
+		internal static SKTextBlob GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<SKTextBlob> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new SKTextBlob(ptr, owns);
+		}
 	}
 
 	public unsafe class SKTextBlobBuilder : SKObject
@@ -50,7 +67,7 @@ namespace SkiaSharp
 		// Build
 
 		public SKTextBlob Build () =>
-			GetObject<SKTextBlob> (SkiaApi.sk_textblob_builder_make (Handle));
+			SKTextBlob.GetObject (SkiaApi.sk_textblob_builder_make (Handle));
 
 		// AddRun
 

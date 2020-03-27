@@ -312,7 +312,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 
 			fixed (SKCodecResult* r = &result) {
-				var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));
+				var codec = GetObject (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));
 				stream.RevokeOwnership (codec);
 				return codec;
 			}
@@ -325,7 +325,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return GetObject<SKCodec> (SkiaApi.sk_codec_new_from_data (data.Handle));
+			return GetObject(SkiaApi.sk_codec_new_from_data (data.Handle));
 		}
 
 		// utils
@@ -342,6 +342,24 @@ namespace SkiaSharp
 			} else {
 				return new SKFrontBufferedManagedStream (stream, MinBufferedBytesNeeded, true);
 			}
+		}
+
+		internal static SKCodec GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<SKCodec> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new SKCodec (ptr, owns);
 		}
 	}
 }

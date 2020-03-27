@@ -43,7 +43,7 @@ namespace SkiaSharp
 
 		public static SKTypeface CreateDefault ()
 		{
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_default ());
+			return GetObject (SkiaApi.sk_typeface_create_default ());
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -71,7 +71,7 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, style.Handle));
+			return GetObject (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, style.Handle));
 		}
 
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
@@ -100,7 +100,7 @@ namespace SkiaSharp
 
 			var utf8path = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
 			fixed (byte* u = utf8path) {
-				return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file (u, index));
+				return GetObject (SkiaApi.sk_typeface_create_from_file (u, index));
 			}
 		}
 
@@ -122,7 +122,7 @@ namespace SkiaSharp
 				managed.Dispose ();
 			}
 
-			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
+			var typeface = GetObject (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
 			stream.RevokeOwnership (typeface);
 			return typeface;
 		}
@@ -142,9 +142,9 @@ namespace SkiaSharp
 		public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort[] glyphs)
 			=> GetGlyphs (str, strlen, encoding, out glyphs);
 
-		public string FamilyName => (string)GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
+		public string FamilyName => (string)SKString.GetObject (SkiaApi.sk_typeface_get_family_name (Handle));
 
-		public SKFontStyle FontStyle => GetObject<SKFontStyle> (SkiaApi.sk_typeface_get_fontstyle (Handle));
+		public SKFontStyle FontStyle => SKFontStyle.GetObject (SkiaApi.sk_typeface_get_fontstyle (Handle));
 
 		public int FontWeight => SkiaApi.sk_typeface_get_font_weight (Handle);
 
@@ -330,8 +330,26 @@ namespace SkiaSharp
 		public SKStreamAsset OpenStream (out int ttcIndex)
 		{
 			fixed (int* ttc = &ttcIndex) {
-				return GetObject<SKStreamAssetImplementation> (SkiaApi.sk_typeface_open_stream (Handle, ttc));
+				return SKStreamAssetImplementation.GetObject (SkiaApi.sk_typeface_open_stream (Handle, ttc));
 			}
+		}
+
+		internal static SKTypeface GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<SKTypeface> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new SKTypeface (ptr, owns);
 		}
 
 		private sealed class SKTypefaceStatic : SKTypeface

@@ -120,22 +120,22 @@ namespace SkiaSharp
 		}
 
 		public SKShader Shader {
-			get => GetObject<SKShader> (SkiaApi.sk_paint_get_shader (Handle));
+			get => SKShader.GetObject (SkiaApi.sk_paint_get_shader (Handle));
 			set => SkiaApi.sk_paint_set_shader (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKMaskFilter MaskFilter {
-			get => GetObject<SKMaskFilter> (SkiaApi.sk_paint_get_maskfilter (Handle));
+			get => SKMaskFilter.GetObject (SkiaApi.sk_paint_get_maskfilter (Handle));
 			set => SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKColorFilter ColorFilter {
-			get => GetObject<SKColorFilter> (SkiaApi.sk_paint_get_colorfilter (Handle));
+			get => SKColorFilter.GetObject (SkiaApi.sk_paint_get_colorfilter (Handle));
 			set => SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKImageFilter ImageFilter {
-			get => GetObject<SKImageFilter> (SkiaApi.sk_paint_get_imagefilter (Handle));
+			get => SKImageFilter.GetObject (SkiaApi.sk_paint_get_imagefilter (Handle));
 			set => SkiaApi.sk_paint_set_imagefilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
@@ -150,7 +150,7 @@ namespace SkiaSharp
 		}
 
 		public SKTypeface Typeface {
-			get => GetObject<SKTypeface> (SkiaApi.sk_paint_get_typeface (Handle));
+			get => SKTypeface.GetObject (SkiaApi.sk_paint_get_typeface (Handle));
 			set => SkiaApi.sk_paint_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
@@ -180,7 +180,7 @@ namespace SkiaSharp
 		}
 
 		public SKPathEffect PathEffect {
-			get => GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect (Handle));
+			get => SKPathEffect.GetObject (SkiaApi.sk_paint_get_path_effect (Handle));
 			set => SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
@@ -202,7 +202,7 @@ namespace SkiaSharp
 		}
 
 		public SKPaint Clone () =>
-			GetObject<SKPaint> (SkiaApi.sk_paint_clone (Handle));
+			GetObject (SkiaApi.sk_paint_clone (Handle));
 
 		// MeasureText
 
@@ -356,7 +356,7 @@ namespace SkiaSharp
 			if (buffer == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
 
-			return GetObject<SKPath> (SkiaApi.sk_paint_get_text_path (Handle, (void*)buffer, length, x, y));
+			return SKPath.GetObject (SkiaApi.sk_paint_get_text_path (Handle, (void*)buffer, length, x, y));
 		}
 
 		public SKPath GetTextPath (string text, SKPoint[] points)
@@ -387,7 +387,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (buffer));
 
 			fixed (SKPoint* p = points) {
-				return GetObject<SKPath> (SkiaApi.sk_paint_get_pos_text_path (Handle, (void*)buffer, length, p));
+				return SKPath.GetObject (SkiaApi.sk_paint_get_pos_text_path (Handle, (void*)buffer, length, p));
 			}
 		}
 
@@ -804,6 +804,24 @@ namespace SkiaSharp
 				}
 				return intervals;
 			}
+		}
+
+		internal static SKPaint GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<SKPaint> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new SKPaint (ptr, owns);
 		}
 	}
 }

@@ -45,7 +45,7 @@ namespace SkiaSharp
 		{
 			if (SizeOf <IntPtr> () == 4 && length > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
-			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy ((void*)bytes, (IntPtr) length));
+			return GetObject (SkiaApi.sk_data_new_with_copy ((void*)bytes, (IntPtr) length));
 		}
 
 		public static SKData CreateCopy (byte[] bytes) =>
@@ -54,7 +54,7 @@ namespace SkiaSharp
 		public static SKData CreateCopy (byte[] bytes, ulong length)
 		{
 			fixed (byte* b = bytes) {
-				return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (b, (IntPtr)length));
+				return GetObject (SkiaApi.sk_data_new_with_copy (b, (IntPtr)length));
 			}
 		}
 
@@ -67,7 +67,7 @@ namespace SkiaSharp
 
 		public static SKData Create (int size)
 		{
-			return GetObject<SKData> (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
+			return GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
 		}
 
 		public static SKData Create (ulong size)
@@ -75,7 +75,7 @@ namespace SkiaSharp
 			if (SizeOf <IntPtr> () == 4 && size > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (size), "The size exceeds the size of pointers.");
 				
-			return GetObject<SKData> (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
+			return GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
 		}
 
 		public static SKData Create (string filename)
@@ -85,7 +85,7 @@ namespace SkiaSharp
 
 			var utf8path = StringUtilities.GetEncodedText (filename, SKEncoding.Utf8);
 			fixed (byte* u = utf8path) {
-				return GetObject<SKData> (SkiaApi.sk_data_new_from_file (u));
+				return GetObject (SkiaApi.sk_data_new_from_file (u));
 			}
 		}
 
@@ -136,7 +136,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
+			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
 		}
 
 		public static SKData Create (SKStream stream, ulong length)
@@ -144,7 +144,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
+			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
 		}
 
 		public static SKData Create (SKStream stream, long length)
@@ -152,7 +152,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
+			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
 		}
 
 		public static SKData Create (IntPtr address, int length)
@@ -171,7 +171,7 @@ namespace SkiaSharp
 				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKDataReleaseDelegateProxy, out _, out var ctx);
-			return GetObject<SKData> (SkiaApi.sk_data_new_with_proc ((void*)address, (IntPtr)length, proxy, (void*)ctx));
+			return GetObject (SkiaApi.sk_data_new_with_proc ((void*)address, (IntPtr)length, proxy, (void*)ctx));
 		}
 
 		internal static SKData FromCString (string str)
@@ -188,7 +188,7 @@ namespace SkiaSharp
 				if (offset > UInt32.MaxValue)
 					throw new ArgumentOutOfRangeException (nameof (offset), "The offset exceeds the size of pointers.");
 			}
-			return GetObject<SKData> (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
+			return GetObject (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
 		}
 
 		public byte[] ToArray ()
@@ -231,6 +231,24 @@ namespace SkiaSharp
 				ptr += copyCount;
 				target.Write (buffer, 0, copyCount);
 			}
+		}
+
+		internal static SKData GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<SKData> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new SKData (ptr, owns);
 		}
 
 		private class SKDataStream : UnmanagedMemoryStream

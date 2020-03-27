@@ -38,7 +38,7 @@ namespace SkiaSharp
 			backend switch
 			{
 				GRBackend.Metal => throw new NotSupportedException (),
-				GRBackend.OpenGL => GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext)),
+				GRBackend.OpenGL => GRContext.GetObject (SkiaApi.gr_context_make_gl (backendContext)),
 				GRBackend.Vulkan => throw new NotSupportedException (),
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
@@ -47,7 +47,7 @@ namespace SkiaSharp
 			CreateGl (null);
 
 		public static GRContext CreateGl (GRGlInterface backendContext) =>
-			GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+			GetObject (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
 
 		public GRBackend Backend => SkiaApi.gr_context_get_backend (Handle);
 
@@ -98,5 +98,23 @@ namespace SkiaSharp
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use GetMaxSurfaceSampleCount(SKColorType) instead.")]
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
+
+		internal static GRContext GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<GRContext> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new GRContext (ptr, owns);
+		}
 	}
 }

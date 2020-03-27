@@ -37,7 +37,7 @@ namespace SkiaSharp
 			if (index < 0 || index >= Count)
 				throw new ArgumentOutOfRangeException ($"Index was out of range. Must be non-negative and less than the size of the set.", nameof (index));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
+			return SKTypeface.GetObject (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
 		}
 
 		public SKTypeface CreateTypeface (SKFontStyle style)
@@ -45,7 +45,7 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
+			return SKTypeface.GetObject (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
 		}
 
 		public IEnumerator<SKFontStyle> GetEnumerator () => GetStyles ().GetEnumerator ();
@@ -65,6 +65,26 @@ namespace SkiaSharp
 			var fontStyle = new SKFontStyle ();
 			SkiaApi.sk_fontstyleset_get_style (Handle, index, fontStyle.Handle, IntPtr.Zero);
 			return fontStyle;
+		}
+
+		internal static SKFontStyleSet GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<SKFontStyleSet> (ptr, out var instance)) {
+
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+
+				return instance;
+			}
+
+			return new SKFontStyleSet (ptr, owns);
 		}
 	}
 }

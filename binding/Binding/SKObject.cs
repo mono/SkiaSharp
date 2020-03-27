@@ -66,12 +66,6 @@ namespace SkiaSharp
 				refcnt.SafeUnRef ();
 		}
 
-		internal static TSkiaObject GetObject<TSkiaObject> (IntPtr handle, bool owns = true, bool unrefExisting = true, bool refNew = false)
-			where TSkiaObject : SKObject
-		{
-			return GetObject<TSkiaObject, TSkiaObject> (handle, owns, unrefExisting, refNew);
-		}
-
 		internal static TSkiaObject GetObject<TSkiaObject, TSkiaImplementation> (IntPtr handle, bool owns = true, bool unrefExisting = true, bool refNew = false)
 			where TSkiaObject : SKObject
 			where TSkiaImplementation : SKObject, TSkiaObject
@@ -223,14 +217,14 @@ namespace SkiaSharp
 
 		internal static int SizeOf<T> () =>
 #if WINDOWS_UWP || NET_STANDARD
-			Marshal.SizeOf <T> ();
+			Marshal.SizeOf<T> ();
 #else
 			Marshal.SizeOf (typeof (T));
 #endif
 
 		internal static T PtrToStructure<T> (IntPtr intPtr) =>
 #if WINDOWS_UWP || NET_STANDARD
-			Marshal.PtrToStructure <T> (intPtr);
+			Marshal.PtrToStructure<T> (intPtr);
 #else
 			(T)Marshal.PtrToStructure (intPtr, typeof (T));
 #endif

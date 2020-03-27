@@ -25,7 +25,7 @@ namespace SkiaSharp
 		public static GRGlInterface CreateNativeGlInterface ()
 		{
 			// the native code will automatically return null on non-OpenGL platforms, such as UWP
-			return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_create_native_interface ());
+			return GetObject (SkiaApi.gr_glinterface_create_native_interface ());
 		}
 		
 		public static GRGlInterface CreateNativeAngleInterface ()
@@ -69,7 +69,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface ((void*)ctx, proxy));
+				return GetObject (SkiaApi.gr_glinterface_assemble_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -98,7 +98,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface ((void*)ctx, proxy));
+				return GetObject (SkiaApi.gr_glinterface_assemble_gl_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -116,7 +116,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface ((void*)ctx, proxy));
+				return GetObject (SkiaApi.gr_glinterface_assemble_gles_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -130,6 +130,24 @@ namespace SkiaSharp
 		public bool HasExtension (string extension)
 		{
 			return SkiaApi.gr_glinterface_has_extension (Handle, extension);
+		}
+
+		internal static GRGlInterface GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true)
+		{
+			if (GetInstance<GRGlInterface> (ptr, out var instance)) {
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+#if THROW_OBJECT_EXCEPTIONS
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {ptr:x} Type: {instance.GetType ()}");
+#endif
+					refcnt.SafeUnRef ();
+				}
+				return instance;
+			}
+
+			return new GRGlInterface (ptr, owns);
 		}
 
 		private static class AngleLoader
