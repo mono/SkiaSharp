@@ -456,6 +456,8 @@ namespace SkiaSharp
 				}
 				return instance;
 			}
+
+			return new SKTypeface (ptr, owns);
 		}
 
 		//
