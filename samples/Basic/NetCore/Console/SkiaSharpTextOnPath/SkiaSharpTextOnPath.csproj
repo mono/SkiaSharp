@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\..\..\..\output\native\windows\x64\libSkiaSharp.dll" CopyToOutputDirectory="Always" Condition=" Exists('..\..\..\..\..\output\native\windows\x64\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\..\..\..\output\native\windows\x64\libSkiaSharp.pdb" CopyToOutputDirectory="Always" Condition=" Exists('..\..\..\..\..\output\native\windows\x64\libSkiaSharp.pdb') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\..\..\..\output\native\windows\x64\libHarfBuzzSharp.dll" CopyToOutputDirectory="Always" Condition=" Exists('..\..\..\..\..\output\native\windows\x64\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\..\..\..\output\native\windows\x64\libHarfBuzzSharp.pdb" CopyToOutputDirectory="Always" Condition=" Exists('..\..\..\..\..\output\native\windows\x64\libHarfBuzzSharp.pdb') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\..\..\..\output\native\osx\libSkiaSharp.dylib" CopyToOutputDirectory="Always" Condition=" Exists('..\..\..\..\..\output\native\osx\libSkiaSharp.dylib') or '$(IsMacOS)' == 'true' " />
+    <Content Include="..\..\..\..\..\output\native\osx\libHarfBuzzSharp.dylib" CopyToOutputDirectory="Always" Condition=" Exists('..\..\..\..\..\output\native\osx\libHarfBuzzSharp.dylib') or '$(IsMacOS)' == 'true' " />
+    <Content Include="..\..\..\..\..\output\native\linux\x64\libSkiaSharp.so" CopyToOutputDirectory="Always" Condition=" Exists('..\..\..\..\..\output\native\linux\x64\libSkiaSharp.so') or '$(IsLinux)' == 'true' " />
+    <Content Include="..\..\..\..\..\output\native\linux\x64\libHarfBuzzSharp.so" CopyToOutputDirectory="Always" Condition=" Exists('..\..\..\..\..\output\native\linux\x64\libHarfBuzzSharp.so') or '$(IsLinux)' == 'true' " />
+  </ItemGroup>
+
+</Project>
