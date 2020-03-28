@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 
 namespace SkiaSharp
 {
@@ -680,10 +679,9 @@ namespace SkiaSharp
 			DrawTextOnPath (text, path, offset, paint, paint.GetFont ());
 
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint) =>
-			DrawTextOnPath(text, path, new SKPoint(hOffset, vOffset), paint, paint.GetFont());
+			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), paint, paint.GetFont ());
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset,
-			SKPaint paint, SKFont font)
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint, SKFont font)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -698,12 +696,10 @@ namespace SkiaSharp
 			DrawTextOnPath (glyphs, path, offset, paint, font);
 		}
 
-		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint, SKFont font)
-		{
+		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint, SKFont font) =>
 			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), paint, font);
-		}
 
-		public void DrawTextOnPath(
+		public void DrawTextOnPath (
 			ReadOnlySpan<ushort> glyphs,
 			SKPath path,
 			SKPoint offset,
@@ -715,7 +711,7 @@ namespace SkiaSharp
 				return;
 
 			var glyphWidths = font.GetGlyphWidths (glyphs);
-			var glyphOffsets = font.GetGlyphPositions(glyphs, offset);
+			var glyphOffsets = font.GetGlyphPositions (glyphs, offset);
 			DrawTextOnPath (path, glyphs, glyphWidths, glyphOffsets, paint, font);
 		}
 
@@ -730,10 +726,8 @@ namespace SkiaSharp
 			var alignment = (int)paint.TextAlign * 0.5f;
 
 			var warping = paint.GlyphWarping;
-			switch (warping)
-			{
-				case SKGlyphWarping.SpacingOnly:
-				{
+			switch (warping) {
+				case SKGlyphWarping.SpacingOnly: {
 					using var blob = SKPath.CreatePlacedTextOnPath (
 						path, font,
 						glyphs, glyphWidths, glyphOffsets,
@@ -741,18 +735,17 @@ namespace SkiaSharp
 					DrawText (blob, 0, 0, paint);
 					break;
 				}
-				case SKGlyphWarping.SpacingAndGlyphs:
-				{
-					using var warp = SKPath.CreateWarpedTextOnPath(
+				case SKGlyphWarping.SpacingAndGlyphs: {
+					using var warp = SKPath.CreateWarpedTextOnPath (
 						path, font,
 						glyphs, glyphWidths, glyphOffsets,
 						alignment);
-					DrawPath(warp, paint);
+					DrawPath (warp, paint);
 					break;
 				}
 
 				default:
-					throw new ArgumentOutOfRangeException (nameof(warping), warping, null);
+					throw new ArgumentOutOfRangeException (nameof (warping), warping, null);
 			}
 		}
 
@@ -773,10 +766,8 @@ namespace SkiaSharp
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use DrawTextOnPath(string, SKPath, float, float, SKPaint) instead.")]
-		public void DrawTextOnPath (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint)
-		{
-			DrawTextOnPath (text, path, hOffset, vOffset, paint);
-		}
+		public void DrawTextOnPath (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint) =>
+			DrawTextOnPath (text, path, new SKPoint(hOffset, vOffset), paint);
 
 		// Flush
 
