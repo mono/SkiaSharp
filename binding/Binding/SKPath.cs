@@ -642,7 +642,7 @@ namespace SkiaSharp
 			return warpedPath;
 		}
 
-		public static SKTextBlob CreateTextBlobOnPath(
+		public static SKTextBlob CreatePlacedTextOnPath(
 				SKPath path,
 				SKFont font,
 				ReadOnlySpan<ushort> glyphs,

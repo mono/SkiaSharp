@@ -4,19 +4,6 @@ using System.Diagnostics;
 
 namespace SkiaSharp
 {
-	public enum SKTextLengthAdjustment
-	{
-		/// <summary>
-		/// Indicates that only the advance values are adjusted. The glyphs themselves are not stretched or compressed.
-		/// </summary>
-		SpacingOnly,
-
-		/// <summary>
-		/// Indicates that the advance values are adjusted and the glyphs themselves stretched or compressed in one axis (i.e., a direction parallel to the inline-base direction).
-		/// </summary>
-		SpacingAndGlyphs
-	}
-
 	// TODO: carefully consider the `PeekPixels`, `ReadPixels`
 	public unsafe class SKCanvas : SKObject
 	{
@@ -689,26 +676,14 @@ namespace SkiaSharp
 
 		// DrawTextOnPath
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset,
-			SKPaint paint, SKTextLengthAdjustment adjustment = SKTextLengthAdjustment.SpacingAndGlyphs)
-		{
-			DrawTextOnPath (text, path, offset, paint, paint.GetFont (), adjustment);
-		}
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint) =>
+			DrawTextOnPath (text, path, offset, paint, paint.GetFont ());
 
-		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset,
-			SKPaint paint, SKTextLengthAdjustment adjustment = SKTextLengthAdjustment.SpacingAndGlyphs)
-		{
-			DrawTextOnPath(text, path, new SKPoint(hOffset, vOffset), paint, paint.GetFont(), adjustment);
-		}
+		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint) =>
+			DrawTextOnPath(text, path, new SKPoint(hOffset, vOffset), paint, paint.GetFont());
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset,
-			SKPaint paint, SKFont font, SKTextLengthAdjustment adjustment = SKTextLengthAdjustment.SpacingAndGlyphs)
-		{
-			DrawTextOnPath(text, path, offset, paint, font, adjustment);
-		}
-
-		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset,
-			SKPaint paint, SKFont font, SKTextLengthAdjustment adjustment = SKTextLengthAdjustment.SpacingAndGlyphs)
+			SKPaint paint, SKFont font)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -717,10 +692,15 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			if (font == null)
-				throw new ArgumentNullException(nameof(paint));
+				throw new ArgumentNullException (nameof (paint));
 
 			var glyphs = font.GetGlyphs (text);
-			DrawTextOnPath (glyphs, path, new SKPoint(hOffset, vOffset), paint, font, adjustment);
+			DrawTextOnPath (glyphs, path, offset, paint, font);
+		}
+
+		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint, SKFont font)
+		{
+			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), paint, font);
 		}
 
 		public void DrawTextOnPath(
@@ -728,15 +708,15 @@ namespace SkiaSharp
 			SKPath path,
 			SKPoint offset,
 			SKPaint paint,
-			SKFont font,
-			SKTextLengthAdjustment adjustment = SKTextLengthAdjustment.SpacingAndGlyphs)
+			SKFont font
+			)
 		{
 			if (glyphs.Length == 0)
 				return;
 
 			var glyphWidths = font.GetGlyphWidths (glyphs);
 			var glyphOffsets = font.GetGlyphPositions(glyphs, offset);
-			DrawTextOnPath (path, glyphs, glyphWidths, glyphOffsets, paint, font, adjustment);
+			DrawTextOnPath (path, glyphs, glyphWidths, glyphOffsets, paint, font);
 		}
 
 		public void DrawTextOnPath (
@@ -745,23 +725,23 @@ namespace SkiaSharp
 			ReadOnlySpan<float> glyphWidths,
 			ReadOnlySpan<SKPoint> glyphOffsets,
 			SKPaint paint,
-			SKFont font,
-			SKTextLengthAdjustment adjustment)
+			SKFont font)
 		{
 			var alignment = (int)paint.TextAlign * 0.5f;
 
-			switch (adjustment)
+			var warping = paint.GlyphWarping;
+			switch (warping)
 			{
-				case SKTextLengthAdjustment.SpacingOnly:
+				case SKGlyphWarping.SpacingOnly:
 				{
-					using var blob = SKPath.CreateTextBlobOnPath (
+					using var blob = SKPath.CreatePlacedTextOnPath (
 						path, font,
 						glyphs, glyphWidths, glyphOffsets,
 						alignment);
 					DrawText (blob, 0, 0, paint);
 					break;
 				}
-				case SKTextLengthAdjustment.SpacingAndGlyphs:
+				case SKGlyphWarping.SpacingAndGlyphs:
 				{
 					using var warp = SKPath.CreateWarpedTextOnPath(
 						path, font,
@@ -772,7 +752,7 @@ namespace SkiaSharp
 				}
 
 				default:
-					throw new ArgumentOutOfRangeException (nameof(adjustment), adjustment, null);
+					throw new ArgumentOutOfRangeException (nameof(warping), warping, null);
 			}
 		}
 

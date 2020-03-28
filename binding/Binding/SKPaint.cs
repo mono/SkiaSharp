@@ -596,5 +596,8 @@ namespace SkiaSharp
 
 		internal SKFont GetFont () =>
 			GetObject<SKFont> (SkiaApi.sk_compatpaint_get_font (Handle), false);
+
+		// Text on path
+		public SKGlyphWarping GlyphWarping { get; set; }
 	}
 }
