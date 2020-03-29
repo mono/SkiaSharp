@@ -1,7 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Linq;
+using SkiaSharp.Tests;
 using Xunit;
+
+[assembly: AssemblyFixture(typeof(GarbageCleanupFixture))]
 
 namespace SkiaSharp.Tests
 {
@@ -16,8 +18,8 @@ namespace SkiaSharp.Tests
 
 		public GarbageCleanupFixture()
 		{
-			Assert.Empty(SKObject.constructors);
-			var aliveObjects = SKObject.instances.Values
+			Assert.Empty(HandleDictionary.constructors);
+			var aliveObjects = HandleDictionary.instances.Values
 				.Select(o => o.Target)
 				.Where(IsExpectedToBeDead)
 				.ToList();
@@ -30,7 +32,7 @@ namespace SkiaSharp.Tests
 			GC.WaitForPendingFinalizers();
 
 			// make sure nothing is alive
-			var aliveObjects = SKObject.instances.Values
+			var aliveObjects = HandleDictionary.instances.Values
 				.Select(o => o.Target)
 				.Where(IsExpectedToBeDead)
 				.ToList();
@@ -38,7 +40,7 @@ namespace SkiaSharp.Tests
 
 #if THROW_OBJECT_EXCEPTIONS
 			// make sure all the exceptions are accounted for
-			var exceptions = SKObject.exceptions
+			var exceptions = HandleDictionary.exceptions
 				.ToList();
 			Assert.Empty(exceptions);
 
