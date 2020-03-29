@@ -7,8 +7,14 @@ namespace SkiaSharp
 {
 	public abstract class SKObject : SKNativeObject
 	{
-		internal readonly ConcurrentDictionary<IntPtr, SKObject> ownedObjects = new ConcurrentDictionary<IntPtr, SKObject> ();
-		internal readonly ConcurrentDictionary<IntPtr, SKObject> keepAliveObjects = new ConcurrentDictionary<IntPtr, SKObject> ();
+		private ConcurrentDictionary<IntPtr, SKObject> ownedObjects;
+		private ConcurrentDictionary<IntPtr, SKObject> keepAliveObjects;
+
+		internal ConcurrentDictionary<IntPtr, SKObject> OwnedObjects =>
+			ownedObjects ??= new ConcurrentDictionary<IntPtr, SKObject> ();
+
+		internal ConcurrentDictionary<IntPtr, SKObject> KeepAliveObjects =>
+			keepAliveObjects ??= new ConcurrentDictionary<IntPtr, SKObject> ();
 
 		static SKObject ()
 		{
@@ -42,11 +48,16 @@ namespace SkiaSharp
 
 		protected override void DisposeManaged ()
 		{
-			foreach (var child in ownedObjects) {
-				child.Value.DisposeInternal ();
+			if (ownedObjects != null) {
+				foreach (var child in ownedObjects) {
+					child.Value.DisposeInternal ();
+				}
+				ownedObjects.Clear ();
 			}
-			ownedObjects.Clear ();
-			keepAliveObjects.Clear ();
+
+			if (keepAliveObjects != null) {
+				KeepAliveObjects.Clear ();
+			}
 		}
 
 		protected override void DisposeNative ()
@@ -111,7 +122,7 @@ namespace SkiaSharp
 			if (newOwner == null)
 				DisposeInternal ();
 			else
-				newOwner.ownedObjects[Handle] = this;
+				newOwner.OwnedObjects[Handle] = this;
 		}
 
 		// indicate that the child was created by the managed code and
@@ -121,7 +132,7 @@ namespace SkiaSharp
 		{
 			if (child != null) {
 				if (owner != null)
-					owner.ownedObjects[child.Handle] = child;
+					owner.OwnedObjects[child.Handle] = child;
 				else
 					child.Dispose ();
 			}
@@ -135,7 +146,7 @@ namespace SkiaSharp
 			where T : SKObject
 		{
 			if (child != null && owner != null)
-				owner.keepAliveObjects[child.Handle] = child;
+				owner.KeepAliveObjects[child.Handle] = child;
 
 			return owner;
 		}
