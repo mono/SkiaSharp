@@ -417,8 +417,6 @@ namespace SkiaSharp.Tests
 
 			var slow = Task.Run(() =>
 			{
-				order.Enqueue(1);
-
 				// wait for thread 1
 				secondThreadStarter.WaitOne();
 
@@ -447,7 +445,7 @@ namespace SkiaSharp.Tests
 			await Task.WhenAll(new[] { fast, slow });
 
 			// make sure it was the right order
-			Assert.Equal("1,1,2,3,4,5,6,7,8", string.Join(",", order.Select(o => o.ToString())));
+			Assert.Equal("1,2,3,4,5,6,7,8", string.Join(",", order.Select(o => o.ToString())));
 
 			// make sure both were "created" and they are NOT the same object
 			Assert.NotNull(objFast);
