@@ -7,14 +7,32 @@ namespace SkiaSharp
 {
 	public abstract class SKObject : SKNativeObject
 	{
+		private readonly object locker = new object ();
+
 		private ConcurrentDictionary<IntPtr, SKObject> ownedObjects;
 		private ConcurrentDictionary<IntPtr, SKObject> keepAliveObjects;
 
-		internal ConcurrentDictionary<IntPtr, SKObject> OwnedObjects =>
-			ownedObjects ??= new ConcurrentDictionary<IntPtr, SKObject> ();
+		internal ConcurrentDictionary<IntPtr, SKObject> OwnedObjects {
+			get {
+				if (ownedObjects == null) {
+					lock (locker) {
+						ownedObjects ??= new ConcurrentDictionary<IntPtr, SKObject> ();
+					}
+				}
+				return ownedObjects;
+			}
+		}
 
-		internal ConcurrentDictionary<IntPtr, SKObject> KeepAliveObjects =>
-			keepAliveObjects ??= new ConcurrentDictionary<IntPtr, SKObject> ();
+		internal ConcurrentDictionary<IntPtr, SKObject> KeepAliveObjects {
+			get {
+				if (keepAliveObjects == null) {
+					lock (locker) {
+						keepAliveObjects ??= new ConcurrentDictionary<IntPtr, SKObject> ();
+					}
+				}
+				return keepAliveObjects;
+			}
+		}
 
 		static SKObject ()
 		{
@@ -48,16 +66,13 @@ namespace SkiaSharp
 
 		protected override void DisposeManaged ()
 		{
-			if (ownedObjects != null) {
-				foreach (var child in ownedObjects) {
+			if (ownedObjects is ConcurrentDictionary<IntPtr, SKObject> dic) {
+				foreach (var child in dic) {
 					child.Value.DisposeInternal ();
 				}
-				ownedObjects.Clear ();
+				dic.Clear ();
 			}
-
-			if (keepAliveObjects != null) {
-				KeepAliveObjects.Clear ();
-			}
+			KeepAliveObjects?.Clear ();
 		}
 
 		protected override void DisposeNative ()
