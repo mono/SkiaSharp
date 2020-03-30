@@ -36,36 +36,6 @@ namespace SkiaSharp.Views.Forms
 			scalePixels = null;
 		}
 
-		private static SKTouchDeviceType GetDeviceType(MotionEventToolType toolType)
-		{
-			SKTouchDeviceType deviceType = SKTouchDeviceType.Touch;
-
-			switch (toolType)
-			{
-				case MotionEventToolType.Eraser:
-					deviceType = SKTouchDeviceType.Pen;
-					break;
-
-				case MotionEventToolType.Finger:
-					deviceType = SKTouchDeviceType.Touch;
-					break;
-
-				case MotionEventToolType.Mouse:
-					deviceType = SKTouchDeviceType.Mouse;
-					break;
-
-				case MotionEventToolType.Stylus:
-					deviceType = SKTouchDeviceType.Pen;
-					break;
-
-				case MotionEventToolType.Unknown:
-					deviceType = SKTouchDeviceType.Touch;
-					break;
-			}
-
-			return deviceType;
-		}
-
 		private void OnTouch(object sender, View.TouchEventArgs e)
 		{
 			if (onTouchAction == null || scalePixels == null)
@@ -78,7 +48,6 @@ namespace SkiaSharp.Views.Forms
 			var coords = scalePixels(evt.GetX(pointer), evt.GetY(pointer));
 
 			var toolType = evt.GetToolType(id);
-
 			var deviceType = GetDeviceType(toolType);
 
 			switch (evt.ActionMasked)
@@ -126,5 +95,16 @@ namespace SkiaSharp.Views.Forms
 					}
 			}
 		}
+
+		private static SKTouchDeviceType GetDeviceType(MotionEventToolType toolType) =>
+			toolType switch
+			{
+				MotionEventToolType.Unknown => SKTouchDeviceType.Touch,
+				MotionEventToolType.Finger => SKTouchDeviceType.Touch,
+				MotionEventToolType.Stylus => SKTouchDeviceType.Pen,
+				MotionEventToolType.Eraser => SKTouchDeviceType.Pen,
+				MotionEventToolType.Mouse => SKTouchDeviceType.Mouse,
+				_ => SKTouchDeviceType.Touch,
+			};
 	}
 }
