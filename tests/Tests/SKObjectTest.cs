@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -395,6 +396,7 @@ namespace SkiaSharp.Tests
 			var fast = Task.Run(() =>
 			{
 				order.Enqueue(1);
+
 				objFast = SKObject.GetObject<DelayedDestructionObject>(handle);
 				objFast.DisposeDelayEvent = new AutoResetEvent(false);
 
@@ -415,6 +417,8 @@ namespace SkiaSharp.Tests
 
 			var slow = Task.Run(() =>
 			{
+				order.Enqueue(1);
+
 				// wait for thread 1
 				secondThreadStarter.WaitOne();
 
@@ -443,7 +447,7 @@ namespace SkiaSharp.Tests
 			await Task.WhenAll(new[] { fast, slow });
 
 			// make sure it was the right order
-			Assert.Equal(new[] { 1, 2, 3, 4, 5, 6, 7, 8 }, order);
+			Assert.Equal("1,1,2,3,4,5,6,7,8", string.Join(",", order.Select(o => o.ToString())));
 
 			// make sure both were "created" and they are NOT the same object
 			Assert.NotNull(objFast);
