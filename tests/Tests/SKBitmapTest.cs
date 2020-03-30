@@ -505,7 +505,6 @@ namespace SkiaSharp.Tests
 
 			var complete = false;
 			var exceptions = new ConcurrentBag<Exception>();
-			var messages = new ConcurrentQueue<string>();
 
 			for (int i = 0; i < numThreads; i++)
 			{
@@ -520,8 +519,6 @@ namespace SkiaSharp.Tests
 					}
 					catch (Exception ex)
 					{
-						messages.Enqueue(ex.Message);
-
 						exceptions.Add(ex);
 					}
 				});
@@ -542,10 +539,7 @@ namespace SkiaSharp.Tests
 			complete = true;
 
 			if (!exceptions.IsEmpty)
-			{
-				File.WriteAllLines(@"C:\Projects\SkiaSharp\tests\output.log", messages);
 				throw new AggregateException(exceptions);
-			}
 
 			static byte[] ComputeThumbnail(string fileName)
 			{
