@@ -394,6 +394,14 @@ namespace SkiaSharp.Tests
 				Assert.NotNull (bitmap);
 		}
 
+		[SkippableFact]
+		public void CanReadManagedStream()
+		{
+			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
+			using (var codec = SKCodec.Create(stream))
+				Assert.NotNull(codec);
+		}
+
 		[SkippableTheory]
 		[InlineData("CMYK.jpg")]
 		[InlineData("baboon.png")]

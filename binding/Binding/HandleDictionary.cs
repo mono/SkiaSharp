@@ -110,7 +110,7 @@ namespace SkiaSharp
 					}
 #if THROW_OBJECT_EXCEPTIONS
 				} else if (weak.Target is SKObject obj) {
-					if (!obj.IsDisposed) {
+					if (!obj.IsDisposed && obj.OwnsHandle) {
 						throw new InvalidOperationException (
 							$"A managed object exists for the handle, but is not the expected type. " +
 							$"H: {handle.ToString ("x")} Type: ({obj.GetType ()}, {typeof (TSkiaObject)})");
