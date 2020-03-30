@@ -140,6 +140,18 @@ namespace SkiaSharp
 				newOwner.OwnedObjects[Handle] = this;
 		}
 
+		// indicate that the child is controlled by the native code and
+		// the managed wrapper should be disposed when the owner is
+		internal static T OwnedBy<T> (T child, SKObject owner)
+			where T : SKObject
+		{
+			if (child != null) {
+				owner.OwnedObjects[child.Handle] = child;
+			}
+
+			return child;
+		}
+
 		// indicate that the child was created by the managed code and
 		// should be disposed when the owner is
 		internal static T Owned<T> (T owner, SKObject child)
