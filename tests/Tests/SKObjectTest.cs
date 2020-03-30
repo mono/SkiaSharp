@@ -408,11 +408,7 @@ namespace SkiaSharp.Tests
 				secondThreadStarter.Set();
 
 				objFast.Dispose();
-				order.Enqueue(8);
-
-				Assert.True(SKObject.GetInstance<DelayedDestructionObject>(handle, out var afterDispose));
-				Assert.NotSame(objFast, afterDispose);
-				Assert.Same(objSlow, afterDispose);
+				order.Enqueue(7);
 			});
 
 			var slow = Task.Run(() =>
@@ -434,18 +430,15 @@ namespace SkiaSharp.Tests
 				order.Enqueue(5);
 				objSlow = SKObject.GetObject<DelayedDestructionObject>(handle);
 				order.Enqueue(6);
+
 				// finish the disposal
 				objFast.DisposeDelayEvent.Set();
-				order.Enqueue(7);
-
-				Assert.True(SKObject.GetInstance<DelayedDestructionObject>(handle, out var afterCreate));
-				Assert.Same(objSlow, afterCreate);
 			});
 
 			await Task.WhenAll(new[] { fast, slow });
 
 			// make sure it was the right order
-			Assert.Equal("1,2,3,4,5,6,7,8", string.Join(",", order.Select(o => o.ToString())));
+			Assert.Equal(new[] { 1, 2, 3, 4, 5, 6, 7 }, order);
 
 			// make sure both were "created" and they are NOT the same object
 			Assert.NotNull(objFast);
