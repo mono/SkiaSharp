@@ -515,6 +515,7 @@ namespace SkiaSharp.Tests
 						for (int j = 0; j < numIterationsPerThread && exceptions.IsEmpty; j++)
 						{
 							var imageData = ComputeThumbnail(referenceFile);
+							Assert.NotEmpty(imageData);
 						}
 					}
 					catch (Exception ex)
@@ -553,6 +554,12 @@ namespace SkiaSharp.Tests
 				var data = image.Encode(SKEncodedImageFormat.Png, 80);
 
 				data.SaveTo(ms);
+
+				GC.KeepAlive(data);
+				GC.KeepAlive(image);
+				GC.KeepAlive(scaledBitmap);
+				GC.KeepAlive(bitmap);
+				GC.KeepAlive(ms);
 
 				return ms.ToArray();
 			}
