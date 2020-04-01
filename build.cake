@@ -163,13 +163,13 @@ Task ("tests")
         RunDesktopTest ("x64");
     }
 
-    // // .NET Core
-    // RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
-    // try {
-    //     RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
-    // } catch {
-    //     failedTests++;
-    // }
+    // .NET Core
+    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
+    try {
+        RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
+    } catch {
+        failedTests++;
+    }
 
     if (failedTests > 0)
         throw new Exception ($"There were {failedTests} failed tests.");
