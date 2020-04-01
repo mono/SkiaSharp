@@ -338,7 +338,10 @@ namespace SkiaSharp
 			if (pixmap == null)
 				throw new ArgumentNullException (nameof (pixmap));
 
-			return SkiaApi.sk_surface_peek_pixels (Handle, pixmap.Handle);
+			var result = SkiaApi.sk_surface_peek_pixels (Handle, pixmap.Handle);
+			if (result)
+				Referenced (pixmap, this);
+			return result;
 		}
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)

@@ -555,12 +555,6 @@ namespace SkiaSharp.Tests
 
 				data.SaveTo(ms);
 
-				GC.KeepAlive(data);
-				GC.KeepAlive(image);
-				GC.KeepAlive(scaledBitmap);
-				GC.KeepAlive(bitmap);
-				GC.KeepAlive(ms);
-
 				return ms.ToArray();
 			}
 		}

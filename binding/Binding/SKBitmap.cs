@@ -718,7 +718,10 @@ namespace SkiaSharp
 			if (pixmap == null) {
 				throw new ArgumentNullException (nameof (pixmap));
 			}
-			return SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
+			var result = SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
+			if (result)
+				Referenced (pixmap, this);
+			return result;
 		}
 
 		// Resize

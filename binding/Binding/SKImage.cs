@@ -529,7 +529,11 @@ namespace SkiaSharp
 		{
 			if (pixmap == null)
 				throw new ArgumentNullException (nameof (pixmap));
-			return SkiaApi.sk_image_peek_pixels (Handle, pixmap.Handle);
+
+			var result = SkiaApi.sk_image_peek_pixels (Handle, pixmap.Handle);
+			if (result)
+				Referenced (pixmap, this);
+			return result;
 		}
 
 		public SKPixmap PeekPixels ()
