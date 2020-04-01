@@ -13,6 +13,7 @@ namespace SkiaSharp.Tests
 		private static readonly string[] StaticTypes = new[] {
 			"SkiaSharp.SKData+SKDataStatic",
 			"SkiaSharp.SKFontManager+SKFontManagerStatic",
+			"SkiaSharp.SKFontStyle+SKFontStyleStatic",
 			"SkiaSharp.SKTypeface+SKTypefaceStatic",
 			"SkiaSharp.SKColorSpace+SKColorSpaceStatic",
 		};
