@@ -172,8 +172,11 @@ Task ("tests")
         failedTests++;
     }
 
-    if (failedTests > 0 && THROW_ON_TEST_FAILURE)
-        throw new Exception ($"There were {failedTests} failed tests.");
+    if (failedTests > 0)
+        if (THROW_ON_TEST_FAILURE)
+            throw new Exception ($"There were {failedTests} failed tests.");
+        else
+            Warning ($"There were {failedTests} failed tests.");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
