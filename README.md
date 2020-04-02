@@ -42,31 +42,12 @@ https://aka.ms/skiasharp-eap/index.json
 
 ## Building SkiaSharp
 
-Before building SkiaSharp:
+Building SkiaSharp is mostly straight forward. The main issue is the multiple dependencies for each platform.
 
- * [Python 2.7](https://www.python.org/downloads) is available in the `PATH` environment variable on Windows
- * [Android NDK r15](https://developer.android.com/ndk/downloads/index.html) is available in the `ANDROID_NDK_HOME` environment variable on macOS
- * [.NET Core](https://www.microsoft.com/net/core) is installed on all platforms
- * C/C++ Compiler (MSVC / "Desktop development" package on Windows)
+However, these are easy to install as they are found on the various websites. If you are just working on managed code, it is even easier as there mays to skip all the native builds.
 
-First, clone the repository:
-
-    $ git clone https://github.com/mono/SkiaSharp.git
-
-Next, set up the submodules:
-
-    $ cd SkiaSharp
-    $ git submodule update --init --recursive
-
-Finally, build everything:
-
-Mac/Linux:
-
-    $ ./bootstrapper.sh -t everything
-
-Windows:
-
-    > .\bootstrapper.ps1 -t everything
+ - To get started building, [go here](https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp).
+ - If you are just wanting a custom Linux build, [go here](https://github.com/mono/SkiaSharp/wiki/Building-on-Linux)
 
 ## Compare Code
 

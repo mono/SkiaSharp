@@ -23,19 +23,24 @@ namespace SkiaSharp.Views.iOS
 		private uint framebuffer;
 
 		private GRContext context;
+		private GRGlFramebufferInfo glInfo;
 		private GRBackendRenderTarget renderTarget;
 		private SKSurface surface;
+		private SKCanvas canvas;
+
+		private SKSizeI lastSize;
+		private bool recreateSurface = true;
 
 		public SKGLLayer()
 		{
 			Opaque = true;
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		[Obsolete("Use PaintSurface instead.")]
 		public ISKGLLayerDelegate SKDelegate { get; set; }
 
-		public SKSize CanvasSize => renderTarget.Size;
+		public SKSize CanvasSize => lastSize;
 
 		public GRContext GRContext => context;
 
@@ -48,31 +53,51 @@ namespace SkiaSharp.Views.iOS
 
 			EAGLContext.SetCurrentContext(glContext);
 
+			// get the new surface size
+			var newSize = lastSize;
+			if (recreateSurface)
+			{
+				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_WIDTH, out var bufferWidth);
+				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_HEIGHT, out var bufferHeight);
+				newSize = new SKSizeI(bufferWidth, bufferHeight);
+			}
+
 			// manage the drawing surface
-			if (renderTarget == null || surface == null)
+			if (recreateSurface || renderTarget == null || lastSize != newSize || !renderTarget.IsValid)
 			{
 				// create or update the dimensions
-				renderTarget?.Dispose();
+				lastSize = newSize;
+
+				// read the info from the buffer
 				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
 				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
 				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
 				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
 				if (samples > maxSamples)
 					samples = maxSamples;
-				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_WIDTH, out var bufferWidth);
-				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_HEIGHT, out var bufferHeight);
-				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
-				renderTarget = new GRBackendRenderTarget(bufferWidth, bufferHeight, samples, stencil, glInfo);
+				glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
 
-				// create the surface
+				// destroy the old surface
 				surface?.Dispose();
-				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
+				surface = null;
+				canvas = null;
+
+				// re-create the render target
+				renderTarget?.Dispose();
+				renderTarget = new GRBackendRenderTarget(newSize.Width, newSize.Height, samples, stencil, glInfo);
 			}
 
-			using (new SKAutoCanvasRestore(surface.Canvas, true))
+			// create the surface
+			if (surface == null)
+			{
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
+				canvas = surface.Canvas;
+			}
+
+			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
 				OnPaintSurface(e);
 #pragma warning disable CS0618 // Type or member is obsolete
 				DrawInSurface(e.Surface, e.RenderTarget);
@@ -81,7 +106,7 @@ namespace SkiaSharp.Views.iOS
 			}
 
 			// flush the SkiaSharp context to the GL context
-			surface.Canvas.Flush();
+			canvas.Flush();
 			context.Flush();
 
 			// present the GL buffers
@@ -98,8 +123,6 @@ namespace SkiaSharp.Views.iOS
 				if (glContext != null)
 				{
 					ResizeGLContexts();
-					renderTarget?.Dispose();
-					renderTarget = null;
 				}
 				Render();
 			}
@@ -112,7 +135,7 @@ namespace SkiaSharp.Views.iOS
 			PaintSurface?.Invoke(this, e);
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{
@@ -140,6 +163,8 @@ namespace SkiaSharp.Views.iOS
 
 			// finished
 			EAGLContext.SetCurrentContext(null);
+
+			recreateSurface = true;
 		}
 
 		private void ResizeGLContexts()
@@ -154,14 +179,16 @@ namespace SkiaSharp.Views.iOS
 
 			// re-link
 			Gles.glFramebufferRenderbuffer(Gles.GL_FRAMEBUFFER, Gles.GL_COLOR_ATTACHMENT0, Gles.GL_RENDERBUFFER, renderBuffer);
+
+			recreateSurface = true;
 		}
 
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
 
-			context.Dispose();
-			glContext.Dispose();
+			context?.Dispose();
+			glContext?.Dispose();
 		}
 	}
 }
