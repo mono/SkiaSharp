@@ -8,7 +8,23 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ConstructorThrowsOnNullPathArgument()
 		{
-			Assert.Throws<ArgumentNullException>(() => new SKPathMeasure(null));
+			var ex = Assert.Throws<ArgumentNullException>(() => new SKPathMeasure(null));
+			Assert.Equal("path", ex.ParamName);
+		}
+
+		[SkippableFact]
+		public void ConstructorDoesNotThrownOnNonNullPathArgument()
+		{
+			var path = new SKPath();
+			var pm = new SKPathMeasure(path);
+			Assert.NotNull(pm);
+		}
+
+		[SkippableFact]
+		public void EmptyConstructorDoesNotThrow()
+		{
+			var pm = new SKPathMeasure();
+			Assert.NotNull(pm);
 		}
 	}
 }
