@@ -8,6 +8,9 @@ namespace SkiaSharp
 	{
 		private const string UnableToCreateInstanceMessage = "Unable to create a new SKPixmap instance.";
 
+		// this is not meant to be anything but a GC reference to keep the actual pixel data alive
+		internal SKObject pixelSource;
+
 		[Preserve]
 		internal SKPixmap (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -50,11 +53,19 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_pixmap_destructor (Handle);
 
+		protected override void DisposeManaged ()
+		{
+			base.DisposeManaged ();
+
+			pixelSource = null;
+		}
+
 		// Reset
 
 		public void Reset ()
 		{
 			SkiaApi.sk_pixmap_reset (Handle);
+			pixelSource = null;
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -68,6 +79,7 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			SkiaApi.sk_pixmap_reset_with_params (Handle, &cinfo, (void*)addr, (IntPtr)rowBytes);
+			pixelSource = null;
 		}
 
 		// properties

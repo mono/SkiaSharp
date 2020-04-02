@@ -340,7 +340,7 @@ namespace SkiaSharp
 
 			var result = SkiaApi.sk_surface_peek_pixels (Handle, pixmap.Handle);
 			if (result)
-				Referenced (pixmap, this);
+				pixmap.pixelSource = this;
 			return result;
 		}
 
