@@ -19,8 +19,13 @@ namespace SkiaSharp
 		}
 
 		public SKPathMeasure (SKPath path, bool forceClosed = false, float resScale = 1)
-			: this (SkiaApi.sk_pathmeasure_new_with_path (path == null ? IntPtr.Zero : path.Handle, forceClosed, resScale), true)
+			: this (IntPtr.Zero, true)
 		{
+			if (path == null)
+				throw new ArgumentNullException (nameof (path));
+
+			Handle = SkiaApi.sk_pathmeasure_new_with_path (path.Handle, forceClosed, resScale);
+
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPathMeasure instance.");
 			}
