@@ -634,7 +634,9 @@ namespace SkiaSharp.Tests
 			}
 
 			using var bitmap = new SKBitmap(20, 40);
-			Assert.Throws<ArgumentException>(() => bitmap.Pixels = sourcePixels);
+			var ex = Assert.Throws<ArgumentException>(() => bitmap.Pixels = sourcePixels);
+			Assert.Equal("value", ex.ParamName);
+			Assert.Contains("800", ex.Message);
 		}
 
 		[SkippableFact]
@@ -657,7 +659,8 @@ namespace SkiaSharp.Tests
 		public void IncorrectPixelLocationThrowsWhenWritingPixel()
 		{
 			using var bitmap = new SKBitmap(20, 40);
-			Assert.Throws<ArgumentOutOfRangeException>(() => bitmap.SetPixel(20, 100, SKColors.Red));
+			var ex = Assert.Throws<ArgumentOutOfRangeException>(() => bitmap.SetPixel(10, 100, SKColors.Red));
+			Assert.Equal("y", ex.ParamName);
 		}
 
 		[SkippableFact]
@@ -674,6 +677,7 @@ namespace SkiaSharp.Tests
 			using var bitmap = new SKBitmap(4, 4);
 			bitmap.Erase(SKColors.Red);
 
+			bitmap.SetPixel(1, 1, SKColors.Red);
 			bitmap.SetPixel(2, 1, SKColors.Green);
 			bitmap.SetPixel(1, 2, SKColors.Blue);
 

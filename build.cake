@@ -34,6 +34,7 @@ var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", f
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
+var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
@@ -171,7 +172,7 @@ Task ("tests")
         failedTests++;
     }
 
-    if (failedTests > 0)
+    if (failedTests > 0 && THROW_ON_TEST_FAILURE)
         throw new Exception ($"There were {failedTests} failed tests.");
 });
 
