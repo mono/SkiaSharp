@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Xml.Linq;
 using Xunit;
 
@@ -469,6 +468,43 @@ namespace SkiaSharp.Tests
 				Assert.Equal("80", rect.Attribute("width")?.Value);
 				Assert.Equal("80", rect.Attribute("height")?.Value);
 			}
+		}
+
+		[SkippableTheory]
+		[InlineData(SKTextAlign.Left, 300)]
+		[InlineData(SKTextAlign.Center, 162)]
+		[InlineData(SKTextAlign.Right, 23)]
+		public void TextAlignMovesTextPosition(SKTextAlign align, int offset)
+		{
+			using var bitmap = new SKBitmap(600, 200);
+			using var canvas = new SKCanvas(bitmap);
+
+			canvas.Clear(SKColors.White);
+
+			using var paint = new SKPaint();
+			paint.IsAntialias = true;
+			paint.TextSize = 64;
+			paint.Color = SKColors.Black;
+
+			paint.TextAlign = align;
+			canvas.DrawText("SkiaSharp", 300, 100, paint);
+
+			// [S]kia[S]har[p]
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 6, 66));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 28, 87));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 28, 66));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 6, 87));
+
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 120, 66));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 142, 87));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 142, 66));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 120, 87));
+
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 246, 70));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 246, 113));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 271, 83));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 258, 83));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 258, 113));
 		}
 	}
 }
