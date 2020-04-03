@@ -36,8 +36,6 @@ var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 
-throw new Exception("THROW_ON_TEST_FAILURE: " + THROW_ON_TEST_FAILURE);
-
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
