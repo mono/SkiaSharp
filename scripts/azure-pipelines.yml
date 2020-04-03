@@ -393,7 +393,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           retryCount: 3
           target: tests
-          additionalArgs: --skipExternals="all"
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=${THROW_ON_TEST_FAILURE}
           shouldPublish: false
           requiredArtifacts:
             - native_win32_x86_windows
@@ -421,7 +421,7 @@ stages:
           vmImage: $(VM_IMAGE_MAC)
           retryCount: 3
           target: tests
-          additionalArgs: --skipExternals="all"
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=${THROW_ON_TEST_FAILURE}
           shouldPublish: false
           requiredArtifacts:
             - native_macos_macos
@@ -448,7 +448,7 @@ stages:
           packages: $(MANAGED_LINUX_PACKAGES)
           retryCount: 3
           target: tests
-          additionalArgs: --skipExternals="all"
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=${THROW_ON_TEST_FAILURE}
           shouldPublish: false
           requiredArtifacts:
             - native_linux_linux
