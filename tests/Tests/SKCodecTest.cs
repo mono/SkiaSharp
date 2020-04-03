@@ -393,5 +393,46 @@ namespace SkiaSharp.Tests
 			using (var bitmap = SKBitmap.Decode (nonSeekable))
 				Assert.NotNull (bitmap);
 		}
+
+		[SkippableFact]
+		public void CanReadManagedStream()
+		{
+			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
+			using (var codec = SKCodec.Create(stream))
+				Assert.NotNull(codec);
+		}
+
+		[SkippableTheory]
+		[InlineData("CMYK.jpg")]
+		[InlineData("baboon.png")]
+		[InlineData("color-wheel.png")]
+		public void CanDecodePath(string image)
+		{
+			var path = Path.Combine(PathToImages, image);
+
+			using var codec = SKCodec.Create(path);
+			Assert.NotNull(codec);
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+		}
+
+		[SkippableTheory]
+		[InlineData("CMYK.jpg")]
+		[InlineData("baboon.png")]
+		[InlineData("color-wheel.png")]
+		public void CanDecodeData(string image)
+		{
+			var path = Path.Combine(PathToImages, image);
+
+			using var data = SKData.Create(path);
+			Assert.NotNull(data);
+
+			using var codec = SKCodec.Create(data);
+			Assert.NotNull(codec);
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+		}
 	}
 }

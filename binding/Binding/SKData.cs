@@ -251,6 +251,7 @@ namespace SkiaSharp
 			} finally {
 				ArrayPool<byte>.Shared.Return (buffer);
 			}
+			GC.KeepAlive (this);
 		}
 
 		//
