@@ -4,6 +4,19 @@ namespace SkiaSharp
 {
 	public class SKFontStyle : SKObject
 	{
+		private static readonly Lazy<SKFontStyle> normal;
+		private static readonly Lazy<SKFontStyle> bold;
+		private static readonly Lazy<SKFontStyle> italic;
+		private static readonly Lazy<SKFontStyle> boldItalic;
+
+		static SKFontStyle()
+		{
+			normal = new Lazy<SKFontStyle> (() => new SKFontStyleStatic (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright));
+			bold = new Lazy<SKFontStyle> (() => new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright));
+			italic = new Lazy<SKFontStyle> (() => new SKFontStyleStatic (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic));
+			boldItalic = new Lazy<SKFontStyle> (() => new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic));
+		}
+
 		[Preserve]
 		internal SKFontStyle (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -37,12 +50,26 @@ namespace SkiaSharp
 
 		public SKFontStyleSlant Slant => SkiaApi.sk_fontstyle_get_slant (Handle);
 
-		public static SKFontStyle Normal => new SKFontStyle (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+		public static SKFontStyle Normal => normal.Value;
 
-		public static SKFontStyle Bold => new SKFontStyle (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+		public static SKFontStyle Bold => bold.Value;
 
-		public static SKFontStyle Italic => new SKFontStyle (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
+		public static SKFontStyle Italic => italic.Value;
 
-		public static SKFontStyle BoldItalic => new SKFontStyle (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
+		public static SKFontStyle BoldItalic => boldItalic.Value;
+
+		private sealed class SKFontStyleStatic : SKFontStyle
+		{
+			internal SKFontStyleStatic (SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
+				: base (weight, width, slant)
+			{
+				IgnorePublicDispose = true;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
+		}
 	}
 }

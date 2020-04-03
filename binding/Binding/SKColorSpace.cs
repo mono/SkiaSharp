@@ -164,7 +164,7 @@ namespace SkiaSharp
 		// *XyzD50
 
 		public SKMatrix44 ToXyzD50 () =>
-			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_to_xyzd50 (Handle), false);
+			OwnedBy (GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_to_xyzd50 (Handle), false), this);
 
 		public bool ToXyzD50 (SKMatrix44 toXyzD50)
 		{
@@ -175,7 +175,7 @@ namespace SkiaSharp
 		}
 
 		public SKMatrix44 FromXyzD50 () =>
-			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_from_xyzd50 (Handle), false);
+			OwnedBy (GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_from_xyzd50 (Handle), false), this);
 
 		//
 
