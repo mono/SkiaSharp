@@ -476,12 +476,16 @@ namespace SkiaSharp.Tests
 		[InlineData(SKTextAlign.Right, 23)]
 		public void TextAlignMovesTextPosition(SKTextAlign align, int offset)
 		{
+			var font = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(font);
+
 			using var bitmap = new SKBitmap(600, 200);
 			using var canvas = new SKCanvas(bitmap);
 
 			canvas.Clear(SKColors.White);
 
 			using var paint = new SKPaint();
+			paint.Typeface = tf;
 			paint.IsAntialias = true;
 			paint.TextSize = 64;
 			paint.Color = SKColors.Black;
