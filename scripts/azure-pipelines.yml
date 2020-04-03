@@ -391,7 +391,6 @@ stages:
           name: tests_windows
           displayName: Tests (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
-          retryCount: 3
           target: tests
           additionalArgs: --skipExternals="all" --throwOnTestFailure=${THROW_ON_TEST_FAILURE}
           shouldPublish: false
@@ -419,7 +418,6 @@ stages:
           name: tests_macos
           displayName: Tests (macOS)
           vmImage: $(VM_IMAGE_MAC)
-          retryCount: 3
           target: tests
           additionalArgs: --skipExternals="all" --throwOnTestFailure=${THROW_ON_TEST_FAILURE}
           shouldPublish: false
@@ -446,7 +444,6 @@ stages:
           displayName: Tests (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
-          retryCount: 3
           target: tests
           additionalArgs: --skipExternals="all" --throwOnTestFailure=${THROW_ON_TEST_FAILURE}
           shouldPublish: false

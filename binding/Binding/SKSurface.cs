@@ -293,7 +293,7 @@ namespace SkiaSharp
 		//
 
 		public SKCanvas Canvas =>
-			GetObject<SKCanvas> (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false);
+			OwnedBy (GetObject<SKCanvas> (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use SurfaceProperties instead.")]
@@ -308,7 +308,7 @@ namespace SkiaSharp
 		}
 
 		public SKSurfaceProperties SurfaceProperties =>
-			GetObject<SKSurfaceProperties> (SkiaApi.sk_surface_get_props (Handle), false);
+			OwnedBy (GetObject<SKSurfaceProperties> (SkiaApi.sk_surface_get_props (Handle), false), this);
 
 		public SKImage Snapshot () =>
 			GetObject<SKImage> (SkiaApi.sk_surface_new_image_snapshot (Handle));
@@ -338,7 +338,10 @@ namespace SkiaSharp
 			if (pixmap == null)
 				throw new ArgumentNullException (nameof (pixmap));
 
-			return SkiaApi.sk_surface_peek_pixels (Handle, pixmap.Handle);
+			var result = SkiaApi.sk_surface_peek_pixels (Handle, pixmap.Handle);
+			if (result)
+				pixmap.pixelSource = this;
+			return result;
 		}
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)

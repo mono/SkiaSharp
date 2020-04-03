@@ -252,6 +252,7 @@ namespace SkiaSharp
 			} finally {
 				pool.Return (buffer);
 			}
+			GC.KeepAlive (this);
 		}
 
 		//

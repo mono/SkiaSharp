@@ -21,10 +21,10 @@ namespace SkiaSharp
 			SkiaApi.sk_document_abort (Handle);
 
 		public SKCanvas BeginPage (float width, float height) =>
-			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, null), false);
+			OwnedBy (GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, null), false), this);
 
 		public SKCanvas BeginPage (float width, float height, SKRect content) =>
-			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false);
+			OwnedBy (GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false), this);
 
 		public void EndPage () =>
 			SkiaApi.sk_document_end_page (Handle);

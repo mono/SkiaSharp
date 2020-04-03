@@ -376,6 +376,14 @@ namespace SkiaSharp.Tests
 			Assert.Equal (codecPixels, bitmapPixels);
 		}
 
+		[SkippableFact]
+		public void CanReadManagedStream()
+		{
+			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
+			using (var codec = SKCodec.Create(stream))
+				Assert.NotNull(codec);
+		}
+
 		[SkippableFact (Skip = "This keeps breaking CI for some reason.")]
 		public async Task DownloadedStream ()
 		{

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public abstract class SKTest : BaseTest, IAssemblyFixture<GarbageCleanupFixture>
+	public abstract class SKTest : BaseTest
 	{
 		protected const float EPSILON = 0.0001f;
 		protected const int PRECISION = 4;
