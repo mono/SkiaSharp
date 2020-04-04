@@ -42,9 +42,11 @@ namespace SkiaSharp.Views.Forms
 
 		public int WheelDelta { get; private set; }
 
+		public float Pressure { get; internal set; } = 1.0f;
+
 		public override string ToString()
 		{
-			return $"{{ActionType={ActionType}, DeviceType={DeviceType}, Handled={Handled}, Id={Id}, InContact={InContact}, Location={Location}, MouseButton={MouseButton}, WheelDelta={WheelDelta}}}";
+			return $"{{ActionType={ActionType}, DeviceType={DeviceType}, Handled={Handled}, Id={Id}, InContact={InContact}, Location={Location}, MouseButton={MouseButton}, WheelDelta={WheelDelta}, Pressure={Pressure}}}";
 		}
 	}
 

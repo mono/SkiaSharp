@@ -50,12 +50,16 @@ namespace SkiaSharp.Views.Forms
 			var toolType = evt.GetToolType(pointer);
 			var deviceType = GetDeviceType(toolType);
 
+			var pressure = evt.GetPressure(pointer);
+
 			switch (evt.ActionMasked)
 			{
 				case MotionEventActions.Down:
 				case MotionEventActions.PointerDown:
 					{
 						var args = new SKTouchEventArgs(id, SKTouchAction.Pressed, SKMouseButton.Left, deviceType, coords, true);
+
+						args.Pressure = pressure;
 
 						onTouchAction(args);
 						e.Handled = args.Handled;
@@ -71,6 +75,9 @@ namespace SkiaSharp.Views.Forms
 							coords = scalePixels(evt.GetX(pointer), evt.GetY(pointer));
 
 							var args = new SKTouchEventArgs(id, SKTouchAction.Moved, SKMouseButton.Left, deviceType, coords, true);
+
+							args.Pressure = pressure;
+
 							onTouchAction(args);
 							e.Handled = e.Handled || args.Handled;
 						}
@@ -81,6 +88,9 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.PointerUp:
 					{
 						var args = new SKTouchEventArgs(id, SKTouchAction.Released, SKMouseButton.Left, deviceType, coords, false);
+
+						args.Pressure = pressure;
+
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;
@@ -89,6 +99,9 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.Cancel:
 					{
 						var args = new SKTouchEventArgs(id, SKTouchAction.Cancelled, SKMouseButton.Left, deviceType, coords, false);
+
+						args.Pressure = pressure;
+
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;
