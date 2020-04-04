@@ -47,7 +47,7 @@ namespace SkiaSharp.Views.Forms
 			var id = evt.GetPointerId(pointer);
 			var coords = scalePixels(evt.GetX(pointer), evt.GetY(pointer));
 
-			var toolType = evt.GetToolType(id);
+			var toolType = evt.GetToolType(pointer);
 			var deviceType = GetDeviceType(toolType);
 
 			switch (evt.ActionMasked)
