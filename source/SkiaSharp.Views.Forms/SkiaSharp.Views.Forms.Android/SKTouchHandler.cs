@@ -72,6 +72,8 @@ namespace SkiaSharp.Views.Forms
 
 						args.Pressure = pressure;
 
+						args.Pressure = pressure;
+
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;
