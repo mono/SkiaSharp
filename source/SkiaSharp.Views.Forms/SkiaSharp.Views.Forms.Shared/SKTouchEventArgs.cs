@@ -15,6 +15,12 @@ namespace SkiaSharp.Views.Forms
 		{
 		}
 
+		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact, int wheelDelta, float pressure)
+			: this(id, type, mouseButton, deviceType, location, inContact, wheelDelta)
+		{
+			Pressure = pressure;
+		}
+
 		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact, int wheelDelta)
 		{
 			Id = id;
@@ -42,7 +48,7 @@ namespace SkiaSharp.Views.Forms
 
 		public int WheelDelta { get; private set; }
 
-		public float Pressure { get; internal set; } = 1.0f;
+		public float Pressure { get; private set; }
 
 		public override string ToString()
 		{
