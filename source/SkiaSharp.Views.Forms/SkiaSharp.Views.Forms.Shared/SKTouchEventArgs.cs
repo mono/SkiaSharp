@@ -48,7 +48,7 @@ namespace SkiaSharp.Views.Forms
 
 		public int WheelDelta { get; private set; }
 
-		public float Pressure { get; private set; }
+		public float Pressure { get; private set; } = 1.0f;
 
 		public override string ToString()
 		{
