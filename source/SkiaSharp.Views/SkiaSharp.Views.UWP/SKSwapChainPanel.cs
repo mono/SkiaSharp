@@ -1,6 +1,7 @@
 ﻿using System;
-using Windows.Foundation;
 using SkiaSharp.Views.GlesInterop;
+using Windows.Foundation;
+using Windows.UI.Xaml;
 
 namespace SkiaSharp.Views.UWP
 {
@@ -20,6 +21,7 @@ namespace SkiaSharp.Views.UWP
 
 		public SKSwapChainPanel()
 		{
+			Unloaded += OnUnloaded;
 		}
 
 		public SKSize CanvasSize => lastSize;
@@ -91,6 +93,22 @@ namespace SkiaSharp.Views.UWP
 			// update the control
 			canvas.Flush();
 			context.Flush();
+		}
+
+		private void OnUnloaded(object sender, RoutedEventArgs e)
+		{
+			lastSize = default;
+			canvas?.Dispose();
+			canvas = null;
+			surface?.Dispose();
+			surface = null;
+			renderTarget?.Dispose();
+			renderTarget = null;
+			glInfo = default;
+			context?.Dispose();
+			context = null;
+			glInterface?.Dispose();
+			glInterface = null;
 		}
 	}
 }
