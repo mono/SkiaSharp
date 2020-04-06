@@ -1,27 +1,25 @@
 ﻿using System;
-using System.Linq;
 
 namespace SkiaSharp.Views.Forms
 {
 	public class SKTouchEventArgs : EventArgs
 	{
 		public SKTouchEventArgs(long id, SKTouchAction type, SKPoint location, bool inContact)
-			: this(id, type, SKMouseButton.Left, SKTouchDeviceType.Touch, location, inContact, 0)
+			: this(id, type, SKMouseButton.Left, SKTouchDeviceType.Touch, location, inContact, 0, 1)
 		{
 		}
 
 		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact)
-			: this(id, type, mouseButton, deviceType, location, inContact, 0)
+			: this(id, type, mouseButton, deviceType, location, inContact, 0, 1)
+		{
+		}
+
+		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact, int wheelDelta)
+			: this(id, type, mouseButton, deviceType, location, inContact, wheelDelta, 1)
 		{
 		}
 
 		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact, int wheelDelta, float pressure)
-			: this(id, type, mouseButton, deviceType, location, inContact, wheelDelta)
-		{
-			Pressure = pressure;
-		}
-
-		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact, int wheelDelta)
 		{
 			Id = id;
 			ActionType = type;
@@ -30,6 +28,7 @@ namespace SkiaSharp.Views.Forms
 			Location = location;
 			InContact = inContact;
 			WheelDelta = wheelDelta;
+			Pressure = pressure;
 		}
 
 		public bool Handled { get; set; }
@@ -48,7 +47,7 @@ namespace SkiaSharp.Views.Forms
 
 		public int WheelDelta { get; private set; }
 
-		public float Pressure { get; private set; } = 1.0f;
+		public float Pressure { get; private set; }
 
 		public override string ToString()
 		{
