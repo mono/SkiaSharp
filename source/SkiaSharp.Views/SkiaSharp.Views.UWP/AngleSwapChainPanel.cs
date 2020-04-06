@@ -1,4 +1,5 @@
 ﻿using System;
+using SkiaSharp.Views.GlesInterop;
 using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.System.Threading;
@@ -6,7 +7,6 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
-using SkiaSharp.Views.GlesInterop;
 
 namespace SkiaSharp.Views.UWP
 {
@@ -103,6 +103,10 @@ namespace SkiaSharp.Views.UWP
 		{
 		}
 
+		protected virtual void OnDestroyingContext()
+		{
+		}
+
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
 			glesContext = new GlesContext();
@@ -118,6 +122,8 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
+			OnDestroyingContext();
+
 			CompositionScaleChanged -= OnCompositionChanged;
 			SizeChanged -= OnSizeChanged;
 
