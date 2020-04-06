@@ -253,8 +253,9 @@ namespace SkiaSharp
 			if (bitmap == null)
 				throw new ArgumentNullException (nameof (bitmap));
 
-			var handle = SkiaApi.sk_image_new_from_bitmap (bitmap.Handle);
-			return GetObject<SKImage> (handle);
+			var image = GetObject<SKImage> (SkiaApi.sk_image_new_from_bitmap (bitmap.Handle));
+			GC.KeepAlive (bitmap);
+			return image;
 		}
 
 		// create a new image from a GPU texture
