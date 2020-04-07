@@ -1,6 +1,6 @@
 ﻿using System;
-using Windows.Foundation;
 using SkiaSharp.Views.GlesInterop;
+using Windows.Foundation;
 
 namespace SkiaSharp.Views.UWP
 {
@@ -91,6 +91,31 @@ namespace SkiaSharp.Views.UWP
 			// update the control
 			canvas.Flush();
 			context.Flush();
+		}
+
+		protected override void OnDestroyingContext()
+		{
+			base.OnDestroyingContext();
+
+			lastSize = default;
+
+			canvas?.Dispose();
+			canvas = null;
+
+			surface?.Dispose();
+			surface = null;
+
+			renderTarget?.Dispose();
+			renderTarget = null;
+
+			glInfo = default;
+
+			context?.AbandonContext(true);
+			context?.Dispose();
+			context = null;
+
+			glInterface?.Dispose();
+			glInterface = null;
 		}
 	}
 }
