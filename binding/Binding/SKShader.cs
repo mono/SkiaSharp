@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -418,18 +419,13 @@ namespace SkiaSharp
 			if (shaderB == null)
 				throw new ArgumentNullException (nameof (shaderB));
 
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle, null));
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle));
 		}
 
-		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKBlendMode mode, SKMatrix localMatrix)
-		{
-			if (shaderA == null)
-				throw new ArgumentNullException (nameof (shaderA));
-			if (shaderB == null)
-				throw new ArgumentNullException (nameof (shaderB));
-
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle, &localMatrix));
-		}
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateCompose (SKShader, SKShader, SKBlendMode) instead.")]
+		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKBlendMode mode, SKMatrix localMatrix) =>
+			CreateCompose (shaderA, shaderB, mode);
 
 		// CreateColorFilter
 

@@ -155,7 +155,12 @@ namespace SkiaSharp
 
 		// Properties
 
-		public string FamilyName => (string)GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
+		public string FamilyName {
+			get {
+				using var str = new SKString (SkiaApi.sk_typeface_get_family_name (Handle), true);
+				return (string)str;
+			}
+		}
 
 		public SKFontStyle FontStyle => GetObject<SKFontStyle> (SkiaApi.sk_typeface_get_fontstyle (Handle));
 

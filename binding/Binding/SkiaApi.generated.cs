@@ -52,6 +52,7 @@ namespace SkiaSharp
 	using sk_region_spanerator_t = IntPtr;
 	using sk_region_t = IntPtr;
 	using sk_rrect_t = IntPtr;
+	using sk_runtimeeffect_t = IntPtr;
 	using sk_shader_t = IntPtr;
 	using sk_stream_asset_t = IntPtr;
 	using sk_stream_filestream_t = IntPtr;
@@ -426,14 +427,6 @@ namespace SkiaSharp
 		// void sk_canvas_draw_bitmap(sk_canvas_t* ccanvas, const sk_bitmap_t* bitmap, float left, float top, const sk_paint_t* paint)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_bitmap (sk_canvas_t ccanvas, sk_bitmap_t bitmap, Single left, Single top, sk_paint_t paint);
-
-		// void sk_canvas_draw_bitmap_lattice(sk_canvas_t* t, const sk_bitmap_t* bitmap, const sk_lattice_t* lattice, const sk_rect_t* dst, const sk_paint_t* paint)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_bitmap_lattice (sk_canvas_t t, sk_bitmap_t bitmap, SKLatticeInternal* lattice, SKRect* dst, sk_paint_t paint);
-
-		// void sk_canvas_draw_bitmap_nine(sk_canvas_t* t, const sk_bitmap_t* bitmap, const sk_irect_t* center, const sk_rect_t* dst, const sk_paint_t* paint)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_bitmap_nine (sk_canvas_t t, sk_bitmap_t bitmap, SKRectI* center, SKRect* dst, sk_paint_t paint);
 
 		// void sk_canvas_draw_bitmap_rect(sk_canvas_t* ccanvas, const sk_bitmap_t* bitmap, const sk_rect_t* src, const sk_rect_t* dst, const sk_paint_t* paint)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1269,17 +1262,9 @@ namespace SkiaSharp
 
 		#region sk_general.h
 
-		// sk_colortype_t gr_pixelconfig_to_sk_colortype(gr_pixelconfig_t pixelConfig)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorTypeNative gr_pixelconfig_to_sk_colortype (GRPixelConfigNative pixelConfig);
-
 		// sk_colortype_t sk_colortype_get_default_8888()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKColorTypeNative sk_colortype_get_default_8888 ();
-
-		// gr_pixelconfig_t sk_colortype_to_gr_pixelconfig(sk_colortype_t colorType)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRPixelConfigNative sk_colortype_to_gr_pixelconfig (SKColorTypeNative colorType);
 
 		// int sk_nvrefcnt_get_ref_count(const sk_nvrefcnt_t* refcnt)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2892,11 +2877,35 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region sk_runtimeeffect.h
+
+		// size_t sk_runtimeeffect_get_input_size(sk_runtimeeffect_t* effect)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_runtimeeffect_get_input_size (sk_runtimeeffect_t effect);
+
+		// sk_runtimeeffect_t* sk_runtimeeffect_make(sk_string_t* sksl, sk_string_t* error)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_runtimeeffect_t sk_runtimeeffect_make (sk_string_t sksl, sk_string_t error);
+
+		// sk_colorfilter_t* sk_runtimeeffect_make_color_filter(sk_runtimeeffect_t* effect, sk_data_t* inputs, sk_colorfilter_t** children, size_t childCount)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_runtimeeffect_make_color_filter (sk_runtimeeffect_t effect, sk_data_t inputs, sk_colorfilter_t* children, /* size_t */ IntPtr childCount);
+
+		// sk_shader_t* sk_runtimeeffect_make_shader(sk_runtimeeffect_t* effect, sk_data_t* inputs, sk_shader_t** children, size_t childCount, const sk_matrix_t* localMatrix, bool isOpaque)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_runtimeeffect_make_shader (sk_runtimeeffect_t effect, sk_data_t inputs, sk_shader_t* children, /* size_t */ IntPtr childCount, SKMatrix* localMatrix, [MarshalAs (UnmanagedType.I1)] bool isOpaque);
+
+		// void sk_runtimeeffect_unref(sk_runtimeeffect_t* effect)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_runtimeeffect_unref (sk_runtimeeffect_t effect);
+
+		#endregion
+
 		#region sk_shader.h
 
-		// sk_shader_t* sk_shader_new_blend(sk_blendmode_t mode, const sk_shader_t* dst, const sk_shader_t* src, const sk_matrix_t* localMatrix)
+		// sk_shader_t* sk_shader_new_blend(sk_blendmode_t mode, const sk_shader_t* dst, const sk_shader_t* src)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_blend (SKBlendMode mode, sk_shader_t dst, sk_shader_t src, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_blend (SKBlendMode mode, sk_shader_t dst, sk_shader_t src);
 
 		// sk_shader_t* sk_shader_new_color(sk_color_t color)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2910,13 +2919,9 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_empty ();
 
-		// sk_shader_t* sk_shader_new_lerp(float t, const sk_shader_t* dst, const sk_shader_t* src, const sk_matrix_t* localMatrix)
+		// sk_shader_t* sk_shader_new_lerp(float t, const sk_shader_t* dst, const sk_shader_t* src)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_lerp (Single t, sk_shader_t dst, sk_shader_t src, SKMatrix* localMatrix);
-
-		// sk_shader_t* sk_shader_new_lerp_red(const sk_shader_t* red, const sk_shader_t* dst, const sk_shader_t* src, const sk_matrix_t* localMatrix)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_lerp_red (sk_shader_t red, sk_shader_t dst, sk_shader_t src, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_lerp (Single t, sk_shader_t dst, sk_shader_t src);
 
 		// sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t[2] points = 2, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -5504,70 +5509,16 @@ namespace SkiaSharp
 
 	// gr_backend_t
 	internal enum GRBackendNative {
-		// METAL_GR_BACKEND = 0
-		Metal = 0,
-		// DAWN_GR_BACKEND = 1
-		Dawn = 1,
-		// OPENGL_GR_BACKEND = 2
-		OpenGL = 2,
-		// VULKAN_GR_BACKEND = 3
-		Vulkan = 3,
-	}
-
-	// gr_pixelconfig_t
-	internal enum GRPixelConfigNative {
-		// UNKNOWN_GR_PIXEL_CONFIG = 0
-		Unknown = 0,
-		// ALPHA_8_GR_PIXEL_CONFIG = 1
-		Alpha8 = 1,
-		// ALPHA_8_AS_ALPHA_GR_PIXEL_CONFIG = 2
-		Alpha8AsAlpha = 2,
-		// ALPHA_8_AS_RED_GR_PIXEL_CONFIG = 3
-		Alpha8AsRed = 3,
-		// GRAY_8_GR_PIXEL_CONFIG = 4
-		Gray8 = 4,
-		// GRAY_8_AS_LUM_GR_PIXEL_CONFIG = 5
-		Gray8AsLum = 5,
-		// GRAY_8_AS_RED_GR_PIXEL_CONFIG = 6
-		Gray8AsRed = 6,
-		// RGB_565_GR_PIXEL_CONFIG = 7
-		Rgb565 = 7,
-		// RGBA_4444_GR_PIXEL_CONFIG = 8
-		Rgba4444 = 8,
-		// RGBA_8888_GR_PIXEL_CONFIG = 9
-		Rgba8888 = 9,
-		// RGB_888_GR_PIXEL_CONFIG = 10
-		Rgb888 = 10,
-		// RGB_888X_GR_PIXEL_CONFIG = 11
-		Rgb888x = 11,
-		// RG_88_GR_PIXEL_CONFIG = 12
-		Rg88 = 12,
-		// BGRA_8888_GR_PIXEL_CONFIG = 13
-		Bgra8888 = 13,
-		// SRGBA_8888_GR_PIXEL_CONFIG = 14
-		Srgba8888 = 14,
-		// RGBA_1010102_GR_PIXEL_CONFIG = 15
-		Rgba1010102 = 15,
-		// ALPHA_HALF_GR_PIXEL_CONFIG = 16
-		AlphaHalf = 16,
-		// ALPHA_HALF_AS_LUM_GR_PIXEL_CONFIG = 17
-		AlphaHalfAsLum = 17,
-		// ALPHA_HALF_AS_RED_GR_PIXEL_CONFIG = 18
-		AlphaHalfAsRed = 18,
-		// RGBA_HALF_GR_PIXEL_CONFIG = 19
-		RgbaHalf = 19,
-		// RGBA_HALF_CLAMPED_GR_PIXEL_CONFIG = 20
-		RgbaHalfClamped = 20,
-		// RGB_ETC1_GR_PIXEL_CONFIG = 21
-		RgbEtc1 = 21,
-		// ALPHA_16_GR_PIXEL_CONFIG = 22
-		Alpha16 = 22,
-		// RG_1616_GR_PIXEL_CONFIG = 23
-		Rg1616 = 23,
-		// RGBA_16161616_GR_PIXEL_CONFIG = 24
-		Rgba16161616 = 24,
-		// RG_HALF_GR_PIXEL_CONFIG = 25
-		RgHalf = 25,
+		// OPENGL_GR_BACKEND = 0
+		OpenGL = 0,
+		// VULKAN_GR_BACKEND = 1
+		Vulkan = 1,
+		// METAL_GR_BACKEND = 2
+		Metal = 2,
+		// DIRECT3D_GR_BACKEND = 3
+		Direct3d = 3,
+		// DAWN_GR_BACKEND = 4
+		Dawn = 4,
 	}
 
 	// gr_surfaceorigin_t
@@ -5749,28 +5700,32 @@ namespace SkiaSharp
 		Bgra8888 = 6,
 		// RGBA_1010102_SK_COLORTYPE = 7
 		Rgba1010102 = 7,
-		// RGB_101010X_SK_COLORTYPE = 8
-		Rgb101010x = 8,
-		// GRAY_8_SK_COLORTYPE = 9
-		Gray8 = 9,
-		// RGBA_F16_NORMALIZED_SK_COLORTYPE = 10
-		RgbaF16Normalized = 10,
-		// RGBA_F16_SK_COLORTYPE = 11
-		RgbaF16 = 11,
-		// RGBA_F32_SK_COLORTYPE = 12
-		RgbaF32 = 12,
-		// R8G8_UNNORMALIZED_SK_COLORTYPE = 13
-		R8g8Unnormalized = 13,
-		// A16_FLOAT_SK_COLORTYPE = 14
-		A16Float = 14,
-		// R16G16_FLOAT_SK_COLORTYPE = 15
-		R16g16Float = 15,
-		// A16_UNNORMALIZED_SK_COLORTYPE = 16
-		A16Unnormalized = 16,
-		// R16G16_UNNORMALIZED_SK_COLORTYPE = 17
-		R16g16Unnormalized = 17,
-		// R16G16B16A16_UNNORMALIZED_SK_COLORTYPE = 18
-		R16g16b16a16Unnormalized = 18,
+		// BGRA_1010102_SK_COLORTYPE = 8
+		Bgra1010102 = 8,
+		// RGB_101010X_SK_COLORTYPE = 9
+		Rgb101010x = 9,
+		// BGR_101010X_SK_COLORTYPE = 10
+		Bgr101010x = 10,
+		// GRAY_8_SK_COLORTYPE = 11
+		Gray8 = 11,
+		// RGBA_F16_NORMALIZED_SK_COLORTYPE = 12
+		RgbaF16Normalized = 12,
+		// RGBA_F16_SK_COLORTYPE = 13
+		RgbaF16 = 13,
+		// RGBA_F32_SK_COLORTYPE = 14
+		RgbaF32 = 14,
+		// R8G8_UNNORMALIZED_SK_COLORTYPE = 15
+		R8g8Unnormalized = 15,
+		// A16_FLOAT_SK_COLORTYPE = 16
+		A16Float = 16,
+		// R16G16_FLOAT_SK_COLORTYPE = 17
+		R16g16Float = 17,
+		// A16_UNNORMALIZED_SK_COLORTYPE = 18
+		A16Unnormalized = 18,
+		// R16G16_UNNORMALIZED_SK_COLORTYPE = 19
+		R16g16Unnormalized = 19,
+		// R16G16B16A16_UNNORMALIZED_SK_COLORTYPE = 20
+		R16g16b16a16Unnormalized = 20,
 	}
 
 	// sk_crop_rect_flags_t

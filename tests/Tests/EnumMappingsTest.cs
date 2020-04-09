@@ -19,19 +19,19 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
-		public void GRPixelConfigMappings()
-		{
-			foreach (GRPixelConfig value in Enum.GetValues(typeof(GRPixelConfig)))
-			{
-				Assert.Equal(value.ToString(), value.ToNative().ToString());
-			}
+		//[SkippableFact]
+		//public void GRPixelConfigMappings()
+		//{
+		//	foreach (GRPixelConfig value in Enum.GetValues(typeof(GRPixelConfig)))
+		//	{
+		//		Assert.Equal(value.ToString(), value.ToNative().ToString());
+		//	}
 
-			foreach (GRPixelConfigNative value in Enum.GetValues(typeof(GRPixelConfigNative)))
-			{
-				Assert.Equal(value.ToString(), value.FromNative().ToString());
-			}
-		}
+		//	foreach (GRPixelConfigNative value in Enum.GetValues(typeof(GRPixelConfigNative)))
+		//	{
+		//		Assert.Equal(value.ToString(), value.FromNative().ToString());
+		//	}
+		//}
 
 		[SkippableFact]
 		public void SKColorTypeMappings()

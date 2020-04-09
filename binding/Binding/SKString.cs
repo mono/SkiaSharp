@@ -43,7 +43,10 @@ namespace SkiaSharp
 			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf8))
 		{
 		}
-		
+
+		public int Length =>
+			(int)SkiaApi.sk_string_get_size (Handle);
+
 		public override string ToString ()
 		{
 			var cstr = SkiaApi.sk_string_get_c_str (Handle);
