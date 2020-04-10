@@ -52,6 +52,7 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static SKVertices GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKVertices (h, o));
+		internal static SKVertices GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKVertices (h, o));
 	}
 }

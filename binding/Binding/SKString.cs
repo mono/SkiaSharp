@@ -70,7 +70,8 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_string_destructor (Handle);
 
-		internal static SKString GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKString (h, o));
+		internal static SKString GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKString (h, o));
 	}
 }
 

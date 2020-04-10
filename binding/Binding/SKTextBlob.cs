@@ -27,7 +27,8 @@ namespace SkiaSharp
 
 		public uint UniqueId => SkiaApi.sk_textblob_get_unique_id (Handle);
 
-		internal static SKTextBlob GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKTextBlob (h, o));
+		internal static SKTextBlob GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKTextBlob (h, o));
 	}
 
 	public unsafe class SKTextBlobBuilder : SKObject

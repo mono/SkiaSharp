@@ -35,40 +35,39 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Retrieve or create an instance for the native handle.
+		/// </summary>
+		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool refNew, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
-			if (handle == IntPtr.Zero) {
+			if (handle == IntPtr.Zero)
 				return null;
-			}
-
-			TSkiaObject obj = null;
 
 			instancesLock.EnterUpgradeableReadLock ();
-
 			try {
-				if (GetInstanceNoLocks<TSkiaObject> (handle, out obj)) {
+				if (GetInstanceNoLocks<TSkiaObject> (handle, out var instance)) {
 					// some object get automatically referenced on the native side,
 					// but managed code just has the same reference
-					if (unrefExisting && obj is ISKReferenceCounted refcnt) {
+					if (unrefExisting && instance is ISKReferenceCounted refcnt) {
 #if THROW_OBJECT_EXCEPTIONS
 						if (refcnt.GetReferenceCount () == 1)
 							throw new InvalidOperationException (
 								$"About to unreference an object that has no references. " +
-								$"H: {handle.ToString ("x")} Type: {obj.GetType ()}");
+								$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
 #endif
 						refcnt.SafeUnRef ();
 					}
 
-					return obj;
+					return instance;
 				}
 
-				obj = objectFactory.Invoke (handle, owns);
+				var obj = objectFactory.Invoke (handle, owns);
 
 				if (refNew && obj is ISKReferenceCounted toRef)
 					toRef.SafeRef ();
 				return obj;
-
 			} finally {
 				instancesLock.ExitUpgradeableReadLock ();
 			}

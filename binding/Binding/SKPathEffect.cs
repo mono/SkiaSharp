@@ -81,7 +81,8 @@ namespace SkiaSharp
 			return GetObject(SkiaApi.sk_path_effect_create_trim(start, stop, mode));
 		}
 
-		internal static SKPathEffect GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKPathEffect (h, o));
+		internal static SKPathEffect GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKPathEffect (h, o));
 	}
 }
 

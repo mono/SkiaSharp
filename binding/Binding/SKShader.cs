@@ -443,6 +443,7 @@ namespace SkiaSharp
 			return shader.WithLocalMatrix (localMatrix);
 		}
 
-		internal static SKShader GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKShader (h, o));
+		internal static SKShader GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKShader (h, o));
 	}
 }

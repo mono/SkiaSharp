@@ -190,7 +190,8 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static SKStream GetObject (IntPtr handle) => GetOrAddObject<SKStream> (handle, (h, o) => new SKStreamImplementation (h, o));
+		internal static SKStream GetObject (IntPtr handle) =>
+			GetOrAddObject<SKStream> (handle, (h, o) => new SKStreamImplementation (h, o));
 	}
 
 	internal class SKStreamImplementation : SKStream

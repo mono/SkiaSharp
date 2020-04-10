@@ -184,7 +184,8 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_fontmgr_create_default ());
 		}
 
-		internal static SKFontManager GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKFontManager (h, o));
+		internal static SKFontManager GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o));
 
 		private sealed class SKFontManagerStatic : SKFontManager
 		{

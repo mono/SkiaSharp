@@ -179,6 +179,7 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static SKDocument GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKDocument (h, o));
+		internal static SKDocument GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKDocument (h, o));
 	}
 }

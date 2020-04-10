@@ -344,6 +344,7 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static SKCodec GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKCodec (h, o));
+		internal static SKCodec GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKCodec (h, o));
 	}
 }

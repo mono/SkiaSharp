@@ -67,6 +67,7 @@ namespace SkiaSharp
 			return fontStyle;
 		}
 
-		internal static SKFontStyleSet GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKFontStyleSet (h, o));
+		internal static SKFontStyleSet GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKFontStyleSet (h, o));
 	}
 }
