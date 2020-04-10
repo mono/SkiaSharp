@@ -447,5 +447,113 @@ namespace SkiaSharp.Tests
 				return SKTypeface.FromStream(stream);
 			}
 		}
+
+		[SkippableFact]
+		public unsafe void FromFileReturnsDifferentObject()
+		{
+			var path = Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf");
+
+			using var tf1 = SKTypeface.FromFile(path);
+			using var tf2 = SKTypeface.FromFile(path);
+
+			Assert.NotSame(tf1, tf2);
+		}
+
+		[SkippableFact]
+		public unsafe void FromStreamReturnsDifferentObject()
+		{
+			using var stream1 = File.OpenRead(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+			using var tf1 = SKTypeface.FromStream(stream1);
+
+			using var stream2 = File.OpenRead(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+			using var tf2 = SKTypeface.FromStream(stream2);
+
+			Assert.NotSame(tf1, tf2);
+		}
+
+		[SkippableFact]
+		public unsafe void FromDataReturnsDifferentObject()
+		{
+			using var data = SKData.Create(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+
+			using var tf1 = SKTypeface.FromData(data);
+			using var tf2 = SKTypeface.FromData(data);
+
+			Assert.NotSame(tf1, tf2);
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public unsafe void FromTypefaceReturnsSameObject()
+		{
+			var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
+
+			var tf1 = SKTypeface.FromTypeface(tf, SKTypefaceStyle.Normal);
+			var tf2 = SKTypeface.FromTypeface(tf, SKTypefaceStyle.Normal);
+
+			Assert.Same(tf, tf1);
+			Assert.Same(tf1, tf2);
+		}
+
+		[SkippableFact]
+		public unsafe void FromFamilyReturnsSameObject()
+		{
+			var tf1 = SKTypeface.FromFamilyName(DefaultFontFamily);
+			var tf2 = SKTypeface.FromFamilyName(DefaultFontFamily);
+
+			Assert.Same(tf1, tf2);
+		}
+
+		[SkippableFact]
+		public unsafe void FromFamilyDisposeDoesNotDispose()
+		{
+			var tf1 = SKTypeface.FromFamilyName(DefaultFontFamily);
+			var tf2 = SKTypeface.FromFamilyName(DefaultFontFamily);
+
+			Assert.Same(tf1, tf2);
+
+			tf1.Dispose();
+
+			Assert.NotEqual(IntPtr.Zero, tf1.Handle);
+			Assert.False(tf1.IsDisposed);
+		}
+
+		[SkippableFact]
+		public unsafe void GCStillCollectsTypeface()
+		{
+			if (!IsWindows)
+				throw new SkipException("Test designed for Windows.");
+
+			var handle = DoWork();
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKTypeface>(handle, out _));
+
+			static IntPtr DoWork()
+			{
+				var tf1 = SKTypeface.FromFamilyName("Times New Roman");
+				var tf2 = SKTypeface.FromFamilyName("Times New Roman");
+				Assert.Same(tf1, tf2);
+
+				var tf3 = SKTypeface.FromFile(@"C:\Windows\Fonts\times.ttf");
+				Assert.NotSame(tf1, tf3);
+
+				tf1.Dispose();
+				tf2.Dispose();
+				tf3.Dispose();
+
+				Assert.NotEqual(IntPtr.Zero, tf1.Handle);
+				Assert.False(tf1.IsDisposed);
+
+				Assert.NotEqual(IntPtr.Zero, tf2.Handle);
+				Assert.False(tf2.IsDisposed);
+
+				Assert.Equal(IntPtr.Zero, tf3.Handle);
+				Assert.True(tf3.IsDisposed);
+
+				return tf1.Handle;
+			}
+		}
 	}
 }

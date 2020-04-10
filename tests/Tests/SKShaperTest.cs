@@ -1,6 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using HarfBuzzSharp;
 using SkiaSharp.Tests;
 using Xunit;
@@ -99,6 +102,53 @@ namespace SkiaSharp.HarfBuzz.Tests
 				var data = Marshal.AllocCoTaskMem(size);
 				skiaTypeface.TryGetTableData(tag, 0, size, data);
 				return new Blob(data, size, MemoryMode.Writeable, () => Marshal.FreeCoTaskMem(data));
+			}
+		}
+
+		[SkippableFact]
+		public void TestMultiThreadCrash()
+		{
+			const int count = 20000;
+			var threads = new List<Thread>();
+
+			for (var i = 0; i < count; i++)
+			{
+				var t = new Thread(new ParameterizedThreadStart(Work));
+				t.TrySetApartmentState(Thread.CurrentThread.GetApartmentState());
+				t.Name = i.ToString();
+				t.Start(i);
+				threads.Add(t);
+			}
+
+			for (var i = 0; i < count; i++)
+			{
+				threads[i].Join();
+			}
+
+			static void Work(object state)
+			{
+				var text = $"Some wonderful text goes here {state}.";
+				var typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold);
+				//using (var typeface = SkiaSharp.SKTypeface.FromFamilyName("Arial", SkiaSharp.SKFontStyle.Bold))
+				//{
+
+				using var paint = new SKPaint();
+
+				SKShaper.Result result;
+				using (var shaper = new SKShaper(typeface))
+				{
+					result = shaper.Shape(text, 75, 75, paint);
+				}
+
+				var imageInfo = new SKImageInfo(128, 128);
+				using var bitmap = new SKBitmap(imageInfo);
+				using var canvas = new SKCanvas(bitmap);
+
+				var bytes = result.Codepoints.Select(cp => BitConverter.GetBytes((ushort)cp)).SelectMany(b => b).ToArray();
+				paint.TextEncoding = SKTextEncoding.GlyphId;
+
+				canvas.DrawPositionedText(bytes, result.Points, paint);
+				//}
 			}
 		}
 	}

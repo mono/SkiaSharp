@@ -37,7 +37,9 @@ namespace SkiaSharp
 			if (index < 0 || index >= Count)
 				throw new ArgumentOutOfRangeException ($"Index was out of range. Must be non-negative and less than the size of the set.", nameof (index));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
+			var tf = GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
+			tf.IgnorePublicDispose = true;
+			return tf;
 		}
 
 		public SKTypeface CreateTypeface (SKFontStyle style)
@@ -45,7 +47,9 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
+			var tf = GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
+			tf.IgnorePublicDispose = true;
+			return tf;
 		}
 
 		public IEnumerator<SKFontStyle> GetEnumerator () => GetStyles ().GetEnumerator ();

@@ -239,7 +239,7 @@ namespace SkiaSharp
 
 		protected internal virtual bool OwnsHandle { get; protected set; }
 
-		protected internal bool IgnorePublicDispose { get; protected set; }
+		protected internal bool IgnorePublicDispose { get; set; }
 
 		protected internal bool IsDisposed => isDisposed == 1;
 

@@ -14,11 +14,11 @@ namespace SkiaSharp
 		// improvement in Copy performance.
 		internal const int CopyBufferSize = 81920;
 
-		private static readonly Lazy<SKData> empty;
+		private static readonly SKData empty;
 
 		static SKData()
 		{
-			empty = new Lazy<SKData> (() => new SKDataStatic (SkiaApi.sk_data_new_empty ()));
+			empty = new SKDataStatic (SkiaApi.sk_data_new_empty ());
 		}
 
 		internal static void EnsureStaticInstanceAreInitialized ()
@@ -40,7 +40,7 @@ namespace SkiaSharp
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_data_unref (Handle);
 
-		public static SKData Empty => empty.Value;
+		public static SKData Empty => empty;
 
 		// CreateCopy
 
@@ -279,17 +279,14 @@ namespace SkiaSharp
 			}
 		}
 
+		//
+
 		private sealed class SKDataStatic : SKData
 		{
 			internal SKDataStatic (IntPtr x)
-				: base (x, false)
+				: base (x, true)
 			{
 				IgnorePublicDispose = true;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				// do not dispose
 			}
 		}
 	}
