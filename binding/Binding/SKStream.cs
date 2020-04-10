@@ -159,11 +159,9 @@ namespace SkiaSharp
 			return (IntPtr)SkiaApi.sk_stream_get_memory_base (Handle);
 		}
 
-		internal SKStream Fork () =>
-			GetObject<SKStream, SKStreamImplementation> (SkiaApi.sk_stream_fork (Handle));
+		internal SKStream Fork () => GetObject (SkiaApi.sk_stream_fork (Handle));
 
-		internal SKStream Duplicate () =>
-			GetObject<SKStream, SKStreamImplementation> (SkiaApi.sk_stream_duplicate (Handle));
+		internal SKStream Duplicate () => GetObject (SkiaApi.sk_stream_duplicate (Handle));
 
 		public bool HasPosition {
 			get {
@@ -191,6 +189,11 @@ namespace SkiaSharp
 				return (int)SkiaApi.sk_stream_get_length (Handle);
 			}
 		}
+
+		internal static SKStream GetObject (IntPtr handle) =>
+			TryGetObject<SKStream> (handle, out var obj)
+				? obj
+				: new SKStreamImplementation (handle, true);
 	}
 
 	internal class SKStreamImplementation : SKStream
@@ -230,6 +233,11 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
+
+		internal static new SKStreamAsset GetObject (IntPtr handle) =>
+			TryGetObject<SKStreamAsset> (handle, out var obj)
+				? obj
+				: new SKStreamAssetImplementation (handle, true);
 	}
 
 	internal class SKStreamAssetImplementation : SKStreamAsset
@@ -540,12 +548,12 @@ namespace SkiaSharp
 
 		public SKStreamAsset DetachAsStream ()
 		{
-			return GetObject<SKStreamAsset, SKStreamAssetImplementation> (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
+			return SKStreamAssetImplementation.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
 		}
 
 		public SKData DetachAsData ()
 		{
-			return GetObject<SKData> (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
+			return SKData.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
 		}
 
 		public void CopyTo (IntPtr data)

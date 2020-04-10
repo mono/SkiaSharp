@@ -480,6 +480,8 @@ namespace SkiaSharp
 			}
 		}
 
+		internal static SKPath GetObject (IntPtr handle) => TryGetObject<SKPath> (handle, out var obj) ? obj : new SKPath (handle, true);
+
 		public class Iterator : SKObject
 		{
 			private readonly SKPath path;

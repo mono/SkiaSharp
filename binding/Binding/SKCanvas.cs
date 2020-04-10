@@ -991,6 +991,11 @@ namespace SkiaSharp
 				SkiaApi.sk_canvas_draw_patch (Handle, cubes, (uint*)cols, coords, mode, paint.Handle);
 			}
 		}
+
+		internal static SKCanvas GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			TryGetObject<SKCanvas> (handle, owns, unrefExisting, false, out var obj)
+				? obj
+				: new SKCanvas (handle, owns);
 	}
 
 	public class SKAutoCanvasRestore : IDisposable

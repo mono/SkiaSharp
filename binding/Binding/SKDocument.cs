@@ -21,10 +21,10 @@ namespace SkiaSharp
 			SkiaApi.sk_document_abort (Handle);
 
 		public SKCanvas BeginPage (float width, float height) =>
-			OwnedBy (GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, null), false), this);
+			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, null), false), this);
 
 		public SKCanvas BeginPage (float width, float height, SKRect content) =>
-			OwnedBy (GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false), this);
+			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false), this);
 
 		public void EndPage () =>
 			SkiaApi.sk_document_end_page (Handle);
@@ -69,7 +69,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi)), stream);
+			return Referenced (GetObject (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi)), stream);
 		}
 
 		// CreatePdf
@@ -108,7 +108,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle)), stream);
+			return Referenced (GetObject (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle)), stream);
 		}
 
 		public static SKDocument CreatePdf (string path, float dpi) =>
@@ -175,8 +175,10 @@ namespace SkiaSharp
 					cmetadata.fModified = &modified;
 				}
 
-				return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, &cmetadata)), stream);
+				return Referenced (GetObject (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, &cmetadata)), stream);
 			}
 		}
+
+		internal static SKDocument GetObject (IntPtr handle) => TryGetObject<SKDocument> (handle, out var obj) ? obj : new SKDocument (handle, true);
 	}
 }

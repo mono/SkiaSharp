@@ -58,6 +58,8 @@ namespace SkiaSharp
 
 		public static SKFontStyle BoldItalic => boldItalic.Value;
 
+		internal static SKFontStyle GetObject (IntPtr handle) => TryGetObject<SKFontStyle> (handle, out var obj) ? obj : new SKFontStyle (handle, true);
+
 		private sealed class SKFontStyleStatic : SKFontStyle
 		{
 			internal SKFontStyleStatic (SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)

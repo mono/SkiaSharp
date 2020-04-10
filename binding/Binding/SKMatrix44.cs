@@ -427,5 +427,7 @@ namespace SkiaSharp
 
 		public static implicit operator SKMatrix44 (SKMatrix matrix) =>
 			new SKMatrix44 (matrix);
+
+		internal static SKMatrix44 GetObject (IntPtr handle, bool owns = true) => TryGetObject<SKMatrix44> (handle, out var obj) ? obj : new SKMatrix44 (handle, owns);
 	}
 }
