@@ -39,8 +39,6 @@ namespace SkiaSharp
 			SKShader.CreatePicture (this, tmx, tmy, localMatrix, tile);
 
 		internal static SKPicture GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			TryGetObject<SKPicture> (handle, owns, unrefExisting, false, out var obj)
-				? obj
-				: new SKPicture (handle, owns);
+			GetOrAddObject (handle, owns, unrefExisting, false, (h, o) => new SKPicture (h, o));
 	}
 }

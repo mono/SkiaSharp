@@ -816,6 +816,6 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static SKPaint GetObject (IntPtr handle) => TryGetObject<SKPaint> (handle, out var obj) ? obj : new SKPaint (handle, true);
+		internal static SKPaint GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKPaint (h, o));
 	}
 }

@@ -132,7 +132,7 @@ namespace SkiaSharp
 			return SkiaApi.gr_glinterface_has_extension (Handle, extension);
 		}
 
-		internal static GRGlInterface GetObject (IntPtr handle) => TryGetObject<GRGlInterface> (handle, out var obj) ? obj : new GRGlInterface (handle, true);
+		internal static GRGlInterface GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new GRGlInterface (h, o));
 
 		private static class AngleLoader
 		{

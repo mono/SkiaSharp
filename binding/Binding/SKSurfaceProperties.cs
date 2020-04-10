@@ -49,8 +49,6 @@ namespace SkiaSharp
 			Flags.HasFlag (SKSurfacePropsFlags.UseDeviceIndependentFonts);
 
 		internal static SKSurfaceProperties GetObject (IntPtr handle, bool owns = true) =>
-			TryGetObject<SKSurfaceProperties> (handle, owns, out var obj)
-				? obj
-				: new SKSurfaceProperties (handle, owns);
+			GetOrAddObject (handle, owns, (h, o) => new SKSurfaceProperties (h, o));
 	}
 }

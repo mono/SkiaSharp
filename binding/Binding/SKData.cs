@@ -254,7 +254,7 @@ namespace SkiaSharp
 			GC.KeepAlive (this);
 		}
 
-		internal static SKData GetObject (IntPtr handle) => TryGetObject<SKData> (handle, out var obj) ? obj : new SKData (handle, true);
+		internal static SKData GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKData (h, o));
 
 		//
 

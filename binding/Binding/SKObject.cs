@@ -81,14 +81,14 @@ namespace SkiaSharp
 				refcnt.SafeUnRef ();
 		}
 
-		internal static bool TryGetObject<TSkiaObject> (IntPtr handle, out TSkiaObject obj)
-			where TSkiaObject : SKObject => HandleDictionary.TryGetObject (handle, true, true, false, out obj);
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject => HandleDictionary.GetOrAddObject (handle, true, true, false, objectFactory);
 
-		internal static bool TryGetObject<TSkiaObject> (IntPtr handle, bool owns, out TSkiaObject obj)
-			where TSkiaObject : SKObject => HandleDictionary.TryGetObject (handle, owns, true, false, out obj);
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject => HandleDictionary.GetOrAddObject (handle, owns, true, false, objectFactory);
 
-		internal static bool TryGetObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool refNew, out TSkiaObject obj)
-			where TSkiaObject : SKObject => HandleDictionary.TryGetObject (handle, owns, unrefExisting, refNew, out obj);
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool refNew, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject => HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, refNew, objectFactory);
 
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)
 		{

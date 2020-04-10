@@ -423,7 +423,7 @@ namespace SkiaSharp
 		public SKStreamAsset OpenStream (out int ttcIndex)
 		{
 			fixed (int* ttc = &ttcIndex) {
-				return SKStreamAssetImplementation.GetObject (SkiaApi.sk_typeface_open_stream (Handle, ttc));
+				return SKStreamAsset.GetObject (SkiaApi.sk_typeface_open_stream (Handle, ttc));
 			}
 		}
 
@@ -439,7 +439,7 @@ namespace SkiaSharp
 			return adjustments;
 		}
 
-		internal static SKTypeface GetObject (IntPtr handle) => TryGetObject<SKTypeface> (handle, out var obj) ? obj : new SKTypeface (handle, true);
+		internal static SKTypeface GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKTypeface (h, o));
 
 		//
 

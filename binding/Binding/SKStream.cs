@@ -190,10 +190,7 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static SKStream GetObject (IntPtr handle) =>
-			TryGetObject<SKStream> (handle, out var obj)
-				? obj
-				: new SKStreamImplementation (handle, true);
+		internal static SKStream GetObject (IntPtr handle) => GetOrAddObject<SKStream> (handle, (h, o) => new SKStreamImplementation (h, o));
 	}
 
 	internal class SKStreamImplementation : SKStream
@@ -235,9 +232,7 @@ namespace SkiaSharp
 		}
 
 		internal static new SKStreamAsset GetObject (IntPtr handle) =>
-			TryGetObject<SKStreamAsset> (handle, out var obj)
-				? obj
-				: new SKStreamAssetImplementation (handle, true);
+			GetOrAddObject<SKStreamAsset> (handle, (h, o) => new SKStreamAssetImplementation (h, o));
 	}
 
 	internal class SKStreamAssetImplementation : SKStreamAsset

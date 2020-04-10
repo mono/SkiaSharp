@@ -264,7 +264,7 @@ namespace SkiaSharp
 			return GetObject(SkiaApi.sk_imagefilter_new_paint(paint.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
-		internal static SKImageFilter GetObject (IntPtr handle) => TryGetObject<SKImageFilter> (handle, out var obj) ? obj : new SKImageFilter (handle, true);
+		internal static SKImageFilter GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKImageFilter (h, o));
 
 		//
 

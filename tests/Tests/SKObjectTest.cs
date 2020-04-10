@@ -20,9 +20,7 @@ namespace SkiaSharp.Tests
 		{
 			var handle = GetNextPtr();
 
-			var impl = new ConcreteObject(handle, true);
-
-			Assert.True(SKObject.TryGetObject<AbstractObject>(handle, out var obj));
+			var obj = SKObject.GetOrAddObject<AbstractObject>(handle, (h, o) => new ConcreteObject(h, o));
 
 			Assert.NotNull(obj);
 			Assert.IsType<ConcreteObject>(obj);
@@ -232,7 +230,7 @@ namespace SkiaSharp.Tests
 			}
 
 			public static LifecycleObject GetObject(IntPtr handle, bool owns = true) =>
-				TryGetObject<LifecycleObject>(handle, owns, out var obj) ? obj : new LifecycleObject(handle, owns);
+				GetOrAddObject(handle, owns, (h, o) => new LifecycleObject(h, o));
 		}
 
 		private class BrokenObject : SKObject
@@ -463,7 +461,7 @@ namespace SkiaSharp.Tests
 			}
 
 			public static DelayedConstructionObject GetObject(IntPtr handle, bool owns = true) =>
-				TryGetObject<DelayedConstructionObject>(handle, owns, out var obj) ? obj : new DelayedConstructionObject(handle, owns);
+				GetOrAddObject(handle, owns, (h, o) => new DelayedConstructionObject(h, o));
 		}
 
 		private class DelayedDestructionObject : SKObject
@@ -485,7 +483,7 @@ namespace SkiaSharp.Tests
 			}
 
 			public static DelayedDestructionObject GetObject(IntPtr handle, bool owns = true) =>
-				TryGetObject<DelayedDestructionObject>(handle, owns, out var obj) ? obj : new DelayedDestructionObject(handle, owns);
+				GetOrAddObject(handle, owns, (h, o) => new DelayedDestructionObject(h, o));
 		}
 	}
 }

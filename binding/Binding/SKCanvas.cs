@@ -993,9 +993,7 @@ namespace SkiaSharp
 		}
 
 		internal static SKCanvas GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			TryGetObject<SKCanvas> (handle, owns, unrefExisting, false, out var obj)
-				? obj
-				: new SKCanvas (handle, owns);
+			GetOrAddObject (handle, owns, unrefExisting, false, (h, o) => new SKCanvas (h, o));
 	}
 
 	public class SKAutoCanvasRestore : IDisposable

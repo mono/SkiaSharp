@@ -35,13 +35,14 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static bool TryGetObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool refNew, out TSkiaObject obj)
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool refNew, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero) {
-				obj = null;
-				return true;
+				return null;
 			}
+
+			TSkiaObject obj = null;
 
 			instancesLock.EnterUpgradeableReadLock ();
 
@@ -59,13 +60,18 @@ namespace SkiaSharp
 						refcnt.SafeUnRef ();
 					}
 
-					return true;
+					return obj;
 				}
+
+				obj = objectFactory.Invoke (handle, owns);
+
+				if (refNew && obj is ISKReferenceCounted toRef)
+					toRef.SafeRef ();
+				return obj;
+
 			} finally {
 				instancesLock.ExitUpgradeableReadLock ();
 			}
-
-			return false;
 		}
 
 		/// <summary>

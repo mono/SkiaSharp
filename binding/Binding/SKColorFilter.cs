@@ -93,6 +93,6 @@ namespace SkiaSharp
 			return CreateHighContrast(new SKHighContrastConfig(grayscale, invertStyle, contrast));
 		}
 
-		internal static SKColorFilter GetObject (IntPtr handle) => TryGetObject<SKColorFilter> (handle, out var obj) ? obj : new SKColorFilter (handle, true);
+		internal static SKColorFilter GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
 	}
 }

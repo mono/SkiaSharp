@@ -131,6 +131,6 @@ namespace SkiaSharp
 			gch.Free ();
 		}
 
-		internal static SKDrawable GetObject (IntPtr handle) => TryGetObject<SKDrawable> (handle, out var obj) ? obj : new SKDrawable (handle, true);
+		internal static SKDrawable GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKDrawable (h, o));
 	}
 }

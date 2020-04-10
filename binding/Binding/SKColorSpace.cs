@@ -180,9 +180,7 @@ namespace SkiaSharp
 		//
 
 		internal static SKColorSpace GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			TryGetObject<SKColorSpace> (handle, owns, unrefExisting, false, out var obj)
-				? obj
-				: new SKColorSpace (handle, owns);
+			GetOrAddObject (handle, owns, unrefExisting, false, (h, o) => new SKColorSpace (h, o));
 
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{

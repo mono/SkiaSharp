@@ -92,7 +92,7 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_maskfilter_new_clip (min, max));
 		}
 
-		internal static SKMaskFilter GetObject (IntPtr handle) => TryGetObject<SKMaskFilter> (handle, out var obj) ? obj : new SKMaskFilter (handle, true);
+		internal static SKMaskFilter GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKMaskFilter (h, o));
 	}
 }
 

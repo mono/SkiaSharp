@@ -651,6 +651,6 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static SKImage GetObject (IntPtr handle) => TryGetObject<SKImage> (handle, out var obj) ? obj : new SKImage (handle, true);
+		internal static SKImage GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKImage (h, o));
 	}
 }

@@ -350,6 +350,6 @@ namespace SkiaSharp
 			return SkiaApi.sk_surface_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
 		}
 
-		internal static SKSurface GetObject (IntPtr handle) => TryGetObject<SKSurface> (handle, out var obj) ? obj : new SKSurface (handle, true);
+		internal static SKSurface GetObject (IntPtr handle) => GetOrAddObject (handle, (h, o) => new SKSurface (h, o));
 	}
 }
