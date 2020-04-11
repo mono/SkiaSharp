@@ -44,7 +44,7 @@ namespace SkiaSharp
 		/// Retrieve or create an instance for the native handle.
 		/// </summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
-		internal static TSkiaObject GetObject<TSkiaObject, TSkiaImplementation> (IntPtr handle, bool owns = true, bool unrefExisting = true, bool refNew = false)
+		internal static TSkiaObject GetObject<TSkiaObject, TSkiaImplementation> (IntPtr handle, bool owns, bool unrefExisting)
 			where TSkiaObject : SKObject
 			where TSkiaImplementation : SKObject, TSkiaObject
 		{
@@ -56,9 +56,10 @@ namespace SkiaSharp
 				if (GetInstanceNoLocks<TSkiaObject> (handle, out var instance)) {
 					// some object get automatically referenced on the native side,
 					// but managed code just has the same reference
-					if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+					if (unrefExisting && instance is ISKReferenceCounted refcnt && instance.OwnsHandle) {
 #if THROW_OBJECT_EXCEPTIONS
-						if (refcnt.GetReferenceCount () == 1)
+						var count = refcnt.GetReferenceCount ();
+						if (count <= 1)
 							throw new InvalidOperationException (
 								$"About to unreference an object that has no references. " +
 								$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
@@ -74,8 +75,6 @@ namespace SkiaSharp
 
 				// we don't need to go into a writable here as the object will do it in the Handle property
 				var obj = (TSkiaObject)constructor.Invoke (new object[] { handle, owns });
-				if (refNew && obj is ISKReferenceCounted toRef)
-					toRef.SafeRef ();
 				return obj;
 			} finally {
 				instancesLock.ExitUpgradeableReadLock ();

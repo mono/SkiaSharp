@@ -81,23 +81,23 @@ namespace SkiaSharp
 				refcnt.SafeUnRef ();
 		}
 
-		internal static TSkiaObject GetObject<TSkiaObject> (IntPtr handle, bool owns = true, bool unrefExisting = true, bool refNew = false)
+		internal static TSkiaObject GetObject<TSkiaObject> (IntPtr handle, bool owns = true, bool unrefExisting = true)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			return HandleDictionary.GetObject<TSkiaObject, TSkiaObject> (handle, owns, unrefExisting, refNew);
+			return HandleDictionary.GetObject<TSkiaObject, TSkiaObject> (handle, owns, unrefExisting);
 		}
 
-		internal static TSkiaObject GetObject<TSkiaObject, TSkiaImplementation> (IntPtr handle, bool owns = true, bool unrefExisting = true, bool refNew = false)
+		internal static TSkiaObject GetObject<TSkiaObject, TSkiaImplementation> (IntPtr handle, bool owns = true, bool unrefExisting = true)
 			where TSkiaObject : SKObject
 			where TSkiaImplementation : SKObject, TSkiaObject
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			return HandleDictionary.GetObject<TSkiaObject, TSkiaImplementation> (handle, owns, unrefExisting, refNew);
+			return HandleDictionary.GetObject<TSkiaObject, TSkiaImplementation> (handle, owns, unrefExisting);
 		}
 
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)
