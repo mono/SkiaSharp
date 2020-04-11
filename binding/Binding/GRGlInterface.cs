@@ -25,7 +25,7 @@ namespace SkiaSharp
 		public static GRGlInterface CreateNativeGlInterface ()
 		{
 			// the native code will automatically return null on non-OpenGL platforms, such as UWP
-			return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_create_native_interface ());
+			return GetObject (SkiaApi.gr_glinterface_create_native_interface ());
 		}
 		
 		public static GRGlInterface CreateNativeAngleInterface ()
@@ -69,7 +69,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface ((void*)ctx, proxy));
+				return GetObject (SkiaApi.gr_glinterface_assemble_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -98,7 +98,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface ((void*)ctx, proxy));
+				return GetObject (SkiaApi.gr_glinterface_assemble_gl_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -116,7 +116,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface ((void*)ctx, proxy));
+				return GetObject (SkiaApi.gr_glinterface_assemble_gles_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -131,6 +131,9 @@ namespace SkiaSharp
 		{
 			return SkiaApi.gr_glinterface_has_extension (Handle, extension);
 		}
+
+		internal static GRGlInterface GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new GRGlInterface (h, o));
 
 		private static class AngleLoader
 		{

@@ -16,23 +16,11 @@ namespace SkiaSharp.Tests
 			(IntPtr)Interlocked.Increment(ref nextPtr);
 
 		[SkippableFact]
-		public void ConstructorsAreCached()
-		{
-			var handle = GetNextPtr();
-
-			SKObject.GetObject<LifecycleObject>(handle);
-
-			Assert.True(HandleDictionary.constructors.ContainsKey(typeof(LifecycleObject)));
-		}
-
-		[SkippableFact]
 		public void CanInstantiateAbstractClassesWithImplementation()
 		{
 			var handle = GetNextPtr();
 
-			Assert.Throws<MemberAccessException>(() => SKObject.GetObject<AbstractObject>(handle));
-
-			var obj = SKObject.GetObject<AbstractObject, ConcreteObject>(handle);
+			var obj = SKObject.GetOrAddObject<AbstractObject>(handle, (h, o) => new ConcreteObject(h, o));
 
 			Assert.NotNull(obj);
 			Assert.IsType<ConcreteObject>(obj);
@@ -75,7 +63,7 @@ namespace SkiaSharp.Tests
 				Assert.Null(i);
 
 				// get/create the object
-				var first = SKObject.GetObject<LifecycleObject>(h);
+				var first = LifecycleObject.GetObject(h);
 
 				// get the same one
 				Assert.True(SKObject.GetInstance(h, out i));
@@ -85,7 +73,7 @@ namespace SkiaSharp.Tests
 				Assert.Same(first, i);
 
 				// get/create the object
-				var second = SKObject.GetObject<LifecycleObject>(h);
+				var second = LifecycleObject.GetObject(h);
 
 				// compare
 				Assert.Same(first, second);
@@ -172,7 +160,7 @@ namespace SkiaSharp.Tests
 		{
 			var handle = GetNextPtr();
 
-			var obj = SKObject.GetObject<LifecycleObject>(handle);
+			var obj = LifecycleObject.GetObject(handle);
 
 			Assert.Equal(handle, obj.Handle);
 			Assert.False(obj.DestroyedNative);
@@ -188,7 +176,7 @@ namespace SkiaSharp.Tests
 		{
 			var handle = GetNextPtr();
 
-			var obj = SKObject.GetObject<LifecycleObject>(handle, false);
+			var obj = LifecycleObject.GetObject(handle, false);
 
 			Assert.False(obj.DestroyedNative);
 
@@ -240,6 +228,9 @@ namespace SkiaSharp.Tests
 			{
 				DestroyedManaged = true;
 			}
+
+			public static LifecycleObject GetObject(IntPtr handle, bool owns = true) =>
+				GetOrAddObject(handle, owns, (h, o) => new LifecycleObject(h, o));
 		}
 
 		private class BrokenObject : SKObject
@@ -350,7 +341,7 @@ namespace SkiaSharp.Tests
 
 				DelayedConstructionObject.ConstructionStartedEvent = objFastStart;
 				DelayedConstructionObject.ConstructionDelayEvent = objFastDelay;
-				objFast = SKObject.GetObject<DelayedConstructionObject>(handle);
+				objFast = DelayedConstructionObject.GetObject(handle);
 				order.Enqueue(4);
 			});
 
@@ -364,7 +355,7 @@ namespace SkiaSharp.Tests
 				var timer = new Timer(state => objFastDelay.Set(), null, 1000, Timeout.Infinite);
 				order.Enqueue(3);
 
-				objSlow = SKObject.GetObject<DelayedConstructionObject>(handle);
+				objSlow = DelayedConstructionObject.GetObject(handle);
 				order.Enqueue(5);
 
 				timer.Dispose(objFastDelay);
@@ -397,7 +388,7 @@ namespace SkiaSharp.Tests
 			{
 				order.Enqueue(1);
 
-				objFast = SKObject.GetObject<DelayedDestructionObject>(handle);
+				objFast = DelayedDestructionObject.GetObject(handle);
 				objFast.DisposeDelayEvent = new AutoResetEvent(false);
 
 				Assert.True(SKObject.GetInstance<DelayedDestructionObject>(handle, out var beforeDispose));
@@ -428,7 +419,7 @@ namespace SkiaSharp.Tests
 				Assert.Same(objFast, directRef.Target);
 
 				order.Enqueue(5);
-				objSlow = SKObject.GetObject<DelayedDestructionObject>(handle);
+				objSlow = DelayedDestructionObject.GetObject(handle);
 				order.Enqueue(6);
 
 				// finish the disposal
@@ -468,6 +459,9 @@ namespace SkiaSharp.Tests
 
 				return handle;
 			}
+
+			public static DelayedConstructionObject GetObject(IntPtr handle, bool owns = true) =>
+				GetOrAddObject(handle, owns, (h, o) => new DelayedConstructionObject(h, o));
 		}
 
 		private class DelayedDestructionObject : SKObject
@@ -487,6 +481,9 @@ namespace SkiaSharp.Tests
 
 				base.DisposeManaged();
 			}
+
+			public static DelayedDestructionObject GetObject(IntPtr handle, bool owns = true) =>
+				GetOrAddObject(handle, owns, (h, o) => new DelayedDestructionObject(h, o));
 		}
 	}
 }

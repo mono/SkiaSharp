@@ -37,7 +37,7 @@ namespace SkiaSharp
 			if (index < 0 || index >= Count)
 				throw new ArgumentOutOfRangeException ($"Index was out of range. Must be non-negative and less than the size of the set.", nameof (index));
 
-			var tf = GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
+			var tf = SKTypeface.GetObject (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
 			tf?.PreventUserDisposal ();
 			return tf;
 		}
@@ -47,7 +47,7 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			var tf = GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
+			var tf = SKTypeface.GetObject (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
 			tf?.PreventUserDisposal ();
 			return tf;
 		}
@@ -70,5 +70,8 @@ namespace SkiaSharp
 			SkiaApi.sk_fontstyleset_get_style (Handle, index, fontStyle.Handle, IntPtr.Zero);
 			return fontStyle;
 		}
+
+		internal static SKFontStyleSet GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKFontStyleSet (h, o));
 	}
 }

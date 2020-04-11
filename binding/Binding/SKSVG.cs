@@ -30,7 +30,7 @@ namespace SkiaSharp
 			//return SKObject.Referenced (SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create_with_stream (&bounds, stream.Handle)), stream);
 
 			var writer = new SKXmlStreamWriter (stream);
-			return SKObject.Owned (SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create_with_writer (&bounds, writer.Handle)), writer);
+			return SKObject.Owned (SKCanvas.GetObject (SkiaApi.sk_svgcanvas_create_with_writer (&bounds, writer.Handle)), writer);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -40,7 +40,7 @@ namespace SkiaSharp
 			if (writer == null)
 				throw new ArgumentNullException (nameof (writer));
 
-			return SKObject.Referenced (SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create_with_writer (&bounds, writer.Handle)), writer);
+			return SKObject.Referenced (SKCanvas.GetObject (SkiaApi.sk_svgcanvas_create_with_writer (&bounds, writer.Handle)), writer);
 		}
 	}
 }

@@ -24,7 +24,7 @@ namespace SkiaSharp
 
 		public static SKImageInfo ToManaged (ref SKImageInfoNative native) =>
 			new SKImageInfo {
-				ColorSpace = SKObject.GetObject<SKColorSpace> (native.colorspace),
+				ColorSpace = SKColorSpace.GetObject (native.colorspace),
 				Width = native.width,
 				Height = native.height,
 				ColorType = native.colorType,

@@ -60,6 +60,9 @@ namespace SkiaSharp
 
 		//
 
+		internal static SKFontStyle GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKFontStyle (h, o));
+
 		private sealed class SKFontStyleStatic : SKFontStyle
 		{
 			internal SKFontStyleStatic (SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)

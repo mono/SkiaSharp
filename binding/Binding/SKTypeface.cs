@@ -45,7 +45,7 @@ namespace SkiaSharp
 
 		public static SKTypeface CreateDefault ()
 		{
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_default ());
+			return GetObject (SkiaApi.sk_typeface_create_default ());
 		}
 
 		// FromFamilyName
@@ -75,7 +75,7 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			var tf = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, style.Handle));
+			var tf = GetObject (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, style.Handle));
 			tf?.PreventUserDisposal ();
 			return tf;
 		}
@@ -108,7 +108,7 @@ namespace SkiaSharp
 
 			var utf8path = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
 			fixed (byte* u = utf8path) {
-				return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file (u, index));
+				return GetObject (SkiaApi.sk_typeface_create_from_file (u, index));
 			}
 		}
 
@@ -130,7 +130,7 @@ namespace SkiaSharp
 				managed.Dispose ();
 			}
 
-			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
+			var typeface = GetObject (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
 			stream.RevokeOwnership (typeface);
 			return typeface;
 		}
@@ -157,9 +157,9 @@ namespace SkiaSharp
 
 		// Properties
 
-		public string FamilyName => (string)GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
+		public string FamilyName => (string)SKString.GetObject (SkiaApi.sk_typeface_get_family_name (Handle));
 
-		public SKFontStyle FontStyle => GetObject<SKFontStyle> (SkiaApi.sk_typeface_get_fontstyle (Handle));
+		public SKFontStyle FontStyle => SKFontStyle.GetObject (SkiaApi.sk_typeface_get_fontstyle (Handle));
 
 		public int FontWeight => SkiaApi.sk_typeface_get_font_weight (Handle);
 
@@ -425,7 +425,7 @@ namespace SkiaSharp
 		public SKStreamAsset OpenStream (out int ttcIndex)
 		{
 			fixed (int* ttc = &ttcIndex) {
-				return GetObject<SKStreamAssetImplementation> (SkiaApi.sk_typeface_open_stream (Handle, ttc));
+				return SKStreamAsset.GetObject (SkiaApi.sk_typeface_open_stream (Handle, ttc));
 			}
 		}
 
@@ -440,6 +440,11 @@ namespace SkiaSharp
 			}
 			return adjustments;
 		}
+
+		//
+
+		internal static SKTypeface GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o));
 
 		//
 
