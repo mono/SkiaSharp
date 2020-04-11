@@ -76,7 +76,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (style));
 
 			var tf = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, style.Handle));
-			tf.IgnorePublicDispose = true;
+			tf?.PreventUserDisposal ();
 			return tf;
 		}
 

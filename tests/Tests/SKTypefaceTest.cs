@@ -486,6 +486,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void FromTypefaceReturnsSameObject()
 		{
+			VerifySupportsMatchingTypefaces();
+
 			var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
 
 			var tf1 = SKTypeface.FromTypeface(tf, SKTypefaceStyle.Normal);
