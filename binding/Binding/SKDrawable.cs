@@ -38,7 +38,6 @@ namespace SkiaSharp
 			}
 		}
 
-		[Preserve]
 		internal SKDrawable (IntPtr x, bool owns)
 			: base (x, owns)
 		{

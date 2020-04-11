@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKPaint : SKObject
 	{
-		[Preserve]
 		internal SKPaint (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

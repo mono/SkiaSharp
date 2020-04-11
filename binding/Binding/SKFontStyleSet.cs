@@ -6,7 +6,6 @@ namespace SkiaSharp
 {
 	public class SKFontStyleSet : SKObject, ISKReferenceCounted, IEnumerable<SKFontStyle>, IReadOnlyCollection<SKFontStyle>, IReadOnlyList<SKFontStyle>
 	{
-		[Preserve]
 		internal SKFontStyleSet (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

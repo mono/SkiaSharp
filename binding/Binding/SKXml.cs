@@ -12,7 +12,6 @@ namespace SkiaSharp
 
 	public class SKXmlStreamWriter : SKXmlWriter
 	{
-		[Preserve]
 		internal SKXmlStreamWriter (IntPtr h, bool owns)
 			: base (h, owns)
 		{

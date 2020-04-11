@@ -13,7 +13,6 @@ namespace SkiaSharp
 
 	public unsafe class SKImage : SKObject, ISKReferenceCounted
 	{
-		[Preserve]
 		internal SKImage (IntPtr x, bool owns)
 			: base (x, owns)
 		{

@@ -23,7 +23,6 @@ namespace SkiaSharp
 		private const float BlurSigmaScale = 0.57735f;
 		public const int TableMaxLength = 256;
 
-		[Preserve]
 		internal SKMaskFilter (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

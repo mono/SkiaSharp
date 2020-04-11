@@ -17,7 +17,6 @@ namespace SkiaSharp
 			boldItalic = new Lazy<SKFontStyle> (() => new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic));
 		}
 
-		[Preserve]
 		internal SKFontStyle (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
