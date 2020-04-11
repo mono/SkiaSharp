@@ -73,7 +73,7 @@ namespace SkiaSharp
 		}
 
 		public SKTypeface Typeface {
-			get => GetObject<SKTypeface> (SkiaApi.sk_font_get_typeface (Handle));
+			get => SKTypeface.GetObject (SkiaApi.sk_font_get_typeface (Handle));
 			set => SkiaApi.sk_font_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
@@ -769,5 +769,10 @@ namespace SkiaSharp
 
 			return true;
 		}
+
+		//
+
+		internal static SKFont GetObject (IntPtr handle, bool owns = true) =>
+			GetOrAddObject (handle, owns, (h, o) => new SKFont (h, o));
 	}
 }

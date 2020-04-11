@@ -60,13 +60,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKBitmap (int width, int height)
-			: this (new SKImageInfo (width, height))
-		{
-		}
-
-		public SKBitmap (int width, int height, bool isOpaque)
-			: this (new SKImageInfo (width, height, SKImageInfo.PlatformColorType, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul))
+		public SKBitmap (int width, int height, bool isOpaque = false)
+			: this (width, height, SKImageInfo.PlatformColorType, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul)
 		{
 		}
 
@@ -880,9 +875,9 @@ namespace SkiaSharp
 			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
-			GetObject<SKShader> (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, null));
+			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, null));
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
-			GetObject<SKShader> (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &localMatrix));
+			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &localMatrix));
 	}
 }

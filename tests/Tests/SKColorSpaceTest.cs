@@ -22,7 +22,7 @@ namespace SkiaSharp.Tests
 			var handle = SkiaApi.sk_colorspace_new_srgb();
 			try
 			{
-				var cs = SKObject.GetObject<SKColorSpace>(handle, unrefExisting: false);
+				var cs = SKColorSpace.GetObject(handle, unrefExisting: false);
 				Assert.Equal("SKColorSpaceStatic", cs.GetType().Name);
 			}
 			finally

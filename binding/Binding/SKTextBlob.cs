@@ -145,6 +145,11 @@ namespace SkiaSharp
 			bounds[1] = lowerBounds;
 			return SkiaApi.sk_textblob_get_intercepts (Handle, bounds, null, paint?.Handle ?? IntPtr.Zero);
 		}
+
+		//
+
+		internal static SKTextBlob GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKTextBlob (h, o));
 	}
 
 	public unsafe class SKTextBlobBuilder : SKObject
@@ -169,7 +174,7 @@ namespace SkiaSharp
 		// Build
 
 		public SKTextBlob Build () =>
-			GetObject<SKTextBlob> (SkiaApi.sk_textblob_builder_make (Handle));
+			SKTextBlob.GetObject (SkiaApi.sk_textblob_builder_make (Handle));
 
 		// AddRun (text)
 

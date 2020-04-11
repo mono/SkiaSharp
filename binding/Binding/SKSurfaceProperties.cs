@@ -47,5 +47,8 @@ namespace SkiaSharp
 
 		public bool IsUseDeviceIndependentFonts =>
 			Flags.HasFlag (SKSurfacePropsFlags.UseDeviceIndependentFonts);
+
+		internal static SKSurfaceProperties GetObject (IntPtr handle, bool owns = true) =>
+			GetOrAddObject (handle, owns, (h, o) => new SKSurfaceProperties (h, o));
 	}
 }

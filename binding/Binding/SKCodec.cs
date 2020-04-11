@@ -309,7 +309,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 
 			fixed (SKCodecResult* r = &result) {
-				var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));
+				var codec = GetObject (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));
 				stream.RevokeOwnership (codec);
 				return codec;
 			}
@@ -322,7 +322,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return GetObject<SKCodec> (SkiaApi.sk_codec_new_from_data (data.Handle));
+			return GetObject (SkiaApi.sk_codec_new_from_data (data.Handle));
 		}
 
 		// utils
@@ -340,5 +340,8 @@ namespace SkiaSharp
 				return new SKFrontBufferedManagedStream (stream, MinBufferedBytesNeeded, true);
 			}
 		}
+
+		internal static SKCodec GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKCodec (h, o));
 	}
 }

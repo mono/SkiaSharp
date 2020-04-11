@@ -26,20 +26,20 @@ namespace SkiaSharp
 
 		public SKCanvas BeginRecording (SKRect cullRect)
 		{
-			return OwnedBy (GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, &cullRect), false), this);
+			return OwnedBy (SKCanvas.GetObject (SkiaApi.sk_picture_recorder_begin_recording (Handle, &cullRect), false), this);
 		}
 
 		public SKPicture EndRecording ()
 		{
-			return GetObject<SKPicture> (SkiaApi.sk_picture_recorder_end_recording (Handle));
+			return SKPicture.GetObject (SkiaApi.sk_picture_recorder_end_recording (Handle));
 		}
 
 		public SKDrawable EndRecordingAsDrawable ()
 		{
-			return GetObject<SKDrawable> (SkiaApi.sk_picture_recorder_end_recording_as_drawable (Handle));
+			return SKDrawable.GetObject (SkiaApi.sk_picture_recorder_end_recording_as_drawable (Handle));
 		}
 
 		public SKCanvas RecordingCanvas =>
-			OwnedBy (GetObject<SKCanvas> (SkiaApi.sk_picture_get_recording_canvas (Handle), false), this);
+			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_picture_get_recording_canvas (Handle), false), this);
 	}
 }
