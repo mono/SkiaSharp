@@ -17,11 +17,11 @@ namespace SkiaSharp
 
 	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
 	{
-		private static readonly Lazy<SKTypeface> defaultTypeface;
+		private static readonly SKTypeface defaultTypeface;
 
 		static SKTypeface ()
 		{
-			defaultTypeface = new Lazy<SKTypeface> (() => new SKTypefaceStatic (SkiaApi.sk_typeface_ref_default ()));
+			defaultTypeface = new SKTypefaceStatic (SkiaApi.sk_typeface_ref_default ());
 		}
 
 		internal static void EnsureStaticInstanceAreInitialized ()
@@ -41,7 +41,7 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKTypeface Default => defaultTypeface.Value;
+		public static SKTypeface Default => defaultTypeface;
 
 		public static SKTypeface CreateDefault ()
 		{
@@ -75,7 +75,9 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			return GetObject (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, style.Handle));
+			var tf = GetObject (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, style.Handle));
+			tf?.PreventPublicDisposal ();
+			return tf;
 		}
 
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
@@ -449,14 +451,9 @@ namespace SkiaSharp
 		private sealed class SKTypefaceStatic : SKTypeface
 		{
 			internal SKTypefaceStatic (IntPtr x)
-				: base (x, false)
+				: base (x, true)
 			{
 				IgnorePublicDispose = true;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				// do not dispose
 			}
 		}
 	}

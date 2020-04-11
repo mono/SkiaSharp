@@ -185,14 +185,9 @@ namespace SkiaSharp
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{
 			internal SKColorSpaceStatic (IntPtr x)
-				: base (x, false)
+				: base (x, true)
 			{
 				IgnorePublicDispose = true;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				// do not dispose
 			}
 		}
 	}

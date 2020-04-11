@@ -135,6 +135,12 @@ namespace SkiaSharp
 			return HandleDictionary.GetInstance<TSkiaObject> (handle, out instance);
 		}
 
+		// indicate that the user cannot dispose the object
+		internal void PreventPublicDisposal ()
+		{
+			IgnorePublicDispose = true;
+		}
+
 		// indicate that the ownership of this object is now in the hands of
 		// the native object
 		internal void RevokeOwnership (SKObject newOwner)
@@ -247,7 +253,7 @@ namespace SkiaSharp
 
 		protected internal virtual bool OwnsHandle { get; protected set; }
 
-		protected internal bool IgnorePublicDispose { get; protected set; }
+		protected internal bool IgnorePublicDispose { get; set; }
 
 		protected internal bool IsDisposed => isDisposed == 1;
 
