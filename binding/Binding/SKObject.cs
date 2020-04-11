@@ -136,7 +136,7 @@ namespace SkiaSharp
 		}
 
 		// indicate that the user cannot dispose the object
-		internal void PreventUserDisposal ()
+		internal void PreventPublicDisposal ()
 		{
 			IgnorePublicDispose = true;
 		}

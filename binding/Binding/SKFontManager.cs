@@ -71,7 +71,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (style));
 
 			var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_family_style (Handle, familyName, style.Handle));
-			tf?.PreventUserDisposal ();
+			tf?.PreventPublicDisposal ();
 			return tf;
 		}
 
@@ -83,7 +83,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (style));
 
 			var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_face_style (Handle, face.Handle, style.Handle));
-			tf?.PreventUserDisposal ();
+			tf?.PreventPublicDisposal ();
 			return tf;
 		}
 
@@ -184,7 +184,7 @@ namespace SkiaSharp
 				familyName = string.Empty;
 
 			var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_family_style_character (Handle, familyName, style.Handle, bcp47, bcp47?.Length ?? 0, character));
-			tf?.PreventUserDisposal ();
+			tf?.PreventPublicDisposal ();
 			return tf;
 		}
 
