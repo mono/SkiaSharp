@@ -144,7 +144,8 @@ namespace HarfBuzzSharp
 
 		public unsafe bool TryGetGlyphName (uint glyph, out string name)
 		{
-			var buffer = ArrayPool<byte>.Shared.Rent (NameBufferLength);
+			var pool = ArrayPool<byte>.Shared;
+			var buffer = pool.Rent (NameBufferLength);
 			try {
 				fixed (byte* first = buffer) {
 					if (!HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, buffer.Length)) {
@@ -155,7 +156,7 @@ namespace HarfBuzzSharp
 					return true;
 				}
 			} finally {
-				ArrayPool<byte>.Shared.Return (buffer);
+				pool.Return (buffer);
 			}
 		}
 
@@ -206,14 +207,15 @@ namespace HarfBuzzSharp
 
 		public unsafe string GlyphToString (uint glyph)
 		{
-			var buffer = ArrayPool<byte>.Shared.Rent (NameBufferLength);
+			var pool = ArrayPool<byte>.Shared;
+			var buffer = pool.Rent (NameBufferLength);
 			try {
 				fixed (byte* first = buffer) {
 					HarfBuzzApi.hb_font_glyph_to_string (Handle, glyph, first, buffer.Length);
 					return Marshal.PtrToStringAnsi ((IntPtr)first);
 				}
 			} finally {
-				ArrayPool<byte>.Shared.Return (buffer);
+				pool.Return (buffer);
 			}
 		}
 

@@ -4,17 +4,17 @@ namespace SkiaSharp
 {
 	public class SKFontStyle : SKObject
 	{
-		private static readonly Lazy<SKFontStyle> normal;
-		private static readonly Lazy<SKFontStyle> bold;
-		private static readonly Lazy<SKFontStyle> italic;
-		private static readonly Lazy<SKFontStyle> boldItalic;
+		private static readonly SKFontStyle normal;
+		private static readonly SKFontStyle bold;
+		private static readonly SKFontStyle italic;
+		private static readonly SKFontStyle boldItalic;
 
-		static SKFontStyle()
+		static SKFontStyle ()
 		{
-			normal = new Lazy<SKFontStyle> (() => new SKFontStyleStatic (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright));
-			bold = new Lazy<SKFontStyle> (() => new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright));
-			italic = new Lazy<SKFontStyle> (() => new SKFontStyleStatic (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic));
-			boldItalic = new Lazy<SKFontStyle> (() => new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic));
+			normal = new SKFontStyleStatic (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+			bold = new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+			italic = new SKFontStyleStatic (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
+			boldItalic = new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
 		}
 
 		internal SKFontStyle (IntPtr handle, bool owns)
@@ -49,13 +49,15 @@ namespace SkiaSharp
 
 		public SKFontStyleSlant Slant => SkiaApi.sk_fontstyle_get_slant (Handle);
 
-		public static SKFontStyle Normal => normal.Value;
+		public static SKFontStyle Normal => normal;
 
-		public static SKFontStyle Bold => bold.Value;
+		public static SKFontStyle Bold => bold;
 
-		public static SKFontStyle Italic => italic.Value;
+		public static SKFontStyle Italic => italic;
 
-		public static SKFontStyle BoldItalic => boldItalic.Value;
+		public static SKFontStyle BoldItalic => boldItalic;
+
+		//
 
 		internal static SKFontStyle GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKFontStyle (h, o));
@@ -66,11 +68,6 @@ namespace SkiaSharp
 				: base (weight, width, slant)
 			{
 				IgnorePublicDispose = true;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				// do not dispose
 			}
 		}
 	}

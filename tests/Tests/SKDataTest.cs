@@ -1,7 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using Xunit;
-using System.IO;
 
 namespace SkiaSharp.Tests
 {
@@ -17,6 +17,15 @@ namespace SkiaSharp.Tests
 
 			empty.Dispose();
 			Assert.True(SKObject.GetInstance<SKData>(empty.Handle, out _));
+		}
+
+		[SkippableFact]
+		public void EmptyAndZeroLengthSameObject()
+		{
+			var empty = SKData.Empty;
+			var zero = SKData.Create(0);
+
+			Assert.Same(empty, zero);
 		}
 
 		[SkippableFact]
@@ -65,7 +74,8 @@ namespace SkiaSharp.Tests
 		{
 			bool released = false;
 
-			var onRelease = new SKDataReleaseDelegate((addr, ctx) => {
+			var onRelease = new SKDataReleaseDelegate((addr, ctx) =>
+			{
 				Marshal.FreeCoTaskMem(addr);
 				released = true;
 				Assert.Equal("RELEASING!", ctx);
@@ -73,7 +83,8 @@ namespace SkiaSharp.Tests
 
 			var memory = Marshal.AllocCoTaskMem(10);
 
-			using (var data = SKData.Create(memory, 10, onRelease, "RELEASING!")) {
+			using (var data = SKData.Create(memory, 10, onRelease, "RELEASING!"))
+			{
 				Assert.Equal(memory, data.Data);
 				Assert.Equal(10, data.Size);
 			}

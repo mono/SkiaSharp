@@ -37,6 +37,8 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile) =>
 			SKShader.CreatePicture (this, tmx, tmy, localMatrix, tile);
 
+		//
+
 		internal static SKPicture GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
 			GetOrAddObject (handle, owns, unrefExisting, false, (h, o) => new SKPicture (h, o));
 	}
