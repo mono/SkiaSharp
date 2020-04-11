@@ -36,14 +36,15 @@ namespace SkiaSharp
 
 			var total = 0;
 			int len;
-			var buffer = ArrayPool<byte>.Shared.Rent (SKData.CopyBufferSize);
+			var pool = ArrayPool<byte>.Shared;
+			var buffer = pool.Rent (SKData.CopyBufferSize);
 			try {
 				while ((len = stream.Read (buffer, 0, buffer.Length)) > 0) {
 					destination.Write (buffer, len);
 					total += len;
 				}
 			} finally {
-				ArrayPool<byte>.Shared.Return (buffer);
+				pool.Return (buffer);
 			}
 			destination.Flush ();
 			return total;

@@ -43,14 +43,15 @@ namespace SkiaSharp
 		protected override bool OnWrite (IntPtr buffer, IntPtr size)
 		{
 			var count = (int)size;
-			var managedBuffer = ArrayPool<byte>.Shared.Rent (count);
+			var pool = ArrayPool<byte>.Shared;
+			var managedBuffer = pool.Rent (count);
 			try {
 				if (buffer != IntPtr.Zero) {
 					Marshal.Copy (buffer, managedBuffer, 0, count);
 				}
 				stream.Write (managedBuffer, 0, count);
 			} finally {
-				ArrayPool<byte>.Shared.Return (managedBuffer);
+				pool.Return (managedBuffer);
 			}
 			return true;
 		}

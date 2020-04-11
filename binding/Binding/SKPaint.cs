@@ -816,6 +816,8 @@ namespace SkiaSharp
 			}
 		}
 
+		//
+
 		internal static SKPaint GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKPaint (h, o));
 	}

@@ -439,6 +439,8 @@ namespace SkiaSharp
 			return adjustments;
 		}
 
+		//
+
 		internal static SKTypeface GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o));
 
