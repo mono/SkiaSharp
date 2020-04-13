@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKMatrix44 : SKObject
 	{
-		[Preserve]
 		internal SKMatrix44 (IntPtr x, bool owns)
 			: base (x, owns)
 		{

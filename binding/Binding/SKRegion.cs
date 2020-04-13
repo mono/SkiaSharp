@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKRegion : SKObject
 	{
-		[Preserve]
 		internal SKRegion (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

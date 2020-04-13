@@ -27,7 +27,6 @@ namespace SkiaSharp
 			//            are initialized before any access is made to them
 		}
 
-		[Preserve]
 		internal SKData (IntPtr x, bool owns)
 			: base (x, owns)
 		{

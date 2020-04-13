@@ -46,7 +46,6 @@ namespace SkiaSharp
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";
 
-		[Preserve]
 		internal SKBitmap (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

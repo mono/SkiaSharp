@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKPathMeasure : SKObject
 	{
-		[Preserve]
 		internal SKPathMeasure (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

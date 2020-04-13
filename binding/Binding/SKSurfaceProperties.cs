@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	public class SKSurfaceProperties : SKObject
 	{
-		[Preserve]
 		internal SKSurfaceProperties (IntPtr h, bool owns)
 			: base (h, owns)
 		{

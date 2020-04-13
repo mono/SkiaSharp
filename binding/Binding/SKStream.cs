@@ -196,7 +196,6 @@ namespace SkiaSharp
 
 	internal class SKStreamImplementation : SKStream
 	{
-		[Preserve]
 		internal SKStreamImplementation (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -238,7 +237,6 @@ namespace SkiaSharp
 
 	internal class SKStreamAssetImplementation : SKStreamAsset
 	{
-		[Preserve]
 		internal SKStreamAssetImplementation (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -261,7 +259,6 @@ namespace SkiaSharp
 
 	public unsafe class SKFileStream : SKStreamAsset
 	{
-		[Preserve]
 		internal SKFileStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -306,7 +303,6 @@ namespace SkiaSharp
 
 	public unsafe class SKMemoryStream : SKStreamMemory
 	{
-		[Preserve]
 		internal SKMemoryStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -476,7 +472,6 @@ namespace SkiaSharp
 
 	public unsafe class SKFileWStream : SKWStream
 	{
-		[Preserve]
 		internal SKFileWStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -521,7 +516,6 @@ namespace SkiaSharp
 
 	public unsafe class SKDynamicMemoryWStream : SKWStream
 	{
-		[Preserve]
 		internal SKDynamicMemoryWStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

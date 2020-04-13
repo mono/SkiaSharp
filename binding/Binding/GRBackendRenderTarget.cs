@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	public unsafe class GRBackendRenderTarget : SKObject
 	{
-		[Preserve]
 		internal GRBackendRenderTarget (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
