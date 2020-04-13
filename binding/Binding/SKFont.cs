@@ -9,7 +9,6 @@ namespace SkiaSharp
 		internal const float DefaultScaleX = 1f;
 		internal const float DefaultSkewX = 0f;
 
-		[Preserve]
 		internal SKFont (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

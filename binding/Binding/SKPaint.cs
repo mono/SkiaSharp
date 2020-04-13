@@ -15,7 +15,6 @@ namespace SkiaSharp
 	{
 		private SKFont font;
 
-		[Preserve]
 		internal SKPaint (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

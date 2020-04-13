@@ -10,7 +10,6 @@ namespace SkiaSharp
 		private const int PatchCornerCount = 4;
 		private const int PatchCubicsCount = 12;
 
-		[Preserve]
 		internal SKCanvas (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

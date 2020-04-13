@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKRoundRect : SKObject
 	{
-		[Preserve]
 		internal SKRoundRect (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

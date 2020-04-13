@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKPath : SKObject
 	{
-		[Preserve]
 		internal SKPath (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

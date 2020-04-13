@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	public unsafe class GRContext : SKObject, ISKReferenceCounted
 	{
-		[Preserve]
 		internal GRContext (IntPtr h, bool owns)
 			: base (h, owns)
 		{

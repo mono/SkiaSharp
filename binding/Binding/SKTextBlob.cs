@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted
 	{
-		[Preserve]
 		internal SKTextBlob (IntPtr x, bool owns)
 			: base (x, owns)
 		{
@@ -154,7 +153,6 @@ namespace SkiaSharp
 
 	public unsafe class SKTextBlobBuilder : SKObject
 	{
-		[Preserve]
 		internal SKTextBlobBuilder (IntPtr x, bool owns)
 			: base (x, owns)
 		{

@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKShader : SKObject, ISKReferenceCounted
 	{
-		[Preserve]
 		internal SKShader (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

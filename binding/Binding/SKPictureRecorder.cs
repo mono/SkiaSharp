@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKPictureRecorder : SKObject
 	{
-		[Preserve]
 		internal SKPictureRecorder (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

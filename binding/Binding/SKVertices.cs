@@ -8,7 +8,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKVertices : SKObject, ISKNonVirtualReferenceCounted
 	{
-		[Preserve]
 		internal SKVertices (IntPtr x, bool owns)
 			: base (x, owns)
 		{

@@ -6,7 +6,6 @@ namespace SkiaSharp
 {
 	public unsafe class GRBackendTexture : SKObject
 	{
-		[Preserve]
 		internal GRBackendTexture (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

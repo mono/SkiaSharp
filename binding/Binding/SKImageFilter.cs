@@ -10,7 +10,6 @@ namespace SkiaSharp
 
 	public unsafe class SKImageFilter : SKObject, ISKReferenceCounted
 	{
-		[Preserve]
 		internal SKImageFilter(IntPtr handle, bool owns)
 			: base(handle, owns)
 		{

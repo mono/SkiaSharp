@@ -9,7 +9,6 @@ namespace SkiaSharp
 
 	public unsafe class SKCodec : SKObject
 	{
-		[Preserve]
 		internal SKCodec (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

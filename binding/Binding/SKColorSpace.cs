@@ -20,7 +20,6 @@ namespace SkiaSharp
 			//            are initialized before any access is made to them
 		}
 
-		[Preserve]
 		internal SKColorSpace (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -265,14 +264,9 @@ namespace SkiaSharp
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{
 			internal SKColorSpaceStatic (IntPtr x)
-				: base (x, false)
+				: base (x, true)
 			{
 				IgnorePublicDispose = true;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				// do not dispose
 			}
 		}
 	}

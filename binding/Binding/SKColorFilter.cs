@@ -9,7 +9,6 @@ namespace SkiaSharp
 		public const int ColorMatrixSize = 20;
 		public const int TableMaxLength = 256;
 
-		[Preserve]
 		internal SKColorFilter(IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
