@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public unsafe class SK3dView : SKObject
 	{
-		[Preserve]
 		internal SK3dView (IntPtr x, bool owns)
 			: base (x, owns)
 		{

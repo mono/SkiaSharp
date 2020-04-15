@@ -23,7 +23,6 @@ namespace SkiaSharp
 		private const float BlurSigmaScale = 0.57735f;
 		public const int TableMaxLength = 256;
 
-		[Preserve]
 		internal SKMaskFilter (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -44,7 +43,7 @@ namespace SkiaSharp
 
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma)
 		{
-			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur (blurStyle, sigma));
+			return GetObject (SkiaApi.sk_maskfilter_new_blur (blurStyle, sigma));
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -68,7 +67,7 @@ namespace SkiaSharp
 
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, bool respectCTM)
 		{
-			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, &occluder, respectCTM));
+			return GetObject (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, &occluder, respectCTM));
 		}
 
 		public static SKMaskFilter CreateTable (byte[] table)
@@ -78,19 +77,22 @@ namespace SkiaSharp
 			if (table.Length != TableMaxLength)
 				throw new ArgumentException ("Table must have a length of {SKColorTable.MaxLength}.", nameof (table));
 			fixed (byte* t = table) {
-				return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_table (t));
+				return GetObject (SkiaApi.sk_maskfilter_new_table (t));
 			}
 		}
 
 		public static SKMaskFilter CreateGamma (float gamma)
 		{
-			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_gamma (gamma));
+			return GetObject (SkiaApi.sk_maskfilter_new_gamma (gamma));
 		}
 
 		public static SKMaskFilter CreateClip (byte min, byte max)
 		{
-			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_clip (min, max));
+			return GetObject (SkiaApi.sk_maskfilter_new_clip (min, max));
 		}
+
+		internal static SKMaskFilter GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKMaskFilter (h, o));
 	}
 }
 

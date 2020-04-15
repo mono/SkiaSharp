@@ -159,11 +159,9 @@ namespace SkiaSharp
 			return (IntPtr)SkiaApi.sk_stream_get_memory_base (Handle);
 		}
 
-		internal SKStream Fork () =>
-			GetObject<SKStream, SKStreamImplementation> (SkiaApi.sk_stream_fork (Handle));
+		internal SKStream Fork () => GetObject (SkiaApi.sk_stream_fork (Handle));
 
-		internal SKStream Duplicate () =>
-			GetObject<SKStream, SKStreamImplementation> (SkiaApi.sk_stream_duplicate (Handle));
+		internal SKStream Duplicate () => GetObject (SkiaApi.sk_stream_duplicate (Handle));
 
 		public bool HasPosition {
 			get {
@@ -191,11 +189,13 @@ namespace SkiaSharp
 				return (int)SkiaApi.sk_stream_get_length (Handle);
 			}
 		}
+
+		internal static SKStream GetObject (IntPtr handle) =>
+			GetOrAddObject<SKStream> (handle, (h, o) => new SKStreamImplementation (h, o));
 	}
 
 	internal class SKStreamImplementation : SKStream
 	{
-		[Preserve]
 		internal SKStreamImplementation (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -230,11 +230,13 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
+
+		internal static new SKStreamAsset GetObject (IntPtr handle) =>
+			GetOrAddObject<SKStreamAsset> (handle, (h, o) => new SKStreamAssetImplementation (h, o));
 	}
 
 	internal class SKStreamAssetImplementation : SKStreamAsset
 	{
-		[Preserve]
 		internal SKStreamAssetImplementation (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -257,7 +259,6 @@ namespace SkiaSharp
 
 	public unsafe class SKFileStream : SKStreamAsset
 	{
-		[Preserve]
 		internal SKFileStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -302,7 +303,6 @@ namespace SkiaSharp
 
 	public unsafe class SKMemoryStream : SKStreamMemory
 	{
-		[Preserve]
 		internal SKMemoryStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -472,7 +472,6 @@ namespace SkiaSharp
 
 	public unsafe class SKFileWStream : SKWStream
 	{
-		[Preserve]
 		internal SKFileWStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -517,7 +516,6 @@ namespace SkiaSharp
 
 	public unsafe class SKDynamicMemoryWStream : SKWStream
 	{
-		[Preserve]
 		internal SKDynamicMemoryWStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -540,12 +538,12 @@ namespace SkiaSharp
 
 		public SKStreamAsset DetachAsStream ()
 		{
-			return GetObject<SKStreamAsset, SKStreamAssetImplementation> (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
+			return SKStreamAssetImplementation.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
 		}
 
 		public SKData DetachAsData ()
 		{
-			return GetObject<SKData> (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
+			return SKData.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
 		}
 
 		public void CopyTo (IntPtr data)
