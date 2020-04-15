@@ -668,130 +668,130 @@ namespace SkiaSharp
 
 			return textBlobBuilder.Build ();
 		}
-	}
 
-	public class Iterator : SKObject
-	{
-		private readonly SKPath path;
-
-		internal Iterator (SKPath path, bool forceClose)
-			: base (SkiaApi.sk_path_create_iter (path.Handle, forceClose ? 1 : 0), true)
+		public class Iterator : SKObject
 		{
-			this.path = path;
-		}
+			private readonly SKPath path;
 
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
-		protected override void DisposeNative () =>
-			SkiaApi.sk_path_iter_destroy (Handle);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Next(SKPoint[]) instead.")]
-		public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates, bool exact) =>
-			Next (points);
-
-		public unsafe SKPathVerb Next (SKPoint[] points)
-		{
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
-			if (points.Length != 4)
-				throw new ArgumentException ("Must be an array of four elements.", nameof (points));
-
-			fixed (SKPoint* p = points) {
-				return SkiaApi.sk_path_iter_next (Handle, p);
-			}
-		}
-
-		public float ConicWeight () =>
-			SkiaApi.sk_path_iter_conic_weight (Handle);
-		public bool IsCloseLine () =>
-			SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
-		public bool IsCloseContour () =>
-			SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
-	}
-
-	public class RawIterator : SKObject
-	{
-		private readonly SKPath path;
-
-		internal RawIterator (SKPath path)
-			: base (SkiaApi.sk_path_create_rawiter (path.Handle), true)
-		{
-			this.path = path;
-		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
-		protected override void DisposeNative () =>
-			SkiaApi.sk_path_rawiter_destroy (Handle);
-
-		public unsafe SKPathVerb Next (SKPoint[] points)
-		{
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
-			if (points.Length != 4)
-				throw new ArgumentException ("Must be an array of four elements.", nameof (points));
-			fixed (SKPoint* p = points) {
-				return SkiaApi.sk_path_rawiter_next (Handle, p);
-			}
-		}
-
-		public float ConicWeight () =>
-			SkiaApi.sk_path_rawiter_conic_weight (Handle);
-		public SKPathVerb Peek () =>
-			SkiaApi.sk_path_rawiter_peek (Handle);
-	}
-
-	public class OpBuilder : SKObject
-	{
-		public OpBuilder ()
-			: base (SkiaApi.sk_opbuilder_new (), true)
-		{
-		}
-
-		public void Add (SKPath path, SKPathOp op) =>
-			SkiaApi.sk_opbuilder_add (Handle, path.Handle, op);
-
-		public bool Resolve (SKPath result)
-		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-
-			return SkiaApi.sk_opbuilder_resolve (Handle, result.Handle);
-		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
-		protected override void DisposeNative () =>
-			SkiaApi.sk_opbuilder_destroy (Handle);
-	}
-
-	internal sealed class GlyphPathCache : Dictionary<ushort, SKPath>, IDisposable
-	{
-		public SKFont Font { get; }
-
-		public GlyphPathCache (SKFont font)
-		{
-			Font = font;
-		}
-
-		public SKPath GetPath (ushort glyphId)
-		{
-			if (!TryGetValue (glyphId, out var glyphPath)) {
-				glyphPath = Font.GetPath (glyphId);
-				this[glyphId] = glyphPath;
+			internal Iterator (SKPath path, bool forceClose)
+				: base (SkiaApi.sk_path_create_iter (path.Handle, forceClose ? 1 : 0), true)
+			{
+				this.path = path;
 			}
 
-			return glyphPath;
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
+
+			protected override void DisposeNative () =>
+				SkiaApi.sk_path_iter_destroy (Handle);
+
+			[EditorBrowsable (EditorBrowsableState.Never)]
+			[Obsolete ("Use Next(SKPoint[]) instead.")]
+			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates, bool exact) =>
+				Next (points);
+
+			public unsafe SKPathVerb Next (SKPoint[] points)
+			{
+				if (points == null)
+					throw new ArgumentNullException (nameof (points));
+				if (points.Length != 4)
+					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
+
+				fixed (SKPoint* p = points) {
+					return SkiaApi.sk_path_iter_next (Handle, p);
+				}
+			}
+
+			public float ConicWeight () =>
+				SkiaApi.sk_path_iter_conic_weight (Handle);
+			public bool IsCloseLine () =>
+				SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
+			public bool IsCloseContour () =>
+				SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
 		}
 
-		public void Dispose ()
+		public class RawIterator : SKObject
 		{
-			foreach (var path in Values) {
-				path.Dispose ();
+			private readonly SKPath path;
+
+			internal RawIterator (SKPath path)
+				: base (SkiaApi.sk_path_create_rawiter (path.Handle), true)
+			{
+				this.path = path;
+			}
+
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
+
+			protected override void DisposeNative () =>
+				SkiaApi.sk_path_rawiter_destroy (Handle);
+
+			public unsafe SKPathVerb Next (SKPoint[] points)
+			{
+				if (points == null)
+					throw new ArgumentNullException (nameof (points));
+				if (points.Length != 4)
+					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
+				fixed (SKPoint* p = points) {
+					return SkiaApi.sk_path_rawiter_next (Handle, p);
+				}
+			}
+
+			public float ConicWeight () =>
+				SkiaApi.sk_path_rawiter_conic_weight (Handle);
+			public SKPathVerb Peek () =>
+				SkiaApi.sk_path_rawiter_peek (Handle);
+		}
+
+		public class OpBuilder : SKObject
+		{
+			public OpBuilder ()
+				: base (SkiaApi.sk_opbuilder_new (), true)
+			{
+			}
+
+			public void Add (SKPath path, SKPathOp op) =>
+				SkiaApi.sk_opbuilder_add (Handle, path.Handle, op);
+
+			public bool Resolve (SKPath result)
+			{
+				if (result == null)
+					throw new ArgumentNullException (nameof (result));
+
+				return SkiaApi.sk_opbuilder_resolve (Handle, result.Handle);
+			}
+
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
+
+			protected override void DisposeNative () =>
+				SkiaApi.sk_opbuilder_destroy (Handle);
+		}
+
+		internal sealed class GlyphPathCache : Dictionary<ushort, SKPath>, IDisposable
+		{
+			public SKFont Font { get; }
+
+			public GlyphPathCache (SKFont font)
+			{
+				Font = font;
+			}
+
+			public SKPath GetPath (ushort glyphId)
+			{
+				if (!TryGetValue (glyphId, out var glyphPath)) {
+					glyphPath = Font.GetPath (glyphId);
+					this[glyphId] = glyphPath;
+				}
+
+				return glyphPath;
+			}
+
+			public void Dispose ()
+			{
+				foreach (var path in Values) {
+					path.Dispose ();
+				}
 			}
 		}
 	}
