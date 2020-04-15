@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKPath : SKObject
 	{
-		[Preserve]
 		internal SKPath (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -479,6 +478,13 @@ namespace SkiaSharp
 				return SkiaApi.sk_path_convert_conic_to_quads (&p0, &p1, &p2, w, ptsptr, pow2);
 			}
 		}
+
+		//
+
+		internal static SKPath GetObject (IntPtr handle, bool owns = true) =>
+			GetOrAddObject (handle, owns, (h, o) => new SKPath (h, o));
+
+		//
 
 		public class Iterator : SKObject
 		{

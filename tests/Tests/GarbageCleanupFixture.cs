@@ -20,7 +20,6 @@ namespace SkiaSharp.Tests
 
 		public GarbageCleanupFixture()
 		{
-			Assert.Empty(HandleDictionary.constructors);
 			var aliveObjects = HandleDictionary.instances.Values
 				.Select(o => o.Target)
 				.Where(o => IsExpectedToBeDead(o, null))

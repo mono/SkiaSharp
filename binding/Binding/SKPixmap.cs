@@ -11,7 +11,6 @@ namespace SkiaSharp
 		// this is not meant to be anything but a GC reference to keep the actual pixel data alive
 		internal SKObject pixelSource;
 
-		[Preserve]
 		internal SKPixmap (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

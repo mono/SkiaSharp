@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	internal unsafe class SKString : SKObject
 	{
-		[Preserve]
 		internal SKString (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -69,6 +68,9 @@ namespace SkiaSharp
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_string_destructor (Handle);
+
+		internal static SKString GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKString (h, o));
 	}
 }
 

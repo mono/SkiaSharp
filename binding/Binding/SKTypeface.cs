@@ -17,11 +17,11 @@ namespace SkiaSharp
 
 	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
 	{
-		private static readonly Lazy<SKTypeface> defaultTypeface;
+		private static readonly SKTypeface defaultTypeface;
 
 		static SKTypeface ()
 		{
-			defaultTypeface = new Lazy<SKTypeface> (() => new SKTypefaceStatic (SkiaApi.sk_typeface_ref_default ()));
+			defaultTypeface = new SKTypefaceStatic (SkiaApi.sk_typeface_ref_default ());
 		}
 
 		internal static void EnsureStaticInstanceAreInitialized ()
@@ -30,7 +30,6 @@ namespace SkiaSharp
 			//            are initialized before any access is made to them
 		}
 
-		[Preserve]
 		internal SKTypeface (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -41,11 +40,11 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKTypeface Default => defaultTypeface.Value;
+		public static SKTypeface Default => defaultTypeface;
 
 		public static SKTypeface CreateDefault ()
 		{
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_default ());
+			return GetObject (SkiaApi.sk_typeface_create_default ());
 		}
 
 		// FromFamilyName
@@ -75,7 +74,9 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name (familyName, style.Handle));
+			var tf = GetObject (SkiaApi.sk_typeface_create_from_name (familyName, style.Handle));
+			tf?.PreventPublicDisposal ();
+			return tf;
 		}
 
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
@@ -106,7 +107,7 @@ namespace SkiaSharp
 
 			var utf8path = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
 			fixed (byte* u = utf8path) {
-				return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file (u, index));
+				return GetObject (SkiaApi.sk_typeface_create_from_file (u, index));
 			}
 		}
 
@@ -128,7 +129,7 @@ namespace SkiaSharp
 				managed.Dispose ();
 			}
 
-			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
+			var typeface = GetObject (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
 			stream.RevokeOwnership (typeface);
 			return typeface;
 		}
@@ -138,7 +139,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_data (data.Handle, index));
+			return GetObject (SkiaApi.sk_typeface_create_from_data (data.Handle, index));
 		}
 
 		// CharsToGlyphs
@@ -155,9 +156,9 @@ namespace SkiaSharp
 
 		// Properties
 
-		public string FamilyName => (string)GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
+		public string FamilyName => (string)SKString.GetObject (SkiaApi.sk_typeface_get_family_name (Handle));
 
-		public SKFontStyle FontStyle => GetObject<SKFontStyle> (SkiaApi.sk_typeface_get_fontstyle (Handle));
+		public SKFontStyle FontStyle => SKFontStyle.GetObject (SkiaApi.sk_typeface_get_fontstyle (Handle));
 
 		public int FontWeight => SkiaApi.sk_typeface_get_font_weight (Handle);
 
@@ -446,7 +447,7 @@ namespace SkiaSharp
 		public SKStreamAsset OpenStream (out int ttcIndex)
 		{
 			fixed (int* ttc = &ttcIndex) {
-				return GetObject<SKStreamAssetImplementation> (SkiaApi.sk_typeface_open_stream (Handle, ttc));
+				return SKStreamAsset.GetObject (SkiaApi.sk_typeface_open_stream (Handle, ttc));
 			}
 		}
 
@@ -464,17 +465,17 @@ namespace SkiaSharp
 
 		//
 
+		internal static SKTypeface GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o));
+
+		//
+
 		private sealed class SKTypefaceStatic : SKTypeface
 		{
 			internal SKTypefaceStatic (IntPtr x)
-				: base (x, false)
+				: base (x, true)
 			{
 				IgnorePublicDispose = true;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				// do not dispose
 			}
 		}
 	}

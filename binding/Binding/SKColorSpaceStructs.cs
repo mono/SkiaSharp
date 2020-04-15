@@ -441,7 +441,6 @@ namespace SkiaSharp
 
 	public unsafe class SKColorSpaceIccProfile : SKObject
 	{
-		[Preserve]
 		internal SKColorSpaceIccProfile (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

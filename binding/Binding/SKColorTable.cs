@@ -9,7 +9,6 @@ namespace SkiaSharp
 	{
 		public const int MaxLength = 256;
 
-		[Preserve]
 		internal SKColorTable (IntPtr x, bool owns)
 			: base (x, owns)
 		{

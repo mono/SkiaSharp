@@ -1,21 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 
 namespace SkiaSharp
 {
 	internal static class HandleDictionary
 	{
-		private static readonly Type IntPtrType = typeof (IntPtr);
-		private static readonly Type BoolType = typeof (bool);
 
 #if THROW_OBJECT_EXCEPTIONS
 		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
 #endif
-
-		internal static readonly ConcurrentDictionary<Type, ConstructorInfo> constructors = new ConcurrentDictionary<Type, ConstructorInfo> ();
 		internal static readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference> ();
 
 		internal static readonly ReaderWriterLockSlim instancesLock = new ReaderWriterLockSlim ();
@@ -44,9 +39,8 @@ namespace SkiaSharp
 		/// Retrieve or create an instance for the native handle.
 		/// </summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
-		internal static TSkiaObject GetObject<TSkiaObject, TSkiaImplementation> (IntPtr handle, bool owns, bool unrefExisting)
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool refNew, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
-			where TSkiaImplementation : SKObject, TSkiaObject
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -70,27 +64,14 @@ namespace SkiaSharp
 					return instance;
 				}
 
-				var type = typeof (TSkiaImplementation);
-				var constructor = constructors.GetOrAdd (type, t => GetConstructor (t));
+				var obj = objectFactory.Invoke (handle, owns);
 
-				// we don't need to go into a writable here as the object will do it in the Handle property
-				var obj = (TSkiaObject)constructor.Invoke (new object[] { handle, owns });
-				return obj;
+				if (refNew && obj is ISKReferenceCounted toRef)
+					toRef.SafeRef ();
+
+        return obj;
 			} finally {
 				instancesLock.ExitUpgradeableReadLock ();
-			}
-
-			static ConstructorInfo GetConstructor (Type type)
-			{
-				var ctors = type.GetTypeInfo ().DeclaredConstructors;
-
-				foreach (var ctor in ctors) {
-					var param = ctor.GetParameters ();
-					if (param.Length == 2 && param[0].ParameterType == IntPtrType && param[1].ParameterType == BoolType)
-						return ctor;
-				}
-
-				throw new MissingMethodException ($"No constructor found for {type.FullName}.ctor(System.IntPtr, System.Boolean)");
 			}
 		}
 

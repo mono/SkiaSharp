@@ -38,7 +38,6 @@ namespace SkiaSharp
 			}
 		}
 
-		[Preserve]
 		internal SKDrawable (IntPtr x, bool owns)
 			: base (x, owns)
 		{
@@ -78,7 +77,7 @@ namespace SkiaSharp
 
 		// do not unref as this is a plain pointer return, not a reference counted pointer
 		public SKPicture Snapshot () =>
-			GetObject<SKPicture> (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
+			SKPicture.GetObject (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
 
 		public void NotifyDrawingChanged () =>
 			SkiaApi.sk_drawable_notify_drawing_changed (Handle);
@@ -102,7 +101,7 @@ namespace SkiaSharp
 		private static void DrawInternal (IntPtr d, void* context, IntPtr canvas)
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
-			drawable.OnDraw (GetObject<SKCanvas> (canvas, false));
+			drawable.OnDraw (SKCanvas.GetObject (canvas, false));
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableGetBoundsProxyDelegate))]
@@ -130,5 +129,8 @@ namespace SkiaSharp
 			}
 			gch.Free ();
 		}
+
+		internal static SKDrawable GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKDrawable (h, o));
 	}
 }

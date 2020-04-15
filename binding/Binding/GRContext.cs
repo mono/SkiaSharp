@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	public unsafe class GRContext : SKObject, ISKReferenceCounted
 	{
-		[Preserve]
 		internal GRContext (IntPtr h, bool owns)
 			: base (h, owns)
 		{
@@ -46,7 +45,7 @@ namespace SkiaSharp
 			backend switch
 			{
 				GRBackend.Metal => throw new NotSupportedException (),
-				GRBackend.OpenGL => GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext)),
+				GRBackend.OpenGL => GetObject (SkiaApi.gr_context_make_gl (backendContext)),
 				GRBackend.Vulkan => throw new NotSupportedException (),
 				GRBackend.Dawn => throw new NotSupportedException (),
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
@@ -58,7 +57,7 @@ namespace SkiaSharp
 			CreateGl (null);
 
 		public static GRContext CreateGl (GRGlInterface backendContext) =>
-			GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+			GetObject (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
 
 		//
 
@@ -111,5 +110,8 @@ namespace SkiaSharp
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
+
+		internal static GRContext GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new GRContext (h, o));
 	}
 }

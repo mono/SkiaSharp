@@ -20,7 +20,6 @@ namespace SkiaSharp
 			//            are initialized before any access is made to them
 		}
 
-		[Preserve]
 		internal SKColorSpace (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -116,7 +115,7 @@ namespace SkiaSharp
 			if (profile == null)
 				throw new ArgumentNullException (nameof (profile));
 
-			return Referenced (GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (profile.Handle)), profile);
+			return Referenced (GetObject (SkiaApi.sk_colorspace_new_icc (profile.Handle)), profile);
 		}
 
 		// CreateRgb
@@ -189,7 +188,7 @@ namespace SkiaSharp
 		// CreateRgb
 
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn transferFn, SKColorSpaceXyz toXyzD50) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb (&transferFn, &toXyzD50));
+			GetObject (SkiaApi.sk_colorspace_new_rgb (&transferFn, &toXyzD50));
 
 		// GetNumericalTransferFunction
 
@@ -227,10 +226,10 @@ namespace SkiaSharp
 		// To*Gamma
 
 		public SKColorSpace ToLinearGamma () =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_make_linear_gamma (Handle));
+			GetObject (SkiaApi.sk_colorspace_make_linear_gamma (Handle));
 
 		public SKColorSpace ToSrgbGamma () =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_make_srgb_gamma (Handle));
+			GetObject (SkiaApi.sk_colorspace_make_srgb_gamma (Handle));
 
 		// *XyzD50
 
@@ -259,17 +258,15 @@ namespace SkiaSharp
 
 		//
 
+		internal static SKColorSpace GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddObject (handle, owns, unrefExisting, false, (h, o) => new SKColorSpace (h, o));
+
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{
 			internal SKColorSpaceStatic (IntPtr x)
-				: base (x, false)
+				: base (x, true)
 			{
 				IgnorePublicDispose = true;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				// do not dispose
 			}
 		}
 	}
