@@ -30,7 +30,7 @@ namespace SkiaSharpTextOnPath
 
 				// draw text on the path, with various tweaks, saving each file.
 				var alignments = new[] { SKTextAlign.Left, SKTextAlign.Center, SKTextAlign.Right };
-				var warpings = new[] { SKGlyphWarping.SpacingOnly, SKGlyphWarping.SpacingAndGlyphs };
+				var warpings = new[] { false, true };
 				var hOffsets = new[] { 0f, -textSize, textSize };
 				var vOffsets = new[] { 0f, textSize / 2, textSize };
 
@@ -56,13 +56,12 @@ namespace SkiaSharpTextOnPath
 
 								// draw the text on the path
 								paint.TextAlign = alignment;
-								paint.GlyphWarping = warping;
 								paint.Color = SKColors.White;
 								paint.Style = SKPaintStyle.Fill;
-								canvas.DrawTextOnPath(text, path, hOffset, vOffset, paint);
+								canvas.DrawTextOnPath(text, path, hOffset, vOffset, paint, warping);
 
 								// save the file
-								var filename = $"output_{alignment}_{warping}_H{hOffset}_V{vOffset}.png";
+								var filename = $"output_{alignment}_{(warping ? "W" : "S")}_H{hOffset}_V{vOffset}.png";
 								using var image = surface.Snapshot();
 								using var data = image.Encode(SKEncodedImageFormat.Png, 100);
 								using var stream = File.OpenWrite(filename);
