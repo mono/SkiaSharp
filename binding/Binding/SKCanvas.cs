@@ -564,6 +564,13 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
+			if (paint.TextAlign != SKTextAlign.Left) {
+				var width = font.MeasureText (text);
+				if (paint.TextAlign == SKTextAlign.Center)
+					width *= 0.5f;
+				x -= width;
+			}
+
 			using var blob = SKTextBlob.Create (text, font);
 			if (blob == null)
 				return;
@@ -587,6 +594,13 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
+			if (paint.TextAlign != SKTextAlign.Left) {
+				var width = paint.MeasureText (text);
+				if (paint.TextAlign == SKTextAlign.Center)
+					width *= 0.5f;
+				x -= width;
+			}
+
 			using var blob = SKTextBlob.Create (text, paint.TextEncoding, paint.GetFont ());
 			if (blob == null)
 				return;
@@ -609,6 +623,13 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
+
+			if (paint.TextAlign != SKTextAlign.Left) {
+				var width = paint.MeasureText (buffer, length);
+				if (paint.TextAlign == SKTextAlign.Center)
+					width *= 0.5f;
+				x -= width;
+			}
 
 			using var blob = SKTextBlob.Create (buffer, length, paint.TextEncoding, paint.GetFont ());
 			if (blob == null)

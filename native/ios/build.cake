@@ -40,7 +40,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-mios-version-min=8.0' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-mios-version-min=8.0' ] " +
             $"extra_ldflags=[ '-Wl,ios_version_min=8.0' ]");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch);

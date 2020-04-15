@@ -25,6 +25,7 @@ variables:
   VM_IMAGE_MAC: Hosted macOS
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  THROW_ON_TEST_FAILURE: false
 
 resources:
   repositories:
@@ -390,9 +391,8 @@ stages:
           name: tests_windows
           displayName: Tests (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
-          retryCount: 3
           target: tests
-          additionalArgs: --skipExternals="all"
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
           shouldPublish: false
           requiredArtifacts:
             - native_win32_x86_windows
@@ -418,9 +418,8 @@ stages:
           name: tests_macos
           displayName: Tests (macOS)
           vmImage: $(VM_IMAGE_MAC)
-          retryCount: 3
           target: tests
-          additionalArgs: --skipExternals="all"
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
           shouldPublish: false
           requiredArtifacts:
             - native_macos_macos
@@ -445,9 +444,8 @@ stages:
           displayName: Tests (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
-          retryCount: 3
           target: tests
-          additionalArgs: --skipExternals="all"
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
           shouldPublish: false
           requiredArtifacts:
             - native_linux_linux

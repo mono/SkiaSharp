@@ -13,6 +13,8 @@ namespace SkiaSharp
 
 	public unsafe class SKPaint : SKObject
 	{
+		private SKFont font;
+
 		[Preserve]
 		internal SKPaint (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -595,7 +597,7 @@ namespace SkiaSharp
 			GetObject<SKFont> (SkiaApi.sk_compatpaint_make_font (Handle));
 
 		internal SKFont GetFont () =>
-			GetObject<SKFont> (SkiaApi.sk_compatpaint_get_font (Handle), false);
+			OwnedBy (font ??= GetObject<SKFont> (SkiaApi.sk_compatpaint_get_font (Handle), false), this);
 
 		// Text on path
 		public SKGlyphWarping GlyphWarping { get; set; }

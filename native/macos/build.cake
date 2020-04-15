@@ -32,7 +32,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-mmacosx-version-min=10.7', '-stdlib=libc++' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-mmacosx-version-min=10.7', '-stdlib=libc++' ] " +
             $"extra_ldflags=[ '-Wl,macosx_version_min=10.7', '-stdlib=libc++' ]");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch);

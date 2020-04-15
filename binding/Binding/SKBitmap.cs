@@ -430,7 +430,7 @@ namespace SkiaSharp
 
 				var info = Info;
 				if (info.Width * info.Height != value.Length)
-					throw new ArgumentException ($"The number of pixels must equal width*height, or {info.Width * info.Height}.", nameof (value));
+					throw new ArgumentException ($"The number of pixels must equal Width x Height, or {info.Width * info.Height}.", nameof (value));
 
 				fixed (SKColor* v = value) {
 					var tempInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
@@ -766,7 +766,10 @@ namespace SkiaSharp
 			if (pixmap == null) {
 				throw new ArgumentNullException (nameof (pixmap));
 			}
-			return SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
+			var result = SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
+			if (result)
+				pixmap.pixelSource = this;
+			return result;
 		}
 
 		// Resize

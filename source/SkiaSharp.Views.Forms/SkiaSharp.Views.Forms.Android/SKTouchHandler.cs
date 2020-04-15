@@ -47,12 +47,21 @@ namespace SkiaSharp.Views.Forms
 			var id = evt.GetPointerId(pointer);
 			var coords = scalePixels(evt.GetX(pointer), evt.GetY(pointer));
 
+			var toolType = evt.GetToolType(pointer);
+
+			var deviceType = GetDeviceType(toolType);
+
+			var pressure = evt.GetPressure(pointer);
+
+			var button = GetButton(evt, toolType);
+
 			switch (evt.ActionMasked)
 			{
 				case MotionEventActions.Down:
 				case MotionEventActions.PointerDown:
 					{
-						var args = new SKTouchEventArgs(id, SKTouchAction.Pressed, coords, true);
+						var args = new SKTouchEventArgs(id, SKTouchAction.Pressed, button, deviceType, coords, true, 0, pressure);
+
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;
@@ -66,7 +75,8 @@ namespace SkiaSharp.Views.Forms
 							id = evt.GetPointerId(pointer);
 							coords = scalePixels(evt.GetX(pointer), evt.GetY(pointer));
 
-							var args = new SKTouchEventArgs(id, SKTouchAction.Moved, coords, true);
+							var args = new SKTouchEventArgs(id, SKTouchAction.Moved, button, deviceType, coords, true, 0, pressure);
+
 							onTouchAction(args);
 							e.Handled = e.Handled || args.Handled;
 						}
@@ -76,7 +86,8 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.Up:
 				case MotionEventActions.PointerUp:
 					{
-						var args = new SKTouchEventArgs(id, SKTouchAction.Released, coords, false);
+						var args = new SKTouchEventArgs(id, SKTouchAction.Released, button, deviceType, coords, false, 0, pressure);
+
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;
@@ -84,12 +95,40 @@ namespace SkiaSharp.Views.Forms
 
 				case MotionEventActions.Cancel:
 					{
-						var args = new SKTouchEventArgs(id, SKTouchAction.Cancelled, coords, false);
+						var args = new SKTouchEventArgs(id, SKTouchAction.Cancelled, button, deviceType, coords, false, 0, pressure);
+
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;
 					}
 			}
 		}
+
+		private static SKMouseButton GetButton(MotionEvent evt, MotionEventToolType toolType)
+		{
+			var button = SKMouseButton.Left;
+
+			if (toolType == MotionEventToolType.Eraser)
+			{
+				button = SKMouseButton.Middle;
+			}
+			else if (evt.ButtonState.HasFlag(MotionEventButtonState.StylusSecondary))
+			{
+				button = SKMouseButton.Right;
+			}
+
+			return button;
+		}
+
+		private static SKTouchDeviceType GetDeviceType(MotionEventToolType toolType) =>
+			toolType switch
+			{
+				MotionEventToolType.Unknown => SKTouchDeviceType.Touch,
+				MotionEventToolType.Finger => SKTouchDeviceType.Touch,
+				MotionEventToolType.Stylus => SKTouchDeviceType.Pen,
+				MotionEventToolType.Eraser => SKTouchDeviceType.Pen,
+				MotionEventToolType.Mouse => SKTouchDeviceType.Mouse,
+				_ => SKTouchDeviceType.Touch,
+			};
 	}
 }

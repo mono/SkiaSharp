@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -500,50 +501,67 @@ namespace SkiaSharp.Tests
 			mask.FreeImage();
 		}
 
-		[Obsolete]
-		[SkippableFact(Skip = "This test takes a long time (~3mins), so ignore this most of the time.")]
-		public static void ImageScalingMultipleThreadsTest()
+		[SkippableTheory]
+		[InlineData(100, 1000)]
+		public static void ImageScalingMultipleThreadsTest(int numThreads, int numIterationsPerThread)
 		{
-			const int numThreads = 100;
-			const int numIterationsPerThread = 1000;
-
 			var referenceFile = Path.Combine(PathToImages, "baboon.jpg");
 
 			var tasks = new List<Task>();
+
+			var complete = false;
+			var exceptions = new ConcurrentBag<Exception>();
 
 			for (int i = 0; i < numThreads; i++)
 			{
 				var task = Task.Run(() =>
 				{
-					for (int j = 0; j < numIterationsPerThread; j++)
+					try
 					{
-						var imageData = ComputeThumbnail(referenceFile);
+						for (int j = 0; j < numIterationsPerThread && exceptions.IsEmpty; j++)
+						{
+							var imageData = ComputeThumbnail(referenceFile);
+							Assert.NotEmpty(imageData);
+						}
+					}
+					catch (Exception ex)
+					{
+						exceptions.Add(ex);
 					}
 				});
 				tasks.Add(task);
 			}
 
+			Task.Run(async () =>
+			{
+				while (!complete && exceptions.IsEmpty)
+				{
+					GC.Collect();
+					await Task.Delay(500);
+				}
+			});
+
 			Task.WaitAll(tasks.ToArray());
 
-			Console.WriteLine($"Test completed for {numThreads} tasks, {numIterationsPerThread} each.");
-		}
+			complete = true;
 
-		[Obsolete]
-		private static byte[] ComputeThumbnail(string fileName)
-		{
-			using (var ms = new MemoryStream())
-			using (var bitmap = SKBitmap.Decode(fileName))
-			using (var scaledBitmap = new SKBitmap(60, 40, bitmap.ColorType, bitmap.AlphaType))
+			if (!exceptions.IsEmpty)
+				throw new AggregateException(exceptions);
+
+			static byte[] ComputeThumbnail(string fileName)
 			{
-				SKBitmap.Resize(scaledBitmap, bitmap, SKBitmapResizeMethod.Hamming);
+				var ms = new MemoryStream();
+				var bitmap = SKBitmap.Decode(fileName);
+				var scaledBitmap = new SKBitmap(60, 40, bitmap.ColorType, bitmap.AlphaType);
 
-				using (var image = SKImage.FromBitmap(scaledBitmap))
-				using (var data = image.Encode(SKEncodedImageFormat.Png, 80))
-				{
-					data.SaveTo(ms);
+				bitmap.ScalePixels(scaledBitmap, SKFilterQuality.High);
 
-					return ms.ToArray();
-				}
+				var image = SKImage.FromBitmap(scaledBitmap);
+				var data = image.Encode(SKEncodedImageFormat.Png, 80);
+
+				data.SaveTo(ms);
+
+				return ms.ToArray();
 			}
 		}
 
@@ -634,7 +652,9 @@ namespace SkiaSharp.Tests
 			}
 
 			using var bitmap = new SKBitmap(20, 40);
-			Assert.Throws<ArgumentException>(() => bitmap.Pixels = sourcePixels);
+			var ex = Assert.Throws<ArgumentException>(() => bitmap.Pixels = sourcePixels);
+			Assert.Equal("value", ex.ParamName);
+			Assert.Contains("800", ex.Message);
 		}
 
 		[SkippableFact]
@@ -657,7 +677,8 @@ namespace SkiaSharp.Tests
 		public void IncorrectPixelLocationThrowsWhenWritingPixel()
 		{
 			using var bitmap = new SKBitmap(20, 40);
-			Assert.Throws<ArgumentOutOfRangeException>(() => bitmap.SetPixel(20, 100, SKColors.Red));
+			var ex = Assert.Throws<ArgumentOutOfRangeException>(() => bitmap.SetPixel(10, 100, SKColors.Red));
+			Assert.Equal("y", ex.ParamName);
 		}
 
 		[SkippableFact]
@@ -674,6 +695,7 @@ namespace SkiaSharp.Tests
 			using var bitmap = new SKBitmap(4, 4);
 			bitmap.Erase(SKColors.Red);
 
+			bitmap.SetPixel(1, 1, SKColors.Red);
 			bitmap.SetPixel(2, 1, SKColors.Green);
 			bitmap.SetPixel(1, 2, SKColors.Blue);
 

@@ -692,12 +692,11 @@ namespace SkiaSharp
 			try {
 				font.TextEncoding = SKTextEncoding.GlyphId;
 
-				using var lang = new SKString ();
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
-					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.GetFont ().Handle, count, x, y, textByteCount, lang.Handle, &b, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.GetFont ().Handle, count, x, y, textByteCount, &b, &runbuffer);
 				} else {
-					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.GetFont ().Handle, count, x, y, textByteCount, lang.Handle, null, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.GetFont ().Handle, count, x, y, textByteCount, null, &runbuffer);
 				}
 
 				return new SKRunBuffer (runbuffer, count, textByteCount);
@@ -735,12 +734,11 @@ namespace SkiaSharp
 			try {
 				font.TextEncoding = SKTextEncoding.GlyphId;
 
-				using var lang = new SKString ();
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.GetFont ().Handle, count, y, textByteCount, lang.Handle, &b, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.GetFont ().Handle, count, y, textByteCount, &b, &runbuffer);
 				} else {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.GetFont ().Handle, count, y, textByteCount, lang.Handle, null, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.GetFont ().Handle, count, y, textByteCount, null, &runbuffer);
 				}
 
 				return new SKHorizontalRunBuffer (runbuffer, count, textByteCount);
@@ -777,12 +775,11 @@ namespace SkiaSharp
 			try {
 				font.TextEncoding = SKTextEncoding.GlyphId;
 
-				using var lang = new SKString ();
 				SKRunBufferInternal runbuffer;
 				if (bounds is SKRect b) {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.GetFont ().Handle, count, textByteCount, lang.Handle, &b, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.GetFont ().Handle, count, textByteCount, &b, &runbuffer);
 				} else {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.GetFont ().Handle, count, textByteCount, lang.Handle, null, &runbuffer);
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.GetFont ().Handle, count, textByteCount, null, &runbuffer);
 				}
 
 				return new SKPositionedRunBuffer (runbuffer, count, textByteCount);
