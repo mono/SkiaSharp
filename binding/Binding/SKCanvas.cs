@@ -696,12 +696,12 @@ namespace SkiaSharp
 		// DrawTextOnPath
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint) =>
-			DrawTextOnPath (text, path, offset, paint, paint.GetFont ());
+			DrawTextOnPath (text, path, offset, paint.GetFont (), paint);
 
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint) =>
-			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), paint, paint.GetFont ());
+			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), paint.GetFont (), paint);
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint, SKFont font)
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKFont font, SKPaint paint)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -713,19 +713,18 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 
 			var glyphs = font.GetGlyphs (text);
-			DrawTextOnPath (glyphs, path, offset, paint, font);
+			DrawTextOnPath (glyphs, path, offset, font, paint);
 		}
 
-		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint, SKFont font) =>
-			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), paint, font);
+		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint) =>
+			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), font, paint);
 
 		public void DrawTextOnPath (
 			ReadOnlySpan<ushort> glyphs,
 			SKPath path,
 			SKPoint offset,
-			SKPaint paint,
-			SKFont font
-			)
+			SKFont font,
+			SKPaint paint)
 		{
 			if (glyphs.Length == 0)
 				return;
@@ -781,13 +780,13 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 
 			var glyphs = paint.GetFont ().GetGlyphs (text, paint.TextEncoding);
-			DrawTextOnPath (glyphs, path, offset, paint, paint.GetFont ());
+			DrawTextOnPath (glyphs, path, offset, paint.GetFont (), paint);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use DrawTextOnPath(string, SKPath, float, float, SKPaint) instead.")]
 		public void DrawTextOnPath (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint) =>
-			DrawTextOnPath (text, path, new SKPoint(hOffset, vOffset), paint);
+			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), paint);
 
 		// Flush
 
