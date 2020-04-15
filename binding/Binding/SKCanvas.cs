@@ -712,8 +712,13 @@ namespace SkiaSharp
 			if (font == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			var glyphs = font.GetGlyphs (text);
-			DrawTextOnPath (glyphs, path, offset, font, paint);
+			var n = font.CountGlyphs (text);
+			if (n > 0) {
+				using (FromArrayPool.Rent<ushort> (n, out var glyphs)) {
+					font.GetGlyphs (text, glyphs);
+					DrawTextOnPath (glyphs, path, offset, font, paint);
+				}
+			}
 		}
 
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint) =>
@@ -729,9 +734,12 @@ namespace SkiaSharp
 			if (glyphs.Length == 0)
 				return;
 
-			var glyphWidths = font.GetGlyphWidths (glyphs);
-			var glyphOffsets = font.GetGlyphPositions (glyphs, offset);
-			DrawTextOnPath (path, glyphs, glyphWidths, glyphOffsets, paint, font);
+			using (FromArrayPool.Rent<float> (glyphs.Length, out var glyphWidths))
+			using (FromArrayPool.Rent<SKPoint> (glyphs.Length, out var glyphOffsets)) {
+				font.GetGlyphWidths (glyphs, glyphWidths, default);
+				font.GetGlyphPositions (glyphs, glyphOffsets, offset);
+				DrawTextOnPath (path, glyphs, glyphWidths, glyphOffsets, paint, font);
+			}
 		}
 
 		public void DrawTextOnPath (
@@ -779,6 +787,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
+			// NOTE: Not using ArrayPool here, since this method is obsolete anyway.
 			var glyphs = paint.GetFont ().GetGlyphs (text, paint.TextEncoding);
 			DrawTextOnPath (glyphs, path, offset, paint.GetFont (), paint);
 		}

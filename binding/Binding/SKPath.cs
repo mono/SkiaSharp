@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -518,8 +519,8 @@ namespace SkiaSharp
 
 			SKPathVerb verb;
 
-			var srcP = new SKPoint[4];
-			var dstP = new SKPoint[4];
+			Span<SKPoint> srcP = stackalloc SKPoint[4];
+			Span<SKPoint> dstP = stackalloc SKPoint[4];
 
 			while ((verb = it.Next (srcP)) != SKPathVerb.Done) {
 				switch (verb) {
@@ -535,15 +536,15 @@ namespace SkiaSharp
 						dst.QuadTo (dstP[0], dstP[1]);
 						break;
 					case SKPathVerb.Quad:
-						MorphPoints (dstP, srcP.AsSpan ().Slice (1, 2), 2, meas, matrix);
+						MorphPoints (dstP, srcP.Slice (1, 2), 2, meas, matrix);
 						dst.QuadTo (dstP[0], dstP[1]);
 						break;
 					case SKPathVerb.Conic:
-						MorphPoints (dstP, srcP.AsSpan ().Slice (1, 2), 2, meas, matrix);
+						MorphPoints (dstP, srcP.Slice (1, 2), 2, meas, matrix);
 						dst.ConicTo (dstP[0], dstP[1], it.ConicWeight ());
 						break;
 					case SKPathVerb.Cubic:
-						MorphPoints (dstP, srcP.AsSpan ().Slice (1, 3), 3, meas, matrix);
+						MorphPoints (dstP, srcP.Slice (1, 3), 3, meas, matrix);
 						dst.CubicTo (dstP[0], dstP[1], dstP[2]);
 						break;
 					case SKPathVerb.Close:
@@ -612,61 +613,62 @@ namespace SkiaSharp
 				return textBlobBuilder.Build ();
 			}
 
-			var glyphTransforms = new SKRotationScaleMatrix[glyphs.Length];
-			var textLength = glyphOffsets[glyphs.Length - 1].X + glyphWidths[glyphs.Length - 1];
+			using (FromArrayPool.Rent<SKRotationScaleMatrix> (
+				glyphs.Length, out var glyphTransforms)) {
+				var textLength = glyphOffsets[glyphs.Length - 1].X + glyphWidths[glyphs.Length - 1];
 
-			using var pathMeasure = new SKPathMeasure (path);
+				using var pathMeasure = new SKPathMeasure (path);
 
-			var contourLength = pathMeasure.Length;
+				var contourLength = pathMeasure.Length;
 
-			var startOffset = glyphOffsets[0].X + (contourLength - textLength) * alignment;
+				var startOffset = glyphOffsets[0].X + (contourLength - textLength) * alignment;
 
-			var firstGlyphIndex = 0;
-			var pathGlyphCount = 0;
+				var firstGlyphIndex = 0;
+				var pathGlyphCount = 0;
 
-			// TODO: Deal with multiple contours?
-			for (var index = 0; index < glyphOffsets.Length; index++) {
-				var glyphOffset = glyphOffsets[index];
-				var halfWidth = glyphWidths[index] * 0.5f;
-				var pathOffset = startOffset + glyphOffset.X + halfWidth;
+				// TODO: Deal with multiple contours?
+				for (var index = 0; index < glyphOffsets.Length; index++) {
+					var glyphOffset = glyphOffsets[index];
+					var halfWidth = glyphWidths[index] * 0.5f;
+					var pathOffset = startOffset + glyphOffset.X + halfWidth;
 
-				// TODO: Clip glyphs on both ends of paths
-				if (pathOffset >= 0 &&
-					 pathOffset < contourLength &&
-					 pathMeasure.GetPositionAndTangent (pathOffset, out var position, out var tangent)) {
-					if (pathGlyphCount == 0)
-						firstGlyphIndex = index;
+					// TODO: Clip glyphs on both ends of paths
+					if (pathOffset >= 0 &&
+					    pathOffset < contourLength &&
+					    pathMeasure.GetPositionAndTangent (pathOffset, out var position, out var tangent)) {
+						if (pathGlyphCount == 0)
+							firstGlyphIndex = index;
 
-					var tx = tangent.X;
-					var ty = tangent.Y;
+						var tx = tangent.X;
+						var ty = tangent.Y;
 
-					var px = position.X;
-					var py = position.Y;
+						var px = position.X;
+						var py = position.Y;
 
-					// Horizontally offset the position using the tangent vector
-					px -= tx * halfWidth;
-					py -= ty * halfWidth;
+						// Horizontally offset the position using the tangent vector
+						px -= tx * halfWidth;
+						py -= ty * halfWidth;
 
-					// Vertically offset the position using the normal vector  (-ty, tx)
-					var dy = glyphOffset.Y;
-					px -= dy * ty;
-					py += dy * tx;
+						// Vertically offset the position using the normal vector  (-ty, tx)
+						var dy = glyphOffset.Y;
+						px -= dy * ty;
+						py += dy * tx;
 
-					glyphTransforms[pathGlyphCount++] = new SKRotationScaleMatrix (tx, ty, px, py);
-					;
+						glyphTransforms[pathGlyphCount++] = new SKRotationScaleMatrix (tx, ty, px, py);
+					}
 				}
-			}
 
-			if (pathGlyphCount == 0) {
+				if (pathGlyphCount == 0) {
+					return textBlobBuilder.Build ();
+				}
+
+				textBlobBuilder.AddRotationScaleRun (
+					glyphs.Slice (firstGlyphIndex, pathGlyphCount),
+					font,
+					glyphTransforms.Slice (0, pathGlyphCount));
+
 				return textBlobBuilder.Build ();
 			}
-
-			textBlobBuilder.AddRotationScaleRun (
-				glyphs.Slice (firstGlyphIndex, pathGlyphCount),
-				font,
-				glyphTransforms.AsSpan ().Slice (0, pathGlyphCount));
-
-			return textBlobBuilder.Build ();
 		}
 
 		public class Iterator : SKObject
@@ -686,11 +688,11 @@ namespace SkiaSharp
 				SkiaApi.sk_path_iter_destroy (Handle);
 
 			[EditorBrowsable (EditorBrowsableState.Never)]
-			[Obsolete ("Use Next(SKPoint[]) instead.")]
-			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates, bool exact) =>
+			[Obsolete ("Use Next(Span<SKPoint>) instead.")]
+			public SKPathVerb Next (Span<SKPoint> points, bool doConsumeDegenerates, bool exact) =>
 				Next (points);
 
-			public unsafe SKPathVerb Next (SKPoint[] points)
+			public SKPathVerb Next (Span<SKPoint> points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
@@ -726,7 +728,7 @@ namespace SkiaSharp
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_rawiter_destroy (Handle);
 
-			public unsafe SKPathVerb Next (SKPoint[] points)
+			public SKPathVerb Next (Span<SKPoint> points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
