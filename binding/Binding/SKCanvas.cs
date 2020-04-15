@@ -755,16 +755,14 @@ namespace SkiaSharp
 			var alignment = (int)paint.TextAlign * 0.5f;
 
 			if (warpGlyphs) {
-				using var warp = SKPath.CreateWarpedTextOnPath (
-					path, font,
+				using var warp = font.GetPathFromTextWarpedOnPath(
 					glyphs, glyphWidths, glyphOffsets,
-					alignment);
+					path, alignment);
 				DrawPath (warp, paint);
 			} else {
-				using var blob = SKPath.CreatePlacedTextOnPath (
-					path, font,
+				using var blob = font.GetBlobFromTextPlacedOnPath(
 					glyphs, glyphWidths, glyphOffsets,
-					alignment);
+					path, alignment);
 				DrawText (blob, 0, 0, paint);
 			}
 		}
