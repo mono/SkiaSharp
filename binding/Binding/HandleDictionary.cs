@@ -50,10 +50,9 @@ namespace SkiaSharp
 				if (GetInstanceNoLocks<TSkiaObject> (handle, out var instance)) {
 					// some object get automatically referenced on the native side,
 					// but managed code just has the same reference
-					if (unrefExisting && instance is ISKReferenceCounted refcnt && instance.OwnsHandle) {
+					if (unrefExisting && instance is ISKReferenceCounted refcnt) {
 #if THROW_OBJECT_EXCEPTIONS
-						var count = refcnt.GetReferenceCount ();
-						if (count <= 1)
+						if (refcnt.GetReferenceCount () == 1)
 							throw new InvalidOperationException (
 								$"About to unreference an object that has no references. " +
 								$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
