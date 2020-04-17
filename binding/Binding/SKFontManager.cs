@@ -20,7 +20,6 @@ namespace SkiaSharp
 			//            are initialized before any access is made to them
 		}
 
-		[Preserve]
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

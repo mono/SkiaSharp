@@ -211,7 +211,6 @@ namespace SkiaSharp.Tests
 			public bool DestroyedNative = false;
 			public bool DestroyedManaged = false;
 
-			[Preserve]
 			public LifecycleObject(IntPtr handle, bool owns)
 				: base(handle, owns)
 			{

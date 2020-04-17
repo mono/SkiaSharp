@@ -8,7 +8,6 @@ namespace SkiaSharp
 	{
 		public const float DefaultRasterDpi = 72.0f;
 
-		[Preserve]
 		internal SKDocument (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

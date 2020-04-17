@@ -7,7 +7,6 @@ namespace SkiaSharp
 {
 	public unsafe class GRGlInterface : SKObject, ISKReferenceCounted
 	{
-		[Preserve]
 		internal GRGlInterface (IntPtr h, bool owns)
 			: base (h, owns)
 		{
@@ -234,7 +233,6 @@ namespace SkiaSharp
 		}
 
 		// this structure is initialized from a native pointer
-		[Preserve (AllMembers = true)]
 		private struct EvasGlApi
 		{
 			// DO NOT change the order, needs to be as specified in struct _Evas_GL_API (/platform/upstream/efl/src/lib/evas/Evas_GL.h)

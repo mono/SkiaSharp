@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	internal unsafe class SKString : SKObject
 	{
-		[Preserve]
 		internal SKString (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

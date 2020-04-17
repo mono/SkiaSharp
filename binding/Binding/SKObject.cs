@@ -42,7 +42,6 @@ namespace SkiaSharp
 			SKTypeface.EnsureStaticInstanceAreInitialized ();
 		}
 
-		[Preserve]
 		internal SKObject (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

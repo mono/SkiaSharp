@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKPathEffect : SKObject, ISKReferenceCounted
 	{
-		[Preserve]
 		internal SKPathEffect (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
