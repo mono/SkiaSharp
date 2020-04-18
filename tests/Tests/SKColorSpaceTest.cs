@@ -52,31 +52,31 @@ namespace SkiaSharp.Tests
 
 			CollectGarbage();
 
-			Assert.Equal(1, colorspaceHandle.GetReferenceCount(false));
+			Assert.Equal(2, colorspaceHandle.GetReferenceCount(false));
 
 			Check();
 
 			CollectGarbage();
 
-			Assert.Equal(1, colorspaceHandle.GetReferenceCount(false));
+			Assert.Equal(2, colorspaceHandle.GetReferenceCount(false));
 
 			GC.KeepAlive(img);
 
 			void Check()
 			{
 				var peek = img.PeekPixels();
-				Assert.Equal(2, colorspaceHandle.GetReferenceCount(false));
+				Assert.Equal(3, colorspaceHandle.GetReferenceCount(false));
 
 				// get the info and color space
 				var info1 = peek.Info;
 				var cs1 = info1.ColorSpace;
-				Assert.Equal(3, colorspaceHandle.GetReferenceCount(false));
+				Assert.Equal(4, colorspaceHandle.GetReferenceCount(false));
 				Assert.NotNull(cs1);
 
 				// get the info and color space again and make sure we are all using the same things
 				var info2 = peek.Info;
 				var cs2 = info2.ColorSpace;
-				Assert.Equal(3, colorspaceHandle.GetReferenceCount(false));
+				Assert.Equal(4, colorspaceHandle.GetReferenceCount(false));
 				Assert.NotNull(cs2);
 
 				Assert.Same(cs1, cs2);
@@ -97,10 +97,35 @@ namespace SkiaSharp.Tests
 				Assert.Equal(1, handle.GetReferenceCount(false));
 
 				var image = SKImage.Create(info);
-				Assert.Equal(2, handle.GetReferenceCount(false));
+				Assert.Equal(3, handle.GetReferenceCount(false));
 
 				return image;
 			}
+		}
+
+		[SkippableFact]
+		public unsafe void ReferencesCountedCorrectly()
+		{
+			var colorspace = SKColorSpace.CreateRgb(
+				new SKColorSpaceTransferFn { A = 0.1f, B = 0.2f, C = 0.3f, D = 0.4f, E = 0.5f, F = 0.6f },
+				SKMatrix44.CreateIdentity());
+			var handle = colorspace.Handle;
+			Assert.Equal(1, handle.GetReferenceCount(false));
+
+			var info = new SKImageInfo(1, 1, SKImageInfo.PlatformColorType, SKAlphaType.Premul, colorspace);
+			Assert.Equal(1, handle.GetReferenceCount(false));
+
+			var pixels = new byte[info.BytesSize];
+			fixed (byte* p = pixels)
+			{
+				var pixmap = new SKPixmap(info, (IntPtr)p);
+				Assert.Equal(2, handle.GetReferenceCount(false));
+
+				pixmap.Dispose();
+				Assert.Equal(1, handle.GetReferenceCount(false));
+			}
+
+			GC.KeepAlive(colorspace);
 		}
 
 		[SkippableFact]
@@ -112,30 +137,30 @@ namespace SkiaSharp.Tests
 
 			CheckBeforeCollection(colorSpaceHandle);
 
+			CheckExistingImage(4, img, colorSpaceHandle);
+
+			CollectGarbage();
+
+			Assert.Null(weakColorspace.Target);
+			Assert.Equal(2, colorSpaceHandle.GetReferenceCount(false));
+
 			CheckExistingImage(3, img, colorSpaceHandle);
 
 			CollectGarbage();
 
 			Assert.Null(weakColorspace.Target);
-			Assert.Equal(1, colorSpaceHandle.GetReferenceCount(false));
-
-			CheckExistingImage(2, img, colorSpaceHandle);
+			Assert.Equal(2, colorSpaceHandle.GetReferenceCount(false));
 
 			CollectGarbage();
 
-			Assert.Null(weakColorspace.Target);
-			Assert.Equal(1, colorSpaceHandle.GetReferenceCount(false));
-
-			CollectGarbage();
-
-			Assert.Equal(1, colorSpaceHandle.GetReferenceCount(false));
+			Assert.Equal(2, colorSpaceHandle.GetReferenceCount(false));
 
 			GC.KeepAlive(img);
 
 			void CheckBeforeCollection(IntPtr csh)
 			{
 				Assert.NotNull(weakColorspace.Target);
-				Assert.Equal(2, csh.GetReferenceCount(false));
+				Assert.Equal(3, csh.GetReferenceCount(false));
 			}
 
 			void CheckExistingImage(int expected, SKImage image, IntPtr csh)
@@ -144,10 +169,10 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expected, csh.GetReferenceCount(false));
 
 				var info = peek.Info;
-				Assert.Equal(3, csh.GetReferenceCount(false));
+				Assert.Equal(4, csh.GetReferenceCount(false));
 
 				var cs = info.ColorSpace;
-				Assert.Equal(3, csh.GetReferenceCount(false));
+				Assert.Equal(4, csh.GetReferenceCount(false));
 				Assert.NotNull(cs);
 			}
 
@@ -170,7 +195,7 @@ namespace SkiaSharp.Tests
 
 				var image = SKImage.Create(info);
 
-				Assert.Equal(2, handle.GetReferenceCount(false));
+				Assert.Equal(3, handle.GetReferenceCount(false));
 
 				return image;
 			}
