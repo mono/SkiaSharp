@@ -26,8 +26,8 @@ variables:
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
-${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-  resources:
+resources:
+  ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     repositories:
       - repository: xamarin-templates
         type: github
