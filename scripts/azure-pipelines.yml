@@ -26,12 +26,13 @@ variables:
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
-resources:
-  repositories:
-    - repository: xamarin-templates
-      type: github
-      name: xamarin/yaml-templates
-      endpoint: xamarin
+${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+  resources:
+    repositories:
+      - repository: xamarin-templates
+        type: github
+        name: xamarin/yaml-templates
+        endpoint: xamarin
 
 stages:
   - stage: prepare
