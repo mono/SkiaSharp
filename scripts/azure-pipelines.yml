@@ -27,12 +27,12 @@ variables:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
 resources:
-  ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-    repositories:
-      - repository: xamarin-templates
-        type: github
-        name: xamarin/yaml-templates
-        endpoint: xamarin
+  repositories:
+      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+        - repository: xamarin-templates
+          type: github
+          name: xamarin/yaml-templates
+          endpoint: xamarin
 
 stages:
   - stage: prepare
