@@ -225,8 +225,8 @@ namespace SkiaSharp.Tests
 			// no need for swizzle
 			Assert.Equal(rgb888, pixmap.GetPixelColor(0, 0));
 
-			// swizzle for some CPU endian-ness
-			if (SKImageInfo.PlatformColorType == SKColorType.Bgra8888)
+			// swizzle for some CPU endianness
+			if (BitConverter.IsLittleEndian)
 				rgb888 = new SKColor(rgb888.Blue, rgb888.Green, rgb888.Red, rgb888.Alpha);
 
 			Assert.Equal(rgb888, pixmap.GetPixelSpan<SKColor>()[0]);
