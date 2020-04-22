@@ -39,7 +39,7 @@ namespace SkiaSharp
 		/// Retrieve or create an instance for the native handle.
 		/// </summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
-		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool refNew, Func<IntPtr, bool, TSkiaObject> objectFactory)
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
@@ -65,8 +65,6 @@ namespace SkiaSharp
 
 				var obj = objectFactory.Invoke (handle, owns);
 
-				if (refNew && obj is ISKReferenceCounted toRef)
-					toRef.SafeRef ();
 				return obj;
 			} finally {
 				instancesLock.ExitUpgradeableReadLock ();
