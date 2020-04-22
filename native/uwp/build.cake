@@ -83,6 +83,7 @@ Task("SkiaSharp.Views.Interop.UWP")
 });
 
 Task("ANGLE")
+    .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
     if (SKIP_ANGLE)
