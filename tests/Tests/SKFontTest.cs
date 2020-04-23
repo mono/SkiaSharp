@@ -48,7 +48,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void BreakTextThrowsForNullPointer()
+		public void CountGlyphsThrowsForNullPointer()
 		{
 			using var font = new SKFont();
 
