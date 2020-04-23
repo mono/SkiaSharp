@@ -2547,6 +2547,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_pixmap_get_row_bytes (sk_pixmap_t cpixmap);
 
+		// void* sk_pixmap_get_writable_addr(const sk_pixmap_t* cpixmap)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* sk_pixmap_get_writable_addr (sk_pixmap_t cpixmap);
+
 		// sk_pixmap_t* sk_pixmap_new()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_pixmap_t sk_pixmap_new ();

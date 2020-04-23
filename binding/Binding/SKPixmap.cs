@@ -95,9 +95,14 @@ namespace SkiaSharp
 
 		public int Height => Info.Height;
 
-		public SKSizeI Size => new SKSizeI (Width, Height);
+		public SKSizeI Size {
+			get {
+				var info = Info;
+				return new SKSizeI (info.Width, info.Height);
+			}
+		}
 
-		public SKRectI Rect => SKRectI.Create (Width, Height);
+		public SKRectI Rect => SKRectI.Create (Size);
 
 		public SKColorType ColorType => Info.ColorType;
 
@@ -119,9 +124,30 @@ namespace SkiaSharp
 		public IntPtr GetPixels (int x, int y) =>
 			(IntPtr)SkiaApi.sk_pixmap_get_pixels_with_xy (Handle, x, y);
 
-		public ReadOnlySpan<byte> GetPixelSpan ()
+		public ReadOnlySpan<byte> GetPixelSpan () =>
+			new ReadOnlySpan<byte> (SkiaApi.sk_pixmap_get_pixels (Handle), BytesSize);
+
+		public unsafe Span<T> GetPixelSpan<T> ()
+			where T : unmanaged
 		{
-			return new ReadOnlySpan<byte> ((void*)GetPixels (), BytesSize);
+			var info = Info;
+			if (info.IsEmpty)
+				return null;
+
+			var bpp = info.BytesPerPixel;
+			if (bpp <= 0)
+				return null;
+
+			// byte is always valid
+			if (typeof (T) == typeof (byte))
+				return new Span<T> (SkiaApi.sk_pixmap_get_writable_addr (Handle), info.BytesSize);
+
+			// other types need to make sure they fit
+			var size = sizeof (T);
+			if (bpp != size)
+				throw new ArgumentException ($"Size of T ({size}) is not the same as the size of each pixel ({bpp}).", nameof (T));
+
+			return new Span<T> (SkiaApi.sk_pixmap_get_writable_addr (Handle), info.Width * info.Height);
 		}
 
 		public SKColor GetPixelColor (int x, int y)
