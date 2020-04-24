@@ -1102,6 +1102,10 @@ namespace SkiaSharp
 
 		#region sk_font.h
 
+		// size_t sk_font_break_text(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, float maxWidth, float* measuredWidth, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_font_break_text (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, Single maxWidth, Single* measuredWidth, sk_paint_t paint);
+
 		// void sk_font_delete(sk_font_t* font)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_delete (sk_font_t font);
@@ -3655,10 +3659,6 @@ namespace SkiaSharp
 		#endregion
 
 		#region sk_compatpaint.h
-
-		// size_t sk_compatpaint_break_text(const sk_compatpaint_t* paint, const void* text, int length, float maxWidth, float* measuredWidth)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_compatpaint_break_text (sk_compatpaint_t paint, void* text, Int32 length, Single maxWidth, Single* measuredWidth);
 
 		// sk_compatpaint_t* sk_compatpaint_clone(const sk_compatpaint_t* paint)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

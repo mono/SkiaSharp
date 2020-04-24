@@ -317,6 +317,16 @@ namespace SkiaSharp
 			return SkiaApi.sk_font_measure_text (Handle, text, (IntPtr)length, encoding, bounds, paint?.Handle ?? IntPtr.Zero);
 		}
 
+		// BreakText
+
+		internal int BreakText (void* text, int length, SKTextEncoding encoding, float maxWidth, float* measuredWidth, SKPaint paint)
+		{
+			if (!ValidateTextArgs (text, length, encoding))
+				return 0;
+
+			return (int)SkiaApi.sk_font_break_text (Handle, text, (IntPtr)length, encoding, maxWidth, measuredWidth, paint?.Handle ?? IntPtr.Zero);
+		}
+
 		// GetGlyphPositions (text)
 
 		public SKPoint[] GetGlyphPositions (string text, SKPoint origin = default) =>

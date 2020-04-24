@@ -319,7 +319,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (buffer));
 
 			fixed (float* mw = &measuredWidth) {
-				return (long)SkiaApi.sk_compatpaint_break_text (Handle, (void*)buffer, length, maxWidth, mw);
+				return GetFont ().BreakText ((void*)buffer, length, TextEncoding, maxWidth, mw, this);
 			}
 		}
 
