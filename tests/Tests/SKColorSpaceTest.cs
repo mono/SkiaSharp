@@ -238,13 +238,8 @@ namespace SkiaSharp.Tests
 			Assert.True(colorspace.ToXyzD50(matrix));
 			AssertMatrix(toXYZ, matrix);
 
-			var toXYZ33 = new[]
-			{
-				0.60974f, 0.20528f, 0.14919f,
-				0.31111f, 0.62567f, 0.06322f,
-				0.01947f, 0.06087f, 0.74457f,
-			};
-			AssertMatrix(toXYZ33, colorspace.ToXyzD50());
+			Assert.True(colorspace.ToColorSpaceXyz(out var xyz));
+			AssertMatrix(toXYZ, xyz.ToMatrix44());
 
 			var fromXYZ = new[]
 			{
@@ -256,7 +251,7 @@ namespace SkiaSharp.Tests
 			AssertMatrix(fromXYZ, colorspace.FromXyzD50());
 		}
 
-		[SkippableFact]
+		[SkippableFact(Skip = "CMYK is not supported.")]
 		public void USWebCoatedSWOPIsCMYK()
 		{
 			var icc = Path.Combine(PathToImages, "USWebCoatedSWOP.icc");

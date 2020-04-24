@@ -247,6 +247,7 @@ namespace SkiaSharp
 
 			if (ToColorSpaceXyz (out var xyz) && xyz.ToMatrix44 () is SKMatrix44 m) {
 				toXyzD50.SetColumnMajor (m.ToColumnMajor ());
+				return true;
 			}
 			return false;
 		}
