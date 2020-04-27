@@ -18,6 +18,9 @@ namespace SkiaSharp.Views.UWP
 
 		private SKSizeI lastSize;
 
+		private SKPaintGLSurfaceEventArgs lastPaintEventArgs;
+		private bool reusePaintEventArgsInstance = true;
+
 		public SKSwapChainPanel()
 		{
 		}
@@ -80,13 +83,17 @@ namespace SkiaSharp.Views.UWP
 			{
 				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
 				canvas = surface.Canvas;
+
+				// reset the args
+				lastPaintEventArgs = null;
 			}
 
-			using (new SKAutoCanvasRestore(canvas, true))
-			{
-				// start drawing
-				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo));
-			}
+			// start drawing
+			if (!reusePaintEventArgsInstance || lastPaintEventArgs == null)
+				lastPaintEventArgs = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
+
+			OnPaintSurface(lastPaintEventArgs);
+			canvas.RestoreToCount(0);
 
 			// update the control
 			canvas.Flush();
@@ -97,6 +104,7 @@ namespace SkiaSharp.Views.UWP
 		{
 			base.OnDestroyingContext();
 
+			lastPaintEventArgs = null;
 			lastSize = default;
 
 			canvas?.Dispose();
