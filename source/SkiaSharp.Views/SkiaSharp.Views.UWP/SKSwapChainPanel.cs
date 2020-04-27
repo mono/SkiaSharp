@@ -88,12 +88,15 @@ namespace SkiaSharp.Views.UWP
 				lastPaintEventArgs = null;
 			}
 
-			// start drawing
+			// create or recreate the event args
 			if (!reusePaintEventArgsInstance || lastPaintEventArgs == null)
 				lastPaintEventArgs = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
 
+			// reset the draw matrix just in case
+			canvas.RestoreToCount(1);
+
+			// start drawing
 			OnPaintSurface(lastPaintEventArgs);
-			canvas.RestoreToCount(0);
 
 			// update the control
 			canvas.Flush();
