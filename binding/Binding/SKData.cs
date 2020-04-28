@@ -238,18 +238,13 @@ namespace SkiaSharp
 
 			var ptr = Data;
 			var total = Size;
-			var pool = ArrayPool<byte>.Shared;
-			var buffer = pool.Rent (CopyBufferSize);
-			try {
-				for (var left = total; left > 0;) {
-					var copyCount = (int)Math.Min (CopyBufferSize, left);
-					Marshal.Copy (ptr, buffer, 0, copyCount);
-					left -= copyCount;
-					ptr += copyCount;
-					target.Write (buffer, 0, copyCount);
-				}
-			} finally {
-				pool.Return (buffer);
+			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
+			for (var left = total; left > 0;) {
+				var copyCount = (int)Math.Min (CopyBufferSize, left);
+				Marshal.Copy (ptr, buffer, 0, copyCount);
+				left -= copyCount;
+				ptr += copyCount;
+				target.Write (buffer, 0, copyCount);
 			}
 			GC.KeepAlive (this);
 		}

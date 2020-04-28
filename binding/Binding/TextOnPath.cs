@@ -76,12 +76,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Get a geometric path from text on a path, also warping (aka bending) the glyph geometries.
 		/// </summary>
-		public static SKPath GetPathFromTextWarpedOnPath(
-			this SKFont font,
-			ReadOnlySpan<ushort> glyphs,
-			ReadOnlySpan<float> glyphWidths,
-			ReadOnlySpan<SKPoint> glyphOffsets,
-			SKPath path, float alignment)
+		public static SKPath GetPathFromTextWarpedOnPath (this SKFont font, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<float> glyphWidths, ReadOnlySpan<SKPoint> glyphOffsets, SKPath path, float alignment)
 		{
 			var warpedPath = new SKPath ();
 
@@ -130,66 +125,63 @@ namespace SkiaSharp
 		{
 			using var textBlobBuilder = new SKTextBlobBuilder ();
 
-			if (glyphs.Length == 0) {
+			if (glyphs.Length == 0)
 				return textBlobBuilder.Build ();
+
+			var glyphTransforms = Utils.RentArray<SKRotationScaleMatrix> (glyphs.Length);
+
+			var textLength = glyphOffsets[glyphs.Length - 1].X + glyphWidths[glyphs.Length - 1];
+
+			using var pathMeasure = new SKPathMeasure (path);
+
+			var contourLength = pathMeasure.Length;
+
+			var startOffset = glyphOffsets[0].X + (contourLength - textLength) * alignment;
+
+			var firstGlyphIndex = 0;
+			var pathGlyphCount = 0;
+
+			// TODO: Deal with multiple contours?
+			for (var index = 0; index < glyphOffsets.Length; index++) {
+				var glyphOffset = glyphOffsets[index];
+				var halfWidth = glyphWidths[index] * 0.5f;
+				var pathOffset = startOffset + glyphOffset.X + halfWidth;
+
+				// TODO: Clip glyphs on both ends of paths
+				if (pathOffset >= 0 &&
+					pathOffset < contourLength &&
+					pathMeasure.GetPositionAndTangent (pathOffset, out var position, out var tangent)) {
+					if (pathGlyphCount == 0)
+						firstGlyphIndex = index;
+
+					var tx = tangent.X;
+					var ty = tangent.Y;
+
+					var px = position.X;
+					var py = position.Y;
+
+					// Horizontally offset the position using the tangent vector
+					px -= tx * halfWidth;
+					py -= ty * halfWidth;
+
+					// Vertically offset the position using the normal vector  (-ty, tx)
+					var dy = glyphOffset.Y;
+					px -= dy * ty;
+					py += dy * tx;
+
+					glyphTransforms.Span[pathGlyphCount++] = new SKRotationScaleMatrix (tx, ty, px, py);
+				}
 			}
 
-			using (FromArrayPool.Rent<SKRotationScaleMatrix> (
-				glyphs.Length, out var glyphTransforms)) {
-				var textLength = glyphOffsets[glyphs.Length - 1].X + glyphWidths[glyphs.Length - 1];
-
-				using var pathMeasure = new SKPathMeasure (path);
-
-				var contourLength = pathMeasure.Length;
-
-				var startOffset = glyphOffsets[0].X + (contourLength - textLength) * alignment;
-
-				var firstGlyphIndex = 0;
-				var pathGlyphCount = 0;
-
-				// TODO: Deal with multiple contours?
-				for (var index = 0; index < glyphOffsets.Length; index++) {
-					var glyphOffset = glyphOffsets[index];
-					var halfWidth = glyphWidths[index] * 0.5f;
-					var pathOffset = startOffset + glyphOffset.X + halfWidth;
-
-					// TODO: Clip glyphs on both ends of paths
-					if (pathOffset >= 0 &&
-						pathOffset < contourLength &&
-						pathMeasure.GetPositionAndTangent (pathOffset, out var position, out var tangent)) {
-						if (pathGlyphCount == 0)
-							firstGlyphIndex = index;
-
-						var tx = tangent.X;
-						var ty = tangent.Y;
-
-						var px = position.X;
-						var py = position.Y;
-
-						// Horizontally offset the position using the tangent vector
-						px -= tx * halfWidth;
-						py -= ty * halfWidth;
-
-						// Vertically offset the position using the normal vector  (-ty, tx)
-						var dy = glyphOffset.Y;
-						px -= dy * ty;
-						py += dy * tx;
-
-						glyphTransforms[pathGlyphCount++] = new SKRotationScaleMatrix (tx, ty, px, py);
-					}
-				}
-
-				if (pathGlyphCount == 0) {
-					return textBlobBuilder.Build ();
-				}
-
-				textBlobBuilder.AddRotationScaleRun (
-					glyphs.Slice (firstGlyphIndex, pathGlyphCount),
-					font,
-					glyphTransforms.Slice (0, pathGlyphCount));
-
+			if (pathGlyphCount == 0)
 				return textBlobBuilder.Build ();
-			}
+
+			textBlobBuilder.AddRotationScaleRun (
+				glyphs.Slice (firstGlyphIndex, pathGlyphCount),
+				font,
+				glyphTransforms.Span.Slice (0, pathGlyphCount));
+
+			return textBlobBuilder.Build ();
 		}
 	}
 }

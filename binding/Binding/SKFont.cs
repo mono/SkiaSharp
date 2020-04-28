@@ -392,15 +392,9 @@ namespace SkiaSharp
 			if (n <= 0)
 				return;
 
-			var pool = ArrayPool<ushort>.Shared;
-			var glyphs = pool.Rent (n);
-			try {
-				var span = glyphs.AsSpan (0, n);
-				GetGlyphs (text, length, encoding, span);
-				GetGlyphPositions (span, offsets, origin);
-			} finally {
-				pool.Return (glyphs);
-			}
+			var glyphs = Utils.RentArray<ushort> (n);
+			GetGlyphs (text, length, encoding, glyphs);
+			GetGlyphPositions (glyphs, offsets, origin);
 		}
 
 		// GetGlyphPositions (glyphs)
@@ -488,15 +482,9 @@ namespace SkiaSharp
 			if (n <= 0)
 				return;
 
-			var pool = ArrayPool<ushort>.Shared;
-			var glyphs = pool.Rent (n);
-			try {
-				var span = glyphs.AsSpan (0, n);
-				GetGlyphs (text, length, encoding, span);
-				GetGlyphOffsets (span, offsets, origin);
-			} finally {
-				pool.Return (glyphs);
-			}
+			var glyphs = Utils.RentArray<ushort> (n);
+			GetGlyphs (text, length, encoding, glyphs);
+			GetGlyphOffsets (glyphs, offsets, origin);
 		}
 
 		// GetGlyphOffsets (glyphs)
@@ -629,15 +617,9 @@ namespace SkiaSharp
 			if (bounds.Length != 0 && bounds.Length != n)
 				throw new ArgumentException ("The length of bounds must be equal to the length of widths or empty.", nameof (bounds));
 
-			var pool = ArrayPool<ushort>.Shared;
-			var glyphs = pool.Rent (n);
-			try {
-				var span = glyphs.AsSpan (0, n);
-				GetGlyphs (text, length, encoding, span);
-				GetGlyphWidths (span, widths, bounds, paint);
-			} finally {
-				pool.Return (glyphs);
-			}
+			var glyphs = Utils.RentArray<ushort> (n);
+			GetGlyphs (text, length, encoding, glyphs);
+			GetGlyphWidths (glyphs, widths, bounds, paint);
 		}
 
 		// GetGlyphWidths (glyphs)
