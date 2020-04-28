@@ -319,7 +319,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (buffer));
 
 			fixed (float* mw = &measuredWidth) {
-				return (long)SkiaApi.sk_compatpaint_break_text (Handle, (void*)buffer, length, maxWidth, mw);
+				return GetFont ().BreakText ((void*)buffer, length, TextEncoding, maxWidth, mw, this);
 			}
 		}
 
@@ -594,6 +594,9 @@ namespace SkiaSharp
 
 		public SKFont ToFont () =>
 			SKFont.GetObject (SkiaApi.sk_compatpaint_make_font (Handle));
+
+		internal SKFont GetFont () =>
+			OwnedBy (font ??= SKFont.GetObject (SkiaApi.sk_compatpaint_get_font (Handle), false), this);
 
 		internal SKFont GetFont () =>
 			OwnedBy (font ??= SKFont.GetObject (SkiaApi.sk_compatpaint_get_font (Handle), false), this);

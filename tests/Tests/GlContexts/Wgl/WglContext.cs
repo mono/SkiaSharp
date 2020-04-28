@@ -7,6 +7,8 @@ namespace SkiaSharp.Tests
 {
 	internal class WglContext : GlContext
 	{
+		private static readonly object fLock = new object();
+
 		private static ushort gWC;
 
 		private static IntPtr fWindow;
@@ -82,7 +84,11 @@ namespace SkiaSharp.Tests
 			};
 			var piFormats = new int[1];
 			uint nFormats;
-			Wgl.wglChoosePixelFormatARB(fDeviceContext, iAttrs, null, (uint)piFormats.Length, piFormats, out nFormats);
+			lock (fLock)
+			{
+				// HACK: This call seems to cause deadlocks on some systems.
+				Wgl.wglChoosePixelFormatARB(fDeviceContext, iAttrs, null, (uint)piFormats.Length, piFormats, out nFormats);
+			}
 			if (nFormats == 0)
 			{
 				Destroy();

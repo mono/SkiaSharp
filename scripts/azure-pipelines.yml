@@ -1,9 +1,13 @@
 trigger:
   - master
+  - develop
+  - patch/*
   - refs/tags/*
 
 pr:
   - master
+  - develop
+  - patch/*
 
 variables:
   SKIASHARP_VERSION: 2.80.0
@@ -25,7 +29,10 @@ variables:
   VM_IMAGE_MAC: Hosted macOS
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-  THROW_ON_TEST_FAILURE: false
+  THROW_ON_TEST_FAILURE: true
+
+  # TODO: TEMPORARY
+  NUGET_DIFF_PRERELEASE: true
 
 resources:
   repositories:
@@ -353,6 +360,7 @@ stages:
           displayName: API Diff
           vmImage: Hosted VS2017
           target: docs-api-diff
+          additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
           shouldPublish: false
           requiredArtifacts:
             - package_windows

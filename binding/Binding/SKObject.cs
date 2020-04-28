@@ -65,13 +65,13 @@ namespace SkiaSharp
 
 		protected override void DisposeManaged ()
 		{
-			if (ownedObjects is ConcurrentDictionary<IntPtr, SKObject> dic) {
-				foreach (var child in dic) {
-					child.Value.DisposeInternal ();
+			if (ownedObjects != null) {
+				foreach (var child in ownedObjects) {
+					child.Value?.DisposeInternal ();
 				}
-				dic.Clear ();
+				ownedObjects.Clear ();
 			}
-			KeepAliveObjects?.Clear ();
+			keepAliveObjects?.Clear ();
 		}
 
 		protected override void DisposeNative ()
@@ -86,7 +86,7 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero)
 				return null;
 
-			return HandleDictionary.GetOrAddObject (handle, true, true, false, objectFactory);
+			return HandleDictionary.GetOrAddObject (handle, true, true, objectFactory);
 		}
 
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, Func<IntPtr, bool, TSkiaObject> objectFactory)
@@ -95,16 +95,16 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero)
 				return null;
 
-			return HandleDictionary.GetOrAddObject (handle, owns, true, false, objectFactory);
+			return HandleDictionary.GetOrAddObject (handle, owns, true, objectFactory);
 		}
 
-		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool refNew, Func<IntPtr, bool, TSkiaObject> objectFactory)
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, refNew, objectFactory);
+			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, objectFactory);
 		}
 
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)

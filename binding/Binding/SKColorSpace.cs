@@ -247,6 +247,7 @@ namespace SkiaSharp
 
 			if (ToColorSpaceXyz (out var xyz) && xyz.ToMatrix44 () is SKMatrix44 m) {
 				toXyzD50.SetColumnMajor (m.ToColumnMajor ());
+				return true;
 			}
 			return false;
 		}
@@ -259,7 +260,7 @@ namespace SkiaSharp
 		//
 
 		internal static SKColorSpace GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			GetOrAddObject (handle, owns, unrefExisting, false, (h, o) => new SKColorSpace (h, o));
+			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{

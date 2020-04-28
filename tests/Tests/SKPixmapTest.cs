@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -6,6 +7,12 @@ namespace SkiaSharp.Tests
 {
 	public class SKPixmapTest : SKTest
 	{
+		public static IEnumerable<object[]> GetAllColorTypes()
+		{
+			foreach (SKColorType ct in Enum.GetValues(typeof(SKColorType)))
+				yield return new object[] { ct };
+		}
+
 		[SkippableFact]
 		public void CanScalePixels()
 		{
@@ -48,7 +55,7 @@ namespace SkiaSharp.Tests
 
 			Assert.True(result);
 		}
-		
+
 		[SkippableFact]
 		public void WithMethodsDoNotModifySource()
 		{
@@ -175,6 +182,91 @@ namespace SkiaSharp.Tests
 			var codec = SKCodec.Create(data);
 
 			Assert.Equal(SKEncodedImageFormat.Webp, codec.EncodedFormat);
+		}
+
+		[SkippableFact]
+		public void MismatchingColorTypesThrow()
+		{
+			var info = new SKImageInfo(1, 1, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			Assert.Throws<ArgumentException>(() => pixmap.GetPixelSpan<ushort>());
+		}
+
+		[SkippableTheory]
+		[MemberData(nameof(GetAllColorTypes))]
+		public void ByteWorksForEverything(SKColorType colortype)
+		{
+			var info = new SKImageInfo(1, 1, colortype);
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			Assert.Equal(info.BytesSize, pixmap?.GetPixelSpan<byte>().Length ?? 0);
+		}
+
+		[SkippableTheory]
+		[InlineData(0x00000000)]
+		[InlineData(0xFF000000)]
+		[InlineData(0xFFFF0000)]
+		[InlineData(0xFF00FF00)]
+		[InlineData(0xFF0000FF)]
+		[InlineData(0xFFFFFFFF)]
+		public void GetPixelSpanReadsValuesCorrectly(uint color)
+		{
+			var rgb888 = (SKColor)color;
+
+			var info = new SKImageInfo(1, 1, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			pixmap.Erase(rgb888);
+
+			// no need for swizzle
+			Assert.Equal(rgb888, pixmap.GetPixelColor(0, 0));
+
+			// swizzle for some CPU endianness
+			if (BitConverter.IsLittleEndian)
+				rgb888 = new SKColor(rgb888.Blue, rgb888.Green, rgb888.Red, rgb888.Alpha);
+
+			Assert.Equal(rgb888, pixmap.GetPixelSpan<SKColor>()[0]);
+			Assert.Equal(rgb888, pixmap.GetPixelSpan<uint>()[0]);
+		}
+
+		[SkippableTheory]
+		[InlineData(0x00000000, 0x0000)]
+		[InlineData(0xFF000000, 0x0000)]
+		[InlineData(0xFFFF0000, 0xF800)]
+		[InlineData(0xFF00FF00, 0x07E0)]
+		[InlineData(0xFF0000FF, 0x001F)]
+		[InlineData(0xFFFFFFFF, 0xFFFF)]
+		public void GetPixelSpanReads565Correctly(uint rgb888, ushort rgb565)
+		{
+			var info = new SKImageInfo(1, 1, SKColorType.Rgb565);
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			pixmap.Erase(rgb888);
+
+			Assert.Equal(rgb565, pixmap.GetPixelSpan<ushort>()[0]);
+		}
+
+		[SkippableTheory]
+		[InlineData(0x00000000, 0)]
+		[InlineData(0xFF000000, 0)]
+		[InlineData(0xFFFF0000, 53)]
+		[InlineData(0xFF00FF00, 182)]
+		[InlineData(0xFF0000FF, 18)]
+		[InlineData(0xFFFFFFFF, 255)]
+		public void GetPixelSpanReadsGray8Correctly(uint rgb888, byte gray8)
+		{
+			var info = new SKImageInfo(1, 1, SKColorType.Gray8);
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			pixmap.Erase(rgb888);
+
+			Assert.Equal(gray8, pixmap.GetPixelSpan<byte>()[0]);
 		}
 	}
 }
