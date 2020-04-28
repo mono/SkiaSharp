@@ -102,10 +102,10 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]
-		private static void SKGlyphPathDelegateProxyImplementation (IntPtr path, SKMatrix* matrix, void* context)
+		private static void SKGlyphPathDelegateProxyImplementation (IntPtr pathOrNull, SKMatrix* matrix, void* context)
 		{
 			var del = Get<SKGlyphPathDelegate> ((IntPtr)context, out _);
-			var path = SKPath.GetObject (path, false);
+			var path = SKPath.GetObject (pathOrNull, false);
 			del.Invoke (path, *matrix, null);
 		}
 	}
