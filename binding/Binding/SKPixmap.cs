@@ -210,7 +210,9 @@ namespace SkiaSharp
 
 		public bool ReadPixels (SKPixmap pixmap)
 		{
-			return ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, 0, 0, SKTransferFunctionBehavior.Respect);
+			var result = ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, 0, 0, SKTransferFunctionBehavior.Respect);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		// Encode

@@ -569,7 +569,9 @@ namespace SkiaSharp
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SKImageCachingHint cachingHint)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
-			return SkiaApi.sk_image_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY, cachingHint);
+			var result = SkiaApi.sk_image_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY, cachingHint);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool ReadPixels (SKPixmap pixmap) =>
@@ -583,7 +585,9 @@ namespace SkiaSharp
 			if (pixmap == null)
 				throw new ArgumentNullException (nameof (pixmap));
 
-			return SkiaApi.sk_image_read_pixels_into_pixmap (Handle, pixmap.Handle, srcX, srcY, cachingHint);
+			var result = SkiaApi.sk_image_read_pixels_into_pixmap (Handle, pixmap.Handle, srcX, srcY, cachingHint);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		// ScalePixels
