@@ -71,7 +71,9 @@ namespace SkiaSharp
 				}
 				dic.Clear ();
 			}
-			KeepAliveObjects?.Clear ();
+			if (keepAliveObjects is ConcurrentDictionary<IntPtr, SKObject> ka) {
+				ka.Clear ();
+			}
 		}
 
 		protected override void DisposeNative ()
