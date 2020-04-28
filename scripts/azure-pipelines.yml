@@ -10,7 +10,7 @@ pr:
   - patch/*
 
 variables:
-  SKIASHARP_VERSION: 1.68.2
+  SKIASHARP_VERSION: 2.80.0
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
@@ -20,15 +20,19 @@ variables:
   PREVIEW_LABEL: 'preview'
   TIZEN_LINUX_PACKAGES: libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts
-  MONO_VERSION_MACOS: 6_4_0
-  MONO_VERSION_LINUX: stable-xenial/snapshots/6.4.0
-  XCODE_VERSION: 11.3
+  MONO_VERSION_MACOS: 6_6_1
+  MONO_VERSION_LINUX: stable-xenial/snapshots/6.6.0
+  XCODE_VERSION: 11.3.1
   DOTNET_VERSION: 3.0.x
   CONFIGURATION: 'Release'
   VM_IMAGE_WINDOWS: Hosted Windows 2019 with VS2019
   VM_IMAGE_MAC: Hosted macOS
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  THROW_ON_TEST_FAILURE: true
+
+  # TODO: TEMPORARY
+  NUGET_DIFF_PRERELEASE: true
 
 resources:
   repositories:
@@ -119,7 +123,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
-          condition: false # TODO: NOT YET SUPPORTED
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
           name: native_uwp_x86_windows
@@ -148,7 +151,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
           additionalArgs: --buildarch=arm64 --skipAngle=true
-          condition: false # TODO: NOT YET SUPPORTED
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
         parameters:
           name: native_win32_x86_windows
@@ -279,11 +281,11 @@ stages:
             - native_uwp_angle_x86_windows
             - native_uwp_angle_x64_windows
             - native_uwp_angle_arm_windows
-            # - native_uwp_angle_arm64_windows
+            - native_uwp_angle_arm64_windows
             - native_uwp_x86_windows
             - native_uwp_x64_windows
             - native_uwp_arm_windows
-            # - native_uwp_arm64_windows
+            - native_uwp_arm64_windows
             - native_win32_x86_windows
             - native_win32_x64_windows
             - native_win32_x64_nanoserver_windows
@@ -292,6 +294,7 @@ stages:
           name: managed_macos
           displayName: Build Managed (macOS)
           vmImage: $(VM_IMAGE_MAC)
+          retryCount: 2
           target: libs
           additionalArgs: --exclusive
           requiredArtifacts:
@@ -357,6 +360,7 @@ stages:
           displayName: API Diff
           vmImage: Hosted VS2017
           target: docs-api-diff
+          additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
           shouldPublish: false
           requiredArtifacts:
             - package_windows
@@ -396,7 +400,7 @@ stages:
           displayName: Tests (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests
-          additionalArgs: --skipExternals="all"
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
           shouldPublish: false
           requiredArtifacts:
             - native_win32_x86_windows
@@ -423,7 +427,7 @@ stages:
           displayName: Tests (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: tests
-          additionalArgs: --skipExternals="all"
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
           shouldPublish: false
           requiredArtifacts:
             - native_macos_macos
@@ -449,7 +453,7 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: tests
-          additionalArgs: --skipExternals="all"
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
           shouldPublish: false
           requiredArtifacts:
             - native_linux_linux

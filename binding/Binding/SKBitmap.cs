@@ -69,6 +69,11 @@ namespace SkiaSharp
 		{
 		}
 
+		public SKBitmap (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorspace)
+			: this (new SKImageInfo (width, height, colorType, alphaType, colorspace))
+		{
+		}
+
 		public SKBitmap (SKImageInfo info)
 			: this (info, info.RowBytes)
 		{
@@ -157,13 +162,26 @@ namespace SkiaSharp
 
 		// GetAddr*
 
-		public byte GetAddr8 (int x, int y) => SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public byte GetAddr8 (int x, int y) => *SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
 
-		public UInt16 GetAddr16 (int x, int y) => SkiaApi.sk_bitmap_get_addr_16 (Handle, x, y);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public UInt16 GetAddr16 (int x, int y) => *SkiaApi.sk_bitmap_get_addr_16 (Handle, x, y);
 
-		public UInt32 GetAddr32 (int x, int y) => SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public UInt32 GetAddr32 (int x, int y) => *SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
 
-		public IntPtr GetAddr (int x, int y) => (IntPtr)SkiaApi.sk_bitmap_get_addr (Handle, x, y);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetAddress instead.")]
+		public IntPtr GetAddr (int x, int y) => GetAddress (x, y);
+
+		// GetAddress
+
+		public IntPtr GetAddress (int x, int y) =>
+			(IntPtr)SkiaApi.sk_bitmap_get_addr (Handle, x, y);
 
 		// Pixels (color)
 
@@ -181,7 +199,14 @@ namespace SkiaSharp
 
 		public void SetPixel (int x, int y, SKColor color)
 		{
-			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, (uint)color);
+			var info = Info;
+			if (x < 0 || x >= info.Width)
+				throw new ArgumentOutOfRangeException (nameof (x));
+			if (y < 0 || y >= info.Height)
+				throw new ArgumentOutOfRangeException (nameof (y));
+
+			using var canvas = new SKCanvas (this);
+			canvas.DrawPoint (x, y, color);
 		}
 
 		// Copy
@@ -394,8 +419,26 @@ namespace SkiaSharp
 				return pixels;
 			}
 			set {
+				if (value == null)
+					throw new ArgumentNullException (nameof (value));
+
+				var info = Info;
+				if (info.Width * info.Height != value.Length)
+					throw new ArgumentException ($"The number of pixels must equal Width x Height, or {info.Width * info.Height}.", nameof (value));
+
 				fixed (SKColor* v = value) {
-					SkiaApi.sk_bitmap_set_pixel_colors (Handle, (uint*)v);
+					var tempInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+					using var temp = new SKBitmap ();
+					temp.InstallPixels (tempInfo, (IntPtr)v);
+
+					using var shader = temp.ToShader ();
+
+					using var canvas = new SKCanvas (this);
+					using var paint = new SKPaint {
+						Shader = shader,
+						BlendMode = SKBlendMode.Src
+					};
+					canvas.DrawPaint (paint);
 				}
 			}
 		}
@@ -831,9 +874,9 @@ namespace SkiaSharp
 			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
-			SKShader.CreateBitmap (this, tmx, tmy);
+			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, null));
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
-			SKShader.CreateBitmap (this, tmx, tmy, localMatrix);
+			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &localMatrix));
 	}
 }

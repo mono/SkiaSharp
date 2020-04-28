@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -551,20 +552,41 @@ namespace SkiaSharp
 
 		public void DrawText (string text, float x, float y, SKPaint paint)
 		{
+			DrawText (text, x, y, paint.GetFont (), paint);
+		}
+
+		public void DrawText (string text, float x, float y, SKFont font, SKPaint paint)
+		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			var bytes = StringUtilities.GetEncodedText (text, paint.TextEncoding);
-			DrawText (bytes, x, y, paint);
+			if (paint.TextAlign != SKTextAlign.Left) {
+				var width = font.MeasureText (text);
+				if (paint.TextAlign == SKTextAlign.Center)
+					width *= 0.5f;
+				x -= width;
+			}
+
+			using var blob = SKTextBlob.Create (text, font);
+			if (blob == null)
+				return;
+
+			DrawText (blob, x, y, paint);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawText(SKTextBlob, float, float, SKPaint) instead.")]
 		public void DrawText (byte[] text, SKPoint p, SKPaint paint)
 		{
 			DrawText (text, p.X, p.Y, paint);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawText(SKTextBlob, float, float, SKPaint) instead.")]
 		public void DrawText (byte[] text, float x, float y, SKPaint paint)
 		{
 			if (text == null)
@@ -572,16 +594,29 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			fixed (byte* t = text) {
-				SkiaApi.sk_canvas_draw_text (Handle, t, (IntPtr)text.Length, x, y, paint.Handle);
+			if (paint.TextAlign != SKTextAlign.Left) {
+				var width = paint.MeasureText (text);
+				if (paint.TextAlign == SKTextAlign.Center)
+					width *= 0.5f;
+				x -= width;
 			}
+
+			using var blob = SKTextBlob.Create (text, paint.TextEncoding, paint.GetFont ());
+			if (blob == null)
+				return;
+
+			DrawText (blob, x, y, paint);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawText(SKTextBlob, float, float, SKPaint) instead.")]
 		public void DrawText (IntPtr buffer, int length, SKPoint p, SKPaint paint)
 		{
 			DrawText (buffer, length, p.X, p.Y, paint);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawText(SKTextBlob, float, float, SKPaint) instead.")]
 		public void DrawText (IntPtr buffer, int length, float x, float y, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero && length != 0)
@@ -589,11 +624,24 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			SkiaApi.sk_canvas_draw_text (Handle, (void*)buffer, (IntPtr)length, x, y, paint.Handle);
+			if (paint.TextAlign != SKTextAlign.Left) {
+				var width = paint.MeasureText (buffer, length);
+				if (paint.TextAlign == SKTextAlign.Center)
+					width *= 0.5f;
+				x -= width;
+			}
+
+			using var blob = SKTextBlob.Create (buffer, length, paint.TextEncoding, paint.GetFont ());
+			if (blob == null)
+				return;
+
+			DrawText (blob, x, y, paint);
 		}
 
 		// DrawPositionedText
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawText(SKTextBlob, float, float, SKPaint) instead.")]
 		public void DrawPositionedText (string text, SKPoint[] points, SKPaint paint)
 		{
 			if (text == null)
@@ -603,10 +651,15 @@ namespace SkiaSharp
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
 
-			var bytes = StringUtilities.GetEncodedText (text, paint.TextEncoding);
-			DrawPositionedText (bytes, points, paint);
+			using var blob = SKTextBlob.CreatePositioned (text, paint.GetFont (), points);
+			if (blob == null)
+				return;
+
+			DrawText (blob, 0, 0, paint);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawText(SKTextBlob, float, float, SKPaint) instead.")]
 		public void DrawPositionedText (byte[] text, SKPoint[] points, SKPaint paint)
 		{
 			if (text == null)
@@ -616,12 +669,15 @@ namespace SkiaSharp
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
 
-			fixed (byte* t = text)
-			fixed (SKPoint* p = points) {
-				SkiaApi.sk_canvas_draw_pos_text (Handle, t, (IntPtr)text.Length, p, paint.Handle);
-			}
+			using var blob = SKTextBlob.CreatePositioned (text, paint.TextEncoding, paint.GetFont (), points);
+			if (blob == null)
+				return;
+
+			DrawText (blob, 0, 0, paint);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawText(SKTextBlob, float, float, SKPaint) instead.")]
 		public void DrawPositionedText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero && length != 0)
@@ -631,9 +687,11 @@ namespace SkiaSharp
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
 
-			fixed (SKPoint* p = points) {
-				SkiaApi.sk_canvas_draw_pos_text (Handle, (void*)buffer, (IntPtr)length, p, paint.Handle);
-			}
+			using var blob = SKTextBlob.CreatePositioned (buffer, length, paint.TextEncoding, paint.GetFont (), points);
+			if (blob == null)
+				return;
+
+			DrawText (blob, 0, 0, paint);
 		}
 
 		// DrawTextOnPath
@@ -656,11 +714,15 @@ namespace SkiaSharp
 			DrawTextOnPath (bytes, path, hOffset, vOffset, paint);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawTextOnPath(SKTextBlob, SKPath, float, float, SKPaint) instead.")]
 		public void DrawTextOnPath (byte[] text, SKPath path, SKPoint offset, SKPaint paint)
 		{
 			DrawTextOnPath (text, path, offset.X, offset.Y, paint);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawTextOnPath(SKTextBlob, SKPath, float, float, SKPaint) instead.")]
 		public void DrawTextOnPath (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			if (text == null)
@@ -671,15 +733,19 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 
 			fixed (byte* t = text) {
-				SkiaApi.sk_canvas_draw_text_on_path (Handle, t, (IntPtr)text.Length, path.Handle, hOffset, vOffset, paint.Handle);
+				DrawTextOnPath ((IntPtr)t, text.Length, path, hOffset, vOffset, paint);
 			}
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawTextOnPath(SKTextBlob, SKPath, float, float, SKPaint) instead.")]
 		public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, SKPoint offset, SKPaint paint)
 		{
 			DrawTextOnPath (buffer, length, path, offset.X, offset.Y, paint);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawTextOnPath(SKTextBlob, SKPath, float, float, SKPaint) instead.")]
 		public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero && length != 0)
@@ -689,7 +755,9 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			SkiaApi.sk_canvas_draw_text_on_path (Handle, (void*)buffer, (IntPtr)length, path.Handle, hOffset, vOffset, paint.Handle);
+			// TODO
+
+			throw new NotImplementedException ();
 		}
 
 		// Flush
