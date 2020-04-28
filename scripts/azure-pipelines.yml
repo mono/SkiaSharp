@@ -31,6 +31,9 @@ variables:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   THROW_ON_TEST_FAILURE: true
 
+  # TODO: TEMPORARY
+  NUGET_DIFF_PRERELEASE: true
+
 resources:
   repositories:
     - repository: xamarin-templates
@@ -357,6 +360,7 @@ stages:
           displayName: API Diff
           vmImage: Hosted VS2017
           target: docs-api-diff
+          additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
           shouldPublish: false
           requiredArtifacts:
             - package_windows
