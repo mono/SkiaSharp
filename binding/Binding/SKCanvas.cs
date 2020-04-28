@@ -724,13 +724,7 @@ namespace SkiaSharp
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint, bool warpGlyphs = true) =>
 			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), font, paint, warpGlyphs);
 
-		public void DrawTextOnPath (
-			ReadOnlySpan<ushort> glyphs,
-			SKPath path,
-			SKPoint offset,
-			SKFont font,
-			SKPaint paint,
-			bool warpGlyphs = true)
+		public void DrawTextOnPath (ReadOnlySpan<ushort> glyphs, SKPath path, SKPoint offset, SKFont font, SKPaint paint, bool warpGlyphs = true)
 		{
 			if (glyphs.Length == 0)
 				return;
@@ -743,24 +737,17 @@ namespace SkiaSharp
 			}
 		}
 
-		public void DrawTextOnPath (
-			SKPath path,
-			ReadOnlySpan<ushort> glyphs,
-			ReadOnlySpan<float> glyphWidths,
-			ReadOnlySpan<SKPoint> glyphOffsets,
-			SKFont font,
-			SKPaint paint,
-			bool warpGlyphs)
+		public void DrawTextOnPath (SKPath path, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<float> glyphWidths, ReadOnlySpan<SKPoint> glyphOffsets, SKFont font, SKPaint paint, bool warpGlyphs)
 		{
 			var alignment = (int)paint.TextAlign * 0.5f;
 
 			if (warpGlyphs) {
-				using var warp = font.GetPathFromTextWarpedOnPath(
+				using var warp = font.GetPathFromTextWarpedOnPath (
 					glyphs, glyphWidths, glyphOffsets,
 					path, alignment);
 				DrawPath (warp, paint);
 			} else {
-				using var blob = font.GetBlobFromTextPlacedOnPath(
+				using var blob = font.GetBlobFromTextPlacedOnPath (
 					glyphs, glyphWidths, glyphOffsets,
 					path, alignment);
 				DrawText (blob, 0, 0, paint);
