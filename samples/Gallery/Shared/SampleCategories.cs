@@ -19,5 +19,6 @@ namespace SkiaSharpSample
 		PathEffects = 1 << 10,
 		SVG = 1 << 11,
 		Documents = 1 << 12,
+		Xtras = 1 << 13,
 	}
 }
