@@ -4,6 +4,7 @@ using System.ComponentModel;
 namespace SkiaSharp
 {
 	// TODO: carefully consider the `PeekPixels`, `ReadPixels`
+
 	public unsafe class SKCanvas : SKObject
 	{
 		private const int PatchCornerCount = 4;
@@ -695,7 +696,12 @@ namespace SkiaSharp
 
 		// DrawTextOnPath
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint, bool warpGlyphs = true) =>
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint)
+		{
+			DrawTextOnPath (text, path, offset, paint.GetFont (), paint, true);
+		}
+
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint, bool warpGlyphs) =>
 			DrawTextOnPath (text, path, offset, paint.GetFont (), paint, warpGlyphs);
 
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint, bool warpGlyphs = true) =>
