@@ -17,7 +17,7 @@ namespace SkiaSharp
 
 	public delegate IntPtr GRGlGetProcDelegate (object context, string name);
 
-	public delegate void SKGlyphPathDelegate (SKPath pathOrNull, SKMatrix matrix, object context);
+	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix, object context);
 
 	internal unsafe static partial class DelegateProxies
 	{
@@ -102,10 +102,10 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]
-		private static void SKGlyphPathDelegateProxyImplementation (IntPtr pathOrNull, SKMatrix* matrix, void* context)
+		private static void SKGlyphPathDelegateProxyImplementation (IntPtr path, SKMatrix* matrix, void* context)
 		{
 			var del = Get<SKGlyphPathDelegate> ((IntPtr)context, out _);
-			var path = SKPath.GetObject (pathOrNull, false);
+			var path = SKPath.GetObject (path, false);
 			del.Invoke (path, *matrix, null);
 		}
 	}
