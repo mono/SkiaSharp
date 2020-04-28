@@ -65,13 +65,13 @@ namespace SkiaSharp
 
 		protected override void DisposeManaged ()
 		{
-			if (ownedObjects is ConcurrentDictionary<IntPtr, SKObject> dic) {
-				foreach (var child in dic) {
-					child.Value.DisposeInternal ();
+			if (ownedObjects != null) {
+				foreach (var child in ownedObjects) {
+					child.Value?.DisposeInternal ();
 				}
-				dic.Clear ();
+				ownedObjects.Clear ();
 			}
-			KeepAliveObjects?.Clear ();
+			keepAliveObjects?.Clear ();
 		}
 
 		protected override void DisposeNative ()
