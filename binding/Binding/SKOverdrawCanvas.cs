@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public class SKOverdrawCanvas : SKNWayCanvas
 	{
-		[Preserve]
 		internal SKOverdrawCanvas (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

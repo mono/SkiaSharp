@@ -107,7 +107,7 @@ namespace HarfBuzzSharp.Tests
 			{
 				unicodeFunctions.SetMirroringDelegate((f, u) => 1337);
 
-				Assert.Equal(1337u, unicodeFunctions.GetMirroring(0));
+				Assert.Equal(1337, unicodeFunctions.GetMirroring(0));
 			}
 		}
 
@@ -124,7 +124,7 @@ namespace HarfBuzzSharp.Tests
 
 				Assert.True(unicodeFunctions.TryCompose(1, 2, out var composed));
 
-				Assert.Equal(1337u, composed);
+				Assert.Equal(1337, composed);
 			}
 		}
 
@@ -142,8 +142,8 @@ namespace HarfBuzzSharp.Tests
 
 				Assert.True(unicodeFunctions.TryDecompose(0, out var first, out var second));
 
-				Assert.Equal(1337u, first);
-				Assert.Equal(7331u, second);
+				Assert.Equal(1337, first);
+				Assert.Equal(7331, second);
 			}
 		}
 	}

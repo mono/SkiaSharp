@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Tizen.NET.Sdk/1.0.8">
 
   <PropertyGroup>
     <TargetFramework>tizen40</TargetFramework>
@@ -12,12 +12,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>None</DebugType>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
-    <PackageReference Include="Tizen.NET" Version="4.0.0" />
-    <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Tizen\SkiaSharp.Views.Tizen.csproj" />
@@ -38,7 +32,5 @@
   </ItemGroup>
 
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets')" />
-
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 
 </Project>

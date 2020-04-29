@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -10,31 +7,48 @@ namespace SkiaSharp
 {
 	public abstract class SKObject : SKNativeObject
 	{
-#if THROW_OBJECT_EXCEPTIONS
-		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
-#endif
+		private readonly object locker = new object ();
 
-		internal static readonly ConcurrentDictionary<Type, ConstructorInfo> constructors;
-		internal static readonly ConcurrentDictionary<IntPtr, WeakReference> instances;
+		private ConcurrentDictionary<IntPtr, SKObject> ownedObjects;
+		private ConcurrentDictionary<IntPtr, SKObject> keepAliveObjects;
 
-		internal readonly ConcurrentDictionary<IntPtr, SKObject> ownedObjects = new ConcurrentDictionary<IntPtr, SKObject> ();
+		internal ConcurrentDictionary<IntPtr, SKObject> OwnedObjects {
+			get {
+				if (ownedObjects == null) {
+					lock (locker) {
+						ownedObjects ??= new ConcurrentDictionary<IntPtr, SKObject> ();
+					}
+				}
+				return ownedObjects;
+			}
+		}
+
+		internal ConcurrentDictionary<IntPtr, SKObject> KeepAliveObjects {
+			get {
+				if (keepAliveObjects == null) {
+					lock (locker) {
+						keepAliveObjects ??= new ConcurrentDictionary<IntPtr, SKObject> ();
+					}
+				}
+				return keepAliveObjects;
+			}
+		}
 
 		static SKObject ()
 		{
-			constructors = new ConcurrentDictionary<Type, ConstructorInfo> ();
-			instances = new ConcurrentDictionary<IntPtr, WeakReference> ();
-
 			SKColorSpace.EnsureStaticInstanceAreInitialized ();
 			SKData.EnsureStaticInstanceAreInitialized ();
 			SKFontManager.EnsureStaticInstanceAreInitialized ();
 			SKTypeface.EnsureStaticInstanceAreInitialized ();
 		}
 
-		[Preserve]
 		internal SKObject (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		public override IntPtr Handle {
 			get => base.Handle;
@@ -51,10 +65,13 @@ namespace SkiaSharp
 
 		protected override void DisposeManaged ()
 		{
-			foreach (var child in ownedObjects) {
-				child.Value.DisposeInternal ();
+			if (ownedObjects != null) {
+				foreach (var child in ownedObjects) {
+					child.Value?.DisposeInternal ();
+				}
+				ownedObjects.Clear ();
 			}
-			ownedObjects.Clear ();
+			keepAliveObjects?.Clear ();
 		}
 
 		protected override void DisposeNative ()
@@ -63,51 +80,31 @@ namespace SkiaSharp
 				refcnt.SafeUnRef ();
 		}
 
-		internal static TSkiaObject GetObject<TSkiaObject> (IntPtr handle, bool owns = true, bool unrefExisting = true, bool refNew = false)
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
-		{
-			return GetObject<TSkiaObject, TSkiaObject> (handle, owns, unrefExisting, refNew);
-		}
-
-		internal static TSkiaObject GetObject<TSkiaObject, TSkiaImplementation> (IntPtr handle, bool owns = true, bool unrefExisting = true, bool refNew = false)
-			where TSkiaObject : SKObject
-			where TSkiaImplementation : SKObject, TSkiaObject
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			if (GetInstance<TSkiaObject> (handle, out var instance)) {
-				// some object get automatically referenced on the native side,
-				// but managed code just has the same reference
-				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
-#if THROW_OBJECT_EXCEPTIONS
-					if (refcnt.GetReferenceCount () == 1)
-						throw new InvalidOperationException (
-							$"About to unreference an object that has no references. " +
-							$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
-#endif
-					refcnt.SafeUnRef ();
-				}
+			return HandleDictionary.GetOrAddObject (handle, true, true, objectFactory);
+		}
 
-				return instance;
-			}
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject
+		{
+			if (handle == IntPtr.Zero)
+				return null;
 
-			var type = typeof (TSkiaImplementation);
-			var constructor = constructors.GetOrAdd (type, t => {
-				var ctor = type.GetTypeInfo ().DeclaredConstructors.FirstOrDefault (c => {
-					var parameters = c.GetParameters ();
-					return
-						parameters.Length == 2 &&
-						parameters[0].ParameterType == typeof (IntPtr) &&
-						parameters[1].ParameterType == typeof (bool);
-				});
-				return ctor ?? throw new MissingMethodException ($"No constructor found for {type.FullName}.ctor(System.IntPtr, System.Boolean)");
-			});
+			return HandleDictionary.GetOrAddObject (handle, owns, true, objectFactory);
+		}
 
-			var obj = (TSkiaObject)constructor.Invoke (new object[] { handle, owns });
-			if (refNew && obj is ISKReferenceCounted toRef)
-				toRef.SafeRef ();
-			return obj;
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject
+		{
+			if (handle == IntPtr.Zero)
+				return null;
+
+			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, objectFactory);
 		}
 
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)
@@ -115,24 +112,7 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero || instance == null)
 				return;
 
-			var weak = new WeakReference (instance);
-			instances.AddOrUpdate (handle, weak, Update);
-
-			WeakReference Update (IntPtr key, WeakReference oldValue)
-			{
-				if (oldValue.Target is SKObject obj && !obj.IsDisposed) {
-#if THROW_OBJECT_EXCEPTIONS
-					if (obj.OwnsHandle)
-						throw new InvalidOperationException (
-							$"A managed object already exists for the specified native object. " +
-							$"H: {handle.ToString ("x")} Type: ({obj.GetType ()}, {instance.GetType ()})");
-#endif
-
-					obj.DisposeInternal ();
-				}
-
-				return weak;
-			}
+			HandleDictionary.RegisterHandle (handle, instance);
 		}
 
 		internal static void DeregisterHandle (IntPtr handle, SKObject instance)
@@ -140,71 +120,24 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero)
 				return;
 
-			var nonExistent = new WeakReference (null);
-			var weak = instances.AddOrUpdate (handle, nonExistent, (ptr, old) => {
-				if (old.Target is SKObject obj && !obj.IsDisposed)
-					return old;
-				return new WeakReference (null);
-			});
-
-#if THROW_OBJECT_EXCEPTIONS
-			InvalidOperationException ex = null;
-			if (weak == nonExistent) {
-				// the dummy instance was added instead of being removed
-				ex = new InvalidOperationException (
-					$"A managed object did not exist for the specified native object. " +
-					$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
-			}
-			if (weak.Target is SKObject o && o != instance && !instance.IsDisposed) {
-				// there was a new living object there, but we are still alive
-				ex = new InvalidOperationException (
-					$"Trying to remove a different object with the same native handle. " +
-					$"H: {handle.ToString ("x")} Type: ({o.GetType ()}, {instance.GetType ()})");
-			}
-			if (ex != null) {
-				if (instance.fromFinalizer)
-					exceptions.Add (ex);
-				else
-					throw ex;
-			}
-#endif
+			HandleDictionary.DeregisterHandle (handle, instance);
 		}
 
 		internal static bool GetInstance<TSkiaObject> (IntPtr handle, out TSkiaObject instance)
 			where TSkiaObject : SKObject
 		{
-			if (instances.TryGetValue (handle, out var weak)) {
-				if (weak.Target is TSkiaObject match) {
-					if (!match.IsDisposed) {
-						instance = match;
-						return true;
-					}
-#if THROW_OBJECT_EXCEPTIONS
-				} else if (weak.Target is SKObject obj) {
-					if (!obj.IsDisposed) {
-						throw new InvalidOperationException (
-							$"A managed object exists for the handle, but is not the expected type. " +
-							$"H: {handle.ToString ("x")} Type: ({obj.GetType ()}, {typeof (TSkiaObject)})");
-					}
-				} else if (weak.Target is object o) {
-					throw new InvalidOperationException (
-						$"An unknown object exists for the handle when trying to fetch an instance. " +
-						$"H: {handle.ToString ("x")} Type: ({o.GetType ()}, {typeof (TSkiaObject)})");
-#endif
-				}
+			if (handle == IntPtr.Zero) {
+				instance = null;
+				return false;
 			}
 
-			instance = null;
-			return false;
+			return HandleDictionary.GetInstance<TSkiaObject> (handle, out instance);
 		}
 
-		// indicate that when this object is disposed on the managed side,
-		// dispose the child as well
-		internal void SetDisposeChild (SKObject child)
+		// indicate that the user cannot dispose the object
+		internal void PreventPublicDisposal ()
 		{
-			if (child == null)
-				return;
-			ownedObjects[child.Handle] = child;
+			IgnorePublicDispose = true;
 		}
 
 		// indicate that the ownership of this object is now in the hands of
@@ -217,19 +150,57 @@ namespace SkiaSharp
 			if (newOwner == null)
 				DisposeInternal ();
 			else
-				newOwner.SetDisposeChild (this);
+				newOwner.OwnedObjects[Handle] = this;
+		}
+
+		// indicate that the child is controlled by the native code and
+		// the managed wrapper should be disposed when the owner is
+		internal static T OwnedBy<T> (T child, SKObject owner)
+			where T : SKObject
+		{
+			if (child != null) {
+				owner.OwnedObjects[child.Handle] = child;
+			}
+
+			return child;
+		}
+
+		// indicate that the child was created by the managed code and
+		// should be disposed when the owner is
+		internal static T Owned<T> (T owner, SKObject child)
+			where T : SKObject
+		{
+			if (child != null) {
+				if (owner != null)
+					owner.OwnedObjects[child.Handle] = child;
+				else
+					child.Dispose ();
+			}
+
+			return owner;
+		}
+
+		// indicate that the chile should not be garbage collected while
+		// the owner still lives
+		internal static T Referenced<T> (T owner, SKObject child)
+			where T : SKObject
+		{
+			if (child != null && owner != null)
+				owner.KeepAliveObjects[child.Handle] = child;
+
+			return owner;
 		}
 
 		internal static int SizeOf<T> () =>
 #if WINDOWS_UWP || NET_STANDARD
-			Marshal.SizeOf <T> ();
+			Marshal.SizeOf<T> ();
 #else
 			Marshal.SizeOf (typeof (T));
 #endif
 
 		internal static T PtrToStructure<T> (IntPtr intPtr) =>
 #if WINDOWS_UWP || NET_STANDARD
-			Marshal.PtrToStructure <T> (intPtr);
+			Marshal.PtrToStructure<T> (intPtr);
 #else
 			(T)Marshal.PtrToStructure (intPtr, typeof (T));
 #endif
@@ -255,9 +226,7 @@ namespace SkiaSharp
 
 	public abstract class SKNativeObject : IDisposable
 	{
-#if THROW_OBJECT_EXCEPTIONS
 		internal bool fromFinalizer = false;
-#endif
 
 		private int isDisposed = 0;
 
@@ -274,9 +243,7 @@ namespace SkiaSharp
 
 		~SKNativeObject ()
 		{
-#if THROW_OBJECT_EXCEPTIONS
 			fromFinalizer = true;
-#endif
 
 			Dispose (false);
 		}
@@ -285,7 +252,7 @@ namespace SkiaSharp
 
 		protected internal virtual bool OwnsHandle { get; protected set; }
 
-		protected internal bool IgnorePublicDispose { get; protected set; }
+		protected internal bool IgnorePublicDispose { get; set; }
 
 		protected internal bool IsDisposed => isDisposed == 1;
 
@@ -304,12 +271,11 @@ namespace SkiaSharp
 			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
 				return;
 
-			if (disposing) {
-				DisposeManaged ();
-			}
-
 			if (Handle != IntPtr.Zero && OwnsHandle)
 				DisposeNative ();
+
+			if (disposing)
+				DisposeManaged ();
 
 			Handle = IntPtr.Zero;
 		}
@@ -322,7 +288,7 @@ namespace SkiaSharp
 			DisposeInternal ();
 		}
 
-		protected void DisposeInternal ()
+		protected internal void DisposeInternal ()
 		{
 			Dispose (true);
 			GC.SuppressFinalize (this);

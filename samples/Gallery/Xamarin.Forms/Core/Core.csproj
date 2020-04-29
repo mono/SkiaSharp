@@ -6,16 +6,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="4.0.0.540366" />
+    <PackageReference Include="Xamarin.Forms" Version="4.4.0.991757" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.NetStandard\HarfBuzzSharp.NetStandard.csproj" />
-    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.csproj" />
   </ItemGroup>
 
-  <Import Project="..\..\Shared\Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="..\..\Shared\Samples\*.cs" Link="Shared\Samples\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Shared\Media\*" Link="Media\%(Filename)%(Extension)" />
+    <EmbeddedResource Remove="..\..\Shared\Media\content-font.ttf" />
+  </ItemGroup>
 
 </Project>

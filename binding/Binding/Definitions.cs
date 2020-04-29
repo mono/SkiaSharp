@@ -1,205 +1,84 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using System.Globalization;
-
-using sk_string_t = System.IntPtr;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public enum SKCodecResult {
-		Success,
-		IncompleteInput,
-		ErrorInInput,
-		InvalidConversion,
-		InvalidScale,
-		InvalidParameters,
-		InvalidInput,
-		CouldNotRewind,
-		InternalError,
-		Unimplemented,
-	}
-
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use SKEncodedOrigin instead.")]
-	public enum SKCodecOrigin {
-		TopLeft = 1,
-		TopRight = 2,
-		BottomRight = 3,
-		BottomLeft = 4,
-		LeftTop = 5,
-		RightTop = 6,
-		RightBottom = 7,
-		LeftBottom = 8,
-	}
-
-	public enum SKEncodedOrigin {
-		TopLeft = 1,
-		TopRight = 2,
-		BottomRight = 3,
-		BottomLeft = 4,
-		LeftTop = 5,
-		RightTop = 6,
-		RightBottom = 7,
-		LeftBottom = 8,
-		Default = TopLeft,
-	}
-
-	public enum SKEncodedImageFormat {
-		Bmp,
-		Gif,
-		Ico,
-		Jpeg,
-		Png,
-		Wbmp,
-		Webp,
-		Pkm,
-		Ktx,
-		Astc,
-		Dng,
-		// Heif // appears to be development still
-	}
-
-	public enum SKFontStyleWeight {
-		Invisible   =   0,
-		Thin        = 100,
-		ExtraLight  = 200,
-		Light       = 300,
-		Normal      = 400,
-		Medium      = 500,
-		SemiBold    = 600,
-		Bold        = 700,
-		ExtraBold   = 800,
-		Black       = 900,
-		ExtraBlack  =1000,
-	};
-
-	public enum SKFontStyleWidth {
-		UltraCondensed   = 1,
-		ExtraCondensed   = 2,
-		Condensed        = 3,
-		SemiCondensed    = 4,
-		Normal           = 5,
-		SemiExpanded     = 6,
-		Expanded         = 7,
-		ExtraExpanded    = 8,
-		UltraExpanded    = 9,
-	};
-
-	public enum SKFontStyleSlant {
-		Upright = 0,
-		Italic  = 1,
-		Oblique = 2,
-	};
-
-	public enum SKPointMode {
-		Points, Lines, Polygon
-	}
-
-	public enum SKPathDirection {
-		Clockwise,
-		CounterClockwise
-	}
-
-	public enum SKPathArcSize {
-		Small,
-		Large
-	}
-
-	public enum SKPathFillType
+	public enum SKCodecOrigin
 	{
-		Winding,
-		EvenOdd,
-		InverseWinding,
-		InverseEvenOdd
+		TopLeft = 1,
+		TopRight = 2,
+		BottomRight = 3,
+		BottomLeft = 4,
+		LeftTop = 5,
+		RightTop = 6,
+		RightBottom = 7,
+		LeftBottom = 8,
 	}
 
-	[Flags]
-	public enum SKPathSegmentMask {
-		Line  = 1 << 0,
-		Quad  = 1 << 1,
-		Conic = 1 << 2,
-		Cubic = 1 << 3,
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use SKTextEncoding instead.")]
+	public enum SKEncoding
+	{
+		Utf8 = 0,
+		Utf16 = 1,
+		Utf32 = 2,
 	}
 
-	public enum SKColorType {
-		Unknown,
-		Alpha8,
-		Rgb565,
-		Argb4444,
-		Rgba8888,
-		Rgb888x,
-		Bgra8888,
-		Rgba1010102,
-		Rgb101010x,
-		Gray8,
-		RgbaF16
+	public enum SKFontStyleWeight
+	{
+		Invisible = 0,
+		Thin = 100,
+		ExtraLight = 200,
+		Light = 300,
+		Normal = 400,
+		Medium = 500,
+		SemiBold = 600,
+		Bold = 700,
+		ExtraBold = 800,
+		Black = 900,
+		ExtraBlack = 1000,
 	}
 
-	public enum SKAlphaType {
-		Unknown,
-		Opaque,
-		Premul,
-		Unpremul
+	public enum SKFontStyleWidth
+	{
+		UltraCondensed = 1,
+		ExtraCondensed = 2,
+		Condensed = 3,
+		SemiCondensed = 4,
+		Normal = 5,
+		SemiExpanded = 6,
+		Expanded = 7,
+		ExtraExpanded = 8,
+		UltraExpanded = 9,
 	}
 
-	public enum SKShaderTileMode {
-		Clamp, Repeat, Mirror
+	public enum SKColorType
+	{
+		Unknown = 0,
+		Alpha8 = 1,
+		Rgb565 = 2,
+		Argb4444 = 3,
+		Rgba8888 = 4,
+		Rgb888x = 5,
+		Bgra8888 = 6,
+		Rgba1010102 = 7,
+		Rgb101010x = 8,
+		Gray8 = 9,
+		RgbaF16 = 10,
+		RgbaF16Normalized = 11,
+		RgbaF32 = 12,
+		R8g8Unnormalized = 13,
+		A16Float = 14,
+		R16g16Float = 15,
+		A16Unnormalized = 16,
+		R16g16Unnormalized = 17,
+		R16g16b16a16Unnormalized = 18,
 	}
 
-	public enum SKBlurStyle {
-		Normal, Solid, Outer, Inner
-	}
-
-	public enum SKBlendMode {
-		Clear,
-		Src,
-		Dst,
-		SrcOver,
-		DstOver,
-		SrcIn,
-		DstIn,
-		SrcOut,
-		DstOut,
-		SrcATop,
-		DstATop,
-		Xor,
-		Plus,
-		Modulate,
-		Screen,
-		Overlay,
-		Darken,
-		Lighten,
-		ColorDodge,
-		ColorBurn,
-		HardLight,
-		SoftLight,
-		Difference,
-		Exclusion,
-		Multiply,
-		Hue,
-		Saturation,
-		Color,
-		Luminosity,
-	}
-
-	public enum SKPixelGeometry {
-		Unknown,
-		RgbHorizontal,
-		BgrHorizontal,
-		RgbVertical,
-		BgrVertical
-	}
-
-	[Flags]
-	public enum SKSurfacePropsFlags {
-		None = 0,
-		UseDeviceIndependentFonts = 1 << 0,
-	}
-
-	public enum SKEncoding {
-		Utf8, Utf16, Utf32
-	}
-
-	public static partial class SkiaExtensions {
+	public static partial class SkiaExtensions
+	{
 		public static bool IsBgr (this SKPixelGeometry pg) =>
 			pg == SKPixelGeometry.BgrHorizontal || pg == SKPixelGeometry.BgrVertical;
 
@@ -211,355 +90,320 @@ namespace SkiaSharp
 
 		public static bool IsHorizontal (this SKPixelGeometry pg) =>
 			pg == SKPixelGeometry.BgrHorizontal || pg == SKPixelGeometry.RgbHorizontal;
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public static SKTextEncoding ToTextEncoding (this SKEncoding encoding) =>
+			encoding switch
+			{
+				SKEncoding.Utf8 => SKTextEncoding.Utf8,
+				SKEncoding.Utf16 => SKTextEncoding.Utf16,
+				SKEncoding.Utf32 => SKTextEncoding.Utf32,
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding)),
+			};
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		internal static SKEncoding ToEncoding (this SKTextEncoding encoding) =>
+			encoding switch
+			{
+				SKTextEncoding.Utf8 => SKEncoding.Utf8,
+				SKTextEncoding.Utf16 => SKEncoding.Utf16,
+				SKTextEncoding.Utf32 => SKEncoding.Utf32,
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding)),
+			};
+
+		// SkImageInfo.cpp - SkColorTypeBytesPerPixel
+		public static int GetBytesPerPixel (this SKColorType colorType) =>
+			colorType switch
+			{
+				// 0
+				SKColorType.Unknown => 0,
+				// 1
+				SKColorType.Alpha8 => 1,
+				SKColorType.Gray8 => 1,
+				// 2
+				SKColorType.Rgb565 => 2,
+				SKColorType.Argb4444 => 2,
+				SKColorType.R8g8Unnormalized => 2,
+				SKColorType.A16Unnormalized => 2,
+				SKColorType.A16Float => 2,
+				// 4
+				SKColorType.Bgra8888 => 4,
+				SKColorType.Rgba8888 => 4,
+				SKColorType.Rgb888x => 4,
+				SKColorType.Rgba1010102 => 4,
+				SKColorType.Rgb101010x => 4,
+				SKColorType.R16g16Unnormalized => 4,
+				SKColorType.R16g16Float => 4,
+				// 8
+				SKColorType.RgbaF16Normalized => 8,
+				SKColorType.RgbaF16 => 8,
+				SKColorType.R16g16b16a16Unnormalized => 8,
+				// 16
+				SKColorType.RgbaF32 => 16,
+				//
+				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
+			};
+
+		// SkImageInfo.cpp - SkColorTypeValidateAlphaType
+		public static SKAlphaType GetAlphaType (this SKColorType colorType, SKAlphaType alphaType = SKAlphaType.Premul)
+		{
+			switch (colorType) {
+				case SKColorType.Unknown:
+					alphaType = SKAlphaType.Unknown;
+					break;
+
+				// opaque or premul
+				case SKColorType.Alpha8:
+				case SKColorType.A16Unnormalized:
+				case SKColorType.A16Float:
+					if (SKAlphaType.Unpremul == alphaType) {
+						alphaType = SKAlphaType.Premul;
+					}
+					break;
+
+				// any
+				case SKColorType.Argb4444:
+				case SKColorType.Rgba8888:
+				case SKColorType.Bgra8888:
+				case SKColorType.Rgba1010102:
+				case SKColorType.RgbaF16Normalized:
+				case SKColorType.RgbaF16:
+				case SKColorType.RgbaF32:
+				case SKColorType.R16g16b16a16Unnormalized:
+					break;
+
+				// opaque
+				case SKColorType.Gray8:
+				case SKColorType.R8g8Unnormalized:
+				case SKColorType.R16g16Unnormalized:
+				case SKColorType.R16g16Float:
+				case SKColorType.Rgb565:
+				case SKColorType.Rgb888x:
+				case SKColorType.Rgb101010x:
+					alphaType = SKAlphaType.Opaque;
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException (nameof (colorType));
+			}
+
+			return alphaType;
+		}
 	}
 
-	public enum SKStrokeCap {
-		Butt, Round, Square
-	}
-
-	public enum SKStrokeJoin {
-		Miter, Round, Bevel,
-	}
-
-	public enum SKTextAlign {
-		Left, Center, Right
-	}
-
-	public enum SKTextEncoding {
-		Utf8, Utf16, Utf32, GlyphId
-	}
-
-	public enum SKFilterQuality
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use SKSurfaceProperties instead.")]
+	public struct SKSurfaceProps : IEquatable<SKSurfaceProps>
 	{
-		None,
-		Low,
-		Medium,
-		High
-	}
-
-	[Flags]
-	public enum SKCropRectFlags
-	{
-		HasNone = 0,
-		HasLeft = 0x01,
-		HasTop = 0x02,
-		HasWidth = 0x04,
-		HasHeight = 0x08,
-		HasAll = 0x0F,
-	}
-
-	public enum SKDropShadowImageFilterShadowMode
-	{
-		DrawShadowAndForeground,
-		DrawShadowOnly,
-	}
-
-	public enum SKDisplacementMapEffectChannelSelectorType
-	{
-		Unknown,
-		R,
-		G,
-		B,
-		A,
-	}
-
-	public enum SKMatrixConvolutionTileMode
-	{
-		Clamp,
-		Repeat,
-		ClampToBlack,
-	}
-
-	public enum SKPaintStyle
-	{
-		Fill,
-		Stroke,
-		StrokeAndFill,
-	}
-
-	public enum SKPaintHinting
-	{
-		NoHinting = 0,
-		Slight = 1,
-		Normal = 2,
-		Full = 3
-	}
-
-	public enum SKRegionOperation
-	{
-		Difference,
-		Intersect,
-		Union,
-		XOR,
-		ReverseDifference,
-		Replace,
-	}
-
-	public enum SKClipOperation
-	{
-		Difference,
-		Intersect,
-	}
-
-	[Obsolete("Use SKSurfaceProperties instead.")]
-	public struct SKSurfaceProps {
 		public SKPixelGeometry PixelGeometry { get; set; }
 		public SKSurfacePropsFlags Flags { get; set; }
+
+		public readonly bool Equals (SKSurfaceProps obj) =>
+			PixelGeometry == obj.PixelGeometry &&
+			Flags == obj.Flags;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKSurfaceProps f && Equals (f);
+
+		public static bool operator == (SKSurfaceProps left, SKSurfaceProps right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKSurfaceProps left, SKSurfaceProps right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (PixelGeometry);
+			hash.Add (Flags);
+			return hash.ToHashCode ();
+		}
 	}
 
-	public enum SKZeroInitialized {
-		Yes,
-		No,
-	}
-
-	public enum SKCodecScanlineOrder {
-		TopDown,
-		BottomUp
-	}
-
-
-	public enum SKTransferFunctionBehavior {
-		Respect,
-		Ignore,
-	}
-
-
-	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe struct SKCodecOptionsInternal {
-		public SKZeroInitialized fZeroInitialized;
-		public SKRectI* fSubset;
-		public int fFrameIndex;
-		public int fPriorFrame;
-		public SKTransferFunctionBehavior fPremulBehavior;
-	}
-
-	public struct SKCodecOptions {
+	public struct SKCodecOptions : IEquatable<SKCodecOptions>
+	{
 		public static readonly SKCodecOptions Default;
 
 		static SKCodecOptions ()
 		{
 			Default = new SKCodecOptions (SKZeroInitialized.No);
 		}
-		public SKCodecOptions (SKZeroInitialized zeroInitialized) {
+
+		public SKCodecOptions (SKZeroInitialized zeroInitialized)
+		{
 			ZeroInitialized = zeroInitialized;
 			Subset = null;
 			FrameIndex = 0;
 			PriorFrame = -1;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
-		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
+		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset)
+		{
 			ZeroInitialized = zeroInitialized;
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
-		public SKCodecOptions (SKRectI subset) {
+		public SKCodecOptions (SKRectI subset)
+		{
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
-		public SKCodecOptions (int frameIndex) {
+		public SKCodecOptions (int frameIndex)
+		{
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = -1;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
-		public SKCodecOptions (int frameIndex, int priorFrame) {
+		public SKCodecOptions (int frameIndex, int priorFrame)
+		{
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = priorFrame;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
+
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
-		public bool HasSubset => Subset != null;
+		public readonly bool HasSubset => Subset != null;
 		public int FrameIndex { get; set; }
 		public int PriorFrame { get; set; }
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
 		public SKTransferFunctionBehavior PremulBehavior { get; set; }
-	}
 
-	public enum SKCodecAnimationDisposalMethod {
-		Keep                     = 1,
-		RestoreBackgroundColor   = 2,
-		RestorePrevious          = 3,
-	}
+		public readonly bool Equals (SKCodecOptions obj) =>
+			ZeroInitialized == obj.ZeroInitialized &&
+			Subset == obj.Subset &&
+			FrameIndex == obj.FrameIndex &&
+			PriorFrame == obj.PriorFrame &&
+			PremulBehavior == obj.PremulBehavior;
 
-	[StructLayout(LayoutKind.Sequential)]
-	public struct SKCodecFrameInfo {
-		private int requiredFrame;
-		private int duration;
-		private byte fullyRecieved;
-		private SKAlphaType alphaType;
-		private SKCodecAnimationDisposalMethod disposalMethod;
+		public readonly override bool Equals (object obj) =>
+			obj is SKCodecOptions f && Equals (f);
 
-		public int RequiredFrame {
-			get => requiredFrame;
-			set => requiredFrame = value;
-		}
+		public static bool operator == (SKCodecOptions left, SKCodecOptions right) =>
+			left.Equals (right);
 
-		public int Duration {
-			get => duration;
-			set => duration = value;
-		}
+		public static bool operator != (SKCodecOptions left, SKCodecOptions right) =>
+			!left.Equals (right);
 
-		public bool FullyRecieved {
-			get => fullyRecieved != 0;
-			set => fullyRecieved = value ? (byte)1 : (byte)0;
-		}
-
-		public SKAlphaType AlphaType {
-			get => alphaType;
-			set => alphaType = value;
-		}
-
-		public SKCodecAnimationDisposalMethod DisposalMethod {
-			get => disposalMethod;
-			set => disposalMethod = value;
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (ZeroInitialized);
+			hash.Add (Subset);
+			hash.Add (FrameIndex);
+			hash.Add (PriorFrame);
+			hash.Add (PremulBehavior);
+			return hash.ToHashCode ();
 		}
 	}
 
-	[StructLayout(LayoutKind.Sequential)]
-	public struct SKFontMetrics
+	public partial struct SKFontMetrics
 	{
 		private const uint flagsUnderlineThicknessIsValid = (1U << 0);
-		private const uint flagsUnderlinePositionIsValid  = (1U << 1);
+		private const uint flagsUnderlinePositionIsValid = (1U << 1);
 		private const uint flagsStrikeoutThicknessIsValid = (1U << 2);
-		private const uint flagsStrikeoutPositionIsValid  = (1U << 3);
+		private const uint flagsStrikeoutPositionIsValid = (1U << 3);
 
-		uint flags;                     // Bit field to identify which values are unknown
-		float top;                      // The greatest distance above the baseline for any glyph (will be <= 0)
-		float ascent;                   // The recommended distance above the baseline (will be <= 0)
-		float descent;                  // The recommended distance below the baseline (will be >= 0)
-		float bottom;                   // The greatest distance below the baseline for any glyph (will be >= 0)
-		float leading;                  // The recommended distance to add between lines of text (will be >= 0)
-		float avgCharWidth;             // the average character width (>= 0)
-		float maxCharWidth;             // the max character width (>= 0)
-		float xMin;                     // The minimum bounding box x value for all glyphs
-		float xMax;                     // The maximum bounding box x value for all glyphs
-		float xHeight;                  // The height of an 'x' in px, or 0 if no 'x' in face
-		float capHeight;                // The cap height (> 0), or 0 if cannot be determined.
-		float underlineThickness;       // underline thickness, or 0 if cannot be determined
-		float underlinePosition;        // underline position, or 0 if cannot be determined
-		float strikeoutThickness;
-		float strikeoutPosition;
+		public readonly float Top => fTop;
 
-		public float Top => top;
+		public readonly float Ascent => fAscent;
 
-		public float Ascent => ascent;
+		public readonly float Descent => fDescent;
 
-		public float Descent => descent;
+		public readonly float Bottom => fBottom;
 
-		public float Bottom => bottom;
+		public readonly float Leading => fLeading;
 
-		public float Leading => leading;
+		public readonly float AverageCharacterWidth => fAvgCharWidth;
 
-		public float AverageCharacterWidth => avgCharWidth;
+		public readonly float MaxCharacterWidth => fMaxCharWidth;
 
-		public float MaxCharacterWidth => maxCharWidth;
+		public readonly float XMin => fXMin;
 
-		public float XMin => xMin;
+		public readonly float XMax => fXMax;
 
-		public float XMax => xMax;
+		public readonly float XHeight => fXHeight;
 
-		public float XHeight => xHeight;
+		public readonly float CapHeight => fCapHeight;
 
-		public float CapHeight => capHeight;
+		public readonly float? UnderlineThickness => GetIfValid (fUnderlineThickness, flagsUnderlineThicknessIsValid);
+		public readonly float? UnderlinePosition => GetIfValid (fUnderlinePosition, flagsUnderlinePositionIsValid);
+		public readonly float? StrikeoutThickness => GetIfValid (fStrikeoutThickness, flagsStrikeoutThicknessIsValid);
+		public readonly float? StrikeoutPosition => GetIfValid (fStrikeoutPosition, flagsStrikeoutPositionIsValid);
 
-		public float? UnderlineThickness => GetIfValid(underlineThickness, flagsUnderlineThicknessIsValid);
-		public float? UnderlinePosition => GetIfValid(underlinePosition, flagsUnderlinePositionIsValid);
-		public float? StrikeoutThickness => GetIfValid(strikeoutThickness, flagsStrikeoutThicknessIsValid);
-		public float? StrikeoutPosition => GetIfValid(strikeoutPosition, flagsStrikeoutPositionIsValid);
-
-		private float? GetIfValid (float value, uint flag) =>
-			(flags & flag) == flag ? value : (float?)null;
+		private readonly float? GetIfValid (float value, uint flag) =>
+			(fFlags & flag) == flag ? value : (float?)null;
 	}
 
-	public enum SKPathOp {
-		Difference,
-		Intersect,
-		Union,
-		Xor,
-		ReverseDifference,
-	};
-
-	public enum SKPathConvexity {
-		Unknown,
-		Convex,
-		Concave,
-	};
-
-	public enum SKLatticeRectType {
-		Default,
-		Transparent,
-		FixedColor,
-	};
-
-	[StructLayout(LayoutKind.Sequential)]
-	internal unsafe struct SKLatticeInternal {
-		public int* fXDivs;
-		public int* fYDivs;
-		public SKLatticeRectType* fRectTypes;
-		public int fXCount;
-		public int fYCount;
-		public SKRectI* fBounds;
-		public SKColor* fColors;
-	}
-
-	public struct SKLattice {
+	public struct SKLattice : IEquatable<SKLattice>
+	{
 		public int[] XDivs { get; set; }
 		public int[] YDivs { get; set; }
 		public SKLatticeRectType[] RectTypes { get; set; }
 		public SKRectI? Bounds { get; set; }
 		public SKColor[] Colors { get; set; }
+
+		public readonly bool Equals (SKLattice obj) =>
+			XDivs == obj.XDivs &&
+			YDivs == obj.YDivs &&
+			RectTypes == obj.RectTypes &&
+			Bounds == obj.Bounds &&
+			Colors == obj.Colors;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKLattice f && Equals (f);
+
+		public static bool operator == (SKLattice left, SKLattice right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKLattice left, SKLattice right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (XDivs);
+			hash.Add (YDivs);
+			hash.Add (RectTypes);
+			hash.Add (Bounds);
+			hash.Add (Colors);
+			return hash.ToHashCode ();
+		}
 	}
 
-	[StructLayout(LayoutKind.Sequential)]
-	internal struct SKTimeDateTimeInternal {
-		public Int16 TimeZoneMinutes;
-		public UInt16 Year;
-		public Byte Month;
-		public Byte DayOfWeek;
-		public Byte Day;
-		public Byte Hour;
-		public Byte Minute;
-		public Byte Second;
-
-		public static SKTimeDateTimeInternal Create (DateTime datetime) {
-			var zone = datetime.Hour - datetime.ToUniversalTime().Hour;
+	internal partial struct SKTimeDateTimeInternal
+	{
+		public static SKTimeDateTimeInternal Create (DateTime datetime)
+		{
+			var zone = datetime.Hour - datetime.ToUniversalTime ().Hour;
 			return new SKTimeDateTimeInternal {
-				TimeZoneMinutes = (Int16)(zone * 60),
-				Year = (UInt16)datetime.Year,
-				Month = (Byte)datetime.Month,
-				DayOfWeek = (Byte)datetime.DayOfWeek,
-				Day = (Byte)datetime.Day,
-				Hour = (Byte)datetime.Hour,
-				Minute = (Byte)datetime.Minute,
-				Second = (Byte)datetime.Second
+				fTimeZoneMinutes = (Int16)(zone * 60),
+				fYear = (UInt16)datetime.Year,
+				fMonth = (Byte)datetime.Month,
+				fDayOfWeek = (Byte)datetime.DayOfWeek,
+				fDay = (Byte)datetime.Day,
+				fHour = (Byte)datetime.Hour,
+				fMinute = (Byte)datetime.Minute,
+				fSecond = (Byte)datetime.Second
 			};
 		}
 	}
 
-	[StructLayout(LayoutKind.Sequential)]
-	internal unsafe struct SKDocumentPdfMetadataInternal {
-		public sk_string_t Title;
-		public sk_string_t Author;
-		public sk_string_t Subject;
-		public sk_string_t Keywords;
-		public sk_string_t Creator;
-		public sk_string_t Producer;
-		public SKTimeDateTimeInternal* Creation;
-		public SKTimeDateTimeInternal* Modified;
-		public float RasterDPI;
-		public byte PDFA;
-		public int EncodingQuality;
-	}
-
-	public struct SKDocumentPdfMetadata {
+	public struct SKDocumentPdfMetadata : IEquatable<SKDocumentPdfMetadata>
+	{
 		public const float DefaultRasterDpi = SKDocument.DefaultRasterDpi;
 		public const int DefaultEncodingQuality = 101;
 
@@ -630,80 +474,66 @@ namespace SkiaSharp
 		public float RasterDpi { get; set; }
 		public bool PdfA { get; set; }
 		public int EncodingQuality { get; set; }
+
+		public readonly bool Equals (SKDocumentPdfMetadata obj) =>
+			Title == obj.Title &&
+			Author == obj.Author &&
+			Subject == obj.Subject &&
+			Keywords == obj.Keywords &&
+			Creator == obj.Creator &&
+			Producer == obj.Producer &&
+			Creation == obj.Creation &&
+			Modified == obj.Modified &&
+			RasterDpi == obj.RasterDpi &&
+			PdfA == obj.PdfA &&
+			EncodingQuality == obj.EncodingQuality;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKDocumentPdfMetadata f && Equals (f);
+
+		public static bool operator == (SKDocumentPdfMetadata left, SKDocumentPdfMetadata right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKDocumentPdfMetadata left, SKDocumentPdfMetadata right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (Title);
+			hash.Add (Author);
+			hash.Add (Subject);
+			hash.Add (Keywords);
+			hash.Add (Creator);
+			hash.Add (Producer);
+			hash.Add (Creation);
+			hash.Add (Modified);
+			hash.Add (RasterDpi);
+			hash.Add (PdfA);
+			hash.Add (EncodingQuality);
+			return hash.ToHashCode ();
+		}
 	}
 
-	public enum SKColorSpaceGamut {
-		Srgb,
-		AdobeRgb,
-		Dcip3D65,
-		Rec2020,
-	}
-
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete]
 	[Flags]
-	public enum SKColorSpaceFlags {
+	public enum SKColorSpaceFlags
+	{
 		None = 0,
 		NonLinearBlending = 0x1,
 	}
 
-	public enum SKColorSpaceRenderTargetGamma {
-		Linear,
-		Srgb,
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete]
+	public enum SKTransferFunctionBehavior
+	{
+		Ignore = 1,
+		Respect = 0,
 	}
 
-	public enum SKColorSpaceType {
-		Rgb,
-		Cmyk,
-		Gray,
-	}
-
-	public enum SKNamedGamma {
-		Linear,
-		Srgb,
-		TwoDotTwoCurve,
-		NonStandard,
-	}
-
-	public enum SKMaskFormat {
-		BW,
-		A8,
-		ThreeD,
-		Argb32,
-		Lcd16,
-	}
-
-	[Flags]
-	public enum SKMatrix44TypeMask {
-		Identity = 0,
-		Translate = 0x01,
-		Scale = 0x02,
-		Affine = 0x04,
-		Perspective = 0x08
-	}
-
-	public enum SKVertexMode {
-		Triangles,
-		TriangleStrip,
-		TriangleFan,
-	}
-
-	public enum SKImageCachingHint {
-		Allow,
-		Disallow,
-	}
-
-	public enum SKHighContrastConfigInvertStyle {
-		NoInvert,
-		InvertBrightness,
-		InvertLightness,
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	public struct SKHighContrastConfig {
-		private byte fGrayscale;
-		private SKHighContrastConfigInvertStyle fInvertStyle;
-		private float fContrast;
-
+	public partial struct SKHighContrastConfig
+	{
 		public static readonly SKHighContrastConfig Default;
 
 		static SKHighContrastConfig ()
@@ -718,110 +548,62 @@ namespace SkiaSharp
 			fContrast = contrast;
 		}
 
-		public bool Grayscale {
-			get => fGrayscale != 0;
-			set => fGrayscale = value ? (byte)1 : (byte)0;
-		}
-		public SKHighContrastConfigInvertStyle InvertStyle {
-			get => fInvertStyle;
-			set => fInvertStyle = value;
-		}
-		public float Contrast {
-			get => fContrast;
-			set => fContrast = value;
-		}
-
-		public bool IsValid =>
+		public readonly bool IsValid =>
 			(int)fInvertStyle >= (int)SKHighContrastConfigInvertStyle.NoInvert &&
 			(int)fInvertStyle <= (int)SKHighContrastConfigInvertStyle.InvertLightness &&
 			fContrast >= -1.0 &&
 			fContrast <= 1.0;
 	}
 
-	[Flags]
-	public enum SKBitmapAllocFlags : uint {
-		None = 0,
-		ZeroPixels = 1 << 0,
-	}
-
-	[Flags]
-	public enum SKPngEncoderFilterFlags {
-		NoFilters  = 0x00,
-		None       = 0x08,
-		Sub        = 0x10,
-		Up         = 0x20,
-		Avg        = 0x40,
-		Paeth      = 0x80,
-		AllFilters = None | Sub | Up | Avg | Paeth,
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	public struct SKPngEncoderOptions {
-		private SKPngEncoderFilterFlags fFilterFlags;
-		private int fZLibLevel;
-		private SKTransferFunctionBehavior fUnpremulBehavior;
-		private IntPtr fComments; // TODO: get and set comments
-
+	public unsafe partial struct SKPngEncoderOptions
+	{
 		public static readonly SKPngEncoderOptions Default;
 
 		static SKPngEncoderOptions ()
 		{
-			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.AllFilters, 6, SKTransferFunctionBehavior.Respect);
+			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.AllFilters, 6);
 		}
 
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel)
 		{
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
-			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
-			fComments = IntPtr.Zero;
+			fComments = null;
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Using SKPngEncoderOptions(SKPngEncoderFilterFlags, int) instead.")]
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel, SKTransferFunctionBehavior unpremulBehavior)
 		{
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
-			fUnpremulBehavior = unpremulBehavior;
-			fComments = IntPtr.Zero;
+			fComments = null;
 		}
 
 		public SKPngEncoderFilterFlags FilterFlags {
-			get => fFilterFlags;
+			readonly get => fFilterFlags;
 			set => fFilterFlags = value;
 		}
 		public int ZLibLevel {
-			get => fZLibLevel;
+			readonly get => fZLibLevel;
 			set => fZLibLevel = value;
 		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
 		public SKTransferFunctionBehavior UnpremulBehavior {
-			get => fUnpremulBehavior;
-			set => fUnpremulBehavior = value;
+			readonly get => SKTransferFunctionBehavior.Respect;
+			set { }
 		}
 	}
 
-	public enum SKJpegEncoderDownsample {
-		Downsample420,
-		Downsample422,
-		Downsample444,
-	}
-
-	public enum SKJpegEncoderAlphaOption {
-		Ignore,
-		BlendOnBlack,
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	public struct SKJpegEncoderOptions {
-		private int fQuality;
-		private SKJpegEncoderDownsample fDownsample;
-		private SKJpegEncoderAlphaOption fAlphaOption;
-		private SKTransferFunctionBehavior fBlendBehavior;
-
+	public partial struct SKJpegEncoderOptions
+	{
 		public static readonly SKJpegEncoderOptions Default;
 
 		static SKJpegEncoderOptions ()
 		{
-			Default = new SKJpegEncoderOptions (100, SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore, SKTransferFunctionBehavior.Respect);
+			Default = new SKJpegEncoderOptions (100, SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore);
 		}
 
 		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption)
@@ -829,94 +611,53 @@ namespace SkiaSharp
 			fQuality = quality;
 			fDownsample = downsample;
 			fAlphaOption = alphaOption;
-			fBlendBehavior = SKTransferFunctionBehavior.Respect;
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use SKJpegEncoderOptions(int, SKJpegEncoderDownsample, SKJpegEncoderAlphaOption) instead.")]
 		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption, SKTransferFunctionBehavior blendBehavior)
 		{
 			fQuality = quality;
 			fDownsample = downsample;
 			fAlphaOption = alphaOption;
-			fBlendBehavior = blendBehavior;
 		}
 
-		public int Quality {
-			get => fQuality;
-			set => fQuality = value;
-		}
-		public SKJpegEncoderDownsample Downsample {
-			get => fDownsample;
-			set => fDownsample = value;
-		}
-		public SKJpegEncoderAlphaOption AlphaOption {
-			get => fAlphaOption;
-			set => fAlphaOption = value;
-		}
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
 		public SKTransferFunctionBehavior BlendBehavior {
-			get => fBlendBehavior;
-			set => fBlendBehavior = value;
+			readonly get => SKTransferFunctionBehavior.Respect;
+			set { }
 		}
 	}
 
-	public enum SKWebpEncoderCompression {
-		Lossy,
-		Lossless,
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	public struct SKWebpEncoderOptions {
-		private SKWebpEncoderCompression fCompression;
-		private float fQuality;
-		private SKTransferFunctionBehavior fUnpremulBehavior;
-
+	public partial struct SKWebpEncoderOptions
+	{
 		public static readonly SKWebpEncoderOptions Default;
 
 		static SKWebpEncoderOptions ()
 		{
-			Default = new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossy, 100, SKTransferFunctionBehavior.Respect);
+			Default = new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossy, 100);
 		}
 
 		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality)
 		{
 			fCompression = compression;
 			fQuality = quality;
-			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use SKWebpEncoderOptions(SKWebpEncoderCompression, float) instead.")]
 		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality, SKTransferFunctionBehavior unpremulBehavior)
 		{
 			fCompression = compression;
 			fQuality = quality;
-			fUnpremulBehavior = unpremulBehavior;
 		}
 
-		public SKWebpEncoderCompression Compression {
-			get => fCompression;
-			set => fCompression = value;
-		}
-		public float Quality {
-			get => fQuality;
-			set => fQuality = value;
-		}
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
 		public SKTransferFunctionBehavior UnpremulBehavior {
-			get => fUnpremulBehavior;
-			set => fUnpremulBehavior = value;
+			readonly get => SKTransferFunctionBehavior.Respect;
+			set { }
 		}
-	}
-
-	public enum SKRoundRectType {
-		Empty,
-		Rect,
-		Oval,
-		Simple,
-		NinePatch,
-		Complex,
-	}
-
-	public enum SKRoundRectCorner {
-		UpperLeft,
-		UpperRight,
-		LowerRight,
-		LowerLeft,
 	}
 }

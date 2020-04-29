@@ -25,11 +25,15 @@ using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Mac.SKPaintSurfaceEventArg
 using Xamarin.Forms.Platform.Tizen;
 using SKNativeView = SkiaSharp.Views.Tizen.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintSurfaceEventArgs;
-using TForms = Xamarin.Forms.Platform.Tizen.Forms;
+using TForms = Xamarin.Forms.Forms;
 #elif __WPF__
 using System.Windows;
 using Xamarin.Forms.Platform.WPF;
 using SKNativeView = SkiaSharp.Views.WPF.SKElement;
+using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs;
+#elif __GTK__
+using Xamarin.Forms.Platform.GTK;
+using SKNativeView = SkiaSharp.Views.Gtk.SKWidget;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs;
 #endif
 
@@ -50,6 +54,7 @@ namespace SkiaSharp.Views.Forms
 #endif
 
 #if __ANDROID__
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("This constructor is obsolete as of version 2.5. Please use SKCanvasViewRendererBase(Context) instead.")]
 #endif
 		protected SKCanvasViewRendererBase()
@@ -96,7 +101,10 @@ namespace SkiaSharp.Views.Forms
 
 				// set the initial values
 				touchHandler.SetEnabled(Control, e.NewElement.EnableTouchEvents);
+#if !__GTK__
+				// TODO: implement this if it is actually supported
 				Control.IgnorePixelScaling = e.NewElement.IgnorePixelScaling;
+#endif
 
 				// subscribe to events from the user
 				newController.SurfaceInvalidated += OnSurfaceInvalidated;
@@ -138,7 +146,10 @@ namespace SkiaSharp.Views.Forms
 
 			if (e.PropertyName == SKFormsView.IgnorePixelScalingProperty.PropertyName)
 			{
+#if !__GTK__
+				// TODO: implement this if it is actually supported
 				Control.IgnorePixelScaling = Element.IgnorePixelScaling;
+#endif
 			}
 			else if (e.PropertyName == SKFormsView.EnableTouchEventsProperty.PropertyName)
 			{
@@ -189,6 +200,9 @@ namespace SkiaSharp.Views.Forms
 				y = Tizen.ScalingInfo.FromPixel(y);
 #elif __IOS__ || __MACOS__ || WINDOWS_UWP || __WPF__
 				// Tizen and Android are the reverse of the other platforms
+#elif __GTK__
+				// TODO: implement this if it is actually supported
+				// GTK does not yet support IgnorePixelScaling
 #else
 #error Missing platform logic
 #endif
@@ -197,6 +211,9 @@ namespace SkiaSharp.Views.Forms
 			{
 #if __ANDROID__ || __TIZEN__
 				// Tizen and Android are the reverse of the other platforms
+#elif __GTK__
+				// TODO: implement this if it is actually supported
+				// GTK does not yet support IgnorePixelScaling
 #elif __IOS__
 				x = x * Control.ContentScaleFactor;
 				y = y * Control.ContentScaleFactor;
@@ -235,6 +252,8 @@ namespace SkiaSharp.Views.Forms
 			Control.NeedsDisplay = true;
 #elif __WPF__
 			Control.InvalidateVisual();
+#elif __GTK__
+			Control.QueueDraw();
 #else
 			Control.Invalidate();
 #endif

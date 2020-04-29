@@ -1,4 +1,5 @@
-﻿using Xamarin.Forms.Platform.Tizen;
+﻿using Xamarin.Forms;
+using Xamarin.Forms.Platform.Tizen;
 
 namespace SkiaSharpSample
 {

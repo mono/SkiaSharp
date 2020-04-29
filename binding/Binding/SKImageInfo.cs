@@ -1,52 +1,38 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	[StructLayout(LayoutKind.Sequential)]
-	internal struct SKImageInfoNative
+	internal partial struct SKImageInfoNative
 	{
-		public IntPtr fColorSpace;
-		public int fWidth;
-		public int fHeight;
-		public SKColorType fColorType;
-		public SKAlphaType fAlphaType;
-
 		public static void UpdateNative (ref SKImageInfo managed, ref SKImageInfoNative native)
 		{
-			native.fColorSpace = managed.ColorSpace == null ? IntPtr.Zero : managed.ColorSpace.Handle;
-			native.fWidth = managed.Width;
-			native.fHeight = managed.Height;
-			native.fColorType = managed.ColorType;
-			native.fAlphaType = managed.AlphaType;
+			native.colorspace = managed.ColorSpace?.Handle ?? IntPtr.Zero;
+			native.width = managed.Width;
+			native.height = managed.Height;
+			native.colorType = managed.ColorType.ToNative ();
+			native.alphaType = managed.AlphaType;
 		}
 
-		public static SKImageInfoNative FromManaged (ref SKImageInfo managed)
-		{
-			return new SKImageInfoNative
-			{
-				fColorSpace = managed.ColorSpace == null ? IntPtr.Zero : managed.ColorSpace.Handle,
-				fWidth = managed.Width,
-				fHeight = managed.Height,
-				fColorType = managed.ColorType,
-				fAlphaType = managed.AlphaType,
+		public static SKImageInfoNative FromManaged (ref SKImageInfo managed) =>
+			new SKImageInfoNative {
+				colorspace = managed.ColorSpace?.Handle ?? IntPtr.Zero,
+				width = managed.Width,
+				height = managed.Height,
+				colorType = managed.ColorType.ToNative (),
+				alphaType = managed.AlphaType,
 			};
-		}
 
-		public static SKImageInfo ToManaged (ref SKImageInfoNative native)
-		{
-			return new SKImageInfo
-			{
-				ColorSpace = SKObject.GetObject<SKColorSpace> (native.fColorSpace),
-				Width = native.fWidth,
-				Height = native.fHeight,
-				ColorType = native.fColorType,
-				AlphaType = native.fAlphaType,
+		public static SKImageInfo ToManaged (ref SKImageInfoNative native) =>
+			new SKImageInfo {
+				ColorSpace = SKColorSpace.GetObject (native.colorspace),
+				Width = native.width,
+				Height = native.height,
+				ColorType = native.colorType.FromNative (),
+				AlphaType = native.alphaType,
 			};
-		}
 	}
 
-	public struct SKImageInfo
+	public unsafe struct SKImageInfo : IEquatable<SKImageInfo>
 	{
 		public static readonly SKImageInfo Empty;
 		public static readonly SKColorType PlatformColorType;
@@ -57,8 +43,14 @@ namespace SkiaSharp
 
 		static SKImageInfo ()
 		{
-			PlatformColorType = SkiaApi.sk_colortype_get_default_8888 ();
-			SkiaApi.sk_color_get_bit_shift (out PlatformColorAlphaShift, out PlatformColorRedShift, out PlatformColorGreenShift, out PlatformColorBlueShift);
+			PlatformColorType = SkiaApi.sk_colortype_get_default_8888 ().FromNative ();
+
+			fixed (int* a = &PlatformColorAlphaShift)
+			fixed (int* r = &PlatformColorRedShift)
+			fixed (int* g = &PlatformColorGreenShift)
+			fixed (int* b = &PlatformColorBlueShift) {
+				SkiaApi.sk_color_get_bit_shift (a, r, g, b);
+			}
 		}
 
 		public int Width { get; set; }
@@ -107,49 +99,31 @@ namespace SkiaSharp
 			ColorSpace = colorspace;
 		}
 
-		public int BytesPerPixel {
-			get {
-				switch (ColorType) {
-				case SKColorType.Unknown:
-					return 0;
-				case SKColorType.Alpha8:
-				case SKColorType.Gray8:
-					return 1;
-				case SKColorType.Rgb565:
-				case SKColorType.Argb4444:
-					return 2;
-				case SKColorType.Bgra8888:
-				case SKColorType.Rgba8888:
-				case SKColorType.Rgb888x:
-				case SKColorType.Rgba1010102:
-				case SKColorType.Rgb101010x:
-					return 4;
-				case SKColorType.RgbaF16:
-					return 8;
-				}
-				throw new ArgumentOutOfRangeException (nameof (ColorType));
-			}
-		}
+		public readonly int BytesPerPixel =>
+			ColorType.GetBytesPerPixel ();
 
-		public int BitsPerPixel => BytesPerPixel * 8;
+		public readonly int BitsPerPixel => BytesPerPixel * 8;
 
-		public int BytesSize => Width * Height * BytesPerPixel;
+		public readonly int BytesSize => Width * Height * BytesPerPixel;
 
-		public long BytesSize64 => (long)Width * (long)Height * (long)BytesPerPixel;
+		public readonly long BytesSize64 => (long)Width * (long)Height * (long)BytesPerPixel;
 
-		public int RowBytes => Width * BytesPerPixel;
+		public readonly int RowBytes => Width * BytesPerPixel;
 
-		public long RowBytes64 => (long)Width * (long)BytesPerPixel;
+		public readonly long RowBytes64 => (long)Width * (long)BytesPerPixel;
 
-		public bool IsEmpty => Width <= 0 || Height <= 0;
+		public readonly bool IsEmpty => Width <= 0 || Height <= 0;
 
-		public bool IsOpaque => AlphaType == SKAlphaType.Opaque;
+		public readonly bool IsOpaque => AlphaType == SKAlphaType.Opaque;
 
-		public SKSizeI Size => new SKSizeI (Width, Height);
+		public readonly SKSizeI Size => new SKSizeI (Width, Height);
 
-		public SKRectI Rect => SKRectI.Create (Width, Height);
+		public readonly SKRectI Rect => SKRectI.Create (Width, Height);
 
-		public SKImageInfo WithSize(int width, int height)
+		public readonly SKImageInfo WithSize (SKSizeI size) =>
+			WithSize (size.Width, size.Height);
+
+		public readonly SKImageInfo WithSize (int width, int height)
 		{
 			var copy = this;
 			copy.Width = width;
@@ -157,25 +131,52 @@ namespace SkiaSharp
 			return copy;
 		}
 
-		public SKImageInfo WithColorType (SKColorType newColorType)
+		public readonly SKImageInfo WithColorType (SKColorType newColorType)
 		{
 			var copy = this;
 			copy.ColorType = newColorType;
 			return copy;
 		}
 
-		public SKImageInfo WithColorSpace (SKColorSpace newColorSpace)
+		public readonly SKImageInfo WithColorSpace (SKColorSpace newColorSpace)
 		{
 			var copy = this;
 			copy.ColorSpace = newColorSpace;
 			return copy;
 		}
 
-		public SKImageInfo WithAlphaType (SKAlphaType newAlphaType)
+		public readonly SKImageInfo WithAlphaType (SKAlphaType newAlphaType)
 		{
 			var copy = this;
 			copy.AlphaType = newAlphaType;
 			return copy;
+		}
+
+		public readonly bool Equals (SKImageInfo obj) =>
+			ColorSpace == obj.ColorSpace &&
+			Width == obj.Width &&
+			Height == obj.Height &&
+			ColorType == obj.ColorType &&
+			AlphaType == obj.AlphaType;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKImageInfo f && Equals (f);
+
+		public static bool operator == (SKImageInfo left, SKImageInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKImageInfo left, SKImageInfo right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (ColorSpace);
+			hash.Add (Width);
+			hash.Add (Height);
+			hash.Add (ColorType);
+			hash.Add (AlphaType);
+			return hash.ToHashCode ();
 		}
 	}
 }

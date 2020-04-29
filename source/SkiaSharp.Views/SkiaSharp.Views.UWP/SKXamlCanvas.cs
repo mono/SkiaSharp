@@ -26,6 +26,9 @@ namespace SkiaSharp.Views.UWP
 		private bool ignorePixelScaling;
 		private bool isVisible = true;
 
+		// workaround for https://github.com/mono/SkiaSharp/issues/1118
+		private int loadUnloadCounter = 0;
+
 		public SKXamlCanvas()
 		{
 			if (designMode)
@@ -89,6 +92,10 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
+			loadUnloadCounter++;
+			if (loadUnloadCounter != 1)
+				return;
+
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged += OnDpiChanged;
 
@@ -97,6 +104,10 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
+			loadUnloadCounter--;
+			if (loadUnloadCounter != 0)
+				return;
+
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged -= OnDpiChanged;
 
@@ -145,7 +156,7 @@ namespace SkiaSharp.Views.UWP
 			var dpi = Dpi;
 			return new SKSizeI((int)(w * dpi), (int)(h * dpi));
 
-			bool IsPositive(double value)
+			static bool IsPositive(double value)
 			{
 				return !double.IsNaN(value) && !double.IsInfinity(value) && value > 0;
 			}

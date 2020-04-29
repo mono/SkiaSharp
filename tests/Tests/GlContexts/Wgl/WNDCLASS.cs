@@ -4,10 +4,10 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Tests
 {
-	internal delegate IntPtr WNDPROC(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+	public delegate IntPtr WNDPROC(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
 	[StructLayout(LayoutKind.Sequential)]
-	internal struct WNDCLASS
+	public struct WNDCLASS
 	{
 		public uint style;
 		[MarshalAs(UnmanagedType.FunctionPtr)]

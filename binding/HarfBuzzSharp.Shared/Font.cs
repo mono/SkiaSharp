@@ -8,7 +8,7 @@ namespace HarfBuzzSharp
 {
 	public class Font : NativeObject
 	{
-		private const int NameBufferLength = 128;
+		internal const int NameBufferLength = 128;
 
 		public Font (Face face)
 			: base (IntPtr.Zero)
@@ -144,18 +144,19 @@ namespace HarfBuzzSharp
 
 		public unsafe bool TryGetGlyphName (uint glyph, out string name)
 		{
-			var buffer = ArrayPool<char>.Shared.Rent (NameBufferLength);
+			var pool = ArrayPool<byte>.Shared;
+			var buffer = pool.Rent (NameBufferLength);
 			try {
-				fixed (char* first = buffer) {
+				fixed (byte* first = buffer) {
 					if (!HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, buffer.Length)) {
 						name = string.Empty;
 						return false;
 					}
-					name = new string (first);
+					name = Marshal.PtrToStringAnsi ((IntPtr)first);
 					return true;
 				}
 			} finally {
-				ArrayPool<char>.Shared.Return (buffer);
+				pool.Return (buffer);
 			}
 		}
 
@@ -206,14 +207,15 @@ namespace HarfBuzzSharp
 
 		public unsafe string GlyphToString (uint glyph)
 		{
-			var buffer = ArrayPool<char>.Shared.Rent (NameBufferLength);
+			var pool = ArrayPool<byte>.Shared;
+			var buffer = pool.Rent (NameBufferLength);
 			try {
-				fixed (char* first = buffer) {
+				fixed (byte* first = buffer) {
 					HarfBuzzApi.hb_font_glyph_to_string (Handle, glyph, first, buffer.Length);
-					return new string (first);
+					return Marshal.PtrToStringAnsi ((IntPtr)first);
 				}
 			} finally {
-				ArrayPool<char>.Shared.Return (buffer);
+				pool.Return (buffer);
 			}
 		}
 
@@ -253,6 +255,9 @@ namespace HarfBuzzSharp
 			if (shapersPtr != IntPtr.Zero)
 				Marshal.FreeCoTaskMem (shapersPtr);
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeHandler ()
 		{

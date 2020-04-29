@@ -1,11 +1,15 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public abstract class SKTest : BaseTest, IAssemblyFixture<GarbageCleanupFixture>
+	public abstract class SKTest : BaseTest
 	{
+		protected const float EPSILON = 0.0001f;
+		protected const int PRECISION = 4;
+
 		private static readonly Random random = new Random();
 
 		protected static Stream CreateTestStream(int length = 1024)
@@ -13,6 +17,13 @@ namespace SkiaSharp.Tests
 			var bytes = new byte[length];
 			random.NextBytes(bytes);
 			return new MemoryStream(bytes);
+		}
+
+		protected static byte[] CreateTestData(int length = 1024)
+		{
+			var bytes = new byte[length];
+			random.NextBytes(bytes);
+			return bytes;
 		}
 
 		protected static SKStreamAsset CreateTestSKStream(int length = 1024)
@@ -90,6 +101,17 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Green.WithAlpha(alpha), pix.GetPixelColor(30, 10));
 			Assert.Equal(SKColors.Blue.WithAlpha(alpha), pix.GetPixelColor(10, 30));
 			Assert.Equal(SKColors.Yellow.WithAlpha(alpha), pix.GetPixelColor(30, 30));
+		}
+
+		protected static void AssertSimilar(ReadOnlySpan<float> expected, ReadOnlySpan<float> actual, int precision = PRECISION)
+		{
+			var eTrimmed = expected.ToArray()
+				.Select(v => (int)(v * precision) / precision);
+
+			var aTrimmed = actual.ToArray()
+				.Select(v => (int)(v * precision) / precision);
+
+			Assert.Equal(eTrimmed, aTrimmed);
 		}
 
 		protected GlContext CreateGlContext()

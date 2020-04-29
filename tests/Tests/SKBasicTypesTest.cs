@@ -7,9 +7,6 @@ namespace SkiaSharp.Tests
 {
 	public class SKBasicTypesTest : SKTest
 	{
-		private const float EPSILON = 0.0001f;
-		private const int PRECISION = 4;
-
 		[SkippableFact]
 		public void ImageInfoMethodsDoNotModifySource()
 		{

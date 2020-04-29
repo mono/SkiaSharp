@@ -1,41 +1,30 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\source\SkiaSharp.Build.props" />
+﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
   <PropertyGroup>
-    <TargetFramework>uap10.0.10240</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
+    <TargetFrameworks>uap10.0.10240;uap10.0.16299</TargetFrameworks>
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
     <PackagingGroup>SkiaSharp</PackagingGroup>
-    <PackagingPlatform>uap10.0</PackagingPlatform>
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.8" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\output\native\uwp\x64\libSkiaSharp.dll" Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\libSkiaSharp.dll" />
     <None Include="..\..\output\native\uwp\x86\libSkiaSharp.dll" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\libSkiaSharp.dll" />
     <None Include="..\..\output\native\uwp\arm\libSkiaSharp.dll" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\libSkiaSharp.dll" />
+    <None Include="..\..\output\native\uwp\arm64\libSkiaSharp.dll" Link="nuget\runtimes\win10-arm64\nativeassets\uap10.0\libSkiaSharp.dll" />
     <None Include="..\..\output\native\uwp\x64\libGLESv2.dll" Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\libGLESv2.dll" />
     <None Include="..\..\output\native\uwp\x86\libGLESv2.dll" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\libGLESv2.dll" />
     <None Include="..\..\output\native\uwp\arm\libGLESv2.dll" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\libGLESv2.dll" />
+    <None Include="..\..\output\native\uwp\arm64\libGLESv2.dll" Link="nuget\runtimes\win10-arm64\nativeassets\uap10.0\libGLESv2.dll" />
     <None Include="..\..\output\native\uwp\x64\libEGL.dll" Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\libEGL.dll" />
     <None Include="..\..\output\native\uwp\x86\libEGL.dll" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\libEGL.dll" />
     <None Include="..\..\output\native\uwp\arm\libEGL.dll" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\libEGL.dll" />
+    <None Include="..\..\output\native\uwp\arm64\libEGL.dll" Link="nuget\runtimes\win10-arm64\nativeassets\uap10.0\libEGL.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

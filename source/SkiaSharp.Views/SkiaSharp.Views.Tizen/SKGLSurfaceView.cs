@@ -19,8 +19,10 @@ namespace SkiaSharp.Views.Tizen
 		private IntPtr glSurface;
 
 		private GRContext context;
+		private GRGlFramebufferInfo glInfo;
 		private GRBackendRenderTarget renderTarget;
 		private SKSurface surface;
+		private SKCanvas canvas;
 		private SKSizeI surfaceSize;
 
 		public SKGLSurfaceView(EvasObject parent)
@@ -90,14 +92,14 @@ namespace SkiaSharp.Views.Tizen
 
 				if (surface != null && renderTarget != null && context != null)
 				{
-					using (new SKAutoCanvasRestore(surface.Canvas, true))
+					using (new SKAutoCanvasRestore(canvas, true))
 					{
 						// draw using SkiaSharp
-						OnDrawFrame(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType));
+						OnDrawFrame(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo));
 					}
 
 					// flush the SkiaSharp contents to GL
-					surface.Canvas.Flush();
+					canvas.Flush();
 					context.Flush();
 				}
 			}
@@ -145,12 +147,17 @@ namespace SkiaSharp.Views.Tizen
 				renderTarget?.Dispose();
 				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
 				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
-				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
-				renderTarget = new GRBackendRenderTarget(surfaceSize.Width, surfaceSize.Height, context.GetMaxSurfaceSampleCount(colorType), stencil, glInfo);
+				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
+				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
+				if (samples > maxSamples)
+					samples = maxSamples;
+				glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
+				renderTarget = new GRBackendRenderTarget(surfaceSize.Width, surfaceSize.Height, samples, stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();
 				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
+				canvas = surface.Canvas;
 			}
 		}
 
@@ -159,6 +166,7 @@ namespace SkiaSharp.Views.Tizen
 			if (glSurface != IntPtr.Zero)
 			{
 				// dispose the unmanaged memory
+				canvas = null;
 				surface?.Dispose();
 				surface = null;
 				renderTarget?.Dispose();

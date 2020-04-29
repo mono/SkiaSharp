@@ -6,7 +6,6 @@ namespace SkiaSharp
 {
 	public class SKFontStyleSet : SKObject, ISKReferenceCounted, IEnumerable<SKFontStyle>, IReadOnlyCollection<SKFontStyle>, IReadOnlyList<SKFontStyle>
 	{
-		[Preserve]
 		internal SKFontStyleSet (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -16,6 +15,9 @@ namespace SkiaSharp
 			: this (SkiaApi.sk_fontstyleset_create_empty (), true)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		public int Count => SkiaApi.sk_fontstyleset_get_count (Handle);
 
@@ -34,7 +36,9 @@ namespace SkiaSharp
 			if (index < 0 || index >= Count)
 				throw new ArgumentOutOfRangeException ($"Index was out of range. Must be non-negative and less than the size of the set.", nameof (index));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
+			var tf = SKTypeface.GetObject (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
+			tf?.PreventPublicDisposal ();
+			return tf;
 		}
 
 		public SKTypeface CreateTypeface (SKFontStyle style)
@@ -42,7 +46,9 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
+			var tf = SKTypeface.GetObject (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
+			tf?.PreventPublicDisposal ();
+			return tf;
 		}
 
 		public IEnumerator<SKFontStyle> GetEnumerator () => GetStyles ().GetEnumerator ();
@@ -63,5 +69,8 @@ namespace SkiaSharp
 			SkiaApi.sk_fontstyleset_get_style (Handle, index, fontStyle.Handle, IntPtr.Zero);
 			return fontStyle;
 		}
+
+		internal static SKFontStyleSet GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKFontStyleSet (h, o));
 	}
 }

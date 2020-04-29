@@ -1,29 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\source\SkiaSharp.Build.props" />
+﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
   <PropertyGroup>
     <TargetFramework>xamarinmac2.0</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
     <PackagingGroup>SkiaSharp</PackagingGroup>
-    <PackagingPlatform>Xamarin.Mac20</PackagingPlatform>
     <DefineConstants>$(DefineConstants);__MACOS__</DefineConstants>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <IsBindingProject>true</IsBindingProject>
-    <EnableDefaultItems>false</EnableDefaultItems>
+    <IsBindingProject Condition=" '$(IsMacOS)' == 'true' ">true</IsBindingProject>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="netstandard" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <ObjcBindingApiDefinition Include="ApiDefinition.cs" />
@@ -34,6 +17,4 @@
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

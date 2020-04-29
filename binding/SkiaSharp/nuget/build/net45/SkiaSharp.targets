@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
+    <PropertyGroup>
+        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
+    </PropertyGroup>
+
+    <!-- get the preferred architecture -->
+    <PropertyGroup>
+        <!-- handle VS 2017 live unit testing -->
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(BuildingForLiveUnitTesting)' == 'true' and '$(PlatformTarget)' == '' ">x86</PreferredNativeSkiaSharp>   
+
+        <!-- handle x86/x64 specifically -->
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and ( '$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86' ) ">$(PlatformTarget)</PreferredNativeSkiaSharp> 
+        <!-- handle Any CPU, considering Prefer32Bit - but only on Windows as macOS and Linux ignore this flag -->
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(OS)' != 'Unix' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeSkiaSharp>  
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(OS)' != 'Unix' and '$(Prefer32Bit)' == 'True' ">x86</PreferredNativeSkiaSharp> 
+        <!-- fall back to x64 on 64-bit machines -->
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(MSBuildRuntimeType)' != 'Core' and '$([System.Environment]::Is64BitOperatingSystem)' == 'True' ">x64</PreferredNativeSkiaSharp> 
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(MSBuildRuntimeType)' == 'Core' and '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'X64' ">x64</PreferredNativeSkiaSharp> 
+        <!-- fall back to x86 -->
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' ">x86</PreferredNativeSkiaSharp>
+    </PropertyGroup>
+
+    <!-- get the preferred paths -->
+    <PropertyGroup>
+        <PreferredWindowsNativeSkiaSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\win-$(PreferredNativeSkiaSharp)\native\libSkiaSharp.dll</PreferredWindowsNativeSkiaSharpPath>
+        <PreferredOSXNativeSkiaSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libSkiaSharp.dylib</PreferredOSXNativeSkiaSharpPath>
+        <PreferredLinuxNativeSkiaSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\linux-$(PreferredNativeSkiaSharp)\native\libSkiaSharp.so</PreferredLinuxNativeSkiaSharpPath>
+    </PropertyGroup>
+
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
+        <None Include="$(PreferredWindowsNativeSkiaSharpPath)" Condition=" Exists('$(PreferredWindowsNativeSkiaSharpPath)') ">
+            <Visible>false</Visible>
+            <Link>$([System.IO.Path]::GetFilename('$(PreferredWindowsNativeSkiaSharpPath)'))</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="$(PreferredOSXNativeSkiaSharpPath)" Condition=" Exists('$(PreferredOSXNativeSkiaSharpPath)') ">
+            <Visible>false</Visible>
+            <Link>$([System.IO.Path]::GetFilename('$(PreferredOSXNativeSkiaSharpPath)'))</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="$(PreferredLinuxNativeSkiaSharpPath)" Condition=" Exists('$(PreferredLinuxNativeSkiaSharpPath)') ">
+            <Visible>false</Visible>
+            <Link>$([System.IO.Path]::GetFilename('$(PreferredLinuxNativeSkiaSharpPath)'))</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <!-- handle the case where this is a Xamarin.Mac Full app/extension -->
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(XamarinMacFrameworkRoot)' != '' and '$(TargetFrameworkIdentifier)' != 'Xamarin.Mac' and '$(UseXamMacFullFramework)' == 'true' and ('$(OutputType)' == 'Exe' or '$(IsAppExtension)' == 'true') ">
+        <NativeReference Include="$(PreferredOSXNativeSkiaSharpPath)" Condition=" Exists('$(PreferredOSXNativeSkiaSharpPath)') ">
+            <Visible>false</Visible>
+            <Link>$([System.IO.Path]::GetFilename('$(PreferredOSXNativeSkiaSharpPath)'))</Link>
+            <Kind>Dynamic</Kind>
+        </NativeReference>
+    </ItemGroup>
+
+    <!-- a special case for Any CPU -->
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and ( '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' ) ">
+        <!-- Windows -->
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x86\native\libSkiaSharp.dll"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win-x86\native\libSkiaSharp.dll')">
+            <Visible>false</Visible>
+            <Link>x86\libSkiaSharp.dll</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\libSkiaSharp.dll"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\libSkiaSharp.dll')">
+            <Visible>false</Visible>
+            <Link>x64\libSkiaSharp.dll</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <!-- Linux -->
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-x86\native\libSkiaSharp.so"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\linux-x86\native\libSkiaSharp.so')">
+            <Visible>false</Visible>
+            <Link>x86\libSkiaSharp.so</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-x64\native\libSkiaSharp.so"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\linux-x64\native\libSkiaSharp.so')">
+            <Visible>false</Visible>
+            <Link>x64\libSkiaSharp.so</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-arm\native\libSkiaSharp.so"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\linux-arm\native\libSkiaSharp.so')">
+            <Visible>false</Visible>
+            <Link>arm\libSkiaSharp.so</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+</Project>

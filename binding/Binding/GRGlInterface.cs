@@ -5,14 +5,16 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public class GRGlInterface : SKObject, ISKReferenceCounted
+	public unsafe class GRGlInterface : SKObject, ISKReferenceCounted
 	{
-		[Preserve]
 		internal GRGlInterface (IntPtr h, bool owns)
 			: base (h, owns)
 		{
 		}
-		
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static GRGlInterface CreateDefaultInterface ()
 		{
 			// first try ANGLE, then fall back to the OpenGL-based
@@ -22,7 +24,7 @@ namespace SkiaSharp
 		public static GRGlInterface CreateNativeGlInterface ()
 		{
 			// the native code will automatically return null on non-OpenGL platforms, such as UWP
-			return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_create_native_interface ());
+			return GetObject (SkiaApi.gr_glinterface_create_native_interface ());
 		}
 		
 		public static GRGlInterface CreateNativeAngleInterface ()
@@ -66,7 +68,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface (ctx, proxy));
+				return GetObject (SkiaApi.gr_glinterface_assemble_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -95,7 +97,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface (ctx, proxy));
+				return GetObject (SkiaApi.gr_glinterface_assemble_gl_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -113,7 +115,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface (ctx, proxy));
+				return GetObject (SkiaApi.gr_glinterface_assemble_gles_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -128,6 +130,9 @@ namespace SkiaSharp
 		{
 			return SkiaApi.gr_glinterface_has_extension (Handle, extension);
 		}
+
+		internal static GRGlInterface GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new GRGlInterface (h, o));
 
 		private static class AngleLoader
 		{
@@ -228,7 +233,6 @@ namespace SkiaSharp
 		}
 
 		// this structure is initialized from a native pointer
-		[Preserve (AllMembers = true)]
 		private struct EvasGlApi
 		{
 			// DO NOT change the order, needs to be as specified in struct _Evas_GL_API (/platform/upstream/efl/src/lib/evas/Evas_GL.h)

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete]
 	public abstract class SKPixelSerializer : SKObject
 	{
@@ -41,6 +43,7 @@ namespace SkiaSharp
 		}
 	}
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete]
 	internal class SKSimplePixelSerializer : SKPixelSerializer
 	{
@@ -64,10 +67,11 @@ namespace SkiaSharp
 		}
 	}
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete]
 	public abstract class SKManagedPixelSerializer : SKPixelSerializer
 	{
-		public SKManagedPixelSerializer()
+		public SKManagedPixelSerializer ()
 		{
 		}
 	}

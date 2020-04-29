@@ -12,6 +12,8 @@
     <RootNamespace>SkiaSharp</RootNamespace>
     <PackageId>Uno.SkiaSharp.Wasm</PackageId>
 		<GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
+    
+    <PackagingGroup>SkiaSharp</PackagingGroup>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,6 +37,7 @@
       <PackagePath>build/libSkia</PackagePath>
     </Content>
     <None Remove="tsconfig.json" />
+    <Compile Include="JSInterop.cs" />
     <Content Include="build/netstandard2.0/Uno.SkiaSharp.Wasm.props">
       <Pack>true</Pack>
       <PackagePath>build/netstandard2.0</PackagePath>

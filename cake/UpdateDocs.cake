@@ -23,8 +23,10 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
             var dllName = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
             if (file.GetFilenameWithoutExtension ().GetExtension () == ".breaking") {
                 // skip over breaking changes without any breaking changes
-                if (!FindTextInFiles (file.FullPath, "###").Any ())
+                if (!FindTextInFiles (file.FullPath, "###").Any ()) {
+                    DeleteFile (file);
                     continue;
+                }
 
                 dllName += ".breaking";
             }
@@ -35,44 +37,61 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
     }
 }
 
-Task ("docs-download-output")
+Task ("docs-download-build-artifact")
+    .IsDependentOn ("determine-last-successful-build")
     .Does (() =>
 {
-    if (string.IsNullOrEmpty (AZURE_BUILD_ID))
-        throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
-
     var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "nuget");
 
     EnsureDirectoryExists ("./output");
     CleanDirectories ("./output");
 
     DownloadFile(url, "./output/nuget.zip");
+});
+
+Task ("docs-expand-build-artifact")
+    .Does (() =>
+{
     Unzip ("./output/nuget.zip", "./output");
-    MoveDirectory ("./output/nuget", "./output/nugets");
+    MoveDirectory ("./output/nuget", OUTPUT_NUGETS_PATH);
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         var version = GetVersion (id);
         var name = $"{id}.{version}.nupkg";
         CleanDirectories ($"./output/{id}");
-        Unzip ($"./output/nugets/{name}", $"./output/{id}/nuget");
+        Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
     }
 });
+
+Task ("docs-download-output")
+    .IsDependentOn ("docs-download-build-artifact")
+    .IsDependentOn ("docs-expand-build-artifact");
 
 Task ("docs-api-diff")
     .Does (async () =>
 {
-    var baseDir = "./output/api-diff";
+    // working version
+    var baseDir = $"{OUTPUT_NUGETS_PATH}/api-diff";
     CleanDirectories (baseDir);
 
+    // pretty version
+    var diffDir = "./output/api-diff";
+    CleanDirectories (diffDir);
+
+    Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
+
+    var filter = new NuGetVersions.Filter {
+        IncludePrerelease = NUGET_DIFF_PRERELEASE
+    };
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         Information ($"Comparing the assemblies in '{id}'...");
 
         var version = GetVersion (id);
-        var latestVersion = (await NuGetVersions.GetLatestAsync (id))?.ToNormalizedString ();
+        var latestVersion = (await NuGetVersions.GetLatestAsync (id, filter))?.ToNormalizedString ();
         Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");
 
         // pre-cache so we can have better logs
@@ -84,7 +103,7 @@ Task ("docs-api-diff")
         // generate the diff and copy to the changelogs
         Debug ($"Running a diff on '{latestVersion}' vs '{version}' of '{id}'...");
         var diffRoot = $"{baseDir}/{id}";
-        using (var reader = new PackageArchiveReader ($"./output/nugets/{id.ToLower ()}.{version}.nupkg")) {
+        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id.ToLower ()}.{version}.nupkg")) {
             // run the diff with just the breaking changes
             comparer.MarkdownDiffFileExtension = ".breaking.md";
             comparer.IgnoreNonBreakingChanges = true;
@@ -96,11 +115,18 @@ Task ("docs-api-diff")
         }
         CopyChangelogs (diffRoot, id, version);
 
+        // copy pretty version
+        foreach (var md in GetFiles ($"{diffRoot}/*/*.md")) {
+            var tfm = md.GetDirectory ().GetDirectoryName();
+            var prettyPath = ((DirectoryPath)diffDir).CombineWithFilePath ($"{id}/{tfm}/{md.GetFilename ()}");
+            if (!FindTextInFiles (md.FullPath, "No changes").Any ()) {
+                EnsureDirectoryExists (prettyPath.GetDirectory ());
+                CopyFile (md, prettyPath);
+            }
+        }
+
         Information ($"Diff complete of '{id}'.");
     }
-
-    // clean up after working
-    CleanDirectories (baseDir);
 });
 
 Task ("docs-api-diff-past")
@@ -109,6 +135,7 @@ Task ("docs-api-diff-past")
     var baseDir = "./output/api-diffs-past";
     CleanDirectories (baseDir);
 
+    Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
@@ -162,6 +189,7 @@ Task ("docs-update-frameworks")
     CleanDirectories (docsTempPath);
 
     // get a comparer that will download the nugets
+    Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
 
     // generate the temp frameworks.xml
@@ -177,21 +205,35 @@ Task ("docs-update-frameworks")
         var dev = new NuGetVersion (GetVersion (id));
         allVersions = allVersions.Union (new [] { dev }).ToArray ();
 
+        // "merge" the patches
+        var merged = new Dictionary<string, NuGetVersion> ();
         foreach (var version in allVersions) {
+            merged [$"{version.Major}.{version.Minor}.{version.Patch}"] = version;
+        }
+
+        foreach (var version in merged) {
             Information ($"Downloading '{id}' version '{version}'...");
             // get the path to the nuget contents
-            var packagePath = version == dev
+            var packagePath = version.Value == dev
                 ? $"./output/{id}/nuget"
-                : await comparer.ExtractCachedPackageAsync (id, version);
+                : await comparer.ExtractCachedPackageAsync (id, version.Value);
 
-            foreach (var (path, platform) in GetPlatformDirectories ($"{packagePath}/lib")) {
+            var dirs =
+                GetPlatformDirectories ($"{packagePath}/lib").Union(
+                GetPlatformDirectories ($"{packagePath}/ref"));
+            foreach (var (path, platform) in dirs) {
                 string moniker;
-                if (id.StartsWith ("SkiaSharp.Views") && !id.StartsWith ("SkiaSharp.Views.Forms"))
-                    moniker = $"skiasharp-views-{version}";
+                if (id.StartsWith ("SkiaSharp.Views.Forms"))
+                    if (id != "SkiaSharp.Views.Forms")
+                        continue;
+                    else
+                        moniker = $"skiasharp-views-forms-{version.Key}";
+                else if (id.StartsWith ("SkiaSharp.Views"))
+                    moniker = $"skiasharp-views-{version.Key}";
                 else if (platform == null)
-                    moniker = $"{id.ToLower ().Replace (".", "-")}-{version}";
+                    moniker = $"{id.ToLower ().Replace (".", "-")}-{version.Key}";
                 else
-                    moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version}";
+                    moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version.Key}";
 
                 // add the node to the frameworks.xml
                 if (xFrameworks.Elements ("Framework")?.Any (e => e.Attribute ("Name").Value == moniker) != true) {
@@ -346,6 +388,31 @@ Task ("docs-format-docs")
             .Descendants ("Attribute")
             .Where (e => !e.Elements ().Any ())
             .Remove ();
+
+        // special case for Android resources: don't process
+        if (xdoc.Root.Name == "Type") {
+            var nameAttr = xdoc.Root.Attribute ("FullName")?.Value;
+            if (nameAttr == "SkiaSharp.Views.Android.Resource" || nameAttr?.StartsWith ("SkiaSharp.Views.Android.Resource+") == true) {
+                DeleteFile (file);
+                continue;
+            }
+        }
+        if (xdoc.Root.Name == "Overview") {
+            foreach (var type in xdoc.Root.Descendants ("Type").ToArray ()) {
+                var nameAttr = type.Attribute ("Name")?.Value;
+                if (nameAttr == "Resource" || nameAttr?.StartsWith ("Resource+") == true) {
+                    type.Remove ();
+                }
+            }
+        }
+        if (xdoc.Root.Name == "Framework") {
+            foreach (var type in xdoc.Root.Descendants ("Type").ToArray ()) {
+                var nameAttr = type.Attribute ("Name")?.Value;
+                if (nameAttr == "SkiaSharp.Views.Android.Resource" || nameAttr?.StartsWith ("SkiaSharp.Views.Android.Resource/") == true) {
+                    type.Remove ();
+                }
+            }
+        }
 
         // count the types without docs
         var typesWithDocs = xdoc.Root

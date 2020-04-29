@@ -1,5 +1,5 @@
 ﻿using SkiaSharp.Views.Tizen;
-using Xamarin.Forms.Platform.Tizen;
+using Xamarin.Forms;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
 using SKNativeView = SkiaSharp.Views.Tizen.SKGLSurfaceView;

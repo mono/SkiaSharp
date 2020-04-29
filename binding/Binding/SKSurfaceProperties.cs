@@ -1,15 +1,16 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
 	public class SKSurfaceProperties : SKObject
 	{
-		[Preserve]
 		internal SKSurfaceProperties (IntPtr h, bool owns)
 			: base (h, owns)
 		{
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public SKSurfaceProperties (SKSurfaceProps props)
 			: this (props.Flags, props.PixelGeometry)
@@ -31,6 +32,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_surfaceprops_delete (Handle);
 
@@ -42,5 +46,8 @@ namespace SkiaSharp
 
 		public bool IsUseDeviceIndependentFonts =>
 			Flags.HasFlag (SKSurfacePropsFlags.UseDeviceIndependentFonts);
+
+		internal static SKSurfaceProperties GetObject (IntPtr handle, bool owns = true) =>
+			GetOrAddObject (handle, owns, (h, o) => new SKSurfaceProperties (h, o));
 	}
 }

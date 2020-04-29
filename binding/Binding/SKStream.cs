@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SkiaSharp
 {
-	public abstract class SKStream : SKObject
+	public unsafe abstract class SKStream : SKObject
 	{
 		internal SKStream (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -67,56 +67,69 @@ namespace SkiaSharp
 
 		public bool ReadSByte (out SByte buffer)
 		{
-			return SkiaApi.sk_stream_read_s8 (Handle, out buffer);
+			fixed (SByte* b = &buffer) {
+				return SkiaApi.sk_stream_read_s8 (Handle, b);
+			}
 		}
 
 		public bool ReadInt16 (out Int16 buffer)
 		{
-			return SkiaApi.sk_stream_read_s16 (Handle, out buffer);
+			fixed (Int16* b = &buffer) {
+				return SkiaApi.sk_stream_read_s16 (Handle, b);
+			}
 		}
 
 		public bool ReadInt32 (out Int32 buffer)
 		{
-			return SkiaApi.sk_stream_read_s32 (Handle, out buffer);
+			fixed (Int32* b = &buffer) {
+				return SkiaApi.sk_stream_read_s32 (Handle, b);
+			}
 		}
 
 		public bool ReadByte (out Byte buffer)
 		{
-			return SkiaApi.sk_stream_read_u8 (Handle, out buffer);
+			fixed (Byte* b = &buffer) {
+				return SkiaApi.sk_stream_read_u8 (Handle, b);
+			}
 		}
 
 		public bool ReadUInt16 (out UInt16 buffer)
 		{
-			return SkiaApi.sk_stream_read_u16 (Handle, out buffer);
+			fixed (UInt16* b = &buffer) {
+				return SkiaApi.sk_stream_read_u16 (Handle, b);
+			}
 		}
 
 		public bool ReadUInt32 (out UInt32 buffer)
 		{
-			return SkiaApi.sk_stream_read_u32 (Handle, out buffer);
+			fixed (UInt32* b = &buffer) {
+				return SkiaApi.sk_stream_read_u32 (Handle, b);
+			}
 		}
 
 		public bool ReadBool (out Boolean buffer)
 		{
-			return SkiaApi.sk_stream_read_bool (Handle, out buffer);
+			byte b;
+			var result = SkiaApi.sk_stream_read_bool (Handle, &b);
+			buffer = b > 0;
+			return result;
 		}
 
 		public int Read (byte[] buffer, int size)
 		{
-			unsafe {
-				fixed (byte* b = buffer) {
-					return Read ((IntPtr)b, size);
-				}
+			fixed (byte* b = buffer) {
+				return Read ((IntPtr)b, size);
 			}
 		}
 
 		public int Read (IntPtr buffer, int size)
 		{
-			return (int)SkiaApi.sk_stream_read (Handle, buffer, (IntPtr)size);
+			return (int)SkiaApi.sk_stream_read (Handle, (void*)buffer, (IntPtr)size);
 		}
 
 		public int Peek (IntPtr buffer, int size)
 		{
-			return (int)SkiaApi.sk_stream_peek (Handle, buffer, (IntPtr)size);
+			return (int)SkiaApi.sk_stream_peek (Handle, (void*)buffer, (IntPtr)size);
 		}
 
 		public int Skip (int size)
@@ -134,21 +147,21 @@ namespace SkiaSharp
 			return SkiaApi.sk_stream_seek (Handle, (IntPtr)position);
 		}
 
-		public bool Move (long offset)
+		public bool Move (long offset) => Move ((int)offset);
+
+		public bool Move (int offset)
 		{
 			return SkiaApi.sk_stream_move (Handle, offset);
 		}
 
 		public IntPtr GetMemoryBase ()
 		{
-			return SkiaApi.sk_stream_get_memory_base (Handle);
+			return (IntPtr)SkiaApi.sk_stream_get_memory_base (Handle);
 		}
 
-		internal SKStream Fork () =>
-			GetObject<SKStream, SKStreamImplementation> (SkiaApi.sk_stream_fork (Handle));
+		internal SKStream Fork () => GetObject (SkiaApi.sk_stream_fork (Handle));
 
-		internal SKStream Duplicate () =>
-			GetObject<SKStream, SKStreamImplementation> (SkiaApi.sk_stream_duplicate (Handle));
+		internal SKStream Duplicate () => GetObject (SkiaApi.sk_stream_duplicate (Handle));
 
 		public bool HasPosition {
 			get {
@@ -176,15 +189,20 @@ namespace SkiaSharp
 				return (int)SkiaApi.sk_stream_get_length (Handle);
 			}
 		}
+
+		internal static SKStream GetObject (IntPtr handle) =>
+			GetOrAddObject<SKStream> (handle, (h, o) => new SKStreamImplementation (h, o));
 	}
 
 	internal class SKStreamImplementation : SKStream
 	{
-		[Preserve]
 		internal SKStreamImplementation (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_stream_destroy (Handle);
@@ -212,15 +230,20 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
+
+		internal static new SKStreamAsset GetObject (IntPtr handle) =>
+			GetOrAddObject<SKStreamAsset> (handle, (h, o) => new SKStreamAssetImplementation (h, o));
 	}
 
 	internal class SKStreamAssetImplementation : SKStreamAsset
 	{
-		[Preserve]
 		internal SKStreamAssetImplementation (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_stream_asset_destroy (Handle);
@@ -234,21 +257,31 @@ namespace SkiaSharp
 		}
 	}
 
-	public class SKFileStream : SKStreamAsset
+	public unsafe class SKFileStream : SKStreamAsset
 	{
-		[Preserve]
 		internal SKFileStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
 		public SKFileStream (string path)
-			: base (SkiaApi.sk_filestream_new (StringUtilities.GetEncodedText (path, SKEncoding.Utf8)), true)
+			: base (CreateNew (path), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKFileStream instance.");
 			}
 		}
+
+		private static IntPtr CreateNew (string path)
+		{
+			var bytes = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
+			fixed (byte* p = bytes) {
+				return SkiaApi.sk_filestream_new (p);
+			}
+		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_filestream_destroy (Handle);
@@ -268,9 +301,8 @@ namespace SkiaSharp
 		}
 	}
 
-	public class SKMemoryStream : SKStreamMemory
+	public unsafe class SKMemoryStream : SKStreamMemory
 	{
-		[Preserve]
 		internal SKMemoryStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -293,7 +325,7 @@ namespace SkiaSharp
 		}
 
 		internal SKMemoryStream (IntPtr data, IntPtr length, bool copyData = false)
-			: this(SkiaApi.sk_memorystream_new_with_data (data, length, copyData), true)
+			: this(SkiaApi.sk_memorystream_new_with_data ((void*)data, length, copyData), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");
@@ -314,17 +346,22 @@ namespace SkiaSharp
 			SetMemory (data);
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_memorystream_destroy (Handle);
 
 		internal void SetMemory (IntPtr data, IntPtr length, bool copyData = false)
 		{
-			SkiaApi.sk_memorystream_set_memory (Handle, data, length, copyData);
+			SkiaApi.sk_memorystream_set_memory (Handle, (void*)data, length, copyData);
 		}
 
 		internal void SetMemory (byte[] data, IntPtr length, bool copyData = false)
 		{
-			SkiaApi.sk_memorystream_set_memory (Handle, data, length, copyData);
+			fixed (byte* d = data) {
+				SkiaApi.sk_memorystream_set_memory (Handle, d, length, copyData);
+			}
 		}
 
 		public void SetMemory (byte[] data)
@@ -333,7 +370,7 @@ namespace SkiaSharp
 		}
 	}
 
-	public abstract class SKWStream : SKObject
+	public unsafe abstract class SKWStream : SKObject
 	{
 		internal SKWStream (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -348,10 +385,8 @@ namespace SkiaSharp
 
 		public virtual bool Write (byte[] buffer, int size)
 		{
-			unsafe {
-				fixed (byte* b = buffer) {
-					return SkiaApi.sk_wstream_write (Handle, (IntPtr)b, (IntPtr)size);
-				}
+			fixed (byte* b = buffer) {
+				return SkiaApi.sk_wstream_write (Handle, (void*)b, (IntPtr)size);
 			}
 		}
 
@@ -435,21 +470,31 @@ namespace SkiaSharp
 		}
 	}
 
-	public class SKFileWStream : SKWStream
+	public unsafe class SKFileWStream : SKWStream
 	{
-		[Preserve]
 		internal SKFileWStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
 		public SKFileWStream (string path)
-			: base (SkiaApi.sk_filewstream_new (StringUtilities.GetEncodedText (path, SKEncoding.Utf8)), true)
+			: base (CreateNew (path), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKFileWStream instance.");
 			}
 		}
+
+		private static IntPtr CreateNew (string path)
+		{
+			var bytes = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
+			fixed (byte* p = bytes) {
+				return SkiaApi.sk_filewstream_new (p);
+			}
+		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_filewstream_destroy (Handle);
@@ -469,9 +514,8 @@ namespace SkiaSharp
 		}
 	}
 
-	public class SKDynamicMemoryWStream : SKWStream
+	public unsafe class SKDynamicMemoryWStream : SKWStream
 	{
-		[Preserve]
 		internal SKDynamicMemoryWStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -494,17 +538,28 @@ namespace SkiaSharp
 
 		public SKStreamAsset DetachAsStream ()
 		{
-			return GetObject<SKStreamAsset, SKStreamAssetImplementation> (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
+			return SKStreamAssetImplementation.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
 		}
 
 		public SKData DetachAsData ()
 		{
-			return GetObject<SKData> (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
+			return SKData.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
 		}
 
 		public void CopyTo (IntPtr data)
 		{
-			SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, data);
+			SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, (void*)data);
+		}
+
+		public void CopyTo (Span<byte> data)
+		{
+			var size = BytesWritten;
+			if (data.Length < size)
+				throw new Exception ($"Not enough space to copy. Expected at least {size}, but received {data.Length}.");
+
+			fixed (void* d = data) {
+				SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, d);
+			}
 		}
 
 		public bool CopyTo (SKWStream dst)
@@ -513,6 +568,18 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (dst));
 			return SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
 		}
+
+		public bool CopyTo (Stream dst)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var wrapped = new SKManagedWStream (dst);
+			return CopyTo (wrapped);
+		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_dynamicmemorywstream_destroy (Handle);

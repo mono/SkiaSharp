@@ -1,6 +1,6 @@
 ﻿using System;
-using Xunit;
 using System.IO;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
@@ -116,7 +116,6 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-
 		[SkippableFact]
 		public void CanReadNonASCIIFile()
 		{
@@ -211,6 +210,141 @@ namespace SkiaSharp.Tests
 			fonts.Dispose();
 			fonts = SKFontManager.Default;
 			Assert.NotNull(fonts);
+		}
+
+		[SkippableFact]
+		public unsafe void FromPathReturnsDifferentObject()
+		{
+			var fonts = SKFontManager.Default;
+
+			var path = Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf");
+
+			using var tf1 = fonts.CreateTypeface(path);
+			using var tf2 = fonts.CreateTypeface(path);
+
+			Assert.NotSame(tf1, tf2);
+		}
+
+		[SkippableFact]
+		public unsafe void FromStreamReturnsDifferentObject()
+		{
+			var fonts = SKFontManager.Default;
+
+			using var stream1 = File.OpenRead(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+			using var tf1 = fonts.CreateTypeface(stream1);
+
+			using var stream2 = File.OpenRead(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+			using var tf2 = fonts.CreateTypeface(stream2);
+
+			Assert.NotSame(tf1, tf2);
+		}
+
+		[SkippableFact]
+		public unsafe void FromDataReturnsDifferentObject()
+		{
+			var fonts = SKFontManager.Default;
+
+			using var data = SKData.Create(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+
+			using var tf1 = fonts.CreateTypeface(data);
+			using var tf2 = fonts.CreateTypeface(data);
+
+			Assert.NotSame(tf1, tf2);
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public unsafe void FromTypefaceReturnsSameObject()
+		{
+			VerifySupportsMatchingTypefaces();
+
+			var fonts = SKFontManager.Default;
+
+			var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
+
+			var tf1 = fonts.MatchTypeface(tf, SKFontStyle.Normal);
+			var tf2 = fonts.MatchTypeface(tf, SKFontStyle.Normal);
+
+			Assert.Same(tf, tf1);
+			Assert.Same(tf1, tf2);
+		}
+
+		[SkippableFact]
+		public unsafe void FromFamilyReturnsSameObject()
+		{
+			var fonts = SKFontManager.Default;
+
+			var tf1 = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Normal);
+			var tf2 = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Normal);
+
+			Assert.Same(tf1, tf2);
+		}
+
+		[SkippableFact]
+		public unsafe void FromFamilyDisposeDoesNotDispose()
+		{
+			var fonts = SKFontManager.Default;
+
+			var tf1 = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Normal);
+			var tf2 = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Normal);
+
+			Assert.Same(tf1, tf2);
+
+			tf1.Dispose();
+
+			Assert.NotEqual(IntPtr.Zero, tf1.Handle);
+			Assert.False(tf1.IsDisposed);
+		}
+
+		[SkippableFact]
+		public unsafe void TypefaceAndFontManagerReturnsSameObject()
+		{
+			var fonts = SKFontManager.Default;
+
+			var tf1 = fonts.MatchFamily("Times New Roman");
+			var tf2 = SKTypeface.FromFamilyName("Times New Roman");
+
+			Assert.Same(tf1, tf2);
+		}
+
+		[SkippableFact]
+		public unsafe void GCStillCollectsTypeface()
+		{
+			if (!IsWindows)
+				throw new SkipException("Test designed for Windows.");
+
+			var handle = DoWork();
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKTypeface>(handle, out _));
+
+			static IntPtr DoWork()
+			{
+				var fonts = SKFontManager.Default;
+
+				var tf1 = fonts.MatchFamily("Times New Roman", SKFontStyle.Normal);
+				var tf2 = fonts.MatchFamily("Times New Roman", SKFontStyle.Normal);
+				Assert.Same(tf1, tf2);
+
+				var tf3 = fonts.CreateTypeface(@"C:\Windows\Fonts\times.ttf");
+				Assert.NotSame(tf1, tf3);
+
+				tf1.Dispose();
+				tf2.Dispose();
+				tf3.Dispose();
+
+				Assert.NotEqual(IntPtr.Zero, tf1.Handle);
+				Assert.False(tf1.IsDisposed);
+
+				Assert.NotEqual(IntPtr.Zero, tf2.Handle);
+				Assert.False(tf2.IsDisposed);
+
+				Assert.Equal(IntPtr.Zero, tf3.Handle);
+				Assert.True(tf3.IsDisposed);
+
+				return tf1.Handle;
+			}
 		}
 	}
 }

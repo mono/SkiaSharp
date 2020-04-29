@@ -4,33 +4,15 @@ using System.Threading;
 
 namespace SkiaSharp
 {
-	public class SKDrawable : SKObject, ISKReferenceCounted
+	public unsafe class SKDrawable : SKObject, ISKReferenceCounted
 	{
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate void DrawDelegate (IntPtr d, IntPtr context, IntPtr canvas);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate void GetBoundsDelegate (IntPtr d, IntPtr context, out SKRect rect);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr NewPictureSnapshotDelegate (IntPtr d, IntPtr context);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate void DestroyDelegate (IntPtr d, IntPtr context);
-
-		[StructLayout (LayoutKind.Sequential)]
-		internal struct Procs
-		{
-			public DrawDelegate fDraw;
-			public GetBoundsDelegate fGetBounds;
-			public NewPictureSnapshotDelegate fNewPictureSnapshot;
-			public DestroyDelegate fDestroy;
-		}
-
-		private static readonly Procs delegates;
+		private static readonly SKManagedDrawableDelegates delegates;
 
 		private int fromNative;
 
 		static SKDrawable ()
 		{
-			delegates = new Procs {
+			delegates = new SKManagedDrawableDelegates {
 				fDraw = DrawInternal,
 				fGetBounds = GetBoundsInternal,
 				fNewPictureSnapshot = NewPictureSnapshotInternal,
@@ -49,18 +31,20 @@ namespace SkiaSharp
 			: base (IntPtr.Zero, owns)
 		{
 			var ctx = DelegateProxies.CreateUserData (this, true);
-			Handle = SkiaApi.sk_manageddrawable_new (ctx);
+			Handle = SkiaApi.sk_manageddrawable_new ((void*)ctx);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKDrawable instance.");
 			}
 		}
 
-		[Preserve]
 		internal SKDrawable (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative ()
 		{
@@ -72,13 +56,18 @@ namespace SkiaSharp
 
 		public SKRect Bounds {
 			get {
-				SkiaApi.sk_drawable_get_bounds (Handle, out var bounds);
+				SKRect bounds;
+				SkiaApi.sk_drawable_get_bounds (Handle, &bounds);
 				return bounds;
 			}
 		}
 
-		public void Draw (SKCanvas canvas, ref SKMatrix matrix) =>
-			SkiaApi.sk_drawable_draw (Handle, canvas.Handle, ref matrix);
+		public void Draw (SKCanvas canvas, ref SKMatrix matrix)
+		{
+			fixed (SKMatrix* m = &matrix) {
+				SkiaApi.sk_drawable_draw (Handle, canvas.Handle, m);
+			}
+		}
 
 		public void Draw (SKCanvas canvas, float x, float y)
 		{
@@ -88,7 +77,7 @@ namespace SkiaSharp
 
 		// do not unref as this is a plain pointer return, not a reference counted pointer
 		public SKPicture Snapshot () =>
-			GetObject<SKPicture> (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
+			SKPicture.GetObject (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
 
 		public void NotifyDrawingChanged () =>
 			SkiaApi.sk_drawable_notify_drawing_changed (Handle);
@@ -108,36 +97,40 @@ namespace SkiaSharp
 			}
 		}
 
-		[MonoPInvokeCallback (typeof (DrawDelegate))]
-		private static void DrawInternal (IntPtr d, IntPtr context, IntPtr canvas)
+		[MonoPInvokeCallback (typeof (SKManagedDrawableDrawProxyDelegate))]
+		private static void DrawInternal (IntPtr d, void* context, IntPtr canvas)
 		{
-			var drawable = DelegateProxies.GetUserData<SKDrawable> (context, out _);
-			drawable.OnDraw (GetObject<SKCanvas> (canvas, false));
+			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
+			drawable.OnDraw (SKCanvas.GetObject (canvas, false));
 		}
 
-		[MonoPInvokeCallback (typeof (GetBoundsDelegate))]
-		private static void GetBoundsInternal (IntPtr d, IntPtr context, out SKRect rect)
+		[MonoPInvokeCallback (typeof (SKManagedDrawableGetBoundsProxyDelegate))]
+		private static void GetBoundsInternal (IntPtr d, void* context, SKRect* rect)
 		{
-			var drawable = DelegateProxies.GetUserData<SKDrawable> (context, out _);
-			rect = drawable.OnGetBounds ();
+			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
+			var bounds = drawable.OnGetBounds ();
+			*rect = bounds;
 		}
 
-		[MonoPInvokeCallback (typeof (NewPictureSnapshotDelegate))]
-		private static IntPtr NewPictureSnapshotInternal (IntPtr d, IntPtr context)
+		[MonoPInvokeCallback (typeof (SKManagedDrawableNewPictureSnapshotProxyDelegate))]
+		private static IntPtr NewPictureSnapshotInternal (IntPtr d, void* context)
 		{
-			var drawable = DelegateProxies.GetUserData<SKDrawable> (context, out _);
+			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			return drawable.OnSnapshot ()?.Handle ?? IntPtr.Zero;
 		}
 
-		[MonoPInvokeCallback (typeof (DestroyDelegate))]
-		private static void DestroyInternal (IntPtr d, IntPtr context)
+		[MonoPInvokeCallback (typeof (SKManagedDrawableDestroyProxyDelegate))]
+		private static void DestroyInternal (IntPtr d, void* context)
 		{
-			var drawable = DelegateProxies.GetUserData<SKDrawable> (context, out var gch);
+			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out var gch);
 			if (drawable != null) {
 				Interlocked.Exchange (ref drawable.fromNative, 1);
 				drawable.Dispose ();
 			}
 			gch.Free ();
 		}
+
+		internal static SKDrawable GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKDrawable (h, o));
 	}
 }
