@@ -35,6 +35,7 @@ var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
+var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");

@@ -19,10 +19,10 @@ namespace SkiaSharp
 		public readonly SKMatrix ToMatrix () =>
 			new SKMatrix (fSCos, -fSSin, fTX, fSSin, fSCos, fTY, 0, 0, 1);
 
-		public static SKRotationScaleMatrix FromDegrees (float scale, float degrees, float tx, float ty, float anchorX, float anchorY) =>
-			FromRadians (scale, degrees * SKMatrix.DegreesToRadians, tx, ty, anchorX, anchorY);
+		public static SKRotationScaleMatrix CreateDegrees (float scale, float degrees, float tx, float ty, float anchorX, float anchorY) =>
+			Create (scale, degrees * SKMatrix.DegreesToRadians, tx, ty, anchorX, anchorY);
 
-		public static SKRotationScaleMatrix FromRadians (float scale, float radians, float tx, float ty, float anchorX, float anchorY)
+		public static SKRotationScaleMatrix Create (float scale, float radians, float tx, float ty, float anchorX, float anchorY)
 		{
 			var s = (float)Math.Sin (radians) * scale;
 			var c = (float)Math.Cos (radians) * scale;
@@ -42,9 +42,9 @@ namespace SkiaSharp
 			new SKRotationScaleMatrix (s, 0, 0, 0);
 
 		public static SKRotationScaleMatrix CreateRotation (float radians, float anchorX, float anchorY) =>
-			FromRadians (1, radians, 0, 0, anchorX, anchorY);
+			Create (1, radians, 0, 0, anchorX, anchorY);
 
 		public static SKRotationScaleMatrix CreateRotationDegrees (float degrees, float anchorX, float anchorY) =>
-			FromDegrees (1, degrees, 0, 0, anchorX, anchorY);
+			CreateDegrees (1, degrees, 0, 0, anchorX, anchorY);
 	}
 }

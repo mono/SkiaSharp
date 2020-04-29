@@ -9,19 +9,12 @@ namespace SkiaSharpSample.Samples
 	{
 		private int animationIndex = 0;
 
-		private T Pick<T>(T[] items, ref int index)
-		{
-			var item = items[index % items.Length];
-			index /= items.Length;
-			return item;
-		}
-
 		[Preserve]
 		public TextOnPathSample()
 		{
 		}
 
-		public override string Title => "Text on path";
+		public override string Title => "Text on Path";
 
 		public override SampleCategories Category => SampleCategories.Text;
 
@@ -41,55 +34,62 @@ namespace SkiaSharpSample.Samples
 			var index = animationIndex;
 
 			// create a circular path
-			using (var path = SKPath.ParseSvgPathData("M 32 128 A 64 64 0 1 1 224 128 A 64 64 0 1 1 32 128"))
-			using (var paint = new SKPaint
+			using var path = SKPath.ParseSvgPathData("M 32 128 A 64 64 0 1 1 224 128 A 64 64 0 1 1 32 128");
+			using var paint = new SKPaint
 			{
 				IsAntialias = true,
 				TextAlign = SKTextAlign.Center,
 				TextSize = textSize,
 				StrokeWidth = 2
-			})
-			{
-				// Fit path in window.
-				path.Transform(SKMatrix.CreateScale(width / 256f, height / 256f));
+			};
 
-				// Pick text-on-path parameters.
-				var alignment = Pick(alignments, ref index);
-				var hOffset = Pick(hOffsets, ref index);
-				var vOffset = Pick(vOffsets, ref index);
-				var warping = Pick(warpings, ref index);
+			// Fit path in window.
+			path.Transform(SKMatrix.CreateScale(width / 256f, height / 256f));
 
-				// make sure the canvas is blank
-				canvas.Clear(SKColors.SkyBlue);
+			// Pick text-on-path parameters.
+			var alignment = Pick(alignments, ref index);
+			var hOffset = Pick(hOffsets, ref index);
+			var vOffset = Pick(vOffsets, ref index);
+			var warping = Pick(warpings, ref index);
 
-				// draw the parameters
-				paint.TextSize = 16;
-				paint.Color = SKColors.White;
-				paint.TextAlign = SKTextAlign.Left;
-				canvas.DrawText($" Alignment: {alignment}", 0, paint.TextSize, paint);
-				paint.TextAlign = SKTextAlign.Center;
-				canvas.DrawText($"Warping: {(warping ? "on" : "off")}", width/2f, paint.TextSize, paint);
-				paint.TextAlign = SKTextAlign.Right;
-				canvas.DrawText($"Offset: ({hOffset}, {vOffset}) ", width, paint.TextSize, paint);
+			// make sure the canvas is blank
+			canvas.Clear(SKColors.SkyBlue);
 
-				// draw the path
-				paint.Color = SKColors.Blue;
-				paint.Style = SKPaintStyle.Stroke;
-				paint.TextSize = textSize;
-				canvas.DrawPath(path, paint);
+			// draw the parameters
+			paint.TextSize = 16;
+			paint.Color = SKColors.White;
+			paint.TextAlign = SKTextAlign.Left;
+			canvas.DrawText($" Alignment: {alignment}", 0, paint.TextSize, paint);
+			paint.TextAlign = SKTextAlign.Center;
+			canvas.DrawText($"Warping: {(warping ? "on" : "off")}", width / 2f, paint.TextSize, paint);
+			paint.TextAlign = SKTextAlign.Right;
+			canvas.DrawText($"Offset: ({hOffset}, {vOffset}) ", width, paint.TextSize, paint);
 
-				// draw the text on the path
-				paint.TextAlign = alignment;
-				paint.Color = SKColors.Black;
-				paint.Style = SKPaintStyle.Fill;
-				canvas.DrawTextOnPath(text, path, hOffset, vOffset, paint, warping);
-			}
+			// draw the path
+			paint.Color = SKColors.Blue;
+			paint.Style = SKPaintStyle.Stroke;
+			paint.TextSize = textSize;
+			canvas.DrawPath(path, paint);
+
+			// draw the text on the path
+			paint.TextAlign = alignment;
+			paint.Color = SKColors.Black;
+			paint.Style = SKPaintStyle.Fill;
+			canvas.DrawTextOnPath(text, path, new SKPoint(hOffset, vOffset), warping, paint);
 		}
 
 		protected override async Task OnUpdate(CancellationToken token)
 		{
 			await Task.Delay(1000, token);
+
 			animationIndex += 1;
+		}
+
+		private T Pick<T>(T[] items, ref int index)
+		{
+			var item = items[index % items.Length];
+			index /= items.Length;
+			return item;
 		}
 	}
 }

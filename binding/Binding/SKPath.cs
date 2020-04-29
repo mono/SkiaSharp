@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 
 namespace SkiaSharp
 {
@@ -506,9 +503,12 @@ namespace SkiaSharp
 				SkiaApi.sk_path_iter_destroy (Handle);
 
 			[EditorBrowsable (EditorBrowsableState.Never)]
-			[Obsolete ("Use Next(Span<SKPoint>) instead.")]
-			public SKPathVerb Next (Span<SKPoint> points, bool doConsumeDegenerates, bool exact) =>
+			[Obsolete ("Use Next(SKPoint[]) instead.")]
+			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates, bool exact) =>
 				Next (points);
+
+			public SKPathVerb Next (SKPoint[] points) =>
+				Next (new Span<SKPoint> (points));
 
 			public SKPathVerb Next (Span<SKPoint> points)
 			{
@@ -548,6 +548,9 @@ namespace SkiaSharp
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_rawiter_destroy (Handle);
 
+			public SKPathVerb Next (SKPoint[] points) =>
+				Next (new Span<SKPoint> (points));
+
 			public SKPathVerb Next (Span<SKPoint> points)
 			{
 				if (points == null)
@@ -561,7 +564,7 @@ namespace SkiaSharp
 
 			public float ConicWeight () =>
 				SkiaApi.sk_path_rawiter_conic_weight (Handle);
-				
+
 			public SKPathVerb Peek () =>
 				SkiaApi.sk_path_rawiter_peek (Handle);
 		}
