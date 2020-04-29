@@ -1,10 +1,10 @@
 #!/bin/bash
 
 cd $BUILD_SOURCESDIRECTORY
-
+sample/Gallery/Uno/SkiaSharpSample/SkiaSharpSample.Wasm/bin/Release/netstandard2.0/dist
 source /emsdk/emsdk_env.sh
-msbuild /r /p:Configuration=Release $BUILD_SOURCESDIRECTORY/source/SkiaSharpSample/SkiaSharpSample.Wasm/SkiaSharpSample.Wasm.csproj
-msbuild /r /p:Configuration=Release $BUILD_SOURCESDIRECTORY/source/SkiaSharpSample/SkiaSharpSample.UITests/SkiaSharpSample.UITests.csproj
+msbuild /r /p:Configuration=Release $BUILD_SOURCESDIRECTORY/sample/Gallery/Uno/SkiaSharpSample/SkiaSharpSample.Wasm/SkiaSharpSample.Wasm.csproj
+msbuild /r /p:Configuration=Release $BUILD_SOURCESDIRECTORY/sample/Gallery/Uno/SkiaSharpSample/SkiaSharpSample.UITests/SkiaSharpSample.UITests.csproj
 
 cd $BUILD_SOURCESDIRECTORY/scripts
 
@@ -23,6 +23,6 @@ mkdir -p $UNO_UITEST_SCREENSHOT_PATH
 
 ## The python server serves the current working directory, and may be changed by the nunit runner
 echo "Starting WebServer"
-bash -c "cd $BUILD_SOURCESDIRECTORY/source/SkiaSharpSample/SkiaSharpSample.Wasm/bin/Release/netstandard2.0/dist; python server.py &"
+bash -c "cd $BUILD_SOURCESDIRECTORY/sample/Gallery/Uno/SkiaSharpSample/SkiaSharpSample.Wasm/bin/Release/netstandard2.0/dist; python server.py &"
 
-mono $BUILD_SOURCESDIRECTORY/scripts/NUnit.ConsoleRunner.3.10.0/tools/nunit3-console.exe --trace=Verbose --inprocess --agents=1 --workers=1 $BUILD_SOURCESDIRECTORY/source/SkiaSharpSample/SkiaSharpSample.UITests/bin/Release/net47/SkiaSharpSample.UITests.dll
+mono $BUILD_SOURCESDIRECTORY/scripts/NUnit.ConsoleRunner.3.10.0/tools/nunit3-console.exe --trace=Verbose --inprocess --agents=1 --workers=1 $BUILD_SOURCESDIRECTORY/sample/Gallery/Uno/SkiaSharpSample/SkiaSharpSample.UITests/bin/Release/net47/SkiaSharpSample.UITests.dll

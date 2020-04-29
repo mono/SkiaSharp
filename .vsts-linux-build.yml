@@ -1,9 +1,10 @@
 jobs:
 - job: Linux
-  container: nventive/wasm-build:1.4.1
+  container: unoplatform/wasm-build:2.1.1
+  dependsOn: SkiaLib_WebAssembly
 
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-latest'
 
   variables:
     NUGET_PACKAGES: $(build.sourcesdirectory)/.nuget
@@ -34,7 +35,7 @@ jobs:
   - task: CopyFiles@2
     displayName: 'Publish Wasm Binaries'
     inputs:
-      SourceFolder: $(build.sourcesdirectory)/source/SkiaSharpSample/SkiaSharpSample.Wasm/bin/Release/netstandard2.0/dist
+      SourceFolder: $(build.sourcesdirectory)/sample/Gallery/Uno/SkiaSharpSample/SkiaSharpSample.Wasm/bin/Release/netstandard2.0/dist
       Contents: '**/*.*'
       TargetFolder: $(build.artifactstagingdirectory)/skiasharp-wasm
       CleanTargetFolder: false
