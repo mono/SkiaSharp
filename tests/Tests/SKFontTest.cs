@@ -195,7 +195,7 @@ namespace SkiaSharp.Tests
 
 			var diff = widths[1] - widths[0];
 
-			var textPath = font.GetPath(text, SKPoint.Empty);
+			var textPath = font.GetTextPath((ReadOnlySpan<char>)text, SKPoint.Empty);
 			var pathWidth = textPath.TightBounds.Width;
 
 			Assert.Equal(pathWidth, diff, 2);
@@ -206,7 +206,7 @@ namespace SkiaSharp.Tests
 		{
 			var font = new SKFont();
 
-			var path = font.GetPath("");
+			var path = font.GetTextPath("");
 
 			Assert.NotNull(path);
 			Assert.Equal(0, path.PointCount);

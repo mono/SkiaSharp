@@ -267,95 +267,80 @@ namespace SkiaSharp
 		// BreakText
 
 		public long BreakText (string text, float maxWidth) =>
-			BreakText (text, maxWidth, out _, out _);
+			GetFont ().BreakText (text, maxWidth, out _, this);
 
 		public long BreakText (string text, float maxWidth, out float measuredWidth) =>
-			BreakText (text, maxWidth, out measuredWidth, out _);
+			GetFont ().BreakText (text, maxWidth, out measuredWidth, this);
 
 		public long BreakText (string text, float maxWidth, out float measuredWidth, out string measuredText)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
 
-			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			var byteLength = (int)BreakText (bytes, maxWidth, out measuredWidth);
-			if (byteLength == 0) {
+			var charsRead = GetFont ().BreakText (text, maxWidth, out measuredWidth, this);
+			if (charsRead == 0) {
 				measuredText = string.Empty;
 				return 0;
 			}
-			if (byteLength == bytes.Length) {
+			if (charsRead == text.Length) {
 				measuredText = text;
 				return text.Length;
 			}
-			measuredText = StringUtilities.GetString (bytes, 0, byteLength, TextEncoding);
-			return measuredText.Length;
+			measuredText = text.Substring (0, charsRead);
+			return charsRead;
 		}
 
 		public long BreakText (byte[] text, float maxWidth) =>
-			BreakText (text, maxWidth, out _);
+			GetFont ().BreakText (text, TextEncoding, maxWidth, out _, this);
 
-		public long BreakText (byte[] text, float maxWidth, out float measuredWidth)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (byte* t = text) {
-				return BreakText ((IntPtr)t, (IntPtr)text.Length, maxWidth, out measuredWidth);
-			}
-		}
+		public long BreakText (byte[] text, float maxWidth, out float measuredWidth) =>
+			GetFont ().BreakText (text, TextEncoding, maxWidth, out measuredWidth, this);
 
 		public long BreakText (IntPtr buffer, int length, float maxWidth) =>
-			BreakText (buffer, (IntPtr)length, maxWidth, out _);
+			GetFont ().BreakText (buffer, length, TextEncoding, maxWidth, out _, this);
 
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth) =>
-			BreakText (buffer, length, maxWidth, out _);
+			GetFont ().BreakText (buffer, (int)length, TextEncoding, maxWidth, out _, this);
+
+		public long BreakText (IntPtr buffer, int length, float maxWidth, out float measuredWidth) =>
+			GetFont ().BreakText (buffer, length, TextEncoding, maxWidth, out measuredWidth, this);
 
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth) =>
-			BreakText (buffer, (int)length, maxWidth, out measuredWidth);
-
-		public long BreakText (IntPtr buffer, int length, float maxWidth, out float measuredWidth)
-		{
-			if (buffer == IntPtr.Zero && length != 0)
-				throw new ArgumentNullException (nameof (buffer));
-
-			fixed (float* mw = &measuredWidth) {
-				return GetFont ().BreakText ((void*)buffer, length, TextEncoding, maxWidth, mw, this);
-			}
-		}
+			GetFont ().BreakText (buffer, (int)length, TextEncoding, maxWidth, out measuredWidth, this);
 
 		// GetTextPath
 
 		public SKPath GetTextPath (string text, float x, float y) =>
-			GetFont ().GetPath (text, new SKPoint (x, y));
+			GetFont ().GetTextPath (text, new SKPoint (x, y));
 
 		public SKPath GetTextPath (byte[] text, float x, float y) =>
-			GetFont ().GetPath (text, TextEncoding, new SKPoint (x, y));
+			GetFont ().GetTextPath (text, TextEncoding, new SKPoint (x, y));
 
 		public SKPath GetTextPath (IntPtr buffer, int length, float x, float y) =>
-			GetFont ().GetPath (buffer, length, TextEncoding, new SKPoint (x, y));
+			GetFont ().GetTextPath (buffer, length, TextEncoding, new SKPoint (x, y));
 
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, float x, float y) =>
-			GetFont ().GetPath (buffer, (int)length, TextEncoding, new SKPoint (x, y));
+			GetFont ().GetTextPath (buffer, (int)length, TextEncoding, new SKPoint (x, y));
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public SKPath GetTextPath (string text, SKPoint[] points) =>
-			GetFont ().GetPath (text, points);
+			GetFont ().GetTextPath (text, points);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public SKPath GetTextPath (byte[] text, SKPoint[] points) =>
-			GetFont ().GetPath (text, TextEncoding, points);
+			GetFont ().GetTextPath (text, TextEncoding, points);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public SKPath GetTextPath (IntPtr buffer, int length, SKPoint[] points) =>
-			GetFont ().GetPath (buffer, length, TextEncoding, points);
+			GetFont ().GetTextPath (buffer, length, TextEncoding, points);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, SKPoint[] points) =>
-			GetFont ().GetPath (buffer, (int)length, TextEncoding, points);
+			GetFont ().GetTextPath (buffer, (int)length, TextEncoding, points);
 
 		// GetFillPath
 

@@ -56,7 +56,7 @@ namespace SkiaSharp
 			public void Dispose () =>
 				ArrayPool<T>.Shared.Return (Array);
 
-			public static implicit operator T[] (RentedArray<T> scope) =>
+			public static explicit operator T[] (RentedArray<T> scope) =>
 				scope.Array;
 
 			public static implicit operator Span<T> (RentedArray<T> scope) =>

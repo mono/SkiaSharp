@@ -75,7 +75,7 @@ namespace SkiaSharpSample.Samples
 			paint.TextAlign = alignment;
 			paint.Color = SKColors.Black;
 			paint.Style = SKPaintStyle.Fill;
-			canvas.DrawTextOnPath(text, path, hOffset, vOffset, paint, warping);
+			canvas.DrawTextOnPath(text, path, new SKPoint(hOffset, vOffset), warping, paint);
 		}
 
 		protected override async Task OnUpdate(CancellationToken token)

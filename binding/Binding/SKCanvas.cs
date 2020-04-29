@@ -698,16 +698,53 @@ namespace SkiaSharp
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint)
 		{
-			DrawTextOnPath (text, path, offset, paint.GetFont (), paint, true);
+			DrawTextOnPath (text, path, offset, true, paint);
 		}
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint, bool warpGlyphs) =>
-			DrawTextOnPath (text, path, offset, paint.GetFont (), paint, warpGlyphs);
+		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, paint);
+		}
 
-		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint, bool warpGlyphs = true) =>
-			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), paint.GetFont (), paint, warpGlyphs);
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKPaint paint)
+		{
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKFont font, SKPaint paint, bool warpGlyphs = true)
+			DrawTextOnPath (text, path, offset, warpGlyphs, paint.GetFont (), paint);
+		}
+
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKFont font, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+			if (path == null)
+				throw new ArgumentNullException (nameof (path));
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+
+			if (warpGlyphs) {
+				using var textPath = font.GetTextPathOnPath (text, path, paint.TextAlign, offset);
+				DrawPath (textPath, paint);
+			} else {
+				using var blob = SKTextBlob.CreatePathPositioned (text, font, path, paint.TextAlign, offset);
+				if (blob != null)
+					DrawText (blob, 0, 0, paint);
+			}
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawTextOnPath(string, SKPath, SKPoint, SKPaint) instead.")]
+		public void DrawTextOnPath (byte[] text, SKPath path, SKPoint offset, SKPaint paint)
+		{
+			DrawTextOnPath (text, path, offset.X, offset.Y, paint);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawTextOnPath(string, SKPath, float, float, SKPaint) instead.")]
+		public void DrawTextOnPath (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -715,54 +752,25 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (path));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
-			if (font == null)
-				throw new ArgumentNullException (nameof (paint));
 
-			var n = font.CountGlyphs (text);
-			if (n <= 0)
-				return;
-
-			using var glyphs = Utils.RentArray<ushort> (n);
-			font.GetGlyphs (text, glyphs);
-			DrawTextOnPath (glyphs, path, offset, font, paint, warpGlyphs);
-		}
-
-		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint, bool warpGlyphs = true) =>
-			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), font, paint, warpGlyphs);
-
-		public void DrawTextOnPath (ReadOnlySpan<ushort> glyphs, SKPath path, SKPoint offset, SKFont font, SKPaint paint, bool warpGlyphs = true)
-		{
-			if (glyphs.Length == 0)
-				return;
-
-			using var glyphWidths = Utils.RentArray<float> (glyphs.Length);
-			using var glyphOffsets = Utils.RentArray<SKPoint> (glyphs.Length);
-
-			font.GetGlyphWidths (glyphs, glyphWidths, default);
-			font.GetGlyphPositions (glyphs, glyphOffsets, offset);
-
-			DrawTextOnPath (path, glyphs, glyphWidths, glyphOffsets, font, paint, warpGlyphs);
-		}
-
-		public void DrawTextOnPath (SKPath path, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<float> glyphWidths, ReadOnlySpan<SKPoint> glyphOffsets, SKFont font, SKPaint paint, bool warpGlyphs)
-		{
-			var alignment = (int)paint.TextAlign * 0.5f;
-
-			if (warpGlyphs) {
-				using var warp = font.GetPathFromTextWarpedOnPath (glyphs, glyphWidths, glyphOffsets, path, alignment);
-				DrawPath (warp, paint);
-			} else {
-				using var blob = font.GetBlobFromTextPlacedOnPath (glyphs, glyphWidths, glyphOffsets, path, alignment);
-				DrawText (blob, 0, 0, paint);
+			fixed (byte* t = text) {
+				DrawTextOnPath ((IntPtr)t, text.Length, path, hOffset, vOffset, paint);
 			}
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use DrawTextOnPath(string, SKPath, float, float, SKPaint) instead.")]
-		public void DrawTextOnPath (byte[] text, SKPath path, SKPoint offset, SKPaint paint)
+		[Obsolete ("Use DrawTextOnPath(string, SKPath, SKPoint, SKPaint) instead.")]
+		public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, SKPoint offset, SKPaint paint)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
+			DrawTextOnPath (buffer, length, path, offset.X, offset.Y, paint);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use DrawTextOnPath(string, SKPath, float, float, SKPaint) instead.")]
+		public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			if (buffer == IntPtr.Zero && length != 0)
+				throw new ArgumentNullException (nameof (buffer));
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 			if (paint == null)
@@ -770,20 +778,9 @@ namespace SkiaSharp
 
 			var font = paint.GetFont ();
 
-			var n = font.CountGlyphs (text, paint.TextEncoding);
-			if (n <= 0)
-				return;
-
-			using var glyphs = Utils.RentArray<ushort> (n);
-			font.GetGlyphs (text, paint.TextEncoding, glyphs);
-
-			DrawTextOnPath (glyphs, path, offset, font, paint);
+			using var textPath = font.GetTextPathOnPath (buffer, length, paint.TextEncoding, path, paint.TextAlign, new SKPoint (hOffset, vOffset));
+			DrawPath (textPath, paint);
 		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use DrawTextOnPath(string, SKPath, float, float, SKPaint) instead.")]
-		public void DrawTextOnPath (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint) =>
-			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), paint);
 
 		// Flush
 

@@ -36,9 +36,9 @@ namespace SkiaSharp
 
 			var total = 0;
 			int len;
-			var buffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
-			while ((len = stream.Read (buffer, 0, buffer.Length)) > 0) {
-				destination.Write (buffer, len);
+			using var buffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
+			while ((len = stream.Read ((byte[])buffer, 0, buffer.Length)) > 0) {
+				destination.Write ((byte[])buffer, len);
 				total += len;
 			}
 			destination.Flush ();

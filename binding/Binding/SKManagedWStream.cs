@@ -43,11 +43,11 @@ namespace SkiaSharp
 		protected override bool OnWrite (IntPtr buffer, IntPtr size)
 		{
 			var count = (int)size;
-			var managedBuffer = Utils.RentArray<byte> (count);
+			using var managedBuffer = Utils.RentArray<byte> (count);
 			if (buffer != IntPtr.Zero) {
-				Marshal.Copy (buffer, managedBuffer, 0, count);
+				Marshal.Copy (buffer, (byte[])managedBuffer, 0, count);
 			}
-			stream.Write (managedBuffer, 0, count);
+			stream.Write ((byte[])managedBuffer, 0, count);
 			return true;
 		}
 
