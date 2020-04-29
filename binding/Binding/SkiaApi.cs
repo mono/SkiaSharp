@@ -18,6 +18,8 @@
 		private const string SKIA = "libSkiaSharp.dll";
 #elif NET_STANDARD
 		private const string SKIA = "libSkiaSharp";
+#elif __WASM__
+		private const string SKIA = "libSkiaSharp";
 #else
 		private const string SKIA = "libSkiaSharp";
 #endif

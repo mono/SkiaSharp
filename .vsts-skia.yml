@@ -33,15 +33,17 @@ jobs:
   - bash: |
       cd $(build.sourcesdirectory)/externals/skia
       source ~/emsdk/emsdk_env.sh
-      modules/canvaskit/compile.sh
+      $(build.sourcesdirectory)/scripts/wasm-generate.sh
 
     displayName: 'Running build'
+    env:
+      BUILD_SOURCESDIRECTORY: "$(build.sourcesdirectory)"
 
   - task: CopyFiles@2
     displayName: 'Publish Wasm Binaries'
     inputs:
       SourceFolder: $(build.sourcesdirectory)/externals/skiaout/canvaskit_wasm
-      Contents: '*.a'
+      Contents: 'libSkiaSharp.a'
       TargetFolder: $(build.artifactstagingdirectory)
       CleanTargetFolder: false
       OverWrite: false
