@@ -293,8 +293,10 @@ namespace SkiaSharp
 		public long BreakText (byte[] text, float maxWidth) =>
 			GetFont ().BreakText (text, TextEncoding, maxWidth, out _, this);
 
-		public long BreakText (byte[] text, float maxWidth, out float measuredWidth) =>
-			GetFont ().BreakText (text, TextEncoding, maxWidth, out measuredWidth, this);
+		public long BreakText (byte[] text, float maxWidth, out float measuredWidth)
+		{
+			return GetFont ().BreakText (text, TextEncoding, maxWidth, out measuredWidth, this);
+		}
 
 		public long BreakText (IntPtr buffer, int length, float maxWidth) =>
 			GetFont ().BreakText (buffer, length, TextEncoding, maxWidth, out _, this);
@@ -302,11 +304,13 @@ namespace SkiaSharp
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth) =>
 			GetFont ().BreakText (buffer, (int)length, TextEncoding, maxWidth, out _, this);
 
-		public long BreakText (IntPtr buffer, int length, float maxWidth, out float measuredWidth) =>
-			GetFont ().BreakText (buffer, length, TextEncoding, maxWidth, out measuredWidth, this);
-
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth) =>
 			GetFont ().BreakText (buffer, (int)length, TextEncoding, maxWidth, out measuredWidth, this);
+
+		public long BreakText (IntPtr buffer, int length, float maxWidth, out float measuredWidth)
+		{
+			return GetFont ().BreakText (buffer, length, TextEncoding, maxWidth, out measuredWidth, this);
+		}
 
 		// GetTextPath
 

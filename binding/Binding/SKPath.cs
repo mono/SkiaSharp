@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 
 namespace SkiaSharp
 {
@@ -567,7 +564,7 @@ namespace SkiaSharp
 
 			public float ConicWeight () =>
 				SkiaApi.sk_path_rawiter_conic_weight (Handle);
-				
+
 			public SKPathVerb Peek () =>
 				SkiaApi.sk_path_rawiter_peek (Handle);
 		}
