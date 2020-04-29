@@ -42,7 +42,7 @@ jobs:
   - task: CopyFiles@2
     displayName: 'Publish Wasm Binaries'
     inputs:
-      SourceFolder: $(build.sourcesdirectory)/externals/skiaout/canvaskit_wasm
+      SourceFolder: $(build.sourcesdirectory)/externals/skia/out/canvaskit_wasm
       Contents: 'libSkiaSharp.a'
       TargetFolder: $(build.artifactstagingdirectory)
       CleanTargetFolder: false
@@ -53,5 +53,5 @@ jobs:
     condition: always()
     inputs:
       PathtoPublish: $(build.artifactstagingdirectory)
-      ArtifactName: skialib-drop
+      ArtifactName: canvaskit_wasm
       ArtifactType: Container

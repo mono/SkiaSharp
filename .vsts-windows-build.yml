@@ -3,6 +3,7 @@ parameters:
 
 jobs:
 - job: Windows
+  dependsOn: SkiaLib_WebAssembly
 
   pool:
     vmImage: 'windows-2019'
@@ -22,6 +23,11 @@ jobs:
     inputs:
       versionSpec: 4.9.1
       checkLatest: false
+
+  - task: DownloadBuildArtifacts@0
+    inputs:
+        artifactName: canvaskit_wasm
+        downloadPath: '$(build.sourcesdirectory)\externals\skia\out'
 
   - task: MSBuild@1
     inputs:
