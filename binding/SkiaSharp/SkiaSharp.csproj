@@ -16,6 +16,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.3" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
+    <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\output\native\windows\x64\libSkiaSharp.dll" Link="nuget\runtimes\win-x64\native\libSkiaSharp.dll"
@@ -35,6 +37,7 @@
     <None Include="nuget\build\net45\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Binding.Resampler\**\*.cs" Link="Resampler/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
