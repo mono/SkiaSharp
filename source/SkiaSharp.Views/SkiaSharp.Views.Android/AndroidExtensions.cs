@@ -1,4 +1,5 @@
-﻿using Android.Graphics;
+﻿using System;
+using Android.Graphics;
 
 namespace SkiaSharp.Views.Android
 {
@@ -130,7 +131,9 @@ namespace SkiaSharp.Views.Android
 		{
 			using (var pixmap = skiaBitmap.PeekPixels())
 			{
-				return pixmap.ToBitmap();
+				var bmp = pixmap.ToBitmap();
+				GC.KeepAlive(skiaBitmap);
+				return bmp;
 			}
 		}
 
@@ -183,7 +186,9 @@ namespace SkiaSharp.Views.Android
 		{
 			using (var pixmap = skiaImage.PeekPixels())
 			{
-				return pixmap.ToBitmap();
+				var bmp = pixmap.ToBitmap();
+				GC.KeepAlive(skiaImage);
+				return bmp;
 			}
 		}
 
