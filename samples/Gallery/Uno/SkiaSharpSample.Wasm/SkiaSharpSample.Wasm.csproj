@@ -18,15 +18,13 @@
     <Content Include="..\SkiaSharpSample.UWP\Assets\*.png" Link="Assets\%(FileName)%(Extension)" />
     <None Remove="MainPage.xaml" />
     <None Remove="ts\GoogleAnalytics.ts" />
-    <Compile Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\App.xaml.cs" Link="App.xaml.cs" />
-    <Compile Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\MainPage.xaml.cs" Link="MainPage.xaml.cs" />
-    <Content Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\Assets\LockScreenLogo.scale-200.png" Link="Assets\LockScreenLogo.scale-200.png" />
-    <Content Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\Assets\SplashScreen.scale-200.png" Link="Assets\SplashScreen.scale-200.png" />
-    <Content Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\Assets\Square150x150Logo.scale-200.png" Link="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\Assets\Square44x44Logo.scale-200.png" Link="Assets\Square44x44Logo.scale-200.png" />
-    <Content Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\Assets\Square44x44Logo.targetsize-24_altform-unplated.png" Link="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\Assets\StoreLogo.png" Link="Assets\StoreLogo.png" />
-    <Content Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\Assets\Wide310x150Logo.scale-200.png" Link="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="..\..\UWP\SkiaSharpSample\Assets\LockScreenLogo.scale-200.png" Link="Assets\LockScreenLogo.scale-200.png" />
+    <Content Include="..\..\UWP\SkiaSharpSample\Assets\SplashScreen.scale-200.png" Link="Assets\SplashScreen.scale-200.png" />
+    <Content Include="..\..\UWP\SkiaSharpSample\Assets\Square150x150Logo.scale-200.png" Link="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="..\..\UWP\SkiaSharpSample\Assets\Square44x44Logo.scale-200.png" Link="Assets\Square44x44Logo.scale-200.png" />
+    <Content Include="..\..\UWP\SkiaSharpSample\Assets\Square44x44Logo.targetsize-24_altform-unplated.png" Link="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Include="..\..\UWP\SkiaSharpSample\Assets\StoreLogo.png" Link="Assets\StoreLogo.png" />
+    <Content Include="..\..\UWP\SkiaSharpSample\Assets\Wide310x150Logo.scale-200.png" Link="Assets\Wide310x150Logo.scale-200.png" />
     <Content Include="Fonts\winjs-symbols.woff2" />
     <Content Include="ts\GoogleAnalytics.ts" />
   </ItemGroup>
@@ -39,6 +37,10 @@
   <ItemGroup> 
     <EmbeddedResource Include="WasmCSS\Fonts.css" />
     <EmbeddedResource Include="WasmScripts\*.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\UWP\SkiaSharpSample\App.xaml.cs" Link="App.xaml.cs" />
+    <Compile Include="..\..\UWP\SkiaSharpSample\MainPage.xaml.cs" Link="MainPage.xaml.cs" />
   </ItemGroup>
   <ItemGroup>
     <LinkerDescriptor Include="LinkerConfig.xml" />
@@ -69,24 +71,25 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\App.xaml" Link="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\MainPage.xaml" Link="MainPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
-    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Assets\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\..\binding\SkiaSharp.Wasm\build\libSkia\libSkiaSharp.bc" Link="libSkiaSharp.bc" />
     <Content Include="..\..\..\binding\SkiaSharp.Wasm\build\libSkia\libSkiaSharp.wasm" Link="libSkiaSharp.wasm" />
   </ItemGroup>
-  <Import Project="..\..\..\samples\Gallery\Shared\Shared.projitems" Label="Shared" />
-  <Import Project="..\..\..\samples\Gallery\PlatformShared\PlatformShared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Page Include="..\..\UWP\SkiaSharpSample\App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <Link>App.xaml</Link>
+    </Page>
+    <Page Include="..\..\UWP\SkiaSharpSample\MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <Link>MainPage.xaml</Link>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.csproj" />
+  </ItemGroup>
+  <Import Project="..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" />
 </Project>

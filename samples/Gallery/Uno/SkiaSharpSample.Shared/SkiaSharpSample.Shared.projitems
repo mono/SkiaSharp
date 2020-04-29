@@ -9,26 +9,6 @@
     <Import_RootNamespace>SkiaSharpSample.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="$(MSBuildThisFileDirectory)App.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </ApplicationDefinition>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)MainPage.xaml.cs">
-      <DependentUpon>MainPage.xaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="$(MSBuildThisFileDirectory)MainPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)Assets\LockScreenLogo.scale-200.png" />
     <Content Include="$(MSBuildThisFileDirectory)Assets\SplashScreen.scale-200.png" />
     <Content Include="$(MSBuildThisFileDirectory)Assets\Square150x150Logo.scale-200.png" />
@@ -39,5 +19,11 @@
   </ItemGroup>
   <ItemGroup>
     <PRIResource Include="$(MSBuildThisFileDirectory)Strings\en\Resources.resw" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\PlatformShared\*.cs" Link="PlatformShared\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Shared\Samples\*.cs" Link="Shared\Samples\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Shared\Media\*" Link="Media\%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

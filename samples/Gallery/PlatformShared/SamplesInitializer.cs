@@ -6,7 +6,11 @@ using Xamarin.Essentials;
 using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.System;
+
+#if !HAS_UNO
 using Launcher = Xamarin.Essentials.Launcher;
+#endif
+
 #elif __MACOS__
 using AppKit;
 using Foundation;
@@ -57,9 +61,9 @@ namespace SkiaSharpSample
 			var path = ResourcePath.GetPath(fontName);
 #endif
 
-#if WINDOWS_UWP || HAS_UNO
+#if HAS_UNO
 			var localStorage = ApplicationData.Current.LocalFolder.Path;
-#if WINDOWS_UWP || __IOS__ || __TVOS__ || __ANDROID__ || __TIZEN__
+#elif WINDOWS_UWP || __IOS__ || __TVOS__ || __ANDROID__ || __TIZEN__
 			var localStorage = FileSystem.AppDataDirectory;
 #elif __MACOS__
 			var localStorage = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
@@ -78,7 +82,7 @@ namespace SkiaSharpSample
 
 		private static async void OnOpenSampleFile(string path)
 		{
-#if WINDOWS_UWP || __TVOS__ || __IOS__ || __ANDROID__ || __TIZEN__ || HAS_UNO
+#if WINDOWS_UWP || __TVOS__ || __IOS__ || __ANDROID__ || __TIZEN__
 			var title = "Open " + Path.GetExtension(path).ToUpperInvariant();
 			await Launcher.OpenAsync(new OpenFileRequest(title, new ReadOnlyFile(path)));
 #elif __MACOS__
