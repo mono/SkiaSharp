@@ -298,6 +298,7 @@ public class SKTouchEventArgs : System.EventArgs {
 	public SKTouchEventArgs (long id, SKTouchAction type, SkiaSharp.SKPoint location, bool inContact);
 	public SKTouchEventArgs (long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SkiaSharp.SKPoint location, bool inContact);
 	public SKTouchEventArgs (long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SkiaSharp.SKPoint location, bool inContact, int wheelDelta);
+	public SKTouchEventArgs (long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SkiaSharp.SKPoint location, bool inContact, int wheelDelta, float pressure);
 	// properties
 	public SKTouchAction ActionType { get; }
 	public SKTouchDeviceType DeviceType { get; }
@@ -306,6 +307,7 @@ public class SKTouchEventArgs : System.EventArgs {
 	public bool InContact { get; }
 	public SkiaSharp.SKPoint Location { get; }
 	public SKMouseButton MouseButton { get; }
+	public float Pressure { get; }
 	public int WheelDelta { get; }
 	// methods
 	public override string ToString ();

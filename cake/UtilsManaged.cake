@@ -125,7 +125,7 @@ string[] GetReferenceSearchPaths()
     var refs = new List<string>();
 
     if (IsRunningOnWindows()) {
-        var vs = VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" });
+        var vs = VS_INSTALL ?? VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" });
         var referenceAssemblies = $"{vs}/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
         var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 
