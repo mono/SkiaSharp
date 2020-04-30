@@ -5,7 +5,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using SkiaSharp;
+using Uno.Extensions;
 using Uno.Foundation;
+using Uno.Logging;
 using Windows.ApplicationModel;
 using Windows.Graphics.Display;
 using Windows.UI.Core;
@@ -80,7 +82,10 @@ namespace SkiaSharp.Views.UWP
 
 			if (!(ActualWidth > 0 && ActualHeight > 0) || !isVisible)
 			{
-				Console.WriteLine($"Ignore Invalidate {ActualWidth}x{ActualHeight} isVisible:{isVisible}");
+				if (this.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Trace))
+				{
+					this.Log().Trace($"Ignore Invalidate {ActualWidth}x{ActualHeight} isVisible:{isVisible}");
+				}
 
 				return;
 			}
@@ -101,7 +106,11 @@ namespace SkiaSharp.Views.UWP
 			CreateBitmap(info);
 			using (var surface = SKSurface.Create(info, pixels, info.RowBytes))
 			{
-				// Console.WriteLine($"info: BytesSize={info.BytesSize} ColorType={info.ColorType} IsOpaque:{info.IsOpaque} {info.Width}x{info.Height}");
+				if (this.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Trace))
+				{
+					this.Log().Trace($"DoInvalidate: BytesSize={info.BytesSize} ColorType={info.ColorType} IsOpaque:{info.IsOpaque} {info.Width}x{info.Height}");
+				}
+
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 			}
 
@@ -114,12 +123,12 @@ namespace SkiaSharp.Views.UWP
 			{
 				FreeBitmap();
 
-				if (!int.TryParse(WebAssemblyRuntime.InvokeJS($"Module._malloc({info.Width}*{info.Height}*4)"), out var ptr))
-				{
-					throw new InvalidOperationException($"Failed to get a CanvasKit allocation");
-				}
+				var ptr = Marshal.AllocHGlobal(info.BytesSize);
 
-				// Console.WriteLine($"Allocated new buffer ({ptr}, {info.Width}x{info.Height})");
+				if (this.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Trace))
+				{
+					this.Log().Trace($"Allocated new buffer ({ptr}, {info.Width}x{info.Height}) was {_pixelWidth}x{_pixelHeight}");
+				}
 
 				pixels = (IntPtr)ptr;
 				_pixelWidth = info.Width;
@@ -131,7 +140,8 @@ namespace SkiaSharp.Views.UWP
 		{
 			if (pixels != IntPtr.Zero)
 			{
-				WebAssemblyRuntime.InvokeJS($"Module._free({pixels}); true;");
+				Marshal.FreeHGlobal(pixels);
+				pixels = IntPtr.Zero;
 			}
 		}
 	}

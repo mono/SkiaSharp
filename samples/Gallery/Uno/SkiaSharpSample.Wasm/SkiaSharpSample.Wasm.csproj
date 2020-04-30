@@ -11,7 +11,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TypeScriptToolsVersion>3.3</TypeScriptToolsVersion>
     <CompileTypeScriptDependsOn>_UnoSourceGenerator; $(CompileTypeScriptDependsOn)</CompileTypeScriptDependsOn>
-    <MonoWasmRuntimeConfiguration>release-dynamic</MonoWasmRuntimeConfiguration>
     <IsUiAutomationMappingEnabled>true</IsUiAutomationMappingEnabled>
   </PropertyGroup>
   <ItemGroup>
@@ -28,12 +27,19 @@
     <Content Include="Fonts\winjs-symbols.woff2" />
     <Content Include="ts\GoogleAnalytics.ts" />
   </ItemGroup>
+  
   <ItemGroup>
     <WasmShellMonoEnvironment Include="MONO_GC_PARAMS" Value="soft-heap-limit=512m,nursery-size=64m,evacuation-threshold=66,major=marksweep" />
     <WasmShellMonoEnvironment Include="MONO_LOG_LEVEL" Value="debug" />
-    <!--<WasmShellMonoEnvironment Include="MONO_LOG_MASK" Value="dll" />-->
     <WasmShellMonoEnvironment Include="MONO_LOG_MASK" Value="gc" />
   </ItemGroup>
+
+  <ItemGroup>
+    <WasmShellExtraEmccFlags Include="-s USE_LIBPNG=1" />
+    <WasmShellExtraEmccFlags Include="-s USE_FREETYPE=1" />
+    <WasmShellExtraEmccFlags Include="-lidbfs.js" />
+  </ItemGroup>
+
   <ItemGroup> 
     <EmbeddedResource Include="WasmCSS\Fonts.css" />
     <EmbeddedResource Include="WasmScripts\*.js" />
@@ -55,7 +61,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
-    <PackageReference Include="Uno.UI" Version="2.0.238-dev.2808" />
+    <PackageReference Include="Uno.UI" Version="2.1.0-dev.1141" />
     <PackageReference Include="Uno.UI.Sample.Banner" Version="1.44.0-dev.23" />
     <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.2.0-dev.29" />
     <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.2.0-dev.29" />

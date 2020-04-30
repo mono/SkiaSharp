@@ -35,15 +35,13 @@ jobs:
   - task: DownloadBuildArtifacts@0
     inputs:
         artifactName: canvaskit_wasm
-        downloadPath: '$(build.sourcesdirectory)\externals\skia\out'
+        downloadPath: '$(build.sourcesdirectory)/externals/skia/out'
 
   - bash: |
       chmod +x scripts/wasm-uitest-run.sh
       scripts/wasm-uitest-run.sh
 
     env:
-      GIT_TARGETBRANCH: "$(System.PullRequest.TargetBranch)"
-      GIT_SOURCEBRANCH: "$(Build.SourceBranch)"
       BUILD_SOURCESDIRECTORY: "$(build.sourcesdirectory)"
       BUILD_ARTIFACTSTAGINGDIRECTORY: "$(build.artifactstagingdirectory)"
 
@@ -52,7 +50,7 @@ jobs:
   - task: CopyFiles@2
     displayName: 'Publish Wasm Binaries'
     inputs:
-      SourceFolder: $(build.sourcesdirectory)/sample/Gallery/Uno/SkiaSharpSample/SkiaSharpSample.Wasm/bin/Release/netstandard2.0/dist
+      SourceFolder: $(build.sourcesdirectory)/samples/Gallery/Uno/SkiaSharpSample.Wasm/bin/Release/netstandard2.0/dist
       Contents: '**/*.*'
       TargetFolder: $(build.artifactstagingdirectory)/skiasharp-wasm
       CleanTargetFolder: false
