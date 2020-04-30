@@ -221,8 +221,23 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void WillFailToTransformWithInvalidTransformation()
+		{
+			var rect = SKRect.Create(10, 10, 100, 100);
+			var offset = rect;
+			offset.Offset(2, 2);
+
+			var rrect = new SKRoundRect(rect, 5, 5);
+			var transformed = rrect.Transform(SKMatrix.MakeRotationDegrees(30));
+
+			Assert.Null(transformed);
+		}
+
+		[SkippableFact]
 		public void CanTransform()
 		{
+			var radii = new[] { new SKPoint(5, 5), new SKPoint(5, 5), new SKPoint(5, 5), new SKPoint(5, 5) };
+
 			var rect = SKRect.Create(10, 10, 100, 100);
 			var offset = rect;
 			offset.Offset(2, 2);
@@ -231,6 +246,7 @@ namespace SkiaSharp.Tests
 			var transformed = rrect.Transform(SKMatrix.MakeTranslation(2, 2));
 
 			Assert.Equal(offset, transformed.Rect);
+			Assert.Equal(radii, transformed.Radii);
 		}
 	}
 }

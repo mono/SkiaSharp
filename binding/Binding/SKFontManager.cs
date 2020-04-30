@@ -5,13 +5,13 @@ using System.Linq;
 
 namespace SkiaSharp
 {
-	public class SKFontManager : SKObject, ISKReferenceCounted
+	public unsafe class SKFontManager : SKObject, ISKReferenceCounted
 	{
-		private static readonly Lazy<SKFontManager> defaultManager;
+		private static readonly SKFontManager defaultManager;
 
-		static SKFontManager()
+		static SKFontManager ()
 		{
-			defaultManager = new Lazy<SKFontManager> (() => new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ()));
+			defaultManager = new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ());
 		}
 
 		internal static void EnsureStaticInstanceAreInitialized ()
@@ -20,13 +20,15 @@ namespace SkiaSharp
 			//            are initialized before any access is made to them
 		}
 
-		[Preserve]
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
-		public static SKFontManager Default => defaultManager.Value;
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
+		public static SKFontManager Default => defaultManager;
 
 		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
 
@@ -51,20 +53,25 @@ namespace SkiaSharp
 
 		public SKFontStyleSet GetFontStyles (int index)
 		{
-			return GetObject<SKFontStyleSet> (SkiaApi.sk_fontmgr_create_styleset (Handle, index));
+			return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_create_styleset (Handle, index));
 		}
 
 		public SKFontStyleSet GetFontStyles (string familyName)
 		{
-			return GetObject<SKFontStyleSet> (SkiaApi.sk_fontmgr_match_family (Handle, familyName));
+			return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_match_family (Handle, familyName));
 		}
+
+		public SKTypeface MatchFamily (string familyName) =>
+			MatchFamily (familyName, SKFontStyle.Normal);
 
 		public SKTypeface MatchFamily (string familyName, SKFontStyle style)
 		{
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_family_style (Handle, familyName, style.Handle));
+			var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_family_style (Handle, familyName, style.Handle));
+			tf?.PreventPublicDisposal ();
+			return tf;
 		}
 
 		public SKTypeface MatchTypeface (SKTypeface face, SKFontStyle style)
@@ -74,7 +81,9 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_face_style (Handle, face.Handle, style.Handle));
+			var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_face_style (Handle, face.Handle, style.Handle));
+			tf?.PreventPublicDisposal ();
+			return tf;
 		}
 
 		public SKTypeface CreateTypeface (string path, int index = 0)
@@ -82,8 +91,10 @@ namespace SkiaSharp
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 
-			var utf8path = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
-			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_file(Handle, utf8path, index));
+			var utf8path = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
+			fixed (byte* u = utf8path) {
+				return SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_file (Handle, u, index));
+			}
 		}
 
 		public SKTypeface CreateTypeface (Stream stream, int index = 0)
@@ -104,7 +115,7 @@ namespace SkiaSharp
 				managed.Dispose ();
 			}
 
-			var typeface = GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_stream (Handle, stream.Handle, index));
+			var typeface = SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_stream (Handle, stream.Handle, index));
 			stream.RevokeOwnership (typeface);
 			return typeface;
 		}
@@ -114,7 +125,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_data (Handle, data.Handle, index));
+			return SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_data (Handle, data.Handle, index));
 		}
 
 		public SKTypeface MatchCharacter (char character)
@@ -171,25 +182,29 @@ namespace SkiaSharp
 			if (familyName == null)
 				familyName = string.Empty;
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_family_style_character (Handle, familyName, style.Handle, bcp47, bcp47?.Length ?? 0, character));
+			var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_family_style_character (Handle, familyName, style.Handle, bcp47, bcp47?.Length ?? 0, character));
+			tf?.PreventPublicDisposal ();
+			return tf;
 		}
 
 		public static SKFontManager CreateDefault ()
 		{
-			return GetObject<SKFontManager> (SkiaApi.sk_fontmgr_create_default ());
+			return GetObject (SkiaApi.sk_fontmgr_create_default ());
 		}
+
+		//
+
+		internal static SKFontManager GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o));
+
+		//
 
 		private sealed class SKFontManagerStatic : SKFontManager
 		{
 			internal SKFontManagerStatic (IntPtr x)
-				: base (x, false)
+				: base (x, true)
 			{
 				IgnorePublicDispose = true;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				// do not dispose
 			}
 		}
 	}

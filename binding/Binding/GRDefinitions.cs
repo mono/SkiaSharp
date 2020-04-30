@@ -1,37 +1,14 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 using GRBackendObject = System.IntPtr;
 
 namespace SkiaSharp
 {
-	public enum GRSurfaceOrigin
-	{
-		TopLeft,
-		BottomLeft,
-	}
-
-	public enum GRPixelConfig
-	{
-		Unknown,
-		Alpha8,
-		Gray8,
-		Rgb565,
-		Rgba4444,
-		Rgba8888,
-		Rgb888,
-		Bgra8888,
-		Srgba8888,
-		Sbgra8888,
-		Rgba1010102,
-		RgbaFloat,
-		RgFloat,
-		AlphaHalf,
-		RgbaHalf,
-	}
-
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use GRBackendRenderTarget instead.")]
-	public struct GRBackendRenderTargetDesc
+	public struct GRBackendRenderTargetDesc : IEquatable<GRBackendRenderTargetDesc>
 	{
 		public int Width { get; set; }
 		public int Height { get; set; }
@@ -40,15 +17,39 @@ namespace SkiaSharp
 		public int SampleCount { get; set; }
 		public int StencilBits { get; set; }
 		public GRBackendObject RenderTargetHandle { get; set; }
-		public SKSizeI Size => new SKSizeI (Width, Height);
-		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
-	}
+		public readonly SKSizeI Size => new SKSizeI (Width, Height);
+		public readonly SKRectI Rect => new SKRectI (0, 0, Width, Height);
 
-	public enum GRBackend
-	{
-		Metal,
-		OpenGL,
-		Vulkan,
+		public readonly bool Equals (GRBackendRenderTargetDesc obj) =>
+			Width == obj.Width &&
+			Height == obj.Height &&
+			Config == obj.Config &&
+			Origin == obj.Origin &&
+			SampleCount == obj.SampleCount &&
+			StencilBits == obj.StencilBits &&
+			RenderTargetHandle == obj.RenderTargetHandle;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRBackendRenderTargetDesc f && Equals (f);
+
+		public static bool operator == (GRBackendRenderTargetDesc left, GRBackendRenderTargetDesc right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRBackendRenderTargetDesc left, GRBackendRenderTargetDesc right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (Width);
+			hash.Add (Height);
+			hash.Add (Config);
+			hash.Add (Origin);
+			hash.Add (SampleCount);
+			hash.Add (StencilBits);
+			hash.Add (RenderTargetHandle);
+			return hash.ToHashCode ();
+		}
 	}
 
 	[Flags]
@@ -77,40 +78,29 @@ namespace SkiaSharp
 		All = 0xffffffff,
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct GRGlFramebufferInfo
+	public partial struct GRGlFramebufferInfo
 	{
-		private uint fboId;
-		private uint format;
-
 		public GRGlFramebufferInfo (uint fboId)
 		{
-			this.fboId = fboId;
-			this.format = 0;
+			fFBOID = fboId;
+			fFormat = 0;
 		}
 
 		public GRGlFramebufferInfo (uint fboId, uint format)
 		{
-			this.fboId = fboId;
-			this.format = format;
-		}
-
-		public uint FramebufferObjectId {
-			get => fboId;
-			set => fboId = value;
-		}
-		public uint Format {
-			get => format;
-			set => format = value;
+			fFBOID = fboId;
+			fFormat = format;
 		}
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct GRGlTextureInfo
+	public partial struct GRGlTextureInfo
 	{
-		private uint fTarget;
-		private uint fID;
-		private uint fFormat;
+		public GRGlTextureInfo (uint target, uint id)
+		{
+			fTarget = target;
+			fID = id;
+			fFormat = 0;
+		}
 
 		public GRGlTextureInfo (uint target, uint id, uint format)
 		{
@@ -118,21 +108,9 @@ namespace SkiaSharp
 			fID = id;
 			fFormat = format;
 		}
+	}
 
-		public uint Target {
-			get { return fTarget; }
-			set { fTarget = value; }
-		}
-		public uint Id {
-			get { return fID; }
-			set { fID = value; }
-		}
-		public uint Format {
-			get { return fFormat; }
-			set { fFormat = value; }
-		}
-	};
-
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Flags]
 	[Obsolete]
 	public enum GRBackendTextureDescFlags
@@ -141,50 +119,56 @@ namespace SkiaSharp
 		RenderTarget = 1,
 	}
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use GRBackendTexture instead.")]
 	[StructLayout (LayoutKind.Sequential)]
-	public struct GRBackendTextureDesc
+	public struct GRBackendTextureDesc : IEquatable<GRBackendTextureDesc>
 	{
-		private GRBackendTextureDescFlags flags;
-		private GRSurfaceOrigin origin;
-		private int width;
-		private int height;
-		private GRPixelConfig config;
-		private int sampleCount;
-		private GRBackendObject textureHandle;
+		public GRBackendTextureDescFlags Flags { get; set; }
+		public GRSurfaceOrigin Origin { get; set; }
+		public int Width { get; set; }
+		public int Height { get; set; }
+		public GRPixelConfig Config { get; set; }
+		public int SampleCount { get; set; }
+		public GRBackendObject TextureHandle { get; set; }
+		public readonly SKSizeI Size => new SKSizeI (Width, Height);
+		public readonly SKRectI Rect => new SKRectI (0, 0, Width, Height);
 
-		public GRBackendTextureDescFlags Flags {
-			get { return flags; }
-			set { flags = value; }
-		}
-		public GRSurfaceOrigin Origin {
-			get { return origin; }
-			set { origin = value; }
-		}
-		public int Width {
-			get { return width; }
-			set { width = value; }
-		}
-		public int Height {
-			get { return height; }
-			set { height = value; }
-		}
-		public GRPixelConfig Config {
-			get { return config; }
-			set { config = value; }
-		}
-		public int SampleCount {
-			get { return sampleCount; }
-			set { sampleCount = value; }
-		}
-		public GRBackendObject TextureHandle {
-			get { return textureHandle; }
-			set { textureHandle = value; }
+		public readonly bool Equals (GRBackendTextureDesc obj) =>
+			Flags == obj.Flags &&
+			Origin == obj.Origin &&
+			Width == obj.Width &&
+			Height == obj.Height &&
+			Config == obj.Config &&
+			SampleCount == obj.SampleCount &&
+			TextureHandle == obj.TextureHandle;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRBackendTextureDesc f && Equals (f);
+
+		public static bool operator == (GRBackendTextureDesc left, GRBackendTextureDesc right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRBackendTextureDesc left, GRBackendTextureDesc right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (Flags);
+			hash.Add (Origin);
+			hash.Add (Width);
+			hash.Add (Height);
+			hash.Add (Config);
+			hash.Add (SampleCount);
+			hash.Add (TextureHandle);
+			return hash.ToHashCode ();
 		}
 	}
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use GRBackendTexture instead.")]
-	public struct GRGlBackendTextureDesc
+	public struct GRGlBackendTextureDesc : IEquatable<GRGlBackendTextureDesc>
 	{
 		public GRBackendTextureDescFlags Flags { get; set; }
 		public GRSurfaceOrigin Origin { get; set; }
@@ -193,145 +177,83 @@ namespace SkiaSharp
 		public GRPixelConfig Config { get; set; }
 		public int SampleCount { get; set; }
 		public GRGlTextureInfo TextureHandle { get; set; }
+		public readonly SKSizeI Size => new SKSizeI (Width, Height);
+		public readonly SKRectI Rect => new SKRectI (0, 0, Width, Height);
+
+		public readonly bool Equals (GRGlBackendTextureDesc obj) =>
+			Flags == obj.Flags &&
+			Origin == obj.Origin &&
+			Width == obj.Width &&
+			Height == obj.Height &&
+			Config == obj.Config &&
+			SampleCount == obj.SampleCount &&
+			TextureHandle == obj.TextureHandle;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRGlBackendTextureDesc f && Equals (f);
+
+		public static bool operator == (GRGlBackendTextureDesc left, GRGlBackendTextureDesc right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRGlBackendTextureDesc left, GRGlBackendTextureDesc right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (Flags);
+			hash.Add (Origin);
+			hash.Add (Width);
+			hash.Add (Height);
+			hash.Add (Config);
+			hash.Add (SampleCount);
+			hash.Add (TextureHandle);
+			return hash.ToHashCode ();
+		}
 	}
 
 	public static partial class SkiaExtensions
 	{
-		public static uint ToGlSizedFormat (this SKColorType colorType)
-		{
-			switch (colorType) {
-				case SKColorType.Unknown:
-					return 0;
-				case SKColorType.Alpha8:
-					return GRGlSizedFormat.ALPHA8;
-				case SKColorType.Rgb565:
-					return GRGlSizedFormat.RGB565;
-				case SKColorType.Argb4444:
-					return GRGlSizedFormat.RGBA4;
-				case SKColorType.Rgba8888:
-					return GRGlSizedFormat.RGBA8;
-				case SKColorType.Rgb888x:
-					return GRGlSizedFormat.RGB8;
-				case SKColorType.Bgra8888:
-					return GRGlSizedFormat.BGRA8;
-				case SKColorType.Rgba1010102:
-					return GRGlSizedFormat.RGB10_A2;
-				case SKColorType.Rgb101010x:
-					return 0;
-				case SKColorType.Gray8:
-					return GRGlSizedFormat.LUMINANCE8;
-				case SKColorType.RgbaF16:
-					return GRGlSizedFormat.RGBA16F;
-				default:
-					throw new ArgumentOutOfRangeException (nameof (colorType));
-			}
-		}
+		public static uint ToGlSizedFormat (this SKColorType colorType) =>
+			colorType.ToPixelConfig ().ToGlSizedFormat ();
 
-		public static uint ToGlSizedFormat (this GRPixelConfig config)
-		{
-			switch (config) {
-				case GRPixelConfig.Alpha8:
-					return GRGlSizedFormat.ALPHA8;
-				case GRPixelConfig.Gray8:
-					return GRGlSizedFormat.LUMINANCE8;
-				case GRPixelConfig.Rgb565:
-					return GRGlSizedFormat.RGB565;
-				case GRPixelConfig.Rgba4444:
-					return GRGlSizedFormat.RGBA4;
-				case GRPixelConfig.Rgba8888:
-					return GRGlSizedFormat.RGBA8;
-				case GRPixelConfig.Rgb888:
-					return GRGlSizedFormat.RGB8;
-				case GRPixelConfig.Bgra8888:
-					return GRGlSizedFormat.BGRA8;
-				case GRPixelConfig.Srgba8888:
-					return GRGlSizedFormat.SRGB8_ALPHA8;
-				case GRPixelConfig.Sbgra8888:
-					return GRGlSizedFormat.SRGB8_ALPHA8;
-				case GRPixelConfig.Rgba1010102:
-					return GRGlSizedFormat.RGB10_A2;
-				case GRPixelConfig.RgbaFloat:
-					return GRGlSizedFormat.RGBA32F;
-				case GRPixelConfig.RgFloat:
-					return GRGlSizedFormat.RG32F;
-				case GRPixelConfig.AlphaHalf:
-					return GRGlSizedFormat.R16F;
-				case GRPixelConfig.RgbaHalf:
-					return GRGlSizedFormat.RGBA16F;
-				case GRPixelConfig.Unknown:
-					return 0;
-				default:
-					throw new ArgumentOutOfRangeException (nameof (config));
-			}
-		}
+		public static uint ToGlSizedFormat (this GRPixelConfig config) =>
+			config switch
+			{
+				GRPixelConfig.Unknown => 0,
+				GRPixelConfig.Alpha8 => GRGlSizedFormat.ALPHA8,
+				GRPixelConfig.Alpha8AsAlpha => GRGlSizedFormat.ALPHA8,
+				GRPixelConfig.Alpha8AsRed => GRGlSizedFormat.ALPHA8,
+				GRPixelConfig.Gray8 => GRGlSizedFormat.LUMINANCE8,
+				GRPixelConfig.Gray8AsLum => GRGlSizedFormat.LUMINANCE8,
+				GRPixelConfig.Gray8AsRed => GRGlSizedFormat.LUMINANCE8,
+				GRPixelConfig.Rgb565 => GRGlSizedFormat.RGB565,
+				GRPixelConfig.Rgba4444 => GRGlSizedFormat.RGBA4,
+				GRPixelConfig.Rgba8888 => GRGlSizedFormat.RGBA8,
+				GRPixelConfig.Rgb888 => GRGlSizedFormat.RGB8,
+				GRPixelConfig.Rgb888x => GRGlSizedFormat.RGBA8,
+				GRPixelConfig.Rg88 => GRGlSizedFormat.RG8,
+				GRPixelConfig.Bgra8888 => GRGlSizedFormat.BGRA8,
+				GRPixelConfig.Srgba8888 => GRGlSizedFormat.SRGB8_ALPHA8,
+				GRPixelConfig.Rgba1010102 => GRGlSizedFormat.RGB10_A2,
+				GRPixelConfig.AlphaHalf => GRGlSizedFormat.R16F,
+				GRPixelConfig.AlphaHalfAsLum => GRGlSizedFormat.LUMINANCE16F,
+				GRPixelConfig.AlphaHalfAsRed => GRGlSizedFormat.R16F,
+				GRPixelConfig.RgbaHalf => GRGlSizedFormat.RGBA16F,
+				GRPixelConfig.RgbaHalfClamped => GRGlSizedFormat.RGBA16F,
+				GRPixelConfig.RgbEtc1 => GRGlSizedFormat.COMPRESSED_ETC1_RGB8,
+				GRPixelConfig.Alpha16 => GRGlSizedFormat.R16,
+				GRPixelConfig.Rg1616 => GRGlSizedFormat.RG16,
+				GRPixelConfig.Rgba16161616 => GRGlSizedFormat.RGBA16,
+				GRPixelConfig.RgHalf => GRGlSizedFormat.RG16F,
+				_ => throw new ArgumentOutOfRangeException (nameof (config)),
+			};
 
-		public static GRPixelConfig ToPixelConfig (this SKColorType colorType)
-		{
-			switch (colorType) {
-				case SKColorType.Unknown:
-					return GRPixelConfig.Unknown;
-				case SKColorType.Alpha8:
-					return GRPixelConfig.Alpha8;
-				case SKColorType.Gray8:
-					return GRPixelConfig.Gray8;
-				case SKColorType.Rgb565:
-					return GRPixelConfig.Rgb565;
-				case SKColorType.Argb4444:
-					return GRPixelConfig.Rgba4444;
-				case SKColorType.Rgba8888:
-					return GRPixelConfig.Rgba8888;
-				case SKColorType.Rgb888x:
-					return GRPixelConfig.Rgb888;
-				case SKColorType.Bgra8888:
-					return GRPixelConfig.Bgra8888;
-				case SKColorType.Rgba1010102:
-					return GRPixelConfig.Rgba1010102;
-				case SKColorType.RgbaF16:
-					return GRPixelConfig.RgbaHalf;
-				case SKColorType.Rgb101010x:
-					return GRPixelConfig.Unknown;
-				default:
-					throw new ArgumentOutOfRangeException (nameof (colorType));
-			}
-		}
+		public static GRPixelConfig ToPixelConfig (this SKColorType colorType) =>
+			SkiaApi.sk_colortype_to_gr_pixelconfig (colorType.ToNative ()).FromNative ();
 
-		public static SKColorType ToColorType (this GRPixelConfig config)
-		{
-			switch (config) {
-				case GRPixelConfig.Unknown:
-					return SKColorType.Unknown;
-				case GRPixelConfig.Alpha8:
-					return SKColorType.Alpha8;
-				case GRPixelConfig.Gray8:
-					return SKColorType.Gray8;
-				case GRPixelConfig.Rgb565:
-					return SKColorType.Rgb565;
-				case GRPixelConfig.Rgba4444:
-					return SKColorType.Argb4444;
-				case GRPixelConfig.Rgba8888:
-					return SKColorType.Rgba8888;
-				case GRPixelConfig.Rgb888:
-					return SKColorType.Rgb888x;
-				case GRPixelConfig.Bgra8888:
-					return SKColorType.Bgra8888;
-				case GRPixelConfig.Srgba8888:
-					return SKColorType.Rgba8888;
-				case GRPixelConfig.Sbgra8888:
-					return SKColorType.Bgra8888;
-				case GRPixelConfig.Rgba1010102:
-					return SKColorType.Rgba1010102;
-				case GRPixelConfig.RgbaFloat:
-					return SKColorType.Unknown;
-				case GRPixelConfig.RgFloat:
-					return SKColorType.Unknown;
-				case GRPixelConfig.AlphaHalf:
-					return SKColorType.Unknown;
-				case GRPixelConfig.RgbaHalf:
-					return SKColorType.RgbaF16;
-				default:
-					throw new ArgumentOutOfRangeException (nameof (config));
-			}
-		}
+		public static SKColorType ToColorType (this GRPixelConfig config) =>
+			SkiaApi.gr_pixelconfig_to_sk_colortype (config.ToNative ()).FromNative ();
 	}
 
 	internal static class GRGlSizedFormat
@@ -384,6 +306,7 @@ namespace SkiaSharp
 
 		// Luminance sized formats
 		internal const uint LUMINANCE8 = 0x8040;
+		internal const uint LUMINANCE16F = 0x881E;
 
 		// Alpha sized formats
 		internal const uint ALPHA8 = 0x803C;
@@ -404,6 +327,7 @@ namespace SkiaSharp
 		internal const uint RG16 = 0x822C;
 		//internal const uint R16F = 0x822D;
 		//internal const uint R32F = 0x822E;
+		internal const uint RG16F = 0x822F;
 
 		// RG sized integer formats
 		internal const uint RG8I = 0x8237;
@@ -436,6 +360,7 @@ namespace SkiaSharp
 		internal const uint RGBA16F = 0x881A;
 		internal const uint RGBA32F = 0x8814;
 		internal const uint RG32F = 0x8230;
+		internal const uint RGBA16 = 0x805B;
 
 		// RGBA integer sized formats
 		internal const uint RGBA8I = 0x8D8E;
@@ -447,5 +372,8 @@ namespace SkiaSharp
 
 		// BGRA sized formats
 		internal const uint BGRA8 = 0x93A1;
+
+		// Compressed texture sized formats
+		internal const uint COMPRESSED_ETC1_RGB8 = 0x8D64;
 	}
 }

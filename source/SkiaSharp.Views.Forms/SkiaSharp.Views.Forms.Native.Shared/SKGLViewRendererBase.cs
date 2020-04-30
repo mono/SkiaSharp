@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !__GTK__
+using System;
 using System.ComponentModel;
 using Xamarin.Forms;
 
@@ -25,11 +26,15 @@ using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Mac.SKPaintGLSurfaceEven
 using Xamarin.Forms.Platform.Tizen;
 using SKNativeView = SkiaSharp.Views.Tizen.SKGLSurfaceView;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs;
-using TForms = Xamarin.Forms.Platform.Tizen.Forms;
+using TForms = Xamarin.Forms.Forms;
 #elif __WPF__
 using System.Windows;
 using Xamarin.Forms.Platform.WPF;
 using SKNativeView = SkiaSharp.Views.Forms.SKHostedGLControl;
+using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs;
+#elif __GTK__
+using Xamarin.Forms.Platform.GTK;
+using SKNativeView = SkiaSharp.Views.Forms.SKGLWidget;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs;
 #endif
 
@@ -50,6 +55,7 @@ namespace SkiaSharp.Views.Forms
 #endif
 
 #if __ANDROID__
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("This constructor is obsolete as of version 2.5. Please use SKGLViewRendererBase(Context) instead.")]
 #endif
 		protected SKGLViewRendererBase()
@@ -165,6 +171,8 @@ namespace SkiaSharp.Views.Forms
 			if (controller != null)
 			{
 				controller.SurfaceInvalidated -= OnSurfaceInvalidated;
+				controller.GetCanvasSize -= OnGetCanvasSize;
+				controller.GetGRContext -= OnGetGRContext;
 			}
 
 			var control = Control;
@@ -195,7 +203,11 @@ namespace SkiaSharp.Views.Forms
 			x = x * Control.ContentsScale;
 			y = y * Control.ContentsScale;
 #elif __WPF__
+			// TODO: implement this if it is actually supported
 			// WPF does not scale for GL as it is using Windows.Forms
+#elif __GTK__
+			// TODO: implement this if it is actually supported
+			// GTK does not yet support IgnorePixelScaling
 #else
 #error Missing platform logic
 #endif
@@ -235,3 +247,4 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 }
+#endif

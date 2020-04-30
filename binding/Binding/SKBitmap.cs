@@ -1,9 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete]
 	public enum SKBitmapResizeMethod
 	{
@@ -16,6 +17,7 @@ namespace SkiaSharp
 
 	public static partial class SkiaExtensions
 	{
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public static SKFilterQuality ToFilterQuality (this SKBitmapResizeMethod method)
 		{
@@ -39,12 +41,11 @@ namespace SkiaSharp
 	// TODO: `GenerationID` may be useful
 	// TODO: `GetAddr` and `GetPixel` are confusing
 
-	public class SKBitmap : SKObject
+	public unsafe class SKBitmap : SKObject
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";
 
-		[Preserve]
 		internal SKBitmap (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -68,6 +69,11 @@ namespace SkiaSharp
 		{
 		}
 
+		public SKBitmap (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorspace)
+			: this (new SKImageInfo (width, height, colorType, alphaType, colorspace))
+		{
+		}
+
 		public SKBitmap (SKImageInfo info)
 			: this (info, info.RowBytes)
 		{
@@ -81,6 +87,7 @@ namespace SkiaSharp
 			}
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo, SKBitmapAllocFlags) instead.")]
 		public SKBitmap (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags)
 			: this (info, SKBitmapAllocFlags.None)
@@ -95,14 +102,20 @@ namespace SkiaSharp
 			}
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo) instead.")]
 		public SKBitmap (SKImageInfo info, SKColorTable ctable)
 			: this (info, SKBitmapAllocFlags.None)
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_bitmap_destructor (Handle);
+
+		// TryAllocPixels
 
 		public bool TryAllocPixels (SKImageInfo info)
 		{
@@ -112,24 +125,30 @@ namespace SkiaSharp
 		public bool TryAllocPixels (SKImageInfo info, int rowBytes)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_bitmap_try_alloc_pixels (Handle, ref cinfo, (IntPtr)rowBytes);
+			return SkiaApi.sk_bitmap_try_alloc_pixels (Handle, &cinfo, (IntPtr)rowBytes);
 		}
-		
+
 		public bool TryAllocPixels (SKImageInfo info, SKBitmapAllocFlags flags)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_bitmap_try_alloc_pixels_with_flags (Handle, ref cinfo, flags);
+			return SkiaApi.sk_bitmap_try_alloc_pixels_with_flags (Handle, &cinfo, (uint)flags);
 		}
+
+		// Reset
 
 		public void Reset ()
 		{
 			SkiaApi.sk_bitmap_reset (Handle);
 		}
 
+		// SetImmutable
+
 		public void SetImmutable ()
 		{
 			SkiaApi.sk_bitmap_set_immutable (Handle);
 		}
+
+		// Erase
 
 		public void Erase (SKColor color)
 		{
@@ -138,18 +157,39 @@ namespace SkiaSharp
 
 		public void Erase (SKColor color, SKRectI rect)
 		{
-			SkiaApi.sk_bitmap_erase_rect (Handle, (uint)color, ref rect);
+			SkiaApi.sk_bitmap_erase_rect (Handle, (uint)color, &rect);
 		}
 
-		public byte GetAddr8(int x, int y) => SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
-		public UInt16 GetAddr16(int x, int y) => SkiaApi.sk_bitmap_get_addr_16 (Handle, x, y);
-		public UInt32 GetAddr32(int x, int y) => SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
-		public IntPtr GetAddr(int x, int y) => SkiaApi.sk_bitmap_get_addr (Handle, x, y);
+		// GetAddr*
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public byte GetAddr8 (int x, int y) => *SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public UInt16 GetAddr16 (int x, int y) => *SkiaApi.sk_bitmap_get_addr_16 (Handle, x, y);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public UInt32 GetAddr32 (int x, int y) => *SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetAddress instead.")]
+		public IntPtr GetAddr (int x, int y) => GetAddress (x, y);
+
+		// GetAddress
+
+		public IntPtr GetAddress (int x, int y) =>
+			(IntPtr)SkiaApi.sk_bitmap_get_addr (Handle, x, y);
+
+		// Pixels (color)
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixel(int, int) instead.")]
 		public SKPMColor GetIndex8Color (int x, int y)
 		{
-			return (SKPMColor) GetPixel (x, y);
+			return (SKPMColor)GetPixel (x, y);
 		}
 
 		public SKColor GetPixel (int x, int y)
@@ -159,44 +199,31 @@ namespace SkiaSharp
 
 		public void SetPixel (int x, int y, SKColor color)
 		{
-			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, (uint)color);
+			var info = Info;
+			if (x < 0 || x >= info.Width)
+				throw new ArgumentOutOfRangeException (nameof (x));
+			if (y < 0 || y >= info.Height)
+				throw new ArgumentOutOfRangeException (nameof (y));
+
+			using var canvas = new SKCanvas (this);
+			canvas.DrawPoint (x, y, color);
 		}
+
+		// Copy
 
 		public bool CanCopyTo (SKColorType colorType)
 		{
-			var srcCT = ColorType;
+			// TODO: optimize as this does more work that we really want
 
-			if (srcCT == SKColorType.Unknown) {
+			if (colorType == SKColorType.Unknown)
 				return false;
-			}
-			if (srcCT == SKColorType.Alpha8 && colorType != SKColorType.Alpha8) {
-				return false;   // can't convert from alpha to non-alpha
-			}
 
-			bool sameConfigs = (srcCT == colorType);
-			switch (colorType) {
-				case SKColorType.Alpha8:
-				case SKColorType.Rgb565:
-				case SKColorType.Rgba8888:
-				case SKColorType.Bgra8888:
-				case SKColorType.Rgb888x:
-				case SKColorType.Rgba1010102:
-				case SKColorType.Rgb101010x:
-				case SKColorType.RgbaF16:
-					break;
-				case SKColorType.Gray8:
-					if (!sameConfigs) {
-						return false;
-					}
-					break;
-				case SKColorType.Argb4444:
-					return
-						sameConfigs || 
-						srcCT == SKImageInfo.PlatformColorType;
-				default:
-					return false;
-			}
-			return true;
+			using var bmp = new SKBitmap ();
+
+			var info = Info
+				.WithColorType (colorType)
+				.WithSize (1, 1);
+			return bmp.TryAllocPixels (info);
 		}
 
 		public SKBitmap Copy ()
@@ -224,108 +251,80 @@ namespace SkiaSharp
 
 		public bool CopyTo (SKBitmap destination, SKColorType colorType)
 		{
-			if (destination == null) {
+			if (destination == null)
 				throw new ArgumentNullException (nameof (destination));
-			}
-			
-			if (!CanCopyTo (colorType)) {
+
+			if (colorType == SKColorType.Unknown)
 				return false;
-			}
 
-			var srcPM = PeekPixels ();
-			if (srcPM == null) {
+			using var srcPixmap = PeekPixels ();
+			if (srcPixmap == null)
 				return false;
-			}
 
-			var dstInfo = srcPM.Info.WithColorType (colorType);
-			switch (colorType) {
-				case SKColorType.Rgb565:
-					// CopyTo() is not strict on alpha type. Here we set the src to opaque to allow
-					// the call to ReadPixels() to succeed and preserve this lenient behavior.
-					if (srcPM.AlphaType != SKAlphaType.Opaque) {
-						srcPM = srcPM.WithAlphaType (SKAlphaType.Opaque);
-					}
-					dstInfo.AlphaType = SKAlphaType.Opaque;
-					break;
-				case SKColorType.RgbaF16:
-					// The caller does not have an opportunity to pass a dst color space.
-					// Assume that they want linear sRGB.
-					dstInfo.ColorSpace = SKColorSpace.CreateSrgbLinear ();
-					if (srcPM.ColorSpace == null) {
-						// We can't do a sane conversion to F16 without a dst color space.
-						// Guess sRGB in this case.
-						srcPM = srcPM.WithColorSpace (SKColorSpace.CreateSrgb ());
-					}
-					break;
-			}
+			using var temp = new SKBitmap ();
 
-			var tmpDst = new SKBitmap ();
-			if (!tmpDst.TryAllocPixels (dstInfo)) {
+			var dstInfo = srcPixmap.Info.WithColorType (colorType);
+			if (!temp.TryAllocPixels (dstInfo))
 				return false;
-			}
 
-			var dstPM = tmpDst.PeekPixels ();
-			if (dstPM == null) {
-				return false;
-			}
+			using var canvas = new SKCanvas (temp);
 
-			// We can't do a sane conversion from F16 without a src color space. Guess sRGB in this case.
-			if (srcPM.ColorType == SKColorType.RgbaF16 && dstPM.ColorSpace == null) {
-				dstPM = dstPM.WithColorSpace (SKColorSpace.CreateSrgb ());
-			}
+			using var paint = new SKPaint {
+				Shader = ToShader (),
+				BlendMode = SKBlendMode.Src
+			};
 
-			// ReadPixels does not yet support color spaces with parametric transfer functions. This
-			// works around that restriction when the color spaces are equal.
-			if (colorType != SKColorType.RgbaF16 && srcPM.ColorType != SKColorType.RgbaF16 && dstPM.ColorSpace == srcPM.ColorSpace) {
-				dstPM = dstPM.WithColorSpace (null);
-				srcPM = srcPM.WithColorSpace (null);
-			}
+			canvas.DrawPaint (paint);
 
-			if (!srcPM.ReadPixels (dstPM)) {
-				return false;
-			}
-
-			destination.Swap (tmpDst);
-
+			destination.Swap (temp);
 			return true;
 		}
 
-		public bool ExtractSubset(SKBitmap destination, SKRectI subset)
+		// ExtractSubset
+
+		public bool ExtractSubset (SKBitmap destination, SKRectI subset)
 		{
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
-			return SkiaApi.sk_bitmap_extract_subset (Handle, destination.Handle, ref subset);
+			return SkiaApi.sk_bitmap_extract_subset (Handle, destination.Handle, &subset);
 		}
 
-		public bool ExtractAlpha(SKBitmap destination)
+		// ExtractAlpha
+
+		public bool ExtractAlpha (SKBitmap destination)
 		{
 			return ExtractAlpha (destination, null, out var offset);
 		}
 
-		public bool ExtractAlpha(SKBitmap destination, out SKPointI offset)
+		public bool ExtractAlpha (SKBitmap destination, out SKPointI offset)
 		{
 			return ExtractAlpha (destination, null, out offset);
 		}
 
-		public bool ExtractAlpha(SKBitmap destination, SKPaint paint)
+		public bool ExtractAlpha (SKBitmap destination, SKPaint paint)
 		{
 			return ExtractAlpha (destination, paint, out var offset);
 		}
 
-		public bool ExtractAlpha(SKBitmap destination, SKPaint paint, out SKPointI offset)
+		public bool ExtractAlpha (SKBitmap destination, SKPaint paint, out SKPointI offset)
 		{
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
-			return SkiaApi.sk_bitmap_extract_alpha (Handle, destination.Handle, paint == null ? IntPtr.Zero : paint.Handle, out offset);
+			fixed (SKPointI* o = &offset) {
+				return SkiaApi.sk_bitmap_extract_alpha (Handle, destination.Handle, paint == null ? IntPtr.Zero : paint.Handle, o);
+			}
 		}
 
-		public bool ReadyToDraw => SkiaApi.sk_bitmap_ready_to_draw (Handle); 
+		// properties
+
+		public bool ReadyToDraw => SkiaApi.sk_bitmap_ready_to_draw (Handle);
 
 		public SKImageInfo Info {
 			get {
-				SkiaApi.sk_bitmap_get_info (Handle, out var cinfo);
+				SKImageInfoNative cinfo;
+				SkiaApi.sk_bitmap_get_info (Handle, &cinfo);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
@@ -362,35 +361,45 @@ namespace SkiaSharp
 			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
 		}
 
+		// *Pixels*
+
 		public IntPtr GetPixels () =>
 			GetPixels (out _);
 
 		public ReadOnlySpan<byte> GetPixelSpan ()
 		{
-			unsafe {
-				return new ReadOnlySpan<byte> ((void*)GetPixels (out var length), (int)length);
+			return new ReadOnlySpan<byte> ((void*)GetPixels (out var length), (int)length);
+		}
+
+		public IntPtr GetPixels (out IntPtr length)
+		{
+			fixed (IntPtr* l = &length) {
+				return (IntPtr)SkiaApi.sk_bitmap_get_pixels (Handle, l);
 			}
 		}
 
-		public IntPtr GetPixels (out IntPtr length) =>
-			SkiaApi.sk_bitmap_get_pixels (Handle, out length);
-
-		public void SetPixels(IntPtr pixels)
+		public void SetPixels (IntPtr pixels)
 		{
-			SkiaApi.sk_bitmap_set_pixels (Handle, pixels);
+			SkiaApi.sk_bitmap_set_pixels (Handle, (void*)pixels);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use SetPixels(IntPtr) instead.")]
-		public void SetPixels(IntPtr pixels, SKColorTable ct)
+		public void SetPixels (IntPtr pixels, SKColorTable ct)
 		{
 			SetPixels (pixels);
 		}
 
+		// SetColorTable
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported.")]
 		public void SetColorTable (SKColorTable ct)
 		{
 			// no-op due to unsupperted action
 		}
+
+		// more properties
 
 		public byte[] Bytes {
 			get {
@@ -401,14 +410,36 @@ namespace SkiaSharp
 		}
 
 		public SKColor[] Pixels {
-			get { 
+			get {
 				var info = Info;
-				var pixels = new SKColor [info.Width * info.Height];
-				SkiaApi.sk_bitmap_get_pixel_colors (Handle, pixels);
+				var pixels = new SKColor[info.Width * info.Height];
+				fixed (SKColor* p = pixels) {
+					SkiaApi.sk_bitmap_get_pixel_colors (Handle, (uint*)p);
+				}
 				return pixels;
 			}
 			set {
-				SkiaApi.sk_bitmap_set_pixel_colors (Handle, value);
+				if (value == null)
+					throw new ArgumentNullException (nameof (value));
+
+				var info = Info;
+				if (info.Width * info.Height != value.Length)
+					throw new ArgumentException ($"The number of pixels must equal Width x Height, or {info.Width * info.Height}.", nameof (value));
+
+				fixed (SKColor* v = value) {
+					var tempInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+					using var temp = new SKBitmap ();
+					temp.InstallPixels (tempInfo, (IntPtr)v);
+
+					using var shader = temp.ToShader ();
+
+					using var canvas = new SKCanvas (this);
+					using var paint = new SKPaint {
+						Shader = shader,
+						BlendMode = SKBlendMode.Src
+					};
+					canvas.DrawPaint (paint);
+				}
 			}
 		}
 
@@ -433,8 +464,11 @@ namespace SkiaSharp
 			set { SkiaApi.sk_bitmap_set_volatile (Handle, value); }
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported.")]
 		public SKColorTable ColorTable => null;
+
+		// DecodeBounds
 
 		public static SKImageInfo DecodeBounds (Stream stream)
 		{
@@ -476,21 +510,19 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKImageInfo DecodeBounds (byte[] buffer)
-		{
-			if (buffer == null) {
-				throw new ArgumentNullException (nameof (buffer));
-			}
+		public static SKImageInfo DecodeBounds (byte[] buffer) =>
+			DecodeBounds (buffer.AsSpan ());
 
-			unsafe {
-				fixed (byte* b = buffer) {
-					using (var skdata = SKData.Create ((IntPtr)b, buffer.Length))
-					using (var codec = SKCodec.Create (skdata)) {
-						return codec?.Info ?? SKImageInfo.Empty;
-					}
-				}
+		public static SKImageInfo DecodeBounds (ReadOnlySpan<byte> buffer)
+		{
+			fixed (byte* b = buffer) {
+				using var skdata = SKData.Create ((IntPtr)b, buffer.Length);
+				using var codec = SKCodec.Create (skdata);
+				return codec?.Info ?? SKImageInfo.Empty;
 			}
 		}
+
+		// Decode
 
 		public static SKBitmap Decode (SKCodec codec)
 		{
@@ -630,31 +662,31 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKBitmap Decode (byte[] buffer)
+		public static SKBitmap Decode (byte[] buffer) =>
+			Decode (buffer.AsSpan ());
+
+		public static SKBitmap Decode (byte[] buffer, SKImageInfo bitmapInfo) =>
+			Decode (buffer.AsSpan (), bitmapInfo);
+
+		public static SKBitmap Decode (ReadOnlySpan<byte> buffer)
 		{
-			if (buffer == null) {
-				throw new ArgumentNullException (nameof (buffer));
-			}
-			using (var stream = new SKMemoryStream (buffer)) {
-				return Decode(stream);
+			fixed (byte* b = buffer) {
+				using var skdata = SKData.Create ((IntPtr)b, buffer.Length);
+				using var codec = SKCodec.Create (skdata);
+				return Decode (codec);
 			}
 		}
 
-		public static SKBitmap Decode (byte[] buffer, SKImageInfo bitmapInfo)
+		public static SKBitmap Decode (ReadOnlySpan<byte> buffer, SKImageInfo bitmapInfo)
 		{
-			if (buffer == null) {
-				throw new ArgumentNullException (nameof (buffer));
-			}
-
-			unsafe {
-				fixed (byte* b = buffer) {
-					using (var skdata = SKData.Create ((IntPtr)b, buffer.Length))
-					using (var codec = SKCodec.Create (skdata)) {
-						return Decode (codec, bitmapInfo);
-					}
-				}
+			fixed (byte* b = buffer) {
+				using var skdata = SKData.Create ((IntPtr)b, buffer.Length);
+				using var codec = SKCodec.Create (skdata);
+				return Decode (codec, bitmapInfo);
 			}
 		}
+
+		// InstallPixels
 
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels)
 		{
@@ -666,12 +698,14 @@ namespace SkiaSharp
 			return InstallPixels (info, pixels, rowBytes, null, null);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int) instead.")]
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable)
 		{
 			return InstallPixels (info, pixels, rowBytes, null, null);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int, SKBitmapReleaseDelegate, object) instead.")]
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context)
 		{
@@ -690,7 +724,7 @@ namespace SkiaSharp
 				? new SKBitmapReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKBitmapReleaseDelegateProxy, out _, out var ctx);
-			return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, proxy, ctx);
+			return SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
 		}
 
 		public bool InstallPixels (SKPixmap pixmap)
@@ -698,15 +732,21 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_install_pixels_with_pixmap (Handle, pixmap.Handle);
 		}
 
-		public bool InstallMaskPixels(SKMask mask)
+		// InstallMaskPixels
+
+		public bool InstallMaskPixels (SKMask mask)
 		{
-			return SkiaApi.sk_bitmap_install_mask_pixels(Handle, ref mask);
+			return SkiaApi.sk_bitmap_install_mask_pixels (Handle, &mask);
 		}
 
-		public void NotifyPixelsChanged()
+		// NotifyPixelsChanged
+
+		public void NotifyPixelsChanged ()
 		{
-			SkiaApi.sk_bitmap_notify_pixels_changed(Handle);
+			SkiaApi.sk_bitmap_notify_pixels_changed (Handle);
 		}
+
+		// PeekPixels
 
 		public SKPixmap PeekPixels ()
 		{
@@ -725,17 +765,25 @@ namespace SkiaSharp
 			if (pixmap == null) {
 				throw new ArgumentNullException (nameof (pixmap));
 			}
-			return SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
+			var result = SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
+			if (result)
+				pixmap.pixelSource = this;
+			return result;
 		}
 
+		// Resize
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Resize(SKImageInfo, SKFilterQuality) instead.")]
 		public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method) =>
 			Resize (info, method.ToFilterQuality ());
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
 		public bool Resize (SKBitmap dst, SKBitmapResizeMethod method) =>
 			ScalePixels (dst, method.ToFilterQuality ());
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
 		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method) =>
 			src.ScalePixels (dst, method.ToFilterQuality ());
@@ -750,6 +798,11 @@ namespace SkiaSharp
 				return null;
 			}
 		}
+
+		public SKBitmap Resize (SKSizeI size, SKFilterQuality quality) =>
+			Resize (Info.WithSize (size), quality);
+
+		// ScalePixels
 
 		public bool ScalePixels (SKBitmap destination, SKFilterQuality quality)
 		{
@@ -773,6 +826,8 @@ namespace SkiaSharp
 			}
 		}
 
+		// From/ToImage
+
 		public static SKBitmap FromImage (SKImage image)
 		{
 			if (image == null) {
@@ -781,23 +836,52 @@ namespace SkiaSharp
 
 			var info = new SKImageInfo (image.Width, image.Height, SKImageInfo.PlatformColorType, image.AlphaType);
 			var bmp = new SKBitmap (info);
-			if (!image.ReadPixels (info, bmp.GetPixels (), info.RowBytes, 0, 0))
-			{
+			if (!image.ReadPixels (info, bmp.GetPixels (), info.RowBytes, 0, 0)) {
 				bmp.Dispose ();
 				bmp = null;
 			}
 			return bmp;
 		}
 
-		[Obsolete ("Use SKPixmap.Encode instead.")]
+		// Encode
+
+		public SKData Encode (SKEncodedImageFormat format, int quality)
+		{
+			using var pixmap = PeekPixels ();
+			return pixmap?.Encode (format, quality);
+		}
+
+		public bool Encode (Stream dst, SKEncodedImageFormat format, int quality)
+		{
+			using var wrapped = new SKManagedWStream (dst);
+			return Encode (wrapped, format, quality);
+		}
+
 		public bool Encode (SKWStream dst, SKEncodedImageFormat format, int quality)
 		{
-			return SKPixmap.Encode (dst, this, format, quality);
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+
+			using var pixmap = PeekPixels ();
+			return pixmap?.Encode (dst, format, quality) ?? false;
 		}
+
+		// Swap
 
 		private void Swap (SKBitmap other)
 		{
 			SkiaApi.sk_bitmap_swap (Handle, other.Handle);
 		}
+
+		// ToShader
+
+		public SKShader ToShader () =>
+			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
+			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, null));
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
+			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &localMatrix));
 	}
 }

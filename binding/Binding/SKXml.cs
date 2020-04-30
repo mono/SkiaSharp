@@ -12,7 +12,6 @@ namespace SkiaSharp
 
 	public class SKXmlStreamWriter : SKXmlWriter
 	{
-		[Preserve]
 		internal SKXmlStreamWriter (IntPtr h, bool owns)
 			: base (h, owns)
 		{
@@ -27,6 +26,9 @@ namespace SkiaSharp
 
 			Handle = SkiaApi.sk_xmlstreamwriter_new (stream.Handle);
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_xmlstreamwriter_delete (Handle);

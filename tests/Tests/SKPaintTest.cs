@@ -14,9 +14,11 @@ namespace SkiaSharp.Tests
 
 			paint.IsStroke = true;
 			Assert.True(paint.IsStroke);
+			Assert.Equal(SKPaintStyle.Stroke, paint.Style);
 
 			paint.IsStroke = false;
 			Assert.False(paint.IsStroke);
+			Assert.Equal(SKPaintStyle.Fill, paint.Style);
 		}
 
 		[SkippableFact]
@@ -169,23 +171,36 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
-		public void BreakTextReturnsTheCorrectNumberOfBytes()
+		[SkippableTheory]
+		[InlineData(SKTextEncoding.Utf8, "ä", 2)]
+		[InlineData(SKTextEncoding.Utf8, "a", 1)]
+		[InlineData(SKTextEncoding.Utf16, "ä", 2)]
+		[InlineData(SKTextEncoding.Utf16, "a", 2)]
+		[InlineData(SKTextEncoding.Utf32, "ä", 4)]
+		[InlineData(SKTextEncoding.Utf32, "a", 4)]
+		[InlineData(SKTextEncoding.GlyphId, "ä", 2)]
+		[InlineData(SKTextEncoding.GlyphId, "a", 2)]
+		public void BreakTextReturnsTheCorrectNumberOfBytes(SKTextEncoding encoding, string text, int extectedRead)
 		{
 			var paint = new SKPaint();
+			paint.TextEncoding = encoding;
 
-			paint.TextEncoding = SKTextEncoding.Utf8;
+			// get bytes
+			var bytes = encoding == SKTextEncoding.GlyphId
+				? GetGlyphBytes(text)
+				: StringUtilities.GetEncodedText(text, encoding);
 
-			Assert.Equal(2, paint.BreakText(StringUtilities.GetEncodedText("ä", paint.TextEncoding), 50.0f));
-			Assert.Equal(1, paint.BreakText(StringUtilities.GetEncodedText("a", paint.TextEncoding), 50.0f));
+			var read = paint.BreakText(bytes, 50.0f, out var measured);
+			Assert.Equal(extectedRead, read);
+			Assert.True(measured > 0);
 
-			paint.TextEncoding = SKTextEncoding.Utf16;
-			Assert.Equal(2, paint.BreakText(StringUtilities.GetEncodedText("ä", paint.TextEncoding), 50.0f));
-			Assert.Equal(2, paint.BreakText(StringUtilities.GetEncodedText("a", paint.TextEncoding), 50.0f));
-
-			paint.TextEncoding = SKTextEncoding.Utf32;
-			Assert.Equal(4, paint.BreakText(StringUtilities.GetEncodedText("ä", paint.TextEncoding), 50.0f));
-			Assert.Equal(4, paint.BreakText(StringUtilities.GetEncodedText("a", paint.TextEncoding), 50.0f));
+			byte[] GetGlyphBytes(string text)
+			{
+				var glyphs = paint.GetGlyphs(text);
+				var bytes = new byte[Buffer.ByteLength(glyphs)];
+				Buffer.BlockCopy(glyphs, 0, bytes, 0, bytes.Length);
+				return bytes;
+			}
 		}
 
 		[SkippableFact]
@@ -226,7 +241,6 @@ namespace SkiaSharp.Tests
 			var paint = new SKPaint();
 
 			paint.TextEncoding = SKTextEncoding.Utf8;
-
 			Assert.Equal(1, paint.BreakText("ä", 50.0f));
 			Assert.Equal(1, paint.BreakText("a", 50.0f));
 
@@ -237,6 +251,92 @@ namespace SkiaSharp.Tests
 			paint.TextEncoding = SKTextEncoding.Utf32;
 			Assert.Equal(1, paint.BreakText("ä", 50.0f));
 			Assert.Equal(1, paint.BreakText("a", 50.0f));
+		}
+
+		[SkippableTheory]
+		[InlineData(-1)]
+		[InlineData(1 << 17)]
+		public void BreakTextWidthIsEqualToMeasureTextWidth(int textSize)
+		{
+			var font = new SKPaint();
+
+			if (textSize >= 0)
+				font.TextSize = textSize;
+
+			var text =
+				"The ultimate measure of a man is not where he stands in moments of comfort " +
+				"and convenience, but where he stands at times of challenge and controversy.";
+			var length = text.Length;
+
+			var width = font.MeasureText(text);
+
+			var length2 = font.BreakText(text, width, out var mm);
+
+			Assert.Equal(length, length2);
+			Assert.Equal(width, mm);
+		}
+
+		[SkippableTheory]
+		[InlineData(-1)]
+		[InlineData(1 << 17)]
+		public void BreakTextHandlesLongText(int textSize)
+		{
+			var font = new SKPaint();
+
+			if (textSize >= 0)
+				font.TextSize = textSize;
+
+			var text = string.Concat(Enumerable.Repeat('a', 1024));
+
+			var width = font.MeasureText(text);
+
+			var length = font.BreakText(text, width, out var mm);
+
+			Assert.Equal(1024, length);
+			Assert.Equal(width, mm);
+		}
+
+		[SkippableTheory]
+		[InlineData(-1)]
+		[InlineData(0)]
+		[InlineData(1 << 17)]
+		public void BreatTextHasCorrectLogic(int textSize)
+		{
+			var font = new SKPaint();
+
+			if (textSize >= 0)
+				font.TextSize = textSize;
+
+			var text = "sdfkljAKLDFJKEWkldfjlk#$%&sdfs.dsj";
+			var length = text.Length;
+			var width = font.MeasureText(text);
+
+			var mm = 0f;
+			var nn = 0L;
+			var step = Math.Max(width / 10f, 1f);
+			for (float w = 0; w <= width; w += step)
+			{
+				var n = font.BreakText(text, w, out var m);
+
+				Assert.True(n <= length);
+				Assert.True(m <= width);
+
+				if (n == 0)
+				{
+					Assert.Equal(0, m);
+				}
+				else if (n == nn)
+				{
+					Assert.Equal(mm, m);
+				}
+				else
+				{
+					Assert.True(n > nn);
+					Assert.True(m > mm);
+				}
+				nn = n;
+				mm = m;
+			}
 		}
 
 		[SkippableFact]

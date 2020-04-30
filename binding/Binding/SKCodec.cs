@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 
 namespace SkiaSharp
@@ -6,13 +7,15 @@ namespace SkiaSharp
 	// TODO: `Create(...)` should have overloads that accept a SKPngChunkReader
 	// TODO: missing the `QueryYuv8` and `GetYuv8Planes` members
 
-	public class SKCodec : SKObject
+	public unsafe class SKCodec : SKObject
 	{
-		[Preserve]
 		internal SKCodec (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_codec_destroy (Handle);
@@ -22,11 +25,13 @@ namespace SkiaSharp
 
 		public SKImageInfo Info {
 			get {
-				SkiaApi.sk_codec_get_info (Handle, out var cinfo);
+				SKImageInfoNative cinfo;
+				SkiaApi.sk_codec_get_info (Handle, &cinfo);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use EncodedOrigin instead.")]
 		public SKCodecOrigin Origin =>
 			(SKCodecOrigin)EncodedOrigin;
@@ -39,12 +44,17 @@ namespace SkiaSharp
 
 		public SKSizeI GetScaledDimensions (float desiredScale)
 		{
-			SkiaApi.sk_codec_get_scaled_dimensions (Handle, out var dimensions, desiredScale);
+			SKSizeI dimensions;
+			SkiaApi.sk_codec_get_scaled_dimensions (Handle, desiredScale, &dimensions);
 			return dimensions;
 		}
 
-		public bool GetValidSubset (ref SKRectI desiredSubset) =>
-			SkiaApi.sk_codec_get_valid_subset (Handle, ref desiredSubset);
+		public bool GetValidSubset (ref SKRectI desiredSubset)
+		{
+			fixed (SKRectI* ds = &desiredSubset) {
+				return SkiaApi.sk_codec_get_valid_subset (Handle, ds);
+			}
+		}
 
 		public byte[] Pixels {
 			get {
@@ -68,13 +78,19 @@ namespace SkiaSharp
 			get {
 				var length = SkiaApi.sk_codec_get_frame_count (Handle);
 				var info = new SKCodecFrameInfo[length];
-				SkiaApi.sk_codec_get_frame_info (Handle, info);
+				fixed (SKCodecFrameInfo* i = info) {
+					SkiaApi.sk_codec_get_frame_info (Handle, i);
+				}
 				return info;
 			}
 		}
 
-		public bool GetFrameInfo (int index, out SKCodecFrameInfo frameInfo) =>
-			SkiaApi.sk_codec_get_frame_info_for_index (Handle, index, out frameInfo);
+		public bool GetFrameInfo (int index, out SKCodecFrameInfo frameInfo)
+		{
+			fixed (SKCodecFrameInfo* f = &frameInfo) {
+				return SkiaApi.sk_codec_get_frame_info_for_index (Handle, index, f);
+			}
+		}
 
 		// pixels
 
@@ -92,10 +108,8 @@ namespace SkiaSharp
 			if (pixels == null)
 				throw new ArgumentNullException (nameof (pixels));
 
-			unsafe {
-				fixed (byte* p = pixels) {
-					return GetPixels (info, (IntPtr)p, info.RowBytes, SKCodecOptions.Default);
-				}
+			fixed (byte* p = pixels) {
+				return GetPixels (info, (IntPtr)p, info.RowBytes, SKCodecOptions.Default);
 			}
 		}
 
@@ -111,44 +125,46 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixels));
 
 			var nInfo = SKImageInfoNative.FromManaged (ref info);
-
-			unsafe {
-				var nOptions = new SKCodecOptionsInternal {
-					fZeroInitialized = options.ZeroInitialized,
-					fSubset = null,
-					fFrameIndex = options.FrameIndex,
-					fPriorFrame = options.PriorFrame,
-					fPremulBehavior = options.PremulBehavior,
-				};
-				var subset = default (SKRectI);
-				if (options.HasSubset) {
-					subset = options.Subset.Value;
-					nOptions.fSubset = &subset;
-				}
-				return SkiaApi.sk_codec_get_pixels (Handle, ref nInfo, pixels, (IntPtr)rowBytes, ref nOptions);
+			var nOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = options.ZeroInitialized,
+				fSubset = null,
+				fFrameIndex = options.FrameIndex,
+				fPriorFrame = options.PriorFrame,
+			};
+			var subset = default (SKRectI);
+			if (options.HasSubset) {
+				subset = options.Subset.Value;
+				nOptions.fSubset = &subset;
 			}
+			return SkiaApi.sk_codec_get_pixels (Handle, &nInfo, (void*)pixels, (IntPtr)rowBytes, &nOptions);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount) =>
 			GetPixels (info, pixels, rowBytes, options);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount) =>
 			GetPixels (info, pixels, info.RowBytes, options);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, IntPtr colorTable, ref int colorTableCount) =>
 			GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount) =>
 			GetPixels (info, pixels, rowBytes, options);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount) =>
 			GetPixels (info, pixels, info.RowBytes, options);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKColorTable colorTable, ref int colorTableCount) =>
 			GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default);
@@ -161,81 +177,81 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixels));
 
 			var nInfo = SKImageInfoNative.FromManaged (ref info);
-
-			unsafe {
-				var nOptions = new SKCodecOptionsInternal {
-					fZeroInitialized = options.ZeroInitialized,
-					fSubset = null,
-					fFrameIndex = options.FrameIndex,
-					fPriorFrame = options.PriorFrame,
-					fPremulBehavior = options.PremulBehavior,
-				};
-				var subset = default (SKRectI);
-				if (options.HasSubset) {
-					subset = options.Subset.Value;
-					nOptions.fSubset = &subset;
-				}
-
-				return SkiaApi.sk_codec_start_incremental_decode (Handle, ref nInfo, pixels, (IntPtr)rowBytes, ref nOptions);
+			var nOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = options.ZeroInitialized,
+				fSubset = null,
+				fFrameIndex = options.FrameIndex,
+				fPriorFrame = options.PriorFrame,
+			};
+			var subset = default (SKRectI);
+			if (options.HasSubset) {
+				subset = options.Subset.Value;
+				nOptions.fSubset = &subset;
 			}
+
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, &nInfo, (void*)pixels, (IntPtr)rowBytes, &nOptions);
 		}
 
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero);
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, null);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount) =>
 			StartIncrementalDecode (info, pixels, rowBytes, options);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount) =>
 			StartIncrementalDecode (info, pixels, rowBytes, options);
 
 		// incremental (step)
 
-		public SKCodecResult IncrementalDecode (out int rowsDecoded) =>
-			SkiaApi.sk_codec_incremental_decode (Handle, out rowsDecoded);
+		public SKCodecResult IncrementalDecode (out int rowsDecoded)
+		{
+			fixed (int* r = &rowsDecoded) {
+				return SkiaApi.sk_codec_incremental_decode (Handle, r);
+			}
+		}
 
 		public SKCodecResult IncrementalDecode () =>
-			SkiaApi.sk_codec_incremental_decode (Handle, out var rowsDecoded);
+			SkiaApi.sk_codec_incremental_decode (Handle, null);
 
 		// scanline (start)
 
 		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options)
 		{
 			var nInfo = SKImageInfoNative.FromManaged (ref info);
-
-			unsafe {
-				var nOptions = new SKCodecOptionsInternal {
-					fZeroInitialized = options.ZeroInitialized,
-					fSubset = null,
-					fFrameIndex = options.FrameIndex,
-					fPriorFrame = options.PriorFrame,
-					fPremulBehavior = options.PremulBehavior,
-				};
-				var subset = default (SKRectI);
-				if (options.HasSubset) {
-					subset = options.Subset.Value;
-					nOptions.fSubset = &subset;
-				}
-
-				return SkiaApi.sk_codec_start_scanline_decode (Handle, ref nInfo, ref nOptions);
+			var nOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = options.ZeroInitialized,
+				fSubset = null,
+				fFrameIndex = options.FrameIndex,
+				fPriorFrame = options.PriorFrame,
+			};
+			var subset = default (SKRectI);
+			if (options.HasSubset) {
+				subset = options.Subset.Value;
+				nOptions.fSubset = &subset;
 			}
+
+			return SkiaApi.sk_codec_start_scanline_decode (Handle, &nInfo, &nOptions);
 		}
 
 		public SKCodecResult StartScanlineDecode (SKImageInfo info)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref cinfo, IntPtr.Zero);
+			return SkiaApi.sk_codec_start_scanline_decode (Handle, &cinfo, null);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.")]
 		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount) =>
 			StartScanlineDecode (info, options);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.")]
 		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount) =>
 			StartScanlineDecode (info, options);
@@ -247,7 +263,7 @@ namespace SkiaSharp
 			if (dst == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (dst));
 
-			return SkiaApi.sk_codec_get_scanlines (Handle, dst, countLines, (IntPtr)rowBytes);
+			return SkiaApi.sk_codec_get_scanlines (Handle, (void*)dst, countLines, (IntPtr)rowBytes);
 		}
 
 		public bool SkipScanlines (int countLines) =>
@@ -291,9 +307,11 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle, out result));
-			stream.RevokeOwnership (codec);
-			return codec;
+			fixed (SKCodecResult* r = &result) {
+				var codec = GetObject (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));
+				stream.RevokeOwnership (codec);
+				return codec;
+			}
 		}
 
 		// create (data)
@@ -303,7 +321,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return GetObject<SKCodec> (SkiaApi.sk_codec_new_from_data (data.Handle));
+			return GetObject (SkiaApi.sk_codec_new_from_data (data.Handle));
 		}
 
 		// utils
@@ -321,5 +339,8 @@ namespace SkiaSharp
 				return new SKFrontBufferedManagedStream (stream, MinBufferedBytesNeeded, true);
 			}
 		}
+
+		internal static SKCodec GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKCodec (h, o));
 	}
 }

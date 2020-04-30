@@ -13,9 +13,18 @@ namespace SkiaSharp.Tests
 			using (var ctx = CreateGlContext()) {
 				ctx.MakeCurrent();
 
-				var grContext = GRContext.Create(GRBackend.OpenGL);
+				var grContext = GRContext.CreateGl();
 
 				Assert.NotNull(grContext);
+			}
+		}
+
+		[SkippableFact]
+		public void ToGlSizedFormat()
+		{
+			foreach (GRPixelConfig value in Enum.GetValues(typeof(GRPixelConfig)))
+			{
+				value.ToGlSizedFormat();
 			}
 		}
 
@@ -30,7 +39,7 @@ namespace SkiaSharp.Tests
 
 				Assert.True(glInterface.Validate());
 
-				var grContext = GRContext.Create(GRBackend.OpenGL, glInterface);
+				var grContext = GRContext.CreateGl(glInterface);
 
 				Assert.NotNull(grContext);
 			}
@@ -43,7 +52,7 @@ namespace SkiaSharp.Tests
 			using (var ctx = CreateGlContext()) {
 				ctx.MakeCurrent();
 
-				using (var grContext = GRContext.Create(GRBackend.OpenGL))
+				using (var grContext = GRContext.CreateGl())
 				using (var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100))) {
 					Assert.NotNull(surface);
 

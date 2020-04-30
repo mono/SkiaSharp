@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Android.Content;
 using Android.Graphics;
 using Android.Runtime;
@@ -136,17 +137,24 @@ namespace SkiaSharp.Views.Android
 			PaintSurface?.Invoke(this, e);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
 		protected virtual void OnDraw(SKSurface surface, SKImageInfo info)
 		{
 		}
 
+		protected override void OnDetachedFromWindow()
+		{
+			FreeBitmap();
+
+			base.OnDetachedFromWindow();
+		}
+
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing)
-			{
 				FreeBitmap();
-			}
+
 			base.Dispose(disposing);
 		}
 
@@ -156,9 +164,7 @@ namespace SkiaSharp.Views.Android
 			{
 				// free and recycle the bitmap data
 				if (bitmap.Handle != IntPtr.Zero && !bitmap.IsRecycled)
-				{
 					bitmap.Recycle();
-				}
 				bitmap.Dispose();
 				bitmap = null;
 			}

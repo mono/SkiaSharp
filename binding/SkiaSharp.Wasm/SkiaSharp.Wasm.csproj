@@ -12,6 +12,8 @@
     <RootNamespace>SkiaSharp</RootNamespace>
     <PackageId>Uno.SkiaSharp.Wasm</PackageId>
 		<GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
+    
+    <PackagingGroup>SkiaSharp</PackagingGroup>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="build\libSkia\" />
     <Folder Include="WasmScripts\" />
   </ItemGroup>
 
@@ -30,11 +33,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="build\libSkia\*.*">
+    <Content Include="..\..\externals\skia\out\canvaskit_wasm\libSkiaSharp.a" Link="build\libSkia\%(FileName).a">
       <Pack>true</Pack>
       <PackagePath>build/libSkia</PackagePath>
     </Content>
     <None Remove="tsconfig.json" />
+    <Compile Include="JSInterop.cs" />
     <Content Include="build/netstandard2.0/Uno.SkiaSharp.Wasm.props">
       <Pack>true</Pack>
       <PackagePath>build/netstandard2.0</PackagePath>

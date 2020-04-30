@@ -217,5 +217,49 @@ namespace SkiaSharp.Tests
 				Assert.Equal(16, SKImageInfo.PlatformColorBlueShift);
 			}
 		}
+
+		[SkippableFact]
+		public void MakeSureColorsAreNotBroken()
+		{
+			var color = new SKColor(100, 0, 0, 100);
+
+			var paint = new SKPaint();
+			paint.Color = color;
+
+			Assert.Equal(color, paint.Color);
+		}
+
+		[SkippableFact]
+		public void GetHashCodeIsConsistent()
+		{
+			var color1 = new SKColor(100, 0, 0, 100);
+			var color2 = new SKColor(100, 0, 0, 100);
+
+			Assert.Equal(color1.GetHashCode(), color2.GetHashCode());
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public void CanPreMultiplyArrays()
+		{
+			var colors = new SKColor[] { 0x33008200, 0x33008200, 0x33008200, 0x33008200, 0x33008200 };
+			var pmcolors = new SKPMColor[] { 0x33001A00, 0x33001A00, 0x33001A00, 0x33001A00, 0x33001A00 };
+
+			var pm = SKPMColor.PreMultiply(colors);
+
+			Assert.Equal(pmcolors, pm);
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public void CanUnPreultiplyArrays()
+		{
+			var colors = new SKColor[] { 0x33008200, 0x33008200, 0x33008200, 0x33008200, 0x33008200 };
+			var pmcolors = new SKPMColor[] { 0x33001A00, 0x33001A00, 0x33001A00, 0x33001A00, 0x33001A00 };
+
+			var upm = SKPMColor.UnPreMultiply(pmcolors);
+
+			Assert.Equal(colors, upm);
+		}
 	}
 }

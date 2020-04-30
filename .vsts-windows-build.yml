@@ -3,9 +3,10 @@ parameters:
 
 jobs:
 - job: Windows
+  dependsOn: SkiaLib_WebAssembly
 
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
 
   variables:
     NUGET_PACKAGES: $(build.sourcesdirectory)/.nuget
@@ -23,6 +24,11 @@ jobs:
     inputs:
       versionSpec: 4.9.1
       checkLatest: false
+
+  - task: DownloadBuildArtifacts@0
+    inputs:
+        artifactName: canvaskit_wasm
+        downloadPath: '$(build.sourcesdirectory)\externals\skia\out'
 
   - task: MSBuild@1
     inputs:

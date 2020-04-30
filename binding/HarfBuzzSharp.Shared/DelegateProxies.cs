@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -10,6 +11,7 @@ namespace HarfBuzzSharp
 
 	public delegate Blob GetTableDelegate (Face face, Tag tag);
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("Use ReleaseDelegate instead.")]
 	public delegate void BlobReleaseDelegate (object context);
 

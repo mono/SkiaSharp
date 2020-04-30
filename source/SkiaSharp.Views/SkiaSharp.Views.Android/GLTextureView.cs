@@ -144,12 +144,13 @@ namespace SkiaSharp.Views.Android
 
 		public void OnSurfaceTextureUpdated(SurfaceTexture surface)
 		{
-			//mGLThread.RequestRender();
+			//glThread.RequestRender();
 		}
 
 		public void OnSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
 		{
 			glThread.OnSurfaceCreated();
+			glThread.RequestRender();
 		}
 
 		public bool OnSurfaceTextureDestroyed(SurfaceTexture surface)

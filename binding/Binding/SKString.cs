@@ -3,9 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	internal class SKString : SKObject
+	internal unsafe class SKString : SKObject
 	{
-		[Preserve]
 		internal SKString (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -20,13 +19,20 @@ namespace SkiaSharp
 		}
 		
 		public SKString (byte [] src, long length)
-			: base (SkiaApi.sk_string_new_with_copy (src, (IntPtr)length), true)
+			: base (CreateCopy (src, length), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKString instance.");
 			}
 		}
 		
+		private static IntPtr CreateCopy (byte [] src, long length)
+		{
+			fixed (byte* s = src) {
+				return SkiaApi.sk_string_new_with_copy (s, (IntPtr)length);
+			}
+		}
+
 		public SKString (byte [] src)
 			: this (src, src.Length)
 		{
@@ -41,7 +47,7 @@ namespace SkiaSharp
 		{
 			var cstr = SkiaApi.sk_string_get_c_str (Handle);
 			var clen = SkiaApi.sk_string_get_size (Handle);
-			return StringUtilities.GetString (cstr, (int)clen, SKTextEncoding.Utf8); 
+			return StringUtilities.GetString ((IntPtr)cstr, (int)clen, SKTextEncoding.Utf8);
 		}
 
 		public static explicit operator string (SKString skString)
@@ -57,8 +63,14 @@ namespace SkiaSharp
 			return new SKString (str);
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_string_destructor (Handle);
+
+		internal static SKString GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKString (h, o));
 	}
 }
 

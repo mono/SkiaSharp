@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
@@ -99,6 +100,48 @@ namespace SkiaSharp.Tests
 			}
 
 			Assert.Equal(set.Count, count);
+		}
+
+		[SkippableFact]
+		public void CreateTypefaceReturnsSameTypeface()
+		{
+			var fonts = SKFontManager.Default;
+			var set = fonts.GetFontStyles(DefaultFontFamily);
+
+			var tf1 = set.CreateTypeface(SKFontStyle.Normal);
+			var tf2 = set.CreateTypeface(SKFontStyle.Normal);
+
+			Assert.Same(tf1, tf2);
+		}
+
+		[SkippableFact]
+		public unsafe void CreateTypefaceDisposeDoesNotDispose()
+		{
+			var fonts = SKFontManager.Default;
+			var set = fonts.GetFontStyles(DefaultFontFamily);
+
+			var tf1 = set.CreateTypeface(SKFontStyle.Normal);
+			var tf2 = set.CreateTypeface(SKFontStyle.Normal);
+
+			Assert.Same(tf1, tf2);
+
+			tf1.Dispose();
+
+			Assert.NotEqual(IntPtr.Zero, tf1.Handle);
+			Assert.False(tf1.IsDisposed);
+		}
+
+		[SkippableFact]
+		public void StyleReturnsSameTypeface()
+		{
+			var fonts = SKFontManager.Default;
+
+			var set = fonts.GetFontStyles(DefaultFontFamily);
+			var tf1 = set.CreateTypeface(SKFontStyle.Normal);
+
+			var tf2 = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Normal);
+
+			Assert.Same(tf1, tf2);
 		}
 	}
 }

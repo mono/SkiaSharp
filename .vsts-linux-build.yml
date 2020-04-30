@@ -1,13 +1,14 @@
 jobs:
 - job: Linux
-  container: nventive/wasm-build:1.4.1
+  container: unoplatform/wasm-build:2.1.1
+  dependsOn: SkiaLib_WebAssembly
 
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-latest'
 
   variables:
     NUGET_PACKAGES: $(build.sourcesdirectory)/.nuget
-    EMSCRIPTEN_VERSION: 1.39.7
+    EMSCRIPTEN_VERSION: 1.39.11
 
   steps:
   - checkout: self
@@ -25,21 +26,22 @@ jobs:
 
   - bash: |
       cd ~/emsdk
-      wget https://raw.githubusercontent.com/mono/mono/27247739c68faee7b2a63ae805222d4b375d2161/sdks/builds/emscripten-pr-8457.diff
-      wget https://raw.githubusercontent.com/mono/mono/27247739c68faee7b2a63ae805222d4b375d2161/sdks/builds/fix-emscripten-8511.diff
+      wget https://raw.githubusercontent.com/mono/mono/b777471fcace85325e2c2af0e460f4ecd8059b5a/sdks/builds/fix-emscripten-8511.diff
       cd ~/emsdk/upstream/emscripten
-      patch -N -p1 < ~/emsdk/emscripten-pr-8457.diff
       patch -N -p1 < ~/emsdk/fix-emscripten-8511.diff
 
     displayName: 'Apply Emscripten Mono patches'
+
+  - task: DownloadBuildArtifacts@0
+    inputs:
+        artifactName: canvaskit_wasm
+        downloadPath: '$(build.sourcesdirectory)/externals/skia/out'
 
   - bash: |
       chmod +x scripts/wasm-uitest-run.sh
       scripts/wasm-uitest-run.sh
 
     env:
-      GIT_TARGETBRANCH: "$(System.PullRequest.TargetBranch)"
-      GIT_SOURCEBRANCH: "$(Build.SourceBranch)"
       BUILD_SOURCESDIRECTORY: "$(build.sourcesdirectory)"
       BUILD_ARTIFACTSTAGINGDIRECTORY: "$(build.artifactstagingdirectory)"
 
@@ -48,7 +50,7 @@ jobs:
   - task: CopyFiles@2
     displayName: 'Publish Wasm Binaries'
     inputs:
-      SourceFolder: $(build.sourcesdirectory)/source/SkiaSharpSample/SkiaSharpSample.Wasm/bin/Release/netstandard2.0/dist
+      SourceFolder: $(build.sourcesdirectory)/samples/Gallery/Uno/SkiaSharpSample.Wasm/bin/Release/netstandard2.0/dist
       Contents: '**/*.*'
       TargetFolder: $(build.artifactstagingdirectory)/skiasharp-wasm
       CleanTargetFolder: false

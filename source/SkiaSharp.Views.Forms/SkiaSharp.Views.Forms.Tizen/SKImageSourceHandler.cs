@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Tizen;
 
-using NativeImage = Xamarin.Forms.Platform.Tizen.Native.Image;
+using ElmImage = ElmSharp.Image;
 
 [assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKImageImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
 [assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKBitmapImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
@@ -17,7 +17,7 @@ namespace SkiaSharp.Views.Forms
 	{
 		private StreamImageSourceHandler handler = new StreamImageSourceHandler();
 
-		public Task<bool> LoadImageAsync(NativeImage image, ImageSource imageSource, CancellationToken cancelationToken = default(CancellationToken))
+		public Task<bool> LoadImageAsync(ElmImage image, ImageSource imageSource, CancellationToken cancelationToken = default(CancellationToken))
 		{
 			ImageSource newSource = null;
 

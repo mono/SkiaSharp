@@ -4,11 +4,59 @@
 
 ### Namespace SkiaSharp
 
-#### Type Changed: SkiaSharp.SKBitmap
+#### Type Changed: SkiaSharp.GRBackendRenderTarget
 
 Added method:
 
 ```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.GRBackendTexture
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SK3dView
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKAbstractManagedStream
+
+Added methods:
+
+```csharp
+protected override void DisposeNative ();
+protected virtual IntPtr OnDuplicate ();
+protected virtual IntPtr OnFork ();
+```
+
+
+#### Type Changed: SkiaSharp.SKAbstractManagedWStream
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKBitmap
+
+Added methods:
+
+```csharp
+protected override void DisposeNative ();
 public System.ReadOnlySpan<byte> GetPixelSpan ();
 ```
 
@@ -18,9 +66,20 @@ public System.ReadOnlySpan<byte> GetPixelSpan ();
 Added methods:
 
 ```csharp
+public void Discard ();
+protected override void DisposeNative ();
 public void DrawDrawable (SKDrawable drawable, ref SKMatrix matrix);
 public void DrawDrawable (SKDrawable drawable, SKPoint p);
 public void DrawDrawable (SKDrawable drawable, float x, float y);
+```
+
+
+#### Type Changed: SkiaSharp.SKCodec
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
 ```
 
 
@@ -116,14 +175,103 @@ public static SKData CreateCopy (System.ReadOnlySpan<byte> bytes);
 ```
 
 
+#### Type Changed: SkiaSharp.SKDynamicMemoryWStream
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKEncodedImageFormat
+
+Added value:
+
+```csharp
+Heif = 11,
+```
+
+
+#### Type Changed: SkiaSharp.SKFileStream
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKFileWStream
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKFontStyle
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKFrontBufferedManagedStream
+
+Added method:
+
+```csharp
+protected override void DisposeManaged ();
+```
+
+
 #### Type Changed: SkiaSharp.SKImage
 
 Added methods:
 
 ```csharp
+public SKImage ApplyImageFilter (SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset);
 public static SKImage FromEncodedData (System.ReadOnlySpan<byte> data);
 public static SKImage FromPixelCopy (SKImageInfo info, System.ReadOnlySpan<byte> pixels);
 public static SKImage FromPixelCopy (SKImageInfo info, System.ReadOnlySpan<byte> pixels, int rowBytes);
+```
+
+
+#### Type Changed: SkiaSharp.SKImageFilter
+
+#### Type Changed: SkiaSharp.SKImageFilter.CropRect
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+
+#### Type Changed: SkiaSharp.SKManagedStream
+
+Added methods:
+
+```csharp
+public int CopyTo (SKWStream destination);
+protected override void DisposeManaged ();
+protected override IntPtr OnDuplicate ();
+protected override IntPtr OnFork ();
+public SKStreamAsset ToMemoryStream ();
+```
+
+
+#### Type Changed: SkiaSharp.SKManagedWStream
+
+Added method:
+
+```csharp
+protected override void DisposeManaged ();
 ```
 
 
@@ -136,6 +284,59 @@ public SKMatrix (float scaleX, float skewX, float transX, float skewY, float sca
 ```
 
 
+#### Type Changed: SkiaSharp.SKMatrix44
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKMemoryStream
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKNativeObject
+
+Added properties:
+
+```csharp
+protected bool IgnorePublicDispose { get; set; }
+protected bool IsDisposed { get; }
+protected virtual bool OwnsHandle { get; set; }
+```
+
+Added methods:
+
+```csharp
+protected void DisposeInternal ();
+protected virtual void DisposeManaged ();
+protected virtual void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKObject
+
+Removed property:
+
+```csharp
+protected bool OwnsHandle { get; }
+```
+
+Added methods:
+
+```csharp
+protected override void DisposeManaged ();
+protected override void DisposeNative ();
+```
+
+
 #### Type Changed: SkiaSharp.SKPaint
 
 Added methods:
@@ -145,6 +346,7 @@ public long BreakText (IntPtr buffer, int length, float maxWidth);
 public long BreakText (IntPtr buffer, int length, float maxWidth, out float measuredWidth);
 public bool ContainsGlyphs (IntPtr text, IntPtr length);
 public int CountGlyphs (IntPtr text, IntPtr length);
+protected override void DisposeNative ();
 public float[] GetGlyphWidths (IntPtr text, IntPtr length);
 public float[] GetGlyphWidths (IntPtr text, IntPtr length, out SKRect[] bounds);
 public ushort[] GetGlyphs (IntPtr text, IntPtr length);
@@ -159,20 +361,88 @@ public void Reset ();
 ```
 
 
-#### Type Changed: SkiaSharp.SKPictureRecorder
+#### Type Changed: SkiaSharp.SKPath
 
 Added method:
 
 ```csharp
+protected override void DisposeNative ();
+```
+
+#### Type Changed: SkiaSharp.SKPath.Iterator
+
+Modified base type:
+
+```diff
+-SkiaSharp.SKNativeObject
++SkiaSharp.SKObject
+```
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKPath.OpBuilder
+
+Modified base type:
+
+```diff
+-SkiaSharp.SKNativeObject
++SkiaSharp.SKObject
+```
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKPath.RawIterator
+
+Modified base type:
+
+```diff
+-SkiaSharp.SKNativeObject
++SkiaSharp.SKObject
+```
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+
+#### Type Changed: SkiaSharp.SKPathMeasure
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
+```
+
+
+#### Type Changed: SkiaSharp.SKPictureRecorder
+
+Added methods:
+
+```csharp
+protected override void DisposeNative ();
 public SKDrawable EndRecordingAsDrawable ();
 ```
 
 
 #### Type Changed: SkiaSharp.SKPixmap
 
-Added method:
+Added methods:
 
 ```csharp
+protected override void DisposeNative ();
 public System.ReadOnlySpan<byte> GetPixelSpan ();
 ```
 
@@ -189,8 +459,54 @@ public SKRegion (SKRectI rect);
 Added methods:
 
 ```csharp
+protected override void Dispose (bool disposing);
+protected override void DisposeNative ();
 public bool Intersects (SKPath path);
 public bool Op (SKPath path, SKRegionOperation op);
+```
+
+
+#### Type Changed: SkiaSharp.SKRoundRect
+
+Added methods:
+
+```csharp
+protected override void DisposeNative ();
+public bool TryTransform (SKMatrix matrix, out SKRoundRect transformed);
+```
+
+
+#### Type Changed: SkiaSharp.SKShader
+
+Added methods:
+
+```csharp
+public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColor[] colors, SKShaderTileMode mode);
+public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy);
+public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile);
+public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile);
+public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColor[] colors, SKShaderTileMode mode);
+public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors);
+public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, SKShaderTileMode tileMode, float startAngle, float endAngle);
+public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor[] colors, SKShaderTileMode mode);
+```
+
+
+#### Type Changed: SkiaSharp.SKStream
+
+Added method:
+
+```csharp
+public bool Move (int offset);
+```
+
+
+#### Type Changed: SkiaSharp.SKSurfaceProperties
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
 ```
 
 
@@ -250,14 +566,18 @@ public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y);
 public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount);
 public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, SKRect? bounds);
 public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount, SKRect? bounds);
+protected override void DisposeNative ();
 ```
 
 
 #### Type Changed: SkiaSharp.SKTypeface
 
-Added property:
+Added properties:
 
 ```csharp
+public bool IsBold { get; }
+public bool IsFixedPitch { get; }
+public bool IsItalic { get; }
 public int TableCount { get; }
 ```
 
@@ -270,6 +590,15 @@ public int GetGlyphs (System.ReadOnlySpan<byte> text, SKEncoding encoding, out u
 public int GetTableSize (uint tag);
 public bool TryGetTableData (uint tag, int offset, int length, IntPtr tableData);
 public bool TryGetTableTags (out uint[] tags);
+```
+
+
+#### Type Changed: SkiaSharp.SKXmlStreamWriter
+
+Added method:
+
+```csharp
+protected override void DisposeNative ();
 ```
 
 
@@ -296,6 +625,7 @@ public class SKDrawable : SkiaSharp.SKObject, System.IDisposable {
 	public uint GenerationId { get; }
 	// methods
 	protected override void Dispose (bool disposing);
+	protected override void DisposeNative ();
 	public void Draw (SKCanvas canvas, ref SKMatrix matrix);
 	public void Draw (SKCanvas canvas, float x, float y);
 	public void NotifyDrawingChanged ();

@@ -61,6 +61,23 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ShouldAdd()
+		{
+			using (var buffer = new Buffer())
+			{
+				buffer.ContentType = ContentType.Unicode;
+
+				buffer.Add(55, 1337);
+
+				Assert.Equal(1, buffer.Length);
+
+				Assert.Equal(55u, buffer.GlyphInfos[0].Codepoint);
+
+				Assert.Equal(1337u, buffer.GlyphInfos[0].Cluster);
+			}
+		}
+
+		[SkippableFact]
 		public void ShouldAddUtfByString()
 		{
 			using (var buffer = new Buffer())
