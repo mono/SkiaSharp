@@ -137,9 +137,12 @@ namespace SkiaSharp.Views.Tizen
 
 		public static System.Drawing.Bitmap ToBitmap(this SKBitmap skiaBitmap)
 		{
-			using (var image = SKImage.FromPixels(skiaBitmap.PeekPixels()))
+			using (var pixmap = skiaBitmap.PeekPixels())
+			using (var image = SKImage.FromPixels(pixmap))
 			{
-				return image.ToBitmap();
+				var bmp = image.ToBitmap();
+				GC.KeepAlive(skiaBitmap);
+				return bmp;
 			}
 		}
 

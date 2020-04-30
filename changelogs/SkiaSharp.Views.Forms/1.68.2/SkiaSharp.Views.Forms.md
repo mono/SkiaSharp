@@ -13,6 +13,21 @@ ISKGLViewController
 ```
 
 
+#### Type Changed: SkiaSharp.Views.Forms.SKTouchEventArgs
+
+Added constructor:
+
+```csharp
+public SKTouchEventArgs (long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SkiaSharp.SKPoint location, bool inContact, int wheelDelta, float pressure);
+```
+
+Added property:
+
+```csharp
+public float Pressure { get; }
+```
+
+
 #### New Type: SkiaSharp.Views.Forms.ISKGLViewController
 
 ```csharp
