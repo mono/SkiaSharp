@@ -119,7 +119,8 @@ Task ("libs")
             platform = ".Linux";
         }
     }
-    RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
+    RunMSBuild ($"./source/SkiaSharpSource{platform}.sln",
+        bl: $"./output/binlogs/libs{platform}.binlog");
 
     // assemble the mdoc docs
     EnsureDirectoryExists ("./output/docs/mdoc/");
@@ -142,7 +143,9 @@ Task ("tests")
 
     void RunDesktopTest (string arch)
     {
-        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
+        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln",
+            platform: arch == "AnyCPU" ? "Any CPU" : arch,
+            bl: $"./output/binlogs/tests-desktop.{arch}.binlog");
         try {
             RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
         } catch {
@@ -164,7 +167,8 @@ Task ("tests")
     }
 
     // .NET Core
-    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
+    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln",
+        bl: $"./output/binlogs/tests-netcore.binlog");
     try {
         RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
     } catch {
