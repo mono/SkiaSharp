@@ -7,6 +7,7 @@
     <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
 
     <_SnExePath Condition=" '$(OS)' == 'Windows_NT' and '$(_SnExePath)' == '' and Exists('$(SDK40ToolsPath)sn.exe') ">$(SDK40ToolsPath)sn.exe</_SnExePath>
+    <_SnExePath Condition=" '$(OS)' == 'Windows_NT' and '$(_SnExePath)' == '' and Exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe') ">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe</_SnExePath>
     <_SnExePath Condition=" '$(_SnExePath)' == '' ">sn</_SnExePath>
 
     <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' ">true</PublicSign>
