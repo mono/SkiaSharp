@@ -6,7 +6,7 @@
     <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And Exists ('/usr/bin/mono') ">/usr/bin/mono</_ManagedExeLauncher>
     <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
 
-    <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' and '$(OS)' != 'Windows_NT' ">true</PublicSign>
+    <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' ">true</PublicSign>
     <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\$(KeyFileName)</AssemblyOriginatorKeyFile>
 
@@ -90,8 +90,19 @@
     Sign the assembly using sn.
     ===================================================================================================================
   -->
-  <Target Name="_SignAssembly" AfterTargets="CoreCompile" Condition=" '$(IsWindows)' != 'true' and '$(SignAssembly)' == 'true' ">
+  <Target Name="_SignAssembly" AfterTargets="CoreCompile" DependsOnTargets="_RedirectMovedTypes" Condition=" '$(SignAssembly)' == 'true' ">
     <Exec Command="sn -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
+  </Target>
+
+  <!--
+    ===================================================================================================================
+    _SignAssemblyVerify
+
+    Verify that the output assembly is signed correctly for release.
+    ===================================================================================================================
+  -->
+  <Target Name="_SignAssemblyVerify" AfterTargets="Build" Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+    <Exec Command="sn -vf &quot;$(TargetPath)&quot;" />
   </Target>
 
   <!--
