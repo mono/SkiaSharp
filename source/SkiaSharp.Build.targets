@@ -6,6 +6,10 @@
     <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And Exists ('/usr/bin/mono') ">/usr/bin/mono</_ManagedExeLauncher>
     <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
 
+    <_SnExePath Condition=" '$(OS)' == 'Windows_NT' And '$(_SnExePath)' == '' and '$(WindowsSDK_ExecutablePath_x86)' != '' ">$(WindowsSDK_ExecutablePath_x86)sn.exe</_SnExePath>
+    <_SnExePath Condition=" '$(OS)' == 'Windows_NT' And '$(_SnExePath)' == '' and '$(WindowsSDK_ExecutablePath_x64)' != '' ">$(WindowsSDK_ExecutablePath_x64)sn.exe</_SnExePath>
+    <_SnExePath Condition=" '$(_SnExePath)' == '' ">sn</_SnExePath>
+
     <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' ">true</PublicSign>
     <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\$(KeyFileName)</AssemblyOriginatorKeyFile>
@@ -91,7 +95,7 @@
     ===================================================================================================================
   -->
   <Target Name="_SignAssembly" AfterTargets="CoreCompile" DependsOnTargets="_RedirectMovedTypes" Condition=" '$(SignAssembly)' == 'true' ">
-    <Exec Command="sn -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
+    <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
   <!--
@@ -102,7 +106,7 @@
     ===================================================================================================================
   -->
   <Target Name="_SignAssemblyVerify" AfterTargets="Build" Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
-    <Exec Command="sn -vf &quot;$(TargetPath)&quot;" />
+    <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" />
   </Target>
 
   <!--
