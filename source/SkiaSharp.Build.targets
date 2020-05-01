@@ -1,13 +1,12 @@
 <Project>
 
   <PropertyGroup>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/Mono.framework/Versions/Current/bin/mono') ">/Library/Frameworks/Mono.framework/Versions/Current/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And Exists ('/usr/local/bin/mono') ">/usr/local/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And Exists ('/usr/bin/mono') ">/usr/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and Exists('/Library/Frameworks/Mono.framework/Versions/Current/bin/mono') ">/Library/Frameworks/Mono.framework/Versions/Current/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and Exists('/usr/local/bin/mono') ">/usr/local/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and Exists('/usr/bin/mono') ">/usr/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
 
-    <_SnExePath Condition=" '$(OS)' == 'Windows_NT' And '$(_SnExePath)' == '' and '$(WindowsSDK_ExecutablePath_x86)' != '' ">$(WindowsSDK_ExecutablePath_x86)sn.exe</_SnExePath>
-    <_SnExePath Condition=" '$(OS)' == 'Windows_NT' And '$(_SnExePath)' == '' and '$(WindowsSDK_ExecutablePath_x64)' != '' ">$(WindowsSDK_ExecutablePath_x64)sn.exe</_SnExePath>
+    <_SnExePath Condition=" '$(OS)' == 'Windows_NT' and '$(_SnExePath)' == '' and Exists('$(SDK40ToolsPath)sn.exe') ">$(SDK40ToolsPath)sn.exe</_SnExePath>
     <_SnExePath Condition=" '$(_SnExePath)' == '' ">sn</_SnExePath>
 
     <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' ">true</PublicSign>
