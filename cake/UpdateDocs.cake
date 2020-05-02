@@ -76,6 +76,7 @@ Task ("docs-api-diff")
 
     // pretty version
     var diffDir = "./output/api-diff";
+    EnsureDirectoryExists (diffDir);
     CleanDirectories (diffDir);
 
     Information ($"Creating comparer...");
