@@ -6,7 +6,8 @@ void RunMSBuild(
     string platform = "Any CPU",
     string platformTarget = null,
     bool restore = true,
-    bool restoreOnly = false)
+    bool restoreOnly = false,
+    string bl = null)
 {
     var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
 
@@ -16,6 +17,13 @@ void RunMSBuild(
         c.Configuration = CONFIGURATION;
         c.Verbosity = VERBOSITY;
         c.MaxCpuCount = 0;
+
+        if (!string.IsNullOrEmpty(bl)) {
+            c.BinaryLogger = new MSBuildBinaryLogSettings {
+                Enabled = true,
+                FileName = bl,
+            };
+        }
 
         if (!string.IsNullOrEmpty(MSBUILD_EXE)) {
             c.ToolPath = MSBUILD_EXE;
