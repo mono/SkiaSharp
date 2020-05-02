@@ -19,6 +19,9 @@ namespace SkiaSharp
 			SkiaApi.sk_swizzle_swap_rb ((uint*)dest, (uint*)src, count);
 		}
 
+		public static void SwapRedBlue (Span<byte> pixels) =>
+			SwapRedBlue (pixels, pixels, pixels.Length);
+
 		public static void SwapRedBlue (ReadOnlySpan<byte> pixels, int count) =>
 			SwapRedBlue (pixels, pixels, count);
 

@@ -1,20 +1,23 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
 	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(SKImageInfo) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType) => Create (new SKImageInfo (width, height, colorType, alphaType));
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), props);
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(SKImageInfo, IntPtr, int) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes);
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props);
 
-		[Preserve]
 		internal SKSurface (IntPtr h, bool owns)
 			: base (h, owns)
 		{
@@ -25,6 +28,7 @@ namespace SkiaSharp
 
 		// RASTER surface
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (SKImageInfo info, SKSurfaceProps props) =>
 			Create (info, 0, new SKSurfaceProperties (props));
@@ -41,11 +45,12 @@ namespace SkiaSharp
 		public static SKSurface Create (SKImageInfo info, int rowBytes, SKSurfaceProperties props)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (&cinfo, (IntPtr)rowBytes, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_raster (&cinfo, (IntPtr)rowBytes, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// convenience RASTER DIRECT to use a SKPixmap instead of SKImageInfo and IntPtr
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(SKPixmap, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (SKPixmap pixmap, SKSurfaceProps props) =>
 			Create (pixmap, new SKSurfaceProperties (props));
@@ -63,6 +68,7 @@ namespace SkiaSharp
 
 		// RASTER DIRECT surface
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(SKImageInfo, IntPtr, rowBytes, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props) =>
 			Create (info, pixels, rowBytes, null, null, new SKSurfaceProperties (props));
@@ -89,11 +95,12 @@ namespace SkiaSharp
 				? new SKSurfaceReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKSurfaceReleaseDelegateProxy, out _, out var ctx);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND RENDER TARGET surface
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
 		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc)
 		{
@@ -104,6 +111,7 @@ namespace SkiaSharp
 			return Create (context, renderTarget, desc.Origin, desc.Config.ToColorType (), null, null);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc, SKSurfaceProps props)
 		{
@@ -136,23 +144,27 @@ namespace SkiaSharp
 			if (renderTarget == null)
 				throw new ArgumentNullException (nameof (renderTarget));
 
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND TEXTURE surface
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc) =>
 			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, null);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc) =>
 			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, null);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props) =>
 			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props) =>
 			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
@@ -185,23 +197,27 @@ namespace SkiaSharp
 			if (texture == null)
 				throw new ArgumentNullException (nameof (texture));
 
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND TEXTURE AS RENDER TARGET surface
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc) =>
 			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, null);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc) =>
 			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, null);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props) =>
 			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props) =>
 			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
@@ -234,11 +250,12 @@ namespace SkiaSharp
 			if (texture == null)
 				throw new ArgumentNullException (nameof (texture));
 
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU NEW surface
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(GRContext, bool, SKImageInfo, int, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProps props) =>
 			Create (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft, new SKSurfaceProperties (props), false);
@@ -264,19 +281,20 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (context));
 
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
+			return GetObject (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
 		}
 
 		// NULL surface
 
 		public static SKSurface CreateNull (int width, int height) =>
-			GetObject<SKSurface> (SkiaApi.sk_surface_new_null (width, height));
+			GetObject (SkiaApi.sk_surface_new_null (width, height));
 
 		//
 
 		public SKCanvas Canvas =>
-			GetObject<SKCanvas> (SkiaApi.sk_surface_get_canvas (Handle), false);
+			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use SurfaceProperties instead.")]
 		public SKSurfaceProps SurfaceProps {
 			get {
@@ -289,10 +307,10 @@ namespace SkiaSharp
 		}
 
 		public SKSurfaceProperties SurfaceProperties =>
-			GetObject<SKSurfaceProperties> (SkiaApi.sk_surface_get_props (Handle), false);
+			OwnedBy (SKSurfaceProperties.GetObject (SkiaApi.sk_surface_get_props (Handle), false), this);
 
 		public SKImage Snapshot () =>
-			GetObject<SKImage> (SkiaApi.sk_surface_new_image_snapshot (Handle));
+			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot (Handle));
 
 		public void Draw (SKCanvas canvas, float x, float y, SKPaint paint)
 		{
@@ -319,13 +337,21 @@ namespace SkiaSharp
 			if (pixmap == null)
 				throw new ArgumentNullException (nameof (pixmap));
 
-			return SkiaApi.sk_surface_peek_pixels (Handle, pixmap.Handle);
+			var result = SkiaApi.sk_surface_peek_pixels (Handle, pixmap.Handle);
+			if (result)
+				pixmap.pixelSource = this;
+			return result;
 		}
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
-			return SkiaApi.sk_surface_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			var result = SkiaApi.sk_surface_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			GC.KeepAlive (this);
+			return result;
 		}
+
+		internal static SKSurface GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKSurface (h, o));
 	}
 }

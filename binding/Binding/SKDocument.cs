@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 
 namespace SkiaSharp
@@ -7,10 +8,6 @@ namespace SkiaSharp
 	{
 		public const float DefaultRasterDpi = 72.0f;
 
-		// keep the stream alive for as long as the document exists
-		private SKWStream underlyingStream;
-
-		[Preserve]
 		internal SKDocument (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -23,10 +20,10 @@ namespace SkiaSharp
 			SkiaApi.sk_document_abort (Handle);
 
 		public SKCanvas BeginPage (float width, float height) =>
-			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, null), false);
+			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, null), false), this);
 
 		public SKCanvas BeginPage (float width, float height, SKRect content) =>
-			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false);
+			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false), this);
 
 		public void EndPage () =>
 			SkiaApi.sk_document_end_page (Handle);
@@ -71,11 +68,12 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi)), stream);
+			return Referenced (GetObject (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi)), stream);
 		}
 
 		// CreatePdf
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
 		public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi)
 		{
@@ -109,7 +107,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle));
+			return Referenced (GetObject (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle)), stream);
 		}
 
 		public static SKDocument CreatePdf (string path, float dpi) =>
@@ -165,37 +163,22 @@ namespace SkiaSharp
 					fEncodingQuality = metadata.EncodingQuality,
 				};
 
+				SKTimeDateTimeInternal creation;
 				if (metadata.Creation != null) {
-					var creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
+					creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
 					cmetadata.fCreation = &creation;
 				}
+				SKTimeDateTimeInternal modified;
 				if (metadata.Modified != null) {
-					var modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
+					modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
 					cmetadata.fModified = &modified;
 				}
 
-				return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, &cmetadata)), stream);
+				return Referenced (GetObject (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, &cmetadata)), stream);
 			}
 		}
 
-		private static SKDocument Owned (SKDocument doc, SKWStream stream)
-		{
-			if (stream != null) {
-				if (doc != null)
-					doc.SetDisposeChild (stream);
-				else
-					stream.Dispose ();
-			}
-
-			return doc;
-		}
-
-		private static SKDocument Referenced (SKDocument doc, SKWStream stream)
-		{
-			if (stream != null && doc != null)
-				doc.underlyingStream = stream;
-
-			return doc;
-		}
+		internal static SKDocument GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKDocument (h, o));
 	}
 }

@@ -22,7 +22,7 @@ namespace SkiaSharp.Tests
 			var handle = SkiaApi.sk_colorspace_new_srgb();
 			try
 			{
-				var cs = SKObject.GetObject<SKColorSpace>(handle, unrefExisting: false);
+				var cs = SKColorSpace.GetObject(handle, unrefExisting: false);
 				Assert.Equal("SKColorSpaceStatic", cs.GetType().Name);
 			}
 			finally
@@ -205,6 +205,10 @@ namespace SkiaSharp.Tests
 				0f, 0f, 0f, 1f,
 			};
 			AssertMatrix(toXYZ, colorspace.ToXyzD50());
+
+			var matrix = new SKMatrix44();
+			Assert.True(colorspace.ToXyzD50(matrix));
+			AssertMatrix(toXYZ, matrix);
 
 			var fromXYZ = new[]
 			{

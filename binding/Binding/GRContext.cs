@@ -1,10 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
 	public unsafe class GRContext : SKObject, ISKReferenceCounted
 	{
-		[Preserve]
 		internal GRContext (IntPtr h, bool owns)
 			: base (h, owns)
 		{
@@ -13,48 +13,50 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		[Obsolete ("Use CreateGl or CreateVulkan instead.")]
-		public static GRContext Create (GRBackend backend)
-		{
-			if (backend != GRBackend.OpenGL)
-				throw new ArgumentOutOfRangeException (nameof (backend));
+		// Create
 
-			return CreateGl ();
-		}
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateGl() instead.")]
+		public static GRContext Create (GRBackend backend) =>
+			backend switch
+			{
+				GRBackend.Metal => throw new NotSupportedException (),
+				GRBackend.OpenGL => CreateGl (),
+				GRBackend.Vulkan => throw new NotSupportedException (),
+				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
+			};
 
-		[Obsolete ("Use CreateGl instead.")]
-		public static GRContext Create (GRBackend backend, GRGlInterface backendContext)
-		{
-			if (backend != GRBackend.OpenGL)
-				throw new ArgumentOutOfRangeException (nameof (backend));
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateGl() instead.")]
+		public static GRContext Create (GRBackend backend, GRGlInterface backendContext) =>
+			backend switch
+			{
+				GRBackend.Metal => throw new NotSupportedException (),
+				GRBackend.OpenGL => CreateGl (backendContext),
+				GRBackend.Vulkan => throw new NotSupportedException (),
+				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
+			};
 
-			return CreateGl (backendContext);
-		}
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateGl() instead.")]
+		public static GRContext Create (GRBackend backend, IntPtr backendContext) =>
+			backend switch
+			{
+				GRBackend.Metal => throw new NotSupportedException (),
+				GRBackend.OpenGL => GetObject (SkiaApi.gr_context_make_gl (backendContext)),
+				GRBackend.Vulkan => throw new NotSupportedException (),
+				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
+			};
 
-		[Obsolete ("Use Create(GRBackend, GRGlInterface) instead.")]
-		public static GRContext Create (GRBackend backend, IntPtr backendContext)
-		{
-			switch (backend) {
-				case GRBackend.Metal:
-					throw new NotSupportedException ();
-				case GRBackend.OpenGL:
-					return GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext));
-				case GRBackend.Vulkan:
-					throw new NotSupportedException ();
-				default:
-					throw new ArgumentOutOfRangeException (nameof (backend));
-			}
-		}
+		// CreateGl
 
-		public static GRContext CreateGl ()
-		{
-			return CreateGl (null);
-		}
+		public static GRContext CreateGl () =>
+			CreateGl (null);
 
-		public static GRContext CreateGl (GRGlInterface backendContext)
-		{
-			return GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
-		}
+		public static GRContext CreateGl (GRGlInterface backendContext) =>
+			GetObject (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+
+		//
 
 		public static GRContext CreateVulkan (GRVkBackendContext backendContext)
 		{
@@ -68,11 +70,10 @@ namespace SkiaSharp
 
 		public void AbandonContext (bool releaseResources = false)
 		{
-			if (releaseResources) {
+			if (releaseResources)
 				SkiaApi.gr_context_release_resources_and_abandon_context (Handle);
-			} else {
+			else
 				SkiaApi.gr_context_abandon_context (Handle);
-			}
 		}
 
 		public void GetResourceCacheLimits (out int maxResources, out long maxResourceBytes)
@@ -84,10 +85,8 @@ namespace SkiaSharp
 			maxResourceBytes = (long)maxResBytes;
 		}
 
-		public void SetResourceCacheLimits (int maxResources, long maxResourceBytes)
-		{
+		public void SetResourceCacheLimits (int maxResources, long maxResourceBytes) =>
 			SkiaApi.gr_context_set_resource_cache_limits (Handle, maxResources, (IntPtr)maxResourceBytes);
-		}
 
 		public void GetResourceCacheUsage (out int maxResources, out long maxResourceBytes)
 		{
@@ -97,36 +96,27 @@ namespace SkiaSharp
 			}
 			maxResourceBytes = (long)maxResBytes;
 		}
-		
-		public void ResetContext (GRGlBackendState state)
-		{
-			ResetContext ((uint) state);
-		}
 
-		public void ResetContext (GRBackendState state = GRBackendState.All)
-		{
-			ResetContext ((uint) state);
-		}
+		public void ResetContext (GRGlBackendState state) =>
+			ResetContext ((uint)state);
 
-		public void ResetContext (uint state)
-		{
+		public void ResetContext (GRBackendState state = GRBackendState.All) =>
+			ResetContext ((uint)state);
+
+		public void ResetContext (uint state) =>
 			SkiaApi.gr_context_reset_context (Handle, state);
-		}
 
-		public void Flush ()
-		{
+		public void Flush () =>
 			SkiaApi.gr_context_flush (Handle);
-		}
 
-		public int GetMaxSurfaceSampleCount (SKColorType colorType)
-		{
-			return SkiaApi.gr_context_get_max_surface_sample_count_for_color_type (Handle, colorType);
-		}
+		public int GetMaxSurfaceSampleCount (SKColorType colorType) =>
+			SkiaApi.gr_context_get_max_surface_sample_count_for_color_type (Handle, colorType);
 
-		[Obsolete ("Use GetMaxSurfaceSampleCount(SKColorType) instead.")]
-		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi)
-		{
-			return GetMaxSurfaceSampleCount (config.ToColorType ());
-		}
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete]
+		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
+
+		internal static GRContext GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new GRContext (h, o));
 	}
 }

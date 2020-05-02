@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKRoundRect : SKObject
 	{
-		[Preserve]
 		internal SKRoundRect (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -26,6 +25,11 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new SKRoundRect instance.");
 			}
 			SetRect (rect);
+		}
+
+		public SKRoundRect (SKRect rect, float radius)
+			: this (rect, radius, radius)
+		{
 		}
 
 		public SKRoundRect (SKRect rect, float xRadius, float yRadius)

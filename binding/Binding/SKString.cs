@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	internal unsafe class SKString : SKObject
 	{
-		[Preserve]
 		internal SKString (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -48,7 +47,7 @@ namespace SkiaSharp
 		{
 			var cstr = SkiaApi.sk_string_get_c_str (Handle);
 			var clen = SkiaApi.sk_string_get_size (Handle);
-			return StringUtilities.GetString (cstr, (int)clen, SKTextEncoding.Utf8); 
+			return StringUtilities.GetString ((IntPtr)cstr, (int)clen, SKTextEncoding.Utf8);
 		}
 
 		public static explicit operator string (SKString skString)
@@ -69,6 +68,9 @@ namespace SkiaSharp
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_string_destructor (Handle);
+
+		internal static SKString GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKString (h, o));
 	}
 }
 

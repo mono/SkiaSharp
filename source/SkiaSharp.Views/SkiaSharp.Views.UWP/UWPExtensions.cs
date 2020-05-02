@@ -96,9 +96,12 @@ namespace SkiaSharp.Views.UWP
 
 		public static WriteableBitmap ToWriteableBitmap(this SKBitmap skiaBitmap)
 		{
-			using (var image = SKImage.FromPixels(skiaBitmap.PeekPixels()))
+			using (var pixmap = skiaBitmap.PeekPixels())
+			using (var image = SKImage.FromPixels(pixmap))
 			{
-				return image.ToWriteableBitmap();
+				var wb = image.ToWriteableBitmap();
+				GC.KeepAlive(skiaBitmap);
+				return wb;
 			}
 		}
 

@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.Buffers;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -42,11 +43,16 @@ namespace SkiaSharp
 		protected override bool OnWrite (IntPtr buffer, IntPtr size)
 		{
 			var count = (int)size;
-			var managedBuffer = new byte[count];
-			if (buffer != IntPtr.Zero) { 
-				Marshal.Copy (buffer, managedBuffer, 0, count);
+			var pool = ArrayPool<byte>.Shared;
+			var managedBuffer = pool.Rent (count);
+			try {
+				if (buffer != IntPtr.Zero) {
+					Marshal.Copy (buffer, managedBuffer, 0, count);
+				}
+				stream.Write (managedBuffer, 0, count);
+			} finally {
+				pool.Return (managedBuffer);
 			}
-			stream.Write (managedBuffer, 0, count);
 			return true;
 		}
 
@@ -55,7 +61,7 @@ namespace SkiaSharp
 			stream.Flush ();
 		}
 
-		protected override IntPtr OnBytesWritten()
+		protected override IntPtr OnBytesWritten ()
 		{
 			return (IntPtr)stream.Position;
 		}

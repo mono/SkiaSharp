@@ -23,8 +23,10 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
             var dllName = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
             if (file.GetFilenameWithoutExtension ().GetExtension () == ".breaking") {
                 // skip over breaking changes without any breaking changes
-                if (!FindTextInFiles (file.FullPath, "###").Any ())
+                if (!FindTextInFiles (file.FullPath, "###").Any ()) {
+                    DeleteFile (file);
                     continue;
+                }
 
                 dllName += ".breaking";
             }
@@ -68,8 +70,14 @@ Task ("docs-download-output")
 Task ("docs-api-diff")
     .Does (async () =>
 {
+    // working version
     var baseDir = $"{OUTPUT_NUGETS_PATH}/api-diff";
     CleanDirectories (baseDir);
+
+    // pretty version
+    var diffDir = "./output/api-diff";
+    EnsureDirectoryExists (diffDir);
+    CleanDirectories (diffDir);
 
     Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
@@ -103,6 +111,16 @@ Task ("docs-api-diff")
             await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
         }
         CopyChangelogs (diffRoot, id, version);
+
+        // copy pretty version
+        foreach (var md in GetFiles ($"{diffRoot}/*/*.md")) {
+            var tfm = md.GetDirectory ().GetDirectoryName();
+            var prettyPath = ((DirectoryPath)diffDir).CombineWithFilePath ($"{id}/{tfm}/{md.GetFilename ()}");
+            if (!FindTextInFiles (md.FullPath, "No changes").Any ()) {
+                EnsureDirectoryExists (prettyPath.GetDirectory ());
+                CopyFile (md, prettyPath);
+            }
+        }
 
         Information ($"Diff complete of '{id}'.");
     }
@@ -367,6 +385,31 @@ Task ("docs-format-docs")
             .Descendants ("Attribute")
             .Where (e => !e.Elements ().Any ())
             .Remove ();
+
+        // special case for Android resources: don't process
+        if (xdoc.Root.Name == "Type") {
+            var nameAttr = xdoc.Root.Attribute ("FullName")?.Value;
+            if (nameAttr == "SkiaSharp.Views.Android.Resource" || nameAttr?.StartsWith ("SkiaSharp.Views.Android.Resource+") == true) {
+                DeleteFile (file);
+                continue;
+            }
+        }
+        if (xdoc.Root.Name == "Overview") {
+            foreach (var type in xdoc.Root.Descendants ("Type").ToArray ()) {
+                var nameAttr = type.Attribute ("Name")?.Value;
+                if (nameAttr == "Resource" || nameAttr?.StartsWith ("Resource+") == true) {
+                    type.Remove ();
+                }
+            }
+        }
+        if (xdoc.Root.Name == "Framework") {
+            foreach (var type in xdoc.Root.Descendants ("Type").ToArray ()) {
+                var nameAttr = type.Attribute ("Name")?.Value;
+                if (nameAttr == "SkiaSharp.Views.Android.Resource" || nameAttr?.StartsWith ("SkiaSharp.Views.Android.Resource/") == true) {
+                    type.Remove ();
+                }
+            }
+        }
 
         // count the types without docs
         var typesWithDocs = xdoc.Root

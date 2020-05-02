@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("The Index8 color type and color table is no longer supported.")]
 	public unsafe class SKColorTable : SKObject, ISKReferenceCounted
 	{
 		public const int MaxLength = 256;
 
-		[Preserve]
 		internal SKColorTable (IntPtr x, bool owns)
 			: base (x, owns)
 		{
@@ -59,10 +59,8 @@ namespace SkiaSharp
 
 		public int Count => SkiaApi.sk_colortable_count (Handle);
 
-		public SKPMColor[] Colors
-		{
-			get
-			{
+		public SKPMColor[] Colors {
+			get {
 				var count = Count;
 				var pointer = ReadColors ();
 
@@ -70,16 +68,14 @@ namespace SkiaSharp
 					return new SKPMColor[0];
 				}
 
-				return PtrToStructureArray <SKPMColor> (pointer, count);
+				return PtrToStructureArray<SKPMColor> (pointer, count);
 			}
 		}
 
 		public SKColor[] UnPreMultipledColors => SKPMColor.UnPreMultiply (Colors);
 
-		public SKPMColor this [int index]
-		{
-			get
-			{
+		public SKPMColor this[int index] {
+			get {
 				var count = Count;
 				var pointer = ReadColors ();
 
@@ -87,11 +83,11 @@ namespace SkiaSharp
 					throw new ArgumentOutOfRangeException (nameof (index));
 				}
 
-				return PtrToStructure <SKPMColor> (pointer, index);
+				return PtrToStructure<SKPMColor> (pointer, index);
 			}
 		}
 
-		public SKColor GetUnPreMultipliedColor (int index) => SKPMColor.UnPreMultiply (this [index]);
+		public SKColor GetUnPreMultipliedColor (int index) => SKPMColor.UnPreMultiply (this[index]);
 
 		public IntPtr ReadColors ()
 		{

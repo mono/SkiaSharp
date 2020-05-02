@@ -2,41 +2,20 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using CppAst;
 
 namespace SkiaSharpGenerator
 {
-	public class Generator
+	public class Generator : BaseTool
 	{
-		private readonly Dictionary<string, TypeMapping> typeMappings = new Dictionary<string, TypeMapping>();
-		private readonly Dictionary<string, FunctionMapping> functionMappings = new Dictionary<string, FunctionMapping>();
-		private readonly Dictionary<string, bool> skiaTypes = new Dictionary<string, bool>();
-
-		private CppCompilation compilation = new CppCompilation();
-		private Config config = new Config();
-
 		public Generator(string skiaRoot, string configFile, TextWriter outputWriter)
+			: base(skiaRoot, configFile)
 		{
-			SkiaRoot = skiaRoot ?? throw new ArgumentNullException(nameof(skiaRoot));
-			ConfigFile = configFile ?? throw new ArgumentNullException(nameof(configFile));
 			OutputWriter = outputWriter ?? throw new ArgumentNullException(nameof(outputWriter));
 		}
 
-		public ILogger? Log { get; set; }
-
-		public string SkiaRoot { get; }
-
-		public string ConfigFile { get; }
-
 		public TextWriter OutputWriter { get; }
-
-		public bool HasErrors =>
-			compilation?.Diagnostics?.HasErrors ?? false;
-
-		public IEnumerable<CppDiagnosticMessage> Messages =>
-			compilation?.Diagnostics?.Messages ?? Array.Empty<CppDiagnosticMessage>();
 
 		public async Task GenerateAsync()
 		{
@@ -53,134 +32,6 @@ namespace SkiaSharpGenerator
 			WriteApi(OutputWriter);
 
 			Log?.Log("C# API generation complete.");
-		}
-
-		private void ParseSkiaHeaders()
-		{
-			Log?.LogVerbose("Parsing skia headers...");
-
-			var options = new CppParserOptions();
-
-			foreach (var header in config.IncludeDirs)
-			{
-				var path = Path.Combine(SkiaRoot, header);
-				options.IncludeFolders.Add(path);
-			}
-
-			var headers = new List<string>();
-			foreach (var header in config.Headers)
-			{
-				var path = Path.Combine(SkiaRoot, header.Key);
-				options.IncludeFolders.Add(path);
-				foreach (var filter in header.Value)
-				{
-					headers.AddRange(Directory.EnumerateFiles(path, filter));
-				}
-			}
-
-			compilation = CppParser.ParseFiles(headers, options);
-
-			if (compilation == null || compilation.HasErrors)
-			{
-				Log?.LogError("Parsing headers failed.");
-				throw new Exception("Parsing headers failed.");
-			}
-		}
-
-		private void LoadStandardMappings()
-		{
-			Log?.LogVerbose("Loading standard types...");
-
-			var standardMappings = new Dictionary<string, string>
-			{
-				// stdint.h types:
-				{ "uint8_t",              nameof(Byte) },
-				{ "uint16_t",             nameof(UInt16) },
-				{ "uint32_t",             nameof(UInt32) },
-				{ "uint64_t",             nameof(UInt64) },
-				{ "usize_t" ,             "/* usize_t */ " + nameof(UIntPtr) },
-				{ "uintptr_t" ,           nameof(UIntPtr) },
-				{ "int8_t",               nameof(SByte) },
-				{ "int16_t",              nameof(Int16) },
-				{ "int32_t",              nameof(Int32) },
-				{ "int64_t",              nameof(Int64) },
-				{ "size_t" ,              "/* size_t */ " + nameof(IntPtr) },
-				{ "intptr_t" ,            nameof(IntPtr) },
-
-				// standard types:
-				{ "bool",                 nameof(Byte) },
-				{ "char",                 "/* char */ void" },
-				{ "unsigned char",        "/* unsigned char */ void" },
-				{ "signed char",          "/* signed char */ void" },
-				{ "short",                nameof(Int16) },
-				{ "short int",            nameof(Int16) },
-				{ "signed short",         nameof(Int16) },
-				{ "signed short int",     nameof(Int16) },
-				{ "unsigned short",       nameof(UInt16) },
-				{ "unsigned short int",   nameof(UInt16) },
-				{ "int",                  nameof(Int32) },
-				{ "signed",               nameof(Int32) },
-				{ "signed int",           nameof(Int32) },
-				{ "unsigned",             nameof(UInt32) },
-				{ "unsigned int",         nameof(UInt32) },
-				{ "long",                 nameof(Int64) },
-				{ "long int",             nameof(Int64) },
-				{ "signed long",          nameof(Int64) },
-				{ "signed long int",      nameof(Int64) },
-				{ "unsigned long",        nameof(UInt64) },
-				{ "unsigned long int",    nameof(UInt64) },
-				{ "float",                nameof(Single) },
-				{ "double",               nameof(Double) },
-				// TODO: long double, wchar_t ?
-
-				{ "void",                 "void" },
-			};
-
-			foreach (var mapping in standardMappings)
-			{
-				var map = new TypeMapping { CsType = mapping.Value };
-				typeMappings[mapping.Key] = map;
-			}
-		}
-
-		private void UpdatingMappings()
-		{
-			// load all the classes/structs
-			var typedefs = compilation.Classes;
-			foreach (var klass in typedefs)
-			{
-				typeMappings[klass.GetDisplayName()] = new TypeMapping();
-			}
-
-			// load all the enums
-			var enums = compilation.Enums;
-			foreach (var enm in enums)
-			{
-				typeMappings[enm.GetDisplayName()] = new TypeMapping();
-			}
-
-			// load the mapping file
-			foreach (var mapping in config.Mappings.Types)
-			{
-				typeMappings[mapping.Key] = mapping.Value;
-			}
-			foreach (var mapping in config.Mappings.Functions)
-			{
-				functionMappings[mapping.Key] = mapping.Value;
-			}
-		}
-
-		private async Task<Config> LoadConfigAsync(string configPath)
-		{
-			Log?.LogVerbose("Loading configuration...");
-
-			using var configJson = File.OpenRead(configPath);
-
-			return await JsonSerializer.DeserializeAsync<Config>(configJson, new JsonSerializerOptions
-			{
-				AllowTrailingCommas = true,
-				ReadCommentHandling = JsonCommentHandling.Skip,
-			});
 		}
 
 		private void WriteApi(TextWriter writer)
@@ -289,10 +140,11 @@ namespace SkiaSharpGenerator
 				writer.WriteLine();
 				writer.WriteLine($"\t// {klass.GetDisplayName()}");
 				writer.WriteLine($"\t[StructLayout (LayoutKind.Sequential)]");
-				var visibility = "public";
-				if (map?.IsInternal == true)
-					visibility = "internal";
-				writer.WriteLine($"\t{visibility} unsafe partial struct {name} {{");
+				var visibility = map?.IsInternal == true ? "internal" : "public";
+				var isReadonly = map?.IsReadOnly == true ? " readonly" : "";
+				var equatable = map?.GenerateEquality == true ? $" : IEquatable<{name}>" : "";
+				writer.WriteLine($"\t{visibility}{isReadonly} unsafe partial struct {name}{equatable} {{");
+				var allFields = new List<string>();
 				foreach (var field in klass.Fields)
 				{
 					var type = GetType(field.Type);
@@ -302,14 +154,14 @@ namespace SkiaSharpGenerator
 
 					var fieldName = field.Name;
 					var isPrivate = fieldName.StartsWith("_private_", StringComparison.OrdinalIgnoreCase);
-					if (isPrivate) {
+					if (isPrivate)
 						fieldName = fieldName.Substring(9);
-					}
 
-					var vis = "private";
-					if (map?.IsInternal == true)
-						vis = "public";
-					writer.WriteLine($"\t\t{vis} {type} {fieldName};");
+					allFields.Add(fieldName);
+
+					var vis = map?.IsInternal == true ? "public" : "private";
+					var ro = map?.IsReadOnly == true ? " readonly" : "";
+					writer.WriteLine($"\t\t{vis}{ro} {type} {fieldName};");
 
 					if (!isPrivate && (map == null || (map.GenerateProperties && !map.IsInternal)))
 					{
@@ -321,20 +173,73 @@ namespace SkiaSharpGenerator
 
 						if (cppT == "bool")
 						{
-							writer.WriteLine($"\t\tpublic bool {propertyName} {{");
-							writer.WriteLine($"\t\t\tget => {fieldName} > 0;");
-							writer.WriteLine($"\t\t\tset => {fieldName} = value ? (byte)1 : (byte)0;");
-							writer.WriteLine($"\t\t}}");
+							if (map?.IsReadOnly == true)
+							{
+								writer.WriteLine($"\t\tpublic readonly bool {propertyName} => {fieldName} > 0;");
+							}
+							else
+							{
+								writer.WriteLine($"\t\tpublic bool {propertyName} {{");
+								writer.WriteLine($"\t\t\treadonly get => {fieldName} > 0;");
+								writer.WriteLine($"\t\t\tset => {fieldName} = value ? (byte)1 : (byte)0;");
+								writer.WriteLine($"\t\t}}");
+							}
 						}
 						else
 						{
-							writer.WriteLine($"\t\tpublic {type} {propertyName} {{");
-							writer.WriteLine($"\t\t\tget => {fieldName};");
-							writer.WriteLine($"\t\t\tset => {fieldName} = value;");
-							writer.WriteLine($"\t\t}}");
+							if (map?.IsReadOnly == true)
+							{
+								writer.WriteLine($"\t\tpublic readonly {type} {propertyName} => {fieldName};");
+							}
+							else
+							{
+								writer.WriteLine($"\t\tpublic {type} {propertyName} {{");
+								writer.WriteLine($"\t\t\treadonly get => {fieldName};");
+								writer.WriteLine($"\t\t\tset => {fieldName} = value;");
+								writer.WriteLine($"\t\t}}");
+							}
 						}
-						writer.WriteLine();
 					}
+
+					writer.WriteLine();
+				}
+
+				if (map?.GenerateEquality == true)
+				{
+					// IEquatable
+					var equalityFields = new List<string>();
+					foreach (var f in allFields)
+					{
+						equalityFields.Add($"{f} == obj.{f}");
+					}
+					writer.WriteLine($"\t\tpublic readonly bool Equals ({name} obj) =>");
+					writer.WriteLine($"\t\t\t{string.Join(" && ", equalityFields)};");
+					writer.WriteLine();
+
+					// Equals
+					writer.WriteLine($"\t\tpublic readonly override bool Equals (object obj) =>");
+					writer.WriteLine($"\t\t\tobj is {name} f && Equals (f);");
+					writer.WriteLine();
+
+					// equality operators
+					writer.WriteLine($"\t\tpublic static bool operator == ({name} left, {name} right) =>");
+					writer.WriteLine($"\t\t\tleft.Equals (right);");
+					writer.WriteLine();
+					writer.WriteLine($"\t\tpublic static bool operator != ({name} left, {name} right) =>");
+					writer.WriteLine($"\t\t\t!left.Equals (right);");
+					writer.WriteLine();
+
+					// GetHashCode
+					writer.WriteLine($"\t\tpublic readonly override int GetHashCode ()");
+					writer.WriteLine($"\t\t{{");
+					writer.WriteLine($"\t\t\tvar hash = new HashCode ();");
+					foreach (var f in allFields)
+					{
+						writer.WriteLine($"\t\t\thash.Add ({f});");
+					}
+					writer.WriteLine($"\t\t\treturn hash.ToHashCode ();");
+					writer.WriteLine($"\t\t}}");
+					writer.WriteLine();
 				}
 				writer.WriteLine($"\t}}");
 			}
@@ -418,7 +323,9 @@ namespace SkiaSharpGenerator
 
 			var functionGroups = compilation.Functions
 				.OrderBy(f => f.Name)
-				.GroupBy(f => f.Span.Start.File);
+				.GroupBy(f => f.Span.Start.File.ToLower().Replace("\\", "/"))
+				.OrderBy(g => Path.GetDirectoryName(g.Key) + "/" + Path.GetFileName(g.Key));
+
 			foreach (var group in functionGroups)
 			{
 				writer.WriteLine($"\t\t#region {Path.GetFileName(group.Key)}");
@@ -463,55 +370,6 @@ namespace SkiaSharpGenerator
 				writer.WriteLine($"\t\t#endregion");
 				writer.WriteLine();
 			}
-		}
-
-		private string GetType(CppType type)
-		{
-			var typeName = GetCppType(type);
-
-			// split the type from the pointers
-			var pointerIndex = typeName.IndexOf("*");
-			var pointers = pointerIndex == -1 ? "" : typeName.Substring(pointerIndex);
-			var noPointers = pointerIndex == -1 ? typeName : typeName.Substring(0, pointerIndex);
-
-			if (skiaTypes.TryGetValue(noPointers, out var isStruct))
-			{
-				if (!isStruct)
-					return noPointers + pointers.Substring(1);
-				if (typeMappings.TryGetValue(noPointers, out var map))
-					return (map.CsType ?? Utils.CleanName(noPointers)) + pointers;
-			}
-			else
-			{
-				if (typeMappings.TryGetValue(typeName, out var map))
-					return map.CsType ?? Utils.CleanName(typeName);
-				if (typeMappings.TryGetValue(noPointers, out map))
-					return (map.CsType ?? Utils.CleanName(noPointers)) + pointers;
-				if (functionMappings.TryGetValue(typeName, out var funcMap))
-					return funcMap.CsType ?? Utils.CleanName(typeName);
-				if (functionMappings.TryGetValue(noPointers, out funcMap))
-					return (funcMap.CsType ?? Utils.CleanName(noPointers)) + pointers;
-			}
-
-			return Utils.CleanName(typeName);
-		}
-
-		private static string GetCppType(CppType type)
-		{
-			var typeName = type.GetDisplayName();
-
-			// remove the const
-			typeName = typeName.Replace("const ", "");
-
-			// replace the [] with a *
-			int start;
-			while ((start = typeName.IndexOf("[")) != -1)
-			{
-				var end = typeName.IndexOf("]");
-				typeName = typeName.Substring(0, start) + "*" + typeName.Substring(end + 1);
-			}
-
-			return typeName;
 		}
 	}
 }

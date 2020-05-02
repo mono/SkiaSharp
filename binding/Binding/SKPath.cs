@@ -1,10 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
 	public unsafe class SKPath : SKObject
 	{
-		[Preserve]
 		internal SKPath (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -322,6 +322,14 @@ namespace SkiaSharp
 		public void Transform (SKMatrix matrix) =>
 			SkiaApi.sk_path_transform (Handle, &matrix);
 
+		public void Transform (SKMatrix matrix, SKPath destination)
+		{
+			if (destination == null)
+				throw new ArgumentNullException (nameof (destination));
+
+			SkiaApi.sk_path_transform_to_dest (Handle, &matrix, destination.Handle);
+		}
+
 		public void AddPath (SKPath other, float dx, float dy, SKPathAddMode mode = SKPathAddMode.Append)
 		{
 			if (other == null)
@@ -359,6 +367,7 @@ namespace SkiaSharp
 		public void AddRoundRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise) =>
 			SkiaApi.sk_path_add_rounded_rect (Handle, &rect, rx, ry, dir);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use AddRoundRect instead.")]
 		public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise) =>
 			AddRoundRect (rect, rx, ry, dir);
@@ -470,6 +479,13 @@ namespace SkiaSharp
 			}
 		}
 
+		//
+
+		internal static SKPath GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKPath (h, o));
+
+		//
+
 		public class Iterator : SKObject
 		{
 			private readonly SKPath path;
@@ -564,4 +580,3 @@ namespace SkiaSharp
 		}
 	}
 }
-

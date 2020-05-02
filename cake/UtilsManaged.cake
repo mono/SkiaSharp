@@ -113,6 +113,8 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
             yield return (dir, "watchos");
         else if (d.StartsWith("tizen"))
             yield return (dir, "tizen");
+        else if (d.StartsWith("netcoreapp"))
+            ; // skip this one for now
         else
             throw new Exception($"Unknown platform '{d}' found at '{dir}'.");
     }
@@ -123,7 +125,7 @@ string[] GetReferenceSearchPaths()
     var refs = new List<string>();
 
     if (IsRunningOnWindows()) {
-        var vs = VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" });
+        var vs = VS_INSTALL ?? VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" });
         var referenceAssemblies = $"{vs}/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
         var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 
@@ -163,7 +165,9 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Xamarin.Forms", "tizen40");
     await AddDep("Xamarin.Forms", "uap10.0");
     await AddDep("Xamarin.Forms.Platform.WPF", "net45");
+    await AddDep("Xamarin.Forms.Platform.GTK", "net45");
     await AddDep("GtkSharp", "netstandard2.0");
+    await AddDep("GdkSharp", "netstandard2.0");
     await AddDep("GLibSharp", "netstandard2.0");
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");

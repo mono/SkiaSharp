@@ -1,15 +1,16 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
 	public unsafe class GRBackendRenderTarget : SKObject
 	{
-		[Preserve]
 		internal GRBackendRenderTarget (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use GRBackendRenderTarget(int, int, int, int, GRGlFramebufferInfo) instead.")]
 		public GRBackendRenderTarget (GRBackend backend, GRBackendRenderTargetDesc desc)
 			: this (IntPtr.Zero, true)
@@ -73,12 +74,9 @@ namespace SkiaSharp
 		public SKSizeI Size => new SKSizeI (Width, Height);
 		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 
-		public GRGlFramebufferInfo GetGlFramebufferInfo ()
-		{
-			if (GetGlFramebufferInfo (out var info))
-				return info;
-			return default (GRGlFramebufferInfo);
-		}
+		public GRGlFramebufferInfo GetGlFramebufferInfo () =>
+			GetGlFramebufferInfo (out var info) ? info : default;
+
 		public bool GetGlFramebufferInfo (out GRGlFramebufferInfo glInfo)
 		{
 			fixed (GRGlFramebufferInfo* g = &glInfo) {

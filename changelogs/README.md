@@ -12,6 +12,7 @@ For **Xamarin.Forms**:
 
  * **[SkiaSharp.Views.Forms](SkiaSharp.Views.Forms)**
  * **[SkiaSharp.Views.Forms.WPF](SkiaSharp.Views.Forms.WPF)**
+ * **[SkiaSharp.Views.Forms.GTK](SkiaSharp.Views.Forms.GTK)**
 
 For **native** platforms:
 

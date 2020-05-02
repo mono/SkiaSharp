@@ -4,7 +4,19 @@ namespace SkiaSharp
 {
 	public class SKFontStyle : SKObject
 	{
-		[Preserve]
+		private static readonly SKFontStyle normal;
+		private static readonly SKFontStyle bold;
+		private static readonly SKFontStyle italic;
+		private static readonly SKFontStyle boldItalic;
+
+		static SKFontStyle ()
+		{
+			normal = new SKFontStyleStatic (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+			bold = new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+			italic = new SKFontStyleStatic (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
+			boldItalic = new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
+		}
+
 		internal SKFontStyle (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -37,12 +49,26 @@ namespace SkiaSharp
 
 		public SKFontStyleSlant Slant => SkiaApi.sk_fontstyle_get_slant (Handle);
 
-		public static SKFontStyle Normal => new SKFontStyle (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+		public static SKFontStyle Normal => normal;
 
-		public static SKFontStyle Bold => new SKFontStyle (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+		public static SKFontStyle Bold => bold;
 
-		public static SKFontStyle Italic => new SKFontStyle (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
+		public static SKFontStyle Italic => italic;
 
-		public static SKFontStyle BoldItalic => new SKFontStyle (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
+		public static SKFontStyle BoldItalic => boldItalic;
+
+		//
+
+		internal static SKFontStyle GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKFontStyle (h, o));
+
+		private sealed class SKFontStyleStatic : SKFontStyle
+		{
+			internal SKFontStyleStatic (SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
+				: base (weight, width, slant)
+			{
+				IgnorePublicDispose = true;
+			}
+		}
 	}
 }
