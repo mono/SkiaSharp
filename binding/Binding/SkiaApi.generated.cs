@@ -16,11 +16,14 @@ namespace SkiaSharp
 	using sk_canvas_t = IntPtr;
 	using sk_codec_t = IntPtr;
 	using sk_colorfilter_t = IntPtr;
+	using sk_colorspace_icc_profile_t = IntPtr;
 	using sk_colorspace_t = IntPtr;
 	using sk_colortable_t = IntPtr;
+	using sk_compatpaint_t = IntPtr;
 	using sk_data_t = IntPtr;
 	using sk_document_t = IntPtr;
 	using sk_drawable_t = IntPtr;
+	using sk_font_t = IntPtr;
 	using sk_fontmgr_t = IntPtr;
 	using sk_fontstyle_t = IntPtr;
 	using sk_fontstyleset_t = IntPtr;
@@ -91,7 +94,7 @@ namespace SkiaSharp
 
 		// gr_backend_t gr_backendrendertarget_get_backend(const gr_backendrendertarget_t* rendertarget)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRBackend gr_backendrendertarget_get_backend (gr_backendrendertarget_t rendertarget);
+		internal static extern GRBackendNative gr_backendrendertarget_get_backend (gr_backendrendertarget_t rendertarget);
 
 		// bool gr_backendrendertarget_get_gl_framebufferinfo(const gr_backendrendertarget_t* rendertarget, gr_gl_framebufferinfo_t* glInfo)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -133,7 +136,7 @@ namespace SkiaSharp
 
 		// gr_backend_t gr_backendtexture_get_backend(const gr_backendtexture_t* texture)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRBackend gr_backendtexture_get_backend (gr_backendtexture_t texture);
+		internal static extern GRBackendNative gr_backendtexture_get_backend (gr_backendtexture_t texture);
 
 		// bool gr_backendtexture_get_gl_textureinfo(const gr_backendtexture_t* texture, gr_gl_textureinfo_t* glInfo)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -176,11 +179,11 @@ namespace SkiaSharp
 
 		// gr_backend_t gr_context_get_backend(gr_context_t* context)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRBackend gr_context_get_backend (gr_context_t context);
+		internal static extern GRBackendNative gr_context_get_backend (gr_context_t context);
 
 		// int gr_context_get_max_surface_sample_count_for_color_type(gr_context_t* context, sk_colortype_t colorType)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_context_get_max_surface_sample_count_for_color_type (gr_context_t context, SKColorType colorType);
+		internal static extern Int32 gr_context_get_max_surface_sample_count_for_color_type (gr_context_t context, SKColorTypeNative colorType);
 
 		// void gr_context_get_resource_cache_limits(gr_context_t* context, int* maxResources, size_t* maxResourceBytes)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -295,17 +298,17 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* sk_bitmap_get_addr (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 
-		// uint16_t sk_bitmap_get_addr_16(sk_bitmap_t* cbitmap, int x, int y)
+		// uint16_t* sk_bitmap_get_addr_16(sk_bitmap_t* cbitmap, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt16 sk_bitmap_get_addr_16 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		internal static extern UInt16* sk_bitmap_get_addr_16 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 
-		// uint32_t sk_bitmap_get_addr_32(sk_bitmap_t* cbitmap, int x, int y)
+		// uint32_t* sk_bitmap_get_addr_32(sk_bitmap_t* cbitmap, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 sk_bitmap_get_addr_32 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		internal static extern UInt32* sk_bitmap_get_addr_32 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 
-		// uint8_t sk_bitmap_get_addr_8(sk_bitmap_t* cbitmap, int x, int y)
+		// uint8_t* sk_bitmap_get_addr_8(sk_bitmap_t* cbitmap, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte sk_bitmap_get_addr_8 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		internal static extern Byte* sk_bitmap_get_addr_8 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
 
 		// size_t sk_bitmap_get_byte_count(sk_bitmap_t* cbitmap)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -361,6 +364,10 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_is_volatile (sk_bitmap_t cbitmap);
 
+		// sk_shader_t* sk_bitmap_make_shader(sk_bitmap_t* cbitmap, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, const sk_matrix_t* cmatrix)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_bitmap_make_shader (sk_bitmap_t cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix* cmatrix);
+
 		// sk_bitmap_t* sk_bitmap_new()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_bitmap_t sk_bitmap_new ();
@@ -386,14 +393,6 @@ namespace SkiaSharp
 		// void sk_bitmap_set_immutable(sk_bitmap_t* cbitmap)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_set_immutable (sk_bitmap_t cbitmap);
-
-		// void sk_bitmap_set_pixel_color(sk_bitmap_t* cbitmap, int x, int y, sk_color_t color)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_set_pixel_color (sk_bitmap_t cbitmap, Int32 x, Int32 y, UInt32 color);
-
-		// void sk_bitmap_set_pixel_colors(sk_bitmap_t* cbitmap, const sk_color_t* colors)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_set_pixel_colors (sk_bitmap_t cbitmap, UInt32* colors);
 
 		// void sk_bitmap_set_pixels(sk_bitmap_t* cbitmap, void* pixels)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -553,10 +552,6 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_points (sk_canvas_t param0, SKPointMode param1, /* size_t */ IntPtr param2, SKPoint* param3, sk_paint_t param4);
 
-		// void sk_canvas_draw_pos_text(sk_canvas_t*, const char* text, size_t byteLength, const sk_point_t[-1], const sk_paint_t* paint)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_pos_text (sk_canvas_t param0, /* char */ void* text, /* size_t */ IntPtr byteLength, SKPoint* param3, sk_paint_t paint);
-
 		// void sk_canvas_draw_rect(sk_canvas_t*, const sk_rect_t*, const sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_rect (sk_canvas_t param0, SKRect* param1, sk_paint_t param2);
@@ -573,17 +568,9 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_rrect (sk_canvas_t param0, sk_rrect_t param1, sk_paint_t param2);
 
-		// void sk_canvas_draw_text(sk_canvas_t*, const char* text, size_t byteLength, float x, float y, const sk_paint_t* paint)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_text (sk_canvas_t param0, /* char */ void* text, /* size_t */ IntPtr byteLength, Single x, Single y, sk_paint_t paint);
-
 		// void sk_canvas_draw_text_blob(sk_canvas_t*, sk_textblob_t* text, float x, float y, const sk_paint_t* paint)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_text_blob (sk_canvas_t param0, sk_textblob_t text, Single x, Single y, sk_paint_t paint);
-
-		// void sk_canvas_draw_text_on_path(sk_canvas_t*, const char* text, size_t byteLength, const sk_path_t* path, float hOffset, float vOffset, const sk_paint_t* paint)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_draw_text_on_path (sk_canvas_t param0, /* char */ void* text, /* size_t */ IntPtr byteLength, sk_path_t path, Single hOffset, Single vOffset, sk_paint_t paint);
 
 		// void sk_canvas_draw_url_annotation(sk_canvas_t* t, const sk_rect_t* rect, sk_data_t* value)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -857,82 +844,72 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_color4f_from_color (UInt32 color, SKColorF* color4f);
 
-		// void sk_color4f_pin(const sk_color4f_t* color4f, sk_color4f_t* pinned)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_color4f_pin (SKColorF* color4f, SKColorF* pinned);
-
 		// sk_color_t sk_color4f_to_color(const sk_color4f_t* color4f)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_color4f_to_color (SKColorF* color4f);
-
-		// const sk_matrix44_t* sk_colorspace_as_from_xyzd50(const sk_colorspace_t* cColorSpace)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_matrix44_t sk_colorspace_as_from_xyzd50 (sk_colorspace_t cColorSpace);
-
-		// const sk_matrix44_t* sk_colorspace_as_to_xyzd50(const sk_colorspace_t* cColorSpace)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_matrix44_t sk_colorspace_as_to_xyzd50 (sk_colorspace_t cColorSpace);
 
 		// bool sk_colorspace_equals(const sk_colorspace_t* src, const sk_colorspace_t* dst)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_equals (sk_colorspace_t src, sk_colorspace_t dst);
 
-		// bool sk_colorspace_gamma_close_to_srgb(const sk_colorspace_t* cColorSpace)
+		// bool sk_colorspace_gamma_close_to_srgb(const sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_gamma_close_to_srgb (sk_colorspace_t cColorSpace);
+		internal static extern bool sk_colorspace_gamma_close_to_srgb (sk_colorspace_t colorspace);
 
-		// sk_gamma_named_t sk_colorspace_gamma_get_gamma_named(const sk_colorspace_t* cColorSpace)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKNamedGamma sk_colorspace_gamma_get_gamma_named (sk_colorspace_t cColorSpace);
-
-		// sk_colorspace_type_t sk_colorspace_gamma_get_type(const sk_colorspace_t* cColorSpace)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorSpaceType sk_colorspace_gamma_get_type (sk_colorspace_t cColorSpace);
-
-		// bool sk_colorspace_gamma_is_linear(const sk_colorspace_t* cColorSpace)
+		// bool sk_colorspace_gamma_is_linear(const sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_gamma_is_linear (sk_colorspace_t cColorSpace);
+		internal static extern bool sk_colorspace_gamma_is_linear (sk_colorspace_t colorspace);
 
-		// bool sk_colorspace_is_numerical_transfer_fn(const sk_colorspace_t* cColorSpace, sk_colorspace_transfer_fn_t* fn)
+		// void sk_colorspace_icc_profile_delete(sk_colorspace_icc_profile_t* profile)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_icc_profile_delete (sk_colorspace_icc_profile_t profile);
+
+		// const uint8_t* sk_colorspace_icc_profile_get_buffer(const sk_colorspace_icc_profile_t* profile, uint32_t* size)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Byte* sk_colorspace_icc_profile_get_buffer (sk_colorspace_icc_profile_t profile, UInt32* size);
+
+		// bool sk_colorspace_icc_profile_get_to_xyzd50(const sk_colorspace_icc_profile_t* profile, sk_colorspace_xyz_t* toXYZD50)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_is_numerical_transfer_fn (sk_colorspace_t cColorSpace, SKColorSpaceTransferFn* fn);
+		internal static extern bool sk_colorspace_icc_profile_get_to_xyzd50 (sk_colorspace_icc_profile_t profile, SKColorSpaceXyz* toXYZD50);
 
-		// bool sk_colorspace_is_srgb(const sk_colorspace_t* cColorSpace)
+		// sk_colorspace_icc_profile_t* sk_colorspace_icc_profile_new()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorspace_icc_profile_t sk_colorspace_icc_profile_new ();
+
+		// bool sk_colorspace_icc_profile_parse(const void* buffer, size_t length, sk_colorspace_icc_profile_t* profile)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_is_srgb (sk_colorspace_t cColorSpace);
+		internal static extern bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, sk_colorspace_icc_profile_t profile);
 
-		// sk_colorspace_t* sk_colorspace_new_icc(const void* input, size_t len)
+		// bool sk_colorspace_is_numerical_transfer_fn(const sk_colorspace_t* colorspace, sk_colorspace_transfer_fn_t* transferFn)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorspace_t sk_colorspace_new_icc (void* input, /* size_t */ IntPtr len);
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_colorspace_is_numerical_transfer_fn (sk_colorspace_t colorspace, SKColorSpaceTransferFn* transferFn);
 
-		// sk_colorspace_t* sk_colorspace_new_rgb_with_coeffs(const sk_colorspace_transfer_fn_t* coeffs, const sk_matrix44_t* toXYZD50)
+		// bool sk_colorspace_is_srgb(const sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorspace_t sk_colorspace_new_rgb_with_coeffs (SKColorSpaceTransferFn* coeffs, sk_matrix44_t toXYZD50);
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_colorspace_is_srgb (sk_colorspace_t colorspace);
 
-		// sk_colorspace_t* sk_colorspace_new_rgb_with_coeffs_and_gamut(const sk_colorspace_transfer_fn_t* coeffs, sk_colorspace_gamut_t gamut)
+		// sk_colorspace_t* sk_colorspace_make_linear_gamma(const sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorspace_t sk_colorspace_new_rgb_with_coeffs_and_gamut (SKColorSpaceTransferFn* coeffs, SKColorSpaceGamut gamut);
+		internal static extern sk_colorspace_t sk_colorspace_make_linear_gamma (sk_colorspace_t colorspace);
 
-		// sk_colorspace_t* sk_colorspace_new_rgb_with_gamma(sk_colorspace_render_target_gamma_t gamma, const sk_matrix44_t* toXYZD50)
+		// sk_colorspace_t* sk_colorspace_make_srgb_gamma(const sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorspace_t sk_colorspace_new_rgb_with_gamma (SKColorSpaceRenderTargetGamma gamma, sk_matrix44_t toXYZD50);
+		internal static extern sk_colorspace_t sk_colorspace_make_srgb_gamma (sk_colorspace_t colorspace);
 
-		// sk_colorspace_t* sk_colorspace_new_rgb_with_gamma_and_gamut(sk_colorspace_render_target_gamma_t gamma, sk_colorspace_gamut_t gamut)
+		// sk_colorspace_t* sk_colorspace_new_icc(const sk_colorspace_icc_profile_t* profile)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorspace_t sk_colorspace_new_rgb_with_gamma_and_gamut (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut);
+		internal static extern sk_colorspace_t sk_colorspace_new_icc (sk_colorspace_icc_profile_t profile);
 
-		// sk_colorspace_t* sk_colorspace_new_rgb_with_gamma_named(sk_gamma_named_t gamma, const sk_matrix44_t* toXYZD50)
+		// sk_colorspace_t* sk_colorspace_new_rgb(const sk_colorspace_transfer_fn_t* transferFn, const sk_colorspace_xyz_t* toXYZD50)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorspace_t sk_colorspace_new_rgb_with_gamma_named (SKNamedGamma gamma, sk_matrix44_t toXYZD50);
-
-		// sk_colorspace_t* sk_colorspace_new_rgb_with_gamma_named_and_gamut(sk_gamma_named_t gamma, sk_colorspace_gamut_t gamut)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorspace_t sk_colorspace_new_rgb_with_gamma_named_and_gamut (SKNamedGamma gamma, SKColorSpaceGamut gamut);
+		internal static extern sk_colorspace_t sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50);
 
 		// sk_colorspace_t* sk_colorspace_new_srgb()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -942,27 +919,89 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_colorspace_new_srgb_linear ();
 
-		// bool sk_colorspace_to_xyzd50(const sk_colorspace_t* cColorSpace, sk_matrix44_t* toXYZD50)
+		// bool sk_colorspace_primaries_to_xyzd50(const sk_colorspace_primaries_t* primaries, sk_colorspace_xyz_t* toXYZD50)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_to_xyzd50 (sk_colorspace_t cColorSpace, sk_matrix44_t toXYZD50);
+		internal static extern bool sk_colorspace_primaries_to_xyzd50 (SKColorSpacePrimaries* primaries, SKColorSpaceXyz* toXYZD50);
 
-		// void sk_colorspace_transfer_fn_invert(const sk_colorspace_transfer_fn_t* transfer, sk_colorspace_transfer_fn_t* inverted)
+		// void sk_colorspace_ref(sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_colorspace_transfer_fn_invert (SKColorSpaceTransferFn* transfer, SKColorSpaceTransferFn* inverted);
+		internal static extern void sk_colorspace_ref (sk_colorspace_t colorspace);
 
-		// float sk_colorspace_transfer_fn_transform(const sk_colorspace_transfer_fn_t* transfer, float x)
+		// void sk_colorspace_to_profile(const sk_colorspace_t* colorspace, sk_colorspace_icc_profile_t* profile)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Single sk_colorspace_transfer_fn_transform (SKColorSpaceTransferFn* transfer, Single x);
+		internal static extern void sk_colorspace_to_profile (sk_colorspace_t colorspace, sk_colorspace_icc_profile_t profile);
 
-		// void sk_colorspace_unref(sk_colorspace_t* cColorSpace)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_colorspace_unref (sk_colorspace_t cColorSpace);
-
-		// bool sk_colorspaceprimaries_to_xyzd50(const sk_colorspaceprimaries_t* primaries, sk_matrix44_t* toXYZD50)
+		// bool sk_colorspace_to_xyzd50(const sk_colorspace_t* colorspace, sk_colorspace_xyz_t* toXYZD50)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspaceprimaries_to_xyzd50 (SKColorSpacePrimaries* primaries, sk_matrix44_t toXYZD50);
+		internal static extern bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, SKColorSpaceXyz* toXYZD50);
+
+		// float sk_colorspace_transfer_fn_eval(const sk_colorspace_transfer_fn_t* transferFn, float x)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single sk_colorspace_transfer_fn_eval (SKColorSpaceTransferFn* transferFn, Single x);
+
+		// bool sk_colorspace_transfer_fn_invert(const sk_colorspace_transfer_fn_t* src, sk_colorspace_transfer_fn_t* dst)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_colorspace_transfer_fn_invert (SKColorSpaceTransferFn* src, SKColorSpaceTransferFn* dst);
+
+		// void sk_colorspace_transfer_fn_named_2dot2(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_2dot2 (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_transfer_fn_named_hlg(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_hlg (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_transfer_fn_named_linear(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_linear (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_transfer_fn_named_pq(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_pq (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_transfer_fn_named_rec2020(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_rec2020 (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_transfer_fn_named_srgb(sk_colorspace_transfer_fn_t* transferFn)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_transfer_fn_named_srgb (SKColorSpaceTransferFn* transferFn);
+
+		// void sk_colorspace_unref(sk_colorspace_t* colorspace)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_unref (sk_colorspace_t colorspace);
+
+		// void sk_colorspace_xyz_concat(const sk_colorspace_xyz_t* a, const sk_colorspace_xyz_t* b, sk_colorspace_xyz_t* result)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_concat (SKColorSpaceXyz* a, SKColorSpaceXyz* b, SKColorSpaceXyz* result);
+
+		// bool sk_colorspace_xyz_invert(const sk_colorspace_xyz_t* src, sk_colorspace_xyz_t* dst)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_colorspace_xyz_invert (SKColorSpaceXyz* src, SKColorSpaceXyz* dst);
+
+		// void sk_colorspace_xyz_named_adobe_rgb(sk_colorspace_xyz_t* xyz)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_named_adobe_rgb (SKColorSpaceXyz* xyz);
+
+		// void sk_colorspace_xyz_named_dcip3(sk_colorspace_xyz_t* xyz)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_named_dcip3 (SKColorSpaceXyz* xyz);
+
+		// void sk_colorspace_xyz_named_rec2020(sk_colorspace_xyz_t* xyz)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_named_rec2020 (SKColorSpaceXyz* xyz);
+
+		// void sk_colorspace_xyz_named_srgb(sk_colorspace_xyz_t* xyz)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_named_srgb (SKColorSpaceXyz* xyz);
+
+		// void sk_colorspace_xyz_named_xyz(sk_colorspace_xyz_t* xyz)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_xyz_named_xyz (SKColorSpaceXyz* xyz);
 
 		#endregion
 
@@ -1102,11 +1141,190 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region sk_font.h
+
+		// size_t sk_font_break_text(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, float maxWidth, float* measuredWidth, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_font_break_text (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, Single maxWidth, Single* measuredWidth, sk_paint_t paint);
+
+		// void sk_font_delete(sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_delete (sk_font_t font);
+
+		// sk_font_edging_t sk_font_get_edging(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKFontEdging sk_font_get_edging (sk_font_t font);
+
+		// sk_font_hinting_t sk_font_get_hinting(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKFontHinting sk_font_get_hinting (sk_font_t font);
+
+		// float sk_font_get_metrics(const sk_font_t* font, sk_fontmetrics_t* metrics)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single sk_font_get_metrics (sk_font_t font, SKFontMetrics* metrics);
+
+		// bool sk_font_get_path(const sk_font_t* font, uint16_t glyph, sk_path_t* path)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_font_get_path (sk_font_t font, UInt16 glyph, sk_path_t path);
+
+		// void sk_font_get_paths(const sk_font_t* font, uint16_t[-1] glyphs, int count, const sk_glyph_path_proc glyphPathProc, void* context)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_get_paths (sk_font_t font, UInt16* glyphs, Int32 count, SKGlyphPathProxyDelegate glyphPathProc, void* context);
+
+		// void sk_font_get_pos(const sk_font_t* font, const uint16_t[-1] glyphs, int count, sk_point_t[-1] pos, sk_point_t* origin)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_get_pos (sk_font_t font, UInt16* glyphs, Int32 count, SKPoint* pos, SKPoint* origin);
+
+		// float sk_font_get_scale_x(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single sk_font_get_scale_x (sk_font_t font);
+
+		// float sk_font_get_size(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single sk_font_get_size (sk_font_t font);
+
+		// float sk_font_get_skew_x(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single sk_font_get_skew_x (sk_font_t font);
+
+		// sk_typeface_t* sk_font_get_typeface(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_typeface_t sk_font_get_typeface (sk_font_t font);
+
+		// void sk_font_get_widths_bounds(const sk_font_t* font, const uint16_t[-1] glyphs, int count, float[-1] widths, sk_rect_t[-1] bounds, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_get_widths_bounds (sk_font_t font, UInt16* glyphs, Int32 count, Single* widths, SKRect* bounds, sk_paint_t paint);
+
+		// void sk_font_get_xpos(const sk_font_t* font, const uint16_t[-1] glyphs, int count, float[-1] xpos, float origin)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_get_xpos (sk_font_t font, UInt16* glyphs, Int32 count, Single* xpos, Single origin);
+
+		// bool sk_font_is_baseline_snap(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_font_is_baseline_snap (sk_font_t font);
+
+		// bool sk_font_is_embedded_bitmaps(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_font_is_embedded_bitmaps (sk_font_t font);
+
+		// bool sk_font_is_embolden(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_font_is_embolden (sk_font_t font);
+
+		// bool sk_font_is_force_auto_hinting(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_font_is_force_auto_hinting (sk_font_t font);
+
+		// bool sk_font_is_linear_metrics(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_font_is_linear_metrics (sk_font_t font);
+
+		// bool sk_font_is_subpixel(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_font_is_subpixel (sk_font_t font);
+
+		// float sk_font_measure_text(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, sk_rect_t* bounds, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single sk_font_measure_text (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, sk_paint_t paint);
+
+		// sk_font_t* sk_font_new()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_font_t sk_font_new ();
+
+		// sk_font_t* sk_font_new_with_values(sk_typeface_t* typeface, float size, float scaleX, float skewX)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_font_t sk_font_new_with_values (sk_typeface_t typeface, Single size, Single scaleX, Single skewX);
+
+		// void sk_font_set_baseline_snap(sk_font_t* font, bool value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_baseline_snap (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+
+		// void sk_font_set_edging(sk_font_t* font, sk_font_edging_t value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_edging (sk_font_t font, SKFontEdging value);
+
+		// void sk_font_set_embedded_bitmaps(sk_font_t* font, bool value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_embedded_bitmaps (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+
+		// void sk_font_set_embolden(sk_font_t* font, bool value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_embolden (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+
+		// void sk_font_set_force_auto_hinting(sk_font_t* font, bool value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_force_auto_hinting (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+
+		// void sk_font_set_hinting(sk_font_t* font, sk_font_hinting_t value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_hinting (sk_font_t font, SKFontHinting value);
+
+		// void sk_font_set_linear_metrics(sk_font_t* font, bool value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_linear_metrics (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+
+		// void sk_font_set_scale_x(sk_font_t* font, float value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_scale_x (sk_font_t font, Single value);
+
+		// void sk_font_set_size(sk_font_t* font, float value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_size (sk_font_t font, Single value);
+
+		// void sk_font_set_skew_x(sk_font_t* font, float value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_skew_x (sk_font_t font, Single value);
+
+		// void sk_font_set_subpixel(sk_font_t* font, bool value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_subpixel (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+
+		// void sk_font_set_typeface(sk_font_t* font, sk_typeface_t* value)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_set_typeface (sk_font_t font, sk_typeface_t value);
+
+		// int sk_font_text_to_glyphs(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, uint16_t[-1] glyphs, int maxGlyphCount)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_font_text_to_glyphs (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, UInt16* glyphs, Int32 maxGlyphCount);
+
+		// uint16_t sk_font_unichar_to_glyph(const sk_font_t* font, int32_t uni)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt16 sk_font_unichar_to_glyph (sk_font_t font, Int32 uni);
+
+		// void sk_font_unichars_to_glyphs(const sk_font_t* font, const int32_t[-1] uni, int count, uint16_t[-1] glyphs)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_unichars_to_glyphs (sk_font_t font, Int32* uni, Int32 count, UInt16* glyphs);
+
+		// void sk_text_utils_get_path(const void* text, size_t length, sk_text_encoding_t encoding, float x, float y, const sk_font_t* font, sk_path_t* path)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_text_utils_get_path (void* text, /* size_t */ IntPtr length, SKTextEncoding encoding, Single x, Single y, sk_font_t font, sk_path_t path);
+
+		// void sk_text_utils_get_pos_path(const void* text, size_t length, sk_text_encoding_t encoding, const sk_point_t[-1] pos, const sk_font_t* font, sk_path_t* path)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_text_utils_get_pos_path (void* text, /* size_t */ IntPtr length, SKTextEncoding encoding, SKPoint* pos, sk_font_t font, sk_path_t path);
+
+		#endregion
+
 		#region sk_general.h
+
+		// sk_colortype_t gr_pixelconfig_to_sk_colortype(gr_pixelconfig_t pixelConfig)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKColorTypeNative gr_pixelconfig_to_sk_colortype (GRPixelConfigNative pixelConfig);
 
 		// sk_colortype_t sk_colortype_get_default_8888()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorType sk_colortype_get_default_8888 ();
+		internal static extern SKColorTypeNative sk_colortype_get_default_8888 ();
+
+		// gr_pixelconfig_t sk_colortype_to_gr_pixelconfig(sk_colortype_t colorType)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern GRPixelConfigNative sk_colortype_to_gr_pixelconfig (SKColorTypeNative colorType);
 
 		// int sk_nvrefcnt_get_ref_count(const sk_nvrefcnt_t* refcnt)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1160,7 +1378,7 @@ namespace SkiaSharp
 
 		// sk_colortype_t sk_image_get_color_type(const sk_image_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorType sk_image_get_color_type (sk_image_t param0);
+		internal static extern SKColorTypeNative sk_image_get_color_type (sk_image_t param0);
 
 		// sk_colorspace_t* sk_image_get_colorspace(const sk_image_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1214,9 +1432,9 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_make_subset (sk_image_t cimage, SKRectI* subset);
 
-		// sk_image_t* sk_image_make_texture_image(const sk_image_t* cimage, gr_context_t* context, sk_colorspace_t* colorspace)
+		// sk_image_t* sk_image_make_texture_image(const sk_image_t* cimage, gr_context_t* context, bool mipmapped)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_image_t sk_image_make_texture_image (sk_image_t cimage, gr_context_t context, sk_colorspace_t colorspace);
+		internal static extern sk_image_t sk_image_make_texture_image (sk_image_t cimage, gr_context_t context, [MarshalAs (UnmanagedType.I1)] bool mipmapped);
 
 		// sk_image_t* sk_image_make_with_filter(const sk_image_t* cimage, const sk_imagefilter_t* filter, const sk_irect_t* subset, const sk_irect_t* clipBounds, sk_irect_t* outSubset, sk_ipoint_t* outOffset)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1224,7 +1442,7 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_from_adopted_texture(gr_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, sk_colorspace_t* colorSpace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_image_t sk_image_new_from_adopted_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, sk_colorspace_t colorSpace);
+		internal static extern sk_image_t sk_image_new_from_adopted_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorTypeNative colorType, SKAlphaType alpha, sk_colorspace_t colorSpace);
 
 		// sk_image_t* sk_image_new_from_bitmap(const sk_bitmap_t* cbitmap)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1240,7 +1458,7 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_from_texture(gr_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, sk_colorspace_t* colorSpace, sk_image_texture_release_proc releaseProc, void* releaseContext)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_image_t sk_image_new_from_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, sk_colorspace_t colorSpace, SKImageTextureReleaseProxyDelegate releaseProc, void* releaseContext);
+		internal static extern sk_image_t sk_image_new_from_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorTypeNative colorType, SKAlphaType alpha, sk_colorspace_t colorSpace, SKImageTextureReleaseProxyDelegate releaseProc, void* releaseContext);
 
 		// sk_image_t* sk_image_new_raster(const sk_pixmap_t* pixmap, sk_image_raster_release_proc releaseProc, void* context)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1450,21 +1668,21 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* sk_mask_get_addr (SKMask* cmask, Int32 x, Int32 y);
 
-		// uint8_t sk_mask_get_addr_1(sk_mask_t* cmask, int x, int y)
+		// uint8_t* sk_mask_get_addr_1(sk_mask_t* cmask, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte sk_mask_get_addr_1 (SKMask* cmask, Int32 x, Int32 y);
+		internal static extern Byte* sk_mask_get_addr_1 (SKMask* cmask, Int32 x, Int32 y);
 
-		// uint32_t sk_mask_get_addr_32(sk_mask_t* cmask, int x, int y)
+		// uint32_t* sk_mask_get_addr_32(sk_mask_t* cmask, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 sk_mask_get_addr_32 (SKMask* cmask, Int32 x, Int32 y);
+		internal static extern UInt32* sk_mask_get_addr_32 (SKMask* cmask, Int32 x, Int32 y);
 
-		// uint8_t sk_mask_get_addr_8(sk_mask_t* cmask, int x, int y)
+		// uint8_t* sk_mask_get_addr_8(sk_mask_t* cmask, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Byte sk_mask_get_addr_8 (SKMask* cmask, Int32 x, Int32 y);
+		internal static extern Byte* sk_mask_get_addr_8 (SKMask* cmask, Int32 x, Int32 y);
 
-		// uint16_t sk_mask_get_addr_lcd_16(sk_mask_t* cmask, int x, int y)
+		// uint16_t* sk_mask_get_addr_lcd_16(sk_mask_t* cmask, int x, int y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt16 sk_mask_get_addr_lcd_16 (SKMask* cmask, Int32 x, Int32 y);
+		internal static extern UInt16* sk_mask_get_addr_lcd_16 (SKMask* cmask, Int32 x, Int32 y);
 
 		// bool sk_mask_is_empty(sk_mask_t* cmask)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1479,9 +1697,9 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_maskfilter_t sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma);
 
-		// sk_maskfilter_t* sk_maskfilter_new_blur_with_flags(sk_blurstyle_t, float sigma, const sk_rect_t* occluder, bool respectCTM)
+		// sk_maskfilter_t* sk_maskfilter_new_blur_with_flags(sk_blurstyle_t, float sigma, bool respectCTM)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_maskfilter_t sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, SKRect* occluder, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
+		internal static extern sk_maskfilter_t sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
 
 		// sk_maskfilter_t* sk_maskfilter_new_clip(uint8_t min, uint8_t max)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1490,6 +1708,10 @@ namespace SkiaSharp
 		// sk_maskfilter_t* sk_maskfilter_new_gamma(float gamma)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_maskfilter_t sk_maskfilter_new_gamma (Single gamma);
+
+		// sk_maskfilter_t* sk_maskfilter_new_shader(sk_shader_t* cshader)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_maskfilter_t sk_maskfilter_new_shader (sk_shader_t cshader);
 
 		// sk_maskfilter_t* sk_maskfilter_new_table(const uint8_t[256] table = 256)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1751,22 +1973,9 @@ namespace SkiaSharp
 
 		#region sk_paint.h
 
-		// size_t sk_paint_break_text(const sk_paint_t* cpaint, const void* text, size_t length, float maxWidth, float* measuredWidth)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_paint_break_text (sk_paint_t cpaint, void* text, /* size_t */ IntPtr length, Single maxWidth, Single* measuredWidth);
-
 		// sk_paint_t* sk_paint_clone(sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_paint_t sk_paint_clone (sk_paint_t param0);
-
-		// bool sk_paint_contains_text(const sk_paint_t* cpaint, const void* text, size_t byteLength)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_paint_contains_text (sk_paint_t cpaint, void* text, /* size_t */ IntPtr byteLength);
-
-		// int sk_paint_count_text(const sk_paint_t* cpaint, const void* text, size_t byteLength)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_paint_count_text (sk_paint_t cpaint, void* text, /* size_t */ IntPtr byteLength);
 
 		// void sk_paint_delete(sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1793,14 +2002,6 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKFilterQuality sk_paint_get_filter_quality (sk_paint_t param0);
 
-		// float sk_paint_get_fontmetrics(sk_paint_t* cpaint, sk_fontmetrics_t* cfontmetrics, float scale)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Single sk_paint_get_fontmetrics (sk_paint_t cpaint, SKFontMetrics* cfontmetrics, Single scale);
-
-		// sk_paint_hinting_t sk_paint_get_hinting(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKPaintHinting sk_paint_get_hinting (sk_paint_t param0);
-
 		// sk_imagefilter_t* sk_paint_get_imagefilter(sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_paint_get_imagefilter (sk_paint_t param0);
@@ -1812,22 +2013,6 @@ namespace SkiaSharp
 		// sk_path_effect_t* sk_paint_get_path_effect(sk_paint_t* cpaint)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_paint_get_path_effect (sk_paint_t cpaint);
-
-		// int sk_paint_get_pos_text_blob_intercepts(const sk_paint_t* cpaint, sk_textblob_t* blob, const float[2] bounds = 2, float* intervals)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_paint_get_pos_text_blob_intercepts (sk_paint_t cpaint, sk_textblob_t blob, Single* bounds, Single* intervals);
-
-		// int sk_paint_get_pos_text_h_intercepts(const sk_paint_t* cpaint, const void* text, size_t byteLength, float* xpos, float y, const float[2] bounds = 2, float* intervals)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_paint_get_pos_text_h_intercepts (sk_paint_t cpaint, void* text, /* size_t */ IntPtr byteLength, Single* xpos, Single y, Single* bounds, Single* intervals);
-
-		// int sk_paint_get_pos_text_intercepts(const sk_paint_t* cpaint, const void* text, size_t byteLength, sk_point_t* pos, const float[2] bounds = 2, float* intervals)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_paint_get_pos_text_intercepts (sk_paint_t cpaint, void* text, /* size_t */ IntPtr byteLength, SKPoint* pos, Single* bounds, Single* intervals);
-
-		// sk_path_t* sk_paint_get_pos_text_path(sk_paint_t* cpaint, const void* text, size_t length, const sk_point_t[-1] pos)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_path_t sk_paint_get_pos_text_path (sk_paint_t cpaint, void* text, /* size_t */ IntPtr length, SKPoint* pos);
 
 		// sk_shader_t* sk_paint_get_shader(sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1853,95 +2038,15 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKPaintStyle sk_paint_get_style (sk_paint_t param0);
 
-		// sk_text_align_t sk_paint_get_text_align(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKTextAlign sk_paint_get_text_align (sk_paint_t param0);
-
-		// sk_text_encoding_t sk_paint_get_text_encoding(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKTextEncoding sk_paint_get_text_encoding (sk_paint_t param0);
-
-		// int sk_paint_get_text_intercepts(const sk_paint_t* cpaint, const void* text, size_t byteLength, float x, float y, const float[2] bounds = 2, float* intervals)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_paint_get_text_intercepts (sk_paint_t cpaint, void* text, /* size_t */ IntPtr byteLength, Single x, Single y, Single* bounds, Single* intervals);
-
-		// sk_path_t* sk_paint_get_text_path(sk_paint_t* cpaint, const void* text, size_t length, float x, float y)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_path_t sk_paint_get_text_path (sk_paint_t cpaint, void* text, /* size_t */ IntPtr length, Single x, Single y);
-
-		// float sk_paint_get_text_scale_x(const sk_paint_t* cpaint)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Single sk_paint_get_text_scale_x (sk_paint_t cpaint);
-
-		// float sk_paint_get_text_skew_x(const sk_paint_t* cpaint)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Single sk_paint_get_text_skew_x (sk_paint_t cpaint);
-
-		// int sk_paint_get_text_widths(const sk_paint_t* cpaint, const void* text, size_t byteLength, float* widths, sk_rect_t* bounds)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_paint_get_text_widths (sk_paint_t cpaint, void* text, /* size_t */ IntPtr byteLength, Single* widths, SKRect* bounds);
-
-		// float sk_paint_get_textsize(sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Single sk_paint_get_textsize (sk_paint_t param0);
-
-		// sk_typeface_t* sk_paint_get_typeface(sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_paint_get_typeface (sk_paint_t param0);
-
 		// bool sk_paint_is_antialias(const sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_paint_is_antialias (sk_paint_t param0);
 
-		// bool sk_paint_is_autohinted(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_paint_is_autohinted (sk_paint_t param0);
-
-		// bool sk_paint_is_dev_kern_text(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_paint_is_dev_kern_text (sk_paint_t param0);
-
 		// bool sk_paint_is_dither(const sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_paint_is_dither (sk_paint_t param0);
-
-		// bool sk_paint_is_embedded_bitmap_text(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_paint_is_embedded_bitmap_text (sk_paint_t param0);
-
-		// bool sk_paint_is_fake_bold_text(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_paint_is_fake_bold_text (sk_paint_t param0);
-
-		// bool sk_paint_is_lcd_render_text(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_paint_is_lcd_render_text (sk_paint_t param0);
-
-		// bool sk_paint_is_linear_text(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_paint_is_linear_text (sk_paint_t param0);
-
-		// bool sk_paint_is_subpixel_text(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_paint_is_subpixel_text (sk_paint_t param0);
-
-		// bool sk_paint_is_verticaltext(const sk_paint_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_paint_is_verticaltext (sk_paint_t param0);
-
-		// float sk_paint_measure_text(const sk_paint_t* cpaint, const void* text, size_t length, sk_rect_t* cbounds)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Single sk_paint_measure_text (sk_paint_t cpaint, void* text, /* size_t */ IntPtr length, SKRect* cbounds);
 
 		// sk_paint_t* sk_paint_new()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1955,10 +2060,6 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_antialias (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
 
-		// void sk_paint_set_autohinted(sk_paint_t*, bool)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_autohinted (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
-
 		// void sk_paint_set_blendmode(sk_paint_t*, sk_blendmode_t)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_blendmode (sk_paint_t param0, SKBlendMode param1);
@@ -1971,41 +2072,17 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_colorfilter (sk_paint_t param0, sk_colorfilter_t param1);
 
-		// void sk_paint_set_dev_kern_text(sk_paint_t*, bool)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_dev_kern_text (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
-
 		// void sk_paint_set_dither(sk_paint_t*, bool)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_dither (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
-
-		// void sk_paint_set_embedded_bitmap_text(sk_paint_t*, bool)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_embedded_bitmap_text (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
-
-		// void sk_paint_set_fake_bold_text(sk_paint_t*, bool)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_fake_bold_text (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
 
 		// void sk_paint_set_filter_quality(sk_paint_t*, sk_filter_quality_t)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_filter_quality (sk_paint_t param0, SKFilterQuality param1);
 
-		// void sk_paint_set_hinting(sk_paint_t*, sk_paint_hinting_t)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_hinting (sk_paint_t param0, SKPaintHinting param1);
-
 		// void sk_paint_set_imagefilter(sk_paint_t*, sk_imagefilter_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_imagefilter (sk_paint_t param0, sk_imagefilter_t param1);
-
-		// void sk_paint_set_lcd_render_text(sk_paint_t*, bool)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_lcd_render_text (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
-
-		// void sk_paint_set_linear_text(sk_paint_t*, bool)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_linear_text (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
 
 		// void sk_paint_set_maskfilter(sk_paint_t*, sk_maskfilter_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2038,42 +2115,6 @@ namespace SkiaSharp
 		// void sk_paint_set_style(sk_paint_t*, sk_paint_style_t)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_style (sk_paint_t param0, SKPaintStyle param1);
-
-		// void sk_paint_set_subpixel_text(sk_paint_t*, bool)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_subpixel_text (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
-
-		// void sk_paint_set_text_align(sk_paint_t*, sk_text_align_t)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_text_align (sk_paint_t param0, SKTextAlign param1);
-
-		// void sk_paint_set_text_encoding(sk_paint_t*, sk_text_encoding_t)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_text_encoding (sk_paint_t param0, SKTextEncoding param1);
-
-		// void sk_paint_set_text_scale_x(sk_paint_t* cpaint, float scale)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_text_scale_x (sk_paint_t cpaint, Single scale);
-
-		// void sk_paint_set_text_skew_x(sk_paint_t* cpaint, float skew)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_text_skew_x (sk_paint_t cpaint, Single skew);
-
-		// void sk_paint_set_textsize(sk_paint_t*, float)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_textsize (sk_paint_t param0, Single param1);
-
-		// void sk_paint_set_typeface(sk_paint_t*, sk_typeface_t*)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_typeface (sk_paint_t param0, sk_typeface_t param1);
-
-		// void sk_paint_set_verticaltext(sk_paint_t*, bool)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_paint_set_verticaltext (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
-
-		// int sk_paint_text_to_glyphs(const sk_paint_t* cpaint, const void* text, size_t byteLength, uint16_t* glyphs)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_paint_text_to_glyphs (sk_paint_t cpaint, void* text, /* size_t */ IntPtr byteLength, UInt16* glyphs);
 
 		#endregion
 
@@ -2274,9 +2315,9 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_path_iter_is_closed_contour (sk_path_iterator_t iterator);
 
-		// sk_path_verb_t sk_path_iter_next(sk_path_iterator_t* iterator, sk_point_t[4] points = 4, int doConsumeDegenerates, int exact)
+		// sk_path_verb_t sk_path_iter_next(sk_path_iterator_t* iterator, sk_point_t[4] points = 4)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKPathVerb sk_path_iter_next (sk_path_iterator_t iterator, SKPoint* points, Int32 doConsumeDegenerates, Int32 exact);
+		internal static extern SKPathVerb sk_path_iter_next (sk_path_iterator_t iterator, SKPoint* points);
 
 		// void sk_path_line_to(sk_path_t*, float x, float y)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2363,7 +2404,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_transform (sk_path_t cpath, SKMatrix* cmatrix);
 
-		// void sk_path_transform_to_dest(sk_path_t* cpath, const sk_matrix_t* cmatrix, sk_path_t* destination)
+		// void sk_path_transform_to_dest(const sk_path_t* cpath, const sk_matrix_t* cmatrix, sk_path_t* destination)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_transform_to_dest (sk_path_t cpath, SKMatrix* cmatrix, sk_path_t destination);
 
@@ -2487,6 +2528,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_picture_get_unique_id (sk_picture_t param0);
 
+		// sk_shader_t* sk_picture_make_shader(sk_picture_t* src, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, const sk_matrix_t* localMatrix, const sk_rect_t* tile)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_picture_make_shader (sk_picture_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix* localMatrix, SKRect* tile);
+
 		// sk_canvas_t* sk_picture_recorder_begin_recording(sk_picture_recorder_t*, const sk_rect_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_canvas_t sk_picture_recorder_begin_recording (sk_picture_recorder_t param0, SKRect* param1);
@@ -2600,10 +2645,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_pixmap_t sk_pixmap_new_with_params (SKImageInfoNative* cinfo, void* addr, /* size_t */ IntPtr rowBytes);
 
-		// bool sk_pixmap_read_pixels(const sk_pixmap_t* cpixmap, const sk_imageinfo_t* dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY, sk_transfer_function_behavior_t behavior)
+		// bool sk_pixmap_read_pixels(const sk_pixmap_t* cpixmap, const sk_imageinfo_t* dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_pixmap_read_pixels (sk_pixmap_t cpixmap, SKImageInfoNative* dstInfo, void* dstPixels, /* size_t */ IntPtr dstRowBytes, Int32 srcX, Int32 srcY, SKTransferFunctionBehavior behavior);
+		internal static extern bool sk_pixmap_read_pixels (sk_pixmap_t cpixmap, SKImageInfoNative* dstInfo, void* dstPixels, /* size_t */ IntPtr dstRowBytes, Int32 srcX, Int32 srcY);
 
 		// void sk_pixmap_reset(sk_pixmap_t* cpixmap)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2898,9 +2943,9 @@ namespace SkiaSharp
 
 		#region sk_shader.h
 
-		// sk_shader_t* sk_shader_new_bitmap(const sk_bitmap_t* src, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, const sk_matrix_t* localMatrix)
+		// sk_shader_t* sk_shader_new_blend(sk_blendmode_t mode, const sk_shader_t* dst, const sk_shader_t* src, const sk_matrix_t* localMatrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_bitmap (sk_bitmap_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix* localMatrix);
+		internal static extern sk_shader_t sk_shader_new_blend (SKBlendMode mode, sk_shader_t dst, sk_shader_t src, SKMatrix* localMatrix);
 
 		// sk_shader_t* sk_shader_new_color(sk_color_t color)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2910,13 +2955,17 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_color4f (SKColorF* color, sk_colorspace_t colorspace);
 
-		// sk_shader_t* sk_shader_new_compose(const sk_shader_t* shaderA, const sk_shader_t* shaderB, sk_blendmode_t mode)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_compose (sk_shader_t shaderA, sk_shader_t shaderB, SKBlendMode mode);
-
 		// sk_shader_t* sk_shader_new_empty()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_empty ();
+
+		// sk_shader_t* sk_shader_new_lerp(float t, const sk_shader_t* dst, const sk_shader_t* src, const sk_matrix_t* localMatrix)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_shader_new_lerp (Single t, sk_shader_t dst, sk_shader_t src, SKMatrix* localMatrix);
+
+		// sk_shader_t* sk_shader_new_lerp_red(const sk_shader_t* red, const sk_shader_t* dst, const sk_shader_t* src, const sk_matrix_t* localMatrix)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_shader_new_lerp_red (sk_shader_t red, sk_shader_t dst, sk_shader_t src, SKMatrix* localMatrix);
 
 		// sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t[2] points = 2, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2937,10 +2986,6 @@ namespace SkiaSharp
 		// sk_shader_t* sk_shader_new_perlin_noise_turbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, const sk_isize_t* tileSize)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
-
-		// sk_shader_t* sk_shader_new_picture(sk_picture_t* src, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, const sk_matrix_t* localMatrix, const sk_rect_t* tile)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_shader_new_picture (sk_picture_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix* localMatrix, SKRect* tile);
 
 		// sk_shader_t* sk_shader_new_radial_gradient(const sk_point_t* center, float radius, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -3290,15 +3335,15 @@ namespace SkiaSharp
 
 		// sk_surface_t* sk_surface_new_backend_render_target(gr_context_t* context, const gr_backendrendertarget_t* target, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, gr_backendrendertarget_t target, GRSurfaceOrigin origin, SKColorType colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		internal static extern sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, gr_backendrendertarget_t target, GRSurfaceOrigin origin, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
 
 		// sk_surface_t* sk_surface_new_backend_texture(gr_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, int samples, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_surface_t sk_surface_new_backend_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, Int32 samples, SKColorType colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		internal static extern sk_surface_t sk_surface_new_backend_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, Int32 samples, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
 
 		// sk_surface_t* sk_surface_new_backend_texture_as_render_target(gr_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, int samples, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_surface_t sk_surface_new_backend_texture_as_render_target (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, Int32 samples, SKColorType colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		internal static extern sk_surface_t sk_surface_new_backend_texture_as_render_target (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, Int32 samples, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
 
 		// sk_image_t* sk_surface_new_image_snapshot(sk_surface_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -3366,17 +3411,33 @@ namespace SkiaSharp
 
 		#region sk_textblob.h
 
-		// void sk_textblob_builder_alloc_run_text(sk_textblob_builder_t* builder, const sk_paint_t* font, int count, float x, float y, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float x, float y, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run_text (sk_textblob_builder_t builder, sk_paint_t font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
 
-		// void sk_textblob_builder_alloc_run_text_pos(sk_textblob_builder_t* builder, const sk_paint_t* font, int count, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run_pos(sk_textblob_builder_t* builder, const sk_font_t* font, int count, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run_text_pos (sk_textblob_builder_t builder, sk_paint_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
 
-		// void sk_textblob_builder_alloc_run_text_pos_h(sk_textblob_builder_t* builder, const sk_paint_t* font, int count, float y, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run_pos_h(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float y, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_textblob_builder_alloc_run_text_pos_h (sk_textblob_builder_t builder, sk_paint_t font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		internal static extern void sk_textblob_builder_alloc_run_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+
+		// void sk_textblob_builder_alloc_run_rsxform(sk_textblob_builder_t* builder, const sk_font_t* font, int count, sk_textblob_builder_runbuffer_t* runbuffer)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_textblob_builder_alloc_run_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRunBufferInternal* runbuffer);
+
+		// void sk_textblob_builder_alloc_run_text(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float x, float y, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_textblob_builder_alloc_run_text (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+
+		// void sk_textblob_builder_alloc_run_text_pos(sk_textblob_builder_t* builder, const sk_font_t* font, int count, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_textblob_builder_alloc_run_text_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+
+		// void sk_textblob_builder_alloc_run_text_pos_h(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float y, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_textblob_builder_alloc_run_text_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
 
 		// void sk_textblob_builder_delete(sk_textblob_builder_t* builder)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -3393,6 +3454,10 @@ namespace SkiaSharp
 		// void sk_textblob_get_bounds(const sk_textblob_t* blob, sk_rect_t* bounds)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_get_bounds (sk_textblob_t blob, SKRect* bounds);
+
+		// int sk_textblob_get_intercepts(const sk_textblob_t* blob, const float[2] bounds = 2, float[-1] intervals, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_textblob_get_intercepts (sk_textblob_t blob, Single* bounds, Single* intervals, sk_paint_t paint);
 
 		// uint32_t sk_textblob_get_unique_id(const sk_textblob_t* blob)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -3506,15 +3571,15 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_fontstyleset_unref (sk_fontstyleset_t fss);
 
-		// int sk_typeface_chars_to_glyphs(sk_typeface_t* typeface, const char* chars, sk_encoding_t encoding, uint16_t[-1] glyphs, int glyphCount)
+		// sk_data_t* sk_typeface_copy_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_typeface_chars_to_glyphs (sk_typeface_t typeface, /* char */ void* chars, SKEncoding encoding, UInt16* glyphs, Int32 glyphCount);
+		internal static extern sk_data_t sk_typeface_copy_table_data (sk_typeface_t typeface, UInt32 tag);
 
-		// int sk_typeface_count_glyphs(sk_typeface_t* typeface)
+		// int sk_typeface_count_glyphs(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_count_glyphs (sk_typeface_t typeface);
 
-		// int sk_typeface_count_tables(sk_typeface_t* typeface)
+		// int sk_typeface_count_tables(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_count_tables (sk_typeface_t typeface);
 
@@ -3522,65 +3587,69 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_default ();
 
+		// sk_typeface_t* sk_typeface_create_from_data(sk_data_t* data, int index)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index);
+
 		// sk_typeface_t* sk_typeface_create_from_file(const char* path, int index)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index);
 
-		// sk_typeface_t* sk_typeface_create_from_name_with_font_style(const char* familyName, sk_fontstyle_t* style)
+		// sk_typeface_t* sk_typeface_create_from_name(const char* familyName, const sk_fontstyle_t* style)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_from_name_with_font_style ([MarshalAs (UnmanagedType.LPStr)] String familyName, sk_fontstyle_t style);
+		internal static extern sk_typeface_t sk_typeface_create_from_name ([MarshalAs (UnmanagedType.LPStr)] String familyName, sk_fontstyle_t style);
 
 		// sk_typeface_t* sk_typeface_create_from_stream(sk_stream_asset_t* stream, int index)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index);
 
-		// sk_string_t* sk_typeface_get_family_name(sk_typeface_t* typeface)
+		// sk_string_t* sk_typeface_get_family_name(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_string_t sk_typeface_get_family_name (sk_typeface_t typeface);
 
-		// sk_font_style_slant_t sk_typeface_get_font_slant(sk_typeface_t* typeface)
+		// sk_font_style_slant_t sk_typeface_get_font_slant(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKFontStyleSlant sk_typeface_get_font_slant (sk_typeface_t typeface);
 
-		// int sk_typeface_get_font_weight(sk_typeface_t* typeface)
+		// int sk_typeface_get_font_weight(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_font_weight (sk_typeface_t typeface);
 
-		// int sk_typeface_get_font_width(sk_typeface_t* typeface)
+		// int sk_typeface_get_font_width(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_font_width (sk_typeface_t typeface);
 
-		// sk_fontstyle_t* sk_typeface_get_fontstyle(sk_typeface_t* typeface)
+		// sk_fontstyle_t* sk_typeface_get_fontstyle(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_fontstyle_t sk_typeface_get_fontstyle (sk_typeface_t typeface);
 
-		// bool sk_typeface_get_kerning_pair_adjustments(sk_typeface_t* typeface, const uint16_t* glyphs, int count, int32_t* adjustments)
+		// bool sk_typeface_get_kerning_pair_adjustments(const sk_typeface_t* typeface, const uint16_t[-1] glyphs, int count, int32_t[-1] adjustments)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_typeface_get_kerning_pair_adjustments (sk_typeface_t typeface, UInt16* glyphs, Int32 count, Int32* adjustments);
 
-		// size_t sk_typeface_get_table_data(sk_typeface_t* typeface, sk_font_table_tag_t tag, size_t offset, size_t length, void* data)
+		// size_t sk_typeface_get_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag, size_t offset, size_t length, void* data)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_typeface_get_table_data (sk_typeface_t typeface, UInt32 tag, /* size_t */ IntPtr offset, /* size_t */ IntPtr length, void* data);
 
-		// size_t sk_typeface_get_table_size(sk_typeface_t* typeface, sk_font_table_tag_t tag)
+		// size_t sk_typeface_get_table_size(const sk_typeface_t* typeface, sk_font_table_tag_t tag)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_typeface_get_table_size (sk_typeface_t typeface, UInt32 tag);
 
-		// int sk_typeface_get_table_tags(sk_typeface_t* typeface, sk_font_table_tag_t[-1] tags)
+		// int sk_typeface_get_table_tags(const sk_typeface_t* typeface, sk_font_table_tag_t[-1] tags)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_table_tags (sk_typeface_t typeface, UInt32* tags);
 
-		// int sk_typeface_get_units_per_em(sk_typeface_t* typeface)
+		// int sk_typeface_get_units_per_em(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_units_per_em (sk_typeface_t typeface);
 
-		// bool sk_typeface_is_fixed_pitch(sk_typeface_t* typeface)
+		// bool sk_typeface_is_fixed_pitch(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_typeface_is_fixed_pitch (sk_typeface_t typeface);
 
-		// sk_stream_asset_t* sk_typeface_open_stream(sk_typeface_t* typeface, int* ttcIndex)
+		// sk_stream_asset_t* sk_typeface_open_stream(const sk_typeface_t* typeface, int* ttcIndex)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_asset_t sk_typeface_open_stream (sk_typeface_t typeface, Int32* ttcIndex);
 
@@ -3588,9 +3657,17 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_ref_default ();
 
-		// void sk_typeface_unref(sk_typeface_t*)
+		// uint16_t sk_typeface_unichar_to_glyph(const sk_typeface_t* typeface, const int32_t unichar)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_typeface_unref (sk_typeface_t param0);
+		internal static extern UInt16 sk_typeface_unichar_to_glyph (sk_typeface_t typeface, Int32 unichar);
+
+		// void sk_typeface_unichars_to_glyphs(const sk_typeface_t* typeface, const int32_t[-1] unichars, int count, uint16_t[-1] glyphs)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_typeface_unichars_to_glyphs (sk_typeface_t typeface, Int32* unichars, Int32 count, UInt16* glyphs);
+
+		// void sk_typeface_unref(sk_typeface_t* typeface)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_typeface_unref (sk_typeface_t typeface);
 
 		#endregion
 
@@ -3619,6 +3696,54 @@ namespace SkiaSharp
 		// sk_xmlstreamwriter_t* sk_xmlstreamwriter_new(sk_wstream_t* stream)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_xmlstreamwriter_t sk_xmlstreamwriter_new (sk_wstream_t stream);
+
+		#endregion
+
+		#region sk_compatpaint.h
+
+		// sk_compatpaint_t* sk_compatpaint_clone(const sk_compatpaint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_compatpaint_t sk_compatpaint_clone (sk_compatpaint_t paint);
+
+		// void sk_compatpaint_delete(sk_compatpaint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_compatpaint_delete (sk_compatpaint_t paint);
+
+		// sk_font_t* sk_compatpaint_get_font(sk_compatpaint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_font_t sk_compatpaint_get_font (sk_compatpaint_t paint);
+
+		// sk_text_align_t sk_compatpaint_get_text_align(const sk_compatpaint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKTextAlign sk_compatpaint_get_text_align (sk_compatpaint_t paint);
+
+		// sk_text_encoding_t sk_compatpaint_get_text_encoding(const sk_compatpaint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKTextEncoding sk_compatpaint_get_text_encoding (sk_compatpaint_t paint);
+
+		// sk_font_t* sk_compatpaint_make_font(sk_compatpaint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_font_t sk_compatpaint_make_font (sk_compatpaint_t paint);
+
+		// sk_compatpaint_t* sk_compatpaint_new()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_compatpaint_t sk_compatpaint_new ();
+
+		// sk_compatpaint_t* sk_compatpaint_new_with_font(const sk_font_t* font)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_compatpaint_t sk_compatpaint_new_with_font (sk_font_t font);
+
+		// void sk_compatpaint_reset(sk_compatpaint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_compatpaint_reset (sk_compatpaint_t paint);
+
+		// void sk_compatpaint_set_text_align(sk_compatpaint_t* paint, sk_text_align_t align)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_compatpaint_set_text_align (sk_compatpaint_t paint, SKTextAlign align);
+
+		// void sk_compatpaint_set_text_encoding(sk_compatpaint_t* paint, sk_text_encoding_t encoding)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_compatpaint_set_text_encoding (sk_compatpaint_t paint, SKTextEncoding encoding);
 
 		#endregion
 
@@ -3685,6 +3810,10 @@ namespace SkiaSharp
 	// typedef void (*)(const void* ptr, void* context)* sk_data_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKDataReleaseProxyDelegate(void* ptr, void* context);
+
+	// typedef void (*)(const sk_path_t* pathOrNull, const sk_matrix_t* matrix, void* context)* sk_glyph_path_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKGlyphPathProxyDelegate(sk_path_t pathOrNull, SKMatrix* matrix, void* context);
 
 	// typedef void (*)(const void* addr, void* context)* sk_image_raster_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4039,11 +4168,8 @@ namespace SkiaSharp
 		// public int fPriorFrame
 		public Int32 fPriorFrame;
 
-		// public sk_transfer_function_behavior_t fPremulBehavior
-		public SKTransferFunctionBehavior fPremulBehavior;
-
 		public readonly bool Equals (SKCodecOptionsInternal obj) =>
-			fZeroInitialized == obj.fZeroInitialized && fSubset == obj.fSubset && fFrameIndex == obj.fFrameIndex && fPriorFrame == obj.fPriorFrame && fPremulBehavior == obj.fPremulBehavior;
+			fZeroInitialized == obj.fZeroInitialized && fSubset == obj.fSubset && fFrameIndex == obj.fFrameIndex && fPriorFrame == obj.fPriorFrame;
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKCodecOptionsInternal f && Equals (f);
@@ -4061,7 +4187,6 @@ namespace SkiaSharp
 			hash.Add (fSubset);
 			hash.Add (fFrameIndex);
 			hash.Add (fPriorFrame);
-			hash.Add (fPremulBehavior);
 			return hash.ToHashCode ();
 		}
 
@@ -4105,6 +4230,93 @@ namespace SkiaSharp
 			hash.Add (fG);
 			hash.Add (fB);
 			hash.Add (fA);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_colorspace_primaries_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKColorSpacePrimaries : IEquatable<SKColorSpacePrimaries> {
+		// public float fRX
+		private Single fRX;
+		public Single RX {
+			readonly get => fRX;
+			set => fRX = value;
+		}
+
+		// public float fRY
+		private Single fRY;
+		public Single RY {
+			readonly get => fRY;
+			set => fRY = value;
+		}
+
+		// public float fGX
+		private Single fGX;
+		public Single GX {
+			readonly get => fGX;
+			set => fGX = value;
+		}
+
+		// public float fGY
+		private Single fGY;
+		public Single GY {
+			readonly get => fGY;
+			set => fGY = value;
+		}
+
+		// public float fBX
+		private Single fBX;
+		public Single BX {
+			readonly get => fBX;
+			set => fBX = value;
+		}
+
+		// public float fBY
+		private Single fBY;
+		public Single BY {
+			readonly get => fBY;
+			set => fBY = value;
+		}
+
+		// public float fWX
+		private Single fWX;
+		public Single WX {
+			readonly get => fWX;
+			set => fWX = value;
+		}
+
+		// public float fWY
+		private Single fWY;
+		public Single WY {
+			readonly get => fWY;
+			set => fWY = value;
+		}
+
+		public readonly bool Equals (SKColorSpacePrimaries obj) =>
+			fRX == obj.fRX && fRY == obj.fRY && fGX == obj.fGX && fGY == obj.fGY && fBX == obj.fBX && fBY == obj.fBY && fWX == obj.fWX && fWY == obj.fWY;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKColorSpacePrimaries f && Equals (f);
+
+		public static bool operator == (SKColorSpacePrimaries left, SKColorSpacePrimaries right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKColorSpacePrimaries left, SKColorSpacePrimaries right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fRX);
+			hash.Add (fRY);
+			hash.Add (fGX);
+			hash.Add (fGY);
+			hash.Add (fBX);
+			hash.Add (fBY);
+			hash.Add (fWX);
+			hash.Add (fWY);
 			return hash.ToHashCode ();
 		}
 
@@ -4189,88 +4401,60 @@ namespace SkiaSharp
 
 	}
 
-	// sk_colorspaceprimaries_t
+	// sk_colorspace_xyz_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKColorSpacePrimaries : IEquatable<SKColorSpacePrimaries> {
-		// public float fRX
-		private Single fRX;
-		public Single RX {
-			readonly get => fRX;
-			set => fRX = value;
-		}
+	public unsafe partial struct SKColorSpaceXyz : IEquatable<SKColorSpaceXyz> {
+		// public float fM00
+		private Single fM00;
 
-		// public float fRY
-		private Single fRY;
-		public Single RY {
-			readonly get => fRY;
-			set => fRY = value;
-		}
+		// public float fM01
+		private Single fM01;
 
-		// public float fGX
-		private Single fGX;
-		public Single GX {
-			readonly get => fGX;
-			set => fGX = value;
-		}
+		// public float fM02
+		private Single fM02;
 
-		// public float fGY
-		private Single fGY;
-		public Single GY {
-			readonly get => fGY;
-			set => fGY = value;
-		}
+		// public float fM10
+		private Single fM10;
 
-		// public float fBX
-		private Single fBX;
-		public Single BX {
-			readonly get => fBX;
-			set => fBX = value;
-		}
+		// public float fM11
+		private Single fM11;
 
-		// public float fBY
-		private Single fBY;
-		public Single BY {
-			readonly get => fBY;
-			set => fBY = value;
-		}
+		// public float fM12
+		private Single fM12;
 
-		// public float fWX
-		private Single fWX;
-		public Single WX {
-			readonly get => fWX;
-			set => fWX = value;
-		}
+		// public float fM20
+		private Single fM20;
 
-		// public float fWY
-		private Single fWY;
-		public Single WY {
-			readonly get => fWY;
-			set => fWY = value;
-		}
+		// public float fM21
+		private Single fM21;
 
-		public readonly bool Equals (SKColorSpacePrimaries obj) =>
-			fRX == obj.fRX && fRY == obj.fRY && fGX == obj.fGX && fGY == obj.fGY && fBX == obj.fBX && fBY == obj.fBY && fWX == obj.fWX && fWY == obj.fWY;
+		// public float fM22
+		private Single fM22;
+
+		public readonly bool Equals (SKColorSpaceXyz obj) =>
+			fM00 == obj.fM00 && fM01 == obj.fM01 && fM02 == obj.fM02 && fM10 == obj.fM10 && fM11 == obj.fM11 && fM12 == obj.fM12 && fM20 == obj.fM20 && fM21 == obj.fM21 && fM22 == obj.fM22;
 
 		public readonly override bool Equals (object obj) =>
-			obj is SKColorSpacePrimaries f && Equals (f);
+			obj is SKColorSpaceXyz f && Equals (f);
 
-		public static bool operator == (SKColorSpacePrimaries left, SKColorSpacePrimaries right) =>
+		public static bool operator == (SKColorSpaceXyz left, SKColorSpaceXyz right) =>
 			left.Equals (right);
 
-		public static bool operator != (SKColorSpacePrimaries left, SKColorSpacePrimaries right) =>
+		public static bool operator != (SKColorSpaceXyz left, SKColorSpaceXyz right) =>
 			!left.Equals (right);
 
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
-			hash.Add (fRX);
-			hash.Add (fRY);
-			hash.Add (fGX);
-			hash.Add (fGY);
-			hash.Add (fBX);
-			hash.Add (fBY);
-			hash.Add (fWX);
-			hash.Add (fWY);
+			hash.Add (fM00);
+			hash.Add (fM01);
+			hash.Add (fM02);
+			hash.Add (fM10);
+			hash.Add (fM11);
+			hash.Add (fM12);
+			hash.Add (fM20);
+			hash.Add (fM21);
+			hash.Add (fM22);
 			return hash.ToHashCode ();
 		}
 
@@ -4490,7 +4674,7 @@ namespace SkiaSharp
 		public Int32 height;
 
 		// public sk_colortype_t colorType
-		public SKColorType colorType;
+		public SKColorTypeNative colorType;
 
 		// public sk_alphatype_t alphaType
 		public SKAlphaType alphaType;
@@ -4677,15 +4861,8 @@ namespace SkiaSharp
 			set => fAlphaOption = value;
 		}
 
-		// public sk_transfer_function_behavior_t fBlendBehavior
-		private SKTransferFunctionBehavior fBlendBehavior;
-		public SKTransferFunctionBehavior BlendBehavior {
-			readonly get => fBlendBehavior;
-			set => fBlendBehavior = value;
-		}
-
 		public readonly bool Equals (SKJpegEncoderOptions obj) =>
-			fQuality == obj.fQuality && fDownsample == obj.fDownsample && fAlphaOption == obj.fAlphaOption && fBlendBehavior == obj.fBlendBehavior;
+			fQuality == obj.fQuality && fDownsample == obj.fDownsample && fAlphaOption == obj.fAlphaOption;
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKJpegEncoderOptions f && Equals (f);
@@ -4702,7 +4879,6 @@ namespace SkiaSharp
 			hash.Add (fQuality);
 			hash.Add (fDownsample);
 			hash.Add (fAlphaOption);
-			hash.Add (fBlendBehavior);
 			return hash.ToHashCode ();
 		}
 
@@ -5055,14 +5231,11 @@ namespace SkiaSharp
 		// public int fZLibLevel
 		private Int32 fZLibLevel;
 
-		// public sk_transfer_function_behavior_t fUnpremulBehavior
-		private SKTransferFunctionBehavior fUnpremulBehavior;
-
 		// public void* fComments
 		private void* fComments;
 
 		public readonly bool Equals (SKPngEncoderOptions obj) =>
-			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fUnpremulBehavior == obj.fUnpremulBehavior && fComments == obj.fComments;
+			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fComments == obj.fComments;
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKPngEncoderOptions f && Equals (f);
@@ -5078,7 +5251,6 @@ namespace SkiaSharp
 			var hash = new HashCode ();
 			hash.Add (fFilterFlags);
 			hash.Add (fZLibLevel);
-			hash.Add (fUnpremulBehavior);
 			hash.Add (fComments);
 			return hash.ToHashCode ();
 		}
@@ -5431,15 +5603,8 @@ namespace SkiaSharp
 			set => fQuality = value;
 		}
 
-		// public sk_transfer_function_behavior_t fUnpremulBehavior
-		private SKTransferFunctionBehavior fUnpremulBehavior;
-		public SKTransferFunctionBehavior UnpremulBehavior {
-			readonly get => fUnpremulBehavior;
-			set => fUnpremulBehavior = value;
-		}
-
 		public readonly bool Equals (SKWebpEncoderOptions obj) =>
-			fCompression == obj.fCompression && fQuality == obj.fQuality && fUnpremulBehavior == obj.fUnpremulBehavior;
+			fCompression == obj.fCompression && fQuality == obj.fQuality;
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKWebpEncoderOptions f && Equals (f);
@@ -5455,7 +5620,6 @@ namespace SkiaSharp
 			var hash = new HashCode ();
 			hash.Add (fCompression);
 			hash.Add (fQuality);
-			hash.Add (fUnpremulBehavior);
 			return hash.ToHashCode ();
 		}
 
@@ -5466,47 +5630,71 @@ namespace SkiaSharp
 	#region Enums
 
 	// gr_backend_t
-	public enum GRBackend {
+	internal enum GRBackendNative {
 		// METAL_GR_BACKEND = 0
 		Metal = 0,
-		// OPENGL_GR_BACKEND = 1
-		OpenGL = 1,
-		// VULKAN_GR_BACKEND = 2
-		Vulkan = 2,
+		// DAWN_GR_BACKEND = 1
+		Dawn = 1,
+		// OPENGL_GR_BACKEND = 2
+		OpenGL = 2,
+		// VULKAN_GR_BACKEND = 3
+		Vulkan = 3,
 	}
 
 	// gr_pixelconfig_t
-	public enum GRPixelConfig {
+	internal enum GRPixelConfigNative {
 		// UNKNOWN_GR_PIXEL_CONFIG = 0
 		Unknown = 0,
 		// ALPHA_8_GR_PIXEL_CONFIG = 1
 		Alpha8 = 1,
-		// GRAY_8_GR_PIXEL_CONFIG = 2
-		Gray8 = 2,
-		// RGB_565_GR_PIXEL_CONFIG = 3
-		Rgb565 = 3,
-		// RGBA_4444_GR_PIXEL_CONFIG = 4
-		Rgba4444 = 4,
-		// RGBA_8888_GR_PIXEL_CONFIG = 5
-		Rgba8888 = 5,
-		// RGB_888_GR_PIXEL_CONFIG = 6
-		Rgb888 = 6,
-		// BGRA_8888_GR_PIXEL_CONFIG = 7
-		Bgra8888 = 7,
-		// SRGBA_8888_GR_PIXEL_CONFIG = 8
-		Srgba8888 = 8,
-		// SBGRA_8888_GR_PIXEL_CONFIG = 9
-		Sbgra8888 = 9,
-		// RGBA_1010102_GR_PIXEL_CONFIG = 10
-		Rgba1010102 = 10,
-		// RGBA_FLOAT_GR_PIXEL_CONFIG = 11
-		RgbaFloat = 11,
-		// RG_FLOAT_GR_PIXEL_CONFIG = 12
-		RgFloat = 12,
-		// ALPHA_HALF_GR_PIXEL_CONFIG = 13
-		AlphaHalf = 13,
-		// RGBA_HALF_GR_PIXEL_CONFIG = 14
-		RgbaHalf = 14,
+		// ALPHA_8_AS_ALPHA_GR_PIXEL_CONFIG = 2
+		Alpha8AsAlpha = 2,
+		// ALPHA_8_AS_RED_GR_PIXEL_CONFIG = 3
+		Alpha8AsRed = 3,
+		// GRAY_8_GR_PIXEL_CONFIG = 4
+		Gray8 = 4,
+		// GRAY_8_AS_LUM_GR_PIXEL_CONFIG = 5
+		Gray8AsLum = 5,
+		// GRAY_8_AS_RED_GR_PIXEL_CONFIG = 6
+		Gray8AsRed = 6,
+		// RGB_565_GR_PIXEL_CONFIG = 7
+		Rgb565 = 7,
+		// RGBA_4444_GR_PIXEL_CONFIG = 8
+		Rgba4444 = 8,
+		// RGBA_8888_GR_PIXEL_CONFIG = 9
+		Rgba8888 = 9,
+		// RGB_888_GR_PIXEL_CONFIG = 10
+		Rgb888 = 10,
+		// RGB_888X_GR_PIXEL_CONFIG = 11
+		Rgb888x = 11,
+		// RG_88_GR_PIXEL_CONFIG = 12
+		Rg88 = 12,
+		// BGRA_8888_GR_PIXEL_CONFIG = 13
+		Bgra8888 = 13,
+		// SRGBA_8888_GR_PIXEL_CONFIG = 14
+		Srgba8888 = 14,
+		// RGBA_1010102_GR_PIXEL_CONFIG = 15
+		Rgba1010102 = 15,
+		// ALPHA_HALF_GR_PIXEL_CONFIG = 16
+		AlphaHalf = 16,
+		// ALPHA_HALF_AS_LUM_GR_PIXEL_CONFIG = 17
+		AlphaHalfAsLum = 17,
+		// ALPHA_HALF_AS_RED_GR_PIXEL_CONFIG = 18
+		AlphaHalfAsRed = 18,
+		// RGBA_HALF_GR_PIXEL_CONFIG = 19
+		RgbaHalf = 19,
+		// RGBA_HALF_CLAMPED_GR_PIXEL_CONFIG = 20
+		RgbaHalfClamped = 20,
+		// RGB_ETC1_GR_PIXEL_CONFIG = 21
+		RgbEtc1 = 21,
+		// ALPHA_16_GR_PIXEL_CONFIG = 22
+		Alpha16 = 22,
+		// RG_1616_GR_PIXEL_CONFIG = 23
+		Rg1616 = 23,
+		// RGBA_16161616_GR_PIXEL_CONFIG = 24
+		Rgba16161616 = 24,
+		// RG_HALF_GR_PIXEL_CONFIG = 25
+		RgHalf = 25,
 	}
 
 	// gr_surfaceorigin_t
@@ -5670,38 +5858,8 @@ namespace SkiaSharp
 		RestorePrevious = 3,
 	}
 
-	// sk_colorspace_gamut_t
-	public enum SKColorSpaceGamut {
-		// SRGB_SK_COLORSPACE_GAMUT = 0
-		Srgb = 0,
-		// ADOBE_RGB_SK_COLORSPACE_GAMUT = 1
-		AdobeRgb = 1,
-		// DCIP3_D65_SK_COLORSPACE_GAMUT = 2
-		Dcip3D65 = 2,
-		// REC2020_SK_COLORSPACE_GAMUT = 3
-		Rec2020 = 3,
-	}
-
-	// sk_colorspace_render_target_gamma_t
-	public enum SKColorSpaceRenderTargetGamma {
-		// LINEAR_SK_COLORSPACE_RENDER_TARGET_GAMMA = 0
-		Linear = 0,
-		// SRGB_SK_COLORSPACE_RENDER_TARGET_GAMMA = 1
-		Srgb = 1,
-	}
-
-	// sk_colorspace_type_t
-	public enum SKColorSpaceType {
-		// RGB_SK_COLORSPACE_TYPE = 0
-		Rgb = 0,
-		// CMYK_SK_COLORSPACE_TYPE = 1
-		Cmyk = 1,
-		// GRAY_SK_COLORSPACE_TYPE = 2
-		Gray = 2,
-	}
-
 	// sk_colortype_t
-	public enum SKColorType {
+	internal enum SKColorTypeNative {
 		// UNKNOWN_SK_COLORTYPE = 0
 		Unknown = 0,
 		// ALPHA_8_SK_COLORTYPE = 1
@@ -5722,8 +5880,24 @@ namespace SkiaSharp
 		Rgb101010x = 8,
 		// GRAY_8_SK_COLORTYPE = 9
 		Gray8 = 9,
-		// RGBA_F16_SK_COLORTYPE = 10
-		RgbaF16 = 10,
+		// RGBA_F16_NORMALIZED_SK_COLORTYPE = 10
+		RgbaF16Normalized = 10,
+		// RGBA_F16_SK_COLORTYPE = 11
+		RgbaF16 = 11,
+		// RGBA_F32_SK_COLORTYPE = 12
+		RgbaF32 = 12,
+		// R8G8_UNNORMALIZED_SK_COLORTYPE = 13
+		R8g8Unnormalized = 13,
+		// A16_FLOAT_SK_COLORTYPE = 14
+		A16Float = 14,
+		// R16G16_FLOAT_SK_COLORTYPE = 15
+		R16g16Float = 15,
+		// A16_UNNORMALIZED_SK_COLORTYPE = 16
+		A16Unnormalized = 16,
+		// R16G16_UNNORMALIZED_SK_COLORTYPE = 17
+		R16g16Unnormalized = 17,
+		// R16G16B16A16_UNNORMALIZED_SK_COLORTYPE = 18
+		R16g16b16a16Unnormalized = 18,
 	}
 
 	// sk_crop_rect_flags_t
@@ -5815,16 +5989,6 @@ namespace SkiaSharp
 		Default = 1,
 	}
 
-	// sk_encoding_t
-	public enum SKEncoding {
-		// UTF8_SK_ENCODING = 0
-		Utf8 = 0,
-		// UTF16_SK_ENCODING = 1
-		Utf16 = 1,
-		// UTF32_SK_ENCODING = 2
-		Utf32 = 2,
-	}
-
 	// sk_filter_quality_t
 	public enum SKFilterQuality {
 		// NONE_SK_FILTER_QUALITY = 0
@@ -5837,6 +6001,28 @@ namespace SkiaSharp
 		High = 3,
 	}
 
+	// sk_font_edging_t
+	public enum SKFontEdging {
+		// ALIAS_SK_FONT_EDGING = 0
+		Alias = 0,
+		// ANTIALIAS_SK_FONT_EDGING = 1
+		Antialias = 1,
+		// SUBPIXEL_ANTIALIAS_SK_FONT_EDGING = 2
+		SubpixelAntialias = 2,
+	}
+
+	// sk_font_hinting_t
+	public enum SKFontHinting {
+		// NONE_SK_FONT_HINTING = 0
+		None = 0,
+		// SLIGHT_SK_FONT_HINTING = 1
+		Slight = 1,
+		// NORMAL_SK_FONT_HINTING = 2
+		Normal = 2,
+		// FULL_SK_FONT_HINTING = 3
+		Full = 3,
+	}
+
 	// sk_font_style_slant_t
 	public enum SKFontStyleSlant {
 		// UPRIGHT_SK_FONT_STYLE_SLANT = 0
@@ -5845,18 +6031,6 @@ namespace SkiaSharp
 		Italic = 1,
 		// OBLIQUE_SK_FONT_STYLE_SLANT = 2
 		Oblique = 2,
-	}
-
-	// sk_gamma_named_t
-	public enum SKNamedGamma {
-		// LINEAR_SK_GAMMA_NAMED = 0
-		Linear = 0,
-		// SRGB_SK_GAMMA_NAMED = 1
-		Srgb = 1,
-		// TWO_DOT_TWO_CURVE_SK_GAMMA_NAMED = 2
-		TwoDotTwoCurve = 2,
-		// NON_STANDARD_SK_GAMMA_NAMED = 3
-		NonStandard = 3,
 	}
 
 	// sk_highcontrastconfig_invertstyle_t
@@ -5917,6 +6091,8 @@ namespace SkiaSharp
 		Argb32 = 3,
 		// LCD16_SK_MASK_FORMAT = 4
 		Lcd16 = 4,
+		// SDF_SK_MASK_FORMAT = 5
+		Sdf = 5,
 	}
 
 	// sk_matrix_convolution_tilemode_t
@@ -5942,18 +6118,6 @@ namespace SkiaSharp
 		Affine = 4,
 		// PERSPECTIVE_SK_MATRIX44_TYPE_MASK = 0x08
 		Perspective = 8,
-	}
-
-	// sk_paint_hinting_t
-	public enum SKPaintHinting {
-		// NO_HINTING_SK_PAINT_HINTING = 0
-		NoHinting = 0,
-		// SLIGHT_HINTING_SK_PAINT_HINTING = 1
-		Slight = 1,
-		// NORMAL_HINTING_SK_PAINT_HINTING = 2
-		Normal = 2,
-		// FULL_HINTING_SK_PAINT_HINTING = 3
-		Full = 3,
 	}
 
 	// sk_paint_style_t
@@ -6181,6 +6345,8 @@ namespace SkiaSharp
 		Repeat = 1,
 		// MIRROR_SK_SHADER_TILEMODE = 2
 		Mirror = 2,
+		// DECAL_SK_SHADER_TILEMODE = 3
+		Decal = 3,
 	}
 
 	// sk_stroke_cap_t
@@ -6232,14 +6398,6 @@ namespace SkiaSharp
 		Utf32 = 2,
 		// GLYPH_ID_SK_TEXT_ENCODING = 3
 		GlyphId = 3,
-	}
-
-	// sk_transfer_function_behavior_t
-	public enum SKTransferFunctionBehavior {
-		// RESPECT_SK_TRANSFER_FUNCTION_BEHAVIOR = 0
-		Respect = 0,
-		// IGNORE_SK_TRANSFER_FUNCTION_BEHAVIOR = 1
-		Ignore = 1,
 	}
 
 	// sk_vertices_vertex_mode_t

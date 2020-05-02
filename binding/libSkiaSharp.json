@@ -4,6 +4,7 @@
   "namespace": "SkiaSharp",
   "className": "SkiaApi",
   "includeDirs": [
+    "."
   ],
   "headers": {
     "include/c": [ "sk_*", "gr_*" ],
@@ -33,15 +34,18 @@
         "cs": "GRVkImageInfo"
       },
       "gr_pixelconfig_t": {
-        "cs": "GRPixelConfig"
+        "cs": "GRPixelConfigNative",
+        "internal": true
       },
       "gr_surfaceorigin_t": {
         "cs": "GRSurfaceOrigin"
       },
       "gr_backend_t": {
+        "cs": "GRBackendNative",
         "members": {
           "OPENGL_GR_BACKEND": "OpenGL"
-        }
+        },
+        "internal": true
       },
       "gr_gl_framebufferinfo_t": {
         "cs": "GRGlFramebufferInfo",
@@ -71,8 +75,15 @@
       "sk_colorspace_transfer_fn_t": {
         "cs": "SKColorSpaceTransferFn"
       },
-      "sk_colorspaceprimaries_t": {
+      "sk_colorspace_primaries_t": {
         "cs": "SKColorSpacePrimaries"
+      },
+      "sk_colorspace_xyz_t": {
+        "cs": "SKColorSpaceXyz",
+        "properties": false
+      },
+      "sk_colorspace_icc_profile_t": {
+        "cs": "SKColorSpaceIccProfile"
       },
       "sk_jpegencoder_alphaoption_t": {
         "cs": "SKJpegEncoderAlphaOption"
@@ -117,7 +128,8 @@
         "cs": "SKAlphaType"
       },
       "sk_colortype_t": {
-        "cs": "SKColorType"
+        "cs": "SKColorTypeNative",
+        "internal": true
       },
       "sk_rsxform_t": {
         "cs": "SKRotationScaleMatrix"
@@ -365,7 +377,7 @@
           "3": "[MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[]"
         }
       },
-      "sk_typeface_create_from_name_with_font_style": {
+      "sk_typeface_create_from_name": {
         "parameters": {
           "0": "[MarshalAs (UnmanagedType.LPStr)] String"
         }

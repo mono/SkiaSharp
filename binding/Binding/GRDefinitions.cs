@@ -215,80 +215,45 @@ namespace SkiaSharp
 	public static partial class SkiaExtensions
 	{
 		public static uint ToGlSizedFormat (this SKColorType colorType) =>
-			colorType switch
-			{
-				SKColorType.Unknown => 0,
-				SKColorType.Alpha8 => GRGlSizedFormat.ALPHA8,
-				SKColorType.Rgb565 => GRGlSizedFormat.RGB565,
-				SKColorType.Argb4444 => GRGlSizedFormat.RGBA4,
-				SKColorType.Rgba8888 => GRGlSizedFormat.RGBA8,
-				SKColorType.Rgb888x => GRGlSizedFormat.RGB8,
-				SKColorType.Bgra8888 => GRGlSizedFormat.BGRA8,
-				SKColorType.Rgba1010102 => GRGlSizedFormat.RGB10_A2,
-				SKColorType.Rgb101010x => 0,
-				SKColorType.Gray8 => GRGlSizedFormat.LUMINANCE8,
-				SKColorType.RgbaF16 => GRGlSizedFormat.RGBA16F,
-				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
-			};
+			colorType.ToPixelConfig ().ToGlSizedFormat ();
 
 		public static uint ToGlSizedFormat (this GRPixelConfig config) =>
 			config switch
 			{
+				GRPixelConfig.Unknown => 0,
 				GRPixelConfig.Alpha8 => GRGlSizedFormat.ALPHA8,
+				GRPixelConfig.Alpha8AsAlpha => GRGlSizedFormat.ALPHA8,
+				GRPixelConfig.Alpha8AsRed => GRGlSizedFormat.ALPHA8,
 				GRPixelConfig.Gray8 => GRGlSizedFormat.LUMINANCE8,
+				GRPixelConfig.Gray8AsLum => GRGlSizedFormat.LUMINANCE8,
+				GRPixelConfig.Gray8AsRed => GRGlSizedFormat.LUMINANCE8,
 				GRPixelConfig.Rgb565 => GRGlSizedFormat.RGB565,
 				GRPixelConfig.Rgba4444 => GRGlSizedFormat.RGBA4,
 				GRPixelConfig.Rgba8888 => GRGlSizedFormat.RGBA8,
 				GRPixelConfig.Rgb888 => GRGlSizedFormat.RGB8,
+				GRPixelConfig.Rgb888x => GRGlSizedFormat.RGBA8,
+				GRPixelConfig.Rg88 => GRGlSizedFormat.RG8,
 				GRPixelConfig.Bgra8888 => GRGlSizedFormat.BGRA8,
 				GRPixelConfig.Srgba8888 => GRGlSizedFormat.SRGB8_ALPHA8,
-				GRPixelConfig.Sbgra8888 => GRGlSizedFormat.SRGB8_ALPHA8,
 				GRPixelConfig.Rgba1010102 => GRGlSizedFormat.RGB10_A2,
-				GRPixelConfig.RgbaFloat => GRGlSizedFormat.RGBA32F,
-				GRPixelConfig.RgFloat => GRGlSizedFormat.RG32F,
 				GRPixelConfig.AlphaHalf => GRGlSizedFormat.R16F,
+				GRPixelConfig.AlphaHalfAsLum => GRGlSizedFormat.LUMINANCE16F,
+				GRPixelConfig.AlphaHalfAsRed => GRGlSizedFormat.R16F,
 				GRPixelConfig.RgbaHalf => GRGlSizedFormat.RGBA16F,
-				GRPixelConfig.Unknown => 0,
+				GRPixelConfig.RgbaHalfClamped => GRGlSizedFormat.RGBA16F,
+				GRPixelConfig.RgbEtc1 => GRGlSizedFormat.COMPRESSED_ETC1_RGB8,
+				GRPixelConfig.Alpha16 => GRGlSizedFormat.R16,
+				GRPixelConfig.Rg1616 => GRGlSizedFormat.RG16,
+				GRPixelConfig.Rgba16161616 => GRGlSizedFormat.RGBA16,
+				GRPixelConfig.RgHalf => GRGlSizedFormat.RG16F,
 				_ => throw new ArgumentOutOfRangeException (nameof (config)),
 			};
 
 		public static GRPixelConfig ToPixelConfig (this SKColorType colorType) =>
-			colorType switch
-			{
-				SKColorType.Unknown => GRPixelConfig.Unknown,
-				SKColorType.Alpha8 => GRPixelConfig.Alpha8,
-				SKColorType.Gray8 => GRPixelConfig.Gray8,
-				SKColorType.Rgb565 => GRPixelConfig.Rgb565,
-				SKColorType.Argb4444 => GRPixelConfig.Rgba4444,
-				SKColorType.Rgba8888 => GRPixelConfig.Rgba8888,
-				SKColorType.Rgb888x => GRPixelConfig.Rgb888,
-				SKColorType.Bgra8888 => GRPixelConfig.Bgra8888,
-				SKColorType.Rgba1010102 => GRPixelConfig.Rgba1010102,
-				SKColorType.RgbaF16 => GRPixelConfig.RgbaHalf,
-				SKColorType.Rgb101010x => GRPixelConfig.Unknown,
-				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
-			};
+			SkiaApi.sk_colortype_to_gr_pixelconfig (colorType.ToNative ()).FromNative ();
 
 		public static SKColorType ToColorType (this GRPixelConfig config) =>
-			config switch
-			{
-				GRPixelConfig.Unknown => SKColorType.Unknown,
-				GRPixelConfig.Alpha8 => SKColorType.Alpha8,
-				GRPixelConfig.Gray8 => SKColorType.Gray8,
-				GRPixelConfig.Rgb565 => SKColorType.Rgb565,
-				GRPixelConfig.Rgba4444 => SKColorType.Argb4444,
-				GRPixelConfig.Rgba8888 => SKColorType.Rgba8888,
-				GRPixelConfig.Rgb888 => SKColorType.Rgb888x,
-				GRPixelConfig.Bgra8888 => SKColorType.Bgra8888,
-				GRPixelConfig.Srgba8888 => SKColorType.Rgba8888,
-				GRPixelConfig.Sbgra8888 => SKColorType.Bgra8888,
-				GRPixelConfig.Rgba1010102 => SKColorType.Rgba1010102,
-				GRPixelConfig.RgbaFloat => SKColorType.Unknown,
-				GRPixelConfig.RgFloat => SKColorType.Unknown,
-				GRPixelConfig.AlphaHalf => SKColorType.Unknown,
-				GRPixelConfig.RgbaHalf => SKColorType.RgbaF16,
-				_ => throw new ArgumentOutOfRangeException (nameof (config)),
-			};
+			SkiaApi.gr_pixelconfig_to_sk_colortype (config.ToNative ()).FromNative ();
 	}
 
 	internal static class GRGlSizedFormat
@@ -341,6 +306,7 @@ namespace SkiaSharp
 
 		// Luminance sized formats
 		internal const uint LUMINANCE8 = 0x8040;
+		internal const uint LUMINANCE16F = 0x881E;
 
 		// Alpha sized formats
 		internal const uint ALPHA8 = 0x803C;
@@ -361,6 +327,7 @@ namespace SkiaSharp
 		internal const uint RG16 = 0x822C;
 		//internal const uint R16F = 0x822D;
 		//internal const uint R32F = 0x822E;
+		internal const uint RG16F = 0x822F;
 
 		// RG sized integer formats
 		internal const uint RG8I = 0x8237;
@@ -393,6 +360,7 @@ namespace SkiaSharp
 		internal const uint RGBA16F = 0x881A;
 		internal const uint RGBA32F = 0x8814;
 		internal const uint RG32F = 0x8230;
+		internal const uint RGBA16 = 0x805B;
 
 		// RGBA integer sized formats
 		internal const uint RGBA8I = 0x8D8E;
@@ -404,5 +372,8 @@ namespace SkiaSharp
 
 		// BGRA sized formats
 		internal const uint BGRA8 = 0x93A1;
+
+		// Compressed texture sized formats
+		internal const uint COMPRESSED_ETC1_RGB8 = 0x8D64;
 	}
 }

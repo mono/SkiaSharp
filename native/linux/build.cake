@@ -3,8 +3,6 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 #load "../../cake/native-shared.cake"
 
-DirectoryPath VULKAN_SDK_HOME = EnvironmentVariable ("VULKAN_SDK_HOME") ?? EnvironmentVariable ("VULKAN_SDK") ?? "";
-
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
@@ -40,12 +38,21 @@ Task("libSkiaSharp")
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
-            $"is_official_build=true skia_enable_tools=false " +
-            $"target_os='linux' target_cpu='{arch}' " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            $"target_os='linux' " +
+            $"target_cpu='{arch}' " +
+            $"is_official_build=true " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
-            $"skia_vulkan_sdk='{(SUPPORT_VULKAN ? VULKAN_SDK_HOME : "")}' " +
+            $"skia_enable_tools=false " +
+            $"skia_use_icu=false " +
+            $"skia_use_piex=true " +
+            $"skia_use_sfntly=false " +
+            $"skia_use_system_expat=false " +
+            $"skia_use_system_freetype2=false " +
+            $"skia_use_system_libjpeg_turbo=false " +
+            $"skia_use_system_libpng=false " +
+            $"skia_use_system_libwebp=false " +
+            $"skia_use_system_zlib=false " +
+            $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             compilers +

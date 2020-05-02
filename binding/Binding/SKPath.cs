@@ -481,8 +481,8 @@ namespace SkiaSharp
 
 		//
 
-		internal static SKPath GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKPath (h, o));
+		internal static SKPath GetObject (IntPtr handle, bool owns = true) =>
+			GetOrAddObject (handle, owns, (h, o) => new SKPath (h, o));
 
 		//
 
@@ -502,14 +502,19 @@ namespace SkiaSharp
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_iter_destroy (Handle);
 
-			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates = true, bool exact = false)
+			[EditorBrowsable (EditorBrowsableState.Never)]
+			[Obsolete ("Use Next(SKPoint[]) instead.")]
+			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates, bool exact) =>
+				Next (points);
+
+			public SKPathVerb Next (SKPoint[] points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 				fixed (SKPoint* p = points) {
-					return SkiaApi.sk_path_iter_next (Handle, p, doConsumeDegenerates ? 1 : 0, exact ? 1 : 0);
+					return SkiaApi.sk_path_iter_next (Handle, p);
 				}
 			}
 
