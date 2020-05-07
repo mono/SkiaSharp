@@ -25,6 +25,8 @@ namespace SkiaSharp.Tests
 		public abstract uint GraphicsFamily { get; }
 		public abstract uint PresentFamily { get; }
 
+		public abstract GRVkGetProcDelegate GetProc { get; }
+
 		public virtual void Dispose() => Instance?.Dispose();
 	}
 }

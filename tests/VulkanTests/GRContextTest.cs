@@ -1,6 +1,4 @@
 ﻿using System;
-using SharpVk.Interop;
-using SkiaSharp.Tests;
 using Xunit;
 
 namespace SkiaSharp.Vulkan.Tests
@@ -11,19 +9,8 @@ namespace SkiaSharp.Vulkan.Tests
 		[SkippableFact]
 		public void CreateVkContextIsValid()
 		{
-			var nativeLibrary = new NativeLibrary();
-
 			using (var ctx = CreateVkContext())
-			using (var vkInterface = GRVkInterface.Create(
-				nativeLibrary.GetProcedureAddress("vkGetInstanceProcAddr"),
-				nativeLibrary.GetProcedureAddress("vkGetDeviceProcAddr"),
-				(IntPtr)ctx.Instance.RawHandle.ToUInt64(),
-				(IntPtr)ctx.Device.RawHandle.ToUInt64(),
-				0))
 			{
-				Assert.NotNull(vkInterface);
-				Assert.True(vkInterface.Validate(0));
-
 				using (var grVkBackendContext = GRVkBackendContext.Assemble(
 					(IntPtr)ctx.Instance.RawHandle.ToUInt64(),
 					(IntPtr)ctx.PhysicalDevice.RawHandle.ToUInt64(),
@@ -33,7 +20,7 @@ namespace SkiaSharp.Vulkan.Tests
 					0,
 					0,
 					0,
-					vkInterface))
+					ctx.GetProc))
 				{
 					Assert.NotNull(grVkBackendContext);
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using SharpVk.Interop;
 using SkiaSharp.Tests;
 using Xunit;
 
