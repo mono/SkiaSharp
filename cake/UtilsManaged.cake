@@ -12,11 +12,14 @@ void RunTests(FilePath testAssembly, bool is32)
 {
     var dir = testAssembly.GetDirectory();
     var settings = new XUnit2Settings {
+        ReportName = "TestResults",
+        XmlReport = true,
         UseX86 = is32,
         NoAppDomain = true,
         Parallelism = ParallelismOption.All,
         OutputDirectory = dir,
         WorkingDirectory = dir,
+        ArgumentCustomization = args => args.Append("-vsts"),
     };
     var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
     foreach (var trait in traits) {
@@ -37,6 +40,7 @@ void RunNetCoreTests(FilePath testAssembly)
         Configuration = CONFIGURATION,
         NoBuild = true,
         WorkingDirectory = dir,
+        Verbosity = DotNetCoreVerbosity.Normal,
     };
     var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
     var filter = string.Join("&", traits.Select(t => $"{t.Name}!={t.Value}"));
