@@ -402,6 +402,21 @@ stages:
             - native_win32_x86_windows
             - native_win32_x64_windows
             - native_win32_x64_nanoserver_windows
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Framework test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'Windows .NET Framework Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.trx'
+                testRunTitle: 'Windows .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
           name: tests_macos
@@ -412,6 +427,21 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - native_macos_macos
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the Mono test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'macOS Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.trx'
+                testRunTitle: 'macOS .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
           name: tests_linux
@@ -424,6 +454,21 @@ stages:
           requiredArtifacts:
             - native_linux_linux
             - native_linux_nodependencies_linux
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the Mono test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.trx'
+                testRunTitle: 'Linux .NET Core Tests'
       # TODO: add tests for linux no dependencies
       # TODO: add tests for windows nano server
 

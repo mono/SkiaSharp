@@ -19,7 +19,7 @@ void RunTests(FilePath testAssembly, bool is32)
         Parallelism = ParallelismOption.All,
         OutputDirectory = dir,
         WorkingDirectory = dir,
-        ArgumentCustomization = args => args.Append("-vsts"),
+        ArgumentCustomization = args => args.Append("-verbose"),
     };
     var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
     foreach (var trait in traits) {
