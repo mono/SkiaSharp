@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class GRBackendRenderTarget : SKObject
+	public unsafe class GRBackendRenderTarget : SKObject, ISKSkipObjectRegistration
 	{
 		internal GRBackendRenderTarget (IntPtr handle, bool owns)
 			: base (handle, owns)

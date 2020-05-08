@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public unsafe class SKPathMeasure : SKObject
+	public unsafe class SKPathMeasure : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKPathMeasure (IntPtr handle, bool owns)
 			: base (handle, owns)

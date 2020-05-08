@@ -1,12 +1,15 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+#if THROW_OBJECT_EXCEPTIONS
+using System.Collections.Concurrent;
+#endif
 
 namespace SkiaSharp
 {
 	internal static class HandleDictionary
 	{
+		private static readonly Type SkipObjectRegistrationType = typeof (ISKSkipObjectRegistration);
 
 #if THROW_OBJECT_EXCEPTIONS
 		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
@@ -23,6 +26,11 @@ namespace SkiaSharp
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero) {
+				instance = null;
+				return false;
+			}
+
+			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject))) {
 				instance = null;
 				return false;
 			}
@@ -44,6 +52,9 @@ namespace SkiaSharp
 		{
 			if (handle == IntPtr.Zero)
 				return null;
+
+			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject)))
+				return objectFactory.Invoke (handle, owns);
 
 			instancesLock.EnterUpgradeableReadLock ();
 			try {
@@ -111,6 +122,9 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero || instance == null)
 				return;
 
+			if (instance is ISKSkipObjectRegistration)
+				return;
+
 			SKObject objectToDispose = null;
 
 			instancesLock.EnterWriteLock ();
@@ -144,6 +158,9 @@ namespace SkiaSharp
 		internal static void DeregisterHandle (IntPtr handle, SKObject instance)
 		{
 			if (handle == IntPtr.Zero)
+				return;
+
+			if (instance is ISKSkipObjectRegistration)
 				return;
 
 			instancesLock.EnterWriteLock ();
