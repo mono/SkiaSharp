@@ -53,8 +53,15 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero)
 				return null;
 
-			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject)))
+			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject))) {
+#if THROW_OBJECT_EXCEPTIONS
+				throw new InvalidOperationException (
+					$"For some reason, the object was constructed using a factory function instead of the constructor. " +
+					$"H: {handle.ToString ("x")} Type: {typeof (TSkiaObject)}");
+#else
 				return objectFactory.Invoke (handle, owns);
+#endif
+			}
 
 			instancesLock.EnterUpgradeableReadLock ();
 			try {
