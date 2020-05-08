@@ -7,57 +7,81 @@ namespace SkiaSharp
 	using GCHandle = SkiaSharp.GCHandleProxy;
 #endif
 
-	public class GRVkBackendContext : SKObject
+	public class GRVkBackendContext : IDisposable
 	{
-		private GCHandle getProcProxy;
+		private GRVkGetProcDelegate getProc;
+		private GRVkGetProcProxyDelegate getProcProxy;
+		private GCHandle? getProcHandle;
+		private IntPtr getProcContext;
 
-		internal GRVkBackendContext (IntPtr h, GCHandle getProcProxy, bool owns)
-			: base (h, owns)
-		{
-			this.getProcProxy = getProcProxy;
+		public IntPtr VkInstance { get; set; }
+
+		public IntPtr VkPhysicalDevice { get; set; }
+
+		public IntPtr VkDevice { get; set; }
+
+		public IntPtr VkQueue { get; set; }
+
+		public UInt32 GraphicsQueueIndex { get; set; }
+
+		public UInt32 MaxAPIVersion { get; set; }
+
+		public GRVkExtensions Extensions { get; set; }
+
+		public IntPtr VkDeviceFeatures { get; set; }
+
+		public IntPtr VkDeviceFeatures2 { get; set; }
+
+		public GRVkGetProcDelegate GetProc {
+			get => getProc;
+			set {
+				if (getProcHandle.HasValue) {
+					getProcHandle.Value.Free ();
+					getProcHandle = null;
+				}
+
+				if (value is null) {
+					getProcProxy = null;
+					getProcContext = IntPtr.Zero;
+					getProc = null;
+				} else {
+					getProcProxy = DelegateProxies.Create (
+						value,
+						DelegateProxies.GRVkGetProcDelegateProxy,
+						out var gch, out var ctx);
+					getProcHandle = gch;
+					getProcContext = ctx;
+					getProc = value;
+				}
+			}
 		}
 
-		public static unsafe GRVkBackendContext Assemble (
-			IntPtr vkInstance,
-			IntPtr vkPhysicalDevice,
-			IntPtr vkDevice,
-			IntPtr vkQueue,
-			uint graphicsQueueIndex,
-			uint minAPIVersion,
-			uint extensions,
-			uint features,
-			GRVkGetProcDelegate getProc)
+		public bool ProtectedContext { get; set; }
+
+		public void Dispose ()
 		{
-			var proxy = DelegateProxies.Create (getProc, DelegateProxies.GRVkGetProcDelegateProxy, out var gch, out var ctx);
-
-			var handle =
-				SkiaApi.gr_vkbackendcontext_assemble (
-					(void*)ctx,
-					vkInstance,
-					vkPhysicalDevice,
-					vkDevice,
-					vkQueue,
-					graphicsQueueIndex,
-					minAPIVersion,
-					extensions,
-					features,
-					proxy);
-
-			return new GRVkBackendContext (handle, gch, true);
+			if (getProcHandle.HasValue) {
+				getProcHandle.Value.Free ();
+				getProcHandle = null;
+			}
 		}
 
-		protected override void DisposeNative ()
+		internal GRVkBackendContextNative ToNative ()
 		{
-			base.DisposeNative ();
-
-			SkiaApi.gr_vkbackendcontext_delete (Handle);
-		}
-
-		protected override void DisposeManaged ()
-		{
-			base.DisposeManaged ();
-
-			getProcProxy.Free ();
+			return new GRVkBackendContextNative {
+				fInstance = VkInstance,
+				fDevice = VkDevice,
+				fPhysicalDevice = VkPhysicalDevice,
+				fQueue = VkQueue,
+				fGraphicsQueueIndex = GraphicsQueueIndex,
+				fMaxAPIVersion = MaxAPIVersion,
+				fVkExtensions = Extensions?.Handle ??IntPtr.Zero,
+				fDeviceFeatures = VkDeviceFeatures,
+				fDeviceFeatures2 = VkDeviceFeatures2,
+				fGetProcContext = getProcContext,
+				fGetProc = getProcProxy,
+				fProtectedContext = ProtectedContext ? (byte)1 : (byte)0
+			};
 		}
 	}
 }

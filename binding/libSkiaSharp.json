@@ -17,6 +17,9 @@
   "mappings": {
     "types": {
       // type aliases
+      "gr_vk_backendmemory_t": {
+        "cs": "IntPtr"
+      },
       "sk_color_t": {
         "cs": "UInt32"
       },
@@ -32,6 +35,9 @@
       // the rest
       "gr_vk_imageinfo_t": {
         "cs": "GRVkImageInfo"
+      },
+      "gr_vk_ycbcrconversioninfo_t": {
+        "cs": "GrVkYcbcrConversionInfo"
       },
       "gr_pixelconfig_t": {
         "cs": "GRPixelConfigNative",
@@ -58,6 +64,10 @@
         "members": {
           "fID": "Id"
         }
+      },
+      "gr_vk_backendcontext_t": {
+        "cs": "GRVkBackendContextNative",
+        "internal": true
       },
       "sk_color4f_t": {
         "cs": "SKColorF",
@@ -343,6 +353,9 @@
           "1": "[MarshalAs (UnmanagedType.LPStr)] String"
         }
       },
+      "gr_vk_func_ptr": {
+        "convention": "stdcall"
+      },
       "gr_vk_get_proc": {
         "cs": "GRVkGetProcProxyDelegate",
         "parameters": {
@@ -366,6 +379,17 @@
       "gr_glinterface_has_extension": {
         "parameters": {
           "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "gr_vk_extensions_has_extension": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "gr_vk_extensions_init": {
+        "parameters": {
+          "6": "[MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[]",
+          "8": "[MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[]"
         }
       },
       "sk_fontmgr_match_family": {

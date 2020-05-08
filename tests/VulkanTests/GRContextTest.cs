@@ -9,27 +9,23 @@ namespace SkiaSharp.Vulkan.Tests
 		[SkippableFact]
 		public void CreateVkContextIsValid()
 		{
-			using (var ctx = CreateVkContext())
-			{
-				using (var grVkBackendContext = GRVkBackendContext.Assemble(
-					(IntPtr)ctx.Instance.RawHandle.ToUInt64(),
-					(IntPtr)ctx.PhysicalDevice.RawHandle.ToUInt64(),
-					(IntPtr)ctx.Device.RawHandle.ToUInt64(),
-					(IntPtr)ctx.GraphicsQueue.RawHandle.ToUInt64(),
-					ctx.GraphicsFamily,
-					0,
-					0,
-					0,
-					ctx.GetProc))
-				{
-					Assert.NotNull(grVkBackendContext);
+			using var ctx = CreateVkContext();
 
-					using (var grContext = GRContext.CreateVulkan(grVkBackendContext))
-					{
-						Assert.NotNull(grContext);
-					}
-				}
-			}
+			using var grVkBackendContext = new GRVkBackendContext
+			{
+				VkInstance = (IntPtr)ctx.Instance.RawHandle.ToUInt64(),
+				VkPhysicalDevice = (IntPtr)ctx.PhysicalDevice.RawHandle.ToUInt64(),
+				VkDevice = (IntPtr)ctx.Device.RawHandle.ToUInt64(),
+				VkQueue = (IntPtr)ctx.GraphicsQueue.RawHandle.ToUInt64(),
+				GraphicsQueueIndex = ctx.GraphicsFamily,
+				GetProc = ctx.GetProc
+			};
+				
+			Assert.NotNull(grVkBackendContext);
+
+			using var grContext = GRContext.CreateVulkan(grVkBackendContext);
+
+			Assert.NotNull(grContext);
 		}
 	}
 }
