@@ -105,6 +105,6 @@ namespace SkiaSharp
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
 
 		internal static GRContext GetObject (IntPtr handle) =>
-			new GRContext (handle, true);
+			handle == IntPtr.Zero ? null : new GRContext (handle, true);
 	}
 }

@@ -70,7 +70,7 @@ namespace SkiaSharp
 			SkiaApi.sk_string_destructor (Handle);
 
 		internal static SKString GetObject (IntPtr handle) =>
-			new SKString (handle, true);
+			handle == IntPtr.Zero ? null : new SKString (handle, true);
 	}
 }
 

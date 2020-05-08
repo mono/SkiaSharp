@@ -482,7 +482,7 @@ namespace SkiaSharp
 		//
 
 		internal static SKPath GetObject (IntPtr handle) =>
-			new SKPath (handle, true);
+			handle == IntPtr.Zero ? null : new SKPath (handle, true);
 
 		//
 

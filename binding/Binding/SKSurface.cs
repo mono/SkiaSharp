@@ -352,6 +352,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKSurface GetObject (IntPtr handle) =>
-			new SKSurface (handle, true);
+			handle == IntPtr.Zero ? null : new SKSurface (handle, true);
 	}
 }

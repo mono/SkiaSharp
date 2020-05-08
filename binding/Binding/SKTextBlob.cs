@@ -27,7 +27,7 @@ namespace SkiaSharp
 		public uint UniqueId => SkiaApi.sk_textblob_get_unique_id (Handle);
 
 		internal static SKTextBlob GetObject (IntPtr handle) =>
-			new SKTextBlob (handle, true);
+			handle == IntPtr.Zero ? null : new SKTextBlob (handle, true);
 	}
 
 	public unsafe class SKTextBlobBuilder : SKObject, ISKSkipObjectRegistration

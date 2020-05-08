@@ -132,7 +132,7 @@ namespace SkiaSharp
 		}
 
 		internal static GRGlInterface GetObject (IntPtr handle) =>
-			new GRGlInterface (handle, true);
+			handle == IntPtr.Zero ? null : new GRGlInterface (handle, true);
 
 		private static class AngleLoader
 		{

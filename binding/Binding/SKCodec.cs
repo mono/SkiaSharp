@@ -344,6 +344,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKCodec GetObject (IntPtr handle) =>
-			new SKCodec (handle, true);
+			handle == IntPtr.Zero ? null : new SKCodec (handle, true);
 	}
 }

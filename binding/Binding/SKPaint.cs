@@ -818,6 +818,6 @@ namespace SkiaSharp
 		//
 
 		internal static SKPaint GetObject (IntPtr handle) =>
-			new SKPaint (handle, true);
+			handle == IntPtr.Zero ? null : new SKPaint (handle, true);
 	}
 }

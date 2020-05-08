@@ -179,6 +179,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKDocument GetObject (IntPtr handle) =>
-			new SKDocument (handle, true);
+			handle == IntPtr.Zero ? null : new SKDocument (handle, true);
 	}
 }

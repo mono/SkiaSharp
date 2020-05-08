@@ -60,7 +60,7 @@ namespace SkiaSharp
 		//
 
 		internal static SKFontStyle GetObject (IntPtr handle) =>
-			new SKFontStyle (handle, true);
+			handle == IntPtr.Zero ? null : new SKFontStyle (handle, true);
 
 		private sealed class SKFontStyleStatic : SKFontStyle
 		{

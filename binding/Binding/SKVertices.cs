@@ -52,6 +52,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKVertices GetObject (IntPtr handle) =>
-			new SKVertices (handle, true);
+			handle == IntPtr.Zero ? null : new SKVertices (handle, true);
 	}
 }
