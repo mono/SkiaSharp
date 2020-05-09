@@ -12,15 +12,12 @@ $ErrorActionPreference = 'Stop'
 if ($IsMacOS) {
     $platform = "macos-64"
     $ext = "bin"
-    $repeat = 2
 } elseif ($IsLinux) {
     $platform = "ubuntu-64"
     $ext = "bin"
-    $repeat = 1
 } else {
     $platform = "windows-64"
     $ext = "exe"
-    $repeat = 1
 }
 
 $url = "http://download.tizen.org/sdk/Installer/tizen-studio_${Version}/web-cli_Tizen_Studio_${Version}_${platform}.${ext}"
@@ -57,12 +54,10 @@ if ($IsMacOS -or $IsLinux) {
 # install packages
 Write-Host "Installing Additional Packages: '$packages'..."
 $packMan = Join-Path (Join-Path "$ts" "package-manager") "package-manager-cli.${ext}"
-for($i = 0; $i -lt $repeat; $i++) {
-    if ($IsMacOS -or $IsLinux) {
-        & "bash" "$packMan" install --no-java-check --accept-license "$packages"
-    } else {
-        & "$packMan" install --no-java-check --accept-license "$packages"
-    }
+if ($IsMacOS -or $IsLinux) {
+    & "bash" "$packMan" install --no-java-check --accept-license "$packages"
+} else {
+    & "$packMan" install --no-java-check --accept-license "$packages"
 }
 
 # make sure that Tizen Studio is in TIZEN_STUDIO_HOME
