@@ -54,10 +54,19 @@ if ($IsMacOS -or $IsLinux) {
 # install packages
 Write-Host "Installing Additional Packages: '$packages'..."
 $packMan = Join-Path (Join-Path "$ts" "package-manager") "package-manager-cli.${ext}"
-if ($IsMacOS -or $IsLinux) {
-    & "bash" "$packMan" install --no-java-check --accept-license "$packages"
-} else {
-    & "$packMan" install --no-java-check --accept-license "$packages"
+try {
+    if ($IsMacOS -or $IsLinux) {
+        & "bash" "$packMan" install --no-java-check --accept-license "$packages"
+    } else {
+        & "$packMan" install --no-java-check --accept-license "$packages"
+    }
+} catch {
+    # just retry and see if that works
+    if ($IsMacOS -or $IsLinux) {
+        & "bash" "$packMan" install --no-java-check --accept-license "$packages"
+    } else {
+        & "$packMan" install --no-java-check --accept-license "$packages"
+    }
 }
 
 # make sure that Tizen Studio is in TIZEN_STUDIO_HOME
