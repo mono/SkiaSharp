@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Text;
-#if NETSTANDARD1_3
+#if NETSTANDARD1_3 || WINDOWS_UWP
 using System.Reflection;
 #endif
 
@@ -38,7 +38,7 @@ namespace SkiaSharp
 			}
 		}
 
-#if NETSTANDARD1_3
+#if NETSTANDARD1_3 || WINDOWS_UWP
 		internal static bool IsAssignableFrom (this Type type, Type c) =>
 			type.GetTypeInfo ().IsAssignableFrom (c.GetTypeInfo ());
 #endif
