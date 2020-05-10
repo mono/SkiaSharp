@@ -94,7 +94,6 @@ stages:
           displayName: Build Native Tizen (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
-          condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
         parameters:
           name: native_uwp_angle_x86_windows
@@ -276,8 +275,7 @@ stages:
             - native_android_x64_windows
             - native_android_arm_windows
             - native_android_arm64_windows
-            # - native_tizen_windows
-            - native_tizen_linux
+            - native_tizen_windows
             - native_uwp_angle_x86_windows
             - native_uwp_angle_x64_windows
             - native_uwp_angle_arm_windows

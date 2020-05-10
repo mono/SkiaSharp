@@ -6,7 +6,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKVertices : SKObject, ISKNonVirtualReferenceCounted
+	public unsafe class SKVertices : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal SKVertices (IntPtr x, bool owns)
 			: base (x, owns)
@@ -52,6 +52,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKVertices GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKVertices (h, o));
+			handle == IntPtr.Zero ? null : new SKVertices (handle, true);
 	}
 }
