@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public unsafe class GRVkExtensions : SKObject
+	public unsafe class GRVkExtensions : SKObject, ISKSkipObjectRegistration
 	{
 		internal GRVkExtensions (IntPtr h, bool owns)
 			: base (h, owns)
