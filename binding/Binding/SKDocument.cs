@@ -4,7 +4,7 @@ using System.IO;
 
 namespace SkiaSharp
 {
-	public unsafe class SKDocument : SKObject, ISKReferenceCounted
+	public unsafe class SKDocument : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		public const float DefaultRasterDpi = 72.0f;
 
@@ -179,6 +179,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKDocument GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKDocument (h, o));
+			handle == IntPtr.Zero ? null : new SKDocument (handle, true);
 	}
 }

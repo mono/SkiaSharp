@@ -349,4 +349,8 @@ namespace SkiaSharp
 
 		void UnreferenceNative ();
 	}
+
+	internal interface ISKSkipObjectRegistration
+	{
+	}
 }

@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public unsafe class SKPaint : SKObject
+	public unsafe class SKPaint : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKPaint (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -818,6 +818,6 @@ namespace SkiaSharp
 		//
 
 		internal static SKPaint GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKPaint (h, o));
+			handle == IntPtr.Zero ? null : new SKPaint (handle, true);
 	}
 }

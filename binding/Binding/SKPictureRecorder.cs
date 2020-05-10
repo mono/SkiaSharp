@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public unsafe class SKPictureRecorder : SKObject
+	public unsafe class SKPictureRecorder : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKPictureRecorder (IntPtr handle, bool owns)
 			: base (handle, owns)

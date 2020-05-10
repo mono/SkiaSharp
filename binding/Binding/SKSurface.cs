@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKSurface : SKObject, ISKReferenceCounted
+	public unsafe class SKSurface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(SKImageInfo) instead.")]
@@ -352,6 +352,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKSurface GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKSurface (h, o));
+			handle == IntPtr.Zero ? null : new SKSurface (handle, true);
 	}
 }
