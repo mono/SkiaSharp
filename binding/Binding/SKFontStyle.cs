@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class SKFontStyle : SKObject
+	public class SKFontStyle : SKObject, ISKSkipObjectRegistration
 	{
 		private static readonly SKFontStyle normal;
 		private static readonly SKFontStyle bold;
@@ -60,7 +60,7 @@ namespace SkiaSharp
 		//
 
 		internal static SKFontStyle GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKFontStyle (h, o));
+			handle == IntPtr.Zero ? null : new SKFontStyle (handle, true);
 
 		private sealed class SKFontStyleStatic : SKFontStyle
 		{

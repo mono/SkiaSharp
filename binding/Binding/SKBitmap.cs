@@ -41,7 +41,7 @@ namespace SkiaSharp
 	// TODO: `GenerationID` may be useful
 	// TODO: `GetAddr` and `GetPixel` are confusing
 
-	public unsafe class SKBitmap : SKObject
+	public unsafe class SKBitmap : SKObject, ISKSkipObjectRegistration
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";

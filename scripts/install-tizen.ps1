@@ -3,7 +3,7 @@
 #  - https://developercommunity.visualstudio.com/content/problem/661596/the-updated-path-doesnt-kick-in.html
 
 Param(
-    [string] $Version = "3.6",
+    [string] $Version = "3.7",
     [string] $InstallDestination = $null
 )
 

@@ -48,7 +48,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="netstandard" />
     <PackageReference Include="mdoc" Version="5.7.4.10" PrivateAssets="All" />
     <PackageReference Include="Xamarin.Build.TypeRedirector" Version="0.1.2-preview" PrivateAssets="All" />
   </ItemGroup>
@@ -60,7 +59,12 @@
     Generate the assembly versioning attributes from the VERSIONS.txt file.
     ===================================================================================================================
   -->
-  <Target Name="_GenerateAssemblyVersionInfo" BeforeTargets="CoreCompile" Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
+  <PropertyGroup Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
+    <_GenerateAssemblyVersionInfoBeforeTargets>
+      CoreCompile
+    </_GenerateAssemblyVersionInfoBeforeTargets>
+  </PropertyGroup>
+  <Target Name="_GenerateAssemblyVersionInfo" BeforeTargets="$(_GenerateAssemblyVersionInfoBeforeTargets)" Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
     <PropertyGroup>
       <_VersionSourceFile>$(IntermediateOutputPath)\$(AssemblyName).Version.cs</_VersionSourceFile>
       <_VersionTxtFile>$(MSBuildThisFileDirectory)..\VERSIONS.txt</_VersionTxtFile>
@@ -94,7 +98,15 @@
     Sign the assembly using sn.
     ===================================================================================================================
   -->
-  <Target Name="_SignAssembly" AfterTargets="CoreCompile" DependsOnTargets="_RedirectMovedTypes" Condition=" '$(SignAssembly)' == 'true' ">
+  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
+    <_SignAssemblyDependsOn Condition=" '$(TypeRedirectorSkip)' == 'false'">
+      _RedirectMovedTypes
+    </_SignAssemblyDependsOn>
+    <_SignAssemblyAfterTargets>
+      CoreCompile
+    </_SignAssemblyAfterTargets>
+  </PropertyGroup>
+  <Target Name="_SignAssembly" AfterTargets="$(_SignAssemblyAfterTargets)" DependsOnTargets="$(_SignAssemblyDependsOn)" Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
@@ -105,7 +117,12 @@
     Verify that the output assembly is signed correctly for release.
     ===================================================================================================================
   -->
-  <Target Name="_SignAssemblyVerify" AfterTargets="Build" Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+    <_SignAssemblyVerifyAfterTargets>
+      Build
+    </_SignAssemblyVerifyAfterTargets>
+  </PropertyGroup>
+  <Target Name="_SignAssemblyVerify" AfterTargets="$(_SignAssemblyVerifyAfterTargets)" Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" />
   </Target>
 
@@ -127,6 +144,11 @@
     Copy the project output into the root output folder.
     ===================================================================================================================
   -->
+  <PropertyGroup Condition=" '$(SkipCopyToOutputDirectory)' != 'true' and '$(TargetPath)' != '' ">
+    <_CopyToOutputDirectoryAfterTargets>
+      Build
+    </_CopyToOutputDirectoryAfterTargets>
+  </PropertyGroup>
   <Target Name="_CopyToOutputDirectoryDep">
     <ItemGroup Condition=" '$(PackagingLocation)' == '' ">
       <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(PackagingPlatform)\$(TargetFileName)" />
@@ -143,7 +165,7 @@
     </ItemGroup>
   </Target>
   <Target Name="_CopyToOutputDirectory" Condition=" '$(SkipCopyToOutputDirectory)' != 'true' and '$(TargetPath)' != '' "
-          AfterTargets="Build" DependsOnTargets="_CopyToOutputDirectoryDep"
+          AfterTargets="$(_CopyToOutputDirectoryAfterTargets)" DependsOnTargets="_CopyToOutputDirectoryDep"
           Inputs="@(_CopyItems)" Outputs="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(PackagingGroup)\%(Dest)')">
     <Copy Condition=" '@(_CopyItems)' != '' "
           SourceFiles="@(_CopyItems)"
@@ -160,6 +182,11 @@
     This runs during the build phase.
     ===================================================================================================================
   -->
+  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' ">
+    <MDocGenerateDocsAfterTargets>
+      CoreCompile
+    </MDocGenerateDocsAfterTargets>
+  </PropertyGroup>
   <Target Name="_MDocGenerateDocsDep">
     <PropertyGroup>
       <MDocVersion Condition=" '%(Identity)' == 'mdoc' ">@(PackageReference -> '%(Version)')</MDocVersion>
@@ -176,7 +203,7 @@
     </ItemGroup>
   </Target>
   <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' "
-          AfterTargets="CoreCompile" DependsOnTargets="_MDocGenerateDocsDep"
+          AfterTargets="$(MDocGenerateDocsAfterTargets)" DependsOnTargets="_MDocGenerateDocsDep"
           Inputs="@(_MDocInputs)" Outputs="$(MDocOutputPath)">
     <MakeDir Directories="$(MDocIntermediateOutputPath)" />
     <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "

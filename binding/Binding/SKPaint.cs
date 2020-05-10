@@ -11,7 +11,7 @@ namespace SkiaSharp
 		Full = 3,
 	}
 
-	public unsafe class SKPaint : SKObject
+	public unsafe class SKPaint : SKObject, ISKSkipObjectRegistration
 	{
 		private SKFont font;
 
@@ -601,6 +601,6 @@ namespace SkiaSharp
 		//
 
 		internal static SKPaint GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKPaint (h, o));
+			handle == IntPtr.Zero ? null : new SKPaint (handle, true);
 	}
 }

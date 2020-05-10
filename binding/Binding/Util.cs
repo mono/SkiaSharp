@@ -1,6 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Text;
+#if NETSTANDARD1_3 || WINDOWS_UWP
+using System.Reflection;
+#endif
 
 namespace SkiaSharp
 {
@@ -34,6 +37,11 @@ namespace SkiaSharp
 				return bytes;
 			}
 		}
+
+#if NETSTANDARD1_3 || WINDOWS_UWP
+		internal static bool IsAssignableFrom (this Type type, Type c) =>
+			type.GetTypeInfo ().IsAssignableFrom (c.GetTypeInfo ());
+#endif
 	}
 
 	public unsafe static class StringUtilities

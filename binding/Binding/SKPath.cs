@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKPath : SKObject
+	public unsafe class SKPath : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKPath (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -482,11 +482,11 @@ namespace SkiaSharp
 		//
 
 		internal static SKPath GetObject (IntPtr handle, bool owns = true) =>
-			GetOrAddObject (handle, owns, (h, o) => new SKPath (h, o));
+			handle == IntPtr.Zero ? null : new SKPath (handle, owns);
 
 		//
 
-		public class Iterator : SKObject
+		public class Iterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKPath path;
 
@@ -526,7 +526,7 @@ namespace SkiaSharp
 				SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
 		}
 
-		public class RawIterator : SKObject
+		public class RawIterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKPath path;
 
@@ -559,7 +559,7 @@ namespace SkiaSharp
 				SkiaApi.sk_path_rawiter_peek (Handle);
 		}
 
-		public class OpBuilder : SKObject
+		public class OpBuilder : SKObject, ISKSkipObjectRegistration
 		{
 			public OpBuilder ()
 				: base (SkiaApi.sk_opbuilder_new (), true)

@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public unsafe class SK3dView : SKObject
+	public unsafe class SK3dView : SKObject, ISKSkipObjectRegistration
 	{
 		internal SK3dView (IntPtr x, bool owns)
 			: base (x, owns)
