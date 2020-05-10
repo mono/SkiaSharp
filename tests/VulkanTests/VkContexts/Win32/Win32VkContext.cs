@@ -25,6 +25,8 @@ namespace SkiaSharp.Tests
 		public override uint GraphicsFamily { get; }
 		public override uint PresentFamily { get; }
 
+		public override GRVkGetProcDelegate GetProc { get; }
+
 		private ushort wcId;
 		private IntPtr hWnd;
 
@@ -55,6 +57,18 @@ namespace SkiaSharp.Tests
 
 			GraphicsQueue = Device.GetQueue(GraphicsFamily, 0);
 			PresentQueue = Device.GetQueue(PresentFamily, 0);
+
+			GetProc = GetProcImpl;
+		}
+
+		private IntPtr GetProcImpl(object context, string name, IntPtr instance, IntPtr device)
+		{
+			if (device != IntPtr.Zero)
+			{
+				return Device.GetProcedureAddress(name);
+			}
+
+			return Instance.GetProcedureAddress(name);
 		}
 
 		private (uint, uint) FindQueueFamilies()

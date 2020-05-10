@@ -66,7 +66,7 @@ namespace SkiaSharp
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));
 
-			return GetObject<GRContext> (SkiaApi.gr_context_make_vulkan (backendContext.Handle));
+			return GetObject(SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
 		}
 
 		//

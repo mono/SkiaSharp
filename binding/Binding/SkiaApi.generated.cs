@@ -9,7 +9,8 @@ namespace SkiaSharp
 	using gr_backendtexture_t = IntPtr;
 	using gr_context_t = IntPtr;
 	using gr_glinterface_t = IntPtr;
-	using gr_vkbackendcontext_t = IntPtr;
+	using gr_vk_extensions_t = IntPtr;
+	using gr_vk_memory_allocator_t = IntPtr;
 	using gr_vkinterface_t = IntPtr;
 	using sk_3dview_t = IntPtr;
 	using sk_bitmap_t = IntPtr;
@@ -76,9 +77,9 @@ namespace SkiaSharp
 	using sk_xmlstreamwriter_t = IntPtr;
 	using sk_xmlwriter_t = IntPtr;
 	using vk_device_t = IntPtr;
-	using vk_getdeviceprocaddr_t = IntPtr;
-	using vk_getinstanceprocaddr_t = IntPtr;
 	using vk_instance_t = IntPtr;
+	using vk_physical_device_features_2_t = IntPtr;
+	using vk_physical_device_features_t = IntPtr;
 	using vk_physical_device_t = IntPtr;
 	using vk_queue_t = IntPtr;
 
@@ -197,9 +198,9 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_context_t gr_context_make_gl (gr_glinterface_t glInterface);
 
-		// gr_context_t* gr_context_make_vulkan(const gr_vkbackendcontext_t* vkBackendContext)
+		// gr_context_t* gr_context_make_vulkan(gr_vk_backendcontext_t vkBackendContext)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern gr_context_t gr_context_make_vulkan (gr_vkbackendcontext_t vkBackendContext);
+		internal static extern gr_context_t gr_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
 
 		// void gr_context_release_resources_and_abandon_context(gr_context_t* context)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -247,26 +248,22 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_glinterface_validate (gr_glinterface_t glInterface);
 
-		// gr_vkbackendcontext_t* gr_vkbackendcontext_assemble(vk_instance_t* vkInstance, vk_physical_device_t* vkPhysicalDevice, vk_device_t* vkDevice, vk_queue_t* vkQueue, uint32_t graphicsQueueIndex, uint32_t minAPIVersion, uint32_t extensions, uint32_t features, gr_vkinterface_t* grVkInterface)
+		// void gr_vk_extensions_delete(gr_vk_extensions_t* extensions)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern gr_vkbackendcontext_t gr_vkbackendcontext_assemble (vk_instance_t vkInstance, vk_physical_device_t vkPhysicalDevice, vk_device_t vkDevice, vk_queue_t vkQueue, UInt32 graphicsQueueIndex, UInt32 minAPIVersion, UInt32 extensions, UInt32 features, gr_vkinterface_t grVkInterface);
+		internal static extern void gr_vk_extensions_delete (gr_vk_extensions_t extensions);
 
-		// void gr_vkbackendcontext_unref(gr_vkbackendcontext_t* grVkBackendContext)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_vkbackendcontext_unref (gr_vkbackendcontext_t grVkBackendContext);
-
-		// gr_vkinterface_t* gr_vkinterface_make(vk_getinstanceprocaddr_t* vkGetInstanceProcAddr, vk_getdeviceprocaddr_t* vkGetDeviceProcAddr, vk_instance_t* vkInstance, vk_device_t* vkDevice, uint32_t extensionFlags)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern gr_vkinterface_t gr_vkinterface_make (vk_getinstanceprocaddr_t vkGetInstanceProcAddr, vk_getdeviceprocaddr_t vkGetDeviceProcAddr, vk_instance_t vkInstance, vk_device_t vkDevice, UInt32 extensionFlags);
-
-		// void gr_vkinterface_unref(gr_vkinterface_t* grVkInterface)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_vkinterface_unref (gr_vkinterface_t grVkInterface);
-
-		// bool gr_vkinterface_validate(const gr_vkinterface_t* grVkInterface, uint32_t extensionsFlags)
+		// bool gr_vk_extensions_has_extension(gr_vk_extensions_t* extensions, const char* ext, uint32_t minVersion)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool gr_vkinterface_validate (gr_vkinterface_t grVkInterface, UInt32 extensionsFlags);
+		internal static extern bool gr_vk_extensions_has_extension (gr_vk_extensions_t extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion);
+
+		// void gr_vk_extensions_init(gr_vk_extensions_t* extensions, gr_vk_get_proc getProc, void* userData, vk_instance_t* instance, vk_physical_device_t* physDev, uint32_t instanceExtensionCount, const char** instanceExtensions, uint32_t deviceExtensionCount, const char** deviceExtensions)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_vk_extensions_init (gr_vk_extensions_t extensions, GRVkGetProcProxyDelegate getProc, void* userData, vk_instance_t instance, vk_physical_device_t physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
+
+		// gr_vk_extensions_t* gr_vk_extensions_new()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_vk_extensions_t gr_vk_extensions_new ();
 
 		#endregion
 
@@ -3803,6 +3800,14 @@ namespace SkiaSharp
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate IntPtr GRGlGetProcProxyDelegate(void* ctx, [MarshalAs (UnmanagedType.LPStr)] String name);
 
+	// typedef void (*)()* gr_vk_func_ptr
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void GRVkFuncPtr();
+
+	// typedef gr_vk_func_ptr (*)(void* ctx, const char* name, vk_instance_t* instance, vk_device_t* device)* gr_vk_get_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate IntPtr GRVkGetProcProxyDelegate(void* ctx, [MarshalAs (UnmanagedType.LPStr)] String name, vk_instance_t instance, vk_device_t device);
+
 	// typedef void (*)(void* addr, void* context)* sk_bitmap_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKBitmapReleaseProxyDelegate(void* addr, void* context);
@@ -4010,82 +4015,352 @@ namespace SkiaSharp
 
 	// gr_vk_alloc_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct GRVkAlloc {
+	public unsafe partial struct GRVkAlloc : IEquatable<GRVkAlloc> {
 		// public uint64_t fMemory
 		private UInt64 fMemory;
 		public UInt64 Memory {
-			get => fMemory;
+			readonly get => fMemory;
 			set => fMemory = value;
 		}
 
 		// public uint64_t fOffset
 		private UInt64 fOffset;
 		public UInt64 Offset {
-			get => fOffset;
+			readonly get => fOffset;
 			set => fOffset = value;
 		}
 
 		// public uint64_t fSize
 		private UInt64 fSize;
 		public UInt64 Size {
-			get => fSize;
+			readonly get => fSize;
 			set => fSize = value;
 		}
 
 		// public uint32_t fFlags
 		private UInt32 fFlags;
 		public UInt32 Flags {
-			get => fFlags;
+			readonly get => fFlags;
 			set => fFlags = value;
+		}
+
+		// public gr_vk_backendmemory_t fBackendMemory
+		private IntPtr fBackendMemory;
+		public IntPtr BackendMemory {
+			readonly get => fBackendMemory;
+			set => fBackendMemory = value;
 		}
 
 		// public bool _private_fUsesSystemHeap
 		private Byte fUsesSystemHeap;
+
+		public readonly bool Equals (GRVkAlloc obj) =>
+			fMemory == obj.fMemory && fOffset == obj.fOffset && fSize == obj.fSize && fFlags == obj.fFlags && fBackendMemory == obj.fBackendMemory && fUsesSystemHeap == obj.fUsesSystemHeap;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkAlloc f && Equals (f);
+
+		public static bool operator == (GRVkAlloc left, GRVkAlloc right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkAlloc left, GRVkAlloc right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fMemory);
+			hash.Add (fOffset);
+			hash.Add (fSize);
+			hash.Add (fFlags);
+			hash.Add (fBackendMemory);
+			hash.Add (fUsesSystemHeap);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_vk_backendcontext_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRVkBackendContextNative : IEquatable<GRVkBackendContextNative> {
+		// public vk_instance_t* fInstance
+		public vk_instance_t fInstance;
+
+		// public vk_physical_device_t* fPhysicalDevice
+		public vk_physical_device_t fPhysicalDevice;
+
+		// public vk_device_t* fDevice
+		public vk_device_t fDevice;
+
+		// public vk_queue_t* fQueue
+		public vk_queue_t fQueue;
+
+		// public uint32_t fGraphicsQueueIndex
+		public UInt32 fGraphicsQueueIndex;
+
+		// public uint32_t fMinAPIVersion
+		public UInt32 fMinAPIVersion;
+
+		// public uint32_t fInstanceVersion
+		public UInt32 fInstanceVersion;
+
+		// public uint32_t fMaxAPIVersion
+		public UInt32 fMaxAPIVersion;
+
+		// public uint32_t fExtensions
+		public UInt32 fExtensions;
+
+		// public const gr_vk_extensions_t* fVkExtensions
+		public gr_vk_extensions_t fVkExtensions;
+
+		// public uint32_t fFeatures
+		public UInt32 fFeatures;
+
+		// public const vk_physical_device_features_t* fDeviceFeatures
+		public vk_physical_device_features_t fDeviceFeatures;
+
+		// public const vk_physical_device_features_2_t* fDeviceFeatures2
+		public vk_physical_device_features_2_t fDeviceFeatures2;
+
+		// public gr_vk_memory_allocator_t* fMemoryAllocator
+		public gr_vk_memory_allocator_t fMemoryAllocator;
+
+		// public gr_vk_get_proc fGetProc
+		public GRVkGetProcProxyDelegate fGetProc;
+
+		// public intptr_t fGetProcContext
+		public IntPtr fGetProcContext;
+
+		// public bool fOwnsInstanceAndDevice
+		public Byte fOwnsInstanceAndDevice;
+
+		// public bool fProtectedContext
+		public Byte fProtectedContext;
+
+		public readonly bool Equals (GRVkBackendContextNative obj) =>
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMinAPIVersion == obj.fMinAPIVersion && fInstanceVersion == obj.fInstanceVersion && fMaxAPIVersion == obj.fMaxAPIVersion && fExtensions == obj.fExtensions && fVkExtensions == obj.fVkExtensions && fFeatures == obj.fFeatures && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcContext == obj.fGetProcContext && fOwnsInstanceAndDevice == obj.fOwnsInstanceAndDevice && fProtectedContext == obj.fProtectedContext;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkBackendContextNative f && Equals (f);
+
+		public static bool operator == (GRVkBackendContextNative left, GRVkBackendContextNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkBackendContextNative left, GRVkBackendContextNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fInstance);
+			hash.Add (fPhysicalDevice);
+			hash.Add (fDevice);
+			hash.Add (fQueue);
+			hash.Add (fGraphicsQueueIndex);
+			hash.Add (fMinAPIVersion);
+			hash.Add (fInstanceVersion);
+			hash.Add (fMaxAPIVersion);
+			hash.Add (fExtensions);
+			hash.Add (fVkExtensions);
+			hash.Add (fFeatures);
+			hash.Add (fDeviceFeatures);
+			hash.Add (fDeviceFeatures2);
+			hash.Add (fMemoryAllocator);
+			hash.Add (fGetProc);
+			hash.Add (fGetProcContext);
+			hash.Add (fOwnsInstanceAndDevice);
+			hash.Add (fProtectedContext);
+			return hash.ToHashCode ();
+		}
+
 	}
 
 	// gr_vk_imageinfo_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct GRVkImageInfo {
+	public unsafe partial struct GRVkImageInfo : IEquatable<GRVkImageInfo> {
 		// public uint64_t fImage
 		private UInt64 fImage;
 		public UInt64 Image {
-			get => fImage;
+			readonly get => fImage;
 			set => fImage = value;
 		}
 
 		// public gr_vk_alloc_t fAlloc
 		private GRVkAlloc fAlloc;
 		public GRVkAlloc Alloc {
-			get => fAlloc;
+			readonly get => fAlloc;
 			set => fAlloc = value;
 		}
 
 		// public uint32_t fImageTiling
 		private UInt32 fImageTiling;
 		public UInt32 ImageTiling {
-			get => fImageTiling;
+			readonly get => fImageTiling;
 			set => fImageTiling = value;
 		}
 
 		// public uint32_t fImageLayout
 		private UInt32 fImageLayout;
 		public UInt32 ImageLayout {
-			get => fImageLayout;
+			readonly get => fImageLayout;
 			set => fImageLayout = value;
 		}
 
 		// public uint32_t fFormat
 		private UInt32 fFormat;
 		public UInt32 Format {
-			get => fFormat;
+			readonly get => fFormat;
 			set => fFormat = value;
 		}
 
 		// public uint32_t fLevelCount
 		private UInt32 fLevelCount;
 		public UInt32 LevelCount {
-			get => fLevelCount;
+			readonly get => fLevelCount;
 			set => fLevelCount = value;
+		}
+
+		// public uint32_t fCurrentQueueFamily
+		private UInt32 fCurrentQueueFamily;
+		public UInt32 CurrentQueueFamily {
+			readonly get => fCurrentQueueFamily;
+			set => fCurrentQueueFamily = value;
+		}
+
+		// public bool fProtected
+		private Byte fProtected;
+		public bool Protected {
+			readonly get => fProtected > 0;
+			set => fProtected = value ? (byte)1 : (byte)0;
+		}
+
+		// public gr_vk_ycbcrconversioninfo_t fYcbcrConversionInfo
+		private GrVkYcbcrConversionInfo fYcbcrConversionInfo;
+		public GrVkYcbcrConversionInfo YcbcrConversionInfo {
+			readonly get => fYcbcrConversionInfo;
+			set => fYcbcrConversionInfo = value;
+		}
+
+		public readonly bool Equals (GRVkImageInfo obj) =>
+			fImage == obj.fImage && fAlloc == obj.fAlloc && fImageTiling == obj.fImageTiling && fImageLayout == obj.fImageLayout && fFormat == obj.fFormat && fLevelCount == obj.fLevelCount && fCurrentQueueFamily == obj.fCurrentQueueFamily && fProtected == obj.fProtected && fYcbcrConversionInfo == obj.fYcbcrConversionInfo;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkImageInfo f && Equals (f);
+
+		public static bool operator == (GRVkImageInfo left, GRVkImageInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkImageInfo left, GRVkImageInfo right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fImage);
+			hash.Add (fAlloc);
+			hash.Add (fImageTiling);
+			hash.Add (fImageLayout);
+			hash.Add (fFormat);
+			hash.Add (fLevelCount);
+			hash.Add (fCurrentQueueFamily);
+			hash.Add (fProtected);
+			hash.Add (fYcbcrConversionInfo);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_vk_ycbcrconversioninfo_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct GrVkYcbcrConversionInfo : IEquatable<GrVkYcbcrConversionInfo> {
+		// public uint32_t fFormat
+		private UInt32 fFormat;
+		public UInt32 Format {
+			readonly get => fFormat;
+			set => fFormat = value;
+		}
+
+		// public uint64_t fExternalFormat
+		private UInt64 fExternalFormat;
+		public UInt64 ExternalFormat {
+			readonly get => fExternalFormat;
+			set => fExternalFormat = value;
+		}
+
+		// public uint32_t fYcbcrModel
+		private UInt32 fYcbcrModel;
+		public UInt32 YcbcrModel {
+			readonly get => fYcbcrModel;
+			set => fYcbcrModel = value;
+		}
+
+		// public uint32_t fYcbcrRange
+		private UInt32 fYcbcrRange;
+		public UInt32 YcbcrRange {
+			readonly get => fYcbcrRange;
+			set => fYcbcrRange = value;
+		}
+
+		// public uint32_t fXChromaOffset
+		private UInt32 fXChromaOffset;
+		public UInt32 XChromaOffset {
+			readonly get => fXChromaOffset;
+			set => fXChromaOffset = value;
+		}
+
+		// public uint32_t fYChromaOffset
+		private UInt32 fYChromaOffset;
+		public UInt32 YChromaOffset {
+			readonly get => fYChromaOffset;
+			set => fYChromaOffset = value;
+		}
+
+		// public uint32_t fChromaFilter
+		private UInt32 fChromaFilter;
+		public UInt32 ChromaFilter {
+			readonly get => fChromaFilter;
+			set => fChromaFilter = value;
+		}
+
+		// public uint32_t fForceExplicitReconstruction
+		private UInt32 fForceExplicitReconstruction;
+		public UInt32 ForceExplicitReconstruction {
+			readonly get => fForceExplicitReconstruction;
+			set => fForceExplicitReconstruction = value;
+		}
+
+		// public uint32_t fFormatFeatures
+		private UInt32 fFormatFeatures;
+		public UInt32 FormatFeatures {
+			readonly get => fFormatFeatures;
+			set => fFormatFeatures = value;
+		}
+
+		public readonly bool Equals (GrVkYcbcrConversionInfo obj) =>
+			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fFormatFeatures == obj.fFormatFeatures;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GrVkYcbcrConversionInfo f && Equals (f);
+
+		public static bool operator == (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fFormat);
+			hash.Add (fExternalFormat);
+			hash.Add (fYcbcrModel);
+			hash.Add (fYcbcrRange);
+			hash.Add (fXChromaOffset);
+			hash.Add (fYChromaOffset);
+			hash.Add (fChromaFilter);
+			hash.Add (fForceExplicitReconstruction);
+			hash.Add (fFormatFeatures);
+			return hash.ToHashCode ();
 		}
 
 	}

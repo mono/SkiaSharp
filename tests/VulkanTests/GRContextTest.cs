@@ -1,6 +1,4 @@
 ﻿using System;
-using SharpVk.Interop;
-using SkiaSharp.Tests;
 using Xunit;
 
 namespace SkiaSharp.Vulkan.Tests
@@ -11,38 +9,23 @@ namespace SkiaSharp.Vulkan.Tests
 		[SkippableFact]
 		public void CreateVkContextIsValid()
 		{
-			var nativeLibrary = new NativeLibrary();
+			using var ctx = CreateVkContext();
 
-			using (var ctx = CreateVkContext())
-			using (var vkInterface = GRVkInterface.Create(
-				nativeLibrary.GetProcedureAddress("vkGetInstanceProcAddr"),
-				nativeLibrary.GetProcedureAddress("vkGetDeviceProcAddr"),
-				(IntPtr)ctx.Instance.RawHandle.ToUInt64(),
-				(IntPtr)ctx.Device.RawHandle.ToUInt64(),
-				0))
+			using var grVkBackendContext = new GRVkBackendContext
 			{
-				Assert.NotNull(vkInterface);
-				Assert.True(vkInterface.Validate(0));
+				VkInstance = (IntPtr)ctx.Instance.RawHandle.ToUInt64(),
+				VkPhysicalDevice = (IntPtr)ctx.PhysicalDevice.RawHandle.ToUInt64(),
+				VkDevice = (IntPtr)ctx.Device.RawHandle.ToUInt64(),
+				VkQueue = (IntPtr)ctx.GraphicsQueue.RawHandle.ToUInt64(),
+				GraphicsQueueIndex = ctx.GraphicsFamily,
+				GetProc = ctx.GetProc
+			};
+				
+			Assert.NotNull(grVkBackendContext);
 
-				using (var grVkBackendContext = GRVkBackendContext.Assemble(
-					(IntPtr)ctx.Instance.RawHandle.ToUInt64(),
-					(IntPtr)ctx.PhysicalDevice.RawHandle.ToUInt64(),
-					(IntPtr)ctx.Device.RawHandle.ToUInt64(),
-					(IntPtr)ctx.GraphicsQueue.RawHandle.ToUInt64(),
-					ctx.GraphicsFamily,
-					0,
-					0,
-					0,
-					vkInterface))
-				{
-					Assert.NotNull(grVkBackendContext);
+			using var grContext = GRContext.CreateVulkan(grVkBackendContext);
 
-					using (var grContext = GRContext.CreateVulkan(grVkBackendContext))
-					{
-						Assert.NotNull(grContext);
-					}
-				}
-			}
+			Assert.NotNull(grContext);
 		}
 	}
 }
