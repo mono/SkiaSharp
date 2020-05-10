@@ -11,15 +11,13 @@ namespace SkiaSharp.Vulkan.Tests
 			try
 			{
 				if (!IsWindows)
-				{
 					throw new PlatformNotSupportedException();
-				}
 
 				return new Win32VkContext();
 			}
 			catch (Exception ex)
 			{
-				throw new SkipException("Unable to create Vulkan context: " + ex.Message);
+				throw new SkipException($"Unable to create Vulkan context: {ex.Message}");
 			}
 		}
 	}

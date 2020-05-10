@@ -198,7 +198,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_context_t gr_context_make_gl (gr_glinterface_t glInterface);
 
-		// gr_context_t* gr_context_make_vulkan(gr_vk_backendcontext_t vkBackendContext)
+		// gr_context_t* gr_context_make_vulkan(const gr_vk_backendcontext_t vkBackendContext)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_context_t gr_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
 
@@ -4128,8 +4128,8 @@ namespace SkiaSharp
 		// public gr_vk_get_proc fGetProc
 		public GRVkGetProcProxyDelegate fGetProc;
 
-		// public intptr_t fGetProcContext
-		public IntPtr fGetProcContext;
+		// public void* fGetProcUserData
+		public void* fGetProcUserData;
 
 		// public bool fOwnsInstanceAndDevice
 		public Byte fOwnsInstanceAndDevice;
@@ -4138,7 +4138,7 @@ namespace SkiaSharp
 		public Byte fProtectedContext;
 
 		public readonly bool Equals (GRVkBackendContextNative obj) =>
-			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMinAPIVersion == obj.fMinAPIVersion && fInstanceVersion == obj.fInstanceVersion && fMaxAPIVersion == obj.fMaxAPIVersion && fExtensions == obj.fExtensions && fVkExtensions == obj.fVkExtensions && fFeatures == obj.fFeatures && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcContext == obj.fGetProcContext && fOwnsInstanceAndDevice == obj.fOwnsInstanceAndDevice && fProtectedContext == obj.fProtectedContext;
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMinAPIVersion == obj.fMinAPIVersion && fInstanceVersion == obj.fInstanceVersion && fMaxAPIVersion == obj.fMaxAPIVersion && fExtensions == obj.fExtensions && fVkExtensions == obj.fVkExtensions && fFeatures == obj.fFeatures && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fOwnsInstanceAndDevice == obj.fOwnsInstanceAndDevice && fProtectedContext == obj.fProtectedContext;
 
 		public readonly override bool Equals (object obj) =>
 			obj is GRVkBackendContextNative f && Equals (f);
@@ -4167,7 +4167,7 @@ namespace SkiaSharp
 			hash.Add (fDeviceFeatures2);
 			hash.Add (fMemoryAllocator);
 			hash.Add (fGetProc);
-			hash.Add (fGetProcContext);
+			hash.Add (fGetProcUserData);
 			hash.Add (fOwnsInstanceAndDevice);
 			hash.Add (fProtectedContext);
 			return hash.ToHashCode ();

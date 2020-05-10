@@ -156,14 +156,14 @@ stages:
           displayName: Build Native Win32|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
-          additionalArgs: --buildarch=x86
+          additionalArgs: --buildarch=x86 --supportVulkan=true
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
         parameters:
           name: native_win32_x64_windows
           displayName: Build Native Win32|x64 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
-          additionalArgs: --buildarch=x64
+          additionalArgs: --buildarch=x64 --supportVulkan=true
       - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Windows)
         parameters:
           name: native_win32_x64_nanoserver_windows
@@ -398,7 +398,7 @@ stages:
           displayName: Tests (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --supportVulkan=true
           shouldPublish: false
           requiredArtifacts:
             - native_win32_x86_windows

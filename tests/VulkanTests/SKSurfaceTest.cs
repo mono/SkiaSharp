@@ -1,4 +1,5 @@
 ﻿using System;
+using SkiaSharp.Vulkan.SharpVk;
 using Xunit;
 
 namespace SkiaSharp.Vulkan.Tests
@@ -33,6 +34,40 @@ namespace SkiaSharp.Vulkan.Tests
 			Assert.NotNull(canvas);
 
 			canvas.Clear(SKColors.Transparent);
+
+			canvas.Flush();
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void VkGpuSurfaceIsCreatedSharpVkTypes()
+		{
+			using var ctx = CreateVkContext();
+
+			using var grVkBackendContext = new SharpVkBackendContext
+			{
+				VkInstance = ctx.Instance,
+				VkPhysicalDevice = ctx.PhysicalDevice,
+				VkDevice = ctx.Device,
+				VkQueue = ctx.GraphicsQueue,
+				GraphicsQueueIndex = ctx.GraphicsFamily,
+				GetProc = ctx.GetProc
+			};
+
+			Assert.NotNull(grVkBackendContext);
+
+			using var grContext = GRContext.CreateVulkan(grVkBackendContext);
+
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
+
+			Assert.NotNull(surface);
+
+			var canvas = surface.Canvas;
+			Assert.NotNull(canvas);
+
+			canvas.Clear(SKColors.Transparent);
+
+			canvas.Flush();
 		}
 	}
 }

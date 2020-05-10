@@ -20,7 +20,7 @@ namespace SkiaSharp.Vulkan.Tests
 				GraphicsQueueIndex = ctx.GraphicsFamily,
 				GetProc = ctx.GetProc
 			};
-				
+
 			Assert.NotNull(grVkBackendContext);
 
 			using var grContext = GRContext.CreateVulkan(grVkBackendContext);

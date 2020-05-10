@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Linq;
-using SharpVk;
-using SharpVk.Glfw;
-using SharpVk.Interop;
 using SharpVk.Khronos;
+
 using Device = SharpVk.Device;
 using Instance = SharpVk.Instance;
 using PhysicalDevice = SharpVk.PhysicalDevice;
@@ -11,22 +8,27 @@ using Queue = SharpVk.Queue;
 
 namespace SkiaSharp.Tests
 {
-	public abstract class VkContext : IDisposable
+	public class VkContext : IDisposable
 	{
-		public abstract Instance Instance { get; }
-		public abstract PhysicalDevice PhysicalDevice { get; }
+		public virtual Instance Instance { get; protected set; }
 
-		public abstract Surface Surface { get; }
-		public abstract Device Device { get; }
+		public virtual PhysicalDevice PhysicalDevice { get; protected set; }
 
-		public abstract Queue GraphicsQueue { get; }
-		public abstract Queue PresentQueue { get; }
+		public virtual Surface Surface { get; protected set; }
 
-		public abstract uint GraphicsFamily { get; }
-		public abstract uint PresentFamily { get; }
+		public virtual Device Device { get; protected set; }
 
-		public abstract GRVkGetProcDelegate GetProc { get; }
+		public virtual Queue GraphicsQueue { get; protected set; }
 
-		public virtual void Dispose() => Instance?.Dispose();
+		public virtual Queue PresentQueue { get; protected set; }
+
+		public virtual uint GraphicsFamily { get; protected set; }
+
+		public virtual uint PresentFamily { get; protected set; }
+
+		public virtual GRVkGetProcDelegate GetProc { get; protected set; }
+
+		public virtual void Dispose() =>
+			Instance?.Dispose();
 	}
 }
