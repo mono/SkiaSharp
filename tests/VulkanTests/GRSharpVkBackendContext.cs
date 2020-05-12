@@ -1,5 +1,4 @@
-﻿using SkiaSharp.Vulkan.SharpVk;
-using Xunit;
+﻿using Xunit;
 
 namespace SkiaSharp.Vulkan.Tests
 {
@@ -10,7 +9,7 @@ namespace SkiaSharp.Vulkan.Tests
 		public void VkGpuSurfaceIsCreatedSharpVkTypes()
 		{
 			using var ctx = CreateVkContext();
-			using var grVkBackendContext = new SharpVkBackendContext
+			using var grVkBackendContext = new GRSharpVkBackendContext
 			{
 				VkInstance = ctx.Instance,
 				VkPhysicalDevice = ctx.PhysicalDevice,
@@ -36,7 +35,7 @@ namespace SkiaSharp.Vulkan.Tests
 		[SkippableFact]
 		public void PropertyIsSetAndUnset()
 		{
-			using var grVkBackendContext = new SharpVkBackendContext();
+			using var grVkBackendContext = new GRSharpVkBackendContext();
 			var baseType = grVkBackendContext as GRVkBackendContext;
 
 			Assert.Equal(0, (long)baseType.VkPhysicalDeviceFeatures);

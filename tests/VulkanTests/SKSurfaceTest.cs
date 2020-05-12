@@ -1,5 +1,4 @@
 ﻿using System;
-using SkiaSharp.Vulkan.SharpVk;
 using Xunit;
 
 namespace SkiaSharp.Vulkan.Tests
@@ -44,7 +43,7 @@ namespace SkiaSharp.Vulkan.Tests
 		{
 			using var ctx = CreateVkContext();
 
-			using var grVkBackendContext = new SharpVkBackendContext
+			using var grVkBackendContext = new GRSharpVkBackendContext
 			{
 				VkInstance = ctx.Instance,
 				VkPhysicalDevice = ctx.PhysicalDevice,

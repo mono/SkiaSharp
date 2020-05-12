@@ -1,22 +1,23 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using SharpVk;
 
 using PhysicalDeviceFeaturesNative = SharpVk.Interop.PhysicalDeviceFeatures;
 
-namespace SkiaSharp.Vulkan.SharpVk
+namespace SkiaSharp
 {
-	public unsafe class SharpVkBackendContext : GRVkBackendContext
+	public unsafe class GRSharpVkBackendContext : GRVkBackendContext
 	{
-		private global::SharpVk.Instance vkInstance;
-		private global::SharpVk.PhysicalDevice vkPhysicalDevice;
-		private global::SharpVk.Device vkDevice;
-		private global::SharpVk.Queue vkQueue;
-		private global::SharpVk.PhysicalDeviceFeatures? vkPhysicalDeviceFeatures;
+		private Instance vkInstance;
+		private PhysicalDevice vkPhysicalDevice;
+		private Device vkDevice;
+		private Queue vkQueue;
+		private PhysicalDeviceFeatures? vkPhysicalDeviceFeatures;
 
 		private PhysicalDeviceFeaturesNative devFeatures;
 		private GCHandle devFeaturesHandle;
 
-		public SharpVkBackendContext()
+		public GRSharpVkBackendContext()
 		{
 		}
 
@@ -31,7 +32,7 @@ namespace SkiaSharp.Vulkan.SharpVk
 			}
 		}
 
-		public new global::SharpVk.Instance VkInstance
+		public new Instance VkInstance
 		{
 			get => vkInstance;
 			set
@@ -41,7 +42,7 @@ namespace SkiaSharp.Vulkan.SharpVk
 			}
 		}
 
-		public new global::SharpVk.PhysicalDevice VkPhysicalDevice
+		public new PhysicalDevice VkPhysicalDevice
 		{
 			get => vkPhysicalDevice;
 			set
@@ -51,7 +52,7 @@ namespace SkiaSharp.Vulkan.SharpVk
 			}
 		}
 
-		public new global::SharpVk.Device VkDevice
+		public new Device VkDevice
 		{
 			get => vkDevice;
 			set
@@ -61,7 +62,7 @@ namespace SkiaSharp.Vulkan.SharpVk
 			}
 		}
 
-		public new global::SharpVk.Queue VkQueue
+		public new Queue VkQueue
 		{
 			get => vkQueue;
 			set
@@ -71,7 +72,7 @@ namespace SkiaSharp.Vulkan.SharpVk
 			}
 		}
 
-		public new global::SharpVk.PhysicalDeviceFeatures? VkPhysicalDeviceFeatures
+		public new PhysicalDeviceFeatures? VkPhysicalDeviceFeatures
 		{
 			get => vkPhysicalDeviceFeatures;
 			set
@@ -85,7 +86,7 @@ namespace SkiaSharp.Vulkan.SharpVk
 				devFeaturesHandle = default;
 				base.VkPhysicalDeviceFeatures = IntPtr.Zero;
 
-				if (value is global::SharpVk.PhysicalDeviceFeatures feat)
+				if (value is PhysicalDeviceFeatures feat)
 				{
 					devFeatures = feat.ToNative();
 					devFeaturesHandle = GCHandle.Alloc(devFeatures, GCHandleType.Pinned);

@@ -1,7 +1,7 @@
 ﻿using System;
 using SharpVk;
 
-namespace SkiaSharp.Vulkan.SharpVk
+namespace SkiaSharp
 {
 	public static class GRVkExtensionsExtensions
 	{

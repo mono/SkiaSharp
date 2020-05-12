@@ -2,7 +2,7 @@
 
 using PhysicalDeviceFeaturesNative = SharpVk.Interop.PhysicalDeviceFeatures;
 
-namespace SkiaSharp.Vulkan.SharpVk
+namespace SkiaSharp
 {
 	internal static class Utils
 	{
