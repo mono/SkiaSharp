@@ -7,7 +7,7 @@ namespace SkiaSharp
 	// TODO: `Create(...)` should have overloads that accept a SKPngChunkReader
 	// TODO: missing the `QueryYuv8` and `GetYuv8Planes` members
 
-	public unsafe class SKCodec : SKObject
+	public unsafe class SKCodec : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKCodec (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -344,6 +344,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKCodec GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKCodec (h, o));
+			handle == IntPtr.Zero ? null : new SKCodec (handle, true);
 	}
 }

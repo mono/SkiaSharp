@@ -82,8 +82,6 @@ jobs:
               displayName: Install the Android NDK
           # install tizen
           - ${{ if contains(parameters.name, '_tizen_') }}:
-            - pwsh: .\scripts\install-openjdk.ps1
-              displayName: Install the OpenJDK
             - pwsh: .\scripts\install-tizen.ps1
               displayName: Install the Tizen SDK
           # install llvm

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public unsafe class GRGlInterface : SKObject, ISKReferenceCounted
+	public unsafe class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal GRGlInterface (IntPtr h, bool owns)
 			: base (h, owns)
@@ -132,7 +132,7 @@ namespace SkiaSharp
 		}
 
 		internal static GRGlInterface GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new GRGlInterface (h, o));
+			handle == IntPtr.Zero ? null : new GRGlInterface (handle, true);
 
 		private static class AngleLoader
 		{

@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted
+	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal SKTextBlob (IntPtr x, bool owns)
 			: base (x, owns)
@@ -27,10 +27,10 @@ namespace SkiaSharp
 		public uint UniqueId => SkiaApi.sk_textblob_get_unique_id (Handle);
 
 		internal static SKTextBlob GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKTextBlob (h, o));
+			handle == IntPtr.Zero ? null : new SKTextBlob (handle, true);
 	}
 
-	public unsafe class SKTextBlobBuilder : SKObject
+	public unsafe class SKTextBlobBuilder : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKTextBlobBuilder (IntPtr x, bool owns)
 			: base (x, owns)

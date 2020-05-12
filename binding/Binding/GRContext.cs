@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class GRContext : SKObject, ISKReferenceCounted
+	public unsafe class GRContext : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal GRContext (IntPtr h, bool owns)
 			: base (h, owns)
@@ -105,6 +105,6 @@ namespace SkiaSharp
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
 
 		internal static GRContext GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new GRContext (h, o));
+			handle == IntPtr.Zero ? null : new GRContext (handle, true);
 	}
 }
