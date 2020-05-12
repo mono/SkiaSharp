@@ -10,7 +10,6 @@ namespace SkiaSharp
 		private const int PatchCornerCount = 4;
 		private const int PatchCubicsCount = 12;
 
-		[Preserve]
 		internal SKCanvas (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -565,6 +564,13 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
+			if (paint.TextAlign != SKTextAlign.Left) {
+				var width = font.MeasureText (text);
+				if (paint.TextAlign == SKTextAlign.Center)
+					width *= 0.5f;
+				x -= width;
+			}
+
 			using var blob = SKTextBlob.Create (text, font);
 			if (blob == null)
 				return;
@@ -588,6 +594,13 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
+			if (paint.TextAlign != SKTextAlign.Left) {
+				var width = paint.MeasureText (text);
+				if (paint.TextAlign == SKTextAlign.Center)
+					width *= 0.5f;
+				x -= width;
+			}
+
 			using var blob = SKTextBlob.Create (text, paint.TextEncoding, paint.GetFont ());
 			if (blob == null)
 				return;
@@ -610,6 +623,13 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
+
+			if (paint.TextAlign != SKTextAlign.Left) {
+				var width = paint.MeasureText (buffer, length);
+				if (paint.TextAlign == SKTextAlign.Center)
+					width *= 0.5f;
+				x -= width;
+			}
 
 			using var blob = SKTextBlob.Create (buffer, length, paint.TextEncoding, paint.GetFont ());
 			if (blob == null)
@@ -1019,6 +1039,9 @@ namespace SkiaSharp
 				SkiaApi.sk_canvas_draw_patch (Handle, cubes, (uint*)cols, coords, mode, paint.Handle);
 			}
 		}
+
+		internal static SKCanvas GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKCanvas (h, o));
 	}
 
 	public class SKAutoCanvasRestore : IDisposable

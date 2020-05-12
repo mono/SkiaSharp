@@ -3,9 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	internal unsafe class SKString : SKObject
+	internal unsafe class SKString : SKObject, ISKSkipObjectRegistration
 	{
-		[Preserve]
 		internal SKString (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -43,7 +42,7 @@ namespace SkiaSharp
 			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf8))
 		{
 		}
-
+		
 		public int Length =>
 			(int)SkiaApi.sk_string_get_size (Handle);
 
@@ -72,6 +71,9 @@ namespace SkiaSharp
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_string_destructor (Handle);
+
+		internal static SKString GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new SKString (handle, true);
 	}
 }
 

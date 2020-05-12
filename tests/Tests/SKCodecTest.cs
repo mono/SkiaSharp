@@ -18,6 +18,17 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public unsafe void StreamLosesOwnershipTddoCodecButIsNotForgotten()
+		{
+			var codec = SKCodec.Create(Path.Combine(PathToImages, "color-wheel.png"));
+
+			for (var i = 0; i < 1000; ++i)
+			{
+				Assert.Equal(SKCodecResult.Success, codec.GetPixels(out _));
+			}
+		}
+
+		[SkippableFact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheCodecWasFinished()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");

@@ -26,7 +26,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return SKObject.Referenced (SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create_with_stream (&bounds, stream.Handle)), stream);
+			return SKObject.Referenced (SKCanvas.GetObject (SkiaApi.sk_svgcanvas_create_with_stream (&bounds, stream.Handle)), stream);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -36,7 +36,7 @@ namespace SkiaSharp
 			if (writer == null)
 				throw new ArgumentNullException (nameof (writer));
 
-			var canvas = SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create_with_writer (&bounds, writer.Handle));
+			var canvas = SKCanvas.GetObject (SkiaApi.sk_svgcanvas_create_with_writer (&bounds, writer.Handle));
 			writer.RevokeOwnership (canvas);
 			return SKObject.Referenced (canvas, writer);
 		}

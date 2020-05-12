@@ -1,9 +1,13 @@
 trigger:
   - master
+  - develop
+  - patch/*
   - refs/tags/*
 
 pr:
   - master
+  - develop
+  - patch/*
 
 variables:
   SKIASHARP_VERSION: 2.80.0
@@ -11,9 +15,9 @@ variables:
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
-  BUILD_NUMBER: $[counter(format('{0}_{1}', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch']), 1)]
   FEATURE_NAME: ''
-  PREVIEW_LABEL: 'preview'
+  PREVIEW_LABEL: 'alpha'
+  BUILD_NUMBER: $[counter(format('{0}_{1}_{2}', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch'], variables['PREVIEW_LABEL']), 1)]
   TIZEN_LINUX_PACKAGES: libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts
   MONO_VERSION_MACOS: 6_6_1
@@ -26,6 +30,9 @@ variables:
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   THROW_ON_TEST_FAILURE: false
+
+  # TODO: TEMPORARY
+  NUGET_DIFF_PRERELEASE: true
 
 resources:
   repositories:
@@ -87,7 +94,6 @@ stages:
           displayName: Build Native Tizen (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
-          condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
         parameters:
           name: native_uwp_angle_x86_windows
@@ -269,8 +275,7 @@ stages:
             - native_android_x64_windows
             - native_android_arm_windows
             - native_android_arm64_windows
-            # - native_tizen_windows
-            - native_tizen_linux
+            - native_tizen_windows
             - native_uwp_angle_x86_windows
             - native_uwp_angle_x64_windows
             - native_uwp_angle_arm_windows
@@ -353,6 +358,7 @@ stages:
           displayName: API Diff
           vmImage: Hosted VS2017
           target: docs-api-diff
+          additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
           shouldPublish: false
           requiredArtifacts:
             - package_windows

@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKSurface : SKObject, ISKReferenceCounted
+	public unsafe class SKSurface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use Create(SKImageInfo) instead.")]
@@ -18,7 +18,6 @@ namespace SkiaSharp
 		[Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props);
 
-		[Preserve]
 		internal SKSurface (IntPtr h, bool owns)
 			: base (h, owns)
 		{
@@ -46,7 +45,7 @@ namespace SkiaSharp
 		public static SKSurface Create (SKImageInfo info, int rowBytes, SKSurfaceProperties props)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (&cinfo, (IntPtr)rowBytes, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_raster (&cinfo, (IntPtr)rowBytes, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// convenience RASTER DIRECT to use a SKPixmap instead of SKImageInfo and IntPtr
@@ -96,7 +95,7 @@ namespace SkiaSharp
 				? new SKSurfaceReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKSurfaceReleaseDelegateProxy, out _, out var ctx);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND RENDER TARGET surface
@@ -145,7 +144,7 @@ namespace SkiaSharp
 			if (renderTarget == null)
 				throw new ArgumentNullException (nameof (renderTarget));
 
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND TEXTURE surface
@@ -198,7 +197,7 @@ namespace SkiaSharp
 			if (texture == null)
 				throw new ArgumentNullException (nameof (texture));
 
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND TEXTURE AS RENDER TARGET surface
@@ -251,7 +250,7 @@ namespace SkiaSharp
 			if (texture == null)
 				throw new ArgumentNullException (nameof (texture));
 
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU NEW surface
@@ -282,18 +281,18 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (context));
 
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
+			return GetObject (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
 		}
 
 		// NULL surface
 
 		public static SKSurface CreateNull (int width, int height) =>
-			GetObject<SKSurface> (SkiaApi.sk_surface_new_null (width, height));
+			GetObject (SkiaApi.sk_surface_new_null (width, height));
 
 		//
 
 		public SKCanvas Canvas =>
-			OwnedBy (GetObject<SKCanvas> (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
+			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use SurfaceProperties instead.")]
@@ -308,10 +307,10 @@ namespace SkiaSharp
 		}
 
 		public SKSurfaceProperties SurfaceProperties =>
-			OwnedBy (GetObject<SKSurfaceProperties> (SkiaApi.sk_surface_get_props (Handle), false), this);
+			OwnedBy (SKSurfaceProperties.GetObject (SkiaApi.sk_surface_get_props (Handle), false), this);
 
 		public SKImage Snapshot () =>
-			GetObject<SKImage> (SkiaApi.sk_surface_new_image_snapshot (Handle));
+			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot (Handle));
 
 		public void Draw (SKCanvas canvas, float x, float y, SKPaint paint)
 		{
@@ -347,7 +346,12 @@ namespace SkiaSharp
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
-			return SkiaApi.sk_surface_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			var result = SkiaApi.sk_surface_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			GC.KeepAlive (this);
+			return result;
 		}
+
+		internal static SKSurface GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new SKSurface (handle, true);
 	}
 }

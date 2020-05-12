@@ -5,11 +5,10 @@ namespace SkiaSharp
 {
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete ("The Index8 color type and color table is no longer supported.")]
-	public unsafe class SKColorTable : SKObject, ISKReferenceCounted
+	public unsafe class SKColorTable : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		public const int MaxLength = 256;
 
-		[Preserve]
 		internal SKColorTable (IntPtr x, bool owns)
 			: base (x, owns)
 		{

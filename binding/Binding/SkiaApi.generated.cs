@@ -1095,6 +1095,10 @@ namespace SkiaSharp
 
 		#region sk_font.h
 
+		// size_t sk_font_break_text(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, float maxWidth, float* measuredWidth, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_font_break_text (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, Single maxWidth, Single* measuredWidth, sk_paint_t paint);
+
 		// void sk_font_delete(sk_font_t* font)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_delete (sk_font_t font);
@@ -1637,9 +1641,9 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_maskfilter_t sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma);
 
-		// sk_maskfilter_t* sk_maskfilter_new_blur_with_flags(sk_blurstyle_t, float sigma, const sk_rect_t* occluder, bool respectCTM)
+		// sk_maskfilter_t* sk_maskfilter_new_blur_with_flags(sk_blurstyle_t, float sigma, bool respectCTM)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_maskfilter_t sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, SKRect* occluder, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
+		internal static extern sk_maskfilter_t sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
 
 		// sk_maskfilter_t* sk_maskfilter_new_clip(uint8_t min, uint8_t max)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2572,6 +2576,10 @@ namespace SkiaSharp
 		// size_t sk_pixmap_get_row_bytes(const sk_pixmap_t* cpixmap)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_pixmap_get_row_bytes (sk_pixmap_t cpixmap);
+
+		// void* sk_pixmap_get_writable_addr(const sk_pixmap_t* cpixmap)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* sk_pixmap_get_writable_addr (sk_pixmap_t cpixmap);
 
 		// sk_pixmap_t* sk_pixmap_new()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -3656,10 +3664,6 @@ namespace SkiaSharp
 		#endregion
 
 		#region sk_compatpaint.h
-
-		// size_t sk_compatpaint_break_text(const sk_compatpaint_t* paint, const void* text, int length, float maxWidth, float* measuredWidth)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_compatpaint_break_text (sk_compatpaint_t paint, void* text, Int32 length, Single maxWidth, Single* measuredWidth);
 
 		// sk_compatpaint_t* sk_compatpaint_clone(const sk_compatpaint_t* paint)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

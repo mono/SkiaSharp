@@ -9,7 +9,6 @@ namespace SkiaSharp
 		internal const float DefaultScaleX = 1f;
 		internal const float DefaultSkewX = 0f;
 
-		[Preserve]
 		internal SKFont (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -73,7 +72,7 @@ namespace SkiaSharp
 		}
 
 		public SKTypeface Typeface {
-			get => GetObject<SKTypeface> (SkiaApi.sk_font_get_typeface (Handle));
+			get => SKTypeface.GetObject (SkiaApi.sk_font_get_typeface (Handle));
 			set => SkiaApi.sk_font_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
@@ -316,6 +315,16 @@ namespace SkiaSharp
 				return 0;
 
 			return SkiaApi.sk_font_measure_text (Handle, text, (IntPtr)length, encoding, bounds, paint?.Handle ?? IntPtr.Zero);
+		}
+
+		// BreakText
+
+		internal int BreakText (void* text, int length, SKTextEncoding encoding, float maxWidth, float* measuredWidth, SKPaint paint)
+		{
+			if (!ValidateTextArgs (text, length, encoding))
+				return 0;
+
+			return (int)SkiaApi.sk_font_break_text (Handle, text, (IntPtr)length, encoding, maxWidth, measuredWidth, paint?.Handle ?? IntPtr.Zero);
 		}
 
 		// GetGlyphPositions (text)
@@ -769,5 +778,10 @@ namespace SkiaSharp
 
 			return true;
 		}
+
+		//
+
+		internal static SKFont GetObject (IntPtr handle, bool owns = true) =>
+			GetOrAddObject (handle, owns, (h, o) => new SKFont (h, o));
 	}
 }

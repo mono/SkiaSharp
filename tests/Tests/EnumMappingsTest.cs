@@ -26,7 +26,7 @@ namespace SkiaSharp.Tests
 		//	{
 		//		Assert.Equal(value.ToString(), value.ToNative().ToString());
 		//	}
-
+		//
 		//	foreach (GRPixelConfigNative value in Enum.GetValues(typeof(GRPixelConfigNative)))
 		//	{
 		//		Assert.Equal(value.ToString(), value.FromNative().ToString());

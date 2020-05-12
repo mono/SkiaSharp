@@ -4,9 +4,8 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public unsafe class GRBackendTexture : SKObject
+	public unsafe class GRBackendTexture : SKObject, ISKSkipObjectRegistration
 	{
-		[Preserve]
 		internal GRBackendTexture (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

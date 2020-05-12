@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Benchmarks</RootNamespace>
+    <AssemblyName>SkiaSharp.Benchmarks</AssemblyName>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+    <SkipCopyToOutputDirectory>true</SkipCopyToOutputDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\output\native\windows\x64\libSkiaSharp.dll" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\windows\x64\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x64\libSkiaSharp.pdb" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\windows\x64\libSkiaSharp.pdb') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\windows\x64\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x64\libHarfBuzzSharp.pdb" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\windows\x64\libHarfBuzzSharp.pdb') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\osx\libSkiaSharp.dylib" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\osx\libSkiaSharp.dylib') or '$(IsMacOS)' == 'true' " />
+    <Content Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\osx\libHarfBuzzSharp.dylib') or '$(IsMacOS)' == 'true' " />
+    <Content Include="..\..\output\native\linux\x64\libSkiaSharp.so" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\linux\x64\libSkiaSharp.so') or '$(IsLinux)' == 'true' " />
+    <Content Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\linux\x64\libHarfBuzzSharp.so') or '$(IsLinux)' == 'true' " />
+  </ItemGroup>
+</Project>

@@ -42,7 +42,6 @@ namespace SkiaSharp
 			SKTypeface.EnsureStaticInstanceAreInitialized ();
 		}
 
-		[Preserve]
 		internal SKObject (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -66,13 +65,13 @@ namespace SkiaSharp
 
 		protected override void DisposeManaged ()
 		{
-			if (ownedObjects is ConcurrentDictionary<IntPtr, SKObject> dic) {
-				foreach (var child in dic) {
-					child.Value.DisposeInternal ();
+			if (ownedObjects != null) {
+				foreach (var child in ownedObjects) {
+					child.Value?.DisposeInternal ();
 				}
-				dic.Clear ();
+				ownedObjects.Clear ();
 			}
-			KeepAliveObjects?.Clear ();
+			keepAliveObjects?.Clear ();
 		}
 
 		protected override void DisposeNative ()
@@ -81,23 +80,31 @@ namespace SkiaSharp
 				refcnt.SafeUnRef ();
 		}
 
-		internal static TSkiaObject GetObject<TSkiaObject> (IntPtr handle, bool owns = true, bool unrefExisting = true, bool refNew = false)
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			return HandleDictionary.GetObject<TSkiaObject, TSkiaObject> (handle, owns, unrefExisting, refNew);
+			return HandleDictionary.GetOrAddObject (handle, true, true, objectFactory);
 		}
 
-		internal static TSkiaObject GetObject<TSkiaObject, TSkiaImplementation> (IntPtr handle, bool owns = true, bool unrefExisting = true, bool refNew = false)
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
-			where TSkiaImplementation : SKObject, TSkiaObject
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			return HandleDictionary.GetObject<TSkiaObject, TSkiaImplementation> (handle, owns, unrefExisting, refNew);
+			return HandleDictionary.GetOrAddObject (handle, owns, true, objectFactory);
+		}
+
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject
+		{
+			if (handle == IntPtr.Zero)
+				return null;
+
+			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, objectFactory);
 		}
 
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)
@@ -125,6 +132,12 @@ namespace SkiaSharp
 			}
 
 			return HandleDictionary.GetInstance<TSkiaObject> (handle, out instance);
+		}
+
+		// indicate that the user cannot dispose the object
+		internal void PreventPublicDisposal ()
+		{
+			IgnorePublicDispose = true;
 		}
 
 		// indicate that the ownership of this object is now in the hands of
@@ -239,7 +252,7 @@ namespace SkiaSharp
 
 		protected internal virtual bool OwnsHandle { get; protected set; }
 
-		protected internal bool IgnorePublicDispose { get; protected set; }
+		protected internal bool IgnorePublicDispose { get; set; }
 
 		protected internal bool IsDisposed => isDisposed == 1;
 
@@ -335,5 +348,9 @@ namespace SkiaSharp
 		void ReferenceNative ();
 
 		void UnreferenceNative ();
+	}
+
+	internal interface ISKSkipObjectRegistration
+	{
 	}
 }

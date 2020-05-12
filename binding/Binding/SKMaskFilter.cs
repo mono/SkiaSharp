@@ -23,7 +23,6 @@ namespace SkiaSharp
 		private const float BlurSigmaScale = 0.57735f;
 		public const int TableMaxLength = 256;
 
-		[Preserve]
 		internal SKMaskFilter (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -44,31 +43,40 @@ namespace SkiaSharp
 
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma)
 		{
-			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur (blurStyle, sigma));
+			return GetObject (SkiaApi.sk_maskfilter_new_blur (blurStyle, sigma));
+		}
+
+		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, bool respectCTM)
+		{
+			return GetObject (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, respectCTM));
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateBlur(SKBlurStyle, float) instead.")]
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKBlurMaskFilterFlags flags)
 		{
-			return CreateBlur (blurStyle, sigma, SKRect.Empty, true);
-		}
-
-		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder)
-		{
-			return CreateBlur (blurStyle, sigma, occluder, true);
+			return CreateBlur (blurStyle, sigma, true);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateBlur(SKBlurStyle, float, SKRect) instead.")]
-		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, SKBlurMaskFilterFlags flags)
+		[Obsolete ("Use CreateBlur(SKBlurStyle, float) instead.")]
+		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder)
 		{
-			return CreateBlur (blurStyle, sigma, occluder, true);
+			return CreateBlur (blurStyle, sigma, true);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateBlur(SKBlurStyle, float) instead.")]
+		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, SKBlurMaskFilterFlags flags)
+		{
+			return CreateBlur (blurStyle, sigma, true);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateBlur(SKBlurStyle, float, bool) instead.")]
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, bool respectCTM)
 		{
-			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, &occluder, respectCTM));
+			return CreateBlur (blurStyle, sigma, respectCTM);
 		}
 
 		public static SKMaskFilter CreateTable (byte[] table)
@@ -78,19 +86,22 @@ namespace SkiaSharp
 			if (table.Length != TableMaxLength)
 				throw new ArgumentException ("Table must have a length of {SKColorTable.MaxLength}.", nameof (table));
 			fixed (byte* t = table) {
-				return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_table (t));
+				return GetObject (SkiaApi.sk_maskfilter_new_table (t));
 			}
 		}
 
 		public static SKMaskFilter CreateGamma (float gamma)
 		{
-			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_gamma (gamma));
+			return GetObject (SkiaApi.sk_maskfilter_new_gamma (gamma));
 		}
 
 		public static SKMaskFilter CreateClip (byte min, byte max)
 		{
-			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_clip (min, max));
+			return GetObject (SkiaApi.sk_maskfilter_new_clip (min, max));
 		}
+
+		internal static SKMaskFilter GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKMaskFilter (h, o));
 	}
 }
 

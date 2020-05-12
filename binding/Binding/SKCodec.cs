@@ -7,9 +7,8 @@ namespace SkiaSharp
 	// TODO: `Create(...)` should have overloads that accept a SKPngChunkReader
 	// TODO: missing the `QueryYuv8` and `GetYuv8Planes` members
 
-	public unsafe class SKCodec : SKObject
+	public unsafe class SKCodec : SKObject, ISKSkipObjectRegistration
 	{
-		[Preserve]
 		internal SKCodec (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -309,7 +308,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 
 			fixed (SKCodecResult* r = &result) {
-				var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));
+				var codec = GetObject (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));
 				stream.RevokeOwnership (codec);
 				return codec;
 			}
@@ -322,7 +321,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return GetObject<SKCodec> (SkiaApi.sk_codec_new_from_data (data.Handle));
+			return GetObject (SkiaApi.sk_codec_new_from_data (data.Handle));
 		}
 
 		// utils
@@ -340,5 +339,8 @@ namespace SkiaSharp
 				return new SKFrontBufferedManagedStream (stream, MinBufferedBytesNeeded, true);
 			}
 		}
+
+		internal static SKCodec GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new SKCodec (handle, true);
 	}
 }

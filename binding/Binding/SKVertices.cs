@@ -6,9 +6,8 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKVertices : SKObject, ISKNonVirtualReferenceCounted
+	public unsafe class SKVertices : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
-		[Preserve]
 		internal SKVertices (IntPtr x, bool owns)
 			: base (x, owns)
 		{
@@ -48,8 +47,11 @@ namespace SkiaSharp
 			fixed (SKPoint* t = texs)
 			fixed (SKColor* c = colors)
 			fixed (UInt16* i = indices) {
-				return GetObject<SKVertices> (SkiaApi.sk_vertices_make_copy (vmode, vertexCount, p, t, (uint*)c, indexCount, i));
+				return GetObject (SkiaApi.sk_vertices_make_copy (vmode, vertexCount, p, t, (uint*)c, indexCount, i));
 			}
 		}
+
+		internal static SKVertices GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new SKVertices (handle, true);
 	}
 }

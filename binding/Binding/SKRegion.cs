@@ -2,9 +2,8 @@
 
 namespace SkiaSharp
 {
-	public unsafe class SKRegion : SKObject
+	public unsafe class SKRegion : SKObject, ISKSkipObjectRegistration
 	{
-		[Preserve]
 		internal SKRegion (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -231,7 +230,7 @@ namespace SkiaSharp
 
 		// classes
 
-		public class RectIterator : SKObject
+		public class RectIterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKRegion region;
 
@@ -261,7 +260,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public class ClipIterator : SKObject
+		public class ClipIterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKRegion region;
 			private readonly SKRectI clip;
@@ -293,20 +292,11 @@ namespace SkiaSharp
 			}
 		}
 
-		public class SpanIterator : SKObject
+		public class SpanIterator : SKObject, ISKSkipObjectRegistration
 		{
-			private readonly SKRegion region;
-			private readonly int y;
-			private readonly int left;
-			private readonly int right;
-
 			internal SpanIterator (SKRegion region, int y, int left, int right)
 				: base (SkiaApi.sk_region_spanerator_new (region.Handle, y, left, right), true)
 			{
-				this.region = region;
-				this.y = y;
-				this.left = left;
-				this.right = right;
 			}
 
 			protected override void DisposeNative () =>

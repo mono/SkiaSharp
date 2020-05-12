@@ -11,11 +11,10 @@ namespace SkiaSharp
 		Full = 3,
 	}
 
-	public unsafe class SKPaint : SKObject
+	public unsafe class SKPaint : SKObject, ISKSkipObjectRegistration
 	{
 		private SKFont font;
 
-		[Preserve]
 		internal SKPaint (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -149,22 +148,22 @@ namespace SkiaSharp
 		}
 
 		public SKShader Shader {
-			get => GetObject<SKShader> (SkiaApi.sk_paint_get_shader (Handle));
+			get => SKShader.GetObject (SkiaApi.sk_paint_get_shader (Handle));
 			set => SkiaApi.sk_paint_set_shader (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKMaskFilter MaskFilter {
-			get => GetObject<SKMaskFilter> (SkiaApi.sk_paint_get_maskfilter (Handle));
+			get => SKMaskFilter.GetObject (SkiaApi.sk_paint_get_maskfilter (Handle));
 			set => SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKColorFilter ColorFilter {
-			get => GetObject<SKColorFilter> (SkiaApi.sk_paint_get_colorfilter (Handle));
+			get => SKColorFilter.GetObject (SkiaApi.sk_paint_get_colorfilter (Handle));
 			set => SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKImageFilter ImageFilter {
-			get => GetObject<SKImageFilter> (SkiaApi.sk_paint_get_imagefilter (Handle));
+			get => SKImageFilter.GetObject (SkiaApi.sk_paint_get_imagefilter (Handle));
 			set => SkiaApi.sk_paint_set_imagefilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
@@ -209,7 +208,7 @@ namespace SkiaSharp
 		}
 
 		public SKPathEffect PathEffect {
-			get => GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect (Handle));
+			get => SKPathEffect.GetObject (SkiaApi.sk_paint_get_path_effect (Handle));
 			set => SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
@@ -237,7 +236,7 @@ namespace SkiaSharp
 		// Clone
 
 		public SKPaint Clone () =>
-			GetObject<SKPaint> (SkiaApi.sk_compatpaint_clone (Handle));
+			GetObject (SkiaApi.sk_compatpaint_clone (Handle));
 
 		// MeasureText
 
@@ -320,7 +319,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (buffer));
 
 			fixed (float* mw = &measuredWidth) {
-				return (long)SkiaApi.sk_compatpaint_break_text (Handle, (void*)buffer, length, maxWidth, mw);
+				return GetFont ().BreakText ((void*)buffer, length, TextEncoding, maxWidth, mw, this);
 			}
 		}
 
@@ -594,9 +593,14 @@ namespace SkiaSharp
 		// Font
 
 		public SKFont ToFont () =>
-			GetObject<SKFont> (SkiaApi.sk_compatpaint_make_font (Handle));
+			SKFont.GetObject (SkiaApi.sk_compatpaint_make_font (Handle));
 
 		internal SKFont GetFont () =>
-			OwnedBy (font ??= GetObject<SKFont> (SkiaApi.sk_compatpaint_get_font (Handle), false), this);
+			OwnedBy (font ??= SKFont.GetObject (SkiaApi.sk_compatpaint_get_font (Handle), false), this);
+
+		//
+
+		internal static SKPaint GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new SKPaint (handle, true);
 	}
 }

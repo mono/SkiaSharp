@@ -130,6 +130,7 @@ namespace SkiaSharp.Views.iOS
 			base.Dispose(disposing);
 
 			drawable?.Dispose();
+			drawable = null;
 		}
 	}
 }

@@ -250,10 +250,12 @@ namespace SkiaSharp
 			};
 
 		public static GRPixelConfig ToPixelConfig (this SKColorType colorType) =>
-			throw new Exception ();
+			// SkiaApi.sk_colortype_to_gr_pixelconfig (colorType.ToNative ()).FromNative ();
+			throw new NotImplementedException ();
 
 		public static SKColorType ToColorType (this GRPixelConfig config) =>
-			throw new Exception ();
+			// SkiaApi.gr_pixelconfig_to_sk_colortype (config.ToNative ()).FromNative ();
+			throw new NotImplementedException ();
 	}
 
 	internal static class GRGlSizedFormat

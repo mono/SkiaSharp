@@ -4,7 +4,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKRuntimeEffect : SKObject, ISKReferenceCounted
 	{
-		[Preserve]
 		internal SKRuntimeEffect (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -14,7 +13,7 @@ namespace SkiaSharp
 		{
 			using var s = new SKString (sksl);
 			using var errorString = new SKString ();
-			var effect = GetObject<SKRuntimeEffect> (SkiaApi.sk_runtimeeffect_make (s.Handle, errorString.Handle));
+			var effect = GetObject (SkiaApi.sk_runtimeeffect_make (s.Handle, errorString.Handle));
 			errors = errorString?.ToString ();
 			if (errors?.Length == 0)
 				errors = null;
@@ -52,9 +51,9 @@ namespace SkiaSharp
 
 			fixed (IntPtr* ch = childrenHandles) {
 				if (localMatrix is SKMatrix m)
-					return GetObject<SKShader> (SkiaApi.sk_runtimeeffect_make_shader (Handle, inputsHandle, ch, childLength, &m, isOpaque));
+					return SKShader.GetObject (SkiaApi.sk_runtimeeffect_make_shader (Handle, inputsHandle, ch, childLength, &m, isOpaque));
 				else
-					return GetObject<SKShader> (SkiaApi.sk_runtimeeffect_make_shader (Handle, inputsHandle, ch, childLength, null, isOpaque));
+					return SKShader.GetObject (SkiaApi.sk_runtimeeffect_make_shader (Handle, inputsHandle, ch, childLength, null, isOpaque));
 			}
 		}
 
@@ -77,8 +76,13 @@ namespace SkiaSharp
 			}
 
 			fixed (IntPtr* ch = childrenHandles) {
-				return GetObject<SKColorFilter> (SkiaApi.sk_runtimeeffect_make_color_filter (Handle, inputsHandle, ch, (IntPtr)children?.Length));
+				return SKColorFilter.GetObject (SkiaApi.sk_runtimeeffect_make_color_filter (Handle, inputsHandle, ch, (IntPtr)children?.Length));
 			}
 		}
+
+		//
+
+		internal static SKRuntimeEffect GetObject (IntPtr handle) =>
+			GetOrAddObject (handle, (h, o) => new SKRuntimeEffect (h, o));
 	}
 }

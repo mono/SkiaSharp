@@ -176,6 +176,7 @@ namespace SkiaSharp.Views.Mac
 					provider,
 					null, false, CGColorRenderingIntent.Default);
 			}
+			GC.KeepAlive(skiaBitmap);
 			return cgImage;
 		}
 

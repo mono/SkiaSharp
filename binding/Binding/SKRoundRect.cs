@@ -2,9 +2,8 @@
 
 namespace SkiaSharp
 {
-	public unsafe class SKRoundRect : SKObject
+	public unsafe class SKRoundRect : SKObject, ISKSkipObjectRegistration
 	{
-		[Preserve]
 		internal SKRoundRect (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{

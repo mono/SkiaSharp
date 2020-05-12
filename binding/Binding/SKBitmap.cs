@@ -41,12 +41,11 @@ namespace SkiaSharp
 	// TODO: `GenerationID` may be useful
 	// TODO: `GetAddr` and `GetPixel` are confusing
 
-	public unsafe class SKBitmap : SKObject
+	public unsafe class SKBitmap : SKObject, ISKSkipObjectRegistration
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";
 
-		[Preserve]
 		internal SKBitmap (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -60,13 +59,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKBitmap (int width, int height)
-			: this (new SKImageInfo (width, height))
-		{
-		}
-
-		public SKBitmap (int width, int height, bool isOpaque)
-			: this (new SKImageInfo (width, height, SKImageInfo.PlatformColorType, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul))
+		public SKBitmap (int width, int height, bool isOpaque = false)
+			: this (width, height, SKImageInfo.PlatformColorType, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul)
 		{
 		}
 
@@ -880,9 +874,9 @@ namespace SkiaSharp
 			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
-			GetObject<SKShader> (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, null));
+			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, null));
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
-			GetObject<SKShader> (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &localMatrix));
+			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &localMatrix));
 	}
 }

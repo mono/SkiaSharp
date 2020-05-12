@@ -76,6 +76,7 @@ Task ("docs-api-diff")
 
     // pretty version
     var diffDir = "./output/api-diff";
+    EnsureDirectoryExists (diffDir);
     CleanDirectories (diffDir);
 
     Information ($"Creating comparer...");
@@ -83,11 +84,15 @@ Task ("docs-api-diff")
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
+    var filter = new NuGetVersions.Filter {
+        IncludePrerelease = NUGET_DIFF_PRERELEASE
+    };
+
     foreach (var id in TRACKED_NUGETS.Keys) {
         Information ($"Comparing the assemblies in '{id}'...");
 
         var version = GetVersion (id);
-        var latestVersion = (await NuGetVersions.GetLatestAsync (id))?.ToNormalizedString ();
+        var latestVersion = (await NuGetVersions.GetLatestAsync (id, filter))?.ToNormalizedString ();
         Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");
 
         // pre-cache so we can have better logs

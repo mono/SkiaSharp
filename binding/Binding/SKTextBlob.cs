@@ -3,9 +3,8 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted
+	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
-		[Preserve]
 		internal SKTextBlob (IntPtr x, bool owns)
 			: base (x, owns)
 		{
@@ -145,11 +144,15 @@ namespace SkiaSharp
 			bounds[1] = lowerBounds;
 			return SkiaApi.sk_textblob_get_intercepts (Handle, bounds, null, paint?.Handle ?? IntPtr.Zero);
 		}
+
+		//
+
+		internal static SKTextBlob GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new SKTextBlob (handle, true);
 	}
 
-	public unsafe class SKTextBlobBuilder : SKObject
+	public unsafe class SKTextBlobBuilder : SKObject, ISKSkipObjectRegistration
 	{
-		[Preserve]
 		internal SKTextBlobBuilder (IntPtr x, bool owns)
 			: base (x, owns)
 		{
@@ -169,7 +172,7 @@ namespace SkiaSharp
 		// Build
 
 		public SKTextBlob Build () =>
-			GetObject<SKTextBlob> (SkiaApi.sk_textblob_builder_make (Handle));
+			SKTextBlob.GetObject (SkiaApi.sk_textblob_builder_make (Handle));
 
 		// AddRun (text)
 
