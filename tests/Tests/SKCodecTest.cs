@@ -18,6 +18,17 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public unsafe void StreamLosesOwnershipTddoCodecButIsNotForgotten()
+		{
+			var codec = SKCodec.Create(Path.Combine(PathToImages, "color-wheel.png"));
+
+			for (var i = 0; i < 1000; ++i)
+			{
+				Assert.Equal(SKCodecResult.Success, codec.GetPixels(out _));
+			}
+		}
+
+		[SkippableFact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheCodecWasFinished()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -376,6 +387,14 @@ namespace SkiaSharp.Tests
 			Assert.Equal (codecPixels, bitmapPixels);
 		}
 
+		[SkippableFact]
+		public void CanReadManagedStream()
+		{
+			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
+			using (var codec = SKCodec.Create(stream))
+				Assert.NotNull(codec);
+		}
+
 		[SkippableFact (Skip = "This keeps breaking CI for some reason.")]
 		public async Task DownloadedStream ()
 		{
@@ -392,14 +411,6 @@ namespace SkiaSharp.Tests
 			using (var nonSeekable = new NonSeekableReadOnlyStream (stream))
 			using (var bitmap = SKBitmap.Decode (nonSeekable))
 				Assert.NotNull (bitmap);
-		}
-
-		[SkippableFact]
-		public void CanReadManagedStream()
-		{
-			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
-			using (var codec = SKCodec.Create(stream))
-				Assert.NotNull(codec);
 		}
 
 		[SkippableTheory]

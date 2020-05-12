@@ -15,21 +15,27 @@ namespace SkiaSharp
 
 		// Create
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateGl() instead.")]
 		public static GRContext Create (GRBackend backend) =>
 			backend switch
 			{
 				GRBackend.Metal => throw new NotSupportedException (),
 				GRBackend.OpenGL => CreateGl (),
 				GRBackend.Vulkan => throw new NotSupportedException (),
+				GRBackend.Dawn => throw new NotSupportedException (),
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateGl(GRGlInterface) instead.")]
 		public static GRContext Create (GRBackend backend, GRGlInterface backendContext) =>
 			backend switch
 			{
 				GRBackend.Metal => throw new NotSupportedException (),
 				GRBackend.OpenGL => CreateGl (backendContext),
 				GRBackend.Vulkan => throw new NotSupportedException (),
+				GRBackend.Dawn => throw new NotSupportedException (),
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
@@ -41,6 +47,7 @@ namespace SkiaSharp
 				GRBackend.Metal => throw new NotSupportedException (),
 				GRBackend.OpenGL => GetObject (SkiaApi.gr_context_make_gl (backendContext)),
 				GRBackend.Vulkan => throw new NotSupportedException (),
+				GRBackend.Dawn => throw new NotSupportedException (),
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
@@ -54,7 +61,7 @@ namespace SkiaSharp
 
 		//
 
-		public GRBackend Backend => SkiaApi.gr_context_get_backend (Handle);
+		public GRBackend Backend => SkiaApi.gr_context_get_backend (Handle).FromNative ();
 
 		public void AbandonContext (bool releaseResources = false)
 		{
@@ -98,7 +105,7 @@ namespace SkiaSharp
 			SkiaApi.gr_context_flush (Handle);
 
 		public int GetMaxSurfaceSampleCount (SKColorType colorType) =>
-			SkiaApi.gr_context_get_max_surface_sample_count_for_color_type (Handle, colorType);
+			SkiaApi.gr_context_get_max_surface_sample_count_for_color_type (Handle, colorType.ToNative ());
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
