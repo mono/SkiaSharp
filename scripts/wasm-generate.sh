@@ -10,6 +10,10 @@ sed -i 's/STRICT=1/STRICT=0/g' modules/canvaskit/compile.sh
 sed -i 's/shared_library("SkiaSharp")/static_library("SkiaSharp")/g' BUILD.gn
 sed -i 's/libsksg.a \\/libsksg.a libSkiaSharp.a \\/g' modules/canvaskit/compile.sh
 
+# Restore CPU shaders
+sed -i 's/-DSK_DISABLE_LEGACY_SHADERCONTEXT//g' modules/canvaskit/compile.sh
+sed -i 's/SK_MaxS32 \* 0.25f/(float)SK_MaxS32 * 0.25f/g' src/shaders/SkImageShader.cpp
+
 modules/canvaskit/compile.sh
 
 export ADDITIONAL_OBJ=out/canvaskit_wasm/obj/libAdditional
