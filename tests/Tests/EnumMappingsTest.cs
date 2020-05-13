@@ -24,7 +24,10 @@ namespace SkiaSharp.Tests
 		{
 			foreach (GRPixelConfig value in Enum.GetValues(typeof(GRPixelConfig)))
 			{
-				Assert.Equal(value.ToString(), value.ToNative().ToString());
+				if (IsEnumValueDeprected(value))
+					Assert.Throws<ArgumentOutOfRangeException>(() => value.ToNative());
+				else
+					Assert.Equal(value.ToString(), value.ToNative().ToString());
 			}
 
 			foreach (GRPixelConfigNative value in Enum.GetValues(typeof(GRPixelConfigNative)))
