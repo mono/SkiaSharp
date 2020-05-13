@@ -43,6 +43,6 @@ namespace SkiaSharp
 		}
 
 		internal static GRVkExtensions GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new GRVkExtensions (h, o));
+			handle == IntPtr.Zero ? null : new GRVkExtensions (handle, true);
 	}
 }

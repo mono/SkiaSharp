@@ -14,15 +14,13 @@ namespace SkiaSharp
 		private GCHandle getProcHandle;
 		private void* getProcContext;
 
-		public GRVkBackendContext ()
-		{
-		}
-
 		protected virtual void Dispose (bool disposing)
 		{
 			if (disposing) {
-				if (getProcHandle.IsAllocated)
+				if (getProcHandle.IsAllocated) {
 					getProcHandle.Free ();
+					getProcHandle = default;
+				}
 			}
 		}
 

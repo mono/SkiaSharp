@@ -17,10 +17,6 @@ namespace SkiaSharp
 		private PhysicalDeviceFeaturesNative devFeatures;
 		private GCHandle devFeaturesHandle;
 
-		public GRSharpVkBackendContext()
-		{
-		}
-
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
@@ -28,7 +24,10 @@ namespace SkiaSharp
 			if (disposing)
 			{
 				if (devFeaturesHandle.IsAllocated)
+				{
 					devFeaturesHandle.Free();
+					devFeaturesHandle = default;
+				}
 			}
 		}
 
