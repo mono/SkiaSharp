@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -21,7 +22,16 @@ namespace SkiaSharp
 		Rgb888 = 6,
 		Bgra8888 = 7,
 		Srgba8888 = 8,
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The pixel configuration 'sBGRA 8888' is no longer supported in the native library.", true)]
+		Sbgra8888 = 9,
 		Rgba1010102 = 10,
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The pixel configuration 'floating-point RGBA' is no longer supported in the native library.", true)]
+		RgbaFloat = 11,
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("The pixel configuration 'floating-point RG' is no longer supported in the native library.", true)]
+		RgFloat = 12,
 		AlphaHalf = 13,
 		RgbaHalf = 14,
 		Alpha8AsAlpha = 15,
