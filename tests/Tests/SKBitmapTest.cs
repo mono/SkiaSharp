@@ -55,7 +55,7 @@ namespace SkiaSharp.Tests
 				Assert.NotEqual(SKColors.Empty, color);
 				if (colorType == SKColorType.Gray8)
 					Assert.Equal(0xFF353535, color);
-				else if (colorType == SKColorType.Alpha8 || colorType == SKColorType.A16Float || colorType == SKColorType.A16)
+				else if (colorType == SKColorType.Alpha8 || colorType == SKColorType.AlphaF16 || colorType == SKColorType.Alpha16)
 					Assert.Equal(0xFF000000, color);
 				else
 					Assert.Equal(0xFFFF0000, color);
@@ -95,11 +95,11 @@ namespace SkiaSharp.Tests
 					Assert.True(color.Red > color.Blue);
 					Assert.Equal(255, color.Alpha);
 				}
-				else if (colorType == SKColorType.Alpha8 || colorType == SKColorType.A16)
+				else if (colorType == SKColorType.Alpha8 || colorType == SKColorType.Alpha16)
 				{
 					Assert.Equal((SKColor)0xAA000000, color);
 				}
-				else if (colorType == SKColorType.A16Float)
+				else if (colorType == SKColorType.AlphaF16)
 				{
 					// rounding
 					Assert.Equal((SKColor)0xA9000000, color);

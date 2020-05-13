@@ -37,20 +37,20 @@ namespace SkiaSharp.Tests
 					GRPixelConfig.Bgra8888 => SKColorType.Bgra8888,
 					GRPixelConfig.Srgba8888 => SKColorType.Rgba8888,
 					GRPixelConfig.Rgba1010102 => SKColorType.Rgba1010102,
-					GRPixelConfig.AlphaHalf => SKColorType.A16Float,
+					GRPixelConfig.AlphaHalf => SKColorType.AlphaF16,
 					GRPixelConfig.RgbaHalf => SKColorType.RgbaF16,
 					GRPixelConfig.Alpha8AsAlpha => SKColorType.Alpha8,
 					GRPixelConfig.Alpha8AsRed => SKColorType.Alpha8,
-					GRPixelConfig.AlphaHalfAsLum => SKColorType.A16Float,
-					GRPixelConfig.AlphaHalfAsRed => SKColorType.A16Float,
+					GRPixelConfig.AlphaHalfAsLum => SKColorType.AlphaF16,
+					GRPixelConfig.AlphaHalfAsRed => SKColorType.AlphaF16,
 					GRPixelConfig.Gray8AsLum => SKColorType.Gray8,
 					GRPixelConfig.Gray8AsRed => SKColorType.Gray8,
 					GRPixelConfig.RgbaHalfClamped => SKColorType.RgbaF16Clamped,
-					GRPixelConfig.Alpha16 => SKColorType.A16,
-					GRPixelConfig.Rg1616 => SKColorType.R16g16,
-					GRPixelConfig.Rgba16161616 => SKColorType.R16g16b16a16,
-					GRPixelConfig.RgHalf => SKColorType.R16g16Float,
-					GRPixelConfig.Rg88 => SKColorType.R8g8,
+					GRPixelConfig.Alpha16 => SKColorType.Alpha16,
+					GRPixelConfig.Rg1616 => SKColorType.Rg1616,
+					GRPixelConfig.Rgba16161616 => SKColorType.Rgba16161616,
+					GRPixelConfig.RgHalf => SKColorType.RgF16,
+					GRPixelConfig.Rg88 => SKColorType.Rg88,
 					GRPixelConfig.Rgb888x => SKColorType.Rgb888x,
 					GRPixelConfig.RgbEtc1 => SKColorType.Rgb888x,
 					_ => SKColorType.Unknown,
@@ -80,14 +80,14 @@ namespace SkiaSharp.Tests
 					SKColorType.Rgb888x => GRPixelConfig.Rgb888,
 					SKColorType.Bgra8888 => GRPixelConfig.Bgra8888,
 					SKColorType.Rgba1010102 => GRPixelConfig.Rgba1010102,
-					SKColorType.A16Float => GRPixelConfig.AlphaHalf,
+					SKColorType.AlphaF16 => GRPixelConfig.AlphaHalf,
 					SKColorType.RgbaF16 => GRPixelConfig.RgbaHalf,
 					SKColorType.RgbaF16Clamped => GRPixelConfig.RgbaHalfClamped,
-					SKColorType.A16 => GRPixelConfig.Alpha16,
-					SKColorType.R16g16 => GRPixelConfig.Rg1616,
-					SKColorType.R16g16b16a16 => GRPixelConfig.Rgba16161616,
-					SKColorType.R16g16Float => GRPixelConfig.RgHalf,
-					SKColorType.R8g8 => GRPixelConfig.Rg88,
+					SKColorType.Alpha16 => GRPixelConfig.Alpha16,
+					SKColorType.Rg1616 => GRPixelConfig.Rg1616,
+					SKColorType.Rgba16161616 => GRPixelConfig.Rgba16161616,
+					SKColorType.RgF16 => GRPixelConfig.RgHalf,
+					SKColorType.Rg88 => GRPixelConfig.Rg88,
 					_ => GRPixelConfig.Unknown,
 				};
 
@@ -104,14 +104,18 @@ namespace SkiaSharp.Tests
 
 				if (value == SKColorType.RgbaF16Clamped)
 					Assert.Equal(SKColorTypeNative.RgbaF16Norm, native);
-				else if (value == SKColorType.A16)
+				else if (value == SKColorType.Alpha16)
 					Assert.Equal(SKColorTypeNative.A16Unorm, native);
-				else if (value == SKColorType.R16g16b16a16)
+				else if (value == SKColorType.Rgba16161616)
 					Assert.Equal(SKColorTypeNative.R16g16b16a16Unorm, native);
-				else if (value == SKColorType.R16g16)
+				else if (value == SKColorType.Rg1616)
 					Assert.Equal(SKColorTypeNative.R16g16Unorm, native);
-				else if (value == SKColorType.R8g8)
+				else if (value == SKColorType.Rg88)
 					Assert.Equal(SKColorTypeNative.R8g8Unorm, native);
+				else if (value == SKColorType.AlphaF16)
+					Assert.Equal(SKColorTypeNative.A16Float, native);
+				else if (value == SKColorType.RgF16)
+					Assert.Equal(SKColorTypeNative.R16g16Float, native);
 				else
 					Assert.Equal(value.ToString(), native.ToString());
 			}
@@ -127,13 +131,17 @@ namespace SkiaSharp.Tests
 				if (value == SKColorTypeNative.RgbaF16Norm)
 					Assert.Equal(SKColorType.RgbaF16Clamped, managed);
 				else if (value == SKColorTypeNative.A16Unorm)
-					Assert.Equal(SKColorType.A16, managed);
+					Assert.Equal(SKColorType.Alpha16, managed);
 				else if (value == SKColorTypeNative.R16g16b16a16Unorm)
-					Assert.Equal(SKColorType.R16g16b16a16, managed);
+					Assert.Equal(SKColorType.Rgba16161616, managed);
 				else if (value == SKColorTypeNative.R16g16Unorm)
-					Assert.Equal(SKColorType.R16g16, managed);
+					Assert.Equal(SKColorType.Rg1616, managed);
 				else if (value == SKColorTypeNative.R8g8Unorm)
-					Assert.Equal(SKColorType.R8g8, managed);
+					Assert.Equal(SKColorType.Rg88, managed);
+				else if (value == SKColorTypeNative.A16Float)
+					Assert.Equal(SKColorType.AlphaF16, managed);
+				else if (value == SKColorTypeNative.R16g16Float)
+					Assert.Equal(SKColorType.RgF16, managed);
 				else
 					Assert.Equal(value.ToString(), managed.ToString());
 			}
