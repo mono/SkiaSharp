@@ -4,7 +4,7 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-$url = "http://releases.llvm.org/${Version}/LLVM-${Version}-win64.exe"
+$url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-${Version}/LLVM-${Version}-win64.exe"
 
 $llvmTemp = "$HOME/llvm-temp"
 $install = "$llvmTemp/llvm.exe"
