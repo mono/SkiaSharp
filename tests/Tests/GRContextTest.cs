@@ -19,6 +19,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void ToGlSizedFormat()
 		{

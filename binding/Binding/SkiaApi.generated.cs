@@ -1311,17 +1311,9 @@ namespace SkiaSharp
 
 		#region sk_general.h
 
-		// sk_colortype_t gr_pixelconfig_to_sk_colortype(gr_pixelconfig_t pixelConfig)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorTypeNative gr_pixelconfig_to_sk_colortype (GRPixelConfigNative pixelConfig);
-
 		// sk_colortype_t sk_colortype_get_default_8888()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKColorTypeNative sk_colortype_get_default_8888 ();
-
-		// gr_pixelconfig_t sk_colortype_to_gr_pixelconfig(sk_colortype_t colorType)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRPixelConfigNative sk_colortype_to_gr_pixelconfig (SKColorTypeNative colorType);
 
 		// int sk_nvrefcnt_get_ref_count(const sk_nvrefcnt_t* refcnt)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -5914,62 +5906,6 @@ namespace SkiaSharp
 		OpenGL = 2,
 		// VULKAN_GR_BACKEND = 3
 		Vulkan = 3,
-	}
-
-	// gr_pixelconfig_t
-	internal enum GRPixelConfigNative {
-		// UNKNOWN_GR_PIXEL_CONFIG = 0
-		Unknown = 0,
-		// ALPHA_8_GR_PIXEL_CONFIG = 1
-		Alpha8 = 1,
-		// ALPHA_8_AS_ALPHA_GR_PIXEL_CONFIG = 2
-		Alpha8AsAlpha = 2,
-		// ALPHA_8_AS_RED_GR_PIXEL_CONFIG = 3
-		Alpha8AsRed = 3,
-		// GRAY_8_GR_PIXEL_CONFIG = 4
-		Gray8 = 4,
-		// GRAY_8_AS_LUM_GR_PIXEL_CONFIG = 5
-		Gray8AsLum = 5,
-		// GRAY_8_AS_RED_GR_PIXEL_CONFIG = 6
-		Gray8AsRed = 6,
-		// RGB_565_GR_PIXEL_CONFIG = 7
-		Rgb565 = 7,
-		// RGBA_4444_GR_PIXEL_CONFIG = 8
-		Rgba4444 = 8,
-		// RGBA_8888_GR_PIXEL_CONFIG = 9
-		Rgba8888 = 9,
-		// RGB_888_GR_PIXEL_CONFIG = 10
-		Rgb888 = 10,
-		// RGB_888X_GR_PIXEL_CONFIG = 11
-		Rgb888x = 11,
-		// RG_88_GR_PIXEL_CONFIG = 12
-		Rg88 = 12,
-		// BGRA_8888_GR_PIXEL_CONFIG = 13
-		Bgra8888 = 13,
-		// SRGBA_8888_GR_PIXEL_CONFIG = 14
-		Srgba8888 = 14,
-		// RGBA_1010102_GR_PIXEL_CONFIG = 15
-		Rgba1010102 = 15,
-		// ALPHA_HALF_GR_PIXEL_CONFIG = 16
-		AlphaHalf = 16,
-		// ALPHA_HALF_AS_LUM_GR_PIXEL_CONFIG = 17
-		AlphaHalfAsLum = 17,
-		// ALPHA_HALF_AS_RED_GR_PIXEL_CONFIG = 18
-		AlphaHalfAsRed = 18,
-		// RGBA_HALF_GR_PIXEL_CONFIG = 19
-		RgbaHalf = 19,
-		// RGBA_HALF_CLAMPED_GR_PIXEL_CONFIG = 20
-		RgbaHalfClamped = 20,
-		// RGB_ETC1_GR_PIXEL_CONFIG = 21
-		RgbEtc1 = 21,
-		// ALPHA_16_GR_PIXEL_CONFIG = 22
-		Alpha16 = 22,
-		// RG_1616_GR_PIXEL_CONFIG = 23
-		Rg1616 = 23,
-		// RGBA_16161616_GR_PIXEL_CONFIG = 24
-		Rgba16161616 = 24,
-		// RG_HALF_GR_PIXEL_CONFIG = 25
-		RgHalf = 25,
 	}
 
 	// gr_surfaceorigin_t
