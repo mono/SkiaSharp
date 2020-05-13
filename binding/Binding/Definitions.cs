@@ -66,15 +66,15 @@ namespace SkiaSharp
 		Rgba1010102 = 7,
 		Rgb101010x = 8,
 		Gray8 = 9,
-		RgbaF16 = 10,
-		RgbaF16Normalized = 11,
+		RgbaF16Clamped = 10,
+		RgbaF16 = 11,
 		RgbaF32 = 12,
-		R8g8Unnormalized = 13,
+		R8g8 = 13,
 		A16Float = 14,
 		R16g16Float = 15,
-		A16Unnormalized = 16,
-		R16g16Unnormalized = 17,
-		R16g16b16a16Unnormalized = 18,
+		A16 = 16,
+		R16g16 = 17,
+		R16g16b16a16 = 18,
 	}
 
 	public static partial class SkiaExtensions
@@ -125,8 +125,8 @@ namespace SkiaSharp
 				// 2
 				SKColorType.Rgb565 => 2,
 				SKColorType.Argb4444 => 2,
-				SKColorType.R8g8Unnormalized => 2,
-				SKColorType.A16Unnormalized => 2,
+				SKColorType.R8g8 => 2,
+				SKColorType.A16 => 2,
 				SKColorType.A16Float => 2,
 				// 4
 				SKColorType.Bgra8888 => 4,
@@ -134,12 +134,12 @@ namespace SkiaSharp
 				SKColorType.Rgb888x => 4,
 				SKColorType.Rgba1010102 => 4,
 				SKColorType.Rgb101010x => 4,
-				SKColorType.R16g16Unnormalized => 4,
+				SKColorType.R16g16 => 4,
 				SKColorType.R16g16Float => 4,
 				// 8
-				SKColorType.RgbaF16Normalized => 8,
+				SKColorType.RgbaF16Clamped => 8,
 				SKColorType.RgbaF16 => 8,
-				SKColorType.R16g16b16a16Unnormalized => 8,
+				SKColorType.R16g16b16a16 => 8,
 				// 16
 				SKColorType.RgbaF32 => 16,
 				//
@@ -156,7 +156,7 @@ namespace SkiaSharp
 
 				// opaque or premul
 				case SKColorType.Alpha8:
-				case SKColorType.A16Unnormalized:
+				case SKColorType.A16:
 				case SKColorType.A16Float:
 					if (SKAlphaType.Unpremul == alphaType) {
 						alphaType = SKAlphaType.Premul;
@@ -168,16 +168,16 @@ namespace SkiaSharp
 				case SKColorType.Rgba8888:
 				case SKColorType.Bgra8888:
 				case SKColorType.Rgba1010102:
-				case SKColorType.RgbaF16Normalized:
+				case SKColorType.RgbaF16Clamped:
 				case SKColorType.RgbaF16:
 				case SKColorType.RgbaF32:
-				case SKColorType.R16g16b16a16Unnormalized:
+				case SKColorType.R16g16b16a16:
 					break;
 
 				// opaque
 				case SKColorType.Gray8:
-				case SKColorType.R8g8Unnormalized:
-				case SKColorType.R16g16Unnormalized:
+				case SKColorType.R8g8:
+				case SKColorType.R16g16:
 				case SKColorType.R16g16Float:
 				case SKColorType.Rgb565:
 				case SKColorType.Rgb888x:
