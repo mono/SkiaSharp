@@ -94,7 +94,6 @@ stages:
           displayName: Build Native Tizen (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
-          condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
         parameters:
           name: native_uwp_angle_x86_windows
@@ -276,8 +275,7 @@ stages:
             - native_android_x64_windows
             - native_android_arm_windows
             - native_android_arm64_windows
-            # - native_tizen_windows
-            - native_tizen_linux
+            - native_tizen_windows
             - native_uwp_angle_x86_windows
             - native_uwp_angle_x64_windows
             - native_uwp_angle_arm_windows
@@ -400,7 +398,7 @@ stages:
           displayName: Tests (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --supportVulkan=true
           shouldPublish: false
           requiredArtifacts:
             - native_win32_x86_windows
@@ -412,14 +410,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Windows .NET Framework Tests'
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Windows .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
@@ -437,14 +435,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS Mono Tests'
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
@@ -464,14 +462,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux Mono Tests'
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux .NET Core Tests'
       # TODO: add tests for linux no dependencies
       # TODO: add tests for windows nano server

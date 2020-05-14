@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	internal unsafe class SKString : SKObject
+	internal unsafe class SKString : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKString (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -70,7 +70,7 @@ namespace SkiaSharp
 			SkiaApi.sk_string_destructor (Handle);
 
 		internal static SKString GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKString (h, o));
+			handle == IntPtr.Zero ? null : new SKString (handle, true);
 	}
 }
 

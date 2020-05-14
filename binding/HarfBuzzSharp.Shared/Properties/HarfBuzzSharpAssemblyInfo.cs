@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("HarfBuzzSharp")]
 [assembly: AssemblyDescription("HarfBuzzSharp is a cross-platform OpenType text shaping engine for .NET platforms.")]
-[assembly: AssemblyCompany("Xamarin Inc.")]
+[assembly: AssemblyCompany("Microsoft Corporation")]
 [assembly: AssemblyProduct("HarfBuzzSharp")]
 [assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 [assembly: NeutralResourcesLanguage("en")]

@@ -76,12 +76,16 @@ Task ("docs-api-diff")
 
     // pretty version
     var diffDir = "./output/api-diff";
+    EnsureDirectoryExists (diffDir);
     CleanDirectories (diffDir);
 
     Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
+
+    // some libraries depend in SkiaSharp
+    comparer.SearchPaths.Add($"./output/SkiaSharp/nuget/lib/netstandard2.0");
 
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE

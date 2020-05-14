@@ -2,6 +2,9 @@
 using System.Buffers;
 using System.ComponentModel;
 using System.Text;
+#if NETSTANDARD1_3 || WINDOWS_UWP
+using System.Reflection;
+#endif
 
 namespace SkiaSharp
 {
@@ -65,6 +68,11 @@ namespace SkiaSharp
 			public static implicit operator ReadOnlySpan<T> (RentedArray<T> scope) =>
 				scope.Span;
 		}
+
+#if NETSTANDARD1_3 || WINDOWS_UWP
+		internal static bool IsAssignableFrom (this Type type, Type c) =>
+			type.GetTypeInfo ().IsAssignableFrom (c.GetTypeInfo ());
+#endif
 	}
 
 	public unsafe static class StringUtilities

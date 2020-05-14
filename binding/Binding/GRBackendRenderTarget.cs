@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class GRBackendRenderTarget : SKObject
+	public unsafe class GRBackendRenderTarget : SKObject, ISKSkipObjectRegistration
 	{
 		internal GRBackendRenderTarget (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -37,9 +37,24 @@ namespace SkiaSharp
 			CreateGl (width, height, sampleCount, stencilBits, glInfo);
 		}
 
+		public GRBackendRenderTarget (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo)
+			: this (IntPtr.Zero, true)
+		{
+			CreateVulkan (width, height, sampleCount, vkImageInfo);
+		}
+
 		private void CreateGl (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
 		{
 			Handle = SkiaApi.gr_backendrendertarget_new_gl (width, height, sampleCount, stencilBits, &glInfo);
+
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
+			}
+		}
+
+		private void CreateVulkan (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo)
+		{
+			Handle = SkiaApi.gr_backendrendertarget_new_vulkan (width, height, sampleCount, &vkImageInfo);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");

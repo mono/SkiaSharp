@@ -19,12 +19,18 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void ToGlSizedFormat()
 		{
 			foreach (GRPixelConfig value in Enum.GetValues(typeof(GRPixelConfig)))
 			{
-				value.ToGlSizedFormat();
+				if (IsEnumValueDeprected(value))
+					Assert.Throws<ArgumentOutOfRangeException>(() => value.ToGlSizedFormat());
+				else if (value == GRPixelConfig.Unknown)
+					Assert.Equal(0u, value.ToGlSizedFormat());
+				else
+					Assert.NotEqual(0u, value.ToGlSizedFormat());
 			}
 		}
 
