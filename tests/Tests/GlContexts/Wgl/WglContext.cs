@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace SkiaSharp.Tests
 {
@@ -9,66 +6,20 @@ namespace SkiaSharp.Tests
 	{
 		private static readonly object fLock = new object();
 
-		private static ushort gWC;
+		private static readonly Win32Window window = new Win32Window("WglContext");
 
-		private static IntPtr fWindow;
-		private static IntPtr fDeviceContext;
-
-		private IntPtr fPbuffer;
-		private IntPtr fPbufferDC;
-		private IntPtr fPbufferGlContext;
-
-		static WglContext()
-		{
-			var wc = new WNDCLASS
-			{
-				cbClsExtra = 0,
-				cbWndExtra = 0,
-				hbrBackground = IntPtr.Zero,
-				hCursor = User32.LoadCursor(IntPtr.Zero, (int)User32.IDC_ARROW),
-				hIcon = User32.LoadIcon(IntPtr.Zero, (IntPtr)User32.IDI_APPLICATION),
-				hInstance = Kernel32.CurrentModuleHandle,
-				lpfnWndProc = (WNDPROC)User32.DefWindowProc,
-				lpszClassName = "Griffin",
-				lpszMenuName = null,
-				style = User32.CS_HREDRAW | User32.CS_VREDRAW | User32.CS_OWNDC
-			};
-
-			gWC = User32.RegisterClass(ref wc);
-			if (gWC == 0)
-			{
-				throw new Exception("Could not register window class.");
-			}
-
-			fWindow = User32.CreateWindow(
-				"Griffin",
-				"The Invisible Man",
-				WindowStyles.WS_OVERLAPPEDWINDOW,
-				0, 0,
-				1, 1,
-				IntPtr.Zero, IntPtr.Zero, Kernel32.CurrentModuleHandle, IntPtr.Zero);
-			if (fWindow == IntPtr.Zero)
-			{
-				throw new Exception($"Could not create window.");
-			}
-
-			fDeviceContext = User32.GetDC(fWindow);
-			if (fDeviceContext == IntPtr.Zero)
-			{
-				DestroyWindow();
-				throw new Exception("Could not get device context.");
-			}
-
-			if (!Wgl.HasExtension(fDeviceContext, "WGL_ARB_pixel_format") ||
-				!Wgl.HasExtension(fDeviceContext, "WGL_ARB_pbuffer"))
-			{
-				DestroyWindow();
-				throw new Exception("DC does not have extensions.");
-			}
-		}
+		private IntPtr pbufferHandle;
+		private IntPtr pbufferDeviceContextHandle;
+		private IntPtr pbufferGlContextHandle;
 
 		public WglContext()
 		{
+			if (!Wgl.HasExtension(window.DeviceContextHandle, "WGL_ARB_pixel_format") ||
+				!Wgl.HasExtension(window.DeviceContextHandle, "WGL_ARB_pbuffer"))
+			{
+				throw new Exception("DC does not have extensions.");
+			}
+
 			var iAttrs = new int[]
 			{
 				Wgl.WGL_ACCELERATION_ARB, Wgl.WGL_FULL_ACCELERATION_ARB,
@@ -87,7 +38,7 @@ namespace SkiaSharp.Tests
 			lock (fLock)
 			{
 				// HACK: This call seems to cause deadlocks on some systems.
-				Wgl.wglChoosePixelFormatARB(fDeviceContext, iAttrs, null, (uint)piFormats.Length, piFormats, out nFormats);
+				Wgl.wglChoosePixelFormatARB(window.DeviceContextHandle, iAttrs, null, (uint)piFormats.Length, piFormats, out nFormats);
 			}
 			if (nFormats == 0)
 			{
@@ -95,15 +46,15 @@ namespace SkiaSharp.Tests
 				throw new Exception("Could not get pixel formats.");
 			}
 
-			fPbuffer = Wgl.wglCreatePbufferARB(fDeviceContext, piFormats[0], 1, 1, null);
-			if (fPbuffer == IntPtr.Zero)
+			pbufferHandle = Wgl.wglCreatePbufferARB(window.DeviceContextHandle, piFormats[0], 1, 1, null);
+			if (pbufferHandle == IntPtr.Zero)
 			{
 				Destroy();
 				throw new Exception("Could not create Pbuffer.");
 			}
 
-			fPbufferDC = Wgl.wglGetPbufferDCARB(fPbuffer);
-			if (fPbufferDC == IntPtr.Zero)
+			pbufferDeviceContextHandle = Wgl.wglGetPbufferDCARB(pbufferHandle);
+			if (pbufferDeviceContextHandle == IntPtr.Zero)
 			{
 				Destroy();
 				throw new Exception("Could not get Pbuffer DC.");
@@ -112,11 +63,11 @@ namespace SkiaSharp.Tests
 			var prevDC = Wgl.wglGetCurrentDC();
 			var prevGLRC = Wgl.wglGetCurrentContext();
 
-			fPbufferGlContext = Wgl.wglCreateContext(fPbufferDC);
+			pbufferGlContextHandle = Wgl.wglCreateContext(pbufferDeviceContextHandle);
 
 			Wgl.wglMakeCurrent(prevDC, prevGLRC);
 
-			if (fPbufferGlContext == IntPtr.Zero)
+			if (pbufferGlContextHandle == IntPtr.Zero)
 			{
 				Destroy();
 				throw new Exception("Could not creeate Pbuffer GL context.");
@@ -125,7 +76,7 @@ namespace SkiaSharp.Tests
 
 		public override void MakeCurrent()
 		{
-			if (!Wgl.wglMakeCurrent(fPbufferDC, fPbufferGlContext))
+			if (!Wgl.wglMakeCurrent(pbufferDeviceContextHandle, pbufferGlContextHandle))
 			{
 				Destroy();
 				throw new Exception("Could not set the context.");
@@ -134,7 +85,7 @@ namespace SkiaSharp.Tests
 
 		public override void SwapBuffers()
 		{
-			if (!Gdi32.SwapBuffers(fPbufferDC))
+			if (!Gdi32.SwapBuffers(pbufferDeviceContextHandle))
 			{
 				Destroy();
 				throw new Exception("Could not complete SwapBuffers.");
@@ -143,33 +94,28 @@ namespace SkiaSharp.Tests
 
 		public override void Destroy()
 		{
-			if (!Wgl.HasExtension(fPbufferDC, "WGL_ARB_pbuffer"))
+			if (pbufferGlContextHandle != IntPtr.Zero)
 			{
-				// ASSERT
+				Wgl.wglDeleteContext(pbufferGlContextHandle);
+				pbufferGlContextHandle = IntPtr.Zero;
 			}
 
-			Wgl.wglDeleteContext(fPbufferGlContext);
-
-			Wgl.wglReleasePbufferDCARB?.Invoke(fPbuffer, fPbufferDC);
-
-			Wgl.wglDestroyPbufferARB?.Invoke(fPbuffer);
-		}
-
-		private static void DestroyWindow()
-		{
-			if (fWindow != IntPtr.Zero)
+			if (pbufferHandle != IntPtr.Zero)
 			{
-				if (fDeviceContext != IntPtr.Zero)
+				if (pbufferDeviceContextHandle != IntPtr.Zero)
 				{
-					User32.ReleaseDC(fWindow, fDeviceContext);
-					fDeviceContext = IntPtr.Zero;
+					if (!Wgl.HasExtension(pbufferDeviceContextHandle, "WGL_ARB_pbuffer"))
+					{
+						// ASSERT
+					}
+
+					Wgl.wglReleasePbufferDCARB?.Invoke(pbufferHandle, pbufferDeviceContextHandle);
+					pbufferDeviceContextHandle = IntPtr.Zero;
 				}
 
-				User32.DestroyWindow(fWindow);
-				fWindow = IntPtr.Zero;
+				Wgl.wglDestroyPbufferARB?.Invoke(pbufferHandle);
+				pbufferHandle = IntPtr.Zero;
 			}
-
-			User32.UnregisterClass("Griffin", Kernel32.CurrentModuleHandle);
 		}
 
 		public override GRGlTextureInfo CreateTexture(SKSizeI textureSize)

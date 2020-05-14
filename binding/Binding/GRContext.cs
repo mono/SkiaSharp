@@ -40,7 +40,7 @@ namespace SkiaSharp
 			};
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Create(GRBackend, GRGlInterface) instead.")]
+		[Obsolete ("Use CreateGl(GRGlInterface) instead.")]
 		public static GRContext Create (GRBackend backend, IntPtr backendContext) =>
 			backend switch
 			{
@@ -58,6 +58,16 @@ namespace SkiaSharp
 
 		public static GRContext CreateGl (GRGlInterface backendContext) =>
 			GetObject (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+
+		// CreateVulkan
+
+		public static GRContext CreateVulkan (GRVkBackendContext backendContext)
+		{
+			if (backendContext == null)
+				throw new ArgumentNullException (nameof (backendContext));
+
+			return GetObject(SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
+		}
 
 		//
 
