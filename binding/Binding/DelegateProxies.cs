@@ -17,6 +17,8 @@ namespace SkiaSharp
 
 	public delegate IntPtr GRGlGetProcDelegate (object context, string name);
 
+	public delegate IntPtr GRVkGetProcDelegate (object context, string name, IntPtr instance, IntPtr device);
+
 	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix, object context);
 
 	internal unsafe static partial class DelegateProxies
@@ -29,6 +31,7 @@ namespace SkiaSharp
 		public static readonly SKImageTextureReleaseProxyDelegate SKImageTextureReleaseDelegateProxy = SKImageTextureReleaseDelegateProxyImplementation;
 		public static readonly SKSurfaceRasterReleaseProxyDelegate SKSurfaceReleaseDelegateProxy = SKSurfaceReleaseDelegateProxyImplementation;
 		public static readonly GRGlGetProcProxyDelegate GRGlGetProcDelegateProxy = GRGlGetProcDelegateProxyImplementation;
+		public static readonly GRVkGetProcProxyDelegate GRVkGetProcDelegateProxy = GRVkGetProcDelegateProxyImplementation;
 		public static readonly SKGlyphPathProxyDelegate SKGlyphPathDelegateProxy = SKGlyphPathDelegateProxyImplementation;
 
 		// internal proxy implementations
@@ -99,6 +102,14 @@ namespace SkiaSharp
 		{
 			var del = Get<GRGlGetProcDelegate> ((IntPtr)context, out _);
 			return del.Invoke (null, name);
+		}
+
+		[MonoPInvokeCallback (typeof (GRVkGetProcProxyDelegate))]
+		private static IntPtr GRVkGetProcDelegateProxyImplementation (void* context, string name, IntPtr instance, IntPtr device)
+		{
+			var del = Get<GRVkGetProcDelegate> ((IntPtr)context, out _);
+
+			return del.Invoke (null, name, instance, device);
 		}
 
 		[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]

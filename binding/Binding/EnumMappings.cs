@@ -11,6 +11,8 @@ namespace SkiaSharp
 		Dawn = 3,
 	}
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use SKColorType instead.")]
 	public enum GRPixelConfig
 	{
 		Unknown = 0,
@@ -72,70 +74,6 @@ namespace SkiaSharp
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
-		internal static GRPixelConfigNative ToNative (this GRPixelConfig config) =>
-			config switch
-			{
-				GRPixelConfig.Unknown => GRPixelConfigNative.Unknown,
-				GRPixelConfig.Alpha8 => GRPixelConfigNative.Alpha8,
-				GRPixelConfig.Gray8 => GRPixelConfigNative.Gray8,
-				GRPixelConfig.Rgb565 => GRPixelConfigNative.Rgb565,
-				GRPixelConfig.Rgba4444 => GRPixelConfigNative.Rgba4444,
-				GRPixelConfig.Rgba8888 => GRPixelConfigNative.Rgba8888,
-				GRPixelConfig.Rgb888 => GRPixelConfigNative.Rgb888,
-				GRPixelConfig.Bgra8888 => GRPixelConfigNative.Bgra8888,
-				GRPixelConfig.Srgba8888 => GRPixelConfigNative.Srgba8888,
-				GRPixelConfig.Rgba1010102 => GRPixelConfigNative.Rgba1010102,
-				GRPixelConfig.AlphaHalf => GRPixelConfigNative.AlphaHalf,
-				GRPixelConfig.RgbaHalf => GRPixelConfigNative.RgbaHalf,
-				GRPixelConfig.Alpha8AsAlpha => GRPixelConfigNative.Alpha8AsAlpha,
-				GRPixelConfig.Alpha8AsRed => GRPixelConfigNative.Alpha8AsRed,
-				GRPixelConfig.AlphaHalfAsLum => GRPixelConfigNative.AlphaHalfAsLum,
-				GRPixelConfig.AlphaHalfAsRed => GRPixelConfigNative.AlphaHalfAsRed,
-				GRPixelConfig.Gray8AsLum => GRPixelConfigNative.Gray8AsLum,
-				GRPixelConfig.Gray8AsRed => GRPixelConfigNative.Gray8AsRed,
-				GRPixelConfig.RgbaHalfClamped => GRPixelConfigNative.RgbaHalfClamped,
-				GRPixelConfig.Alpha16 => GRPixelConfigNative.Alpha16,
-				GRPixelConfig.Rg1616 => GRPixelConfigNative.Rg1616,
-				GRPixelConfig.Rgba16161616 => GRPixelConfigNative.Rgba16161616,
-				GRPixelConfig.RgHalf => GRPixelConfigNative.RgHalf,
-				GRPixelConfig.Rg88 => GRPixelConfigNative.Rg88,
-				GRPixelConfig.Rgb888x => GRPixelConfigNative.Rgb888x,
-				GRPixelConfig.RgbEtc1 => GRPixelConfigNative.RgbEtc1,
-				_ => throw new ArgumentOutOfRangeException (nameof (config)),
-			};
-
-		internal static GRPixelConfig FromNative (this GRPixelConfigNative config) =>
-			config switch
-			{
-				GRPixelConfigNative.Unknown => GRPixelConfig.Unknown,
-				GRPixelConfigNative.Alpha8 => GRPixelConfig.Alpha8,
-				GRPixelConfigNative.Gray8 => GRPixelConfig.Gray8,
-				GRPixelConfigNative.Rgb565 => GRPixelConfig.Rgb565,
-				GRPixelConfigNative.Rgba4444 => GRPixelConfig.Rgba4444,
-				GRPixelConfigNative.Rgba8888 => GRPixelConfig.Rgba8888,
-				GRPixelConfigNative.Rgb888 => GRPixelConfig.Rgb888,
-				GRPixelConfigNative.Bgra8888 => GRPixelConfig.Bgra8888,
-				GRPixelConfigNative.Srgba8888 => GRPixelConfig.Srgba8888,
-				GRPixelConfigNative.Rgba1010102 => GRPixelConfig.Rgba1010102,
-				GRPixelConfigNative.AlphaHalf => GRPixelConfig.AlphaHalf,
-				GRPixelConfigNative.RgbaHalf => GRPixelConfig.RgbaHalf,
-				GRPixelConfigNative.Alpha8AsAlpha => GRPixelConfig.Alpha8AsAlpha,
-				GRPixelConfigNative.Alpha8AsRed => GRPixelConfig.Alpha8AsRed,
-				GRPixelConfigNative.AlphaHalfAsLum => GRPixelConfig.AlphaHalfAsLum,
-				GRPixelConfigNative.AlphaHalfAsRed => GRPixelConfig.AlphaHalfAsRed,
-				GRPixelConfigNative.Gray8AsLum => GRPixelConfig.Gray8AsLum,
-				GRPixelConfigNative.Gray8AsRed => GRPixelConfig.Gray8AsRed,
-				GRPixelConfigNative.RgbaHalfClamped => GRPixelConfig.RgbaHalfClamped,
-				GRPixelConfigNative.Alpha16 => GRPixelConfig.Alpha16,
-				GRPixelConfigNative.Rg1616 => GRPixelConfig.Rg1616,
-				GRPixelConfigNative.Rgba16161616 => GRPixelConfig.Rgba16161616,
-				GRPixelConfigNative.RgHalf => GRPixelConfig.RgHalf,
-				GRPixelConfigNative.Rg88 => GRPixelConfig.Rg88,
-				GRPixelConfigNative.Rgb888x => GRPixelConfig.Rgb888x,
-				GRPixelConfigNative.RgbEtc1 => GRPixelConfig.RgbEtc1,
-				_ => throw new ArgumentOutOfRangeException (nameof (config)),
-			};
-
 		internal static SKColorTypeNative ToNative (this SKColorType colorType) =>
 			colorType switch
 			{
@@ -149,15 +87,15 @@ namespace SkiaSharp
 				SKColorType.Rgba1010102 => SKColorTypeNative.Rgba1010102,
 				SKColorType.Rgb101010x => SKColorTypeNative.Rgb101010x,
 				SKColorType.Gray8 => SKColorTypeNative.Gray8,
-				SKColorType.RgbaF16Normalized => SKColorTypeNative.RgbaF16Normalized,
+				SKColorType.RgbaF16Clamped => SKColorTypeNative.RgbaF16Norm,
 				SKColorType.RgbaF16 => SKColorTypeNative.RgbaF16,
 				SKColorType.RgbaF32 => SKColorTypeNative.RgbaF32,
-				SKColorType.R8g8Unnormalized => SKColorTypeNative.R8g8Unnormalized,
-				SKColorType.A16Float => SKColorTypeNative.A16Float,
-				SKColorType.R16g16Float => SKColorTypeNative.R16g16Float,
-				SKColorType.A16Unnormalized => SKColorTypeNative.A16Unnormalized,
-				SKColorType.R16g16Unnormalized => SKColorTypeNative.R16g16Unnormalized,
-				SKColorType.R16g16b16a16Unnormalized => SKColorTypeNative.R16g16b16a16Unnormalized,
+				SKColorType.Rg88 => SKColorTypeNative.R8g8Unorm,
+				SKColorType.AlphaF16 => SKColorTypeNative.A16Float,
+				SKColorType.RgF16 => SKColorTypeNative.R16g16Float,
+				SKColorType.Alpha16 => SKColorTypeNative.A16Unorm,
+				SKColorType.Rg1616 => SKColorTypeNative.R16g16Unorm,
+				SKColorType.Rgba16161616 => SKColorTypeNative.R16g16b16a16Unorm,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
 			};
 
@@ -174,15 +112,15 @@ namespace SkiaSharp
 				SKColorTypeNative.Rgba1010102 => SKColorType.Rgba1010102,
 				SKColorTypeNative.Rgb101010x => SKColorType.Rgb101010x,
 				SKColorTypeNative.Gray8 => SKColorType.Gray8,
-				SKColorTypeNative.RgbaF16Normalized => SKColorType.RgbaF16Normalized,
+				SKColorTypeNative.RgbaF16Norm => SKColorType.RgbaF16Clamped,
 				SKColorTypeNative.RgbaF16 => SKColorType.RgbaF16,
 				SKColorTypeNative.RgbaF32 => SKColorType.RgbaF32,
-				SKColorTypeNative.R8g8Unnormalized => SKColorType.R8g8Unnormalized,
-				SKColorTypeNative.A16Float => SKColorType.A16Float,
-				SKColorTypeNative.R16g16Float => SKColorType.R16g16Float,
-				SKColorTypeNative.A16Unnormalized => SKColorType.A16Unnormalized,
-				SKColorTypeNative.R16g16Unnormalized => SKColorType.R16g16Unnormalized,
-				SKColorTypeNative.R16g16b16a16Unnormalized => SKColorType.R16g16b16a16Unnormalized,
+				SKColorTypeNative.R8g8Unorm => SKColorType.Rg88,
+				SKColorTypeNative.A16Float => SKColorType.AlphaF16,
+				SKColorTypeNative.R16g16Float => SKColorType.RgF16,
+				SKColorTypeNative.A16Unorm => SKColorType.Alpha16,
+				SKColorTypeNative.R16g16Unorm => SKColorType.Rg1616,
+				SKColorTypeNative.R16g16b16a16Unorm => SKColorType.Rgba16161616,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
 			};
 	}

@@ -398,7 +398,7 @@ stages:
           displayName: Tests (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --supportVulkan=true
           shouldPublish: false
           requiredArtifacts:
             - native_win32_x86_windows
@@ -410,14 +410,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Windows .NET Framework Tests'
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Windows .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
@@ -435,14 +435,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS Mono Tests'
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
@@ -462,14 +462,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux Mono Tests'
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux .NET Core Tests'
       # TODO: add tests for linux no dependencies
       # TODO: add tests for windows nano server

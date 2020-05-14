@@ -9,6 +9,9 @@ namespace SkiaSharp
 	using gr_backendtexture_t = IntPtr;
 	using gr_context_t = IntPtr;
 	using gr_glinterface_t = IntPtr;
+	using gr_vk_extensions_t = IntPtr;
+	using gr_vk_memory_allocator_t = IntPtr;
+	using gr_vkinterface_t = IntPtr;
 	using sk_3dview_t = IntPtr;
 	using sk_bitmap_t = IntPtr;
 	using sk_canvas_t = IntPtr;
@@ -73,6 +76,12 @@ namespace SkiaSharp
 	using sk_wstream_t = IntPtr;
 	using sk_xmlstreamwriter_t = IntPtr;
 	using sk_xmlwriter_t = IntPtr;
+	using vk_device_t = IntPtr;
+	using vk_instance_t = IntPtr;
+	using vk_physical_device_features_2_t = IntPtr;
+	using vk_physical_device_features_t = IntPtr;
+	using vk_physical_device_t = IntPtr;
+	using vk_queue_t = IntPtr;
 
 	#endregion
 
@@ -118,6 +127,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo);
 
+		// gr_backendrendertarget_t* gr_backendrendertarget_new_vulkan(int width, int height, int samples, const gr_vk_imageinfo_t* vkImageInfo)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo);
+
 		// void gr_backendtexture_delete(gr_backendtexture_t* texture)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_backendtexture_delete (gr_backendtexture_t texture);
@@ -153,6 +166,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_backendtexture_t gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo);
 
+		// gr_backendtexture_t* gr_backendtexture_new_vulkan(int width, int height, const gr_vk_imageinfo_t* vkInfo)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_backendtexture_t gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo);
+
 		// void gr_context_abandon_context(gr_context_t* context)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_context_abandon_context (gr_context_t context);
@@ -180,6 +197,10 @@ namespace SkiaSharp
 		// gr_context_t* gr_context_make_gl(const gr_glinterface_t* glInterface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_context_t gr_context_make_gl (gr_glinterface_t glInterface);
+
+		// gr_context_t* gr_context_make_vulkan(const gr_vk_backendcontext_t vkBackendContext)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_context_t gr_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
 
 		// void gr_context_release_resources_and_abandon_context(gr_context_t* context)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -226,6 +247,23 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_glinterface_validate (gr_glinterface_t glInterface);
+
+		// void gr_vk_extensions_delete(gr_vk_extensions_t* extensions)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_vk_extensions_delete (gr_vk_extensions_t extensions);
+
+		// bool gr_vk_extensions_has_extension(gr_vk_extensions_t* extensions, const char* ext, uint32_t minVersion)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool gr_vk_extensions_has_extension (gr_vk_extensions_t extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion);
+
+		// void gr_vk_extensions_init(gr_vk_extensions_t* extensions, gr_vk_get_proc getProc, void* userData, vk_instance_t* instance, vk_physical_device_t* physDev, uint32_t instanceExtensionCount, const char** instanceExtensions, uint32_t deviceExtensionCount, const char** deviceExtensions)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_vk_extensions_init (gr_vk_extensions_t extensions, GRVkGetProcProxyDelegate getProc, void* userData, vk_instance_t instance, vk_physical_device_t physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
+
+		// gr_vk_extensions_t* gr_vk_extensions_new()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_vk_extensions_t gr_vk_extensions_new ();
 
 		#endregion
 
@@ -1273,17 +1311,9 @@ namespace SkiaSharp
 
 		#region sk_general.h
 
-		// sk_colortype_t gr_pixelconfig_to_sk_colortype(gr_pixelconfig_t pixelConfig)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorTypeNative gr_pixelconfig_to_sk_colortype (GRPixelConfigNative pixelConfig);
-
 		// sk_colortype_t sk_colortype_get_default_8888()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKColorTypeNative sk_colortype_get_default_8888 ();
-
-		// gr_pixelconfig_t sk_colortype_to_gr_pixelconfig(sk_colortype_t colorType)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRPixelConfigNative sk_colortype_to_gr_pixelconfig (SKColorTypeNative colorType);
 
 		// int sk_nvrefcnt_get_ref_count(const sk_nvrefcnt_t* refcnt)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -3762,6 +3792,14 @@ namespace SkiaSharp
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate IntPtr GRGlGetProcProxyDelegate(void* ctx, [MarshalAs (UnmanagedType.LPStr)] String name);
 
+	// typedef void (*)()* gr_vk_func_ptr
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void GRVkFuncPtr();
+
+	// typedef gr_vk_func_ptr (*)(void* ctx, const char* name, vk_instance_t* instance, vk_device_t* device)* gr_vk_get_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate IntPtr GRVkGetProcProxyDelegate(void* ctx, [MarshalAs (UnmanagedType.LPStr)] String name, vk_instance_t instance, vk_device_t device);
+
 	// typedef void (*)(void* addr, void* context)* sk_bitmap_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKBitmapReleaseProxyDelegate(void* addr, void* context);
@@ -3962,6 +4000,358 @@ namespace SkiaSharp
 			hash.Add (fTarget);
 			hash.Add (fID);
 			hash.Add (fFormat);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_vk_alloc_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct GRVkAlloc : IEquatable<GRVkAlloc> {
+		// public uint64_t fMemory
+		private UInt64 fMemory;
+		public UInt64 Memory {
+			readonly get => fMemory;
+			set => fMemory = value;
+		}
+
+		// public uint64_t fOffset
+		private UInt64 fOffset;
+		public UInt64 Offset {
+			readonly get => fOffset;
+			set => fOffset = value;
+		}
+
+		// public uint64_t fSize
+		private UInt64 fSize;
+		public UInt64 Size {
+			readonly get => fSize;
+			set => fSize = value;
+		}
+
+		// public uint32_t fFlags
+		private UInt32 fFlags;
+		public UInt32 Flags {
+			readonly get => fFlags;
+			set => fFlags = value;
+		}
+
+		// public gr_vk_backendmemory_t fBackendMemory
+		private IntPtr fBackendMemory;
+		public IntPtr BackendMemory {
+			readonly get => fBackendMemory;
+			set => fBackendMemory = value;
+		}
+
+		// public bool _private_fUsesSystemHeap
+		private Byte fUsesSystemHeap;
+
+		public readonly bool Equals (GRVkAlloc obj) =>
+			fMemory == obj.fMemory && fOffset == obj.fOffset && fSize == obj.fSize && fFlags == obj.fFlags && fBackendMemory == obj.fBackendMemory && fUsesSystemHeap == obj.fUsesSystemHeap;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkAlloc f && Equals (f);
+
+		public static bool operator == (GRVkAlloc left, GRVkAlloc right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkAlloc left, GRVkAlloc right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fMemory);
+			hash.Add (fOffset);
+			hash.Add (fSize);
+			hash.Add (fFlags);
+			hash.Add (fBackendMemory);
+			hash.Add (fUsesSystemHeap);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_vk_backendcontext_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRVkBackendContextNative : IEquatable<GRVkBackendContextNative> {
+		// public vk_instance_t* fInstance
+		public vk_instance_t fInstance;
+
+		// public vk_physical_device_t* fPhysicalDevice
+		public vk_physical_device_t fPhysicalDevice;
+
+		// public vk_device_t* fDevice
+		public vk_device_t fDevice;
+
+		// public vk_queue_t* fQueue
+		public vk_queue_t fQueue;
+
+		// public uint32_t fGraphicsQueueIndex
+		public UInt32 fGraphicsQueueIndex;
+
+		// public uint32_t fMinAPIVersion
+		public UInt32 fMinAPIVersion;
+
+		// public uint32_t fInstanceVersion
+		public UInt32 fInstanceVersion;
+
+		// public uint32_t fMaxAPIVersion
+		public UInt32 fMaxAPIVersion;
+
+		// public uint32_t fExtensions
+		public UInt32 fExtensions;
+
+		// public const gr_vk_extensions_t* fVkExtensions
+		public gr_vk_extensions_t fVkExtensions;
+
+		// public uint32_t fFeatures
+		public UInt32 fFeatures;
+
+		// public const vk_physical_device_features_t* fDeviceFeatures
+		public vk_physical_device_features_t fDeviceFeatures;
+
+		// public const vk_physical_device_features_2_t* fDeviceFeatures2
+		public vk_physical_device_features_2_t fDeviceFeatures2;
+
+		// public gr_vk_memory_allocator_t* fMemoryAllocator
+		public gr_vk_memory_allocator_t fMemoryAllocator;
+
+		// public gr_vk_get_proc fGetProc
+		public GRVkGetProcProxyDelegate fGetProc;
+
+		// public void* fGetProcUserData
+		public void* fGetProcUserData;
+
+		// public bool fOwnsInstanceAndDevice
+		public Byte fOwnsInstanceAndDevice;
+
+		// public bool fProtectedContext
+		public Byte fProtectedContext;
+
+		public readonly bool Equals (GRVkBackendContextNative obj) =>
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMinAPIVersion == obj.fMinAPIVersion && fInstanceVersion == obj.fInstanceVersion && fMaxAPIVersion == obj.fMaxAPIVersion && fExtensions == obj.fExtensions && fVkExtensions == obj.fVkExtensions && fFeatures == obj.fFeatures && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fOwnsInstanceAndDevice == obj.fOwnsInstanceAndDevice && fProtectedContext == obj.fProtectedContext;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkBackendContextNative f && Equals (f);
+
+		public static bool operator == (GRVkBackendContextNative left, GRVkBackendContextNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkBackendContextNative left, GRVkBackendContextNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fInstance);
+			hash.Add (fPhysicalDevice);
+			hash.Add (fDevice);
+			hash.Add (fQueue);
+			hash.Add (fGraphicsQueueIndex);
+			hash.Add (fMinAPIVersion);
+			hash.Add (fInstanceVersion);
+			hash.Add (fMaxAPIVersion);
+			hash.Add (fExtensions);
+			hash.Add (fVkExtensions);
+			hash.Add (fFeatures);
+			hash.Add (fDeviceFeatures);
+			hash.Add (fDeviceFeatures2);
+			hash.Add (fMemoryAllocator);
+			hash.Add (fGetProc);
+			hash.Add (fGetProcUserData);
+			hash.Add (fOwnsInstanceAndDevice);
+			hash.Add (fProtectedContext);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_vk_imageinfo_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct GRVkImageInfo : IEquatable<GRVkImageInfo> {
+		// public uint64_t fImage
+		private UInt64 fImage;
+		public UInt64 Image {
+			readonly get => fImage;
+			set => fImage = value;
+		}
+
+		// public gr_vk_alloc_t fAlloc
+		private GRVkAlloc fAlloc;
+		public GRVkAlloc Alloc {
+			readonly get => fAlloc;
+			set => fAlloc = value;
+		}
+
+		// public uint32_t fImageTiling
+		private UInt32 fImageTiling;
+		public UInt32 ImageTiling {
+			readonly get => fImageTiling;
+			set => fImageTiling = value;
+		}
+
+		// public uint32_t fImageLayout
+		private UInt32 fImageLayout;
+		public UInt32 ImageLayout {
+			readonly get => fImageLayout;
+			set => fImageLayout = value;
+		}
+
+		// public uint32_t fFormat
+		private UInt32 fFormat;
+		public UInt32 Format {
+			readonly get => fFormat;
+			set => fFormat = value;
+		}
+
+		// public uint32_t fLevelCount
+		private UInt32 fLevelCount;
+		public UInt32 LevelCount {
+			readonly get => fLevelCount;
+			set => fLevelCount = value;
+		}
+
+		// public uint32_t fCurrentQueueFamily
+		private UInt32 fCurrentQueueFamily;
+		public UInt32 CurrentQueueFamily {
+			readonly get => fCurrentQueueFamily;
+			set => fCurrentQueueFamily = value;
+		}
+
+		// public bool fProtected
+		private Byte fProtected;
+		public bool Protected {
+			readonly get => fProtected > 0;
+			set => fProtected = value ? (byte)1 : (byte)0;
+		}
+
+		// public gr_vk_ycbcrconversioninfo_t fYcbcrConversionInfo
+		private GrVkYcbcrConversionInfo fYcbcrConversionInfo;
+		public GrVkYcbcrConversionInfo YcbcrConversionInfo {
+			readonly get => fYcbcrConversionInfo;
+			set => fYcbcrConversionInfo = value;
+		}
+
+		public readonly bool Equals (GRVkImageInfo obj) =>
+			fImage == obj.fImage && fAlloc == obj.fAlloc && fImageTiling == obj.fImageTiling && fImageLayout == obj.fImageLayout && fFormat == obj.fFormat && fLevelCount == obj.fLevelCount && fCurrentQueueFamily == obj.fCurrentQueueFamily && fProtected == obj.fProtected && fYcbcrConversionInfo == obj.fYcbcrConversionInfo;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkImageInfo f && Equals (f);
+
+		public static bool operator == (GRVkImageInfo left, GRVkImageInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkImageInfo left, GRVkImageInfo right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fImage);
+			hash.Add (fAlloc);
+			hash.Add (fImageTiling);
+			hash.Add (fImageLayout);
+			hash.Add (fFormat);
+			hash.Add (fLevelCount);
+			hash.Add (fCurrentQueueFamily);
+			hash.Add (fProtected);
+			hash.Add (fYcbcrConversionInfo);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_vk_ycbcrconversioninfo_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct GrVkYcbcrConversionInfo : IEquatable<GrVkYcbcrConversionInfo> {
+		// public uint32_t fFormat
+		private UInt32 fFormat;
+		public UInt32 Format {
+			readonly get => fFormat;
+			set => fFormat = value;
+		}
+
+		// public uint64_t fExternalFormat
+		private UInt64 fExternalFormat;
+		public UInt64 ExternalFormat {
+			readonly get => fExternalFormat;
+			set => fExternalFormat = value;
+		}
+
+		// public uint32_t fYcbcrModel
+		private UInt32 fYcbcrModel;
+		public UInt32 YcbcrModel {
+			readonly get => fYcbcrModel;
+			set => fYcbcrModel = value;
+		}
+
+		// public uint32_t fYcbcrRange
+		private UInt32 fYcbcrRange;
+		public UInt32 YcbcrRange {
+			readonly get => fYcbcrRange;
+			set => fYcbcrRange = value;
+		}
+
+		// public uint32_t fXChromaOffset
+		private UInt32 fXChromaOffset;
+		public UInt32 XChromaOffset {
+			readonly get => fXChromaOffset;
+			set => fXChromaOffset = value;
+		}
+
+		// public uint32_t fYChromaOffset
+		private UInt32 fYChromaOffset;
+		public UInt32 YChromaOffset {
+			readonly get => fYChromaOffset;
+			set => fYChromaOffset = value;
+		}
+
+		// public uint32_t fChromaFilter
+		private UInt32 fChromaFilter;
+		public UInt32 ChromaFilter {
+			readonly get => fChromaFilter;
+			set => fChromaFilter = value;
+		}
+
+		// public uint32_t fForceExplicitReconstruction
+		private UInt32 fForceExplicitReconstruction;
+		public UInt32 ForceExplicitReconstruction {
+			readonly get => fForceExplicitReconstruction;
+			set => fForceExplicitReconstruction = value;
+		}
+
+		// public uint32_t fFormatFeatures
+		private UInt32 fFormatFeatures;
+		public UInt32 FormatFeatures {
+			readonly get => fFormatFeatures;
+			set => fFormatFeatures = value;
+		}
+
+		public readonly bool Equals (GrVkYcbcrConversionInfo obj) =>
+			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fFormatFeatures == obj.fFormatFeatures;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GrVkYcbcrConversionInfo f && Equals (f);
+
+		public static bool operator == (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fFormat);
+			hash.Add (fExternalFormat);
+			hash.Add (fYcbcrModel);
+			hash.Add (fYcbcrRange);
+			hash.Add (fXChromaOffset);
+			hash.Add (fYChromaOffset);
+			hash.Add (fChromaFilter);
+			hash.Add (fForceExplicitReconstruction);
+			hash.Add (fFormatFeatures);
 			return hash.ToHashCode ();
 		}
 
@@ -5518,62 +5908,6 @@ namespace SkiaSharp
 		Vulkan = 3,
 	}
 
-	// gr_pixelconfig_t
-	internal enum GRPixelConfigNative {
-		// UNKNOWN_GR_PIXEL_CONFIG = 0
-		Unknown = 0,
-		// ALPHA_8_GR_PIXEL_CONFIG = 1
-		Alpha8 = 1,
-		// ALPHA_8_AS_ALPHA_GR_PIXEL_CONFIG = 2
-		Alpha8AsAlpha = 2,
-		// ALPHA_8_AS_RED_GR_PIXEL_CONFIG = 3
-		Alpha8AsRed = 3,
-		// GRAY_8_GR_PIXEL_CONFIG = 4
-		Gray8 = 4,
-		// GRAY_8_AS_LUM_GR_PIXEL_CONFIG = 5
-		Gray8AsLum = 5,
-		// GRAY_8_AS_RED_GR_PIXEL_CONFIG = 6
-		Gray8AsRed = 6,
-		// RGB_565_GR_PIXEL_CONFIG = 7
-		Rgb565 = 7,
-		// RGBA_4444_GR_PIXEL_CONFIG = 8
-		Rgba4444 = 8,
-		// RGBA_8888_GR_PIXEL_CONFIG = 9
-		Rgba8888 = 9,
-		// RGB_888_GR_PIXEL_CONFIG = 10
-		Rgb888 = 10,
-		// RGB_888X_GR_PIXEL_CONFIG = 11
-		Rgb888x = 11,
-		// RG_88_GR_PIXEL_CONFIG = 12
-		Rg88 = 12,
-		// BGRA_8888_GR_PIXEL_CONFIG = 13
-		Bgra8888 = 13,
-		// SRGBA_8888_GR_PIXEL_CONFIG = 14
-		Srgba8888 = 14,
-		// RGBA_1010102_GR_PIXEL_CONFIG = 15
-		Rgba1010102 = 15,
-		// ALPHA_HALF_GR_PIXEL_CONFIG = 16
-		AlphaHalf = 16,
-		// ALPHA_HALF_AS_LUM_GR_PIXEL_CONFIG = 17
-		AlphaHalfAsLum = 17,
-		// ALPHA_HALF_AS_RED_GR_PIXEL_CONFIG = 18
-		AlphaHalfAsRed = 18,
-		// RGBA_HALF_GR_PIXEL_CONFIG = 19
-		RgbaHalf = 19,
-		// RGBA_HALF_CLAMPED_GR_PIXEL_CONFIG = 20
-		RgbaHalfClamped = 20,
-		// RGB_ETC1_GR_PIXEL_CONFIG = 21
-		RgbEtc1 = 21,
-		// ALPHA_16_GR_PIXEL_CONFIG = 22
-		Alpha16 = 22,
-		// RG_1616_GR_PIXEL_CONFIG = 23
-		Rg1616 = 23,
-		// RGBA_16161616_GR_PIXEL_CONFIG = 24
-		Rgba16161616 = 24,
-		// RG_HALF_GR_PIXEL_CONFIG = 25
-		RgHalf = 25,
-	}
-
 	// gr_surfaceorigin_t
 	public enum GRSurfaceOrigin {
 		// TOP_LEFT_GR_SURFACE_ORIGIN = 0
@@ -5757,24 +6091,24 @@ namespace SkiaSharp
 		Rgb101010x = 8,
 		// GRAY_8_SK_COLORTYPE = 9
 		Gray8 = 9,
-		// RGBA_F16_NORMALIZED_SK_COLORTYPE = 10
-		RgbaF16Normalized = 10,
+		// RGBA_F16_NORM_SK_COLORTYPE = 10
+		RgbaF16Norm = 10,
 		// RGBA_F16_SK_COLORTYPE = 11
 		RgbaF16 = 11,
 		// RGBA_F32_SK_COLORTYPE = 12
 		RgbaF32 = 12,
-		// R8G8_UNNORMALIZED_SK_COLORTYPE = 13
-		R8g8Unnormalized = 13,
+		// R8G8_UNORM_SK_COLORTYPE = 13
+		R8g8Unorm = 13,
 		// A16_FLOAT_SK_COLORTYPE = 14
 		A16Float = 14,
 		// R16G16_FLOAT_SK_COLORTYPE = 15
 		R16g16Float = 15,
-		// A16_UNNORMALIZED_SK_COLORTYPE = 16
-		A16Unnormalized = 16,
-		// R16G16_UNNORMALIZED_SK_COLORTYPE = 17
-		R16g16Unnormalized = 17,
-		// R16G16B16A16_UNNORMALIZED_SK_COLORTYPE = 18
-		R16g16b16a16Unnormalized = 18,
+		// A16_UNORM_SK_COLORTYPE = 16
+		A16Unorm = 16,
+		// R16G16_UNORM_SK_COLORTYPE = 17
+		R16g16Unorm = 17,
+		// R16G16B16A16_UNORM_SK_COLORTYPE = 18
+		R16g16b16a16Unorm = 18,
 	}
 
 	// sk_crop_rect_flags_t
