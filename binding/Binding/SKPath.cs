@@ -507,12 +507,16 @@ namespace SkiaSharp
 			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates, bool exact) =>
 				Next (points);
 
-			public SKPathVerb Next (SKPoint[] points)
+			public SKPathVerb Next (SKPoint[] points) =>
+				Next (new Span<SKPoint> (points));
+
+			public SKPathVerb Next (Span<SKPoint> points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
+
 				fixed (SKPoint* p = points) {
 					return SkiaApi.sk_path_iter_next (Handle, p);
 				}
@@ -520,8 +524,10 @@ namespace SkiaSharp
 
 			public float ConicWeight () =>
 				SkiaApi.sk_path_iter_conic_weight (Handle);
+
 			public bool IsCloseLine () =>
 				SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
+
 			public bool IsCloseContour () =>
 				SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
 		}
@@ -542,7 +548,10 @@ namespace SkiaSharp
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_rawiter_destroy (Handle);
 
-			public SKPathVerb Next (SKPoint[] points)
+			public SKPathVerb Next (SKPoint[] points) =>
+				Next (new Span<SKPoint> (points));
+
+			public SKPathVerb Next (Span<SKPoint> points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
@@ -555,6 +564,7 @@ namespace SkiaSharp
 
 			public float ConicWeight () =>
 				SkiaApi.sk_path_rawiter_conic_weight (Handle);
+
 			public SKPathVerb Peek () =>
 				SkiaApi.sk_path_rawiter_peek (Handle);
 		}

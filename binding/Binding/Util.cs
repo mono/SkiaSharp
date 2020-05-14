@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.ComponentModel;
 using System.Text;
 #if NETSTANDARD1_3 || WINDOWS_UWP
@@ -36,6 +37,36 @@ namespace SkiaSharp
 				}
 				return bytes;
 			}
+		}
+
+		public static RentedArray<T> RentArray<T> (int length) =>
+			new RentedArray<T> (length);
+
+		internal readonly ref struct RentedArray<T>
+		{
+			internal RentedArray (int length)
+			{
+				Array = ArrayPool<T>.Shared.Rent (length);
+				Span = new Span<T> (Array, 0, length);
+			}
+
+			public readonly T[] Array;
+
+			public readonly Span<T> Span;
+
+			public int Length => Span.Length;
+
+			public void Dispose () =>
+				ArrayPool<T>.Shared.Return (Array);
+
+			public static explicit operator T[] (RentedArray<T> scope) =>
+				scope.Array;
+
+			public static implicit operator Span<T> (RentedArray<T> scope) =>
+				scope.Span;
+
+			public static implicit operator ReadOnlySpan<T> (RentedArray<T> scope) =>
+				scope.Span;
 		}
 
 #if NETSTANDARD1_3 || WINDOWS_UWP
