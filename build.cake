@@ -37,7 +37,8 @@ var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 
-var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "false");
+var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
+var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
 var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
