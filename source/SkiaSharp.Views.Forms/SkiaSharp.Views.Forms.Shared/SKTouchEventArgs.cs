@@ -9,6 +9,11 @@ namespace SkiaSharp.Views.Forms
 		{
 		}
 
+		public SKTouchEventArgs(long id, SKTouchAction type, SKPoint location, bool inContact, float pressure)
+			: this(id, type, SKMouseButton.Left, SKTouchDeviceType.Touch, location, inContact, 0, pressure)
+		{
+		}
+
 		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact)
 			: this(id, type, mouseButton, deviceType, location, inContact, 0, 1)
 		{
@@ -70,7 +75,8 @@ namespace SkiaSharp.Views.Forms
 	{
 		Touch,
 		Mouse,
-		Pen
+		Pen,
+		Eraser
 	}
 
 	public enum SKMouseButton

@@ -116,8 +116,9 @@ namespace SkiaSharp.Views.Forms
 			cgPoint.Y = View.Bounds.Height - cgPoint.Y;
 
 			var point = scalePixels(cgPoint.X, cgPoint.Y);
+			var wheelDelta = (int)mouseEvent.ScrollingDeltaY;
 
-			var args = new SKTouchEventArgs(id, actionType, mouse, device, point, inContact);
+			var args = new SKTouchEventArgs(id, actionType, mouse, device, point, inContact, wheelDelta, mouseEvent.Pressure);
 			onTouchAction(args);
 			return args.Handled;
 		}
