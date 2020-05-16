@@ -26,9 +26,9 @@ namespace SkiaSharp.Tests
 
 		public virtual uint PresentFamily { get; protected set; }
 
-		public virtual GRVkGetProcDelegate GetProc { get; protected set; }
+		public virtual GRVkGetProcedureAddressDelegate GetProc { get; protected set; }
 
-		public virtual GRSharpVkGetProcDelegate SharpVkGetProc { get; protected set; }
+		public virtual GRSharpVkGetProcedureAddressDelegate SharpVkGetProc { get; protected set; }
 
 		public virtual void Dispose() =>
 			Instance?.Dispose();

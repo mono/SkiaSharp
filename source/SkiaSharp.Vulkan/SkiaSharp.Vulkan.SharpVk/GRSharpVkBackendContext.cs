@@ -6,7 +6,7 @@ using PhysicalDeviceFeaturesNative = SharpVk.Interop.PhysicalDeviceFeatures;
 
 namespace SkiaSharp
 {
-	public delegate IntPtr GRSharpVkGetProcDelegate(string name, Instance instance, Device device);
+	public delegate IntPtr GRSharpVkGetProcedureAddressDelegate(string name, Instance instance, Device device);
 
 	public unsafe class GRSharpVkBackendContext : GRVkBackendContext
 	{
@@ -15,7 +15,7 @@ namespace SkiaSharp
 		private Device vkDevice;
 		private Queue vkQueue;
 		private PhysicalDeviceFeatures? vkPhysicalDeviceFeatures;
-		private GRSharpVkGetProcDelegate getProc;
+		private GRSharpVkGetProcedureAddressDelegate getProc;
 
 		private PhysicalDeviceFeaturesNative devFeatures;
 		private GCHandle devFeaturesHandle;
@@ -97,18 +97,18 @@ namespace SkiaSharp
 			}
 		}
 
-		public new GRSharpVkGetProcDelegate GetProc
+		public new GRSharpVkGetProcedureAddressDelegate GetProcedureAddress
 		{
 			get => getProc;
 			set
 			{
 				getProc = value;
 
-				base.GetProc = null;
+				base.GetProcedureAddress = null;
 
-				if (value is GRSharpVkGetProcDelegate del)
+				if (value is GRSharpVkGetProcedureAddressDelegate del)
 				{
-					base.GetProc = (name, instance, device) =>
+					base.GetProcedureAddress = (name, instance, device) =>
 					{
 						if (instance != IntPtr.Zero && vkInstance?.RawHandle.ToUInt64() != (ulong)instance.ToInt64())
 							throw new InvalidOperationException("Incorrect object for VkInstance.");

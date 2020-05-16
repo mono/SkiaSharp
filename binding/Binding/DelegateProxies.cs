@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -15,9 +16,13 @@ namespace SkiaSharp
 
 	public delegate void SKSurfaceReleaseDelegate (IntPtr address, object context);
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use GRGlGetProcedureAddressDelegate instead.")]
 	public delegate IntPtr GRGlGetProcDelegate (object context, string name);
 
-	public delegate IntPtr GRVkGetProcDelegate (string name, IntPtr instance, IntPtr device);
+	public delegate IntPtr GRGlGetProcedureAddressDelegate (string name);
+
+	public delegate IntPtr GRVkGetProcedureAddressDelegate (string name, IntPtr instance, IntPtr device);
 
 	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix);
 
@@ -100,14 +105,14 @@ namespace SkiaSharp
 		[MonoPInvokeCallback (typeof (GRGlGetProcProxyDelegate))]
 		private static IntPtr GRGlGetProcDelegateProxyImplementation (void* context, string name)
 		{
-			var del = Get<GRGlGetProcDelegate> ((IntPtr)context, out _);
-			return del.Invoke (null, name);
+			var del = Get<GRGlGetProcedureAddressDelegate> ((IntPtr)context, out _);
+			return del.Invoke (name);
 		}
 
 		[MonoPInvokeCallback (typeof (GRVkGetProcProxyDelegate))]
 		private static IntPtr GRVkGetProcDelegateProxyImplementation (void* context, string name, IntPtr instance, IntPtr device)
 		{
-			var del = Get<GRVkGetProcDelegate> ((IntPtr)context, out _);
+			var del = Get<GRVkGetProcedureAddressDelegate> ((IntPtr)context, out _);
 
 			return del.Invoke (name, instance, device);
 		}

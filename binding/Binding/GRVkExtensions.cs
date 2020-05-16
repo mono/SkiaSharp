@@ -20,10 +20,10 @@ namespace SkiaSharp
 		public void HasExtension (string extension, int minVersion) =>
 			SkiaApi.gr_vk_extensions_has_extension (Handle, extension, (uint)minVersion);
 
-		public void Initialize (GRVkGetProcDelegate getProc, IntPtr vkInstance, IntPtr vkPhysicalDevice) =>
+		public void Initialize (GRVkGetProcedureAddressDelegate getProc, IntPtr vkInstance, IntPtr vkPhysicalDevice) =>
 			Initialize (getProc, vkInstance, vkPhysicalDevice, null, null);
 
-		public void Initialize (GRVkGetProcDelegate getProc, IntPtr vkInstance, IntPtr vkPhysicalDevice, string[] instanceExtensions, string[] deviceExtensions)
+		public void Initialize (GRVkGetProcedureAddressDelegate getProc, IntPtr vkInstance, IntPtr vkPhysicalDevice, string[] instanceExtensions, string[] deviceExtensions)
 		{
 			var proxy = DelegateProxies.Create (getProc, DelegateProxies.GRVkGetProcDelegateProxy, out var gch, out var ctx);
 			try {
@@ -35,7 +35,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static GRVkExtensions Create (GRVkGetProcDelegate getProc, IntPtr vkInstance, IntPtr vkPhysicalDevice, string[] instanceExtensions, string[] deviceExtensions)
+		public static GRVkExtensions Create (GRVkGetProcedureAddressDelegate getProc, IntPtr vkInstance, IntPtr vkPhysicalDevice, string[] instanceExtensions, string[] deviceExtensions)
 		{
 			var extensions = new GRVkExtensions ();
 			extensions.Initialize (getProc, vkInstance, vkPhysicalDevice, instanceExtensions, deviceExtensions);
