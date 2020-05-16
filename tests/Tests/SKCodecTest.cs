@@ -276,7 +276,7 @@ namespace SkiaSharp.Tests
 
 					// only decode every second line
 					for	(int y = 0; y < info.Height; y += 2) {
-						Assert.Equal (1, codec.GetScanlines (scanlineBitmap.GetAddr (0, y), 1, info.RowBytes));
+						Assert.Equal (1, codec.GetScanlines (scanlineBitmap.GetAddress (0, y), 1, info.RowBytes));
 						Assert.Equal (y + 1, codec.NextScanline);
 						if (codec.SkipScanlines (1))
 							Assert.Equal (y + 2, codec.NextScanline);
