@@ -20,11 +20,8 @@ namespace SkiaSharp
 
 		// Create* (defaults)
 
-		public static GRGlInterface Create ()
-		{
-			// first try ANGLE, then fall back to the OpenGL-based
-			return CreateAngle () ?? CreateGl ();
-		}
+		public static GRGlInterface Create () =>
+			CreateGl () ?? CreateAngle ();
 
 		private static GRGlInterface CreateGl ()
 		{
@@ -208,13 +205,11 @@ namespace SkiaSharp
 				}
 
 				libEGL = LoadLibrary ("libEGL.dll");
-				if (Marshal.GetLastWin32Error () != 0 || libEGL == IntPtr.Zero)
-					throw new DllNotFoundException ("Unable to load libEGL.dll.");
-
 				libGLESv2 = LoadLibrary ("libGLESv2.dll");
-				if (Marshal.GetLastWin32Error () != 0 || libGLESv2 == IntPtr.Zero)
-					throw new DllNotFoundException ("Unable to load libGLESv2.dll.");
 			}
+
+			public static bool IsValid =>
+				libEGL != IntPtr.Zero && libGLESv2 != IntPtr.Zero;
 
 			// function to assemble the ANGLE interface
 			public static IntPtr GetProc (string name)
@@ -223,6 +218,9 @@ namespace SkiaSharp
 				if (!PlatformConfiguration.IsWindows) {
 					return IntPtr.Zero;
 				}
+
+				if (!IsValid)
+					return IntPtr.Zero;
 
 				IntPtr proc = GetProcAddress (libGLESv2, name);
 				if (proc == IntPtr.Zero)
