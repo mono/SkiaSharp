@@ -230,6 +230,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_glinterface_t gr_glinterface_assemble_interface (void* ctx, GRGlGetProcProxyDelegate get);
 
+		// const gr_glinterface_t* gr_glinterface_assemble_webgl_interface(void* ctx, gr_gl_get_proc get)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_glinterface_t gr_glinterface_assemble_webgl_interface (void* ctx, GRGlGetProcProxyDelegate get);
+
 		// const gr_glinterface_t* gr_glinterface_create_native_interface()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_glinterface_t gr_glinterface_create_native_interface ();
