@@ -88,7 +88,7 @@ namespace SkiaSharp
 		{
 #if __TIZEN__
 			var evasLoader = new EvasGlLoader (evas);
-			return AssembleGlesInterface ((ctx, name) => evasLoader.GetFunctionPointer (name));
+			return CreateGles (name => evasLoader.GetFunctionPointer (name));
 #else
 			return null;
 #endif
