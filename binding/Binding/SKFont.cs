@@ -758,15 +758,9 @@ namespace SkiaSharp
 
 		// GetGlyphPaths
 
-		public void GetGlyphPaths (ReadOnlySpan<ushort> glyphs, SKGlyphPathDelegate glyphPathDelegate) =>
-			GetGlyphPaths (glyphs, glyphPathDelegate, null);
-
-		public void GetGlyphPaths (ReadOnlySpan<ushort> glyphs, SKGlyphPathDelegate glyphPathDelegate, object context)
+		public void GetGlyphPaths (ReadOnlySpan<ushort> glyphs, SKGlyphPathDelegate glyphPathDelegate)
 		{
-			var del = glyphPathDelegate != null && context != null
-				? new SKGlyphPathDelegate ((p, m, _) => glyphPathDelegate (p, m, context))
-				: glyphPathDelegate;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKGlyphPathDelegateProxy, out var gch, out var ctx);
+			var proxy = DelegateProxies.Create (glyphPathDelegate, DelegateProxies.SKGlyphPathDelegateProxy, out var gch, out var ctx);
 			try {
 				fixed (ushort* g = glyphs) {
 					SkiaApi.sk_font_get_paths (Handle, g, glyphs.Length, proxy, (void*)ctx);

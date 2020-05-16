@@ -19,7 +19,7 @@ namespace SkiaSharp
 
 	public delegate IntPtr GRVkGetProcDelegate (string name, IntPtr instance, IntPtr device);
 
-	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix, object context);
+	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix);
 
 	internal unsafe static partial class DelegateProxies
 	{
@@ -117,7 +117,7 @@ namespace SkiaSharp
 		{
 			var del = Get<SKGlyphPathDelegate> ((IntPtr)context, out _);
 			var path = SKPath.GetObject (pathOrNull, false);
-			del.Invoke (path, *matrix, null);
+			del.Invoke (path, *matrix);
 		}
 	}
 }
