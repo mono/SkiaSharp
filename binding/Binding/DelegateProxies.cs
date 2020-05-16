@@ -17,7 +17,7 @@ namespace SkiaSharp
 
 	public delegate IntPtr GRGlGetProcDelegate (object context, string name);
 
-	public delegate IntPtr GRVkGetProcDelegate (object context, string name, IntPtr instance, IntPtr device);
+	public delegate IntPtr GRVkGetProcDelegate (string name, IntPtr instance, IntPtr device);
 
 	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix, object context);
 
@@ -109,7 +109,7 @@ namespace SkiaSharp
 		{
 			var del = Get<GRVkGetProcDelegate> ((IntPtr)context, out _);
 
-			return del.Invoke (null, name, instance, device);
+			return del.Invoke (name, instance, device);
 		}
 
 		[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]

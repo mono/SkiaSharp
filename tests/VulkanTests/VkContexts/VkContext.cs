@@ -28,6 +28,8 @@ namespace SkiaSharp.Tests
 
 		public virtual GRVkGetProcDelegate GetProc { get; protected set; }
 
+		public virtual GRSharpVkGetProcDelegate SharpVkGetProc { get; protected set; }
+
 		public virtual void Dispose() =>
 			Instance?.Dispose();
 	}

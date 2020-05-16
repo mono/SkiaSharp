@@ -50,7 +50,7 @@ namespace SkiaSharp.Vulkan.Tests
 				VkDevice = ctx.Device,
 				VkQueue = ctx.GraphicsQueue,
 				GraphicsQueueIndex = ctx.GraphicsFamily,
-				GetProc = ctx.GetProc
+				GetProc = ctx.SharpVkGetProc
 			};
 
 			Assert.NotNull(grVkBackendContext);
