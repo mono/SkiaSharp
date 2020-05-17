@@ -41,7 +41,7 @@ namespace SkiaSharp.Tests
 			using (var ctx = CreateGlContext()) {
 				ctx.MakeCurrent();
 
-				var glInterface = GRGlInterface.CreateNativeGlInterface();
+				var glInterface = GRGlInterface.Create();
 
 				Assert.True(glInterface.Validate());
 

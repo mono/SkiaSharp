@@ -9,7 +9,7 @@ namespace SkiaSharp
 
 	public unsafe class GRVkBackendContext : IDisposable
 	{
-		private GRVkGetProcDelegate getProc;
+		private GRVkGetProcedureAddressDelegate getProc;
 		private GRVkGetProcProxyDelegate getProcProxy;
 		private GCHandle getProcHandle;
 		private void* getProcContext;
@@ -48,7 +48,7 @@ namespace SkiaSharp
 
 		public IntPtr VkPhysicalDeviceFeatures2 { get; set; }
 
-		public GRVkGetProcDelegate GetProc {
+		public GRVkGetProcedureAddressDelegate GetProcedureAddress {
 			get => getProc;
 			set {
 				getProc = value;

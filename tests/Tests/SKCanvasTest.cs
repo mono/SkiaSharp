@@ -20,15 +20,15 @@ namespace SkiaSharp.Tests
 				{
 					var canvas = surface.Canvas;
 
-					Assert.Equal(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
+					Assert.Equal(SKMatrix.Identity, canvas.TotalMatrix);
 
 					using (new SKAutoCanvasRestore(canvas))
 					{
 						canvas.Translate(10, 10);
-						Assert.Equal(SKMatrix.MakeTranslation(10, 10), canvas.TotalMatrix);
+						Assert.Equal(SKMatrix.CreateTranslation(10, 10), canvas.TotalMatrix);
 					}
 
-					Assert.Equal(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
+					Assert.Equal(SKMatrix.Identity, canvas.TotalMatrix);
 				}
 			}
 		}
@@ -188,6 +188,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void CanDrawNullPointerZeroLengthText()
 		{
@@ -199,6 +200,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void ThrowsOnDrawNullPointerText()
 		{
@@ -383,10 +385,10 @@ namespace SkiaSharp.Tests
 			using (var canvas = new SKCanvas(bitmap))
 			{
 				canvas.Translate(10, 20);
-				Assert.Equal(SKMatrix.MakeTranslation(10, 20).Values, canvas.TotalMatrix.Values);
+				Assert.Equal(SKMatrix.CreateTranslation(10, 20).Values, canvas.TotalMatrix.Values);
 
 				canvas.Translate(10, 20);
-				Assert.Equal(SKMatrix.MakeTranslation(20, 40).Values, canvas.TotalMatrix.Values);
+				Assert.Equal(SKMatrix.CreateTranslation(20, 40).Values, canvas.TotalMatrix.Values);
 			}
 		}
 

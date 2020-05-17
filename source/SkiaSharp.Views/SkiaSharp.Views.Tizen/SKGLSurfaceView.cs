@@ -139,9 +139,9 @@ namespace SkiaSharp.Views.Tizen
 				Gles.glViewport(0, 0, surfaceSize.Width, surfaceSize.Height);
 
 				// create the interface using the function pointers provided by the EFL
-				var glInterface = GRGlInterface.CreateNativeEvasInterface(glEvas);
+				var glInterface = GRGlInterface.CreateEvas(glEvas);
 				context?.Dispose();
-				context = GRContext.Create(GRBackend.OpenGL, glInterface);
+				context = GRContext.CreateGl(glInterface);
 
 				// create the render target
 				renderTarget?.Dispose();

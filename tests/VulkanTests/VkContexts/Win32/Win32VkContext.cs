@@ -30,11 +30,25 @@ namespace SkiaSharp.Tests
 
 			PresentQueue = Device.GetQueue(PresentFamily, 0);
 
-			GetProc = (context, name, instanceHandle, deviceHandle) =>
+			GetProc = (name, instanceHandle, deviceHandle) =>
 			{
 				if (deviceHandle != IntPtr.Zero)
 					return Device.GetProcedureAddress(name);
 
+				return Instance.GetProcedureAddress(name);
+			};
+
+			SharpVkGetProc = (name, instance, device) =>
+			{
+				if (device != null)
+					return device.GetProcedureAddress(name);
+				if (instance != null)
+					return instance.GetProcedureAddress(name);
+
+				// SharpVk includes the static functions on Instance, but this is not actually correct
+				// since the functions are static, they are not tied to an instance. For example,
+				// VkCreateInstance is not found on an instance, it is creating said instance.
+				// Other libraries, such as VulkanCore, use another type to do this.
 				return Instance.GetProcedureAddress(name);
 			};
 		}
