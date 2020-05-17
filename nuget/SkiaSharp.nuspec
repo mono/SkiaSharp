@@ -92,16 +92,26 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file src="lib/tizen40/SkiaSharp.xml" />
 
     <!-- the build bits -->
+    <!-- net4x (win32/macos/linux) -->
     <file src="build/net45/SkiaSharp.targets" />
     <file src="build/net45/SkiaSharp.targets" target="buildTransitive/net45/SkiaSharp.targets" />
     <file src="build/net462/SkiaSharp.targets" />
     <file src="build/net462/SkiaSharp.targets" target="buildTransitive/net462/SkiaSharp.targets" />
+    <!-- others -->
+    <file src="build/monoandroid1.0/SkiaSharp.targets" />
+    <file src="build/xamarinios1.0/SkiaSharp.targets" />
+    <file src="build/xamarintvos1.0/SkiaSharp.targets" />
+    <file src="build/xamarinwatchos1.0/SkiaSharp.targets" />
+    <file src="build/xamarinmac2.0/SkiaSharp.targets" />
     <file src="build/tizen40/SkiaSharp.targets" />
 
     <!-- libSkiaSharp.dll and other native files -->
+    <!-- win -->
     <file platform="windows" src="runtimes/win-x64/native/libSkiaSharp.dll" />
     <file platform="windows" src="runtimes/win-x86/native/libSkiaSharp.dll" />
+    <!-- macos -->
     <file platform="macos" src="runtimes/osx/native/libSkiaSharp.dylib" />
+    <!-- win10 -->
     <file platform="windows" src="runtimes/win10-x64/nativeassets/uap10.0/libSkiaSharp.dll" />
     <file platform="windows" src="runtimes/win10-x86/nativeassets/uap10.0/libSkiaSharp.dll" />
     <file platform="windows" src="runtimes/win10-arm/nativeassets/uap10.0/libSkiaSharp.dll" />
@@ -114,8 +124,20 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file platform="windows" src="runtimes/win10-x86/nativeassets/uap10.0/libEGL.dll" />
     <file platform="windows" src="runtimes/win10-arm/nativeassets/uap10.0/libEGL.dll" />
     <file platform="windows" src="runtimes/win10-arm64/nativeassets/uap10.0/libEGL.dll" />
+    <!-- tizen -->
     <file src="runtimes/tizen-armel/native/libSkiaSharp.so" />
     <file src="runtimes/tizen-x86/native/libSkiaSharp.so" />
+    <!-- android -->
+    <file platform="macos,windows" src="runtimes/android-x64/native/libSkiaSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-x86/native/libSkiaSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-arm/native/libSkiaSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-arm64/native/libSkiaSharp.so" />
+    <!-- ios -->
+    <file platform="macos" src="runtimes/ios/native/libSkiaSharp.framework" />
+    <!-- tvos -->
+    <file platform="macos" src="runtimes/tvos/native/libSkiaSharp.framework" />
+    <!-- watchos -->
+    <file platform="macos" src="runtimes/watchos/native/libSkiaSharp.framework" />
 
     <!-- Workbooks integration -->
     <file src="xamarin.interactive/SkiaSharp.Workbooks.dll" />
