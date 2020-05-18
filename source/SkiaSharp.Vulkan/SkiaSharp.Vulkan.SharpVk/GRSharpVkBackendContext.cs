@@ -6,6 +6,8 @@ using PhysicalDeviceFeaturesNative = SharpVk.Interop.PhysicalDeviceFeatures;
 
 namespace SkiaSharp
 {
+	public delegate IntPtr GRSharpVkGetProcedureAddressDelegate(string name, Instance instance, Device device);
+
 	public unsafe class GRSharpVkBackendContext : GRVkBackendContext
 	{
 		private Instance vkInstance;
@@ -13,6 +15,7 @@ namespace SkiaSharp
 		private Device vkDevice;
 		private Queue vkQueue;
 		private PhysicalDeviceFeatures? vkPhysicalDeviceFeatures;
+		private GRSharpVkGetProcedureAddressDelegate getProc;
 
 		private PhysicalDeviceFeaturesNative devFeatures;
 		private GCHandle devFeaturesHandle;
@@ -90,6 +93,33 @@ namespace SkiaSharp
 					devFeatures = feat.ToNative();
 					devFeaturesHandle = GCHandle.Alloc(devFeatures, GCHandleType.Pinned);
 					base.VkPhysicalDeviceFeatures = devFeaturesHandle.AddrOfPinnedObject();
+				}
+			}
+		}
+
+		public new GRSharpVkGetProcedureAddressDelegate GetProcedureAddress
+		{
+			get => getProc;
+			set
+			{
+				getProc = value;
+
+				base.GetProcedureAddress = null;
+
+				if (value is GRSharpVkGetProcedureAddressDelegate del)
+				{
+					base.GetProcedureAddress = (name, instance, device) =>
+					{
+						if (instance != IntPtr.Zero && vkInstance?.RawHandle.ToUInt64() != (ulong)instance.ToInt64())
+							throw new InvalidOperationException("Incorrect object for VkInstance.");
+						if (device != IntPtr.Zero && vkDevice?.RawHandle.ToUInt64() != (ulong)device.ToInt64())
+							throw new InvalidOperationException("Incorrect object for VkDevice.");
+
+						var i = instance != IntPtr.Zero ? vkInstance : null;
+						var d = device != IntPtr.Zero ? vkDevice : null;
+
+						return del?.Invoke(name, i, d) ?? IntPtr.Zero;
+					};
 				}
 			}
 		}

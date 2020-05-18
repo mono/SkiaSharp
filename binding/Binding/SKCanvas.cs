@@ -436,7 +436,7 @@ namespace SkiaSharp
 
 		public void DrawPicture (SKPicture picture, float x, float y, SKPaint paint = null)
 		{
-			var matrix = SKMatrix.MakeTranslation (x, y);
+			var matrix = SKMatrix.CreateTranslation (x, y);
 			DrawPicture (picture, ref matrix, paint);
 		}
 
@@ -476,7 +476,7 @@ namespace SkiaSharp
 		{
 			if (drawable == null)
 				throw new ArgumentNullException (nameof (drawable));
-			var matrix = SKMatrix.MakeTranslation (x, y);
+			var matrix = SKMatrix.CreateTranslation (x, y);
 			DrawDrawable (drawable, ref matrix);
 		}
 
@@ -484,7 +484,7 @@ namespace SkiaSharp
 		{
 			if (drawable == null)
 				throw new ArgumentNullException (nameof (drawable));
-			var matrix = SKMatrix.MakeTranslation (p.X, p.Y);
+			var matrix = SKMatrix.CreateTranslation (p.X, p.Y);
 			DrawDrawable (drawable, ref matrix);
 		}
 

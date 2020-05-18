@@ -237,7 +237,9 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = 0;
 			PriorFrame = -1;
+#pragma warning disable CS0612 // Type or member is obsolete
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
+#pragma warning restore CS0612 // Type or member is obsolete
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset)
 		{
@@ -245,7 +247,9 @@ namespace SkiaSharp
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
+#pragma warning disable CS0612 // Type or member is obsolete
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
+#pragma warning restore CS0612 // Type or member is obsolete
 		}
 		public SKCodecOptions (SKRectI subset)
 		{
@@ -253,7 +257,9 @@ namespace SkiaSharp
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
+#pragma warning disable CS0612 // Type or member is obsolete
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
+#pragma warning restore CS0612 // Type or member is obsolete
 		}
 		public SKCodecOptions (int frameIndex)
 		{
@@ -261,7 +267,9 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = -1;
+#pragma warning disable CS0612 // Type or member is obsolete
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
+#pragma warning restore CS0612 // Type or member is obsolete
 		}
 		public SKCodecOptions (int frameIndex, int priorFrame)
 		{
@@ -269,7 +277,9 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = priorFrame;
+#pragma warning disable CS0612 // Type or member is obsolete
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
+#pragma warning restore CS0612 // Type or member is obsolete
 		}
 
 		public SKZeroInitialized ZeroInitialized { get; set; }
@@ -287,7 +297,9 @@ namespace SkiaSharp
 			Subset == obj.Subset &&
 			FrameIndex == obj.FrameIndex &&
 			PriorFrame == obj.PriorFrame &&
+#pragma warning disable CS0612 // Type or member is obsolete
 			PremulBehavior == obj.PremulBehavior;
+#pragma warning restore CS0612 // Type or member is obsolete
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKCodecOptions f && Equals (f);
@@ -305,7 +317,9 @@ namespace SkiaSharp
 			hash.Add (Subset);
 			hash.Add (FrameIndex);
 			hash.Add (PriorFrame);
+#pragma warning disable CS0612 // Type or member is obsolete
 			hash.Add (PremulBehavior);
+#pragma warning restore CS0612 // Type or member is obsolete
 			return hash.ToHashCode ();
 		}
 	}

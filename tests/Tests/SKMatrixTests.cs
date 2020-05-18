@@ -10,42 +10,42 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void MatrixCanInvert()
 		{
-			var m = SKMatrix.MakeTranslation(10, 20);
+			var m = SKMatrix.CreateTranslation(10, 20);
 			Assert.True(m.TryInvert(out var inverse));
-			Assert.Equal(SKMatrix.MakeTranslation(-10, -20).Values, inverse.Values);
+			Assert.Equal(SKMatrix.CreateTranslation(-10, -20).Values, inverse.Values);
 		}
 
 		[SkippableFact]
 		public void MatrixCanConcat()
 		{
-			var a = SKMatrix.MakeTranslation(10, 20);
-			var b = SKMatrix.MakeTranslation(5, 7);
+			var a = SKMatrix.CreateTranslation(10, 20);
+			var b = SKMatrix.CreateTranslation(5, 7);
 
 			var c = SKMatrix.Concat(a, b);
 			
-			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, c.Values);
+			Assert.Equal(SKMatrix.CreateTranslation(15, 27).Values, c.Values);
 		}
 
 		[SkippableFact]
 		public void MatrixCanPreConcat()
 		{
-			var a = SKMatrix.MakeTranslation(10, 20);
-			var b = SKMatrix.MakeTranslation(5, 7);
+			var a = SKMatrix.CreateTranslation(10, 20);
+			var b = SKMatrix.CreateTranslation(5, 7);
 
 			var c = a.PreConcat(b);
 			
-			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, c.Values);
+			Assert.Equal(SKMatrix.CreateTranslation(15, 27).Values, c.Values);
 		}
 
 		[SkippableFact]
 		public void MatrixCanPostConcat()
 		{
-			var a = SKMatrix.MakeTranslation(10, 20);
-			var b = SKMatrix.MakeTranslation(5, 7);
+			var a = SKMatrix.CreateTranslation(10, 20);
+			var b = SKMatrix.CreateTranslation(5, 7);
 
 			var c = a.PostConcat(b);
 			
-			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, c.Values);
+			Assert.Equal(SKMatrix.CreateTranslation(15, 27).Values, c.Values);
 		}
 
 		[SkippableFact]
@@ -75,7 +75,7 @@ namespace SkiaSharp.Tests
 				new SKPoint(15, 15),
 			};
 
-			var matrix = SKMatrix.MakeTranslation(10, 10);
+			var matrix = SKMatrix.CreateTranslation(10, 10);
 			matrix.MapPoints(source, source);
 
 			Assert.Equal(expectedResult, source);
