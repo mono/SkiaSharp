@@ -9,7 +9,7 @@ Task("libSkiaSharp")
 {
     RunCake("../linux/build.cake", "libSkiaSharp", new Dictionary<string, string> {
         { "variant", "linuxnodeps" },
-        { "gn", "skia_use_fontconfig=false" },
+        { "gnArgs", "skia_use_fontconfig=false" },
     });
 
     RunProcess("ldd", OUTPUT_PATH.CombineWithFilePath($"x64/libSkiaSharp.so").FullPath, out var stdout);
