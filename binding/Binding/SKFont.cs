@@ -262,7 +262,7 @@ namespace SkiaSharp
 			return SkiaApi.sk_font_text_to_glyphs (Handle, text, (IntPtr)length, encoding, null, 0);
 		}
 
-		// MeasureText
+		// MeasureText (text)
 
 		internal float MeasureText (string text, SKPaint paint = null) =>
 			MeasureText (text.AsSpan (), paint);
@@ -316,6 +316,23 @@ namespace SkiaSharp
 				return 0;
 
 			return SkiaApi.sk_font_measure_text (Handle, text, (IntPtr)length, encoding, bounds, paint?.Handle ?? IntPtr.Zero);
+		}
+
+		// MeasureText (glyphs)
+
+		public float MeasureText (ReadOnlySpan<ushort> glyphs, SKPaint paint = null)
+		{
+			fixed (ushort* gp = glyphs) {
+				return MeasureText (gp, glyphs.Length * 2, SKTextEncoding.GlyphId, null, paint);
+			}
+		}
+
+		public float MeasureText (ReadOnlySpan<ushort> glyphs, out SKRect bounds, SKPaint paint = null)
+		{
+			fixed (ushort* gp = glyphs)
+			fixed (SKRect* b = &bounds) {
+				return MeasureText (gp, glyphs.Length * 2, SKTextEncoding.GlyphId, b, paint);
+			}
 		}
 
 		// BreakText

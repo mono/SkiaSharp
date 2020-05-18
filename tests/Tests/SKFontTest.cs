@@ -139,6 +139,31 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void MeasureTextMeasuresTheTextForGlyphs()
+		{
+			var font = new SKFont();
+			var expectedWidth = font.MeasureText("Hello World!");
+
+			var glyphs = font.GetGlyphs("Hello World!");
+			var width = font.MeasureText(glyphs);
+
+			Assert.Equal(expectedWidth, width);
+		}
+
+		[SkippableFact]
+		public void MeasureTextReturnsTheBoundsForGlyphs()
+		{
+			var font = new SKFont();
+			var expectedWidth = font.MeasureText("Hello World!", out var expectedBounds);
+
+			var glyphs = font.GetGlyphs("Hello World!");
+			var width = font.MeasureText(glyphs, out var bounds);
+
+			Assert.Equal(expectedWidth, width);
+			Assert.Equal(expectedBounds, bounds);
+		}
+
+		[SkippableFact]
 		public void MeasureTextSucceedsForEmtptyString()
 		{
 			var font = new SKFont();
