@@ -826,7 +826,7 @@ namespace SkiaSharp
 
 		// GetTextPathOnPath (glyphs)
 
-		public SKPath GetTextPathOnPath (ReadOnlySpan<ushort> glyphs, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default)
+		internal SKPath GetTextPathOnPath (ReadOnlySpan<ushort> glyphs, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default)
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
@@ -843,7 +843,7 @@ namespace SkiaSharp
 			return GetTextPathOnPath (glyphs, glyphWidths, glyphOffsets, path, textAlign);
 		}
 
-		public SKPath GetTextPathOnPath (ReadOnlySpan<ushort> glyphs, ReadOnlySpan<float> glyphWidths, ReadOnlySpan<SKPoint> glyphPositions, SKPath path, SKTextAlign textAlign = SKTextAlign.Left)
+		internal SKPath GetTextPathOnPath (ReadOnlySpan<ushort> glyphs, ReadOnlySpan<float> glyphWidths, ReadOnlySpan<SKPoint> glyphPositions, SKPath path, SKTextAlign textAlign = SKTextAlign.Left)
 		{
 			if (glyphs.Length != glyphWidths.Length)
 				throw new ArgumentException ("The number of glyphs and glyph widths must be the same.");

@@ -355,13 +355,13 @@ namespace SkiaSharp
 		public SKPath GetTextPath (string text, SKPoint[] points) =>
 			GetFont ().GetTextPath (text, points);
 
-		public SKPath GetTextPath (ReadOnlySpan<char> text, SKPoint[] points) =>
+		public SKPath GetTextPath (ReadOnlySpan<char> text, ReadOnlySpan<SKPoint> points) =>
 			GetFont ().GetTextPath (text, points);
 
 		public SKPath GetTextPath (byte[] text, SKPoint[] points) =>
 			GetFont ().GetTextPath (text, TextEncoding, points);
 
-		public SKPath GetTextPath (ReadOnlySpan<byte> text, SKPoint[] points) =>
+		public SKPath GetTextPath (ReadOnlySpan<byte> text, ReadOnlySpan<SKPoint> points) =>
 			GetFont ().GetTextPath (text, TextEncoding, points);
 
 		public SKPath GetTextPath (IntPtr buffer, int length, SKPoint[] points) =>
@@ -607,7 +607,7 @@ namespace SkiaSharp
 		public float[] GetPositionedTextIntercepts (string text, SKPoint[] positions, float upperBounds, float lowerBounds) =>
 			GetPositionedTextIntercepts (text.AsSpan (), positions, upperBounds, lowerBounds);
 
-		public float[] GetPositionedTextIntercepts (ReadOnlySpan<char> text, SKPoint[] positions, float upperBounds, float lowerBounds)
+		public float[] GetPositionedTextIntercepts (ReadOnlySpan<char> text, ReadOnlySpan<SKPoint> positions, float upperBounds, float lowerBounds)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -619,7 +619,7 @@ namespace SkiaSharp
 		public float[] GetPositionedTextIntercepts (byte[] text, SKPoint[] positions, float upperBounds, float lowerBounds) =>
 			GetPositionedTextIntercepts (text.AsSpan (), positions, upperBounds, lowerBounds);
 
-		public float[] GetPositionedTextIntercepts (ReadOnlySpan<byte> text, SKPoint[] positions, float upperBounds, float lowerBounds)
+		public float[] GetPositionedTextIntercepts (ReadOnlySpan<byte> text, ReadOnlySpan<SKPoint> positions, float upperBounds, float lowerBounds)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -645,7 +645,7 @@ namespace SkiaSharp
 		public float[] GetHorizontalTextIntercepts (string text, float[] xpositions, float y, float upperBounds, float lowerBounds) =>
 			GetHorizontalTextIntercepts (text.AsSpan (), xpositions, y, upperBounds, lowerBounds);
 
-		public float[] GetHorizontalTextIntercepts (ReadOnlySpan<char> text, float[] xpositions, float y, float upperBounds, float lowerBounds)
+		public float[] GetHorizontalTextIntercepts (ReadOnlySpan<char> text, ReadOnlySpan<float> xpositions, float y, float upperBounds, float lowerBounds)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -657,7 +657,7 @@ namespace SkiaSharp
 		public float[] GetHorizontalTextIntercepts (byte[] text, float[] xpositions, float y, float upperBounds, float lowerBounds) =>
 			GetHorizontalTextIntercepts (text.AsSpan (), xpositions, y, upperBounds, lowerBounds);
 
-		public float[] GetHorizontalTextIntercepts (ReadOnlySpan<byte> text, float[] xpositions, float y, float upperBounds, float lowerBounds)
+		public float[] GetHorizontalTextIntercepts (ReadOnlySpan<byte> text, ReadOnlySpan<float> xpositions, float y, float upperBounds, float lowerBounds)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
