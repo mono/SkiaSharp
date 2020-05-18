@@ -367,6 +367,9 @@ namespace SkiaSharp
 		public SKPath GetTextPath (IntPtr buffer, int length, SKPoint[] points) =>
 			GetFont ().GetTextPath (buffer, length, TextEncoding, points);
 
+		public SKPath GetTextPath (IntPtr buffer, int length, ReadOnlySpan<SKPoint> points) =>
+			GetFont ().GetTextPath (buffer, length, TextEncoding, points);
+
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, SKPoint[] points) =>
 			GetFont ().GetTextPath (buffer, (int)length, TextEncoding, points);
 
