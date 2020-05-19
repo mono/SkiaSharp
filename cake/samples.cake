@@ -83,7 +83,10 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                     var packageId = projItem.Attribute("Include").Value;
                     var version = GetVersion(packageId);
                     if (!string.IsNullOrWhiteSpace(version)) {
-                        version += suffix;
+                        // only add the suffix for our nugets
+                        if (packageId.StartsWith("SkiaSharp") || packageId.StartsWith("HarfBuzzSharp")) {
+                            version += suffix;
+                        }
                         Debug($"Substituting package version {packageId} for {version}.");
                         projItem.Attribute("Version").Value = version;
                     } else if (packageId.StartsWith("SkiaSharp") || packageId.StartsWith("HarfBuzzSharp")) {
