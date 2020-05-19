@@ -197,8 +197,8 @@ namespace SkiaSharp
 	[Obsolete ("Use SKSurfaceProperties instead.")]
 	public struct SKSurfaceProps : IEquatable<SKSurfaceProps>
 	{
-		public SKPixelGeometry PixelGeometry { get; set; }
-		public SKSurfacePropsFlags Flags { get; set; }
+		public SKPixelGeometry PixelGeometry { readonly get; set; }
+		public SKSurfacePropsFlags Flags { readonly get; set; }
 
 		public readonly bool Equals (SKSurfaceProps obj) =>
 			PixelGeometry == obj.PixelGeometry &&
@@ -237,9 +237,6 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = 0;
 			PriorFrame = -1;
-#pragma warning disable CS0612 // Type or member is obsolete
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
-#pragma warning restore CS0612 // Type or member is obsolete
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset)
 		{
@@ -247,9 +244,6 @@ namespace SkiaSharp
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
-#pragma warning disable CS0612 // Type or member is obsolete
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
-#pragma warning restore CS0612 // Type or member is obsolete
 		}
 		public SKCodecOptions (SKRectI subset)
 		{
@@ -257,9 +251,6 @@ namespace SkiaSharp
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
-#pragma warning disable CS0612 // Type or member is obsolete
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
-#pragma warning restore CS0612 // Type or member is obsolete
 		}
 		public SKCodecOptions (int frameIndex)
 		{
@@ -267,9 +258,6 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = -1;
-#pragma warning disable CS0612 // Type or member is obsolete
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
-#pragma warning restore CS0612 // Type or member is obsolete
 		}
 		public SKCodecOptions (int frameIndex, int priorFrame)
 		{
@@ -277,29 +265,26 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = priorFrame;
-#pragma warning disable CS0612 // Type or member is obsolete
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
-#pragma warning restore CS0612 // Type or member is obsolete
 		}
 
-		public SKZeroInitialized ZeroInitialized { get; set; }
-		public SKRectI? Subset { get; set; }
+		public SKZeroInitialized ZeroInitialized { readonly get; set; }
+		public SKRectI? Subset { readonly get; set; }
 		public readonly bool HasSubset => Subset != null;
-		public int FrameIndex { get; set; }
-		public int PriorFrame { get; set; }
+		public int FrameIndex { readonly get; set; }
+		public int PriorFrame { readonly get; set; }
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
-		public SKTransferFunctionBehavior PremulBehavior { get; set; }
+		public SKTransferFunctionBehavior UnpremulBehavior {
+			readonly get => SKTransferFunctionBehavior.Respect;
+			set { }
+		}
 
 		public readonly bool Equals (SKCodecOptions obj) =>
 			ZeroInitialized == obj.ZeroInitialized &&
 			Subset == obj.Subset &&
 			FrameIndex == obj.FrameIndex &&
-			PriorFrame == obj.PriorFrame &&
-#pragma warning disable CS0612 // Type or member is obsolete
-			PremulBehavior == obj.PremulBehavior;
-#pragma warning restore CS0612 // Type or member is obsolete
+			PriorFrame == obj.PriorFrame;
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKCodecOptions f && Equals (f);
@@ -317,9 +302,6 @@ namespace SkiaSharp
 			hash.Add (Subset);
 			hash.Add (FrameIndex);
 			hash.Add (PriorFrame);
-#pragma warning disable CS0612 // Type or member is obsolete
-			hash.Add (PremulBehavior);
-#pragma warning restore CS0612 // Type or member is obsolete
 			return hash.ToHashCode ();
 		}
 	}
@@ -364,11 +346,11 @@ namespace SkiaSharp
 
 	public struct SKLattice : IEquatable<SKLattice>
 	{
-		public int[] XDivs { get; set; }
-		public int[] YDivs { get; set; }
-		public SKLatticeRectType[] RectTypes { get; set; }
-		public SKRectI? Bounds { get; set; }
-		public SKColor[] Colors { get; set; }
+		public int[] XDivs { readonly get; set; }
+		public int[] YDivs { readonly get; set; }
+		public SKLatticeRectType[] RectTypes { readonly get; set; }
+		public SKRectI? Bounds { readonly get; set; }
+		public SKColor[] Colors { readonly get; set; }
 
 		public readonly bool Equals (SKLattice obj) =>
 			XDivs == obj.XDivs &&
@@ -477,17 +459,17 @@ namespace SkiaSharp
 			EncodingQuality = encodingQuality;
 		}
 
-		public string Title { get; set; }
-		public string Author { get; set; }
-		public string Subject { get; set; }
-		public string Keywords { get; set; }
-		public string Creator { get; set; }
-		public string Producer { get; set; }
-		public DateTime? Creation { get; set; }
-		public DateTime? Modified { get; set; }
-		public float RasterDpi { get; set; }
-		public bool PdfA { get; set; }
-		public int EncodingQuality { get; set; }
+		public string Title { readonly get; set; }
+		public string Author { readonly get; set; }
+		public string Subject { readonly get; set; }
+		public string Keywords { readonly get; set; }
+		public string Creator { readonly get; set; }
+		public string Producer { readonly get; set; }
+		public DateTime? Creation { readonly get; set; }
+		public DateTime? Modified { readonly get; set; }
+		public float RasterDpi { readonly get; set; }
+		public bool PdfA { readonly get; set; }
+		public int EncodingQuality { readonly get; set; }
 
 		public readonly bool Equals (SKDocumentPdfMetadata obj) =>
 			Title == obj.Title &&
