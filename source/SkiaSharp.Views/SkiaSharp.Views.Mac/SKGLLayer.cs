@@ -54,8 +54,8 @@ namespace SkiaSharp.Views.Mac
 			if (context == null)
 			{
 				// get the bits for SkiaSharp
-				var glInterface = GRGlInterface.CreateNativeGlInterface();
-				context = GRContext.Create(GRBackend.OpenGL, glInterface);
+				var glInterface = GRGlInterface.Create();
+				context = GRContext.CreateGl(glInterface);
 			}
 
 			// manage the drawing surface
