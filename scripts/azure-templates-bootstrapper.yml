@@ -19,7 +19,7 @@ parameters:
   docker: ''                                    # the Docker image to build and use
 
 jobs:
-- ${{ if and(ne(parameters.buildExternals, ''), or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'), startsWith(parameters.name, 'tests_'))) }}:
+- ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
   - template: azure-templates-download.yml
     parameters:
       name: ${{ parameters.name }}
@@ -28,7 +28,7 @@ jobs:
       condition: ${{ parameters.condition }}
       buildExternals: ${{ parameters.buildExternals }}
 
-- ${{ if or(eq(parameters.buildExternals, ''), not(and(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'), startsWith(parameters.name, 'tests_')))) }}:
+- ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
