@@ -15,11 +15,11 @@ parameters:
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
   buildExternals: '3742149'                            # the build number to download externals from
-  verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
+  verbosity: 'diagnostic'                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
 
 jobs:
-- ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
+- ${{ if and(ne(parameters.buildExternals, ''), or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'), startsWith(parameters.name, 'tests_'))) }}:
   - template: azure-templates-download.yml
     parameters:
       name: ${{ parameters.name }}
@@ -28,7 +28,7 @@ jobs:
       condition: ${{ parameters.condition }}
       buildExternals: ${{ parameters.buildExternals }}
 
-- ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
+- ${{ if or(eq(parameters.buildExternals, ''), not(and(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'), startsWith(parameters.name, 'tests_')))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
