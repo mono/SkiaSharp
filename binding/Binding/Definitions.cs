@@ -275,7 +275,7 @@ namespace SkiaSharp
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
-		public SKTransferFunctionBehavior UnpremulBehavior {
+		public SKTransferFunctionBehavior PremulBehavior {
 			readonly get => SKTransferFunctionBehavior.Respect;
 			set { }
 		}

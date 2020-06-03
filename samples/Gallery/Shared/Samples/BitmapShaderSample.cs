@@ -20,7 +20,7 @@ namespace SkiaSharpSample.Samples
 			using (var stream = new SKManagedStream(SampleMedia.Images.ColorWheel))
 			using (var source = SKBitmap.Decode(stream))
 			{
-				var matrix = SKMatrix.MakeRotation(30.0f);
+				var matrix = SKMatrix.CreateRotation(30.0f);
 
 				// create the shader and paint
 				using (var shader = SKShader.CreateBitmap(source, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, matrix))
