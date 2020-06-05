@@ -55,6 +55,7 @@ namespace SkiaSharp
 	using sk_region_spanerator_t = IntPtr;
 	using sk_region_t = IntPtr;
 	using sk_rrect_t = IntPtr;
+	using sk_runtimeeffect_t = IntPtr;
 	using sk_shader_t = IntPtr;
 	using sk_stream_asset_t = IntPtr;
 	using sk_stream_filestream_t = IntPtr;
@@ -2926,6 +2927,29 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region sk_runtimeeffect.h
+
+		// size_t sk_runtimeeffect_get_input_size(sk_runtimeeffect_t* effect)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_runtimeeffect_get_input_size (sk_runtimeeffect_t effect);
+
+		// sk_runtimeeffect_t* sk_runtimeeffect_make(sk_string_t* sksl, sk_string_t* error)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_runtimeeffect_t sk_runtimeeffect_make (sk_string_t sksl, sk_string_t error);
+
+		// sk_colorfilter_t* sk_runtimeeffect_make_color_filter(sk_runtimeeffect_t* effect, sk_data_t* inputs, sk_colorfilter_t** children, size_t childCount)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_runtimeeffect_make_color_filter (sk_runtimeeffect_t effect, sk_data_t inputs, sk_colorfilter_t* children, /* size_t */ IntPtr childCount);
+
+		// sk_shader_t* sk_runtimeeffect_make_shader(sk_runtimeeffect_t* effect, sk_data_t* inputs, sk_shader_t** children, size_t childCount, const sk_matrix_t* localMatrix, bool isOpaque)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_runtimeeffect_make_shader (sk_runtimeeffect_t effect, sk_data_t inputs, sk_shader_t* children, /* size_t */ IntPtr childCount, SKMatrix* localMatrix, [MarshalAs (UnmanagedType.I1)] bool isOpaque);
+
+		// void sk_runtimeeffect_unref(sk_runtimeeffect_t* effect)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_runtimeeffect_unref (sk_runtimeeffect_t effect);
+
+		#endregion
 
 		#region sk_shader.h
 
