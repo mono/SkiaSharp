@@ -420,14 +420,16 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle, null));
 		}
 
-		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKBlendMode mode, SKMatrix localMatrix)
-		{
-			if (shaderA == null)
-				throw new ArgumentNullException (nameof (shaderA));
-			if (shaderB == null)
-				throw new ArgumentNullException (nameof (shaderB));
+		// CreateLerp
 
-			return GetObject (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle, &localMatrix));
+		public static SKShader CreateLerp (float weight, SKShader dst, SKShader src)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return GetObject (SkiaApi.sk_shader_new_lerp (weight, dst.Handle, src.Handle, null));
 		}
 
 		// CreateColorFilter
