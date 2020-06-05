@@ -53,6 +53,6 @@ However, these are easy to install as they are found on the various websites. If
 
 Here are some links to show the differences in our code as compared to Google's code.
 
-What version are we on? [**m64**](https://github.com/google/skia/tree/chrome/m84)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-develop...google:chrome/m84)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m84...mono:xamarin-develop)  
+What version are we on? [**m68**](https://github.com/google/skia/tree/chrome/m80)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m80)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m80...mono:xamarin-mobile-bindings)  
