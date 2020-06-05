@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if __MACOS__
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -91,3 +92,4 @@ namespace SkiaSharp.Views.UWP
 		}
 	}
 }
+#endif
