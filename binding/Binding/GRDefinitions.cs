@@ -262,6 +262,7 @@ namespace SkiaSharp
 				GRPixelConfig.Bgra8888 => GRGlSizedFormat.BGRA8,
 				GRPixelConfig.Srgba8888 => GRGlSizedFormat.SRGB8_ALPHA8,
 				GRPixelConfig.Rgba1010102 => GRGlSizedFormat.RGB10_A2,
+				GRPixelConfig.Bgra1010102 => GRGlSizedFormat.RGB10_A2,
 				GRPixelConfig.AlphaHalf => GRGlSizedFormat.R16F,
 				GRPixelConfig.AlphaHalfAsLum => GRGlSizedFormat.LUMINANCE16F,
 				GRPixelConfig.AlphaHalfAsRed => GRGlSizedFormat.R16F,
