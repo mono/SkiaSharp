@@ -21,7 +21,7 @@ steps:
   - pwsh: |
       $label = ""
       if ($env:BUILD_REASON -ne "PullRequest") {
-        $label = "+" + $env:BUILD_SOURCEBRANCH.Substring("refs/heads/".Length)
+        $label = "+" + $env:BUILD_SOURCEBRANCHNAME
       }
       $label = "$env:SKIASHARP_VERSION-$env:PREVIEW_LABEL.$env:BUILD_NUMBER$label"
       Write-Host "Build label: $label"
