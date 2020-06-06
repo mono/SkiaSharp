@@ -44,7 +44,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[SkippableTheory(Skip = "Shaders are not yet supported on raster surfaces.")]
 		[MemberData(nameof(ShadersTestCaseData))]
 		public void ShadersRunOnRaster(string hdr, string body, SKColor[] expected)
 		{
