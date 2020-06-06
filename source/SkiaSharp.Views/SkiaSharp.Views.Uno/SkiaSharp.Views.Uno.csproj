@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54" ToolsVersion="15.0">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;xamarinios10;monoandroid80;monoandroid90</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;xamarinios10;monoandroid80;monoandroid90;xamarinmac20</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <NoWarn>$(NoWarm);NU1701</NoWarn>
@@ -63,15 +63,24 @@
     <Compile Remove="..\SkiaSharp.Views.AppleiOS\SKGLView.cs" />
     <Compile Remove="..\SkiaSharp.Views.AppleiOS\SKGLLayer.cs" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'!='xamarinios10'">
+  <ItemGroup Condition="'$(TargetFramework)'=='xamarinmac20'">
+    <Compile Include="..\SkiaSharp.Views.Mac\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Remove="..\SkiaSharp.Views.Mac\SKCanvasView.cs" />
+    <Compile Remove="..\SkiaSharp.Views.Apple\SKCanvasLayer.cs" />
+    <Compile Remove="..\SkiaSharp.Views.Mac\SKGLView.cs" />
+    <Compile Remove="..\SkiaSharp.Views.Mac\SKGLLayer.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'!='xamarinios10' and '$(TargetFramework)'!='xamarinmac20'">
     <None Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp.Views.Mac\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='xamarinios10' or '$(TargetFramework)'=='monoandroid80' or '$(TargetFramework)'=='monoandroid90'">
+  <ItemGroup Condition="'$(TargetFramework)'=='xamarinios10' or '$(TargetFramework)'=='xamarinmac20' or '$(TargetFramework)'=='monoandroid80' or '$(TargetFramework)'=='monoandroid90'">
     <PackageReference Include="SkiaSharp" Version="1.68.0" />
   </ItemGroup>
   
