@@ -17,7 +17,7 @@ steps:
     condition: eq(variables['Build.Reason'], 'PullRequest')
   - pwsh: |
       $label = ""
-      if (-not $label.StartsWith("pr.")) {
+      if ($env:PREVIEW_LABEL.StartsWith("pr.")) {
         $label = "+$env:GIT_BRANCH_NAME"
       }
       Write-Host "##vso[build.updatebuildnumber]$env:SKIASHARP_VERSION-$env:PREVIEW_LABEL.$env:BUILD_NUMBER$label"
