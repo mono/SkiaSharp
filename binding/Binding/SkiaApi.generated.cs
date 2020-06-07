@@ -56,6 +56,7 @@ namespace SkiaSharp
 	using sk_region_t = IntPtr;
 	using sk_rrect_t = IntPtr;
 	using sk_runtimeeffect_t = IntPtr;
+	using sk_runtimeeffect_variable_t = IntPtr;
 	using sk_shader_t = IntPtr;
 	using sk_stream_asset_t = IntPtr;
 	using sk_stream_filestream_t = IntPtr;
@@ -2929,9 +2930,33 @@ namespace SkiaSharp
 
 		#region sk_runtimeeffect.h
 
-		// size_t sk_runtimeeffect_get_input_size(sk_runtimeeffect_t* effect)
+		// void sk_runtimeeffect_get_child_name(const sk_runtimeeffect_t* effect, int index, sk_string_t* name)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_runtimeeffect_get_child_name (sk_runtimeeffect_t effect, Int32 index, sk_string_t name);
+
+		// size_t sk_runtimeeffect_get_children_count(const sk_runtimeeffect_t* effect)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_runtimeeffect_get_children_count (sk_runtimeeffect_t effect);
+
+		// const sk_runtimeeffect_variable_t* sk_runtimeeffect_get_input_from_index(const sk_runtimeeffect_t* effect, int index)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_runtimeeffect_variable_t sk_runtimeeffect_get_input_from_index (sk_runtimeeffect_t effect, Int32 index);
+
+		// const sk_runtimeeffect_variable_t* sk_runtimeeffect_get_input_from_name(const sk_runtimeeffect_t* effect, const char* name, size_t len)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_runtimeeffect_variable_t sk_runtimeeffect_get_input_from_name (sk_runtimeeffect_t effect, /* char */ void* name, /* size_t */ IntPtr len);
+
+		// void sk_runtimeeffect_get_input_name(const sk_runtimeeffect_t* effect, int index, sk_string_t* name)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_runtimeeffect_get_input_name (sk_runtimeeffect_t effect, Int32 index, sk_string_t name);
+
+		// size_t sk_runtimeeffect_get_input_size(const sk_runtimeeffect_t* effect)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_runtimeeffect_get_input_size (sk_runtimeeffect_t effect);
+
+		// size_t sk_runtimeeffect_get_inputs_count(const sk_runtimeeffect_t* effect)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_runtimeeffect_get_inputs_count (sk_runtimeeffect_t effect);
 
 		// sk_runtimeeffect_t* sk_runtimeeffect_make(sk_string_t* sksl, sk_string_t* error)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2948,6 +2973,14 @@ namespace SkiaSharp
 		// void sk_runtimeeffect_unref(sk_runtimeeffect_t* effect)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_runtimeeffect_unref (sk_runtimeeffect_t effect);
+
+		// size_t sk_runtimeeffect_variable_get_offset(const sk_runtimeeffect_variable_t* variable)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_runtimeeffect_variable_get_offset (sk_runtimeeffect_variable_t variable);
+
+		// size_t sk_runtimeeffect_variable_get_size_in_bytes(const sk_runtimeeffect_variable_t* variable)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_runtimeeffect_variable_get_size_in_bytes (sk_runtimeeffect_variable_t variable);
 
 		#endregion
 
