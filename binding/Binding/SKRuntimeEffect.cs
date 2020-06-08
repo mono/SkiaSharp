@@ -134,7 +134,7 @@ namespace SkiaSharp
 			GetOrAddObject (handle, (h, o) => new SKRuntimeEffect (h, o));
 	}
 
-	public unsafe class SKRuntimeEffectInputs
+	public unsafe class SKRuntimeEffectInputs : IEnumerable
 	{
 		internal struct Variable
 		{
@@ -187,42 +187,11 @@ namespace SkiaSharp
 		public bool Contains (string name) =>
 			Array.IndexOf (names, name) != -1;
 
-		public void Set (string name, bool value)
-		{
-			var v = value ? (byte)1 : (byte)0;
-			Set (name, &v, sizeof (byte));
+		public SKRuntimeEffectInput this[string name] {
+			set => Add (name, value);
 		}
 
-		public void Set (string name, int value) =>
-			Set (name, &value, sizeof (int));
-
-		public void Set (string name, int[] value)
-		{
-			fixed (void* v = value) {
-				Set (name, v, sizeof (int) * (value?.Length ?? 0));
-			}
-		}
-
-		public void Set (string name, float value) =>
-			Set (name, &value, sizeof (float));
-
-		public void Set (string name, float[] value)
-		{
-			fixed (void* v = value) {
-				Set (name, v, sizeof (float) * (value?.Length ?? 0));
-			}
-		}
-
-		public void Set (string name, float[][] value)
-		{
-			var floats = new List<float> ();
-			foreach (var array in value) {
-				floats.AddRange (array);
-			}
-			Set (name, floats.ToArray ());
-		}
-
-		private void Set (string name, void* value, int size)
+		public void Add (string name, SKRuntimeEffectInput value)
 		{
 			var index = Array.IndexOf (names, name);
 
@@ -232,23 +201,29 @@ namespace SkiaSharp
 			var variable = variables[name];
 			var slice = data.Span.Slice (variable.Offset, variable.Size);
 
-			if (value == null) {
+			if (value.IsEmpty) {
 				slice.Fill (0);
 				return;
 			}
 
-			if (size != variable.Size)
-				throw new ArgumentException ($"Value size of {size} does not match variable size of {variable.Size}.", nameof (value));
+			if (value.Size != variable.Size)
+				throw new ArgumentException ($"Value size of {value.Size} does not match variable size of {variable.Size}.", nameof (value));
 
-			var val = new Span<byte> (value, size);
-			val.CopyTo (slice);
+			// TODO: either check or convert data types - for example int and float are both 4 bytes, but not the same byte[] value
+
+			value.WriteTo (slice);
 		}
 
 		public SKData ToData () =>
 			SKData.CreateCopy (data.Data, data.Size);
+
+		IEnumerator IEnumerable.GetEnumerator ()
+		{
+			yield break;
+		}
 	}
 
-	public class SKRuntimeEffectChildren
+	public class SKRuntimeEffectChildren : IEnumerable
 	{
 		private readonly string[] names;
 		private readonly SKShader[] children;
@@ -274,7 +249,11 @@ namespace SkiaSharp
 		public bool Contains (string name) =>
 			Array.IndexOf (names, name) != -1;
 
-		public void Set (string name, SKShader value)
+		public SKShader this[string name] {
+			set => Add (name, value);
+		}
+
+		public void Add (string name, SKShader value)
 		{
 			var index = Array.IndexOf (names, name);
 
@@ -286,5 +265,110 @@ namespace SkiaSharp
 
 		public SKShader[] ToArray () =>
 			children.ToArray ();
+
+		IEnumerator IEnumerable.GetEnumerator ()
+		{
+			yield break;
+		}
+	}
+
+	public unsafe struct SKRuntimeEffectInput
+	{
+		private enum DataType
+		{
+			Empty,
+
+			Byte,
+			ByteArray,
+			Int,
+			IntArray,
+			Float,
+			FloatArray
+		}
+
+		public static readonly SKRuntimeEffectInput Empty = new SKRuntimeEffectInput ();
+
+		// fields
+
+		private byte byteValue;
+		private int intValue;
+		private float floatValue;
+
+		private byte[] byteArray;
+		private int[] intArray;
+		private float[] floatArray;
+
+		private DataType type;
+		private int size;
+
+		// properties
+
+		public bool IsEmpty =>
+			type == DataType.Empty;
+
+		public int Size =>
+			size;
+
+		// converters
+
+		public static implicit operator SKRuntimeEffectInput (bool value) =>
+			new SKRuntimeEffectInput { byteValue = value ? (byte)1 : (byte)0, size = sizeof (byte), type = DataType.Byte };
+
+		public static implicit operator SKRuntimeEffectInput (int value) =>
+			new SKRuntimeEffectInput { intValue = value, size = sizeof (int), type = DataType.Int };
+
+		public static implicit operator SKRuntimeEffectInput (float value) =>
+			new SKRuntimeEffectInput { floatValue = value, size = sizeof (float), type = DataType.Float };
+
+		public static implicit operator SKRuntimeEffectInput (int[] value) =>
+			new SKRuntimeEffectInput { intArray = value, size = sizeof (int) * (value?.Length ?? 0), type = DataType.IntArray };
+
+		public static implicit operator SKRuntimeEffectInput (float[] value) =>
+			new SKRuntimeEffectInput { floatArray = value, size = sizeof (float) * (value?.Length ?? 0), type = DataType.FloatArray };
+
+		public static implicit operator SKRuntimeEffectInput (float[][] value)
+		{
+			var floats = new List<float> ();
+			foreach (var array in value) {
+				floats.AddRange (array);
+			}
+			return floats.ToArray ();
+		}
+
+		// writer
+
+		public void WriteTo (Span<byte> data)
+		{
+			switch (type) {
+				case DataType.Byte:
+					fixed (void* v = &byteValue)
+						new ReadOnlySpan<byte> (v, size).CopyTo (data);
+					break;
+				case DataType.ByteArray:
+					fixed (void* v = byteArray)
+						new ReadOnlySpan<byte> (v, size).CopyTo (data);
+					break;
+				case DataType.Int:
+					fixed (void* v = &intValue)
+						new ReadOnlySpan<byte> (v, size).CopyTo (data);
+					break;
+				case DataType.IntArray:
+					fixed (void* v = intArray)
+						new ReadOnlySpan<byte> (v, size).CopyTo (data);
+					break;
+				case DataType.Float:
+					fixed (void* v = &floatValue)
+						new ReadOnlySpan<byte> (v, size).CopyTo (data);
+					break;
+				case DataType.FloatArray:
+					fixed (void* v = floatArray)
+						new ReadOnlySpan<byte> (v, size).CopyTo (data);
+					break;
+				case DataType.Empty:
+				default:
+					data.Fill (0);
+					break;
+			}
+		}
 	}
 }

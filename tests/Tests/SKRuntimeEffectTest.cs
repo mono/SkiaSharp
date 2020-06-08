@@ -173,13 +173,13 @@ namespace SkiaSharp.Tests
 				foreach (var input in inputs)
 				{
 					if (input.Value is int intVal)
-						this.inputs.Set(input.Key, intVal);
+						this.inputs[input.Key] = intVal;
 					else if (input.Value is float[] floatArray)
-						this.inputs.Set(input.Key, floatArray);
+						this.inputs[input.Key] = floatArray;
 					else if (input.Value is float[][] floatArrayArray)
-						this.inputs.Set(input.Key, floatArrayArray);
+						this.inputs[input.Key] = floatArrayArray;
 					else if (input.Value is int[] intArray)
-						this.inputs.Set(input.Key, intArray);
+						this.inputs[input.Key] = intArray;
 				}
 			}
 
@@ -248,7 +248,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void RuntimeEffectChildrenWorksCorrectly()
+		public void RuntimeEffectInitializesCorrectChildren()
 		{
 			var src = @"
 in fragmentProcessor color_map;
@@ -260,21 +260,260 @@ void main(float2 p, inout half4 color) { }";
 
 			Assert.Equal(2, effectChildren.Count);
 			Assert.Equal(2, effectChildren.Names.Count);
+		}
 
+		[SkippableFact]
+		public void RuntimeEffectChildrenWorksCorrectly()
+		{
 			using var blueShirt = SKImage.FromEncodedData(Path.Combine(PathToImages, "blue-shirt.jpg"));
 			using var textureShader = blueShirt.ToShader();
 
-			effectChildren.Set("color_map", textureShader);
-			Assert.Equal(new SKShader[] { textureShader, null }, effectChildren.ToArray());
+			var src = @"
+in fragmentProcessor color_map;
+in fragmentProcessor normal_map;
+void main(float2 p, inout half4 color) { }";
 
-			effectChildren.Set("normal_map", textureShader);
-			Assert.Equal(new SKShader[] { textureShader, textureShader }, effectChildren.ToArray());
+			using var effect = SKRuntimeEffect.Create(src, out _);
+			var children = new SKRuntimeEffectChildren(effect);
 
-			effectChildren.Set("color_map", null);
-			Assert.Equal(new SKShader[] { null, textureShader }, effectChildren.ToArray());
+			children.Add("color_map", textureShader);
+			Assert.Equal(new SKShader[] { textureShader, null }, children.ToArray());
 
-			effectChildren.Reset();
-			Assert.Equal(new SKShader[] { null, null }, effectChildren.ToArray());
+			children.Add("normal_map", textureShader);
+			Assert.Equal(new SKShader[] { textureShader, textureShader }, children.ToArray());
+
+			children.Add("color_map", null);
+			Assert.Equal(new SKShader[] { null, textureShader }, children.ToArray());
+
+			children.Reset();
+			Assert.Equal(new SKShader[] { null, null }, children.ToArray());
+		}
+
+		[SkippableFact]
+		public void RuntimeEffectChildrenWorksCorrectlyWithCollectionInitializer()
+		{
+			using var blueShirt = SKImage.FromEncodedData(Path.Combine(PathToImages, "blue-shirt.jpg"));
+			using var textureShader = blueShirt.ToShader();
+
+			var src = @"
+in fragmentProcessor color_map;
+in fragmentProcessor normal_map;
+void main(float2 p, inout half4 color) { }";
+
+			using var effect = SKRuntimeEffect.Create(src, out _);
+
+			var children = new SKRuntimeEffectChildren(effect)
+			{
+				{ "color_map", textureShader },
+			};
+			Assert.Equal(new SKShader[] { textureShader, null }, children.ToArray());
+
+			children = new SKRuntimeEffectChildren(effect)
+			{
+				{ "color_map", textureShader },
+				{ "normal_map", textureShader },
+			};
+			Assert.Equal(new SKShader[] { textureShader, textureShader }, children.ToArray());
+
+			children = new SKRuntimeEffectChildren(effect)
+			{
+				{ "normal_map", textureShader },
+				{ "color_map", null },
+			};
+			Assert.Equal(new SKShader[] { null, textureShader }, children.ToArray());
+
+			children = new SKRuntimeEffectChildren(effect)
+			{
+				{ "normal_map", null },
+				{ "color_map", null },
+			};
+			Assert.Equal(new SKShader[] { null, null }, children.ToArray());
+		}
+
+		[SkippableFact]
+		public void RuntimeEffectChildrenWorksCorrectlyWithCollectionIndexer()
+		{
+			using var blueShirt = SKImage.FromEncodedData(Path.Combine(PathToImages, "blue-shirt.jpg"));
+			using var textureShader = blueShirt.ToShader();
+
+			var src = @"
+in fragmentProcessor color_map;
+in fragmentProcessor normal_map;
+void main(float2 p, inout half4 color) { }";
+
+			using var effect = SKRuntimeEffect.Create(src, out _);
+
+			var childrent = new SKRuntimeEffectChildren(effect)
+			{
+				["color_map"] = textureShader,
+			};
+			Assert.Equal(new SKShader[] { textureShader, null }, childrent.ToArray());
+
+			childrent = new SKRuntimeEffectChildren(effect)
+			{
+				["color_map"] = textureShader,
+				["normal_map"] = textureShader,
+			};
+			Assert.Equal(new SKShader[] { textureShader, textureShader }, childrent.ToArray());
+
+			childrent = new SKRuntimeEffectChildren(effect)
+			{
+				["normal_map"] = textureShader,
+				["color_map"] = null,
+			};
+			Assert.Equal(new SKShader[] { null, textureShader }, childrent.ToArray());
+
+			childrent = new SKRuntimeEffectChildren(effect)
+			{
+				["normal_map"] = null,
+				["color_map"] = null,
+			};
+			Assert.Equal(new SKShader[] { null, null }, childrent.ToArray());
+		}
+
+		[SkippableFact]
+		public void RuntimeEffectInputsWorksCorrectly()
+		{
+			var src = @"
+uniform float input_float;
+in int input_int;
+uniform float input_float_array[2];
+void main(float2 p, inout half4 color) { }";
+
+			using var effect = SKRuntimeEffect.Create(src, out _);
+			var inputs = new SKRuntimeEffectInputs(effect);
+
+			inputs.Add("input_float", 1f);
+			inputs.Add("input_int", 1);
+			inputs.Add("input_float_array", new[] { 1f, 2f });
+			inputs.Reset();
+		}
+
+		[SkippableFact]
+		public void RuntimeEffectInputsThrowsWhithInvalidName()
+		{
+			var src = @"
+uniform float input_float;
+void main(float2 p, inout half4 color) { }";
+
+			using var effect = SKRuntimeEffect.Create(src, out _);
+			var inputs = new SKRuntimeEffectInputs(effect);
+
+			Assert.Throws<ArgumentOutOfRangeException>(() => inputs.Add("invalid", 1f));
+		}
+
+		[SkippableTheory]
+		[InlineData("input_float", true)]
+		//[InlineData("input_float", 1)]
+		//[InlineData("input_float", new[] { 1f })]
+		[InlineData("input_int", true)]
+		//[InlineData("input_int", 1f)]
+		//[InlineData("input_int", new[] { 1f })]
+		[InlineData("input_float_array", true)]
+		[InlineData("input_float_array", 1)]
+		[InlineData("input_float_array", 1f)]
+		[InlineData("input_float_array", new[] { 1f })]
+		public void RuntimeEffectInputsThrowsCorrectly(string name, object value)
+		{
+			var src = @"
+uniform float input_float;
+in int input_int;
+uniform float input_float_array[2];
+void main(float2 p, inout half4 color) { }";
+
+			using var effect = SKRuntimeEffect.Create(src, out _);
+			var inputs = new SKRuntimeEffectInputs(effect);
+
+			if (value is bool boolValue)
+				Assert.Throws<ArgumentException>(() => inputs.Add(name, boolValue));
+			else if (value is int intValue)
+				Assert.Throws<ArgumentException>(() => inputs.Add(name, intValue));
+			else if (value is float floatValue)
+				Assert.Throws<ArgumentException>(() => inputs.Add(name, floatValue));
+			else if (value is float[] floatArray)
+				Assert.Throws<ArgumentException>(() => inputs.Add(name, floatArray));
+			else
+				throw new ArgumentException($"Invalid test data type {value}");
+		}
+
+		[SkippableFact]
+		public void RuntimeEffectInputsWorksCorrectlyWithCollectionInitializer()
+		{
+			var src = @"
+uniform float input_float;
+in int input_int;
+uniform float input_float_array[2];
+void main(float2 p, inout half4 color) { }";
+
+			using var effect = SKRuntimeEffect.Create(src, out _);
+
+			var inputs = new SKRuntimeEffectInputs(effect)
+			{
+				{ "input_float", 1f },
+				{ "input_int", 1 },
+				{ "input_float_array", new [] { 1f, 2f } },
+			};
+		}
+
+		[SkippableFact]
+		public void RuntimeEffectInputsWorksCorrectlyWithCollectionIndexer()
+		{
+			var src = @"
+uniform float input_float;
+in int input_int;
+uniform float input_float_array[2];
+void main(float2 p, inout half4 color) { }";
+
+			using var effect = SKRuntimeEffect.Create(src, out _);
+
+			var inputs = new SKRuntimeEffectInputs(effect)
+			{
+				["input_float"] = 1f,
+				["input_int"] = 1,
+				["input_float_array"] = new[] { 1f, 2f }
+			};
+		}
+
+		[SkippableFact]
+		public void InputIsConvertedFromBasicTypes()
+		{
+			var input = SKRuntimeEffectInput.Empty;
+			Assert.True(input.IsEmpty);
+			Assert.Equal(0, input.Size);
+
+			var data = new byte[4];
+
+			input = true;
+			Assert.False(input.IsEmpty);
+			Assert.Equal(1, input.Size);
+			input.WriteTo(data);
+			Assert.Equal(new byte[] { 1, 0, 0, 0 }, data);
+
+			input = false;
+			Assert.False(input.IsEmpty);
+			Assert.Equal(1, input.Size);
+			input.WriteTo(data);
+			Assert.Equal(new byte[] { 0, 0, 0, 0 }, data);
+
+			input = 5;
+			Assert.False(input.IsEmpty);
+			Assert.Equal(4, input.Size);
+			input.WriteTo(data);
+			Assert.Equal(new byte[] { 5, 0, 0, 0 }, data);
+
+			input = 3f;
+			Assert.False(input.IsEmpty);
+			Assert.Equal(4, input.Size);
+			input.WriteTo(data);
+			Assert.Equal(new byte[] { 0, 0, 64, 64 }, data);
+
+			data = new byte[8];
+
+			input = new[] { 6f, 9f };
+			Assert.False(input.IsEmpty);
+			Assert.Equal(8, input.Size);
+			input.WriteTo(data);
+			Assert.Equal(new byte[] { 0, 0, 192, 64, 0, 0, 16, 65 }, data);
 		}
 
 		[Trait(CategoryKey, GpuCategory)]
@@ -317,13 +556,17 @@ void main(float2 p, inout half4 color) {
 			var inputSize = effect.InputSize;
 			Assert.Equal(5 * sizeof(float), inputSize);
 
-			var inputs = new SKRuntimeEffectInputs(effect);
-			inputs.Set("scale", threshold);
-			inputs.Set("exp", exponent);
-			inputs.Set("in_colors0", new[] { 1f, 1f, 1f });
+			var inputs = new SKRuntimeEffectInputs(effect)
+			{
+				["scale"] = threshold,
+				["exp"] = exponent,
+				["in_colors0"] = new[] { 1f, 1f, 1f },
+			};
 
-			var children = new SKRuntimeEffectChildren(effect);
-			children.Set("color_map", textureShader);
+			var children = new SKRuntimeEffectChildren(effect)
+			{
+				["color_map"] = textureShader
+			};
 
 			using var shader = effect.ToShader(inputs, children, true);
 
