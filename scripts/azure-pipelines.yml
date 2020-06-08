@@ -16,7 +16,7 @@ variables:
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
   FEATURE_NAME: ''
-  PREVIEW_LABEL: 'alpha'
+  PREVIEW_LABEL: 'preview'
   BUILD_NUMBER: $[counter(format('{0}_{1}_{2}', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch'], variables['PREVIEW_LABEL']), 1)]
   TIZEN_LINUX_PACKAGES: libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts
@@ -511,7 +511,7 @@ stages:
                 provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
             - task: InstallAppleProvisioningProfile@1
               inputs:
-                provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
+                provProfileSecureFile: 'SkiaSharp Mac Provisioning.mobileprovision'
             - task: InstallAppleProvisioningProfile@1
               inputs:
                 provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
