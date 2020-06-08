@@ -75,8 +75,14 @@ namespace SkiaSharp
 		public SKShader ToShader (SKData inputs, SKShader[] children, bool isOpaque) =>
 			ToShader (inputs, children, null, isOpaque);
 
+		public SKShader ToShader (SKRuntimeEffectInputs inputs, SKRuntimeEffectChildren children, bool isOpaque) =>
+			ToShader (inputs.ToData (), children.ToArray (), null, isOpaque);
+
 		public SKShader ToShader (SKData inputs, SKShader[] children, SKMatrix localMatrix, bool isOpaque) =>
 			ToShader (inputs, children, &localMatrix, isOpaque);
+
+		public SKShader ToShader (SKRuntimeEffectInputs inputs, SKRuntimeEffectChildren children, SKMatrix localMatrix, bool isOpaque) =>
+			ToShader (inputs.ToData (), children.ToArray (), &localMatrix, isOpaque);
 
 		internal unsafe SKShader ToShader (SKData inputs, SKShader[] children, SKMatrix* localMatrix, bool isOpaque)
 		{

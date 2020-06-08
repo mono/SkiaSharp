@@ -276,5 +276,69 @@ void main(float2 p, inout half4 color) { }";
 			effectChildren.Reset();
 			Assert.Equal(new SKShader[] { null, null }, effectChildren.ToArray());
 		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableTheory]
+		[InlineData(1.05f, 1.5f, 0xFF000000, 0xFFE98404)]
+		[InlineData(1.26f, 1.35f, 0xFF000000, 0xFF000000)]
+		[InlineData(0f, 6.5f, 0xFFFFFFFF, 0xFFE98404)]
+		public void ImageCanClearBackground(float threshold, float exponent, uint backgroundColor, uint shirtColor)
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+			using var grContext = GRContext.CreateGl();
+
+			var info = new SKImageInfo(500, 500, SKColorType.Rgba8888);
+			using var surface = SKSurface.Create(grContext, false, info);
+			var canvas = surface.Canvas;
+			canvas.Clear(SKColors.Black);
+
+			using var blueShirt = SKImage.FromEncodedData(Path.Combine(PathToImages, "blue-shirt.jpg"));
+			using var textureShader = blueShirt.ToShader();
+
+			var src = @"
+in fragmentProcessor color_map;
+
+uniform float scale;
+uniform half exp;
+uniform float3 in_colors0;
+
+void main(float2 p, inout half4 color) {
+    half4 texColor = sample(color_map, p);
+    if (length(abs(in_colors0 - pow(texColor.rgb, half3(exp)))) < scale)
+        discard;
+    color = texColor;
+}";
+
+			using var effect = SKRuntimeEffect.Create(src, out var errorText);
+			Assert.Null(errorText);
+			Assert.NotNull(effect);
+
+			var inputSize = effect.InputSize;
+			Assert.Equal(5 * sizeof(float), inputSize);
+
+			var inputs = new SKRuntimeEffectInputs(effect);
+			inputs.Set("scale", threshold);
+			inputs.Set("exp", exponent);
+			inputs.Set("in_colors0", new[] { 1f, 1f, 1f });
+
+			var children = new SKRuntimeEffectChildren(effect);
+			children.Set("color_map", textureShader);
+
+			using var shader = effect.ToShader(inputs, children, true);
+
+			using var paint = new SKPaint { Shader = shader };
+			canvas.DrawRect(SKRect.Create(400, 400), paint);
+
+			using var snap = surface.Snapshot();
+			SaveImage(snap);
+
+			var actual = new SKColor[500 * 500];
+			fixed (void* a = actual)
+				Assert.True(surface.ReadPixels(info, (IntPtr)a, info.RowBytes, 0, 0));
+
+			Assert.Equal(backgroundColor, actual[100 * info.Width + 100]);
+			Assert.Equal(shirtColor, actual[230 * info.Width + 300]);
+		}
 	}
 }
