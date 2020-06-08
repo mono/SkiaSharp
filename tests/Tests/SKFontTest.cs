@@ -139,6 +139,31 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void MeasureTextMeasuresTheTextForGlyphs()
+		{
+			var font = new SKFont();
+			var expectedWidth = font.MeasureText("Hello World!");
+
+			var glyphs = font.GetGlyphs("Hello World!");
+			var width = font.MeasureText(glyphs);
+
+			Assert.Equal(expectedWidth, width);
+		}
+
+		[SkippableFact]
+		public void MeasureTextReturnsTheBoundsForGlyphs()
+		{
+			var font = new SKFont();
+			var expectedWidth = font.MeasureText("Hello World!", out var expectedBounds);
+
+			var glyphs = font.GetGlyphs("Hello World!");
+			var width = font.MeasureText(glyphs, out var bounds);
+
+			Assert.Equal(expectedWidth, width);
+			Assert.Equal(expectedBounds, bounds);
+		}
+
+		[SkippableFact]
 		public void MeasureTextSucceedsForEmtptyString()
 		{
 			var font = new SKFont();
@@ -195,7 +220,7 @@ namespace SkiaSharp.Tests
 
 			var diff = widths[1] - widths[0];
 
-			var textPath = font.GetPath(text, SKPoint.Empty);
+			var textPath = font.GetTextPath(text, SKPoint.Empty);
 			var pathWidth = textPath.TightBounds.Width;
 
 			Assert.Equal(pathWidth, diff, 2);
@@ -206,7 +231,7 @@ namespace SkiaSharp.Tests
 		{
 			var font = new SKFont();
 
-			var path = font.GetPath("");
+			var path = font.GetTextPath("");
 
 			Assert.NotNull(path);
 			Assert.Equal(0, path.PointCount);

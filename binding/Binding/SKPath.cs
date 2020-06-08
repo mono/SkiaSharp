@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKPath : SKObject
+	public unsafe class SKPath : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKPath (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -176,7 +176,7 @@ namespace SkiaSharp
 			Offset (offset.X, offset.Y);
 
 		public void Offset (float dx, float dy) =>
-			Transform (SKMatrix.MakeTranslation (dx, dy));
+			Transform (SKMatrix.CreateTranslation (dx, dy));
 
 		public void MoveTo (SKPoint point) =>
 			SkiaApi.sk_path_move_to (Handle, point.X, point.Y);
@@ -482,11 +482,11 @@ namespace SkiaSharp
 		//
 
 		internal static SKPath GetObject (IntPtr handle, bool owns = true) =>
-			GetOrAddObject (handle, owns, (h, o) => new SKPath (h, o));
+			handle == IntPtr.Zero ? null : new SKPath (handle, owns);
 
 		//
 
-		public class Iterator : SKObject
+		public class Iterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKPath path;
 
@@ -507,12 +507,16 @@ namespace SkiaSharp
 			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates, bool exact) =>
 				Next (points);
 
-			public SKPathVerb Next (SKPoint[] points)
+			public SKPathVerb Next (SKPoint[] points) =>
+				Next (new Span<SKPoint> (points));
+
+			public SKPathVerb Next (Span<SKPoint> points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
+
 				fixed (SKPoint* p = points) {
 					return SkiaApi.sk_path_iter_next (Handle, p);
 				}
@@ -520,13 +524,15 @@ namespace SkiaSharp
 
 			public float ConicWeight () =>
 				SkiaApi.sk_path_iter_conic_weight (Handle);
+
 			public bool IsCloseLine () =>
 				SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
+
 			public bool IsCloseContour () =>
 				SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
 		}
 
-		public class RawIterator : SKObject
+		public class RawIterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKPath path;
 
@@ -542,7 +548,10 @@ namespace SkiaSharp
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_rawiter_destroy (Handle);
 
-			public SKPathVerb Next (SKPoint[] points)
+			public SKPathVerb Next (SKPoint[] points) =>
+				Next (new Span<SKPoint> (points));
+
+			public SKPathVerb Next (Span<SKPoint> points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
@@ -555,11 +564,12 @@ namespace SkiaSharp
 
 			public float ConicWeight () =>
 				SkiaApi.sk_path_rawiter_conic_weight (Handle);
+
 			public SKPathVerb Peek () =>
 				SkiaApi.sk_path_rawiter_peek (Handle);
 		}
 
-		public class OpBuilder : SKObject
+		public class OpBuilder : SKObject, ISKSkipObjectRegistration
 		{
 			public OpBuilder ()
 				: base (SkiaApi.sk_opbuilder_new (), true)

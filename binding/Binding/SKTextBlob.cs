@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted
+	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal SKTextBlob (IntPtr x, bool owns)
 			: base (x, owns)
@@ -34,9 +34,9 @@ namespace SkiaSharp
 
 		public static SKTextBlob Create (ReadOnlySpan<char> text, SKFont font, SKPoint origin = default)
 		{
-			using var builder = new SKTextBlobBuilder ();
-			builder.AddRun (text, font, origin);
-			return builder.Build ();
+			fixed (void* t = text) {
+				return Create (t, text.Length * 2, SKTextEncoding.Utf16, font, origin);
+			}
 		}
 
 		public static SKTextBlob Create (IntPtr text, int length, SKTextEncoding encoding, SKFont font, SKPoint origin = default) =>
@@ -44,8 +44,24 @@ namespace SkiaSharp
 
 		public static SKTextBlob Create (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, SKPoint origin = default)
 		{
+			fixed (void* t = text) {
+				return Create (t, text.Length, encoding, font, origin);
+			}
+		}
+
+		internal static SKTextBlob Create (void* text, int length, SKTextEncoding encoding, SKFont font, SKPoint origin)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			var count = font.CountGlyphs (text, length, encoding);
+			if (count <= 0)
+				return null;
+
 			using var builder = new SKTextBlobBuilder ();
-			builder.AddRun (text, encoding, font, origin);
+			var buffer = builder.AllocatePositionedRun (font, count);
+			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
+			font.GetGlyphPositions (buffer.GetGlyphSpan (), buffer.GetPositionSpan (), origin);
 			return builder.Build ();
 		}
 
@@ -56,9 +72,9 @@ namespace SkiaSharp
 
 		public static SKTextBlob CreateHorizontal (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
-			using var builder = new SKTextBlobBuilder ();
-			builder.AddHorizontalRun (text, font, positions, y);
-			return builder.Build ();
+			fixed (void* t = text) {
+				return CreateHorizontal (t, text.Length * 2, SKTextEncoding.Utf16, font, positions, y);
+			}
 		}
 
 		public static SKTextBlob CreateHorizontal (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y) =>
@@ -66,8 +82,24 @@ namespace SkiaSharp
 
 		public static SKTextBlob CreateHorizontal (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
+			fixed (void* t = text) {
+				return CreateHorizontal (t, text.Length, encoding, font, positions, y);
+			}
+		}
+
+		internal static SKTextBlob CreateHorizontal (void* text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			var count = font.CountGlyphs (text, length, encoding);
+			if (count <= 0)
+				return null;
+
 			using var builder = new SKTextBlobBuilder ();
-			builder.AddHorizontalRun (text, encoding, font, positions, y);
+			var buffer = builder.AllocateHorizontalRun (font, count, y);
+			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
+			positions.CopyTo (buffer.GetPositionSpan ());
 			return builder.Build ();
 		}
 
@@ -78,9 +110,9 @@ namespace SkiaSharp
 
 		public static SKTextBlob CreatePositioned (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
-			using var builder = new SKTextBlobBuilder ();
-			builder.AddPositionedRun (text, font, positions);
-			return builder.Build ();
+			fixed (void* t = text) {
+				return CreatePositioned (t, text.Length * 2, SKTextEncoding.Utf16, font, positions);
+			}
 		}
 
 		public static SKTextBlob CreatePositioned (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions) =>
@@ -88,8 +120,24 @@ namespace SkiaSharp
 
 		public static SKTextBlob CreatePositioned (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
+			fixed (void* t = text) {
+				return CreatePositioned (t, text.Length, encoding, font, positions);
+			}
+		}
+
+		internal static SKTextBlob CreatePositioned (void* text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			var count = font.CountGlyphs (text, length, encoding);
+			if (count <= 0)
+				return null;
+
 			using var builder = new SKTextBlobBuilder ();
-			builder.AddPositionedRun (text, encoding, font, positions);
+			var buffer = builder.AllocatePositionedRun (font, count);
+			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
+			positions.CopyTo (buffer.GetPositionSpan ());
 			return builder.Build ();
 		}
 
@@ -100,9 +148,9 @@ namespace SkiaSharp
 
 		public static SKTextBlob CreateRotationScale (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
 		{
-			using var builder = new SKTextBlobBuilder ();
-			builder.AddRotationScaleRun (text, font, positions);
-			return builder.Build ();
+			fixed (void* t = text) {
+				return CreateRotationScale (t, text.Length * 2, SKTextEncoding.Utf16, font, positions);
+			}
 		}
 
 		public static SKTextBlob CreateRotationScale (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions) =>
@@ -110,8 +158,69 @@ namespace SkiaSharp
 
 		public static SKTextBlob CreateRotationScale (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
 		{
+			fixed (void* t = text) {
+				return CreateRotationScale (t, text.Length, encoding, font, positions);
+			}
+		}
+
+		internal static SKTextBlob CreateRotationScale (void* text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			var count = font.CountGlyphs (text, length, encoding);
+			if (count <= 0)
+				return null;
+
 			using var builder = new SKTextBlobBuilder ();
-			builder.AddRotationScaleRun (text, encoding, font, positions);
+			var buffer = builder.AllocateRotationScaleRun (font, count);
+			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
+			positions.CopyTo (buffer.GetRotationScaleSpan ());
+			return builder.Build ();
+		}
+
+		// CreatePathPositioned
+
+		public static SKTextBlob CreatePathPositioned (string text, SKFont font, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default) =>
+			CreatePathPositioned (text.AsSpan (), font, path, textAlign, origin);
+
+		public static SKTextBlob CreatePathPositioned (ReadOnlySpan<char> text, SKFont font, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default)
+		{
+			fixed (void* t = text) {
+				return CreatePathPositioned (t, text.Length * 2, SKTextEncoding.Utf16, font, path, textAlign, origin);
+			}
+		}
+
+		public static SKTextBlob CreatePathPositioned (IntPtr text, int length, SKTextEncoding encoding, SKFont font, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default) =>
+			CreatePathPositioned (text.AsReadOnlySpan (length), encoding, font, path, textAlign, origin);
+
+		public static SKTextBlob CreatePathPositioned (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default)
+		{
+			fixed (void* t = text) {
+				return CreatePathPositioned (t, text.Length, encoding, font, path, textAlign, origin);
+			}
+		}
+
+		internal static SKTextBlob CreatePathPositioned (void* text, int length, SKTextEncoding encoding, SKFont font, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			var count = font.CountGlyphs (text, length, encoding);
+			if (count <= 0)
+				return null;
+
+			// we use temporary arrays because we might only use part of the text
+			using var glyphs = Utils.RentArray<ushort> (count);
+			using var glyphWidths = Utils.RentArray<float> (glyphs.Length);
+			using var glyphOffsets = Utils.RentArray<SKPoint> (glyphs.Length);
+
+			font.GetGlyphs (text, length, encoding, glyphs);
+			font.GetGlyphWidths (glyphs, glyphWidths, Span<SKRect>.Empty);
+			font.GetGlyphPositions (glyphs, glyphOffsets, origin);
+
+			using var builder = new SKTextBlobBuilder ();
+			builder.AddPathPositionedRun (glyphs, font, glyphWidths, glyphOffsets, path, textAlign);
 			return builder.Build ();
 		}
 
@@ -148,10 +257,10 @@ namespace SkiaSharp
 		//
 
 		internal static SKTextBlob GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKTextBlob (h, o));
+			handle == IntPtr.Zero ? null : new SKTextBlob (handle, true);
 	}
 
-	public unsafe class SKTextBlobBuilder : SKObject
+	public unsafe class SKTextBlobBuilder : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKTextBlobBuilder (IntPtr x, bool owns)
 			: base (x, owns)
@@ -174,40 +283,7 @@ namespace SkiaSharp
 		public SKTextBlob Build () =>
 			SKTextBlob.GetObject (SkiaApi.sk_textblob_builder_make (Handle));
 
-		// AddRun (text)
-
-		public void AddRun (string text, SKFont font, SKPoint origin = default) =>
-			AddRun (text.AsSpan (), font, origin);
-
-		public void AddRun (ReadOnlySpan<char> text, SKFont font, SKPoint origin = default)
-		{
-			fixed (void* t = text) {
-				AddRun (t, text.Length * 2, SKTextEncoding.Utf16, font, origin);
-			}
-		}
-
-		public void AddRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, SKPoint origin = default)
-		{
-			fixed (void* t = text) {
-				AddRun (t, text.Length, encoding, font, origin);
-			}
-		}
-
-		public void AddRun (IntPtr text, int length, SKTextEncoding encoding, SKFont font, SKPoint origin = default) =>
-			AddRun ((void*)text, length, encoding, font, origin);
-
-		internal void AddRun (void* text, int length, SKTextEncoding encoding, SKFont font, SKPoint origin = default)
-		{
-			if (font == null)
-				throw new ArgumentNullException (nameof (font));
-
-			var count = font.CountGlyphs (text, length, encoding);
-			var buffer = AllocatePositionedRun (font, count);
-			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
-			font.GetGlyphPositions (buffer.GetGlyphSpan (), buffer.GetPositionSpan (), origin);
-		}
-
-		// AddRun (glyphs)
+		// AddRun
 
 		public void AddRun (ReadOnlySpan<ushort> glyphs, SKFont font, SKPoint origin = default)
 		{
@@ -219,40 +295,7 @@ namespace SkiaSharp
 			font.GetGlyphPositions (buffer.GetGlyphSpan (), buffer.GetPositionSpan (), origin);
 		}
 
-		// AddHorizontalRun (text)
-
-		public void AddHorizontalRun (string text, SKFont font, ReadOnlySpan<float> positions, float y) =>
-			AddHorizontalRun (text.AsSpan (), font, positions, y);
-
-		public void AddHorizontalRun (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<float> positions, float y)
-		{
-			fixed (void* t = text) {
-				AddHorizontalRun (t, text.Length * 2, SKTextEncoding.Utf16, font, positions, y);
-			}
-		}
-
-		public void AddHorizontalRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y)
-		{
-			fixed (void* t = text) {
-				AddHorizontalRun (t, text.Length, encoding, font, positions, y);
-			}
-		}
-
-		public void AddHorizontalRun (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y) =>
-			AddHorizontalRun ((void*)text, length, encoding, font, positions, y);
-
-		internal void AddHorizontalRun (void* text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y)
-		{
-			if (font == null)
-				throw new ArgumentNullException (nameof (font));
-
-			var count = font.CountGlyphs (text, length, encoding);
-			var buffer = AllocateHorizontalRun (font, count, y);
-			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
-			positions.CopyTo (buffer.GetPositionSpan ());
-		}
-
-		// AddHorizontalRun (glyphs)
+		// AddHorizontalRun
 
 		public void AddHorizontalRun (ReadOnlySpan<ushort> glyphs, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
@@ -264,40 +307,7 @@ namespace SkiaSharp
 			positions.CopyTo (buffer.GetPositionSpan ());
 		}
 
-		// AddPositionedRun (text)
-
-		public void AddPositionedRun (string text, SKFont font, ReadOnlySpan<SKPoint> positions) =>
-			AddPositionedRun (text.AsSpan (), font, positions);
-
-		public void AddPositionedRun (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKPoint> positions)
-		{
-			fixed (void* t = text) {
-				AddPositionedRun (t, text.Length * 2, SKTextEncoding.Utf16, font, positions);
-			}
-		}
-
-		public void AddPositionedRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions)
-		{
-			fixed (void* t = text) {
-				AddPositionedRun (t, text.Length, encoding, font, positions);
-			}
-		}
-
-		public void AddPositionedRun (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions) =>
-			AddPositionedRun ((void*)text, length, encoding, font, positions);
-
-		internal void AddPositionedRun (void* text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions)
-		{
-			if (font == null)
-				throw new ArgumentNullException (nameof (font));
-
-			var count = font.CountGlyphs (text, length, encoding);
-			var buffer = AllocatePositionedRun (font, count);
-			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
-			positions.CopyTo (buffer.GetPositionSpan ());
-		}
-
-		// AddPositionedRun (glyphs)
+		// AddPositionedRun
 
 		public void AddPositionedRun (ReadOnlySpan<ushort> glyphs, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
@@ -309,40 +319,7 @@ namespace SkiaSharp
 			positions.CopyTo (buffer.GetPositionSpan ());
 		}
 
-		// AddRotationScaleRun (text)
-
-		public void AddRotationScaleRun (string text, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions) =>
-			AddRotationScaleRun (text.AsSpan (), font, positions);
-
-		public void AddRotationScaleRun (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
-		{
-			fixed (void* t = text) {
-				AddRotationScaleRun (t, text.Length * 2, SKTextEncoding.Utf16, font, positions);
-			}
-		}
-
-		public void AddRotationScaleRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
-		{
-			fixed (void* t = text) {
-				AddRotationScaleRun (t, text.Length, encoding, font, positions);
-			}
-		}
-
-		public void AddRotationScaleRun (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions) =>
-			AddRotationScaleRun ((void*)text, length, encoding, font, positions);
-
-		internal void AddRotationScaleRun (void* text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
-		{
-			if (font == null)
-				throw new ArgumentNullException (nameof (font));
-
-			var count = font.CountGlyphs (text, length, encoding);
-			var buffer = AllocateRotationScaleRun (font, count);
-			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
-			positions.CopyTo (buffer.GetRotationScaleSpan ());
-		}
-
-		// AddRotationScaleRun (text)
+		// AddRotationScaleRun 
 
 		public void AddRotationScaleRun (ReadOnlySpan<ushort> glyphs, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
 		{
@@ -352,6 +329,59 @@ namespace SkiaSharp
 			var buffer = AllocateRotationScaleRun (font, glyphs.Length);
 			glyphs.CopyTo (buffer.GetGlyphSpan ());
 			positions.CopyTo (buffer.GetRotationScaleSpan ());
+		}
+
+		// AddPathPositionedRun
+
+		public void AddPathPositionedRun (ReadOnlySpan<ushort> glyphs, SKFont font, ReadOnlySpan<float> glyphWidths, ReadOnlySpan<SKPoint> glyphOffsets, SKPath path, SKTextAlign textAlign = SKTextAlign.Left)
+		{
+			using var pathMeasure = new SKPathMeasure (path);
+
+			var contourLength = pathMeasure.Length;
+
+			var textLength = glyphOffsets[glyphs.Length - 1].X + glyphWidths[glyphs.Length - 1];
+			var alignment = (int)textAlign * 0.5f;
+			var startOffset = glyphOffsets[0].X + (contourLength - textLength) * alignment;
+
+			var firstGlyphIndex = 0;
+			var pathGlyphCount = 0;
+
+			using var glyphTransforms = Utils.RentArray<SKRotationScaleMatrix> (glyphs.Length);
+
+			// TODO: deal with multiple contours?
+			for (var index = 0; index < glyphOffsets.Length; index++) {
+				var glyphOffset = glyphOffsets[index];
+				var halfWidth = glyphWidths[index] * 0.5f;
+				var pathOffset = startOffset + glyphOffset.X + halfWidth;
+
+				// TODO: clip glyphs on both ends of paths
+				if (pathOffset >= 0 && pathOffset < contourLength && pathMeasure.GetPositionAndTangent (pathOffset, out var position, out var tangent)) {
+					if (pathGlyphCount == 0)
+						firstGlyphIndex = index;
+
+					var tx = tangent.X;
+					var ty = tangent.Y;
+
+					var px = position.X;
+					var py = position.Y;
+
+					// horizontally offset the position using the tangent vector
+					px -= tx * halfWidth;
+					py -= ty * halfWidth;
+
+					// vertically offset the position using the normal vector  (-ty, tx)
+					var dy = glyphOffset.Y;
+					px -= dy * ty;
+					py += dy * tx;
+
+					glyphTransforms.Span[pathGlyphCount++] = new SKRotationScaleMatrix (tx, ty, px, py);
+				}
+			}
+
+			var glyphSubset = glyphs.Slice (firstGlyphIndex, pathGlyphCount);
+			var positions = glyphTransforms.Span.Slice (0, pathGlyphCount);
+
+			AddRotationScaleRun (glyphSubset, font, positions);
 		}
 
 		// AllocateRun

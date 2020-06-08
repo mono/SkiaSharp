@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public unsafe class GRBackendTexture : SKObject
+	public unsafe class GRBackendTexture : SKObject, ISKSkipObjectRegistration
 	{
 		internal GRBackendTexture (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -41,9 +41,24 @@ namespace SkiaSharp
 			CreateGl (width, height, mipmapped, glInfo);
 		}
 
+		public GRBackendTexture (int width, int height, GRVkImageInfo vkInfo)
+			: this (IntPtr.Zero, true)
+		{
+			CreateVulkan (width, height, vkInfo);
+		}
+
 		private void CreateGl (int width, int height, bool mipmapped, GRGlTextureInfo glInfo)
 		{
 			Handle = SkiaApi.gr_backendtexture_new_gl (width, height, mipmapped, &glInfo);
+
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
+			}
+		}
+
+		private void CreateVulkan (int width, int height, GRVkImageInfo vkInfo)
+		{
+			Handle = SkiaApi.gr_backendtexture_new_vulkan (width, height, &vkInfo);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");

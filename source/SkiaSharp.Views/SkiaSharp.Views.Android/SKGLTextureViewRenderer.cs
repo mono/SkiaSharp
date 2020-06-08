@@ -42,8 +42,8 @@ namespace SkiaSharp.Views.Android
 			// create the contexts if not done already
 			if (context == null)
 			{
-				var glInterface = GRGlInterface.CreateNativeGlInterface();
-				context = GRContext.Create(GRBackend.OpenGL, glInterface);
+				var glInterface = GRGlInterface.Create();
+				context = GRContext.CreateGl(glInterface);
 			}
 
 			// manage the drawing surface

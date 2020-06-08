@@ -291,6 +291,15 @@ public void CopyTo (System.Span<byte> data);
 ```
 
 
+#### Type Changed: SkiaSharp.SKFontManager
+
+Added method:
+
+```csharp
+public SKTypeface MatchFamily (string familyName);
+```
+
+
 #### Type Changed: SkiaSharp.SKFontMetrics
 
 Added interface:
@@ -528,6 +537,16 @@ public static SKMatrix44 op_Implicit (SKMatrix matrix);
 ```
 
 
+#### Type Changed: SkiaSharp.SKNativeObject
+
+Modified methods:
+
+```diff
+-protected void DisposeInternal ()
++protected void DisposeInternal ()
+```
+
+
 #### Type Changed: SkiaSharp.SKPMColor
 
 Added interface:
@@ -597,12 +616,14 @@ Obsoleted methods:
 Added methods:
 
 ```csharp
+protected override void DisposeManaged ();
 public bool Encode (System.IO.Stream dst, SKJpegEncoderOptions options);
 public bool Encode (System.IO.Stream dst, SKPngEncoderOptions options);
 public bool Encode (System.IO.Stream dst, SKWebpEncoderOptions options);
 public bool Encode (System.IO.Stream dst, SKEncodedImageFormat encoder, int quality);
 public bool Erase (SKColorF color);
 public bool Erase (SKColorF color, SKRectI subset);
+public System.Span<T> GetPixelSpan<T> ();
 ```
 
 
@@ -1021,6 +1042,8 @@ public struct SKRotationScaleMatrix, System.IEquatable<SKRotationScaleMatrix> {
 	public float TX { get; set; }
 	public float TY { get; set; }
 	// methods
+	public static SKRotationScaleMatrix Create (float scale, float radians, float tx, float ty, float anchorX, float anchorY);
+	public static SKRotationScaleMatrix CreateDegrees (float scale, float degrees, float tx, float ty, float anchorX, float anchorY);
 	public static SKRotationScaleMatrix CreateIdentity ();
 	public static SKRotationScaleMatrix CreateRotation (float radians, float anchorX, float anchorY);
 	public static SKRotationScaleMatrix CreateRotationDegrees (float degrees, float anchorX, float anchorY);
@@ -1028,8 +1051,6 @@ public struct SKRotationScaleMatrix, System.IEquatable<SKRotationScaleMatrix> {
 	public static SKRotationScaleMatrix CreateTranslation (float x, float y);
 	public virtual bool Equals (SKRotationScaleMatrix obj);
 	public override bool Equals (object obj);
-	public static SKRotationScaleMatrix FromDegrees (float scale, float degrees, float tx, float ty, float anchorX, float anchorY);
-	public static SKRotationScaleMatrix FromRadians (float scale, float radians, float tx, float ty, float anchorX, float anchorY);
 	public override int GetHashCode ();
 	public SKMatrix ToMatrix ();
 	public static bool op_Equality (SKRotationScaleMatrix left, SKRotationScaleMatrix right);
