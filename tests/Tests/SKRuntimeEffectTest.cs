@@ -245,6 +245,7 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(inputs, effectInputs.Names);
 			Assert.Equal(effect.InputSize, effectInputs.ToData().Size);
+			Assert.Equal(inputs, effectInputs);
 		}
 
 		[SkippableFact]
@@ -260,6 +261,8 @@ void main(float2 p, inout half4 color) { }";
 
 			Assert.Equal(2, effectChildren.Count);
 			Assert.Equal(2, effectChildren.Names.Count);
+			Assert.Equal(new[] { "color_map", "normal_map" }, effectChildren.Names);
+			Assert.Equal(new[] { "color_map", "normal_map" }, effectChildren);
 		}
 
 		[SkippableFact]

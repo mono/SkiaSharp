@@ -66,25 +66,25 @@ namespace SkiaSharp
 		public SKShader ToShader (bool isOpaque) =>
 			ToShader (null, null, null, isOpaque);
 
-		public SKShader ToShader (SKData inputs, bool isOpaque) =>
+		private SKShader ToShader (SKData inputs, bool isOpaque) =>
 			ToShader (inputs, null, null, isOpaque);
 
 		public SKShader ToShader (SKRuntimeEffectInputs inputs, bool isOpaque) =>
 			ToShader (inputs.ToData (), null, null, isOpaque);
 
-		public SKShader ToShader (SKData inputs, SKShader[] children, bool isOpaque) =>
+		private SKShader ToShader (SKData inputs, SKShader[] children, bool isOpaque) =>
 			ToShader (inputs, children, null, isOpaque);
 
 		public SKShader ToShader (SKRuntimeEffectInputs inputs, SKRuntimeEffectChildren children, bool isOpaque) =>
 			ToShader (inputs.ToData (), children.ToArray (), null, isOpaque);
 
-		public SKShader ToShader (SKData inputs, SKShader[] children, SKMatrix localMatrix, bool isOpaque) =>
+		private SKShader ToShader (SKData inputs, SKShader[] children, SKMatrix localMatrix, bool isOpaque) =>
 			ToShader (inputs, children, &localMatrix, isOpaque);
 
 		public SKShader ToShader (SKRuntimeEffectInputs inputs, SKRuntimeEffectChildren children, SKMatrix localMatrix, bool isOpaque) =>
 			ToShader (inputs.ToData (), children.ToArray (), &localMatrix, isOpaque);
 
-		internal unsafe SKShader ToShader (SKData inputs, SKShader[] children, SKMatrix* localMatrix, bool isOpaque)
+		private unsafe SKShader ToShader (SKData inputs, SKShader[] children, SKMatrix* localMatrix, bool isOpaque)
 		{
 			var inputsHandle = inputs?.Handle ?? IntPtr.Zero;
 
@@ -134,7 +134,7 @@ namespace SkiaSharp
 			GetOrAddObject (handle, (h, o) => new SKRuntimeEffect (h, o));
 	}
 
-	public unsafe class SKRuntimeEffectInputs : IEnumerable
+	public unsafe class SKRuntimeEffectInputs : IEnumerable<string>
 	{
 		internal struct Variable
 		{
@@ -217,13 +217,14 @@ namespace SkiaSharp
 		public SKData ToData () =>
 			SKData.CreateCopy (data.Data, data.Size);
 
-		IEnumerator IEnumerable.GetEnumerator ()
-		{
-			yield break;
-		}
+		IEnumerator IEnumerable.GetEnumerator () =>
+			GetEnumerator ();
+
+		public IEnumerator<string> GetEnumerator () =>
+			((IEnumerable<string>)names).GetEnumerator ();
 	}
 
-	public class SKRuntimeEffectChildren : IEnumerable
+	public class SKRuntimeEffectChildren : IEnumerable<string>
 	{
 		private readonly string[] names;
 		private readonly SKShader[] children;
@@ -266,13 +267,14 @@ namespace SkiaSharp
 		public SKShader[] ToArray () =>
 			children.ToArray ();
 
-		IEnumerator IEnumerable.GetEnumerator ()
-		{
-			yield break;
-		}
+		IEnumerator IEnumerable.GetEnumerator () =>
+			GetEnumerator ();
+
+		public IEnumerator<string> GetEnumerator () =>
+			((IEnumerable<string>)names).GetEnumerator ();
 	}
 
-	public unsafe struct SKRuntimeEffectInput
+	public unsafe readonly ref struct SKRuntimeEffectInput
 	{
 		private enum DataType
 		{
@@ -286,45 +288,70 @@ namespace SkiaSharp
 			FloatArray
 		}
 
-		public static readonly SKRuntimeEffectInput Empty = new SKRuntimeEffectInput ();
+		public static SKRuntimeEffectInput Empty => default;
 
 		// fields
 
-		private byte byteValue;
-		private int intValue;
-		private float floatValue;
+		private readonly DataType type;
+		private readonly int size;
 
-		private byte[] byteArray;
-		private int[] intArray;
-		private float[] floatArray;
+		private readonly byte byteValue;
+		private readonly int intValue;
+		private readonly float floatValue;
 
-		private DataType type;
-		private int size;
+		private readonly ReadOnlySpan<byte> byteArray;
+		private readonly ReadOnlySpan<int> intArray;
+		private readonly ReadOnlySpan<float> floatArray;
+
+		// ctor
+
+		private SKRuntimeEffectInput (
+			DataType type, int size,
+			byte byteValue = default, int intValue = default, float floatValue = default,
+			ReadOnlySpan<byte> byteArray = default, ReadOnlySpan<int> intArray = default, ReadOnlySpan<float> floatArray = default)
+		{
+			this.type = type;
+			this.size = size;
+
+			this.byteValue = byteValue;
+			this.intValue = intValue;
+			this.floatValue = floatValue;
+
+			this.byteArray = byteArray;
+			this.intArray = intArray;
+			this.floatArray = floatArray;
+		}
 
 		// properties
 
-		public bool IsEmpty =>
-			type == DataType.Empty;
+		public bool IsEmpty => type == DataType.Empty;
 
-		public int Size =>
-			size;
+		public int Size => size;
 
 		// converters
 
 		public static implicit operator SKRuntimeEffectInput (bool value) =>
-			new SKRuntimeEffectInput { byteValue = value ? (byte)1 : (byte)0, size = sizeof (byte), type = DataType.Byte };
+			new SKRuntimeEffectInput (DataType.Byte, sizeof (byte), byteValue: value ? (byte)1 : (byte)0);
 
 		public static implicit operator SKRuntimeEffectInput (int value) =>
-			new SKRuntimeEffectInput { intValue = value, size = sizeof (int), type = DataType.Int };
+			new SKRuntimeEffectInput (DataType.Int, sizeof (int), intValue: value);
 
 		public static implicit operator SKRuntimeEffectInput (float value) =>
-			new SKRuntimeEffectInput { floatValue = value, size = sizeof (float), type = DataType.Float };
+			new SKRuntimeEffectInput (DataType.Float, sizeof (float), floatValue: value);
 
-		public static implicit operator SKRuntimeEffectInput (int[] value) =>
-			new SKRuntimeEffectInput { intArray = value, size = sizeof (int) * (value?.Length ?? 0), type = DataType.IntArray };
+		public static implicit operator SKRuntimeEffectInput (int[] value) => (ReadOnlySpan<int>)value;
 
-		public static implicit operator SKRuntimeEffectInput (float[] value) =>
-			new SKRuntimeEffectInput { floatArray = value, size = sizeof (float) * (value?.Length ?? 0), type = DataType.FloatArray };
+		public static implicit operator SKRuntimeEffectInput (Span<int> value) => (ReadOnlySpan<int>)value;
+
+		public static implicit operator SKRuntimeEffectInput (ReadOnlySpan<int> value) =>
+			new SKRuntimeEffectInput (DataType.IntArray, sizeof (int) * value.Length, intArray: value);
+
+		public static implicit operator SKRuntimeEffectInput (float[] value) => (ReadOnlySpan<float>)value;
+
+		public static implicit operator SKRuntimeEffectInput (Span<float> value) => (ReadOnlySpan<float>)value;
+
+		public static implicit operator SKRuntimeEffectInput (ReadOnlySpan<float> value) =>
+			new SKRuntimeEffectInput (DataType.FloatArray, sizeof (float) * value.Length, floatArray: value);
 
 		public static implicit operator SKRuntimeEffectInput (float[][] value)
 		{
