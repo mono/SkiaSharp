@@ -1982,6 +1982,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_paint_get_color (sk_paint_t param0);
 
+		// void sk_paint_get_color4f(const sk_paint_t* paint, sk_color4f_t* color)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_paint_get_color4f (sk_paint_t paint, SKColorF* color);
+
 		// sk_colorfilter_t* sk_paint_get_colorfilter(sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_paint_get_colorfilter (sk_paint_t param0);
@@ -2060,6 +2064,10 @@ namespace SkiaSharp
 		// void sk_paint_set_color(sk_paint_t*, sk_color_t)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_color (sk_paint_t param0, UInt32 param1);
+
+		// void sk_paint_set_color4f(sk_paint_t* paint, sk_color4f_t* color, sk_colorspace_t* colorspace)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_paint_set_color4f (sk_paint_t paint, SKColorF* color, sk_colorspace_t colorspace);
 
 		// void sk_paint_set_colorfilter(sk_paint_t*, sk_colorfilter_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
