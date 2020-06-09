@@ -5,7 +5,7 @@ namespace SkiaSharp
 {
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Obsolete]
-	public abstract class SKPixelSerializer : SKObject
+	public abstract class SKPixelSerializer : SKObject, ISKSkipObjectRegistration
 	{
 		protected SKPixelSerializer ()
 			: base (IntPtr.Zero, false)

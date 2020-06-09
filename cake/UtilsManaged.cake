@@ -125,7 +125,7 @@ string[] GetReferenceSearchPaths()
     var refs = new List<string>();
 
     if (IsRunningOnWindows()) {
-        var vs = VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" });
+        var vs = VS_INSTALL ?? VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" });
         var referenceAssemblies = $"{vs}/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
         var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 
@@ -155,7 +155,6 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     comparer.SearchPaths.AddRange(GetReferenceSearchPaths());
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
 
-    await AddDep("OpenTK.GLControl", "NET40", "reference");
     await AddDep("OpenTK.GLControl", "NET40");
     await AddDep("Tizen.NET", "netstandard2.0");
     await AddDep("Xamarin.Forms", "netstandard2.0");
@@ -163,7 +162,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Xamarin.Forms", "Xamarin.iOS10");
     await AddDep("Xamarin.Forms", "Xamarin.Mac");
     await AddDep("Xamarin.Forms", "tizen40");
-    await AddDep("Xamarin.Forms", "uap10.0");
+    await AddDep("Xamarin.Forms", "uap10.0.16299");
     await AddDep("Xamarin.Forms.Platform.WPF", "net45");
     await AddDep("Xamarin.Forms.Platform.GTK", "net45");
     await AddDep("GtkSharp", "netstandard2.0");
@@ -171,6 +170,11 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("GLibSharp", "netstandard2.0");
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");
+
+    await AddDep("OpenTK.GLControl", "NET40", "reference");
+    await AddDep("Xamarin.Forms", "Xamarin.iOS10", "reference");
+    await AddDep("Xamarin.Forms", "Xamarin.Mac", "reference");
+    await AddDep("Xamarin.Forms", "uap10.0", "reference");
 
     return comparer;
 

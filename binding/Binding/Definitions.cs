@@ -67,14 +67,14 @@ namespace SkiaSharp
 		Rgb101010x = 8,
 		Gray8 = 9,
 		RgbaF16 = 10,
-		RgbaF16Normalized = 11,
+		RgbaF16Clamped = 11,
 		RgbaF32 = 12,
-		R8g8Unnormalized = 13,
-		A16Float = 14,
-		R16g16Float = 15,
-		A16Unnormalized = 16,
-		R16g16Unnormalized = 17,
-		R16g16b16a16Unnormalized = 18,
+		Rg88 = 13,
+		AlphaF16 = 14,
+		RgF16 = 15,
+		Alpha16 = 16,
+		Rg1616 = 17,
+		Rgba16161616 = 18,
 	}
 
 	public static partial class SkiaExtensions
@@ -125,21 +125,21 @@ namespace SkiaSharp
 				// 2
 				SKColorType.Rgb565 => 2,
 				SKColorType.Argb4444 => 2,
-				SKColorType.R8g8Unnormalized => 2,
-				SKColorType.A16Unnormalized => 2,
-				SKColorType.A16Float => 2,
+				SKColorType.Rg88 => 2,
+				SKColorType.Alpha16 => 2,
+				SKColorType.AlphaF16 => 2,
 				// 4
 				SKColorType.Bgra8888 => 4,
 				SKColorType.Rgba8888 => 4,
 				SKColorType.Rgb888x => 4,
 				SKColorType.Rgba1010102 => 4,
 				SKColorType.Rgb101010x => 4,
-				SKColorType.R16g16Unnormalized => 4,
-				SKColorType.R16g16Float => 4,
+				SKColorType.Rg1616 => 4,
+				SKColorType.RgF16 => 4,
 				// 8
-				SKColorType.RgbaF16Normalized => 8,
+				SKColorType.RgbaF16Clamped => 8,
 				SKColorType.RgbaF16 => 8,
-				SKColorType.R16g16b16a16Unnormalized => 8,
+				SKColorType.Rgba16161616 => 8,
 				// 16
 				SKColorType.RgbaF32 => 16,
 				//
@@ -156,8 +156,8 @@ namespace SkiaSharp
 
 				// opaque or premul
 				case SKColorType.Alpha8:
-				case SKColorType.A16Unnormalized:
-				case SKColorType.A16Float:
+				case SKColorType.Alpha16:
+				case SKColorType.AlphaF16:
 					if (SKAlphaType.Unpremul == alphaType) {
 						alphaType = SKAlphaType.Premul;
 					}
@@ -168,17 +168,17 @@ namespace SkiaSharp
 				case SKColorType.Rgba8888:
 				case SKColorType.Bgra8888:
 				case SKColorType.Rgba1010102:
-				case SKColorType.RgbaF16Normalized:
+				case SKColorType.RgbaF16Clamped:
 				case SKColorType.RgbaF16:
 				case SKColorType.RgbaF32:
-				case SKColorType.R16g16b16a16Unnormalized:
+				case SKColorType.Rgba16161616:
 					break;
 
 				// opaque
 				case SKColorType.Gray8:
-				case SKColorType.R8g8Unnormalized:
-				case SKColorType.R16g16Unnormalized:
-				case SKColorType.R16g16Float:
+				case SKColorType.Rg88:
+				case SKColorType.Rg1616:
+				case SKColorType.RgF16:
 				case SKColorType.Rgb565:
 				case SKColorType.Rgb888x:
 				case SKColorType.Rgb101010x:
@@ -197,8 +197,8 @@ namespace SkiaSharp
 	[Obsolete ("Use SKSurfaceProperties instead.")]
 	public struct SKSurfaceProps : IEquatable<SKSurfaceProps>
 	{
-		public SKPixelGeometry PixelGeometry { get; set; }
-		public SKSurfacePropsFlags Flags { get; set; }
+		public SKPixelGeometry PixelGeometry { readonly get; set; }
+		public SKSurfacePropsFlags Flags { readonly get; set; }
 
 		public readonly bool Equals (SKSurfaceProps obj) =>
 			PixelGeometry == obj.PixelGeometry &&
@@ -237,7 +237,6 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = 0;
 			PriorFrame = -1;
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset)
 		{
@@ -245,7 +244,6 @@ namespace SkiaSharp
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKRectI subset)
 		{
@@ -253,7 +251,6 @@ namespace SkiaSharp
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (int frameIndex)
 		{
@@ -261,7 +258,6 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = -1;
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (int frameIndex, int priorFrame)
 		{
@@ -269,25 +265,26 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = priorFrame;
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 
-		public SKZeroInitialized ZeroInitialized { get; set; }
-		public SKRectI? Subset { get; set; }
+		public SKZeroInitialized ZeroInitialized { readonly get; set; }
+		public SKRectI? Subset { readonly get; set; }
 		public readonly bool HasSubset => Subset != null;
-		public int FrameIndex { get; set; }
-		public int PriorFrame { get; set; }
+		public int FrameIndex { readonly get; set; }
+		public int PriorFrame { readonly get; set; }
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
-		public SKTransferFunctionBehavior PremulBehavior { get; set; }
+		public SKTransferFunctionBehavior PremulBehavior {
+			readonly get => SKTransferFunctionBehavior.Respect;
+			set { }
+		}
 
 		public readonly bool Equals (SKCodecOptions obj) =>
 			ZeroInitialized == obj.ZeroInitialized &&
 			Subset == obj.Subset &&
 			FrameIndex == obj.FrameIndex &&
-			PriorFrame == obj.PriorFrame &&
-			PremulBehavior == obj.PremulBehavior;
+			PriorFrame == obj.PriorFrame;
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKCodecOptions f && Equals (f);
@@ -305,7 +302,6 @@ namespace SkiaSharp
 			hash.Add (Subset);
 			hash.Add (FrameIndex);
 			hash.Add (PriorFrame);
-			hash.Add (PremulBehavior);
 			return hash.ToHashCode ();
 		}
 	}
@@ -350,11 +346,11 @@ namespace SkiaSharp
 
 	public struct SKLattice : IEquatable<SKLattice>
 	{
-		public int[] XDivs { get; set; }
-		public int[] YDivs { get; set; }
-		public SKLatticeRectType[] RectTypes { get; set; }
-		public SKRectI? Bounds { get; set; }
-		public SKColor[] Colors { get; set; }
+		public int[] XDivs { readonly get; set; }
+		public int[] YDivs { readonly get; set; }
+		public SKLatticeRectType[] RectTypes { readonly get; set; }
+		public SKRectI? Bounds { readonly get; set; }
+		public SKColor[] Colors { readonly get; set; }
 
 		public readonly bool Equals (SKLattice obj) =>
 			XDivs == obj.XDivs &&
@@ -463,17 +459,17 @@ namespace SkiaSharp
 			EncodingQuality = encodingQuality;
 		}
 
-		public string Title { get; set; }
-		public string Author { get; set; }
-		public string Subject { get; set; }
-		public string Keywords { get; set; }
-		public string Creator { get; set; }
-		public string Producer { get; set; }
-		public DateTime? Creation { get; set; }
-		public DateTime? Modified { get; set; }
-		public float RasterDpi { get; set; }
-		public bool PdfA { get; set; }
-		public int EncodingQuality { get; set; }
+		public string Title { readonly get; set; }
+		public string Author { readonly get; set; }
+		public string Subject { readonly get; set; }
+		public string Keywords { readonly get; set; }
+		public string Creator { readonly get; set; }
+		public string Producer { readonly get; set; }
+		public DateTime? Creation { readonly get; set; }
+		public DateTime? Modified { readonly get; set; }
+		public float RasterDpi { readonly get; set; }
+		public bool PdfA { readonly get; set; }
+		public int EncodingQuality { readonly get; set; }
 
 		public readonly bool Equals (SKDocumentPdfMetadata obj) =>
 			Title == obj.Title &&

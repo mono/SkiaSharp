@@ -1,11 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
+
+#if __TIZEN__
+using System.Reflection;
+#endif
 
 namespace SkiaSharp
 {
-	public unsafe class GRGlInterface : SKObject, ISKReferenceCounted
+	public unsafe class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal GRGlInterface (IntPtr h, bool owns)
 			: base (h, owns)
@@ -15,58 +18,32 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static GRGlInterface CreateDefaultInterface ()
-		{
-			// first try ANGLE, then fall back to the OpenGL-based
-			return CreateNativeAngleInterface () ?? CreateNativeGlInterface ();
-		}
+		// Create* (defaults)
 
-		public static GRGlInterface CreateNativeGlInterface ()
+		public static GRGlInterface Create () =>
+			CreateGl () ?? CreateAngle ();
+
+		private static GRGlInterface CreateGl ()
 		{
 			// the native code will automatically return null on non-OpenGL platforms, such as UWP
 			return GetObject (SkiaApi.gr_glinterface_create_native_interface ());
 		}
-		
-		public static GRGlInterface CreateNativeAngleInterface ()
+
+		private static GRGlInterface CreateAngle ()
 		{
 			if (PlatformConfiguration.IsWindows) {
-				return AssembleAngleInterface (AngleLoader.GetProc);
+				return CreateAngle (AngleLoader.GetProc);
 			} else {
 				// return null on non-DirectX platforms: everything except Windows
 				return null;
 			}
 		}
 
-		public static GRGlInterface CreateNativeEvasInterface (IntPtr evas)
-		{
-#if __TIZEN__
-			var evasLoader = new EvasGlLoader (evas);
-			return AssembleGlesInterface ((ctx, name) => evasLoader.GetFunctionPointer (name));
-#else
-			return null;
-#endif
-		}
+		// Create* (assemble)
 
-		public static GRGlInterface AssembleInterface (GRGlGetProcDelegate get)
+		public static GRGlInterface Create (GRGlGetProcedureAddressDelegate get)
 		{
-			return AssembleInterface (null, get);
-		}
-
-		public static GRGlInterface AssembleInterface (object context, GRGlGetProcDelegate get)
-		{
-			// if on Windows, try ANGLE
-			if (PlatformConfiguration.IsWindows) {
-				var angle = AssembleAngleInterface (context, get);
-				if (angle != null) {
-					return angle;
-				}
-			}
-
-			// try the native default
-			var del = get != null && context != null
-				? new GRGlGetProcDelegate ((_, name) => get (context, name))
-				: get;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_interface ((void*)ctx, proxy));
 			} finally {
@@ -74,28 +51,12 @@ namespace SkiaSharp
 			}
 		}
 
-		public static GRGlInterface AssembleAngleInterface (GRGlGetProcDelegate get)
-		{
-			return AssembleAngleInterface (null, get);
-		}
+		public static GRGlInterface CreateAngle (GRGlGetProcedureAddressDelegate get) =>
+			CreateGles (get); // ANGLE is just a GLES v2 over DX v9+
 
-		public static GRGlInterface AssembleAngleInterface (object context, GRGlGetProcDelegate get)
+		public static GRGlInterface CreateOpenGl (GRGlGetProcedureAddressDelegate get)
 		{
-			// ANGLE is just a GLES v2 over DX v9+
-			return AssembleGlesInterface (context, get);
-		}
-
-		public static GRGlInterface AssembleGlInterface (GRGlGetProcDelegate get)
-		{
-			return AssembleGlInterface (null, get);
-		}
-
-		public static GRGlInterface AssembleGlInterface (object context, GRGlGetProcDelegate get)
-		{
-			var del = get != null && context != null
-				? new GRGlGetProcDelegate ((_, name) => get (context, name))
-				: get;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_gl_interface ((void*)ctx, proxy));
 			} finally {
@@ -103,17 +64,9 @@ namespace SkiaSharp
 			}
 		}
 
-		public static GRGlInterface AssembleGlesInterface (GRGlGetProcDelegate get)
+		public static GRGlInterface CreateGles (GRGlGetProcedureAddressDelegate get)
 		{
-			return AssembleGlesInterface (null, get);
-		}
-
-		public static GRGlInterface AssembleGlesInterface (object context, GRGlGetProcDelegate get)
-		{
-			var del = get != null && context != null
-				? new GRGlGetProcDelegate ((_, name) => get (context, name))
-				: get;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_gles_interface ((void*)ctx, proxy));
 			} finally {
@@ -121,18 +74,102 @@ namespace SkiaSharp
 			}
 		}
 
-		public bool Validate ()
+		public static GRGlInterface CreateWebGl (GRGlGetProcedureAddressDelegate get)
 		{
-			return SkiaApi.gr_glinterface_validate (Handle);
+			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			try {
+				return GetObject (SkiaApi.gr_glinterface_assemble_webgl_interface ((void*)ctx, proxy));
+			} finally {
+				gch.Free ();
+			}
 		}
 
-		public bool HasExtension (string extension)
+		public static GRGlInterface CreateEvas (IntPtr evas)
 		{
-			return SkiaApi.gr_glinterface_has_extension (Handle, extension);
+#if __TIZEN__
+			var evasLoader = new EvasGlLoader (evas);
+			return CreateGles (name => evasLoader.GetFunctionPointer (name));
+#else
+			return null;
+#endif
 		}
+
+		// OBSOLETE CREATION
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create() instead.")]
+		public static GRGlInterface CreateDefaultInterface () =>
+			Create ();
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create() instead.")]
+		public static GRGlInterface CreateNativeGlInterface () =>
+			CreateGl ();
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create() instead.")]
+		public static GRGlInterface CreateNativeAngleInterface () =>
+			CreateAngle ();
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateEvas(IntPtr) instead.")]
+		public static GRGlInterface CreateNativeEvasInterface (IntPtr evas) =>
+			CreateEvas (evas);
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(GRGlGetProcedureAddressDelegate) instead.")]
+		public static GRGlInterface AssembleInterface (GRGlGetProcDelegate get) =>
+			Create (name => get (null, name));
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(GRGlGetProcedureAddressDelegate) instead.")]
+		public static GRGlInterface AssembleInterface (object context, GRGlGetProcDelegate get) =>
+			Create (name => get (context, name));
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateAngle(GRGlGetProcedureAddressDelegate) instead.")]
+		public static GRGlInterface AssembleAngleInterface (GRGlGetProcDelegate get) =>
+			CreateAngle (name => get (null, name));
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateAngle(GRGlGetProcedureAddressDelegate) instead.")]
+		public static GRGlInterface AssembleAngleInterface (object context, GRGlGetProcDelegate get) =>
+			CreateAngle (name => get (context, name));
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateOpenGl(GRGlGetProcedureAddressDelegate) instead.")]
+		public static GRGlInterface AssembleGlInterface (GRGlGetProcDelegate get) =>
+			CreateOpenGl (name => get (null, name));
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateOpenGl(GRGlGetProcedureAddressDelegate) instead.")]
+		public static GRGlInterface AssembleGlInterface (object context, GRGlGetProcDelegate get) =>
+			CreateOpenGl (name => get (context, name));
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateGles(GRGlGetProcedureAddressDelegate) instead.")]
+		public static GRGlInterface AssembleGlesInterface (GRGlGetProcDelegate get) =>
+			CreateGles (name => get (null, name));
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateGles(GRGlGetProcedureAddressDelegate) instead.")]
+		public static GRGlInterface AssembleGlesInterface (object context, GRGlGetProcDelegate get) =>
+			CreateGles (name => get (context, name));
+
+		//
+
+		public bool Validate () =>
+			SkiaApi.gr_glinterface_validate (Handle);
+
+		public bool HasExtension (string extension) =>
+			SkiaApi.gr_glinterface_has_extension (Handle, extension);
+
+		//
 
 		internal static GRGlInterface GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new GRGlInterface (h, o));
+			handle == IntPtr.Zero ? null : new GRGlInterface (handle, true);
+
+		//
 
 		private static class AngleLoader
 		{
@@ -168,21 +205,22 @@ namespace SkiaSharp
 				}
 
 				libEGL = LoadLibrary ("libEGL.dll");
-				if (Marshal.GetLastWin32Error () != 0 || libEGL == IntPtr.Zero)
-					throw new DllNotFoundException ("Unable to load libEGL.dll.");
-
 				libGLESv2 = LoadLibrary ("libGLESv2.dll");
-				if (Marshal.GetLastWin32Error () != 0 || libGLESv2 == IntPtr.Zero)
-					throw new DllNotFoundException ("Unable to load libGLESv2.dll.");
 			}
 
+			public static bool IsValid =>
+				libEGL != IntPtr.Zero && libGLESv2 != IntPtr.Zero;
+
 			// function to assemble the ANGLE interface
-			public static IntPtr GetProc (object context, string name)
+			public static IntPtr GetProc (string name)
 			{
 				// this is not supported at all on non-Windows platforms
 				if (!PlatformConfiguration.IsWindows) {
 					return IntPtr.Zero;
 				}
+
+				if (!IsValid)
+					return IntPtr.Zero;
 
 				IntPtr proc = GetProcAddress (libGLESv2, name);
 				if (proc == IntPtr.Zero)
@@ -869,4 +907,3 @@ namespace SkiaSharp
 #endif
 	}
 }
-

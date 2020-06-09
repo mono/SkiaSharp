@@ -1,5 +1,7 @@
 ﻿using Gdk;
 
+using GC = System.GC;
+
 namespace SkiaSharp.Views.Gtk
 {
 	public static class GTKExtensions
@@ -91,9 +93,12 @@ namespace SkiaSharp.Views.Gtk
 
 		public static Pixbuf ToPixbuf(this SKBitmap skiaBitmap)
 		{
-			using (var image = SKImage.FromPixels(skiaBitmap.PeekPixels()))
+			using (var pixmap = skiaBitmap.PeekPixels())
+			using (var image = SKImage.FromPixels(pixmap))
 			{
-				return image.ToPixbuf();
+				var pixbuf = image.ToPixbuf();
+				GC.KeepAlive(skiaBitmap);
+				return pixbuf;
 			}
 		}
 

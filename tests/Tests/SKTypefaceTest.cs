@@ -507,6 +507,18 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public unsafe void FontStyleIsNotTheSame()
+		{
+			var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
+			
+			var fs1 = tf.FontStyle;
+			var fs2 = tf.FontStyle;
+
+			Assert.NotSame(fs1, fs2);
+			Assert.NotEqual(fs1.Handle, fs2.Handle);
+		}
+
+		[SkippableFact]
 		public unsafe void FromFamilyDisposeDoesNotDispose()
 		{
 			var tf1 = SKTypeface.FromFamilyName(DefaultFontFamily);

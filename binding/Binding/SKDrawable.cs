@@ -71,7 +71,7 @@ namespace SkiaSharp
 
 		public void Draw (SKCanvas canvas, float x, float y)
 		{
-			var matrix = SKMatrix.MakeTranslation (x, y);
+			var matrix = SKMatrix.CreateTranslation (x, y);
 			Draw (canvas, ref matrix);
 		}
 

@@ -164,5 +164,16 @@ namespace SkiaSharp.Tests
 			if (IsLinux)
 				throw new SkipException("Linux does not support matching typefaces from a typeface that was loaded from a stream.");
 		}
+
+		protected static bool IsEnumValueDeprected<T>(T value)
+			where T : struct
+		{
+			var enumType = typeof(T);
+			var enumValue = enumType.GetMember(value.ToString()).FirstOrDefault();
+
+			var obsoleteAttribute = enumValue.GetCustomAttributes(typeof(ObsoleteAttribute), false).FirstOrDefault() as ObsoleteAttribute;
+
+			return obsoleteAttribute?.IsError == true;
+		}
 	}
 }

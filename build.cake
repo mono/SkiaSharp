@@ -37,6 +37,10 @@ var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 
+var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
+var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
+var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
+
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
@@ -67,6 +71,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
+    { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 57, 0) },
 };
 
 #load "cake/msbuild.cake"
@@ -121,7 +126,8 @@ Task ("libs")
             platform = ".Linux";
         }
     }
-    RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
+    RunMSBuild ($"./source/SkiaSharpSource{platform}.sln",
+        bl: $"./output/binlogs/libs{platform}.binlog");
 
     // assemble the mdoc docs
     EnsureDirectoryExists ("./output/docs/mdoc/");
@@ -144,11 +150,24 @@ Task ("tests")
 
     void RunDesktopTest (string arch)
     {
-        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
+        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests.sln",
+            platform: arch == "AnyCPU" ? "Any CPU" : arch,
+            bl: $"./output/binlogs/tests-desktop.{arch}.binlog");
+
+        // SkiaSharp.Tests.dll
         try {
             RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
         } catch {
             failedTests++;
+        }
+
+        // SkiaSharp.Vulkan.Tests.dll
+        if (SUPPORT_VULKAN) {
+            try {
+                RunTests ($"./tests/SkiaSharp.Vulkan.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
+            } catch {
+                failedTests++;
+            }
         }
     }
 
@@ -166,11 +185,23 @@ Task ("tests")
     }
 
     // .NET Core
-    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
+
+    // SkiaSharp.NetCore.Tests.csproj
+    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests.sln",
+        bl: $"./output/binlogs/tests-netcore.binlog");
     try {
         RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
     } catch {
         failedTests++;
+    }
+
+    // SkiaSharp.Vulkan.NetCore.Tests.csproj
+    if (SUPPORT_VULKAN) {
+        try {
+            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.NetCore.Tests/SkiaSharp.Vulkan.NetCore.Tests.csproj");
+        } catch {
+            failedTests++;
+        }
     }
 
     if (failedTests > 0)
