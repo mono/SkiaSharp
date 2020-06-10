@@ -556,7 +556,7 @@ Obsoleted methods:
 Added method:
 
 ```csharp
-public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKBlendMode mode, SKMatrix localMatrix);
+public static SKShader CreateLerp (float weight, SKShader dst, SKShader src);
 ```
 
 

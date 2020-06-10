@@ -1982,6 +1982,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_paint_get_color (sk_paint_t param0);
 
+		// void sk_paint_get_color4f(const sk_paint_t* paint, sk_color4f_t* color)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_paint_get_color4f (sk_paint_t paint, SKColorF* color);
+
 		// sk_colorfilter_t* sk_paint_get_colorfilter(sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_paint_get_colorfilter (sk_paint_t param0);
@@ -2060,6 +2064,10 @@ namespace SkiaSharp
 		// void sk_paint_set_color(sk_paint_t*, sk_color_t)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_color (sk_paint_t param0, UInt32 param1);
+
+		// void sk_paint_set_color4f(sk_paint_t* paint, sk_color4f_t* color, sk_colorspace_t* colorspace)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_paint_set_color4f (sk_paint_t paint, SKColorF* color, sk_colorspace_t colorspace);
 
 		// void sk_paint_set_colorfilter(sk_paint_t*, sk_colorfilter_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2445,6 +2453,11 @@ namespace SkiaSharp
 		// void sk_pathmeasure_set_path(sk_pathmeasure_t* pathMeasure, const sk_path_t* path, bool forceClosed)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_pathmeasure_set_path (sk_pathmeasure_t pathMeasure, sk_path_t path, [MarshalAs (UnmanagedType.I1)] bool forceClosed);
+
+		// bool sk_pathop_as_winding(const sk_path_t* path, sk_path_t* result)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_pathop_as_winding (sk_path_t path, sk_path_t result);
 
 		// bool sk_pathop_op(const sk_path_t* one, const sk_path_t* two, sk_pathop_t op, sk_path_t* result)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
