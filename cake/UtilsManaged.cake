@@ -5,6 +5,12 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath)
         OutputDirectory = MakeAbsolute(outputPath),
         BasePath = nuspecPath.GetDirectory(),
         ToolPath = NuGetToolPath,
+        Properties = new Dictionary<string, string> {
+            // NU5048: The 'PackageIconUrl'/'iconUrl' element is deprecated. Consider using the 'PackageIcon'/'icon' element instead.
+            // NU5105: The package version 'xxx' uses SemVer 2.0.0 or components of SemVer 1.0.0 that are not supported on legacy clients.
+            // NU5125: The 'licenseUrl' element will be deprecated. Consider using the 'license' element instead.
+            { "NoWarn", "NU5048,NU5105,NU5125" }
+        },
     });
 }
 
