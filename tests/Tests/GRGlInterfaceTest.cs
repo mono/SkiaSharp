@@ -7,6 +7,14 @@ namespace SkiaSharp.Tests
 {
 	public class GRGlInterfaceTest : SKTest
 	{
+		[SkippableFact]
+		public void InterfaceConstructionWithoutContextDoesNotCrash()
+		{
+			var glInterface = GRGlInterface.Create();
+
+			Assert.Null(glInterface);
+		}
+
 		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void CreateDefaultInterfaceIsValid()
