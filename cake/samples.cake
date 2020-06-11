@@ -116,7 +116,7 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                         Debug($"Substituting project reference {relFilePath} for project {rel}.");
                         var name = projItem.Name.Namespace + "PackageReference";
                         // only add the suffix for our nugets
-                        if (packageId.StartsWith("SkiaSharp") || packageId.StartsWith("HarfBuzzSharp")) {
+                        if (packagingGroup.StartsWith("SkiaSharp") || packagingGroup.StartsWith("HarfBuzzSharp")) {
                             version += suffix;
                         }
                         projItem.AddAfterSelf(new XElement(name, new object[] {
