@@ -261,7 +261,7 @@ Obsoleted methods:
 ```diff
  [Obsolete ("Use ToColorSpaceXyz() instead.")]
  public SKMatrix44 ToXyzD50 ();
- [Obsolete ("Use ToColorSpaceXyz(SKMatrix44) instead.")]
+ [Obsolete ("Use ToColorSpaceXyz(out SKColorSpaceXyz) instead.")]
  public bool ToXyzD50 (SKMatrix44 toXyzD50);
 ```
 

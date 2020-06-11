@@ -133,7 +133,7 @@ namespace SkiaSharp
 			ToMatrix44 ();
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use ToColorSpaceXyz(SKMatrix44) instead.")]
+		[Obsolete ("Use ToColorSpaceXyz(out SKColorSpaceXyz) instead.")]
 		public readonly bool ToXyzD50 (SKMatrix44 toXyzD50)
 		{
 			if (toXyzD50 == null)
