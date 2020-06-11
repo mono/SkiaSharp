@@ -271,6 +271,8 @@ namespace SkiaSharpGenerator
 
 				writer.WriteLine();
 				writer.WriteLine($"\t// {enm.GetDisplayName()}");
+				if (map?.IsObsolete == true)
+					writer.WriteLine($"\t[Obsolete]");
 				if (map?.IsFlags == true)
 					writer.WriteLine($"\t[Flags]");
 				writer.WriteLine($"\t{visibility} enum {name} {{");

@@ -128,12 +128,12 @@ namespace SkiaSharp
 			new[] { fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY };
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use ToMatrix44() instead.")]
+		[Obsolete ("Use ToColorSpaceXyz() instead.")]
 		public readonly SKMatrix44 ToXyzD50 () =>
 			ToMatrix44 ();
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use ToMatrix44(SKMatrix44) instead.")]
+		[Obsolete ("Use ToColorSpaceXyz(SKMatrix44) instead.")]
 		public readonly bool ToXyzD50 (SKMatrix44 toXyzD50)
 		{
 			if (toXyzD50 == null)
@@ -145,10 +145,10 @@ namespace SkiaSharp
 			return xyz != null;
 		}
 
-		public readonly SKMatrix44 ToMatrix44 () =>
+		internal readonly SKMatrix44 ToMatrix44 () =>
 			ToMatrix44 (out var toXYZ) ? toXYZ : null;
 
-		public readonly bool ToMatrix44 (out SKMatrix44 toXyzD50)
+		internal readonly bool ToMatrix44 (out SKMatrix44 toXyzD50)
 		{
 			if (!ToColorSpaceXyz (out var xyz)) {
 				toXyzD50 = null;
@@ -431,7 +431,7 @@ namespace SkiaSharp
 			return result;
 		}
 
-		public readonly SKMatrix44 ToMatrix44 ()
+		internal readonly SKMatrix44 ToMatrix44 ()
 		{
 			var matrix = new SKMatrix44 ();
 			matrix.Set3x3RowMajor (Values);

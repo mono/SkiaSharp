@@ -259,9 +259,9 @@ public SKColorSpace ToSrgbGamma ();
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use ToMatrix44() instead.")]
+ [Obsolete ("Use ToColorSpaceXyz() instead.")]
  public SKMatrix44 ToXyzD50 ();
- [Obsolete ("Use ToMatrix44(SKMatrix44) instead.")]
+ [Obsolete ("Use ToColorSpaceXyz(SKMatrix44) instead.")]
  public bool ToXyzD50 (SKMatrix44 toXyzD50);
 ```
 
@@ -270,8 +270,6 @@ Added methods:
 ```csharp
 public SKColorSpaceXyz ToColorSpaceXyz ();
 public bool ToColorSpaceXyz (out SKColorSpaceXyz toXyzD50);
-public SKMatrix44 ToMatrix44 ();
-public bool ToMatrix44 (out SKMatrix44 toXyzD50);
 ```
 
 
@@ -956,7 +954,6 @@ public struct SKColorSpaceXyz, System.IEquatable<SKColorSpaceXyz> {
 	public override bool Equals (object obj);
 	public override int GetHashCode ();
 	public SKColorSpaceXyz Invert ();
-	public SKMatrix44 ToMatrix44 ();
 	public static bool op_Equality (SKColorSpaceXyz left, SKColorSpaceXyz right);
 	public static bool op_Inequality (SKColorSpaceXyz left, SKColorSpaceXyz right);
 }
