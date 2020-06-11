@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -5951,9 +5951,9 @@ namespace SkiaSharp
 
 	}
 
-#endregion
+	#endregion
 
-#region Enums
+	#region Enums
 
 	// gr_backend_t
 	internal enum GRBackendNative {
@@ -6688,5 +6688,5 @@ namespace SkiaSharp
 		Lossless = 1,
 	}
 
-#endregion
+	#endregion
 }
