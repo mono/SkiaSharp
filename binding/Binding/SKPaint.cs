@@ -127,6 +127,18 @@ namespace SkiaSharp
 			set => SkiaApi.sk_paint_set_color (Handle, (uint)value);
 		}
 
+		public SKColorF ColorF {
+			get {
+				SKColorF color4f;
+				SkiaApi.sk_paint_get_color4f (Handle, &color4f);
+				return color4f;
+			}
+			set => SkiaApi.sk_paint_set_color4f (Handle, &value, IntPtr.Zero);
+		}
+
+		public void SetColor (SKColorF color, SKColorSpace colorspace) =>
+			SkiaApi.sk_paint_set_color4f (Handle, &color, colorspace?.Handle ?? IntPtr.Zero);
+
 		public float StrokeWidth {
 			get => SkiaApi.sk_paint_get_stroke_width (Handle);
 			set => SkiaApi.sk_paint_set_stroke_width (Handle, value);

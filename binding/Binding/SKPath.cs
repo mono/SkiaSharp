@@ -437,6 +437,25 @@ namespace SkiaSharp
 			}
 		}
 
+		public bool ToWinding (SKPath result)
+		{
+			if (result == null)
+				throw new ArgumentNullException (nameof (result));
+
+			return SkiaApi.sk_pathop_as_winding (Handle, result.Handle);
+		}
+
+		public SKPath ToWinding ()
+		{
+			var result = new SKPath ();
+			if (ToWinding (result)) {
+				return result;
+			} else {
+				result.Dispose ();
+				return null;
+			}
+		}
+
 		public string ToSvgPathData ()
 		{
 			using (var str = new SKString ()) {
