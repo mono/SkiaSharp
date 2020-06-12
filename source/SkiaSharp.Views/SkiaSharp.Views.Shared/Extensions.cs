@@ -1,7 +1,5 @@
 ﻿using System;
-#if HAS_UNO
-namespace SkiaSharp.Views.UWP
-#elif __ANDROID__
+#if __ANDROID__
 namespace SkiaSharp.Views.Android
 #elif __TVOS__
 namespace SkiaSharp.Views.tvOS
@@ -11,7 +9,7 @@ namespace SkiaSharp.Views.watchOS
 namespace SkiaSharp.Views.iOS
 #elif __DESKTOP__
 namespace SkiaSharp.Views.Desktop
-#elif WINDOWS_UWP
+#elif WINDOWS_UWP || HAS_UNO
 namespace SkiaSharp.Views.UWP
 #elif __MACOS__
 namespace SkiaSharp.Views.Mac
