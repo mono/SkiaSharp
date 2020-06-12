@@ -1,73 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-
-    <TSBindingsPath>$(MSBuildThisFileDirectory)tsBindings</TSBindingsPath>
-
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
-    <AssemblyName>SkiaSharp</AssemblyName>
     <RootNamespace>SkiaSharp</RootNamespace>
-    <PackageId>Uno.SkiaSharp.Wasm</PackageId>
-		<GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
-    
+    <AssemblyName>SkiaSharp</AssemblyName>
     <PackagingGroup>SkiaSharp</PackagingGroup>
+    <PackagingPlatform>wasm-$(TargetFramework)</PackagingPlatform>
+    <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
   </PropertyGroup>
-
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\output\native\wasm\libSkiaSharp.a" Link="nuget\build\$(PackagingPlatform)\libSkiaSharp.a" />
+    <None Include="nuget\build\wasm\SkiaSharp.props" Link="nuget\build\$(PackagingPlatform)\SkiaSharp.WebAssembly.targets" />
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="WasmScripts\*.js" />
   </ItemGroup>
-
   <ItemGroup>
-    <Folder Include="build\libSkia\" />
-    <Folder Include="WasmScripts\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <UpToDateCheckInput Include="ts\**\*" />
-
-    <Compile Include="..\Binding.Shared\**\*.cs" Link="Binding\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\Binding\**\*.cs" Link="Binding\%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="..\..\externals\skia\out\canvaskit_wasm\libSkiaSharp.a" Link="build\libSkia\%(FileName).a">
-      <Pack>true</Pack>
-      <PackagePath>build/libSkia</PackagePath>
-    </Content>
-    <None Remove="tsconfig.json" />
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="JSInterop.cs" />
-    <Content Include="build/netstandard2.0/Uno.SkiaSharp.Wasm.props">
-      <Pack>true</Pack>
-      <PackagePath>build/netstandard2.0</PackagePath>
-    </Content>
-    <Content Include="tsconfig.json">
-      <Pack>false</Pack>
-    </Content>
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.TypeScript.Compiler" Version="3.1.5">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.3.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="System.Memory" Version="4.5.3" />
-  </ItemGroup>
-
-  <!-- 
-  Adjust the items list generate by the microsoft.typescript.msbuild package.
-  If those items are not removed, they end-up packaged in nuget, and get parsed 
-  incorrectly as duplicate typescript files.
-  -->
-  <Target Name="AdjustPackContent" BeforeTargets="GetTypeScriptOutputForPublishing">
-    <ItemGroup>
-      <GeneratedJavascript Remove="@(GeneratedJavascript)" />
-    </ItemGroup>
-  </Target>
 </Project>

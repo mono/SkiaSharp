@@ -584,12 +584,7 @@ namespace SkiaSharp
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
 			}
-			using (var codec = SKCodec.Create (stream, out var result)) {
-
-				if(result != SKCodecResult.Success) {
-					throw new InvalidOperationException ($"Failed to create codec {result}");
-				}
-
+			using (var codec = SKCodec.Create (stream)) {
 				if (codec == null) {
 					return null;
 				}
