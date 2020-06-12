@@ -1,5 +1,4 @@
-﻿#if __WASM__
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -146,4 +145,3 @@ namespace SkiaSharp.Views.UWP
 		}
 	}
 }
-#endif

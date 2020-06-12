@@ -1,18 +1,7 @@
-﻿#if __ANDROID__
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 using Android.Graphics;
-using SkiaSharp;
-using SkiaSharp.Views.Android;
-using Windows.ApplicationModel;
 using Windows.Graphics.Display;
-using Windows.UI.Core;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
 
 namespace SkiaSharp.Views.UWP
 {
@@ -97,7 +86,7 @@ namespace SkiaSharp.Views.UWP
 		}
 
 
-		protected override void OnDraw(global::Android.Graphics.Canvas canvas)
+		protected override void OnDraw(Canvas canvas)
 		{
 			base.OnDraw(canvas);
 
@@ -126,7 +115,7 @@ namespace SkiaSharp.Views.UWP
 
 			// draw bitmap to canvas
 			if (IgnorePixelScaling)
-				canvas.DrawBitmap(bitmap, info.Rect.ToRect(), new RectF(0, 0, (float)Width, (float)Height), null);
+				canvas.DrawBitmap(bitmap, new Rect(0, 0, info.Rect.Width, info.Rect.Height), new RectF(0, 0, (float)Width, (float)Height), null);
 			else
 				canvas.DrawBitmap(bitmap, 0, 0, null);
 		}
@@ -146,4 +135,3 @@ namespace SkiaSharp.Views.UWP
 		}
 	}
 }
-#endif

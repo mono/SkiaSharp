@@ -3,7 +3,9 @@ using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Xaml.Media.Imaging;
 
+#if !HAS_UNO
 using SkiaSharp.Views.UWP.Interop;
+#endif
 
 namespace SkiaSharp.Views.UWP
 {
@@ -57,7 +59,7 @@ namespace SkiaSharp.Views.UWP
 			return Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue);
 		}
 
-
+#if !HAS_UNO
 		// WriteableBitmap
 
 		public static WriteableBitmap ToWriteableBitmap(this SKPicture picture, SKSizeI dimensions)
@@ -175,5 +177,6 @@ namespace SkiaSharp.Views.UWP
 
 			return ptr;
 		}
+#endif
 	}
 }
