@@ -14,7 +14,7 @@ sed -i 's/libsksg.a \\/libsksg.a libSkiaSharp.a \\/g' modules/canvaskit/compile.
 sed -i 's/-DSK_DISABLE_LEGACY_SHADERCONTEXT//g' modules/canvaskit/compile.sh
 sed -i 's/SK_MaxS32 \* 0.25f/(float)SK_MaxS32 * 0.25f/g' src/shaders/SkImageShader.cpp
 
-modules/canvaskit/compile.sh
+modules/canvaskit/compile.sh no_skottie no_managed_skottie no_particles no_canvas primitive_shaper no_paragraph
 
 export ADDITIONAL_OBJ=out/canvaskit_wasm/obj/libAdditional
 
