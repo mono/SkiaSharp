@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
+    <PropertyGroup>
+        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
+    </PropertyGroup>
+
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\..\runtimes\android-x86\native\libSkiaSharp.so" Abi="x86" />
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\..\runtimes\android-x64\native\libSkiaSharp.so" Abi="x86_64" />
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\..\runtimes\android-arm\native\libSkiaSharp.so" Abi="armeabi-v7a" />
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\..\runtimes\android-arm64\native\libSkiaSharp.so" Abi="arm64-v8a" />
+    </ItemGroup>
+
+</Project>

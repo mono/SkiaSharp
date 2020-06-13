@@ -302,7 +302,7 @@ namespace SkiaSharp
 		public static SKCodec Create (SKStream stream) =>
 			Create (stream, out var result);
 
-		public unsafe static SKCodec Create (SKStream stream, out SKCodecResult result)
+		public static SKCodec Create (SKStream stream, out SKCodecResult result)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
