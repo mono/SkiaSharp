@@ -15,4 +15,11 @@ RUN git clone https://github.com/emscripten-core/emsdk ~/emsdk && \
     ./emsdk install ${EMSCRIPTEN_VERSION} && \
     ./emsdk activate ${EMSCRIPTEN_VERSION}
 
+RUN source ~/emsdk/emsdk_env.sh
+
+# Workaround for https://github.com/dotnet/sdk/issues/11108
+RUN cd /usr/share/dotnet/sdk/3.1.201/Sdks/Microsoft.NET.Sdk.WindowsDesktop/targets && \
+    mv Microsoft.WinFx.props Microsoft.WinFX.props && \
+    mv Microsoft.WinFx.targets Microsoft.WinFX.targets
+
 WORKDIR /work
