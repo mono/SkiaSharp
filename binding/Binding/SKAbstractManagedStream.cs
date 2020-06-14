@@ -18,17 +18,31 @@ namespace SkiaSharp
 		static SKAbstractManagedStream ()
 		{
 #if __WASM__
-			// Javascript returns the list of registered methods, then the
-			// sk_managedstream_set_procs gets called through P/Invoke
-			// because it is not exported when building for AOT.
+			const string js = @"
+SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.SKAbstractManagedStream', {
+  'ReadInternal': 'iiiii',
+  'PeekInternal': 'iiiii',
+  'IsAtEndInternal': 'iii',
+  'HasPositionInternal': 'iii',
+  'HasLengthInternal': 'iii',
+  'RewindInternal': 'iii',
+  'GetPositionInternal': 'iii',
+  'SeekInternal': 'iiii',
+  'MoveInternal': 'iiii',
+  'GetLengthInternal': 'iii',
+  'DuplicateInternal': 'iii',
+  'ForkInternal': 'iii',
+  'DestroyInternal': 'vii',
+});";
+			const int expected = 13;
 
-			var ret = WebAssembly.Runtime.InvokeJS ($"SkiaSharp.SKAbstractManagedStream.init();");
+			var ret = WebAssembly.Runtime.InvokeJS (js);
 			var funcs = ret.Split (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
 				.Select (f => (IntPtr)int.Parse (f, CultureInfo.InvariantCulture))
 				.ToArray ();
 
-			if (funcs.Length != 13)
-				throw new InvalidOperationException ($"Mismatch for 'SkiaSharp.SKAbstractManagedStream.init()' returned values (got {funcs.Length}, expected 13)");
+			if (funcs.Length != expected)
+				throw new InvalidOperationException ($"Mismatch when binding 'SkiaSharp.SKAbstractManagedStream' members. Returned {funcs.Length}, expected {expected}.");
 
 			// we can do magic with variables
 			var ReadInternal = funcs[0];

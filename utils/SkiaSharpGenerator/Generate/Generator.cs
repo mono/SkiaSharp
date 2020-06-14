@@ -150,6 +150,12 @@ namespace SkiaSharpGenerator
 					var type = GetType(field.Type);
 					var cppT = GetCppType(field.Type);
 
+					var isDelegateMember = 
+						map?.IsDelegateStruct == true &&
+						field.Type is CppTypedef typedef &&
+						typedef.ElementType is CppPointerType pointer &&
+						pointer.ElementType is CppFunctionType function;
+
 					writer.WriteLine($"\t\t// {field}");
 
 					var fieldName = field.Name;
@@ -161,7 +167,15 @@ namespace SkiaSharpGenerator
 
 					var vis = map?.IsInternal == true ? "public" : "private";
 					var ro = map?.IsReadOnly == true ? " readonly" : "";
+					if (isDelegateMember) {
+						writer.WriteLine($"\t\t#if __WASM__");
+						writer.WriteLine($"\t\t{vis}{ro} IntPtr {fieldName};");
+						writer.WriteLine($"\t\t#else");
+					}
 					writer.WriteLine($"\t\t{vis}{ro} {type} {fieldName};");
+					if (isDelegateMember) {
+						writer.WriteLine($"\t\t#endif");
+					}
 
 					if (!isPrivate && (map == null || (map.GenerateProperties && !map.IsInternal)))
 					{

@@ -5261,86 +5261,96 @@ namespace SkiaSharp
 	// sk_managedstream_procs_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKManagedStreamDelegates : IEquatable<SKManagedStreamDelegates> {
-
-#if __WASM__
 		// public sk_managedstream_read_proc fRead
+		#if __WASM__
 		public IntPtr fRead;
-
-		// public sk_managedstream_peek_proc fPeek
-		public IntPtr fPeek;
-
-		// public sk_managedstream_isAtEnd_proc fIsAtEnd
-		public IntPtr fIsAtEnd;
-
-		// public sk_managedstream_hasPosition_proc fHasPosition
-		public IntPtr fHasPosition;
-
-		// public sk_managedstream_hasLength_proc fHasLength
-		public IntPtr fHasLength;
-
-		// public sk_managedstream_rewind_proc fRewind
-		public IntPtr fRewind;
-
-		// public sk_managedstream_getPosition_proc fGetPosition
-		public IntPtr fGetPosition;
-
-		// public sk_managedstream_seek_proc fSeek
-		public IntPtr fSeek;
-
-		// public sk_managedstream_move_proc fMove
-		public IntPtr fMove;
-
-		// public sk_managedstream_getLength_proc fGetLength
-		public IntPtr fGetLength;
-
-		// public sk_managedstream_duplicate_proc fDuplicate
-		public IntPtr fDuplicate;
-
-		// public sk_managedstream_fork_proc fFork
-		public IntPtr fFork;
-
-		// public sk_managedstream_destroy_proc fDestroy
-		public IntPtr fDestroy;
-#else
-		// public sk_managedstream_read_proc fRead
+		#else
 		public SKManagedStreamReadProxyDelegate fRead;
+		#endif
 
 		// public sk_managedstream_peek_proc fPeek
+		#if __WASM__
+		public IntPtr fPeek;
+		#else
 		public SKManagedStreamPeekProxyDelegate fPeek;
+		#endif
 
 		// public sk_managedstream_isAtEnd_proc fIsAtEnd
+		#if __WASM__
+		public IntPtr fIsAtEnd;
+		#else
 		public SKManagedStreamIsAtEndProxyDelegate fIsAtEnd;
+		#endif
 
 		// public sk_managedstream_hasPosition_proc fHasPosition
+		#if __WASM__
+		public IntPtr fHasPosition;
+		#else
 		public SKManagedStreamHasPositionProxyDelegate fHasPosition;
+		#endif
 
 		// public sk_managedstream_hasLength_proc fHasLength
+		#if __WASM__
+		public IntPtr fHasLength;
+		#else
 		public SKManagedStreamHasLengthProxyDelegate fHasLength;
+		#endif
 
 		// public sk_managedstream_rewind_proc fRewind
+		#if __WASM__
+		public IntPtr fRewind;
+		#else
 		public SKManagedStreamRewindProxyDelegate fRewind;
+		#endif
 
 		// public sk_managedstream_getPosition_proc fGetPosition
+		#if __WASM__
+		public IntPtr fGetPosition;
+		#else
 		public SKManagedStreamGetPositionProxyDelegate fGetPosition;
+		#endif
 
 		// public sk_managedstream_seek_proc fSeek
+		#if __WASM__
+		public IntPtr fSeek;
+		#else
 		public SKManagedStreamSeekProxyDelegate fSeek;
+		#endif
 
 		// public sk_managedstream_move_proc fMove
+		#if __WASM__
+		public IntPtr fMove;
+		#else
 		public SKManagedStreamMoveProxyDelegate fMove;
+		#endif
 
 		// public sk_managedstream_getLength_proc fGetLength
+		#if __WASM__
+		public IntPtr fGetLength;
+		#else
 		public SKManagedStreamGetLengthProxyDelegate fGetLength;
+		#endif
 
 		// public sk_managedstream_duplicate_proc fDuplicate
+		#if __WASM__
+		public IntPtr fDuplicate;
+		#else
 		public SKManagedStreamDuplicateProxyDelegate fDuplicate;
+		#endif
 
 		// public sk_managedstream_fork_proc fFork
+		#if __WASM__
+		public IntPtr fFork;
+		#else
 		public SKManagedStreamForkProxyDelegate fFork;
+		#endif
 
 		// public sk_managedstream_destroy_proc fDestroy
+		#if __WASM__
+		public IntPtr fDestroy;
+		#else
 		public SKManagedStreamDestroyProxyDelegate fDestroy;
-#endif
+		#endif
 
 		public readonly bool Equals (SKManagedStreamDelegates obj) =>
 			fRead == obj.fRead && fPeek == obj.fPeek && fIsAtEnd == obj.fIsAtEnd && fHasPosition == obj.fHasPosition && fHasLength == obj.fHasLength && fRewind == obj.fRewind && fGetPosition == obj.fGetPosition && fSeek == obj.fSeek && fMove == obj.fMove && fGetLength == obj.fGetLength && fDuplicate == obj.fDuplicate && fFork == obj.fFork && fDestroy == obj.fDestroy;

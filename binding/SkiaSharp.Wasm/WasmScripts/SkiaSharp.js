@@ -20,24 +20,4 @@ var SkiaSharp;
         }
     }
     SkiaSharp.SkiaApi = SkiaApi;
-    class SKAbstractManagedStream {
-        static init() {
-            return SkiaApi.bindMembers("[SkiaSharp] SkiaSharp.SKAbstractManagedStream", {
-                "ReadInternal": "iiiii",
-                "PeekInternal": "iiiii",
-                "IsAtEndInternal": "iii",
-                "HasPositionInternal": "iii",
-                "HasLengthInternal": "iii",
-                "RewindInternal": "iii",
-                "GetPositionInternal": "iii",
-                "SeekInternal": "iiii",
-                "MoveInternal": "iiii",
-                "GetLengthInternal": "iii",
-                "DuplicateInternal": "iii",
-                "ForkInternal": "iii",
-                "DestroyInternal": "vii",
-            });
-        }
-    }
-    SkiaSharp.SKAbstractManagedStream = SKAbstractManagedStream;
 })(SkiaSharp || (SkiaSharp = {}));
