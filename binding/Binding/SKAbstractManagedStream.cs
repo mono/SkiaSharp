@@ -18,22 +18,22 @@ namespace SkiaSharp
 		static SKAbstractManagedStream ()
 		{
 #if __WASM__
-			const string js = @"
-SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.SKAbstractManagedStream', {
-  'ReadInternal': 'iiiii',
-  'PeekInternal': 'iiiii',
-  'IsAtEndInternal': 'iii',
-  'HasPositionInternal': 'iii',
-  'HasLengthInternal': 'iii',
-  'RewindInternal': 'iii',
-  'GetPositionInternal': 'iii',
-  'SeekInternal': 'iiii',
-  'MoveInternal': 'iiii',
-  'GetLengthInternal': 'iii',
-  'DuplicateInternal': 'iii',
-  'ForkInternal': 'iii',
-  'DestroyInternal': 'vii',
-});";
+			const string js =
+				"SkiaSharp.SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.SKAbstractManagedStream', {" +
+				"  'ReadInternal': 'iiiii'," +
+				"  'PeekInternal': 'iiiii'," +
+				"  'IsAtEndInternal': 'iii'," +
+				"  'HasPositionInternal': 'iii'," +
+				"  'HasLengthInternal': 'iii'," +
+				"  'RewindInternal': 'iii'," +
+				"  'GetPositionInternal': 'iii'," +
+				"  'SeekInternal': 'iiii'," +
+				"  'MoveInternal': 'iiii'," +
+				"  'GetLengthInternal': 'iii'," +
+				"  'DuplicateInternal': 'iii'," +
+				"  'ForkInternal': 'iii'," +
+				"  'DestroyInternal': 'vii'," +
+				"});";
 			const int expected = 13;
 
 			var ret = WebAssembly.Runtime.InvokeJS (js);
