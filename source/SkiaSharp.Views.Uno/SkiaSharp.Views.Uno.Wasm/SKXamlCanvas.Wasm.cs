@@ -113,7 +113,7 @@ namespace SkiaSharp.Views.UWP
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 			}
 
-			WebAssemblyRuntime.InvokeJS($"SkiaSharp.SurfaceManager.invalidateCanvas({pixels}, \"{HtmlId}\", {info.Width}, {_pixelHeight});");
+			WebAssemblyRuntime.InvokeJS($"SkiaSharp.Views.UWP.SKXamlCanvas.invalidateCanvas({pixels}, \"{HtmlId}\", {info.Width}, {_pixelHeight});");
 		}
 
 		private unsafe void CreateBitmap(SKImageInfo info)

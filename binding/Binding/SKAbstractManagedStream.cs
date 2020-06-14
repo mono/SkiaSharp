@@ -1,7 +1,10 @@
 ﻿using System;
+#if __WASM__
 using System.Globalization;
 using System.Linq;
+#else
 using System.Runtime.InteropServices;
+#endif
 using System.Threading;
 
 namespace SkiaSharp
@@ -15,37 +18,34 @@ namespace SkiaSharp
 		static SKAbstractManagedStream ()
 		{
 #if __WASM__
-			//
 			// Javascript returns the list of registered methods, then the
-			// sk_managedstream_set_delegates gets called through P/Invoke
+			// sk_managedstream_set_procs gets called through P/Invoke
 			// because it is not exported when building for AOT.
-			//
 
-			var ret = WebAssembly.Runtime.InvokeJS ($"SkiaSharp.SurfaceManager.registerManagedStream();");
+			var ret = WebAssembly.Runtime.InvokeJS ($"SkiaSharp.SKAbstractManagedStream.init();");
 			var funcs = ret.Split (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
 				.Select (f => (IntPtr)int.Parse (f, CultureInfo.InvariantCulture))
 				.ToArray ();
 
-			if (funcs.Length == 13) {
-				delegates = new SKManagedStreamDelegates {
-					fRead = funcs[0],
-					fPeek = funcs[1],
-					fIsAtEnd = funcs[2],
-					fHasPosition = funcs[3],
-					fHasLength = funcs[4],
-					fRewind = funcs[5],
-					fGetPosition = funcs[6],
-					fSeek = funcs[7],
-					fMove = funcs[8],
-					fGetLength = funcs[9],
-					fDuplicate = funcs[10],
-					fFork = funcs[11],
-					fDestroy = funcs[12],
-				};
-			} else {
-				throw new InvalidOperationException ($"Mismatch for registerManagedStream returned values (got {funcs.Length}, expected 12)");
-			}
-#else
+			if (funcs.Length != 13)
+				throw new InvalidOperationException ($"Mismatch for 'SkiaSharp.SKAbstractManagedStream.init()' returned values (got {funcs.Length}, expected 13)");
+
+			// we can do magic with variables
+			var ReadInternal = funcs[0];
+			var PeekInternal = funcs[1];
+			var IsAtEndInternal = funcs[2];
+			var HasPositionInternal = funcs[3];
+			var HasLengthInternal = funcs[4];
+			var RewindInternal = funcs[5];
+			var GetPositionInternal = funcs[6];
+			var SeekInternal = funcs[7];
+			var MoveInternal = funcs[8];
+			var GetLengthInternal = funcs[9];
+			var DuplicateInternal = funcs[10];
+			var ForkInternal = funcs[11];
+			var DestroyInternal = funcs[12];
+#endif
+
 			delegates = new SKManagedStreamDelegates {
 				fRead = ReadInternal,
 				fPeek = PeekInternal,
@@ -61,8 +61,6 @@ namespace SkiaSharp
 				fFork = ForkInternal,
 				fDestroy = DestroyInternal,
 			};
-#endif
-
 			SkiaApi.sk_managedstream_set_procs (delegates);
 		}
 

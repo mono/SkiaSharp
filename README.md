@@ -1,25 +1,3 @@
-# SkiaSharp for WebAssembly
-
-SkiaSharp for WebAssembly is a SkiaSharp port that runs on top of the [Uno Platform](https://github.com/nventive/uno), using 
-modified [CanvasKit for WebAssembly](https://github.com/nventive/skia).
-
-It is currently in **experimental state** and uses mono-wasm [support Emscripten's for dynamic linking](https://github.com/emscripten-core/emscripten/wiki/Linking#overview-of-dynamic-linking), to 
-load CanvasKit.
-
-To experiment with it, open the `SkiaSharpSource.sln` and build the `SkiaSharpSample.Wasm` project.
-
-This repository provides two packages:
-- `Uno.SkiaSharp.Wasm`, which provides basic SkiaSharp functionality
-- `Uno.SkiaSharp.Views` which provides the `SKXamlCanvas` control which enables software rendering support for iOS, Android and WebAssembly.
-
-## Requirements
-For the WebAssembly support:
-- The Uno.Wasm.Bootstrap package must be `1.0.0-dev.293` or later.
-- The following property must be added to your Uno WebAssembly head:
-`<MonoWasmRuntimeConfiguration>release-dynamic</MonoWasmRuntimeConfiguration>`
-
-Upcoming updates will provide support for OpenGL based rendering.
-
 # SkiaSharp
 
 [![SkiaSharp](https://img.shields.io/nuget/vpre/SkiaSharp.svg?maxAge=2592000&label=SkiaSharp%20nuget)](https://www.nuget.org/packages/SkiaSharp)  [![SkiaSharp.Views](https://img.shields.io/nuget/vpre/SkiaSharp.Views.svg?maxAge=2592000&label=SkiaSharp.Views%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views)  [![SkiaSharp.Views.Forms](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Forms.svg?maxAge=2592000&label=SkiaSharp.Views.Forms%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Forms)  [![HarfBuzzSharp](https://img.shields.io/nuget/vpre/HarfBuzzSharp.svg?maxAge=2592000&label=HarfBuzzSharp%20nuget)](https://www.nuget.org/packages/HarfBuzzSharp)  
@@ -42,6 +20,7 @@ SkiaSharp provides cross-platform bindings for:
  - Xamarin.Mac
  - Windows Classic Desktop (Windows.Forms / WPF)
  - Windows UWP (Desktop / Mobile / Xbox / HoloLens)
+ - Web Assembly (WASM)
 
 The [API Documentation](https://docs.microsoft.com/en-us/dotnet/api/SkiaSharp/) is
 available on the web to browse.

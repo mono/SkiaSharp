@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.props" Condition="Exists('..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.props')" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -22,8 +23,6 @@
     <WasmShellMonoEnvironment Include="MONO_LOG_MASK" Value="gc" />
   </ItemGroup>
   <ItemGroup>
-    <WasmShellExtraEmccFlags Include="-s USE_LIBPNG=1" />
-    <WasmShellExtraEmccFlags Include="-s USE_FREETYPE=1" />
     <WasmShellExtraEmccFlags Include="-lidbfs.js" />
   </ItemGroup>
   <ItemGroup>
@@ -37,9 +36,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.Wasm\SkiaSharp.Views.Uno.Wasm.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\..\..\..\output\native\wasm\libSkiaSharp.a" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\**\*" />

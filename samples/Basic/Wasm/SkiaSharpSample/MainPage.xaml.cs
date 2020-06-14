@@ -1,16 +1,28 @@
-﻿using Windows.Graphics.Display;
-using Windows.UI.Xaml.Controls;
-
+﻿using System.Net.Http;
 using SkiaSharp;
 using SkiaSharp.Views.UWP;
+using Windows.Graphics.Display;
+using Windows.UI.Xaml.Controls;
 
 namespace SkiaSharpSample
 {
 	public sealed partial class MainPage : Page
 	{
+		SKImage image;
+
 		public MainPage()
 		{
 			InitializeComponent();
+
+			Load();
+		}
+
+		private async void Load()
+		{
+			var client = new HttpClient();
+			var stream = await client.GetStreamAsync("https://raw.githubusercontent.com/mono/SkiaSharp/master/images/nuget.png");
+			image = SKImage.FromEncodedData(stream);
+			skiaview.Invalidate();
 		}
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -40,6 +52,11 @@ namespace SkiaSharpSample
 			};
 			var coord = new SKPoint(scaledSize.Width / 2, (scaledSize.Height + paint.TextSize) / 2);
 			canvas.DrawText("SkiaSharp", coord, paint);
+
+			if (image != null)
+			{
+				canvas.DrawImage(image, 10, 10);
+			}
 		}
 	}
 }

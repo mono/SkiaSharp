@@ -8,17 +8,25 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.3" />
+    <PackageReference Include="Microsoft.TypeScript.Compiler" Version="3.1.5" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.9.5" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\output\native\wasm\libSkiaSharp.a" Link="nuget\build\$(PackagingPlatform)\libSkiaSharp.a" />
-    <None Include="nuget\build\wasm\SkiaSharp.props" Link="nuget\build\$(PackagingPlatform)\SkiaSharp.WebAssembly.targets" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="WasmScripts\*.js" />
+    <None Include="nuget\build\wasm\SkiaSharp.props" Link="nuget\build\$(PackagingPlatform)\SkiaSharp.WebAssembly.props" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="JSInterop.cs" />
+    <Compile Include="WebAssembly.Runtime.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Remove="WasmScripts\**\*" />
+    <TypeScriptCompile Include="ts\tsconfig.json" />
+    <TypeScriptCompile Include="..\..\externals\typescript\**\*.ts" Link="ts\%(RecursiveDir)%(Filename)%(Extension)" />
+    <TypeScriptCompile Include="ts\**\*.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="WasmScripts\*.js" />
   </ItemGroup>
 </Project>
