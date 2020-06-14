@@ -27,10 +27,12 @@
   <ItemGroup>
     <TypeScriptCompile Remove="WasmScripts\**\*" />
     <TypeScriptCompile Include="ts\tsconfig.json" />
-    <TypeScriptCompile Include="..\..\externals\typescript\**\*.ts" Link="ts\%(RecursiveDir)%(Filename)%(Extension)" />
+    <TypeScriptCompile Include="..\..\..\externals\typescript\**\*.ts" Link="ts\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Remove="ts\**\*" />
     <TypeScriptCompile Include="ts\**\*.ts" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="WasmScripts\**\*" />
     <EmbeddedResource Include="WasmScripts\*.js" />
   </ItemGroup>
 </Project>
