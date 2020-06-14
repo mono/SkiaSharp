@@ -57,14 +57,7 @@ stages:
     displayName: Build Native
     dependsOn: prepare
     jobs:
-      - template: azure-templates-bootstrapper.yml # Build Native WASM (Linux)
-        parameters:
-          name: native_wasm_linux
-          displayName: Build Native WASM (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/wasm
-          target: externals-wasm
-  #     # NATIVE JOBS - WINDOWS
+      # NATIVE JOBS - WINDOWS
   #     - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Windows)
   #       parameters:
   #         name: native_android_x86_windows
@@ -162,13 +155,13 @@ stages:
   #         vmImage: $(VM_IMAGE_WINDOWS)
   #         target: externals-windows
   #         additionalArgs: --buildarch=x86
-  #     - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
-  #       parameters:
-  #         name: native_win32_x64_windows
-  #         displayName: Build Native Win32|x64 (Windows)
-  #         vmImage: $(VM_IMAGE_WINDOWS)
-  #         target: externals-windows
-  #         additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
+        parameters:
+          name: native_win32_x64_windows
+          displayName: Build Native Win32|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-windows
+          additionalArgs: --buildarch=x64
   #     - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Windows)
   #       parameters:
   #         name: native_win32_x64_nanoserver_windows
@@ -179,7 +172,7 @@ stages:
   #         preBuildSteps:
   #           - pwsh: dotnet tool install -g nano-api-scan
   #             displayName: Install nano-api-scan
-  #     # NATIVE JOBS - MAC
+      # NATIVE JOBS - MAC
   #     - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
   #       parameters:
   #         name: native_android_x86_macos
@@ -214,12 +207,12 @@ stages:
   #         displayName: Build Native iOS (macOS)
   #         vmImage: $(VM_IMAGE_MAC)
   #         target: externals-ios
-  #     - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
-  #       parameters:
-  #         name: native_macos_macos
-  #         displayName: Build Native macOS (macOS)
-  #         vmImage: $(VM_IMAGE_MAC)
-  #         target: externals-macos
+      - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
+        parameters:
+          name: native_macos_macos
+          displayName: Build Native macOS (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-macos
   #     - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
   #       parameters:
   #         name: native_tizen_macos
@@ -239,15 +232,15 @@ stages:
   #         displayName: Build Native watchOS (macOS)
   #         vmImage: $(VM_IMAGE_MAC)
   #         target: externals-watchos
-  #     # NATIVE JOBS - LINUX
-  #     - template: azure-templates-bootstrapper.yml # Build Native Linux (Linux)
-  #       parameters:
-  #         name: native_linux_linux
-  #         displayName: Build Native Linux (Linux)
-  #         vmImage: $(VM_IMAGE_LINUX)
-  #         docker: scripts/Docker/ubuntu16/amd64
-  #         target: externals-linux
-  #         additionalArgs: --buildarch=x64
+      # NATIVE JOBS - LINUX
+      - template: azure-templates-bootstrapper.yml # Build Native Linux (Linux)
+        parameters:
+          name: native_linux_linux
+          displayName: Build Native Linux (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: scripts/Docker/ubuntu16/amd64
+          target: externals-linux
+          additionalArgs: --buildarch=x64
   #     - template: azure-templates-bootstrapper.yml # Build Native Linux [No Dependencies] (Linux)
   #       parameters:
   #         name: native_linux_nodependencies_linux
@@ -263,6 +256,14 @@ stages:
   #         vmImage: $(VM_IMAGE_LINUX)
   #         packages: $(TIZEN_LINUX_PACKAGES)
   #         target: externals-tizen
+      # NATIVE JOBS - WASM
+      - template: azure-templates-bootstrapper.yml # Build Native WASM (Linux)
+        parameters:
+          name: native_wasm_linux
+          displayName: Build Native WASM (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: scripts/Docker/wasm
+          target: externals-wasm
 
   # - stage: managed
   #   displayName: Build Managed
