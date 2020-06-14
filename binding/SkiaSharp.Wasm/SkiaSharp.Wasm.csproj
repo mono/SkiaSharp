@@ -21,6 +21,10 @@
     <Compile Include="WebAssembly.Runtime.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="LinkerDefinition.Wasm.xml" />
+    <EmbeddedResource Include="LinkerDefinition.Wasm.xml" LogicalName="$(AssemblyName).xml" />
+  </ItemGroup>
+  <ItemGroup>
     <TypeScriptCompile Remove="WasmScripts\**\*" />
     <TypeScriptCompile Include="ts\tsconfig.json" />
     <TypeScriptCompile Include="..\..\externals\typescript\**\*.ts" Link="ts\%(RecursiveDir)%(Filename)%(Extension)" />
