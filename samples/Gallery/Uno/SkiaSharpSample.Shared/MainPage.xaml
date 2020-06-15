@@ -5,6 +5,7 @@
       xmlns:local="using:SkiaSharpSample"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:banner="using:Uno.UI.Sample.Banner"
       x:Class="SkiaSharpSample.MainPage"
       mc:Ignorable="d">
     <Page.Resources>
@@ -23,13 +24,23 @@
         <SolidColorBrush x:Key="XamarinLightBlue" Color="#3498DB" />
     </Page.Resources>
 
+    <banner:BannerControl
+        LinkToUnoPlatformApp="https://github.com/nventive/Uno.SkiaSharp"
+        LinkToOriginalApp="https://github.com/mono/SkiaSharp/"
+        AppName="SkiaSharp Samples (Experimental)"
+        AppAuthor="Microsoft">
+        <banner:BannerControl.AboutContent>
+            This application uses CanvasKit for WebAssembly (Skia) and Skia# for .NET, running on WebAssembly with software rendering.
+            It uses a dynamic and static linking and .NET P/Invoke mechanism to package and use Skia# from C#.
+        </banner:BannerControl.AboutContent>
+
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="{ThemeResource SplitViewCompactPaneThemeLength}" />
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <SplitView Name="splitView" DisplayMode="Overlay" OpenPaneLength="320" Grid.Row="1">
+            <SplitView Name="splitView" DisplayMode="Inline" IsPaneOpen="true" OpenPaneLength="320" Grid.Row="1">
                 <SplitView.Pane>
                     <!-- the samples menu -->
                     <ListView ItemsSource="{x:Bind samplesViewSource.View}" SelectionChanged="OnSampleSelected">
@@ -44,7 +55,7 @@
                         </ListView.GroupStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="sample:SampleBase">
-                                <TextBlock Text="{x:Bind Title}" />
+                                <TextBlock Text="{x:Bind Title}" Name="{x:Bind Title}" />
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
@@ -54,7 +65,7 @@
                     <!-- the samples canvas -->
                     <Grid Tapped="OnSampleTapped">
                         <views:SKXamlCanvas x:Name="canvas" Grid.Row="1" PaintSurface="OnPaintCanvas" />
-                        <views:SKSwapChainPanel x:Name="glview" Grid.Row="1" PaintSurface="OnPaintGL" DrawInBackground="True" Visibility="Collapsed" />
+                        <!--<views:SKSwapChainPanel x:Name="glview" Grid.Row="1" PaintSurface="OnPaintGL" DrawInBackground="True" Visibility="Collapsed" />-->
                     </Grid>
                 </SplitView.Content>
             </SplitView>
@@ -95,4 +106,5 @@
         </CommandBar>
 
     </Grid>
+    </banner:BannerControl>
 </Page>

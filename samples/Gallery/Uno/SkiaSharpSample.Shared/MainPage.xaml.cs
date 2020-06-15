@@ -89,14 +89,20 @@ namespace SkiaSharpSample
 			switch (backend)
 			{
 				case SampleBackends.Memory:
+#if !HAS_UNO
 					glview.Visibility = Visibility.Collapsed;
+#endif
 					canvas.Visibility = Visibility.Visible;
 					canvas.Invalidate();
 					break;
 				case SampleBackends.OpenGL:
+#if !HAS_UNO
 					glview.Visibility = Visibility.Visible;
+#endif
 					canvas.Visibility = Visibility.Collapsed;
+#if !HAS_UNO
 					glview.Invalidate();
+#endif
 					break;
 				default:
 					var msg = new MessageDialog("This functionality is not yet implemented.", "Configure Backend");
@@ -173,7 +179,11 @@ namespace SkiaSharpSample
 			sample = newSample;
 
 			// set the title
+#if HAS_UNO
+			titleBar.Text = sample?.Title ?? "SkiaSharp for Uno Platform";
+#else
 			titleBar.Text = sample?.Title ?? "SkiaSharp for Windows";
+#endif
 
 			// prepare the sample
 			if (sample != null)
@@ -189,7 +199,9 @@ namespace SkiaSharpSample
 		private void OnRefreshRequested(object sender, EventArgs e)
 		{
 			canvas.Invalidate();
+#if !HAS_UNO
 			glview.Invalidate();
+#endif
 		}
 
 		private void OnPaintSurface(SKCanvas canvas, int width, int height)
