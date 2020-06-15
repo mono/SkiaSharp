@@ -101,25 +101,25 @@ namespace SkiaSharp
 
 		protected abstract IntPtr OnRead (IntPtr buffer, IntPtr size);
 
-		protected internal abstract IntPtr OnPeek (IntPtr buffer, IntPtr size);
+		protected abstract IntPtr OnPeek (IntPtr buffer, IntPtr size);
 
-		protected internal abstract bool OnIsAtEnd ();
+		protected abstract bool OnIsAtEnd ();
 
-		protected internal abstract bool OnHasPosition ();
+		protected abstract bool OnHasPosition ();
 
-		protected internal abstract bool OnHasLength ();
+		protected abstract bool OnHasLength ();
 
-		protected internal abstract bool OnRewind ();
+		protected abstract bool OnRewind ();
 
-		protected internal abstract IntPtr OnGetPosition ();
+		protected abstract IntPtr OnGetPosition ();
 
-		protected internal abstract IntPtr OnGetLength ();
+		protected abstract IntPtr OnGetLength ();
 
-		protected internal abstract bool OnSeek (IntPtr position);
+		protected abstract bool OnSeek (IntPtr position);
 
-		protected internal abstract bool OnMove (int offset);
+		protected abstract bool OnMove (int offset);
 
-		protected internal abstract IntPtr OnCreateNew ();
+		protected abstract IntPtr OnCreateNew ();
 
 		protected virtual IntPtr OnFork ()
 		{

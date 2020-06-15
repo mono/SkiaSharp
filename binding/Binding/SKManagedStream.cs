@@ -111,7 +111,7 @@ namespace SkiaSharp
 			return OnReadManagedStream (buffer, size);
 		}
 
-		protected internal override IntPtr OnPeek (IntPtr buffer, IntPtr size)
+		protected override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
 			VerifyOriginal ();
 
@@ -124,7 +124,7 @@ namespace SkiaSharp
 			return result;
 		}
 
-		protected internal override bool OnIsAtEnd ()
+		protected override bool OnIsAtEnd ()
 		{
 			VerifyOriginal ();
 
@@ -134,21 +134,21 @@ namespace SkiaSharp
 			return stream.Position >= stream.Length;
 		}
 
-		protected internal override bool OnHasPosition ()
+		protected override bool OnHasPosition ()
 		{
 			VerifyOriginal ();
 
 			return stream.CanSeek;
 		}
 
-		protected internal override bool OnHasLength ()
+		protected override bool OnHasLength ()
 		{
 			VerifyOriginal ();
 
 			return stream.CanSeek;
 		}
 
-		protected internal override bool OnRewind ()
+		protected override bool OnRewind ()
 		{
 			VerifyOriginal ();
 
@@ -159,7 +159,7 @@ namespace SkiaSharp
 			return true;
 		}
 
-		protected internal override IntPtr OnGetPosition ()
+		protected override IntPtr OnGetPosition ()
 		{
 			VerifyOriginal ();
 
@@ -169,7 +169,7 @@ namespace SkiaSharp
 			return (IntPtr)stream.Position;
 		}
 
-		protected internal override IntPtr OnGetLength ()
+		protected override IntPtr OnGetLength ()
 		{
 			VerifyOriginal ();
 
@@ -179,7 +179,7 @@ namespace SkiaSharp
 			return (IntPtr)stream.Length;
 		}
 
-		protected internal override bool OnSeek (IntPtr position)
+		protected override bool OnSeek (IntPtr position)
 		{
 			VerifyOriginal ();
 
@@ -190,7 +190,7 @@ namespace SkiaSharp
 			return true;
 		}
 
-		protected internal override bool OnMove (int offset)
+		protected override bool OnMove (int offset)
 		{
 			VerifyOriginal ();
 
@@ -201,7 +201,7 @@ namespace SkiaSharp
 			return true;
 		}
 
-		protected internal override IntPtr OnCreateNew ()
+		protected override IntPtr OnCreateNew ()
 		{
 			VerifyOriginal ();
 
