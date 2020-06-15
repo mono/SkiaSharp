@@ -16,9 +16,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using SkiaSharp;
 using SkiaSharp.Views.UWP;
-using Windows.UI.Xaml.Data;
-using Uno.Foundation;
-using Uno.Extensions;
 
 namespace SkiaSharpSample
 {
@@ -55,50 +52,19 @@ namespace SkiaSharpSample
 				titlebar.ButtonHoverForegroundColor = Colors.White;
 			}
 
-			var _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => {
-
-				try
-				{
-					while (!SKXamlCanvas.IsInitialized)
-					{
-						Console.WriteLine("Waiting for Skia init");
-						await Task.Delay(500);
-					}
-
-					Initialize();
-
-					Console.WriteLine("Initialized");
-				}
-				catch(Exception e)
-				{
-					Console.WriteLine(e);
-				}
-			});
-		}
-
-		private void Initialize()
-		{
 			samples = SamplesManager.GetSamples(SamplePlatforms.UWP).ToList();
-			SamplesInitializer.Init();
-
-#if !__WASM__
-			samplesViewSource.Source = sampleGroups;
-			SetSample(samples.First(s => s.Category.HasFlag(SampleCategories.Showcases)));
 			sampleGroups = Enum.GetValues(typeof(SampleCategories))
 				.Cast<SampleCategories>()
 				.Select(c => new GroupedSamples(c, samples.Where(s => s.Category.HasFlag(c))))
 				.Where(g => g.Count > 0)
 				.OrderBy(g => g.Category == SampleCategories.Showcases ? string.Empty : g.Name)
 				.ToList();
-#else
-			listView.ItemsSource = samples;
 
-			var tests = samples.Select(s => $"[TestCase(\"{s.Title}\")]").JoinBy("\n");
-			Console.WriteLine(tests);
+			SamplesInitializer.Init();
 
-			commandBar.Visibility = Visibility.Collapsed;
-#endif
+			samplesViewSource.Source = sampleGroups;
 
+			SetSample(samples.First(s => s.Category.HasFlag(SampleCategories.Showcases)));
 		}
 
 		protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -213,7 +179,11 @@ namespace SkiaSharpSample
 			sample = newSample;
 
 			// set the title
-			titleBar.Text = sample?.Title ?? "SkiaSharp for WebAssembly";
+#if HAS_UNO
+			titleBar.Text = sample?.Title ?? "SkiaSharp for Uno Platform";
+#else
+			titleBar.Text = sample?.Title ?? "SkiaSharp for Windows";
+#endif
 
 			// prepare the sample
 			if (sample != null)

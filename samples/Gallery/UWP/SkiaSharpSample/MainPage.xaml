@@ -10,6 +10,7 @@
       mc:Ignorable="d">
     <Page.Resources>
         <CollectionViewSource x:Name="samplesViewSource" IsSourceGrouped="True" />
+        
 
         <Style x:Key="ShellButton" TargetType="ButtonBase">
             <Setter Property="Background" Value="Transparent" />
@@ -34,95 +35,95 @@
             It uses a dynamic and static linking and .NET P/Invoke mechanism to package and use Skia# from C#.
         </banner:BannerControl.AboutContent>
 
-        <Grid Background="Gray">
+    <Grid Background="Gray">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto" />
+                <RowDefinition />
             </Grid.RowDefinitions>
-            <Grid Grid.Row="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto" />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
-                <SplitView Name="splitView" DisplayMode="Inline" IsPaneOpen="true" OpenPaneLength="320" Grid.Row="1">
-                    <SplitView.Pane>
-                        <!-- the samples menu -->
-                        <ListView x:Name="listView" SelectionChanged="OnSampleSelected">
-                            <ListView.GroupStyle>
-                                <GroupStyle>
-                                    <GroupStyle.HeaderTemplate>
-                                        <DataTemplate x:DataType="local:GroupedSamples">
-                                            <TextBlock Text="{x:Bind Name}" />
-                                        </DataTemplate>
-                                    </GroupStyle.HeaderTemplate>
-                                </GroupStyle>
-                            </ListView.GroupStyle>
-                            <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="sample:SampleBase">
-                                    <TextBlock Text="{x:Bind Title}" Name="{x:Bind Title}" />
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </SplitView.Pane>
+            <SplitView Name="splitView" DisplayMode="Inline" IsPaneOpen="true" OpenPaneLength="320" Grid.Row="1">
+                <SplitView.Pane>
+                    <!-- the samples menu -->
+                    <ListView ItemsSource="{x:Bind samplesViewSource.View}" SelectionChanged="OnSampleSelected">
+                        <ListView.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate x:DataType="local:GroupedSamples">
+                                        <TextBlock Text="{x:Bind Name}" />
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListView.GroupStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="sample:SampleBase">
+                                <TextBlock Text="{x:Bind Title}" Name="{x:Bind Title}" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </SplitView.Pane>
 
-                    <SplitView.Content>
-                        <!-- the samples canvas -->
-                        <Grid Tapped="OnSampleTapped">
-                            <StackPanel Margin="12">
-                                <TextBlock FontSize="14" Foreground="White" TextWrapping="Wrap">
-                                    <Run Text="This application uses CanvasKit for WebAssembly (Skia) and Skia# for .NET with software rendering, running on WebAssembly with the Uno Platform." />
-                                    <LineBreak/>
-                                    <LineBreak/>
-                                    <Run Text="It is an experiment for the integration of Skia in an application running on top of  Mono for WebAssembly." />
-                                    <LineBreak/>
-                                    <Run Text="It uses a temporary interfacing mechanism until Emscripten and Mono improve the support for" />
-                                    <Hyperlink  NavigateUri="https://github.com/mono/mono/issues/14010">dynamic linking of WebAssembly modules.</Hyperlink>  
-                                    <LineBreak/>
-                                    <LineBreak/>
-                                    <Run Text="Works best on Chrome or Firefox for desktop, but may be unstable at times. Refresh the page to restart." />
-                                </TextBlock>
-                            </StackPanel>
-                            <views:SKXamlCanvas x:Name="canvas" Grid.Row="1" PaintSurface="OnPaintCanvas" />
-                            <!--<views:SKSwapChainPanel x:Name="glview" Grid.Row="1" PaintSurface="OnPaintGL" DrawInBackground="True" Visibility="Collapsed" />-->
-                        </Grid>
-                    </SplitView.Content>
-                </SplitView>
-            </Grid>
+                <SplitView.Content>
+                    <!-- the samples canvas -->
+                    <Grid Tapped="OnSampleTapped">
+                        <StackPanel Margin="12">
+                            <TextBlock FontSize="14" Foreground="White" TextWrapping="Wrap">
+                                <Run Text="This application uses CanvasKit for WebAssembly (Skia) and Skia# for .NET with software rendering, running on WebAssembly with the Uno Platform." />
+                                <LineBreak/>
+                                <LineBreak/>
+                                <Run Text="It is an experiment for the integration of Skia in an application running on top of  Mono for WebAssembly." />
+                                <LineBreak/>
+                                <Run Text="It uses a temporary interfacing mechanism until Emscripten and Mono improve the support for" />
+                                <Hyperlink  NavigateUri="https://github.com/mono/mono/issues/14010">dynamic linking of WebAssembly modules.</Hyperlink>  
+                                <LineBreak/>
+                                <LineBreak/>
+                                <Run Text="Works best on Chrome or Firefox for desktop, but may be unstable at times. Refresh the page to restart." />
+                            </TextBlock>
+                        </StackPanel>
+                        <views:SKXamlCanvas x:Name="canvas" Grid.Row="1" PaintSurface="OnPaintCanvas" />
+                        <!--<views:SKSwapChainPanel x:Name="glview" Grid.Row="1" PaintSurface="OnPaintGL" DrawInBackground="True" Visibility="Collapsed" />-->
+                    </Grid>
+                </SplitView.Content>
+            </SplitView>
+        </Grid>
 
-            <CommandBar x:Name="commandBar" Background="Gray" Foreground="White">
-                <!-- the toolbar items -->
-                <AppBarButton Icon="Repair" Label="Configure Backend" IsCompact="True" Foreground="White">
-                    <Button.Flyout>
-                        <MenuFlyout>
-                            <MenuFlyoutItem Text="Memory" Tag="Memory" Click="OnBackendSelected" />
-                            <MenuFlyoutItem Text="OpenGL" Tag="OpenGL" Click="OnBackendSelected" />
-                            <MenuFlyoutItem Text="Vulkan" Tag="Vulkan" Click="OnBackendSelected" />
-                        </MenuFlyout>
-                    </Button.Flyout>
-                </AppBarButton>
-                <AppBarButton Icon="Pictures" Label="Toggle Sample Slideshow" IsCompact="True" Foreground="White" 
+        <CommandBar x:Name="commandBar" Background="{StaticResource XamarinLightBlue}" Foreground="White">
+            <!-- the toolbar items -->
+            <AppBarButton Icon="Repair" Label="Configure Backend" IsCompact="True" Foreground="White">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="Memory" Tag="Memory" Click="OnBackendSelected" />
+                        <MenuFlyoutItem Text="OpenGL" Tag="OpenGL" Click="OnBackendSelected" />
+                        <MenuFlyoutItem Text="Vulkan" Tag="Vulkan" Click="OnBackendSelected" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </AppBarButton>
+            <AppBarButton Icon="Pictures" Label="Toggle Sample Slideshow" IsCompact="True" Foreground="White" 
                           Click="OnToggleSlideshow" />
 
-                <CommandBar.Content>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
+            <CommandBar.Content>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
 
-                        <!-- the hamburger menu -->
-                        <ToggleButton IsChecked="{Binding IsPaneOpen, ElementName=splitView, Mode=TwoWay}" IsTabStop="False"
+                    <!-- the hamburger menu -->
+                    <ToggleButton IsChecked="{Binding IsPaneOpen, ElementName=splitView, Mode=TwoWay}" IsTabStop="False"
                                   IsThreeState="False" ClickMode="Press" Style="{StaticResource ShellButton}" Foreground="White">
-                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE700;" />
-                        </ToggleButton>
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE700;" />
+                    </ToggleButton>
 
-                        <!-- the title bar -->
-                        <TextBlock x:Name="titleBar" Text="SkiaSharp for Windows" Grid.Column="1" Margin="12,0,0,0"
+                    <!-- the title bar -->
+                    <TextBlock x:Name="titleBar" Text="SkiaSharp for Windows" Grid.Column="1" Margin="12,0,0,0"
                                VerticalAlignment="Center" HorizontalAlignment="Left" />
-                    </Grid>
-                </CommandBar.Content>
-            </CommandBar>
+                </Grid>
+            </CommandBar.Content>
+        </CommandBar>
 
-        </Grid>
+    </Grid>
     </banner:BannerControl>
 </Page>
