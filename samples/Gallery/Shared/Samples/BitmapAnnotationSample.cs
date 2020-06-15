@@ -1,5 +1,4 @@
-﻿#if !__WASM__
-using System;
+﻿using System;
 
 using SkiaSharp;
 
@@ -23,7 +22,7 @@ namespace SkiaSharpSample.Samples
 
 			// decode the bitmap
 			var desiredInfo = new SKImageInfo(386, 395, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
-			using (var stream = new SKManagedStream(SampleMedia.Images.ColorWheel))
+			using (var stream = new SKManagedStream(SampleMedia.Images.BabyTux))
 			using (var bitmap = SKBitmap.Decode(stream, desiredInfo))
 			{
 				// draw directly on the bitmap
@@ -44,4 +43,3 @@ namespace SkiaSharpSample.Samples
 		}
 	}
 }
-#endif

@@ -16,7 +16,7 @@ namespace SkiaSharpSample.Samples
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{
-			canvas.Clear(SKColors.Blue);
+			canvas.Clear(SKColors.White);
 
 			// load the image from the embedded resource stream
 			using (var stream = new SKManagedStream(SampleMedia.Images.Baboon))
@@ -24,7 +24,7 @@ namespace SkiaSharpSample.Samples
 			using (var cf = SKColorFilter.CreateBlendMode(SKColors.Red, SKBlendMode.ColorDodge))
 			using (var paint = new SKPaint())
 			{
-				// paint.ColorFilter = cf;
+				paint.ColorFilter = cf;
 
 				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
 			}

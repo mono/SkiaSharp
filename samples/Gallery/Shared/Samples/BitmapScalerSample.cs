@@ -29,7 +29,7 @@ namespace SkiaSharpSample.Samples
 			methods = Enum.GetValues(typeof(SKBitmapResizeMethod)).Cast<SKBitmapResizeMethod>().ToList();
 			method = methods[0];
 
-			using (var stream = new SKManagedStream(SampleMedia.Images.ColorWheel))
+			using (var stream = new SKManagedStream(SampleMedia.Images.AdobeDng))
 			{
 				bitmap = SKBitmap.Decode(stream);
 			}
