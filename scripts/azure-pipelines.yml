@@ -293,6 +293,7 @@ stages:
             - native_win32_x86_windows
             - native_win32_x64_windows
             - native_win32_x64_nanoserver_windows
+            - native_wasm_linux
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
@@ -312,6 +313,7 @@ stages:
             - native_tizen_linux
             - native_tvos_macos
             - native_watchos_macos
+            - native_wasm_linux
       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
         parameters:
           name: managed_linux
@@ -325,6 +327,7 @@ stages:
             - native_linux_linux
             - native_linux_nodependencies_linux
             - native_tizen_linux
+            - native_wasm_linux
 
   - stage: package
     displayName: Package NuGets
