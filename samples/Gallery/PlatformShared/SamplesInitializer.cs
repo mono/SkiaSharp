@@ -61,14 +61,14 @@ namespace SkiaSharpSample
 			var path = ResourcePath.GetPath(fontName);
 #endif
 
-#if HAS_UNO
-			var localStorage = ApplicationData.Current.LocalFolder.Path;
-#elif WINDOWS_UWP || __IOS__ || __TVOS__ || __ANDROID__ || __TIZEN__
+#if WINDOWS_UWP || __IOS__ || __TVOS__ || __ANDROID__ || __TIZEN__
 			var localStorage = FileSystem.AppDataDirectory;
 #elif __MACOS__
 			var localStorage = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
 #elif __DESKTOP__
 			var localStorage = System.Windows.Forms.Application.LocalUserAppDataPath;
+#elif HAS_UNO
+			var localStorage = ApplicationData.Current.LocalFolder.Path;
 #endif
 
 			SamplesManager.ContentFontPath = path;
