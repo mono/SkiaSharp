@@ -1,5 +1,4 @@
-﻿#if !__WASM__
-using System.IO;
+﻿using System.IO;
 
 using SkiaSharp;
 
@@ -77,4 +76,3 @@ namespace SkiaSharpSample.Samples
 		}
 	}
 }
-#endif

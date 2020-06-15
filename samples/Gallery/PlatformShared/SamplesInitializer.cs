@@ -42,7 +42,7 @@ namespace SkiaSharpSample
 		{
 			var fontName = "content-font.ttf";
 
-#if WINDOWS_UWP || HAS_UNO
+#if WINDOWS_UWP
 			var pkg = Package.Current.InstalledLocation.Path;
 			var path = Path.Combine(pkg, "Assets", "Media", fontName);
 #elif __IOS__ || __TVOS__ || __MACOS__
@@ -54,11 +54,25 @@ namespace SkiaSharpSample
 			{
 				asset.CopyTo(dest);
 			}
-#elif __DESKTOP__ || HAS_UNO
+#elif __DESKTOP__
 			var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			var path = Path.Combine(root, "Media", fontName);
 #elif __TIZEN__
 			var path = ResourcePath.GetPath(fontName);
+#elif HAS_UNO
+			// Uno does not have a uniform app package, so just use the embedded font
+			string path;
+			using (var stream = SampleMedia.Fonts.EmbeddedFont)
+			{
+				var appData = ApplicationData.Current.LocalFolder.Path;
+				var temp = Path.Combine(appData, "SkiaSharpSample", "Assets", "Media");
+				if (!Directory.Exists(temp))
+					Directory.CreateDirectory(temp);
+
+				path = Path.Combine(temp, fontName);
+				using (var writer = File.OpenWrite(path))
+					stream.CopyTo(writer);
+			}
 #endif
 
 #if WINDOWS_UWP || __IOS__ || __TVOS__ || __ANDROID__ || __TIZEN__
@@ -96,6 +110,7 @@ namespace SkiaSharpSample
 			}
 #elif __DESKTOP__
 			Process.Start(path);
+#elif HAS_UNO
 #endif
 		}
 	}
