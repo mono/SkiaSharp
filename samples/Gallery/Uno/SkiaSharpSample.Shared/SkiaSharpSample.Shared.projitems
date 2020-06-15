@@ -9,21 +9,12 @@
     <Import_RootNamespace>SkiaSharpSample.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)Assets\lockscreenlogo.scale-200.png" />
-    <Content Include="$(MSBuildThisFileDirectory)Assets\splashscreen.scale-200.png" />
-    <Content Include="$(MSBuildThisFileDirectory)Assets\square150x150logo.scale-200.png" />
-    <Content Include="$(MSBuildThisFileDirectory)Assets\square44x44logo.scale-200.png" />
-    <Content Include="$(MSBuildThisFileDirectory)Assets\square44x44logo.targetsize-24_altform-unplated.png" />
-    <Content Include="$(MSBuildThisFileDirectory)Assets\storelogo.png" />
-    <Content Include="$(MSBuildThisFileDirectory)Assets\wide310x150logo.scale-200.png" />
+    <Content Include="$(MSBuildThisFileDirectory)Assets\*" />
   </ItemGroup>
   <ItemGroup>
-    <PRIResource Include="$(MSBuildThisFileDirectory)Strings\en\Resources.resw" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\..\PlatformShared\*.cs" Link="PlatformShared\%(Filename)%(Extension)" />
-    <Compile Include="..\..\Shared\Samples\*.cs" Link="Shared\Samples\%(Filename)%(Extension)" />
-    <Compile Include="..\..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+    <Compile Include="..\..\PlatformShared\*.cs" Link="%(Filename)%(Extension)" />
+    <Compile Include="..\..\Shared\Samples\*.cs" Link="Samples\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Shared\*.cs" Link="%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\..\Shared\Media\*" Link="Media\%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
