@@ -1,5 +1,5 @@
 ﻿var UnoAppManifest = {
-    splashScreenImage: "Assets/SplashScreen.scale-200.png",
+    splashScreenImage: "Assets/SplashScreen.png",
     splashScreenColor: "#F8F8F8",
     displayName: "SkiaSharp for Uno Platform (WebAssembly)"
 }
