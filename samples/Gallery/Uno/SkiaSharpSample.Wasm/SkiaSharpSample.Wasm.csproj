@@ -8,7 +8,7 @@
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
     <NoWarn>NU1701</NoWarn>
     <MonoRuntimeDebuggerEnabled Condition="'$(Configuration)'=='Debug'">true</MonoRuntimeDebuggerEnabled>
-    <WasmShellMonoRuntimeExecutionMode Condition="$([MSBuild]::IsOsPlatform('Linux'))">InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
+    <WasmShellMonoRuntimeExecutionMode Condition="'$(Configuration)' == 'Release' and $([MSBuild]::IsOsPlatform('Linux'))">InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CompileTypeScriptDependsOn>_UnoSourceGenerator; $(CompileTypeScriptDependsOn)</CompileTypeScriptDependsOn>
     <IsUiAutomationMappingEnabled>true</IsUiAutomationMappingEnabled>
@@ -33,7 +33,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
     <PackageReference Include="Uno.UI" Version="2.3.0-dev.118" />
-    <PackageReference Include="Uno.UI.Sample.Banner" Version="1.44.0-dev.23" />
     <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.2.0-dev.37" />
     <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.2.0-dev.37" />
   </ItemGroup>

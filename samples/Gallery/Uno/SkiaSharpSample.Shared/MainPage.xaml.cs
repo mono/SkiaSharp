@@ -26,43 +26,19 @@ namespace SkiaSharpSample
 
 		private CancellationTokenSource cancellations;
 		private IList<SampleBase> samples;
-		private IList<GroupedSamples> sampleGroups;
 		private SampleBase sample;
 
 		public MainPage()
 		{
-			this.InitializeComponent();
+			InitializeComponent();
 
-			if (ApiInformation.IsTypePresent(typeof(StatusBar).FullName))
-			{
-				var statusBar = StatusBar.GetForCurrentView();
-				statusBar.BackgroundColor = XamarinLightBlue;
-				statusBar.ForegroundColor = Colors.White;
-				statusBar.BackgroundOpacity = 1;
-			}
-
-			if (ApiInformation.IsTypePresent(typeof(ApplicationViewTitleBar).FullName))
-			{
-				var titlebar = ApplicationView.GetForCurrentView().TitleBar;
-				titlebar.BackgroundColor = XamarinLightBlue;
-				titlebar.ForegroundColor = Colors.White;
-				titlebar.ButtonBackgroundColor = XamarinLightBlue;
-				titlebar.ButtonForegroundColor = Colors.White;
-				titlebar.ButtonHoverBackgroundColor = XamarinDarkBlue;
-				titlebar.ButtonHoverForegroundColor = Colors.White;
-			}
-
-			samples = SamplesManager.GetSamples(SamplePlatforms.UWP).ToList();
-			sampleGroups = Enum.GetValues(typeof(SampleCategories))
-				.Cast<SampleCategories>()
-				.Select(c => new GroupedSamples(c, samples.Where(s => s.Category.HasFlag(c))))
-				.Where(g => g.Count > 0)
-				.OrderBy(g => g.Category == SampleCategories.Showcases ? string.Empty : g.Name)
+			samples = SamplesManager.GetSamples(SamplePlatforms.UWP)
+				.OrderBy(s => s.Category == SampleCategories.Showcases ? string.Empty : s.Title)
 				.ToList();
 
 			SamplesInitializer.Init();
 
-			samplesViewSource.Source = sampleGroups;
+			listView.ItemsSource = samples;
 
 			SetSample(samples.First(s => s.Category.HasFlag(SampleCategories.Showcases)));
 		}
@@ -79,37 +55,6 @@ namespace SkiaSharpSample
 		{
 			var sample = e.AddedItems?.FirstOrDefault() as SampleBase;
 			SetSample(sample);
-		}
-
-		private void OnBackendSelected(object sender, RoutedEventArgs e)
-		{
-			var menu = sender as MenuFlyoutItem;
-
-			var backend = (SampleBackends)Enum.Parse(typeof(SampleBackends), menu.Tag.ToString());
-			switch (backend)
-			{
-				case SampleBackends.Memory:
-#if !HAS_UNO
-					glview.Visibility = Visibility.Collapsed;
-#endif
-					canvas.Visibility = Visibility.Visible;
-					canvas.Invalidate();
-					break;
-				case SampleBackends.OpenGL:
-#if !HAS_UNO
-					glview.Visibility = Visibility.Visible;
-#endif
-					canvas.Visibility = Visibility.Collapsed;
-#if !HAS_UNO
-					glview.Invalidate();
-#endif
-					break;
-				default:
-					var msg = new MessageDialog("This functionality is not yet implemented.", "Configure Backend");
-					msg.Commands.Add(new UICommand("OK"));
-					msg.ShowAsync();
-					break;
-			}
 		}
 
 		private void OnToggleSlideshow(object sender, RoutedEventArgs e)
@@ -130,8 +75,7 @@ namespace SkiaSharpSample
 					try
 					{
 						// get the samples in a list
-						var sortedSamples = sampleGroups.SelectMany(g => g).Distinct().ToList();
-						var lastSample = sortedSamples.First();
+						var lastSample = samples.First();
 						while (!token.IsCancellationRequested)
 						{
 							// display the sample
@@ -141,12 +85,12 @@ namespace SkiaSharpSample
 							await Task.Delay(3000, token);
 
 							// select the next one
-							var idx = sortedSamples.IndexOf(lastSample) + 1;
-							if (idx >= sortedSamples.Count)
+							var idx = samples.IndexOf(lastSample) + 1;
+							if (idx >= samples.Count)
 							{
 								idx = 0;
 							}
-							lastSample = sortedSamples[idx];
+							lastSample = samples[idx];
 						}
 					}
 					catch (TaskCanceledException)
@@ -162,11 +106,6 @@ namespace SkiaSharpSample
 			OnPaintSurface(e.Surface.Canvas, e.Info.Width, e.Info.Height);
 		}
 
-		private void OnPaintGL(object sender, SKPaintGLSurfaceEventArgs e)
-		{
-			OnPaintSurface(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
-		}
-
 		private void SetSample(SampleBase newSample)
 		{
 			// clean up the old sample
@@ -178,12 +117,19 @@ namespace SkiaSharpSample
 
 			sample = newSample;
 
-			// set the title
-#if HAS_UNO
-			titleBar.Text = sample?.Title ?? "SkiaSharp for Uno Platform";
-#else
-			titleBar.Text = sample?.Title ?? "SkiaSharp for Windows";
+			var runtimeMode = string.Empty;
+#if __WASM__
+			runtimeMode = Environment.GetEnvironmentVariable("UNO_BOOTSTRAP_MONO_RUNTIME_MODE");
+			if (runtimeMode.Equals("Interpreter", StringComparison.InvariantCultureIgnoreCase))
+				runtimeMode = " (Interpreted)";
+			else if (runtimeMode.Equals("FullAOT", StringComparison.InvariantCultureIgnoreCase))
+				runtimeMode = " (AOT)";
+			else if (runtimeMode.Equals("InterpreterAndAOT", StringComparison.InvariantCultureIgnoreCase))
+				runtimeMode = " (Mixed)";
 #endif
+
+			// set the title
+			titleBar.Text = (sample?.Title ?? $"SkiaSharp for Uno Platform") + runtimeMode;
 
 			// prepare the sample
 			if (sample != null)
@@ -199,9 +145,6 @@ namespace SkiaSharpSample
 		private void OnRefreshRequested(object sender, EventArgs e)
 		{
 			canvas.Invalidate();
-#if !HAS_UNO
-			glview.Invalidate();
-#endif
 		}
 
 		private void OnPaintSurface(SKCanvas canvas, int width, int height)
@@ -213,24 +156,5 @@ namespace SkiaSharpSample
 		{
 			sample?.Tap();
 		}
-	}
-
-	public class GroupedSamples : ObservableCollection<SampleBase>
-	{
-		private static readonly Regex EnumSplitRexeg = new Regex("(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])");
-
-		public GroupedSamples(SampleCategories category, IEnumerable<SampleBase> samples)
-		{
-			Category = category;
-			Name = EnumSplitRexeg.Replace(category.ToString(), " $1");
-			foreach (var sample in samples.OrderBy(s => s.Title))
-			{
-				Add(sample);
-			}
-		}
-
-		public SampleCategories Category { get; private set; }
-
-		public string Name { get; private set; }
 	}
 }

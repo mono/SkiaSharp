@@ -12,24 +12,28 @@
     <Content Include="$(MSBuildThisFileDirectory)Assets\*" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\PlatformShared\*.cs" Link="%(Filename)%(Extension)" />
-    <Compile Include="..\..\Shared\Samples\*.cs" Link="Samples\%(Filename)%(Extension)" />
-    <Compile Include="..\..\Shared\*.cs" Link="%(Filename)%(Extension)" />
-    <EmbeddedResource Include="..\..\Shared\Media\*" Link="Media\%(Filename)%(Extension)" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\PlatformShared\*.cs" Link="%(Filename)%(Extension)" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\Shared\Samples\*.cs" Link="Samples\%(Filename)%(Extension)" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\Shared\*.cs" Link="%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)..\..\Shared\Media\*" Link="Media\%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="App.xaml.cs">
+    <ApplicationDefinition Include="$(MSBuildThisFileDirectory)App.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </ApplicationDefinition>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainPage.xaml.cs">
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="MainPage.xaml">
+    <Page Include="$(MSBuildThisFileDirectory)MainPage.xaml">
+      <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
