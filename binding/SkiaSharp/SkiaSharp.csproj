@@ -30,6 +30,8 @@
           Condition=" Exists('..\..\output\native\nanoserver\x64\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
     <None Include="..\..\output\native\linuxnodeps\x64\libSkiaSharp.so" Link="nuget\runtimes\linuxnodeps-x64\native\libSkiaSharp.so"
           Condition=" Exists('..\..\output\native\linuxnodeps\x64\libSkiaSharp.so') or '$(IsLinux)' == 'true' " />
+    <None Include="..\..\output\native\alpine\x64\libSkiaSharp.so" Link="nuget\runtimes\alpine-x64\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\output\native\alpine\x64\libSkiaSharp.so') or '$(IsLinux)' == 'true' " />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <None Include="nuget\build\net45\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
