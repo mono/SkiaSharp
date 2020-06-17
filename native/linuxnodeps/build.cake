@@ -3,12 +3,14 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/linuxn
 
 #load "../../cake/shared.cake"
 
+string VARIANT = BUILD_VARIANT ?? "linuxnodeps";
+
 Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
     RunCake("../linux/build.cake", "libSkiaSharp", new Dictionary<string, string> {
-        { "variant", "linuxnodeps" },
+        { "variant", VARIANT },
         { "gnArgs", "skia_use_fontconfig=false" },
     });
 
@@ -23,7 +25,7 @@ Task("libHarfBuzzSharp")
     .Does(() =>
 {
     RunCake("../linux/build.cake", "libHarfBuzzSharp", new Dictionary<string, string> {
-        { "variant", "linuxnodeps" },
+        { "variant", VARIANT },
     });
 
     RunProcess("ldd", OUTPUT_PATH.CombineWithFilePath($"x64/libHarfBuzzSharp.so").FullPath, out var stdout);
