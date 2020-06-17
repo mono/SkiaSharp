@@ -249,6 +249,14 @@ stages:
           docker: scripts/Docker/ubuntu16/amd64
           target: externals-linuxnodeps
           additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine] (Linux)
+        parameters:
+          name: native_linux_alpine_linux
+          displayName: Build Native Linux [Alpinr] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: scripts/Docker/alpine/amd64
+          target: externals-linux
+          additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpine
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
         parameters:
           name: native_tizen_linux
@@ -316,6 +324,7 @@ stages:
           requiredArtifacts:
             - native_linux_linux
             - native_linux_nodependencies_linux
+            - native_linux_alpine_linux
             - native_tizen_linux
 
   - stage: package
@@ -454,6 +463,7 @@ stages:
           requiredArtifacts:
             - native_linux_linux
             - native_linux_nodependencies_linux
+            - native_linux_alpine_linux
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the Mono test results
@@ -469,6 +479,7 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux .NET Core Tests'
+      # TODO: add tests for linux alpine
       # TODO: add tests for linux no dependencies
       # TODO: add tests for windows nano server
 
