@@ -152,7 +152,7 @@ namespace SkiaSharp
 			if (data.Length == 0)
 				return string.Empty;
 
-#if __DESKTOP__
+#if __NET_45__
 			// TODO: improve this copy for old .NET 4.5
 			var array = data.ToArray ();
 			return encoding switch

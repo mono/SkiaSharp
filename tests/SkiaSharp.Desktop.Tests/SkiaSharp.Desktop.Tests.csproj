@@ -100,10 +100,14 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\output\native\windows\$(Platform)\libSkiaSharp.dll" CopyToOutputDirectory="Always" Visible="false"
-             Condition=" Exists('..\..\output\native\windows\$(Platform)\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
-    <Content Include="..\..\output\native\windows\$(Platform)\libSkiaSharp.pdb" CopyToOutputDirectory="Always" Visible="false"
-             Condition=" Exists('..\..\output\native\windows\$(Platform)\libSkiaSharp.pdb') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x64\libSkiaSharp.dll" Link="x64\libSkiaSharp.dll" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\windows\x64\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x64\libSkiaSharp.pdb" Link="x64\libSkiaSharp.pdb" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\windows\x64\libSkiaSharp.pdb') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x86\libSkiaSharp.dll" Link="x86\libSkiaSharp.dll" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\windows\x86\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x86\libSkiaSharp.pdb" Link="x86\libSkiaSharp.pdb" CopyToOutputDirectory="Always" Visible="false"
+             Condition=" Exists('..\..\output\native\windows\x64\libSkiaSharp.pdb') or '$(IsWindows)' == 'true' " />
     <Content Include="..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.dll" CopyToOutputDirectory="Always" Visible="false"
              Condition=" Exists('..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
     <Content Include="..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.pdb" CopyToOutputDirectory="Always" Visible="false"

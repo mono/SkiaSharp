@@ -1,4 +1,6 @@
-﻿namespace SkiaSharp
+﻿using System;
+
+namespace SkiaSharp
 {
 	internal partial class SkiaApi
 	{
@@ -20,6 +22,19 @@
 		private const string SKIA = "libSkiaSharp";
 #else
 		private const string SKIA = "libSkiaSharp";
+#endif
+
+#if USE_DELEGATES
+		private static IntPtr libSkiaSharpHandle;
+
+		private static T Get<T> (string name)
+			where T : Delegate
+		{
+			if (libSkiaSharpHandle == IntPtr.Zero)
+				libSkiaSharpHandle = LibraryLoader.LoadLocalLibrary<SkiaApi> (SKIA);
+
+			return LibraryLoader.GetSymbolDelegate<T> (libSkiaSharpHandle, name);
+		}
 #endif
 	}
 }
