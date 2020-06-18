@@ -44,7 +44,7 @@ jobs:
       - template: azure-templates-variables.yml
 
       # install any packages on linux
-      - ${{ if endsWith(parameters.name, '_linux') }}:
+      - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
         - bash: |
             sudo apt update
             sudo apt install -y ${{ parameters.packages }}
@@ -52,7 +52,7 @@ jobs:
           condition: ne('${{ parameters.packages }}', '')
 
       # make sure mono/msbuild is the correct version
-      - ${{ if endsWith(parameters.name, '_linux') }}:
+      - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
         - bash: |
             sudo apt remove -y mono-complete msbuild
             sudo apt autoremove -y
