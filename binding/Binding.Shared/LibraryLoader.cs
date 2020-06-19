@@ -46,30 +46,30 @@ namespace SkiaSharp
 				if (!string.IsNullOrEmpty (path)) {
 					path = Path.GetDirectoryName (path);
 					// 1.1 in platform sub dir
-					path = Path.Combine (path, arch, libWithExt);
-					if (File.Exists (path))
-						return path;
+					var lib = Path.Combine (path, arch, libWithExt);
+					if (File.Exists (lib))
+						return lib;
 					// 1.2 in root
-					path = Path.Combine (path, libWithExt);
-					if (File.Exists (path))
-						return path;
+					lib = Path.Combine (path, libWithExt);
+					if (File.Exists (lib))
+						return lib;
 				}
 
 				// 2. try current directory
 				path = Directory.GetCurrentDirectory ();
 				if (!string.IsNullOrEmpty (path)) {
 					// 2.1 in platform sub dir
-					path = Path.Combine (path, arch, libWithExt);
-					if (File.Exists (path))
-						return path;
+					var lib = Path.Combine (path, arch, libWithExt);
+					if (File.Exists (lib))
+						return lib;
 					// 2.2 in root
-					path = Path.Combine (path, libWithExt);
-					if (File.Exists (path))
-						return path;
+					lib = Path.Combine (lib, libWithExt);
+					if (File.Exists (lib))
+						return lib;
 				}
 
 				// 3. use PATH or default loading mechanism
-				return libraryName;
+				return libWithExt;
 			}
 		}
 
