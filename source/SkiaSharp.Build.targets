@@ -52,6 +52,10 @@
     <PackageReference Include="Xamarin.Build.TypeRedirector" Version="0.1.2-preview" PrivateAssets="All" />
   </ItemGroup>
 
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Reference Include="netstandard" />
+  </ItemGroup>
+
   <!--
     ===================================================================================================================
     _GenerateAssemblyVersionInfo
