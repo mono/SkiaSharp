@@ -9,6 +9,7 @@
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <DependsOnNETStandard>true</DependsOnNETStandard>
     <DefineConstants>$(DefineConstants);USE_DELEGATES;__DESKTOP__</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net45'))">
@@ -21,7 +22,6 @@
     <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="netstandard" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup>

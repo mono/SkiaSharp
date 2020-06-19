@@ -9,14 +9,20 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('net45'))">
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <DependsOnNETStandard>true</DependsOnNETStandard>
     <DefineConstants>$(DefineConstants);__DESKTOP__</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net45'))">
+    <DefineConstants>$(DefineConstants);__NET_45__</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net46'))">
+    <DefineConstants>$(DefineConstants);__NET_46__</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
     <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="netstandard" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup>
