@@ -38,6 +38,16 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void DataCanBeCreatedFromStream()
+		{
+			using var stream = new SKFileStream(Path.Combine(PathToImages, "baboon.jpg"));
+			using var data = SKData.Create(stream);
+
+			Assert.NotNull(data);
+			Assert.True(data.Size > 0);
+		}
+
+		[SkippableFact]
 		public void DataCanBeCreatedFromFile()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
