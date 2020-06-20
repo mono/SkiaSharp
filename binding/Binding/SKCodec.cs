@@ -294,13 +294,10 @@ namespace SkiaSharp
 		}
 
 		public static SKCodec Create (Stream stream) =>
-			Create (stream, out var result);
+			Create (WrapManagedStream (stream));
 
 		public static SKCodec Create (Stream stream, out SKCodecResult result) =>
 			Create (WrapManagedStream (stream), out result);
-
-		public static SKCodec Create (SKStream stream) =>
-			Create (stream, out var result);
 
 		public static SKCodec Create (SKStream stream, out SKCodecResult result)
 		{
@@ -312,6 +309,16 @@ namespace SkiaSharp
 				stream.RevokeOwnership (codec);
 				return codec;
 			}
+		}
+
+		public static SKCodec Create (SKStream stream)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			var codec = GetObject (SkiaApi.sk_codec_new_from_stream (stream.Handle, null));
+			stream.RevokeOwnership (codec);
+			return codec;
 		}
 
 		// create (data)
