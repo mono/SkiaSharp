@@ -159,7 +159,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void CanCreateStreamCodec()
 		{
-			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
+			var stream = File.OpenRead(Path.Combine(PathToImages, "color-wheel.png"));
 			using var codec = SKCodec.Create(stream);
 
 			Assert.Equal(SKEncodedImageFormat.Png, codec.EncodedFormat);
@@ -172,7 +172,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void CanCreateStreamCodecWithResult()
 		{
-			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
+			var stream = File.OpenRead(Path.Combine(PathToImages, "color-wheel.png"));
 			using var codec = SKCodec.Create(stream, out var result);
 
 			Assert.Equal(SKCodecResult.Success, result);
