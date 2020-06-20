@@ -41,6 +41,8 @@ namespace SkiaSharp.Tests
 		public void DataCanBeCreatedFromStream()
 		{
 			using var stream = new SKFileStream(Path.Combine(PathToImages, "baboon.jpg"));
+			Assert.True(stream.IsValid);
+
 			using var data = SKData.Create(stream);
 
 			Assert.NotNull(data);

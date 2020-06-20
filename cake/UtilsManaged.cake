@@ -25,7 +25,13 @@ void RunTests(FilePath testAssembly, bool is32)
         Parallelism = ParallelismOption.All,
         OutputDirectory = dir,
         WorkingDirectory = dir,
-        ArgumentCustomization = args => args.Append("-verbose -method \"SkiaSharp.Tests.SKCodecTest.CanReadManagedStream\" -method \"SkiaSharp.Tests.SKCodecTest.CanCreateStreamCodec\" -method \"SkiaSharp.Tests.SKCodecTest.CanCreateStreamCodecWithResult\""),
+        ArgumentCustomization = args => args.Append(
+            "-verbose " +
+            "-method \"SkiaSharp.Tests.SKCodecTest.CanReadManagedStream\" " +
+            "-method \"SkiaSharp.Tests.SKCodecTest.CanCreateStreamCodec\" " + 
+            "-method \"SkiaSharp.Tests.SKCodecTest.CanCreateStreamCodecWithResult\" " + 
+            "-method \"SkiaSharp.Tests.SKDataTest.DataCanBeCreatedFromStream\" " + 
+            "-method \"SkiaSharp.Tests.SKDataTest.DataCanBeCreatedFromManagedStream\" "),
     };
     var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
     foreach (var trait in traits) {
