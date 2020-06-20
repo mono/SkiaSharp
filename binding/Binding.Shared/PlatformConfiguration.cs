@@ -37,7 +37,7 @@ namespace SkiaSharp
 #endif
 		}
 
-#if !NET_STANDARD && !__NET_46__
+#if __NET_45__
 #pragma warning disable IDE1006 // Naming Styles
 		private static class MacPlatformDetector
 		{
