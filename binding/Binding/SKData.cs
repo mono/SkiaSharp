@@ -87,7 +87,7 @@ namespace SkiaSharp
 			if (string.IsNullOrEmpty (filename))
 				throw new ArgumentException ("The filename cannot be empty.", nameof (filename));
 
-			var utf8path = StringUtilities.GetEncodedText (filename, SKTextEncoding.Utf8);
+			var utf8path = StringUtilities.GetEncodedText (filename, SKTextEncoding.Utf8, true);
 			fixed (byte* u = utf8path) {
 				return GetObject (SkiaApi.sk_data_new_from_file (u));
 			}

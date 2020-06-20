@@ -77,6 +77,8 @@ namespace SkiaSharp
 
 	public unsafe static class StringUtilities
 	{
+		internal const string NullTerminator = "\0";
+
 		// GetUnicodeStringLength
 
 		private static int GetUnicodeStringLength (SKTextEncoding encoding) =>
@@ -110,6 +112,14 @@ namespace SkiaSharp
 
 		public static byte[] GetEncodedText (string text, SKTextEncoding encoding) =>
 			GetEncodedText (text.AsSpan (), encoding);
+
+		internal static byte[] GetEncodedText (string text, SKTextEncoding encoding, bool addNull)
+		{
+			if (!string.IsNullOrEmpty (text) && addNull)
+				text += NullTerminator;
+
+			return GetEncodedText (text.AsSpan (), encoding);
+		}
 
 		public static byte[] GetEncodedText (ReadOnlySpan<char> text, SKTextEncoding encoding) =>
 			encoding switch

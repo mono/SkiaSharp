@@ -37,6 +37,24 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
+		[SkippableTheory]
+		[InlineData(null, 0, 0, 0)]
+		[InlineData("", 0, 0, 0)]
+		[InlineData("H", 1, 1, 2)]
+		[InlineData("Hello World!", 12, 12, 13)]
+		[InlineData("Hello World!!", 13, 13, 14)]
+		[InlineData("上田雅美", 4, 12, 13)]
+		public void StringsAreConvertedWithNullTerminator(string str, int length, int byteLength, int terminatedLength)
+		{
+			Assert.Equal(length, str?.Length ?? 0);
+
+			var bytes = StringUtilities.GetEncodedText(str, SKTextEncoding.Utf8);
+			Assert.Equal(byteLength, bytes.Length);
+
+			bytes = StringUtilities.GetEncodedText(str, SKTextEncoding.Utf8, true);
+			Assert.Equal(terminatedLength, bytes.Length);
+		}
+
 		[SkippableFact]
 		public void DataCanBeCreatedFromStream()
 		{
