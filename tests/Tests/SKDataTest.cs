@@ -48,6 +48,17 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void DataCanBeCreatedFromManagedStream()
+		{
+			using var managed = File.OpenRead(Path.Combine(PathToImages, "baboon.jpg"));
+			using var stream = new SKManagedStream(managed);
+			using var data = SKData.Create(stream);
+
+			Assert.NotNull(data);
+			Assert.True(data.Size > 0);
+		}
+
+		[SkippableFact]
 		public void DataCanBeCreatedFromFile()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
