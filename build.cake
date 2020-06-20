@@ -161,14 +161,14 @@ Task ("tests")
             failedTests++;
         }
 
-        // // SkiaSharp.Vulkan.Tests.dll
-        // if (SUPPORT_VULKAN) {
-        //     try {
-        //         RunTests ($"./tests/SkiaSharp.Vulkan.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
-        //     } catch {
-        //         failedTests++;
-        //     }
-        // }
+        // SkiaSharp.Vulkan.Tests.dll
+        if (SUPPORT_VULKAN) {
+            try {
+                RunTests ($"./tests/SkiaSharp.Vulkan.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
+            } catch {
+                failedTests++;
+            }
+        }
     }
 
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
@@ -184,25 +184,25 @@ Task ("tests")
         RunDesktopTest ("x64");
     }
 
-    // // .NET Core
+    // .NET Core
 
-    // // SkiaSharp.NetCore.Tests.csproj
-    // RunMSBuild ("./tests/SkiaSharp.NetCore.Tests.sln",
-    //     bl: $"./output/binlogs/tests-netcore.binlog");
-    // try {
-    //     RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
-    // } catch {
-    //     failedTests++;
-    // }
+    // SkiaSharp.NetCore.Tests.csproj
+    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests.sln",
+        bl: $"./output/binlogs/tests-netcore.binlog");
+    try {
+        RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
+    } catch {
+        failedTests++;
+    }
 
-    // // SkiaSharp.Vulkan.NetCore.Tests.csproj
-    // if (SUPPORT_VULKAN) {
-    //     try {
-    //         RunNetCoreTests ("./tests/SkiaSharp.Vulkan.NetCore.Tests/SkiaSharp.Vulkan.NetCore.Tests.csproj");
-    //     } catch {
-    //         failedTests++;
-    //     }
-    // }
+    // SkiaSharp.Vulkan.NetCore.Tests.csproj
+    if (SUPPORT_VULKAN) {
+        try {
+            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.NetCore.Tests/SkiaSharp.Vulkan.NetCore.Tests.csproj");
+        } catch {
+            failedTests++;
+        }
+    }
 
     if (failedTests > 0)
         if (THROW_ON_TEST_FAILURE)
