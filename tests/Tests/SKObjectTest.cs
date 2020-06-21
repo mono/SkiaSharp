@@ -493,6 +493,9 @@ namespace SkiaSharp.Tests
 
 			parent1.Dispose();
 
+			var unownedParent = ParentChildWorld.DisposeUnownedManagedParent;
+			var unownedChild =  ParentChildWorld.DisposeUnownedManagedChild;
+
 			var managedParent = ParentChildWorld.DisposeManagedParent;
 			var managedChild = ParentChildWorld.DisposeManagedChild;
 
@@ -502,12 +505,16 @@ namespace SkiaSharp.Tests
 			Assert.True(child1.IsDisposed);
 			Assert.True(parent1.IsDisposed);
 
-			Assert.Equal("DisposeManaged", managedParent.State);
-			Assert.Equal("DisposeManaged", managedChild.State);
+			Assert.Equal("DisposeUnownedManaged", unownedParent.State);
+			Assert.Equal("DisposeUnownedManaged", unownedChild.State);
 
-			Assert.Equal("DisposeManaged", nativeParent.State);
-			Assert.Equal("DisposeManaged", nativeChild.State);
+			Assert.Equal("DisposeUnownedManaged", managedParent.State);
+			Assert.Equal("DisposeUnownedManaged", managedChild.State);
 
+			Assert.Equal("DisposeUnownedManaged", nativeParent.State);
+			Assert.Equal("DisposeUnownedManaged", nativeChild.State);
+
+			unownedParent.Dispose();
 			managedParent.Dispose();
 			nativeParent.Dispose();
 		}
@@ -525,6 +532,9 @@ namespace SkiaSharp.Tests
 
 			public static ParentObject DisposeNativeParent;
 			public static ChildObject DisposeNativeChild;
+
+			public static ParentObject DisposeUnownedManagedParent;
+			public static ChildObject DisposeUnownedManagedChild;
 		}
 
 		private class ParentObject : SKObject
@@ -539,6 +549,17 @@ namespace SkiaSharp.Tests
 				OwnedBy(GetOrAddObject(ParentChildWorld.ChildHandle, false, (h, o) => new ChildObject(State, h, o)), this);
 
 			public string State { get; }
+
+			protected override void DisposeUnownedManaged()
+			{
+				base.DisposeUnownedManaged();
+
+				if (State == "Root")
+				{
+					ParentChildWorld.DisposeUnownedManagedParent = ParentChildWorld.GetParent("DisposeUnownedManaged");
+					ParentChildWorld.DisposeUnownedManagedChild = ParentChildWorld.DisposeUnownedManagedParent.Child;
+				}
+			}
 
 			protected override void DisposeManaged()
 			{
