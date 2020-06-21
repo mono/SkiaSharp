@@ -271,11 +271,11 @@ namespace SkiaSharp
 			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
 				return;
 
-			if (Handle != IntPtr.Zero && OwnsHandle)
-				DisposeNative ();
-
 			if (disposing)
 				DisposeManaged ();
+
+			if (Handle != IntPtr.Zero && OwnsHandle)
+				DisposeNative ();
 
 			Handle = IntPtr.Zero;
 		}
