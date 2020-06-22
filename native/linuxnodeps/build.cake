@@ -15,7 +15,8 @@ Task("libSkiaSharp")
         { "gnArgs", "skia_use_fontconfig=false" },
     });
 
-    RunProcess("ldd", OUTPUT_PATH.CombineWithFilePath($"x64/libSkiaSharp.so").FullPath, out var stdout);
+    var suffix = GetVersion("libSkiaSharp", "suffix");
+    RunProcess("ldd", OUTPUT_PATH.CombineWithFilePath($"x64/libSkiaSharp{suffix}.so").FullPath, out var stdout);
 
     if (stdout.Any(o => o.Contains("fontconfig")))
         throw new Exception("libSkiaSharp.so contained a dependency on fontconfig.");

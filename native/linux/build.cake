@@ -36,11 +36,13 @@ Task("libSkiaSharp")
 
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
+        var suffix = GetVersion("libSkiaSharp", "suffix");
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
             $"target_cpu='{arch}' " +
             $"is_official_build=true " +
+            $"skiasharp_suffix='{suffix}'" +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"skia_enable_tools=false " +
             $"skia_use_icu=false " +
@@ -61,9 +63,9 @@ Task("libSkiaSharp")
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
-        var so = SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.so.{soname}");
+        var so = SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp{suffix}.so.{soname}");
         CopyFileToDirectory(so, outDir);
-        CopyFile(so, outDir.CombineWithFilePath("libSkiaSharp.so"));
+        CopyFile(so, outDir.CombineWithFilePath($"libSkiaSharp{suffix}.so"));
     }
 });
 
