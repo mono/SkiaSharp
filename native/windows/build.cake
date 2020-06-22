@@ -24,11 +24,13 @@ Task("libSkiaSharp")
         if (Skip(arch)) return;
 
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
+        var suffix = GetVersion("libSkiaSharp", "suffix");
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='win'" +
             $"target_cpu='{skiaArch}' " +
             $"is_official_build=true " +
+            $"skiasharp_suffix='{suffix}'" +
             $"skia_enable_fontmgr_win_gdi=false " +
             $"skia_enable_tools=false " +
             $"skia_use_dng_sdk=true " +
@@ -48,8 +50,8 @@ Task("libSkiaSharp")
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
-        CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.dll"), outDir);
-        CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.pdb"), outDir);
+        CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp{suffix}.dll"), outDir);
+        CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp{suffix}.pdb"), outDir);
     }
 });
 
