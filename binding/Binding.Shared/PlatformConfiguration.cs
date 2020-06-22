@@ -24,16 +24,16 @@ namespace SkiaSharp
 			IsLinux = false;
 			IsUnix = false;
 			IsWindows = true;
-#elif NET_STANDARD || __NET_46__
-			IsMac = RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
-			IsLinux = RuntimeInformation.IsOSPlatform (OSPlatform.Linux);
-			IsUnix = IsMac || IsLinux;
-			IsWindows = RuntimeInformation.IsOSPlatform (OSPlatform.Windows);
-#else
+#elif __NET_45__
 			IsUnix = Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
 			IsWindows = !IsUnix;
 			IsMac = IsUnix && MacPlatformDetector.IsMac.Value;
 			IsLinux = IsUnix && !IsMac;
+#else
+			IsMac = RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
+			IsLinux = RuntimeInformation.IsOSPlatform (OSPlatform.Linux);
+			IsUnix = IsMac || IsLinux;
+			IsWindows = RuntimeInformation.IsOSPlatform (OSPlatform.Windows);
 #endif
 		}
 
