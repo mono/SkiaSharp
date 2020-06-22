@@ -24,7 +24,7 @@ namespace SkiaSharp
 			IsLinux = false;
 			IsUnix = false;
 			IsWindows = true;
-#elif __NET_45__
+#elif NET45
 			IsUnix = Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
 			IsWindows = !IsUnix;
 			IsMac = IsUnix && MacPlatformDetector.IsMac.Value;
@@ -37,7 +37,7 @@ namespace SkiaSharp
 #endif
 		}
 
-#if __NET_45__
+#if NET45
 #pragma warning disable IDE1006 // Naming Styles
 		private static class MacPlatformDetector
 		{

@@ -80,7 +80,7 @@ namespace SkiaSharp
 			if (symbol == IntPtr.Zero)
 				throw new EntryPointNotFoundException ($"Unable to load symbol '{name}'.");
 
-#if __NET_45__
+#if NET45
 			return (T)Marshal.GetDelegateForFunctionPointer (symbol, typeof (T));
 #else
 			return Marshal.GetDelegateForFunctionPointer<T> (symbol);
