@@ -19,7 +19,7 @@ namespace SkiaSharp
 #elif __TIZEN__
 		private const string SKIA = "libSkiaSharp.so";
 #else
-		private const string SKIA = "libSkiaSharp";
+		private const string SKIA = "libSkiaSharp" + VersionConstants.NativeSuffix;
 #endif
 
 #if USE_DELEGATES
