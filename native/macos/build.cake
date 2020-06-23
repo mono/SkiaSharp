@@ -36,12 +36,18 @@ Task("libSkiaSharp")
             $"extra_ldflags=[ '-Wl,macosx_version_min=10.7', '-stdlib=libc++' ]");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch);
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp_static", "macosx", arch);
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
         CopyDirectory($"libSkiaSharp/bin/{CONFIGURATION}/{arch}/{CONFIGURATION}/", outDir);
 
         StripSign(outDir.CombineWithFilePath("libSkiaSharp.dylib"));
+
+        RunLibtoolStatic(OUTPUT_PATH, "libSkiaSharp.a", new [] {
+            SKIA_PATH.CombineWithFilePath($"out/macos/{arch}/libskia.a"),
+            outDir.CombineWithFilePath("libSkiaSharp_static.a"),
+        });
     }
 });
 

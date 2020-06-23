@@ -7,11 +7,11 @@
 #elif __WATCHOS__ && __UNIFIED__
 		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __IOS__ && __UNIFIED__
-		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
+		private const string SKIA = "__Internal";
 #elif __ANDROID__
 		private const string SKIA = "libSkiaSharp.so";
 #elif __MACOS__
-		private const string SKIA = "libSkiaSharp.dylib";
+		private const string SKIA = "__Internal";
 #elif __DESKTOP__
 		private const string SKIA = "libSkiaSharp";
 #elif WINDOWS_UWP

@@ -7,7 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
-        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\ios\native\libSkiaSharp.framework" Kind="Framework" />
+<!--         <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\ios\native\libSkiaSharp.framework" Kind="Framework" /> -->
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\ios\native\libSkiaSharp.a" Kind="Static" IsCxx="True" Frameworks="CoreText CoreGraphics CoreFoundation" />
     </ItemGroup>
 
 </Project>

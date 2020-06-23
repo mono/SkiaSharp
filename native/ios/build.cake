@@ -23,6 +23,13 @@ Task("libSkiaSharp")
        (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
     });
 
+    RunLipo(OUTPUT_PATH, "libSkiaSharp.a", new [] {
+        (FilePath) "i386/libSkiaSharp.a",
+        (FilePath) "x86_64/libSkiaSharp.a",
+        (FilePath) "armv7/libSkiaSharp.a",
+        (FilePath) "arm64/libSkiaSharp.a"
+    });
+
     void Build(string sdk, string arch, string skiaArch)
     {
         if (Skip(arch)) return;
@@ -44,12 +51,18 @@ Task("libSkiaSharp")
             $"extra_ldflags=[ '-Wl,ios_version_min=8.0' ]");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch);
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp_static", sdk, arch);
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
         CopyDirectory($"libSkiaSharp/bin/{CONFIGURATION}/{arch}/{CONFIGURATION}-{sdk}", outDir);
 
         StripSign(outDir.CombineWithFilePath("libSkiaSharp.framework"));
+
+        RunLibtoolStatic(outDir, "libSkiaSharp.a", new [] {
+            SKIA_PATH.CombineWithFilePath($"out/ios/{arch}/libskia.a"),
+            "libSkiaSharp_static.a",
+        });
     }
 });
 
