@@ -63,11 +63,22 @@ namespace SkiaSharp
 			}
 		}
 
+		protected override void DisposeUnownedManaged ()
+		{
+			if (ownedObjects != null) {
+				foreach (var child in ownedObjects) {
+					if (child.Value is SKObject c && !c.OwnsHandle)
+						c.DisposeInternal ();
+				}
+			}
+		}
+
 		protected override void DisposeManaged ()
 		{
 			if (ownedObjects != null) {
 				foreach (var child in ownedObjects) {
-					child.Value?.DisposeInternal ();
+					if (child.Value is SKObject c && c.OwnsHandle)
+						c.DisposeInternal ();
 				}
 				ownedObjects.Clear ();
 			}
@@ -256,6 +267,11 @@ namespace SkiaSharp
 
 		protected internal bool IsDisposed => isDisposed == 1;
 
+		protected virtual void DisposeUnownedManaged ()
+		{
+			// dispose of any managed resources that are not actually owned
+		}
+
 		protected virtual void DisposeManaged ()
 		{
 			// dispose of any managed resources
@@ -271,9 +287,15 @@ namespace SkiaSharp
 			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
 				return;
 
+			// dispose any objects that are owned/created by native code
+			if (disposing)
+				DisposeUnownedManaged ();
+
+			// destroy the native object
 			if (Handle != IntPtr.Zero && OwnsHandle)
 				DisposeNative ();
 
+			// dispose any remaining managed-created objects
 			if (disposing)
 				DisposeManaged ();
 

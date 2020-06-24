@@ -408,6 +408,12 @@ Obsoleted properties:
  public bool IsVerticalText { get; set; }
 ```
 
+Added property:
+
+```csharp
+public SKColorF ColorF { get; set; }
+```
+
 Obsoleted methods:
 
 ```diff
@@ -462,11 +468,19 @@ public float MeasureText (System.ReadOnlySpan<byte> text);
 public float MeasureText (System.ReadOnlySpan<char> text);
 public float MeasureText (System.ReadOnlySpan<byte> text, ref SKRect bounds);
 public float MeasureText (System.ReadOnlySpan<char> text, ref SKRect bounds);
+public void SetColor (SKColorF color, SKColorSpace colorspace);
 public SKFont ToFont ();
 ```
 
 
 #### Type Changed: SkiaSharp.SKPath
+
+Added methods:
+
+```csharp
+public SKPath ToWinding ();
+public bool ToWinding (SKPath result);
+```
 
 #### Type Changed: SkiaSharp.SKPath.Iterator
 
