@@ -1353,6 +1353,18 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_refcnt_unique (sk_refcnt_t refcnt);
 
+		// int sk_version_get_increment()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_version_get_increment ();
+
+		// int sk_version_get_milestone()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_version_get_milestone ();
+
+		// const char* sk_version_get_string()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* char */ void* sk_version_get_string ();
+
 		#endregion
 
 		#region sk_image.h
