@@ -5,6 +5,12 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath)
         OutputDirectory = MakeAbsolute(outputPath),
         BasePath = nuspecPath.GetDirectory(),
         ToolPath = NuGetToolPath,
+        Properties = new Dictionary<string, string> {
+            // NU5048: The 'PackageIconUrl'/'iconUrl' element is deprecated. Consider using the 'PackageIcon'/'icon' element instead.
+            // NU5105: The package version 'xxx' uses SemVer 2.0.0 or components of SemVer 1.0.0 that are not supported on legacy clients.
+            // NU5125: The 'licenseUrl' element will be deprecated. Consider using the 'license' element instead.
+            { "NoWarn", "NU5048,NU5105,NU5125" }
+        },
     });
 }
 
@@ -155,7 +161,6 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     comparer.SearchPaths.AddRange(GetReferenceSearchPaths());
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
 
-    await AddDep("OpenTK.GLControl", "NET40", "reference");
     await AddDep("OpenTK.GLControl", "NET40");
     await AddDep("Tizen.NET", "netstandard2.0");
     await AddDep("Xamarin.Forms", "netstandard2.0");
@@ -163,7 +168,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Xamarin.Forms", "Xamarin.iOS10");
     await AddDep("Xamarin.Forms", "Xamarin.Mac");
     await AddDep("Xamarin.Forms", "tizen40");
-    await AddDep("Xamarin.Forms", "uap10.0");
+    await AddDep("Xamarin.Forms", "uap10.0.16299");
     await AddDep("Xamarin.Forms.Platform.WPF", "net45");
     await AddDep("Xamarin.Forms.Platform.GTK", "net45");
     await AddDep("GtkSharp", "netstandard2.0");
@@ -171,6 +176,11 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("GLibSharp", "netstandard2.0");
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");
+
+    await AddDep("OpenTK.GLControl", "NET40", "reference");
+    await AddDep("Xamarin.Forms", "Xamarin.iOS10", "reference");
+    await AddDep("Xamarin.Forms", "Xamarin.Mac", "reference");
+    await AddDep("Xamarin.Forms", "uap10.0", "reference");
 
     return comparer;
 

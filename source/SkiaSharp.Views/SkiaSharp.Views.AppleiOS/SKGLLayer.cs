@@ -158,8 +158,8 @@ namespace SkiaSharp.Views.iOS
 			Gles.glFramebufferRenderbuffer(Gles.GL_FRAMEBUFFER, Gles.GL_COLOR_ATTACHMENT0, Gles.GL_RENDERBUFFER, renderBuffer);
 
 			// get the bits for SkiaSharp
-			var glInterface = GRGlInterface.CreateNativeGlInterface();
-			context = GRContext.Create(GRBackend.OpenGL, glInterface);
+			var glInterface = GRGlInterface.Create();
+			context = GRContext.CreateGl(glInterface);
 
 			// finished
 			EAGLContext.SetCurrentContext(null);

@@ -16,7 +16,7 @@ variables:
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
   FEATURE_NAME: ''
-  PREVIEW_LABEL: 'alpha'
+  PREVIEW_LABEL: 'preview'
   BUILD_NUMBER: $[counter(format('{0}_{1}_{2}', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch'], variables['PREVIEW_LABEL']), 1)]
   TIZEN_LINUX_PACKAGES: libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts
@@ -30,9 +30,7 @@ variables:
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   THROW_ON_TEST_FAILURE: true
-
-  # TODO: TEMPORARY
-  NUGET_DIFF_PRERELEASE: true
+  NUGET_DIFF_PRERELEASE: false
 
 resources:
   repositories:
@@ -251,6 +249,22 @@ stages:
           docker: scripts/Docker/ubuntu16/amd64
           target: externals-linuxnodeps
           additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine] (Linux)
+        parameters:
+          name: native_linux_alpine_linux
+          displayName: Build Native Linux [Alpine] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: scripts/Docker/alpine/amd64
+          target: externals-linux
+          additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpine
+      - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine, No Dependencies] (Linux)
+        parameters:
+          name: native_linux_alpinenodependencies_linux
+          displayName: Build Native Linux [Alpine, No Dependencies] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: scripts/Docker/alpine/amd64
+          target: externals-linuxnodeps
+          additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpinenodeps
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
         parameters:
           name: native_tizen_linux
@@ -318,6 +332,8 @@ stages:
           requiredArtifacts:
             - native_linux_linux
             - native_linux_nodependencies_linux
+            - native_linux_alpinenodependencies_linux
+            - native_linux_alpine_linux
             - native_tizen_linux
 
   - stage: package
@@ -456,6 +472,8 @@ stages:
           requiredArtifacts:
             - native_linux_linux
             - native_linux_nodependencies_linux
+            - native_linux_alpinenodependencies_linux
+            - native_linux_alpine_linux
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the Mono test results
@@ -471,6 +489,7 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux .NET Core Tests'
+      # TODO: add tests for linux alpine
       # TODO: add tests for linux no dependencies
       # TODO: add tests for windows nano server
 
@@ -513,7 +532,7 @@ stages:
                 provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
             - task: InstallAppleProvisioningProfile@1
               inputs:
-                provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
+                provProfileSecureFile: 'SkiaSharp Mac Provisioning.mobileprovision'
             - task: InstallAppleProvisioningProfile@1
               inputs:
                 provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
