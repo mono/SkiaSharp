@@ -38,7 +38,7 @@ Task("libSkiaSharp")
            $"skia_use_system_zlib=true " +
            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_BUILD_FOR_TIZEN', '-DXML_DEV_URANDOM' ] " +
            $"ncli='{TIZEN_STUDIO_HOME}' " +
-           $"ncli_version='6.0'");
+           $"ncli_version='4.0'");
 
         RunProcess(tizen, new ProcessSettings {
            Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION}" ,
