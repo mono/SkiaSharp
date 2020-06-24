@@ -26,7 +26,7 @@ namespace SkiaSharp
 		private static readonly Lazy<IntPtr> libSkiaSharpHandle =
 			new Lazy<IntPtr> (() => LibraryLoader.LoadLocalLibrary<SkiaApi> (SKIA));
 
-		private static T Get<T> (string name) where T : Delegate =>
+		private static T GetSymbol<T> (string name) where T : Delegate =>
 			LibraryLoader.GetSymbolDelegate<T> (libSkiaSharpHandle.Value, name);
 #endif
 	}

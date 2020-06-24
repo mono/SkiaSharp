@@ -373,14 +373,14 @@ namespace SkiaSharpGenerator
 					writer.WriteLine($"\t\tinternal static extern {returnType} {name} ({string.Join(", ", paramsList)});");
 					writer.WriteLine($"\t\t#else");
 					writer.WriteLine($"\t\tprivate partial class Delegates {{");
-					writer.WriteLine($"\t\t\t[UnmanagedFunctionPointer(CallingConvention.Cdecl)]");
+					writer.WriteLine($"\t\t\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
 					if (!string.IsNullOrEmpty(retAttr))
 						writer.WriteLine($"\t\t\t{retAttr}");
 					writer.WriteLine($"\t\t\tinternal delegate {returnType} {name} ({string.Join(", ", paramsList)});");
 					writer.WriteLine($"\t\t}}");
 					writer.WriteLine($"\t\tprivate static Delegates.{name} {name}_delegate;");
 					writer.WriteLine($"\t\tinternal static {returnType} {name} ({string.Join(", ", paramsList)}) =>");
-					writer.WriteLine($"\t\t\t({name}_delegate ??= Get<Delegates.{name}>(\"{name}\")).Invoke({string.Join(", ", paramNamesList)});");
+					writer.WriteLine($"\t\t\t({name}_delegate ??= GetSymbol<Delegates.{name}> (\"{name}\")).Invoke ({string.Join(", ", paramNamesList)});");
 					writer.WriteLine($"\t\t#endif");
 				}
 				writer.WriteLine();
