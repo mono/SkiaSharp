@@ -14,10 +14,10 @@ Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .Does(() =>
 {
-    Build("armel", "arm");
-    Build("i386", "x86");
+    Build("armel", "arm", "mobile-4.0-device.core");
+    Build("i386", "x86", "mobile-4.0-emulator.core");
 
-    void Build(string arch, string skiaArch)
+    void Build(string arch, string skiaArch, string rootstrap)
     {
         if (Skip(arch)) return;
 
@@ -41,7 +41,7 @@ Task("libSkiaSharp")
            $"ncli_version='4.0'");
 
         RunProcess(tizen, new ProcessSettings {
-           Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION}" ,
+           Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
            WorkingDirectory = MakeAbsolute((DirectoryPath)"libSkiaSharp").FullPath,
         });
 
