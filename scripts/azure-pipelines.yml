@@ -435,12 +435,11 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Windows .NET Core Tests'
-            - task: PublishCodeCoverageResults@1
+            - task: PublishBuildArtifacts@1
               displayName: 'Publish the code coverage results'
               inputs:
-                codeCoverageTool: Cobertura
-                summaryFileLocation: 'output/coverage/Cobertura.xml'
-                reportDirectory: 'output/coverage'
+                artifactName: coverage_windows
+                pathToPublish: 'output/coverage'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
           name: tests_macos
@@ -468,12 +467,11 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS .NET Core Tests'
-            - task: PublishCodeCoverageResults@1
+            - task: PublishBuildArtifacts@1
               displayName: 'Publish the code coverage results'
               inputs:
-                codeCoverageTool: Cobertura
-                summaryFileLocation: 'output/coverage/Cobertura.xml'
-                reportDirectory: 'output/coverage'
+                artifactName: coverage_macos
+                pathToPublish: 'output/coverage'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
           name: tests_linux
@@ -505,15 +503,45 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux .NET Core Tests'
-            - task: PublishCodeCoverageResults@1
+            - task: PublishBuildArtifacts@1
               displayName: 'Publish the code coverage results'
               inputs:
-                codeCoverageTool: Cobertura
-                summaryFileLocation: 'output/coverage/Cobertura.xml'
-                reportDirectory: 'output/coverage'
+                artifactName: coverage_linux
+                pathToPublish: 'output/coverage'
       # TODO: add tests for linux alpine
       # TODO: add tests for linux no dependencies
       # TODO: add tests for windows nano server
+      - job: coverage_reports                      # Coverage Reports
+        displayName: Coverage Reports
+        pool:
+          name: $(VM_IMAGE_LINUX)
+        dependsOn:
+          - tests_windows
+          - tests_macos
+          - tests_linux
+        steps:
+          - checkout: none
+          - template: azure-templates-variables.yml
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the coverage_windows artifact
+            inputs:
+              artifactName: coverage_windows
+              downloadPath: output
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the coverage_macos artifact
+            inputs:
+              artifactName: coverage_macos
+              downloadPath: output
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the coverage_linux artifact
+            inputs:
+              artifactName: coverage_linux
+              downloadPath: output
+          - task: PublishCodeCoverageResults@1
+            displayName: 'Publish the code coverage results'
+            inputs:
+              codeCoverageTool: Cobertura
+              summaryFileLocation: 'output/**/Cobertura.xml'
 
   - stage: samples
     displayName: Build Samples
