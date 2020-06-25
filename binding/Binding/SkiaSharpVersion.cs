@@ -5,8 +5,8 @@ namespace SkiaSharp
 {
 	public static unsafe class SkiaSharpVersion
 	{
-		public static Version nativeMinimum;
-		public static Version nativeVersion;
+		private static Version nativeMinimum;
+		private static Version nativeVersion;
 
 		public static Version NativeMinimum =>
 			nativeMinimum ??= new Version (VersionConstants.Milestone, VersionConstants.Increment);
