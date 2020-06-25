@@ -205,6 +205,12 @@ Task ("tests")
         }
     }
 
+    if (failedTests > 0)
+        if (THROW_ON_TEST_FAILURE)
+            throw new Exception ($"There were {failedTests} failed tests.");
+        else
+            Warning ($"There were {failedTests} failed tests.");
+
     if (COVERAGE) {
         try {
             RunProcess ("reportgenerator", new ProcessSettings {
@@ -218,12 +224,6 @@ Task ("tests")
         var root = FindRegexMatchGroupsInFile (xml, @"<source>(.*)<\/source>", 0)[1].Value;
         ReplaceTextInFiles (xml, root, "");
     }
-
-    if (failedTests > 0)
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
