@@ -3,7 +3,7 @@ using SharpVk;
 
 namespace SkiaSharp
 {
-	public static class GRVkExtensionsExtensions
+	public static class GRVkExtensionsSharpVkExtensions
 	{
 		public static void Initialize(this GRVkExtensions extensions, GRSharpVkGetProcedureAddressDelegate getProc, Instance instance, PhysicalDevice physicalDevice) =>
 			extensions.Initialize(getProc, instance, physicalDevice, null, null);
