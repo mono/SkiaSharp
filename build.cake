@@ -210,9 +210,13 @@ Task ("tests")
             RunProcess ("reportgenerator", new ProcessSettings {
                 Arguments = "-reports:./tests/**/Coverage/**/*.xml -targetdir:./output/coverage -reporttypes:HtmlInline_AzurePipelines;Cobertura"
             });
-        } catch {
-            Warning ("Unable to run the code coverage report generator.");
+        } catch (Exception ex) {
+            Error ("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
+            Error (ex);
         }
+        var xml = "./output/coverage/Cobertura.xml";
+        var root = FindRegexMatchGroupsInFile (xml, @"<source>(.*)<\/source>", 0)[1].Value;
+        ReplaceTextInFiles (xml, root, "");
     }
 
     if (failedTests > 0)
