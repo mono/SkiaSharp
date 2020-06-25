@@ -31,6 +31,7 @@ variables:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
+  ENABLE_CODE_COVERAGE: true
 
 resources:
   repositories:
@@ -411,7 +412,7 @@ stages:
           displayName: Tests (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           shouldPublish: false
           requiredArtifacts:
             - native_win32_x86_windows
@@ -446,7 +447,7 @@ stages:
           displayName: Tests (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: tests
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           shouldPublish: false
           requiredArtifacts:
             - native_macos_macos
@@ -480,7 +481,7 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: tests
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           shouldPublish: false
           requiredArtifacts:
             - native_linux_linux
