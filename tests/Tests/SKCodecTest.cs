@@ -157,16 +157,34 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void CanCreateStreamCodec ()
+		public void CanCreateStreamCodec()
 		{
-			var stream = new SKFileStream (Path.Combine (PathToImages, "color-wheel.png"));
-			using (var codec = SKCodec.Create (stream)) {
-				Assert.Equal (SKEncodedImageFormat.Png, codec.EncodedFormat);
-				Assert.Equal (128, codec.Info.Width);
-				Assert.Equal (128, codec.Info.Height);
-				Assert.Equal (SKAlphaType.Unpremul, codec.Info.AlphaType);
-				Assert.Equal (SKImageInfo.PlatformColorType, codec.Info.ColorType);
-			}
+			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
+			Assert.True(stream.IsValid);
+
+			using var codec = SKCodec.Create(stream);
+
+			Assert.Equal(SKEncodedImageFormat.Png, codec.EncodedFormat);
+			Assert.Equal(128, codec.Info.Width);
+			Assert.Equal(128, codec.Info.Height);
+			Assert.Equal(SKAlphaType.Unpremul, codec.Info.AlphaType);
+			Assert.Equal(SKImageInfo.PlatformColorType, codec.Info.ColorType);
+		}
+
+		[SkippableFact]
+		public void CanCreateStreamCodecWithResult()
+		{
+			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
+			Assert.True(stream.IsValid);
+
+			using var codec = SKCodec.Create(stream, out var result);
+
+			Assert.Equal(SKCodecResult.Success, result);
+			Assert.Equal(SKEncodedImageFormat.Png, codec.EncodedFormat);
+			Assert.Equal(128, codec.Info.Width);
+			Assert.Equal(128, codec.Info.Height);
+			Assert.Equal(SKAlphaType.Unpremul, codec.Info.AlphaType);
+			Assert.Equal(SKImageInfo.PlatformColorType, codec.Info.ColorType);
 		}
 
 		[SkippableFact]

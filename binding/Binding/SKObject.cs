@@ -36,6 +36,8 @@ namespace SkiaSharp
 
 		static SKObject ()
 		{
+			SkiaSharpVersion.CheckNativeLibraryCompatible (true);
+
 			SKColorSpace.EnsureStaticInstanceAreInitialized ();
 			SKData.EnsureStaticInstanceAreInitialized ();
 			SKFontManager.EnsureStaticInstanceAreInitialized ();

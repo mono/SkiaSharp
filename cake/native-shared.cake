@@ -29,6 +29,22 @@ var NINJA_EXE = Argument("ninja", EnvironmentVariable("NINJA_EXE") ?? DEPOT_PATH
 Task("git-sync-deps")
     .Does(() =>
 {
+    // first run some checks to make sure all the versions are in sync
+
+    var milestoneFile = SKIA_PATH.CombineWithFilePath("include/core/SkMilestone.h");
+    var incrementFile = SKIA_PATH.CombineWithFilePath("include/c/sk_types.h");
+
+    var expectedMilestone = GetVersion("libSkiaSharp", "milestone");
+    var expectedIncrement = GetVersion("libSkiaSharp", "increment");
+
+    var actualMilestone = GetRegexValue(@"^#define SK_MILESTONE (\d+)\s*$", milestoneFile);
+    var actualIncrement = GetRegexValue(@"^#define SK_C_INCREMENT (\d+)\s*$", incrementFile);
+
+    if (actualMilestone != expectedMilestone)
+        throw new Exception($"The libskia C++ API version did not match the expected '{expectedMilestone}', instead was '{actualMilestone}'.");
+    if (actualIncrement != expectedIncrement)
+        throw new Exception($"The libSkiaSharp C API version did not match the expected '{expectedIncrement}', instead was '{actualIncrement}'.");
+
     RunProcess(PYTHON_EXE, new ProcessSettings {
         Arguments = SKIA_PATH.CombineWithFilePath("tools/git-sync-deps").FullPath,
         WorkingDirectory = SKIA_PATH.FullPath,
