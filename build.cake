@@ -36,6 +36,7 @@ var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
+var COVERAGE = Argument ("coverage", false);
 
 var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
 var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
@@ -201,6 +202,16 @@ Task ("tests")
             RunNetCoreTests ("./tests/SkiaSharp.Vulkan.NetCore.Tests/SkiaSharp.Vulkan.NetCore.Tests.csproj");
         } catch {
             failedTests++;
+        }
+    }
+
+    if (COVERAGE) {
+        try {
+            RunProcess ("reportgenerator", new ProcessSettings {
+                Arguments = "-reports:./tests/**/Coverage/**/*.xml -targetdir:./output/coverage -reporttypes:HtmlInline_AzurePipelines;Cobertura"
+            });
+        } catch {
+            Warning ("Unable to run the code coverage report generator.");
         }
     }
 
