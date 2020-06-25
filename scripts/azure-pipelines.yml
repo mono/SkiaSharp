@@ -273,66 +273,66 @@ stages:
           packages: $(TIZEN_LINUX_PACKAGES)
           target: externals-tizen
 
-  - stage: managed
-    displayName: Build Managed
-    dependsOn: native
-    jobs:
-      - template: azure-templates-bootstrapper.yml # Build Managed (Windows)
-        parameters:
-          name: managed_windows
-          displayName: Build Managed (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
-          target: libs
-          additionalArgs: --exclusive
-          requiredArtifacts:
-            - native_android_x86_windows
-            - native_android_x64_windows
-            - native_android_arm_windows
-            - native_android_arm64_windows
-            - native_tizen_windows
-            - native_uwp_angle_x86_windows
-            - native_uwp_angle_x64_windows
-            - native_uwp_angle_arm_windows
-            - native_uwp_angle_arm64_windows
-            - native_uwp_x86_windows
-            - native_uwp_x64_windows
-            - native_uwp_arm_windows
-            - native_uwp_arm64_windows
-            - native_win32_x86_windows
-            - native_win32_x64_windows
-            - native_win32_x64_nanoserver_windows
-      - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
-        parameters:
-          name: managed_macos
-          displayName: Build Managed (macOS)
-          vmImage: $(VM_IMAGE_MAC)
-          target: libs
-          additionalArgs: --exclusive
-          requiredArtifacts:
-            - native_android_x86_macos
-            - native_android_x64_macos
-            - native_android_arm_macos
-            - native_android_arm64_macos
-            - native_ios_macos
-            - native_macos_macos
-            # - native_tizen_macos
-            - native_tizen_linux
-            - native_tvos_macos
-            - native_watchos_macos
-      - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
-        parameters:
-          name: managed_linux
-          displayName: Build Managed (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          packages: $(MANAGED_LINUX_PACKAGES)
-          target: libs
-          additionalArgs: --exclusive
-          requiredArtifacts:
-            - native_linux_linux
-            - native_linux_nodependencies_linux
-            - native_linux_alpinenodependencies_linux
-            - native_linux_alpine_linux
-            - native_tizen_linux
+  # - stage: managed
+  #   displayName: Build Managed
+  #   dependsOn: native
+  #   jobs:
+  #     - template: azure-templates-bootstrapper.yml # Build Managed (Windows)
+  #       parameters:
+  #         name: managed_windows
+  #         displayName: Build Managed (Windows)
+  #         vmImage: $(VM_IMAGE_WINDOWS)
+  #         target: libs
+  #         additionalArgs: --exclusive
+  #         requiredArtifacts:
+  #           - native_android_x86_windows
+  #           - native_android_x64_windows
+  #           - native_android_arm_windows
+  #           - native_android_arm64_windows
+  #           - native_tizen_windows
+  #           - native_uwp_angle_x86_windows
+  #           - native_uwp_angle_x64_windows
+  #           - native_uwp_angle_arm_windows
+  #           - native_uwp_angle_arm64_windows
+  #           - native_uwp_x86_windows
+  #           - native_uwp_x64_windows
+  #           - native_uwp_arm_windows
+  #           - native_uwp_arm64_windows
+  #           - native_win32_x86_windows
+  #           - native_win32_x64_windows
+  #           - native_win32_x64_nanoserver_windows
+  #     - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
+  #       parameters:
+  #         name: managed_macos
+  #         displayName: Build Managed (macOS)
+  #         vmImage: $(VM_IMAGE_MAC)
+  #         target: libs
+  #         additionalArgs: --exclusive
+  #         requiredArtifacts:
+  #           - native_android_x86_macos
+  #           - native_android_x64_macos
+  #           - native_android_arm_macos
+  #           - native_android_arm64_macos
+  #           - native_ios_macos
+  #           - native_macos_macos
+  #           # - native_tizen_macos
+  #           - native_tizen_linux
+  #           - native_tvos_macos
+  #           - native_watchos_macos
+  #     - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
+  #       parameters:
+  #         name: managed_linux
+  #         displayName: Build Managed (Linux)
+  #         vmImage: $(VM_IMAGE_LINUX)
+  #         packages: $(MANAGED_LINUX_PACKAGES)
+  #         target: libs
+  #         additionalArgs: --exclusive
+  #         requiredArtifacts:
+  #           - native_linux_linux
+  #           - native_linux_nodependencies_linux
+  #           - native_linux_alpinenodependencies_linux
+  #           - native_linux_alpine_linux
+  #           - native_tizen_linux
 
   # - stage: package
   #   displayName: Package NuGets
