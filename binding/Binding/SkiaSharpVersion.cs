@@ -5,6 +5,8 @@ namespace SkiaSharp
 {
 	public static unsafe class SkiaSharpVersion
 	{
+		private static readonly Version Zero = new Version (0, 0);
+
 		private static Version nativeMinimum;
 		private static Version nativeVersion;
 
@@ -20,7 +22,7 @@ namespace SkiaSharp
 #else
 				} catch (EntryPointNotFoundException) {
 #endif
-					return default;
+					return nativeVersion ??= Zero;
 				}
 			}
 		}
@@ -33,16 +35,17 @@ namespace SkiaSharp
 
 		internal static bool CheckNativeLibraryCompatible (Version minimum, Version current, bool throwIfIncompatible = false)
 		{
-			var zero = new Version (0, 0, 0, 0);
+			minimum ??= Zero;
+			current ??= Zero;
 
 			// fail fast to success if SkiaSharp is compiled without a minimum
-			if (minimum <= zero)
+			if (minimum <= Zero)
 				return true;
 
 			var max = new Version (minimum.Major + 1, 0);
 
 			// fail fast if a pre-2.80 version of libSkiaSharp is loaded
-			if (current <= zero) {
+			if (current <= Zero) {
 				if (throwIfIncompatible)
 					throw new InvalidOperationException (
 						$"The version of the native libSkiaSharp library is incompatible with this version of SkiaSharp. " +
