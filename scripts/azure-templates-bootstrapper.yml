@@ -114,6 +114,11 @@ jobs:
                 .\sdksetup.exe /norestart /quiet | Out-Null
               displayName: Install the Windows 10 SDK 10.0.10240
 
+      # install any .NET Core global tools
+      - ${{ each tool in parameters.tools }}:
+        - pwsh: dotnet tool install -g ${{ tool }}
+          displayName: Install ${{ tool }}
+
       # download artifacts
       - ${{ each dep in parameters.requiredArtifacts }}:
         - task: DownloadBuildArtifacts@0

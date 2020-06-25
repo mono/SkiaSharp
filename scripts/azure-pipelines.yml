@@ -31,6 +31,7 @@ variables:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
+  ENABLE_CODE_COVERAGE: true
 
 resources:
   repositories:
@@ -169,9 +170,8 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
-          preBuildSteps:
-            - pwsh: dotnet tool install -g nano-api-scan
-              displayName: Install nano-api-scan
+          tools:
+            - nano-api-scan
       # NATIVE JOBS - MAC
       - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
         parameters:
@@ -412,12 +412,14 @@ stages:
           displayName: Tests (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           shouldPublish: false
           requiredArtifacts:
             - native_win32_x86_windows
             - native_win32_x64_windows
             - native_win32_x64_nanoserver_windows
+          tools:
+            - dotnet-reportgenerator-globaltool
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the .NET Framework test results
@@ -433,16 +435,23 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Windows .NET Core Tests'
+            - task: PublishBuildArtifacts@1
+              displayName: 'Publish the code coverage results'
+              inputs:
+                artifactName: coverage_windows
+                pathToPublish: 'output/coverage'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
           name: tests_macos
           displayName: Tests (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: tests
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           shouldPublish: false
           requiredArtifacts:
             - native_macos_macos
+          tools:
+            - dotnet-reportgenerator-globaltool
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the Mono test results
@@ -458,6 +467,11 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS .NET Core Tests'
+            - task: PublishBuildArtifacts@1
+              displayName: 'Publish the code coverage results'
+              inputs:
+                artifactName: coverage_macos
+                pathToPublish: 'output/coverage'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
           name: tests_linux
@@ -465,13 +479,15 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: tests
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE)
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           shouldPublish: false
           requiredArtifacts:
             - native_linux_linux
             - native_linux_nodependencies_linux
             - native_linux_alpinenodependencies_linux
             - native_linux_alpine_linux
+          tools:
+            - dotnet-reportgenerator-globaltool
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the Mono test results
@@ -487,9 +503,45 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux .NET Core Tests'
+            - task: PublishBuildArtifacts@1
+              displayName: 'Publish the code coverage results'
+              inputs:
+                artifactName: coverage_linux
+                pathToPublish: 'output/coverage'
       # TODO: add tests for linux alpine
       # TODO: add tests for linux no dependencies
       # TODO: add tests for windows nano server
+      - job: coverage_reports                      # Coverage Reports
+        displayName: Coverage Reports
+        pool:
+          name: $(VM_IMAGE_LINUX)
+        dependsOn:
+          - tests_windows
+          - tests_macos
+          - tests_linux
+        steps:
+          - checkout: self
+          - template: azure-templates-variables.yml
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the coverage_windows artifact
+            inputs:
+              artifactName: coverage_windows
+              downloadPath: output
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the coverage_macos artifact
+            inputs:
+              artifactName: coverage_macos
+              downloadPath: output
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the coverage_linux artifact
+            inputs:
+              artifactName: coverage_linux
+              downloadPath: output
+          - task: PublishCodeCoverageResults@1
+            displayName: 'Publish the code coverage results'
+            inputs:
+              codeCoverageTool: Cobertura
+              summaryFileLocation: 'output/**/Cobertura.xml'
 
   - stage: samples
     displayName: Build Samples
