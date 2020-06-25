@@ -219,6 +219,7 @@ Task ("tests")
         } catch (Exception ex) {
             Error ("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
             Error (ex);
+            throw;
         }
         var xml = "./output/coverage/Cobertura.xml";
         var root = FindRegexMatchGroupsInFile (xml, @"<source>(.*)<\/source>", 0)[1].Value;
