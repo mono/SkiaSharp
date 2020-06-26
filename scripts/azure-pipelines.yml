@@ -163,6 +163,13 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
           additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Windows)
+        parameters:
+          name: native_win32_arm64_windows
+          displayName: Build Native Win32|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-windows
+          additionalArgs: --buildarch=arm64
       - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Windows)
         parameters:
           name: native_win32_x64_nanoserver_windows
@@ -300,6 +307,7 @@ stages:
             - native_uwp_arm64_windows
             - native_win32_x86_windows
             - native_win32_x64_windows
+            - native_win32_arm64_windows
             - native_win32_x64_nanoserver_windows
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
@@ -417,6 +425,7 @@ stages:
           requiredArtifacts:
             - native_win32_x86_windows
             - native_win32_x64_windows
+            - native_win32_arm64_windows
             - native_win32_x64_nanoserver_windows
           tools:
             - dotnet-reportgenerator-globaltool
