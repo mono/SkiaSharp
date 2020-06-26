@@ -421,18 +421,18 @@ namespace SkiaSharp
 			(gr_context_get_max_surface_sample_count_for_color_type_delegate ??= GetSymbol<Delegates.gr_context_get_max_surface_sample_count_for_color_type> ("gr_context_get_max_surface_sample_count_for_color_type")).Invoke (context, colorType);
 		#endif
 
-		// void gr_context_get_resource_cache_limits(gr_context_t* context, int* maxResources, size_t* maxResourceBytes)
+		// size_t gr_context_get_resource_cache_limit(gr_context_t* context)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_context_get_resource_cache_limits (gr_context_t context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes);
+		internal static extern /* size_t */ IntPtr gr_context_get_resource_cache_limit (gr_context_t context);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_context_get_resource_cache_limits (gr_context_t context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes);
+			internal delegate /* size_t */ IntPtr gr_context_get_resource_cache_limit (gr_context_t context);
 		}
-		private static Delegates.gr_context_get_resource_cache_limits gr_context_get_resource_cache_limits_delegate;
-		internal static void gr_context_get_resource_cache_limits (gr_context_t context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes) =>
-			(gr_context_get_resource_cache_limits_delegate ??= GetSymbol<Delegates.gr_context_get_resource_cache_limits> ("gr_context_get_resource_cache_limits")).Invoke (context, maxResources, maxResourceBytes);
+		private static Delegates.gr_context_get_resource_cache_limit gr_context_get_resource_cache_limit_delegate;
+		internal static /* size_t */ IntPtr gr_context_get_resource_cache_limit (gr_context_t context) =>
+			(gr_context_get_resource_cache_limit_delegate ??= GetSymbol<Delegates.gr_context_get_resource_cache_limit> ("gr_context_get_resource_cache_limit")).Invoke (context);
 		#endif
 
 		// void gr_context_get_resource_cache_usage(gr_context_t* context, int* maxResources, size_t* maxResourceBytes)
@@ -505,18 +505,18 @@ namespace SkiaSharp
 			(gr_context_reset_context_delegate ??= GetSymbol<Delegates.gr_context_reset_context> ("gr_context_reset_context")).Invoke (context, state);
 		#endif
 
-		// void gr_context_set_resource_cache_limits(gr_context_t* context, int maxResources, size_t maxResourceBytes)
+		// void gr_context_set_resource_cache_limit(gr_context_t* context, size_t maxResourceBytes)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_context_set_resource_cache_limits (gr_context_t context, Int32 maxResources, /* size_t */ IntPtr maxResourceBytes);
+		internal static extern void gr_context_set_resource_cache_limit (gr_context_t context, /* size_t */ IntPtr maxResourceBytes);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_context_set_resource_cache_limits (gr_context_t context, Int32 maxResources, /* size_t */ IntPtr maxResourceBytes);
+			internal delegate void gr_context_set_resource_cache_limit (gr_context_t context, /* size_t */ IntPtr maxResourceBytes);
 		}
-		private static Delegates.gr_context_set_resource_cache_limits gr_context_set_resource_cache_limits_delegate;
-		internal static void gr_context_set_resource_cache_limits (gr_context_t context, Int32 maxResources, /* size_t */ IntPtr maxResourceBytes) =>
-			(gr_context_set_resource_cache_limits_delegate ??= GetSymbol<Delegates.gr_context_set_resource_cache_limits> ("gr_context_set_resource_cache_limits")).Invoke (context, maxResources, maxResourceBytes);
+		private static Delegates.gr_context_set_resource_cache_limit gr_context_set_resource_cache_limit_delegate;
+		internal static void gr_context_set_resource_cache_limit (gr_context_t context, /* size_t */ IntPtr maxResourceBytes) =>
+			(gr_context_set_resource_cache_limit_delegate ??= GetSymbol<Delegates.gr_context_set_resource_cache_limit> ("gr_context_set_resource_cache_limit")).Invoke (context, maxResourceBytes);
 		#endif
 
 		// void gr_context_unref(gr_context_t* context)
@@ -4971,18 +4971,18 @@ namespace SkiaSharp
 			(sk_imagefilter_new_arithmetic_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_arithmetic> ("sk_imagefilter_new_arithmetic")).Invoke (k1, k2, k3, k4, enforcePMColor, background, foreground, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_blur(float sigmaX, float sigmaY, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
+		// sk_imagefilter_t* sk_imagefilter_new_blur(float sigmaX, float sigmaY, sk_shader_tilemode_t tileMode, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_blur sk_imagefilter_new_blur_delegate;
-		internal static sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
-			(sk_imagefilter_new_blur_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_blur> ("sk_imagefilter_new_blur")).Invoke (sigmaX, sigmaY, input, cropRect);
+		internal static sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
+			(sk_imagefilter_new_blur_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_blur> ("sk_imagefilter_new_blur")).Invoke (sigmaX, sigmaY, tileMode, input, cropRect);
 		#endif
 
 		// sk_imagefilter_t* sk_imagefilter_new_color_filter(sk_colorfilter_t* cf, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
@@ -5027,17 +5027,17 @@ namespace SkiaSharp
 			(sk_imagefilter_new_dilate_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_dilate> ("sk_imagefilter_new_dilate")).Invoke (radiusX, radiusY, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_displacement_map_effect(sk_displacement_map_effect_channel_selector_type_t xChannelSelector, sk_displacement_map_effect_channel_selector_type_t yChannelSelector, float scale, sk_imagefilter_t* displacement, sk_imagefilter_t* color, const sk_imagefilter_croprect_t* cropRect)
+		// sk_imagefilter_t* sk_imagefilter_new_displacement_map_effect(sk_color_channel_t xChannelSelector, sk_color_channel_t yChannelSelector, float scale, sk_imagefilter_t* displacement, sk_imagefilter_t* color, const sk_imagefilter_croprect_t* cropRect)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, sk_imagefilter_croprect_t cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, sk_imagefilter_croprect_t cropRect);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, sk_imagefilter_croprect_t cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, sk_imagefilter_croprect_t cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_displacement_map_effect sk_imagefilter_new_displacement_map_effect_delegate;
-		internal static sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, sk_imagefilter_croprect_t cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, sk_imagefilter_croprect_t cropRect) =>
 			(sk_imagefilter_new_displacement_map_effect_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_displacement_map_effect> ("sk_imagefilter_new_displacement_map_effect")).Invoke (xChannelSelector, yChannelSelector, scale, displacement, color, cropRect);
 		#endif
 
@@ -5069,18 +5069,32 @@ namespace SkiaSharp
 			(sk_imagefilter_new_distant_lit_specular_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_distant_lit_specular> ("sk_imagefilter_new_distant_lit_specular")).Invoke (direction, lightColor, surfaceScale, ks, shininess, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_drop_shadow(float dx, float dy, float sigmaX, float sigmaY, sk_color_t color, sk_drop_shadow_image_filter_shadow_mode_t shadowMode, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
+		// sk_imagefilter_t* sk_imagefilter_new_drop_shadow(float dx, float dy, float sigmaX, float sigmaY, sk_color_t color, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, SKDropShadowImageFilterShadowMode shadowMode, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, SKDropShadowImageFilterShadowMode shadowMode, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_drop_shadow sk_imagefilter_new_drop_shadow_delegate;
-		internal static sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, SKDropShadowImageFilterShadowMode shadowMode, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
-			(sk_imagefilter_new_drop_shadow_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow> ("sk_imagefilter_new_drop_shadow")).Invoke (dx, dy, sigmaX, sigmaY, color, shadowMode, input, cropRect);
+		internal static sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
+			(sk_imagefilter_new_drop_shadow_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow> ("sk_imagefilter_new_drop_shadow")).Invoke (dx, dy, sigmaX, sigmaY, color, input, cropRect);
+		#endif
+
+		// sk_imagefilter_t* sk_imagefilter_new_drop_shadow_only(float dx, float dy, float sigmaX, float sigmaY, sk_color_t color, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+		}
+		private static Delegates.sk_imagefilter_new_drop_shadow_only sk_imagefilter_new_drop_shadow_only_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
+			(sk_imagefilter_new_drop_shadow_only_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow_only> ("sk_imagefilter_new_drop_shadow_only")).Invoke (dx, dy, sigmaX, sigmaY, color, input, cropRect);
 		#endif
 
 		// sk_imagefilter_t* sk_imagefilter_new_erode(int radiusX, int radiusY, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
@@ -5153,17 +5167,17 @@ namespace SkiaSharp
 			(sk_imagefilter_new_matrix_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_matrix> ("sk_imagefilter_new_matrix")).Invoke (matrix, quality, input);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_matrix_convolution(const sk_isize_t* kernelSize, const float[-1] kernel, float gain, float bias, const sk_ipoint_t* kernelOffset, sk_matrix_convolution_tilemode_t tileMode, bool convolveAlpha, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
+		// sk_imagefilter_t* sk_imagefilter_new_matrix_convolution(const sk_isize_t* kernelSize, const float[-1] kernel, float gain, float bias, const sk_ipoint_t* kernelOffset, sk_shader_tilemode_t tileMode, bool convolveAlpha, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKMatrixConvolutionTileMode tileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode tileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKMatrixConvolutionTileMode tileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode tileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_matrix_convolution sk_imagefilter_new_matrix_convolution_delegate;
-		internal static sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKMatrixConvolutionTileMode tileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode tileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
 			(sk_imagefilter_new_matrix_convolution_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_matrix_convolution> ("sk_imagefilter_new_matrix_convolution")).Invoke (kernelSize, kernel, gain, bias, kernelOffset, tileMode, convolveAlpha, input, cropRect);
 		#endif
 
@@ -14832,6 +14846,18 @@ namespace SkiaSharp
 		RestorePrevious = 3,
 	}
 
+	// sk_color_channel_t
+	public enum SKColorChannel {
+		// R_SK_COLOR_CHANNEL = 0
+		R = 0,
+		// G_SK_COLOR_CHANNEL = 1
+		G = 1,
+		// B_SK_COLOR_CHANNEL = 2
+		B = 2,
+		// A_SK_COLOR_CHANNEL = 3
+		A = 3,
+	}
+
 	// sk_colortype_t
 	internal enum SKColorTypeNative {
 		// UNKNOWN_SK_COLORTYPE = 0
@@ -14889,28 +14915,6 @@ namespace SkiaSharp
 		HasHeight = 8,
 		// HAS_ALL_SK_CROP_RECT_FLAG = 0x0F
 		HasAll = 15,
-	}
-
-	// sk_displacement_map_effect_channel_selector_type_t
-	public enum SKDisplacementMapEffectChannelSelectorType {
-		// UNKNOWN_SK_DISPLACEMENT_MAP_EFFECT_CHANNEL_SELECTOR_TYPE = 0
-		Unknown = 0,
-		// R_SK_DISPLACEMENT_MAP_EFFECT_CHANNEL_SELECTOR_TYPE = 1
-		R = 1,
-		// G_SK_DISPLACEMENT_MAP_EFFECT_CHANNEL_SELECTOR_TYPE = 2
-		G = 2,
-		// B_SK_DISPLACEMENT_MAP_EFFECT_CHANNEL_SELECTOR_TYPE = 3
-		B = 3,
-		// A_SK_DISPLACEMENT_MAP_EFFECT_CHANNEL_SELECTOR_TYPE = 4
-		A = 4,
-	}
-
-	// sk_drop_shadow_image_filter_shadow_mode_t
-	public enum SKDropShadowImageFilterShadowMode {
-		// DRAW_SHADOW_AND_FOREGROUND_SK_DROP_SHADOW_IMAGE_FILTER_SHADOW_MODE = 0
-		DrawShadowAndForeground = 0,
-		// DRAW_SHADOW_ONLY_SK_DROP_SHADOW_IMAGE_FILTER_SHADOW_MODE = 1
-		DrawShadowOnly = 1,
 	}
 
 	// sk_encoded_image_format_t
@@ -15067,16 +15071,6 @@ namespace SkiaSharp
 		Lcd16 = 4,
 		// SDF_SK_MASK_FORMAT = 5
 		Sdf = 5,
-	}
-
-	// sk_matrix_convolution_tilemode_t
-	public enum SKMatrixConvolutionTileMode {
-		// CLAMP_SK_MATRIX_CONVOLUTION_TILEMODE = 0
-		Clamp = 0,
-		// REPEAT_SK_MATRIX_CONVOLUTION_TILEMODE = 1
-		Repeat = 1,
-		// CLAMP_TO_BLACK_SK_MATRIX_CONVOLUTION_TILEMODE = 2
-		ClampToBlack = 2,
 	}
 
 	// sk_matrix44_type_mask_t
