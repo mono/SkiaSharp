@@ -29,7 +29,7 @@ namespace SkiaSharp
 			: this (IntPtr.Zero, true)
 		{
 			var handlePtr = desc.TextureHandle;
-			var oldHandle = PtrToStructure<GRTextureInfoObsolete> (handlePtr);
+			var oldHandle = Marshal.PtrToStructure<GRTextureInfoObsolete> (handlePtr);
 
 			var handle = new GRGlTextureInfo (oldHandle.fTarget, oldHandle.fID, desc.Config.ToGlSizedFormat ());
 			CreateGl (desc.Width, desc.Height, false, handle);

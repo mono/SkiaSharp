@@ -35,7 +35,7 @@ namespace SkiaSharp
 
 			static string GetLibraryPath (string libraryName)
 			{
-				var arch = IntPtr.Size == 8 ? "x64" : "x86";
+				var arch = PlatformConfiguration.Is64Bit ? "x64" : "x86";
 
 				var libWithExt = libraryName;
 				if (!libraryName.EndsWith (Extension, StringComparison.OrdinalIgnoreCase))
