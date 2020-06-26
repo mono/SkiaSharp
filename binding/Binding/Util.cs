@@ -162,17 +162,6 @@ namespace SkiaSharp
 			if (data.Length == 0)
 				return string.Empty;
 
-#if NET45
-			// TODO: improve this copy for old .NET 4.5
-			var array = data.ToArray ();
-			return encoding switch
-			{
-				SKTextEncoding.Utf8 => Encoding.UTF8.GetString (array),
-				SKTextEncoding.Utf16 => Encoding.Unicode.GetString (array),
-				SKTextEncoding.Utf32 => Encoding.UTF32.GetString (array),
-				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
-			};
-#else
 			fixed (byte* bp = data) {
 				return encoding switch
 				{
@@ -182,7 +171,6 @@ namespace SkiaSharp
 					_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
 				};
 			}
-#endif
 		}
 	}
 }

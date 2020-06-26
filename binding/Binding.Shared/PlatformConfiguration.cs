@@ -24,11 +24,6 @@ namespace SkiaSharp
 			IsLinux = false;
 			IsUnix = false;
 			IsWindows = true;
-#elif NET45
-			IsUnix = Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
-			IsWindows = !IsUnix;
-			IsMac = IsUnix && MacPlatformDetector.IsMac.Value;
-			IsLinux = IsUnix && !IsMac;
 #else
 			IsMac = RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
 			IsLinux = RuntimeInformation.IsOSPlatform (OSPlatform.Linux);
@@ -36,36 +31,5 @@ namespace SkiaSharp
 			IsWindows = RuntimeInformation.IsOSPlatform (OSPlatform.Windows);
 #endif
 		}
-
-#if NET45
-#pragma warning disable IDE1006 // Naming Styles
-		private static class MacPlatformDetector
-		{
-			internal static readonly Lazy<bool> IsMac = new Lazy<bool> (IsRunningOnMac);
-
-			[DllImport ("libc")]
-			static extern int uname (IntPtr buf);
-
-			static bool IsRunningOnMac ()
-			{
-				IntPtr buf = IntPtr.Zero;
-				try {
-					buf = Marshal.AllocHGlobal (8192);
-					// This is a hacktastic way of getting sysname from uname ()
-					if (uname (buf) == 0) {
-						string os = Marshal.PtrToStringAnsi (buf);
-						if (os == "Darwin")
-							return true;
-					}
-				} catch {
-				} finally {
-					if (buf != IntPtr.Zero)
-						Marshal.FreeHGlobal (buf);
-				}
-				return false;
-			}
-		}
-#pragma warning restore IDE1006 // Naming Styles
-#endif
 	}
 }
