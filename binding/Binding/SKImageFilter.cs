@@ -8,6 +8,60 @@ namespace SkiaSharp
 	// TODO: `cropRectIsSet`, `getCropRect`
 	// TODO: `computeFastBounds`, `canComputeFastBounds`
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use SKColorChannel instead.")]
+	public enum SKDisplacementMapEffectChannelSelectorType
+	{
+		Unknown = 0,
+		R = 1,
+		G = 2,
+		B = 3,
+		A = 4,
+	}
+
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use CreateDropShadow or CreateDropShadowOnly instead.")]
+	public enum SKDropShadowImageFilterShadowMode
+	{
+		DrawShadowAndForeground = 0,
+		DrawShadowOnly = 1,
+	}
+
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use SKShaderTileMode instead.")]
+	public enum SKMatrixConvolutionTileMode
+	{
+		Clamp = 0,
+		Repeat = 1,
+		ClampToBlack = 2,
+
+	}
+
+	public static partial class SkiaExtensions
+	{
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use SKColorChannel instead.")]
+		public static SKColorChannel ToColorChannel (this SKDisplacementMapEffectChannelSelectorType channelSelectorType) =>
+			channelSelectorType switch
+			{
+				SKDisplacementMapEffectChannelSelectorType.R => SKColorChannel.R,
+				SKDisplacementMapEffectChannelSelectorType.G => SKColorChannel.G,
+				SKDisplacementMapEffectChannelSelectorType.B => SKColorChannel.B,
+				SKDisplacementMapEffectChannelSelectorType.A => SKColorChannel.A,
+				_ => SKColorChannel.B,
+			};
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use SKShaderTileMode instead.")]
+		public static SKShaderTileMode ToShaderTileMode (this SKMatrixConvolutionTileMode tileMode) =>
+			tileMode switch
+			{
+				SKMatrixConvolutionTileMode.Clamp => SKShaderTileMode.Clamp,
+				SKMatrixConvolutionTileMode.Repeat => SKShaderTileMode.Repeat,
+				_ => SKShaderTileMode.Decal,
+			};
+	}
+
 	public unsafe class SKImageFilter : SKObject, ISKReferenceCounted
 	{
 		internal SKImageFilter(IntPtr handle, bool owns)
@@ -44,10 +98,11 @@ namespace SkiaSharp
 
 		// CreateBlur
 
-		public static SKImageFilter CreateBlur(float sigmaX, float sigmaY, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
-		{
-			return GetObject(SkiaApi.sk_imagefilter_new_blur(sigmaX, sigmaY, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
-		}
+		public static SKImageFilter CreateBlur (float sigmaX, float sigmaY, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null) =>
+			CreateBlur (sigmaX, sigmaY, SKShaderTileMode.Decal, input, cropRect);
+
+		public static SKImageFilter CreateBlur (float sigmaX, float sigmaY, SKShaderTileMode tileMode, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null) =>
+			GetObject (SkiaApi.sk_imagefilter_new_blur (sigmaX, sigmaY, tileMode, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 
 		// CreateColorFilter
 
@@ -71,19 +126,32 @@ namespace SkiaSharp
 
 		// CreateDisplacementMapEffect
 
-		public static SKImageFilter CreateDisplacementMapEffect(SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateDisplacementMapEffect(SKColorChannel, SKColorChannel, float, SKImageFilter, SKImageFilter, SKImageFilter.CropRect) instead.")]
+		public static SKImageFilter CreateDisplacementMapEffect (SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null) =>
+			CreateDisplacementMapEffect (xChannelSelector.ToColorChannel (), yChannelSelector.ToColorChannel (), scale, displacement, input, cropRect);
+
+		public static SKImageFilter CreateDisplacementMapEffect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
 		{
 			if (displacement == null)
-				throw new ArgumentNullException(nameof(displacement));
-			return GetObject(SkiaApi.sk_imagefilter_new_displacement_map_effect(xChannelSelector, yChannelSelector, scale, displacement.Handle, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
+				throw new ArgumentNullException (nameof (displacement));
+			return GetObject (SkiaApi.sk_imagefilter_new_displacement_map_effect (xChannelSelector, yChannelSelector, scale, displacement.Handle, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
 		// CreateDropShadow
 
-		public static SKImageFilter CreateDropShadow(float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKDropShadowImageFilterShadowMode shadowMode, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
-		{
-			return GetObject(SkiaApi.sk_imagefilter_new_drop_shadow(dx, dy, sigmaX, sigmaY, (uint)color, shadowMode, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
-		}
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateDropShadow or CreateDropShadowOnly instead.")]
+		public static SKImageFilter CreateDropShadow (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKDropShadowImageFilterShadowMode shadowMode, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null) =>
+			shadowMode == SKDropShadowImageFilterShadowMode.DrawShadowOnly
+				? CreateDropShadowOnly (dx, dy, sigmaX, sigmaY, color, input, cropRect)
+				: CreateDropShadow (dx, dy, sigmaX, sigmaY, color, input, cropRect);
+
+		public static SKImageFilter CreateDropShadow (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null) =>
+			GetObject (SkiaApi.sk_imagefilter_new_drop_shadow (dx, dy, sigmaX, sigmaY, (uint)color, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
+
+		public static SKImageFilter CreateDropShadowOnly (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null) =>
+			GetObject (SkiaApi.sk_imagefilter_new_drop_shadow_only (dx, dy, sigmaX, sigmaY, (uint)color, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 
 		// Create*LitDiffuse
 
@@ -128,12 +196,17 @@ namespace SkiaSharp
 
 		// CreateMatrixConvolution
 
-		public static SKImageFilter CreateMatrixConvolution(SKSizeI kernelSize, float[] kernel, float gain, float bias, SKPointI kernelOffset, SKMatrixConvolutionTileMode tileMode, bool convolveAlpha, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateMatrixConvolution(SKSizeI, float[], float, float, SKPointI, SKShaderTileMode, bool, SKImageFilter, SKImageFilter.CropRect) instead.")]
+		public static SKImageFilter CreateMatrixConvolution (SKSizeI kernelSize, float[] kernel, float gain, float bias, SKPointI kernelOffset, SKMatrixConvolutionTileMode tileMode, bool convolveAlpha, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null) =>
+			CreateMatrixConvolution (kernelSize, kernel, gain, bias, kernelOffset, tileMode.ToShaderTileMode (), convolveAlpha, input, cropRect);
+
+		public static SKImageFilter CreateMatrixConvolution (SKSizeI kernelSize, float[] kernel, float gain, float bias, SKPointI kernelOffset, SKShaderTileMode tileMode, bool convolveAlpha, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
 		{
 			if (kernel == null)
-				throw new ArgumentNullException(nameof(kernel));
+				throw new ArgumentNullException (nameof (kernel));
 			if (kernel.Length != kernelSize.Width * kernelSize.Height)
-				throw new ArgumentException("Kernel length must match the dimensions of the kernel size (Width * Height).", nameof(kernel));
+				throw new ArgumentException ("Kernel length must match the dimensions of the kernel size (Width * Height).", nameof (kernel));
 			fixed (float* k = kernel) {
 				return GetObject (SkiaApi.sk_imagefilter_new_matrix_convolution (&kernelSize, k, gain, bias, &kernelOffset, tileMode, convolveAlpha, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 			}
