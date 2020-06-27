@@ -36,6 +36,7 @@ var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
+var COVERAGE = Argument ("coverage", false);
 
 var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
 var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
@@ -209,6 +210,21 @@ Task ("tests")
             throw new Exception ($"There were {failedTests} failed tests.");
         else
             Warning ($"There were {failedTests} failed tests.");
+
+    if (COVERAGE) {
+        try {
+            RunProcess ("reportgenerator", new ProcessSettings {
+                Arguments = "-reports:./tests/**/Coverage/**/*.xml -targetdir:./output/coverage -reporttypes:HtmlInline_AzurePipelines;Cobertura"
+            });
+        } catch (Exception ex) {
+            Error ("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
+            Error (ex);
+            throw;
+        }
+        var xml = "./output/coverage/Cobertura.xml";
+        var root = FindRegexMatchGroupsInFile (xml, @"<source>(.*)<\/source>", 0)[1].Value;
+        ReplaceTextInFiles (xml, root, "");
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

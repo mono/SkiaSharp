@@ -27,6 +27,10 @@
     <DefineConstants>$(DefineConstants);THROW_OBJECT_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <DependsOnNETStandard>true</DependsOnNETStandard>
+  </PropertyGroup>
+
   <PropertyGroup>
     <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
     <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsMacOS>

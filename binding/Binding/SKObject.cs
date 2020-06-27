@@ -36,6 +36,8 @@ namespace SkiaSharp
 
 		static SKObject ()
 		{
+			SkiaSharpVersion.CheckNativeLibraryCompatible (true);
+
 			SKColorSpace.EnsureStaticInstanceAreInitialized ();
 			SKData.EnsureStaticInstanceAreInitialized ();
 			SKFontManager.EnsureStaticInstanceAreInitialized ();
@@ -202,36 +204,22 @@ namespace SkiaSharp
 			return owner;
 		}
 
-		internal static int SizeOf<T> () =>
-#if WINDOWS_UWP || NET_STANDARD
-			Marshal.SizeOf<T> ();
-#else
-			Marshal.SizeOf (typeof (T));
-#endif
-
-		internal static T PtrToStructure<T> (IntPtr intPtr) =>
-#if WINDOWS_UWP || NET_STANDARD
-			Marshal.PtrToStructure<T> (intPtr);
-#else
-			(T)Marshal.PtrToStructure (intPtr, typeof (T));
-#endif
-
 		internal static T[] PtrToStructureArray<T> (IntPtr intPtr, int count)
 		{
 			var items = new T[count];
-			var size = SizeOf<T> ();
+			var size = Marshal.SizeOf<T> ();
 			for (var i = 0; i < count; i++) {
 				var newPtr = new IntPtr (intPtr.ToInt64 () + (i * size));
-				items[i] = PtrToStructure<T> (newPtr);
+				items[i] = Marshal.PtrToStructure<T> (newPtr);
 			}
 			return items;
 		}
 
 		internal static T PtrToStructure<T> (IntPtr intPtr, int index)
 		{
-			var size = SizeOf<T> ();
+			var size = Marshal.SizeOf<T> ();
 			var newPtr = new IntPtr (intPtr.ToInt64 () + (index * size));
-			return PtrToStructure<T> (newPtr);
+			return Marshal.PtrToStructure<T> (newPtr);
 		}
 	}
 
