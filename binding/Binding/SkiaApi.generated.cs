@@ -11087,6 +11087,20 @@ namespace SkiaSharp
 			(sk_surface_new_image_snapshot_delegate ??= GetSymbol<Delegates.sk_surface_new_image_snapshot> ("sk_surface_new_image_snapshot")).Invoke (param0);
 		#endif
 
+		// sk_image_t* sk_surface_new_image_snapshot_with_crop(sk_surface_t* surface, const sk_irect_t* bounds)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_image_t sk_surface_new_image_snapshot_with_crop (sk_surface_t surface, SKRectI* bounds);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_image_t sk_surface_new_image_snapshot_with_crop (sk_surface_t surface, SKRectI* bounds);
+		}
+		private static Delegates.sk_surface_new_image_snapshot_with_crop sk_surface_new_image_snapshot_with_crop_delegate;
+		internal static sk_image_t sk_surface_new_image_snapshot_with_crop (sk_surface_t surface, SKRectI* bounds) =>
+			(sk_surface_new_image_snapshot_with_crop_delegate ??= GetSymbol<Delegates.sk_surface_new_image_snapshot_with_crop> ("sk_surface_new_image_snapshot_with_crop")).Invoke (surface, bounds);
+		#endif
+
 		// sk_surface_t* sk_surface_new_null(int width, int height)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
