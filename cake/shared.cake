@@ -78,10 +78,14 @@ bool IsRunningOnLinux()
 
 string GetVersion(string lib, string type = "nuget")
 {
+    return GetRegexValue($@"^{lib}\s*{type}\s*(.*)$", ROOT_PATH.CombineWithFilePath("VERSIONS.txt"));
+}
+
+string GetRegexValue(string regex, FilePath file)
+{
     try {
-        var file = ROOT_PATH.CombineWithFilePath("VERSIONS.txt");
         var contents = System.IO.File.ReadAllText(file.FullPath);
-        var match = Regex.Match(contents, $@"^{lib}\s*{type}\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        var match = Regex.Match(contents, regex, RegexOptions.IgnoreCase | RegexOptions.Multiline);
         return match.Groups[1].Value.Trim();
     } catch {
         return "";

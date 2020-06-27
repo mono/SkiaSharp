@@ -12,6 +12,7 @@
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <SkipCopyToOutputDirectory>true</SkipCopyToOutputDirectory>
+    <DependsOnNETStandard>true</DependsOnNETStandard>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -100,22 +101,20 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\output\native\windows\$(Platform)\libSkiaSharp.dll" CopyToOutputDirectory="Always" Visible="false"
-             Condition=" Exists('..\..\output\native\windows\$(Platform)\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
-    <Content Include="..\..\output\native\windows\$(Platform)\libSkiaSharp.pdb" CopyToOutputDirectory="Always" Visible="false"
-             Condition=" Exists('..\..\output\native\windows\$(Platform)\libSkiaSharp.pdb') or '$(IsWindows)' == 'true' " />
-    <Content Include="..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.dll" CopyToOutputDirectory="Always" Visible="false"
-             Condition=" Exists('..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
-    <Content Include="..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.pdb" CopyToOutputDirectory="Always" Visible="false"
-             Condition=" Exists('..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.pdb') or '$(IsWindows)' == 'true' " />
-    <Content Include="..\..\output\native\osx\libSkiaSharp.dylib" CopyToOutputDirectory="Always" Visible="false"
-             Condition=" Exists('..\..\output\native\osx\libSkiaSharp.dylib') or '$(IsMacOS)' == 'true' " />
-    <Content Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" CopyToOutputDirectory="Always" Visible="false"
-             Condition=" Exists('..\..\output\native\osx\libHarfBuzzSharp.dylib') or '$(IsMacOS)' == 'true' " />
-    <Content Include="..\..\output\native\linux\$(Platform)\libSkiaSharp.so" CopyToOutputDirectory="Always" Visible="false"
-             Condition=" Exists('..\..\output\native\linux\$(Platform)\libSkiaSharp.so') or '$(IsLinux)' == 'true' " />
-    <Content Include="..\..\output\native\linux\$(Platform)\libHarfBuzzSharp.so" CopyToOutputDirectory="Always" Visible="false"
-             Condition=" Exists('..\..\output\native\linux\$(Platform)\libHarfBuzzSharp.so') or '$(IsLinux)' == 'true' " />
+    <!-- libSkiaSharp -->
+    <_NativeFile Include="..\..\output\native\windows\x86\libSkiaSharp*.dll" Dir="x86\" />
+    <_NativeFile Include="..\..\output\native\windows\x64\libSkiaSharp*.dll" Dir="x64\" />
+    <_NativeFile Include="..\..\output\native\linux\x86\libSkiaSharp*.so" Dir="x86\" />
+    <_NativeFile Include="..\..\output\native\linux\x64\libSkiaSharp*.so" Dir="x64\" />
+    <_NativeFile Include="..\..\output\native\linux\arm\libSkiaSharp*.so" Dir="arm\" />
+    <_NativeFile Include="..\..\output\native\linux\arm64\libSkiaSharp*.so" Dir="arm64\" />
+    <_NativeFile Include="..\..\output\native\osx\libSkiaSharp*.dylib" />
+    <!-- libHarfBuzzSharp -->
+    <_NativeFile Include="..\..\output\native\windows\$(Platform)\libHarfBuzzSharp*.dll" />
+    <_NativeFile Include="..\..\output\native\linux\$(Platform)\libHarfBuzzSharp*.so" />
+    <_NativeFile Include="..\..\output\native\osx\libHarfBuzzSharp*.dylib" />
+    <!-- copy -->
+    <Content Include="@(_NativeFile)" Link="%(Dir)%(Filename)%(Extension)" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

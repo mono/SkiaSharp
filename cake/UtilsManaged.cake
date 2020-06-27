@@ -49,6 +49,14 @@ void RunNetCoreTests(FilePath testAssembly)
         Logger = "xunit",
         WorkingDirectory = dir,
         Verbosity = DotNetCoreVerbosity.Normal,
+        ArgumentCustomization = args => {
+            if (COVERAGE)
+                args = args
+                    .Append("/p:CollectCoverage=true")
+                    .Append("/p:CoverletOutputFormat=cobertura")
+                    .Append("/p:CoverletOutput=Coverage/");
+            return args;
+        },
     };
     var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
     var filter = string.Join("&", traits.Select(t => $"{t.Name}!={t.Value}"));

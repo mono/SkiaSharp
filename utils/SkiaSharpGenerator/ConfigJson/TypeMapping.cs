@@ -14,6 +14,9 @@ namespace SkiaSharpGenerator
 		[JsonPropertyName("flags")]
 		public bool IsFlags { get; set; } = false;
 
+		[JsonPropertyName("obsolete")]
+		public bool IsObsolete { get; set; } = false;
+
 		[JsonPropertyName("properties")]
 		public bool GenerateProperties { get; set; } = true;
 
