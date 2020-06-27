@@ -18,6 +18,7 @@ Task("libSkiaSharp")
 {
     Build("Win32", "x86", "x86");
     Build("x64", "x64", "x64");
+    Build("ARM64", "arm64", "ARM64");
 
     void Build(string arch, string skiaArch, string dir)
     {
@@ -59,6 +60,7 @@ Task("libHarfBuzzSharp")
 {
     Build("Win32", "x86");
     Build("x64", "x64");
+    Build("ARM64", "arm64");
 
     void Build(string arch, string dir)
     {

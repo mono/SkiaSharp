@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+#if WINDOWS_UWP
+using Windows.ApplicationModel;
+using Windows.System;
+#endif
+
 #if HARFBUZZ
 namespace HarfBuzzSharp
 #else
@@ -17,6 +22,10 @@ namespace SkiaSharp
 
 		public static bool IsLinux { get; }
 
+		public static bool IsArm { get; }
+
+		public static bool Is64Bit { get; }
+
 		static PlatformConfiguration ()
 		{
 #if WINDOWS_UWP
@@ -24,48 +33,22 @@ namespace SkiaSharp
 			IsLinux = false;
 			IsUnix = false;
 			IsWindows = true;
-#elif NET45
-			IsUnix = Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
-			IsWindows = !IsUnix;
-			IsMac = IsUnix && MacPlatformDetector.IsMac.Value;
-			IsLinux = IsUnix && !IsMac;
+
+			var arch = Package.Current.Id.Architecture;
+			const ProcessorArchitecture arm64 = (ProcessorArchitecture)12;
+			IsArm = arch == ProcessorArchitecture.Arm || arch == arm64;
+
 #else
 			IsMac = RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
 			IsLinux = RuntimeInformation.IsOSPlatform (OSPlatform.Linux);
 			IsUnix = IsMac || IsLinux;
 			IsWindows = RuntimeInformation.IsOSPlatform (OSPlatform.Windows);
+
+			var arch = RuntimeInformation.ProcessArchitecture;
+			IsArm = arch == Architecture.Arm || arch == Architecture.Arm64;
 #endif
+
+			Is64Bit = IntPtr.Size == 8;
 		}
-
-#if NET45
-#pragma warning disable IDE1006 // Naming Styles
-		private static class MacPlatformDetector
-		{
-			internal static readonly Lazy<bool> IsMac = new Lazy<bool> (IsRunningOnMac);
-
-			[DllImport ("libc")]
-			static extern int uname (IntPtr buf);
-
-			static bool IsRunningOnMac ()
-			{
-				IntPtr buf = IntPtr.Zero;
-				try {
-					buf = Marshal.AllocHGlobal (8192);
-					// This is a hacktastic way of getting sysname from uname ()
-					if (uname (buf) == 0) {
-						string os = Marshal.PtrToStringAnsi (buf);
-						if (os == "Darwin")
-							return true;
-					}
-				} catch {
-				} finally {
-					if (buf != IntPtr.Zero)
-						Marshal.FreeHGlobal (buf);
-				}
-				return false;
-			}
-		}
-#pragma warning restore IDE1006 // Naming Styles
-#endif
 	}
 }

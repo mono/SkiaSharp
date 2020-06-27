@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0;net45;net462</TargetFrameworks>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;net462</TargetFrameworks>
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
@@ -24,6 +24,7 @@
     <!-- Windows -->
     <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp*" Link="nuget\runtimes\win-x64\native\%(Filename)%(Extension)" />
     <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp*" Link="nuget\runtimes\win-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\windows\arm64\libHarfBuzzSharp*" Link="nuget\runtimes\win-arm64\native\%(Filename)%(Extension)" />
     <!-- Windows: Nano Server -->
     <None Include="..\..\output\native\nanoserver\x64\libHarfBuzzSharp*" Link="nuget\runtimes\nanoserver-x64\native\%(Filename)%(Extension)" />
     <!-- Linux -->
@@ -48,7 +49,7 @@
     <None Include="..\..\output\native\alpinenodeps\arm\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-musl-arm\native\%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <None Include="nuget\build\net45\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
+    <None Include="nuget\build\net462\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />

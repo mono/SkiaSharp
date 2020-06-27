@@ -35,7 +35,9 @@ namespace SkiaSharp
 
 			static string GetLibraryPath (string libraryName)
 			{
-				var arch = IntPtr.Size == 8 ? "x64" : "x86";
+				var arch = PlatformConfiguration.Is64Bit
+					? PlatformConfiguration.IsArm ? "arm64" : "x64"
+					: PlatformConfiguration.IsArm ? "arm" : "x86";
 
 				var libWithExt = libraryName;
 				if (!libraryName.EndsWith (Extension, StringComparison.OrdinalIgnoreCase))
@@ -80,11 +82,7 @@ namespace SkiaSharp
 			if (symbol == IntPtr.Zero)
 				throw new EntryPointNotFoundException ($"Unable to load symbol '{name}'.");
 
-#if NET45
-			return (T)Marshal.GetDelegateForFunctionPointer (symbol, typeof (T));
-#else
 			return Marshal.GetDelegateForFunctionPointer<T> (symbol);
-#endif
 		}
 
 		public static IntPtr LoadLibrary (string libraryName)
