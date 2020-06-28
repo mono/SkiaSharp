@@ -9,10 +9,13 @@ using sk_wstream_filestream_t = System.IntPtr;
 
 namespace NativeLibraryMiniTest {
     unsafe class Program {
-        const string SKIA = "libSkiaSharp.so";
+        const string SKIA = "libSkiaSharp";
 
-        static int Main(string[] args) {
+        static int Main() {
             Console.WriteLine("Starting test...");
+
+            Console.WriteLine("Version test...");
+            Console.WriteLine($"sk_version_get_string() = {sk_version_get_string()}");
 
             Console.WriteLine("Color type test...");
             Console.WriteLine($"sk_colortype_get_default_8888() = {sk_colortype_get_default_8888()}");
@@ -42,6 +45,10 @@ namespace NativeLibraryMiniTest {
             Console.WriteLine("Test complete.");
             return 0;
         }
+
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.LPStr)]
+        static extern string sk_version_get_string();
 
         [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
         static extern sk_colortype_t sk_colortype_get_default_8888();
