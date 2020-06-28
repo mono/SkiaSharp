@@ -234,6 +234,9 @@ Task ("tests-wasm")
 {
     var failedTests = 0;
 
+    Warning("WARN");
+    Error("ERR");
+
     RunMSBuild ("./tests/SkiaSharp.Wasm.Tests.sln",
         bl: $"./output/binlogs/tests-wasm.binlog");
     IProcess serverProc = null;
