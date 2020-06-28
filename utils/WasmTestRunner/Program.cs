@@ -110,8 +110,21 @@ namespace WasmTestRunner
 
 			driver.Url = Url;
 
+			var index = 0;
+			var currentTimeout = Timeout;
+
 			do
 			{
+				var pre = driver.FindElementsByTagName("PRE").Skip(index).ToArray();
+				if (pre.Length > 0)
+				{
+					index += pre.Length;
+					currentTimeout = Timeout; // reset the timeout
+
+					foreach (var e in pre)
+						Console.WriteLine(e.Text);
+				}
+
 				var resultsElement = driver.FindElementsById("results");
 				if (resultsElement.Count == 0)
 				{
@@ -121,7 +134,7 @@ namespace WasmTestRunner
 						throw new Exception($"There was an error loading the page: {errorCode}");
 					}
 
-					Thread.Sleep(1000);
+					Thread.Sleep(500);
 					continue;
 				}
 
@@ -129,9 +142,9 @@ namespace WasmTestRunner
 				var bytes = Convert.FromBase64String(text);
 				File.WriteAllBytes(OutputPath, bytes);
 				break;
-			} while (--Timeout > 0);
+			} while (--currentTimeout > 0);
 
-			if (Timeout <= 0)
+			if (currentTimeout <= 0)
 				throw new TimeoutException();
 		}
 	}

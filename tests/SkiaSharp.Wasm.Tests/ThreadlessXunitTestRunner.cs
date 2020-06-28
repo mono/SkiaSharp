@@ -13,42 +13,66 @@ namespace SkiaSharp.Tests
 	{
 		public bool Run(string assemblyFileName, IEnumerable<string> excludedTraits)
 		{
+			WebAssembly.Runtime.InvokeJS($"if (document) document.body.innerHTML = ''");
+
+			Log("Starting tests...");
+
 			var filters = new XunitFilters();
 			foreach (var trait in excludedTraits ?? Array.Empty<string>())
 			{
 				ParseEqualSeparatedArgument(filters.ExcludedTraits, trait);
 			}
 
-			var configuration = new TestAssemblyConfiguration() { ShadowCopy = false, ParallelizeAssembly = false, ParallelizeTestCollections = false, MaxParallelThreads = 1, PreEnumerateTheories = false };
+			var configuration = new TestAssemblyConfiguration
+			{
+				ShadowCopy = false,
+				ParallelizeAssembly = false,
+				ParallelizeTestCollections = false,
+				MaxParallelThreads = 1,
+				PreEnumerateTheories = false
+			};
 			var discoveryOptions = TestFrameworkOptions.ForDiscovery(configuration);
 			var discoverySink = new TestDiscoverySink();
 			var diagnosticSink = new ConsoleDiagnosticMessageSink();
 			var testOptions = TestFrameworkOptions.ForExecution(configuration);
 			var testSink = new TestMessageSink();
-			var controller = new Xunit2(AppDomainSupport.Denied, new NullSourceInformationProvider(), assemblyFileName, configFileName: null, shadowCopy: false, shadowCopyFolder: null, diagnosticMessageSink: diagnosticSink, verifyTestAssemblyExists: false);
+			var controller = new Xunit2(
+				AppDomainSupport.Denied,
+				new NullSourceInformationProvider(),
+				assemblyFileName,
+				configFileName: null,
+				shadowCopy: false,
+				shadowCopyFolder: null,
+				diagnosticMessageSink: diagnosticSink,
+				verifyTestAssemblyExists: false);
 
 			discoveryOptions.SetSynchronousMessageReporting(true);
 			testOptions.SetSynchronousMessageReporting(true);
 
-			Console.WriteLine($"Discovering tests for {assemblyFileName}");
+			Log($"Discovering tests for {assemblyFileName}...");
 			var assembly = Assembly.LoadFrom(assemblyFileName);
 			var assemblyInfo = new Xunit.Sdk.ReflectionAssemblyInfo(assembly);
 			var discoverer = new ThreadlessXunitDiscoverer(assemblyInfo, new NullSourceInformationProvider(), discoverySink);
 			discoverer.FindWithoutThreads(includeSourceInformation: false, discoverySink, discoveryOptions);
 			discoverySink.Finished.WaitOne();
 			var testCasesToRun = discoverySink.TestCases.Where(filters.Filter).ToList();
-			Console.WriteLine($"Discovery finished.");
+			Log($"Discovery finished.");
+			Log("");
 
-			var summarySink = new DelegatingExecutionSummarySink(testSink, () => false, (completed, summary) => { Console.WriteLine($"Tests run: {summary.Total}, Errors: 0, Failures: {summary.Failed}, Skipped: {summary.Skipped}. Time: {TimeSpan.FromSeconds((double)summary.Time).TotalSeconds}s"); });
+			var summarySink = new DelegatingExecutionSummarySink(
+				testSink,
+				() => false,
+				(completed, summary) => { Log($"Tests run: {summary.Total}, Errors: 0, Failures: {summary.Failed}, Skipped: {summary.Skipped}. Time: {TimeSpan.FromSeconds((double)summary.Time).TotalSeconds}s"); });
+
 			var resultsXmlAssembly = new XElement("assembly");
 			var resultsSink = new DelegatingXmlCreationSink(summarySink, resultsXmlAssembly);
 
-			testSink.Execution.TestPassedEvent += args => { Console.WriteLine($"[PASS] {args.Message.Test.DisplayName}"); };
-			testSink.Execution.TestSkippedEvent += args => { Console.WriteLine($"[SKIP] {args.Message.Test.DisplayName}"); };
-			testSink.Execution.TestFailedEvent += args => { Console.WriteLine($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}"); };
+			testSink.Execution.TestPassedEvent += args => { Log($"[PASS] {args.Message.Test.DisplayName}", color: "green"); };
+			testSink.Execution.TestSkippedEvent += args => { Log($"[SKIP] {args.Message.Test.DisplayName}", color: "orange"); };
+			testSink.Execution.TestFailedEvent += args => { Log($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}", color: "red"); };
 
-			testSink.Execution.TestAssemblyStartingEvent += args => { Console.WriteLine($"Running tests for {args.Message.TestAssembly.Assembly}"); };
-			testSink.Execution.TestAssemblyFinishedEvent += args => { Console.WriteLine($"Finished {args.Message.TestAssembly.Assembly}{Environment.NewLine}"); };
+			testSink.Execution.TestAssemblyStartingEvent += args => { Log($"Running tests for {args.Message.TestAssembly.Assembly}"); };
+			testSink.Execution.TestAssemblyFinishedEvent += args => { Log($"Finished {args.Message.TestAssembly.Assembly}{Environment.NewLine}"); };
 
 			controller.RunTests(testCasesToRun, resultsSink, testOptions);
 			resultsSink.Finished.WaitOne();
@@ -56,11 +80,32 @@ namespace SkiaSharp.Tests
 			var resultsXml = new XElement("assemblies");
 			resultsXml.Add(resultsXmlAssembly);
 
-			var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(resultsXml.ToString()));
+			Console.WriteLine(resultsXml.ToString());
 
-			WebAssembly.Runtime.InvokeJS($"document.body.innerHTML = '<div id=\"results\">{base64}</div>'");
+			Log("");
+			Log("Test results (Base64 encoded):");
+			var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(resultsXml.ToString()));
+			Log(base64, id: "results");
 
 			return resultsSink.ExecutionSummary.Failed > 0 || resultsSink.ExecutionSummary.Errors > 0;
+		}
+
+		private void Log(string contents, string color = null, string id = null)
+		{
+			Console.WriteLine(contents);
+
+			if (string.IsNullOrEmpty(contents))
+				contents = "&nbsp;";
+
+			var ele = "";
+			if (!string.IsNullOrEmpty(id))
+				ele += $"id=\"{id}\"";
+
+			var style = "white-space: pre-wrap; word-break: break-all;";
+			if (!string.IsNullOrEmpty(color))
+				style += $"color: {color};";
+
+			WebAssembly.Runtime.InvokeJS($"if (document) document.body.innerHTML += '<pre {ele} style=\"{style}\">{contents.Replace("\n", "<br/>")}</pre>'");
 		}
 
 		private void ParseEqualSeparatedArgument(Dictionary<string, List<string>> targetDictionary, string argument)
@@ -107,9 +152,7 @@ namespace SkiaSharp.Tests
 		public bool OnMessage(IMessageSinkMessage message)
 		{
 			if (message is IDiagnosticMessage diagnosticMessage)
-			{
 				Console.WriteLine(diagnosticMessage.Message);
-			}
 
 			return true;
 		}

@@ -242,14 +242,14 @@ Task ("tests-wasm")
         Configuration = CONFIGURATION,
         NoBuild = true,
         WorkingDirectory = dir,
-        OutputDirectory = dir.Combine("publish"),
+        OutputDirectory = dir.Combine("bin/publish"),
     };
     DotNetCorePublish(testProject.GetFilename().ToString(), buildSettings);
     IProcess serverProc = null;
     try {
         serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
             Arguments = "server.py",
-            WorkingDirectory = $"./tests/SkiaSharp.Wasm.Tests/publish",
+            WorkingDirectory = $"./tests/SkiaSharp.Wasm.Tests/bin/publish",
         });
         DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj", "http://localhost:8000/ -o ./tests/SkiaSharp.Wasm.Tests/TestResults/");
     } catch {
