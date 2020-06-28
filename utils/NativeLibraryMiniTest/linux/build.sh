@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
-mkdir -p utils/NativeLibraryMiniTest/bin
-csc /out:utils/NativeLibraryMiniTest/bin/Program.exe /unsafe utils/NativeLibraryMiniTest/Program.cs
-cp output/native/linux/x64/libSkiaSharp.so utils/NativeLibraryMiniTest/bin/
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-(cd utils/NativeLibraryMiniTest/bin && mono Program.exe)
+mkdir -p $DIR/bin
+csc /out:$DIR/bin/Program.exe /unsafe $DIR/../source/Program.cs
+cp $DIR/../../../output/native/linux/x64/libSkiaSharp.so $DIR/bin/
+
+(cd $DIR/bin && mono Program.exe)

@@ -7,7 +7,7 @@ string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
 string CC = Argument("cc", "emcc");
-string CXX = Argument("ccx", "em++");
+string CXX = Argument("cxx", "em++");
 string AR = Argument("ar", "emar");
 
 Task("libSkiaSharp")
