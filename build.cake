@@ -238,13 +238,6 @@ Task ("tests-wasm")
         bl: $"./output/binlogs/tests-wasm.binlog");
     IProcess serverProc = null;
     try {
-        FilePath testProject = "./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj";
-        var dir = testProject.GetDirectory();
-        var buildSettings = new DotNetCoreBuildSettings {
-            Configuration = CONFIGURATION,
-            WorkingDirectory = dir,
-        };
-        DotNetCoreBuild(testProject.GetFilename().ToString(), buildSettings);
         serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
             Arguments = "server.py",
             WorkingDirectory = $"./tests/SkiaSharp.Wasm.Tests/bin/{CONFIGURATION}/netstandard2.1/dist",
