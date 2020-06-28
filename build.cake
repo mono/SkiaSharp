@@ -236,20 +236,14 @@ Task ("tests-wasm")
 
     RunMSBuild ("./tests/SkiaSharp.Wasm.Tests.sln",
         bl: $"./output/binlogs/tests-wasm.binlog");
-    FilePath testProject = "./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj";
-    var dir = testProject.GetDirectory();
-    var buildSettings = new DotNetCorePublishSettings {
-        Configuration = CONFIGURATION,
-        NoBuild = true,
-        WorkingDirectory = dir,
-        OutputDirectory = dir.Combine("bin/publish"),
-    };
-    DotNetCorePublish(testProject.GetFilename().ToString(), buildSettings);
+
+    var pubDir = "./tests/SkiaSharp.Wasm.Tests/bin/publish/";
+    RunNetCorePublish("./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj", pubDir);
     IProcess serverProc = null;
     try {
         serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
             Arguments = "server.py",
-            WorkingDirectory = $"./tests/SkiaSharp.Wasm.Tests/bin/publish",
+            WorkingDirectory = pubDir,
         });
         DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj", "http://localhost:8000/ -o ./tests/SkiaSharp.Wasm.Tests/TestResults/");
     } catch {
