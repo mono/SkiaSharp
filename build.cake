@@ -227,6 +227,42 @@ Task ("tests")
     }
 });
 
+Task ("tests-wasm")
+    .Description ("Run WASM tests.")
+    .IsDependentOn ("externals-wasm")
+    .Does (() =>
+{
+    var failedTests = 0;
+
+    RunMSBuild ("./tests/SkiaSharp.Wasm.Tests.sln",
+        bl: $"./output/binlogs/tests-wasm.binlog");
+    IProcess serverProc = null;
+    try {
+        FilePath testProject = "./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj";
+        var dir = testProject.GetDirectory();
+        var buildSettings = new DotNetCoreBuildSettings {
+            Configuration = CONFIGURATION,
+            WorkingDirectory = dir,
+        };
+        DotNetCoreBuild(testProject.GetFilename().ToString(), buildSettings);
+        serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
+            Arguments = "server.py",
+            WorkingDirectory = $"./tests/SkiaSharp.Wasm.Tests/bin/{CONFIGURATION}/netstandard2.1/dist",
+        });
+        DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj", "http://localhost:8000/ -o ./tests/SkiaSharp.Wasm.Tests/TestResults/");
+    } catch {
+        failedTests++;
+    } finally {
+        serverProc?.Kill();
+    }
+
+    if (failedTests > 0)
+        if (THROW_ON_TEST_FAILURE)
+            throw new Exception ($"There were {failedTests} failed tests.");
+        else
+            Warning ($"There were {failedTests} failed tests.");
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAMPLES - the demo apps showing off the work
 ////////////////////////////////////////////////////////////////////////////////////////////////////

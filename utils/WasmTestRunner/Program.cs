@@ -95,7 +95,12 @@ namespace WasmTestRunner
 		{
 			var options = new ChromeOptions();
 			if (UseHeadless)
+			{
+				options.AddArgument("--no-sandbox");
 				options.AddArgument("headless");
+			}
+
+			options.AddArgument("window-size=1024x768");
 
 			using var service = ChromeDriverService.CreateDefaultService();
 			using var driver = new ChromeDriver(service, options);
