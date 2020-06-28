@@ -99,7 +99,7 @@ namespace WasmTestRunner
 			var options = new ChromeOptions();
 			if (UseHeadless)
 			{
-				options.AddArgument("--no-sandbox");
+				options.AddArgument("no-sandbox");
 				options.AddArgument("headless");
 			}
 
