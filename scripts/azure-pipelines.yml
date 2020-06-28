@@ -62,6 +62,14 @@ stages:
           target: tests-wasm
           additionalArgs: --exclusive
           shouldPublish: false
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the WASM test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp*.Wasm.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux WASM Tests'
 
   # - stage: native
   #   displayName: Build Native
