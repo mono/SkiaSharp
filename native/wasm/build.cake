@@ -6,12 +6,16 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
+string CC = Argument("cc", "emcc");
+string CXX = Argument("ccx", "em++");
+string AR = Argument("ar", "emar");
+
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    var compilers = "cc='emcc' cxx='em++' ar='emar' ";
+    var compilers = $"cc='{CC}' cxx='{CXX}' ar='{AR}' ";
 
     GnNinja($"wasm", "SkiaSharp",
         $"target_os='linux' " +
@@ -60,7 +64,7 @@ Task("libSkiaSharp")
     EnsureDirectoryExists(mergeDir);
     CleanDirectories(mergeDir.FullPath);
     foreach (var file in GetFiles($"{skiaOut}/*.a")) {
-        RunProcess("ar", new ProcessSettings {
+        RunProcess(AR, new ProcessSettings {
             Arguments = $"x \"{file}\"",
             WorkingDirectory = mergeDir.FullPath,
         });
@@ -73,19 +77,26 @@ Task("libSkiaSharp")
         Arguments = $"{embed_resources} --name SK_EMBEDDED_FONTS --input {input} --output {input}.cpp --align 4",
         WorkingDirectory = SKIA_PATH.FullPath,
     });
-    RunProcess("emcc", $"-std=c++17 -I. {input}.cpp -r -o {mergeDir}/NotoMonoRegularttf.o");
+    RunProcess(CC, $"-std=c++17 -I. {input}.cpp -r -o {mergeDir}/NotoMonoRegularttf.o");
 
     // merge all the .o files into the final .a file
     var oFiles = GetFiles($"{mergeDir}/*.o");
-    RunProcess("ar", $"-crs {a} {string.Join(" ", oFiles)}");
+    RunProcess(AR, $"-crs {a} {string.Join(" ", oFiles)}");
 
     var outDir = OUTPUT_PATH.Combine($"wasm");
     EnsureDirectoryExists(outDir);
     CopyFileToDirectory(a, outDir);
 });
 
+Task("libHarfBuzzSharp")
+    .WithCriteria(IsRunningOnLinux())
+    .Does(() =>
+{
+    Warning($"Building libHarfBuzzSharp for WASM is not yet supported.");
+});
+
 Task("Default")
-    .IsDependentOn("libSkiaSharp");
-    // TODO: .IsDependentOn("libHarfBuzzSharp");
+    .IsDependentOn("libSkiaSharp")
+    .IsDependentOn("libHarfBuzzSharp");
 
 RunTarget(TARGET);
