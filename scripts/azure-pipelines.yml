@@ -536,6 +536,11 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - native_wasm_linux
+          initScript: |
+            git clone https://github.com/emscripten-core/emsdk ~/emsdk
+            cd ~/emsdk
+            ./emsdk install latest
+            ./emsdk activate latest
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the WASM test results
