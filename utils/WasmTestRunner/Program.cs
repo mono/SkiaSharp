@@ -49,6 +49,9 @@ namespace WasmTestRunner
 				if (string.IsNullOrEmpty(OutputPath))
 					OutputPath = Directory.GetCurrentDirectory();
 				OutputPath = Path.Combine(OutputPath, ResultsFileName);
+				var dir = Path.GetDirectoryName(OutputPath);
+				if (!string.IsNullOrEmpty(dir))
+					Directory.CreateDirectory(dir);
 			}
 			catch (OptionException e)
 			{
