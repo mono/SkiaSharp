@@ -32,6 +32,7 @@ variables:
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
   ENABLE_CODE_COVERAGE: true
+  EMSCRIPTEN_VERSION: 1.39.11
 
 resources:
   repositories:
@@ -538,8 +539,8 @@ stages:
             - native_wasm_linux
           initScript: |
             git clone https://github.com/emscripten-core/emsdk ~/emsdk
-            ~/emsdk/emsdk install latest
-            ~/emsdk/emsdk activate latest
+            ~/emsdk/emsdk install $(EMSCRIPTEN_VERSION)
+            ~/emsdk/emsdk activate $(EMSCRIPTEN_VERSION)
             source ~/emsdk/emsdk_env.sh
           postBuildSteps:
             - task: PublishTestResults@2
