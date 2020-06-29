@@ -280,8 +280,12 @@ namespace SkiaSharp
 
 		// Build
 
-		public SKTextBlob Build () =>
-			SKTextBlob.GetObject (SkiaApi.sk_textblob_builder_make (Handle));
+		public SKTextBlob Build ()
+		{
+			var blob = SKTextBlob.GetObject (SkiaApi.sk_textblob_builder_make (Handle));
+			GC.KeepAlive (this);
+			return blob;
+		}
 
 		// AddRun
 

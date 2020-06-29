@@ -15,7 +15,9 @@ namespace NativeLibraryMiniTest {
             Console.WriteLine("Starting test...");
 
             Console.WriteLine("Version test...");
-            Console.WriteLine($"sk_version_get_string() = {sk_version_get_string()}");
+            Console.WriteLine($"sk_version_get_milestone() = {sk_version_get_milestone()}");
+            var str = Marshal.PtrToStringAnsi((IntPtr)sk_version_get_string());
+            Console.WriteLine($"sk_version_get_string() = {str}");
 
             Console.WriteLine("Color type test...");
             Console.WriteLine($"sk_colortype_get_default_8888() = {sk_colortype_get_default_8888()}");
@@ -48,7 +50,10 @@ namespace NativeLibraryMiniTest {
 
         [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.LPStr)]
-        static extern string sk_version_get_string();
+        static extern void* sk_version_get_string();
+
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        static extern int sk_version_get_milestone();
 
         [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
         static extern sk_colortype_t sk_colortype_get_default_8888();
