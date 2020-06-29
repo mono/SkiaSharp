@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Foundation;
 using UIKit;
@@ -7,6 +8,7 @@ namespace SkiaSharp.Views.Forms
 {
 	internal class SKTouchHandler : UIGestureRecognizer
 	{
+		private readonly HashSet<UITouch> trackedTouches = new HashSet<UITouch>();
 		private Action<SKTouchEventArgs> onTouchAction;
 		private Func<double, double, SKPoint> scalePixels;
 
@@ -55,7 +57,11 @@ namespace SkiaSharp.Views.Forms
 
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
-				if (!FireEvent(SKTouchAction.Pressed, touch, true))
+				if (FireEvent(SKTouchAction.Pressed, touch, true))
+				{
+					trackedTouches.Add(touch);
+				}
+				else
 				{
 					IgnoreTouch(touch, evt);
 				}
@@ -79,6 +85,7 @@ namespace SkiaSharp.Views.Forms
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
 				FireEvent(SKTouchAction.Released, touch, false);
+				trackedTouches.Remove(touch);
 			}
 		}
 
@@ -89,7 +96,20 @@ namespace SkiaSharp.Views.Forms
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
 				FireEvent(SKTouchAction.Cancelled, touch, false);
+				trackedTouches.Remove(touch);
 			}
+		}
+
+		public override void Reset()
+		{
+			base.Reset();
+
+			foreach (UITouch touch in trackedTouches)
+			{
+				FireEvent(SKTouchAction.Cancelled, touch, false);
+			}
+
+			trackedTouches.Clear();
 		}
 
 		private bool FireEvent(SKTouchAction actionType, UITouch touch, bool inContact)
