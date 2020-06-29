@@ -271,6 +271,8 @@ namespace SkiaSharpGenerator
 
 				writer.WriteLine();
 				writer.WriteLine($"\t// {enm.GetDisplayName()}");
+				if (map?.IsObsolete == true)
+					writer.WriteLine($"\t[Obsolete]");
 				if (map?.IsFlags == true)
 					writer.WriteLine($"\t[Flags]");
 				writer.WriteLine($"\t{visibility} enum {name} {{");
@@ -333,14 +335,11 @@ namespace SkiaSharpGenerator
 				{
 					Log?.LogVerbose($"    {function.Name}");
 
-					writer.WriteLine();
-					writer.WriteLine($"\t\t// {function}");
-					writer.WriteLine($"\t\t[DllImport ({config.DllName}, CallingConvention = CallingConvention.Cdecl)]");
-
 					var name = function.Name;
 					functionMappings.TryGetValue(name, out var funcMap);
 
 					var paramsList = new List<string>();
+					var paramNamesList = new List<string>();
 					for (var i = 0; i < function.Parameters.Count; i++)
 					{
 						var p = function.Parameters[i];
@@ -352,9 +351,11 @@ namespace SkiaSharpGenerator
 						if (funcMap != null && funcMap.Parameters.TryGetValue(i.ToString(), out var newT))
 							t = newT;
 						paramsList.Add($"{t} {n}");
+						paramNamesList.Add(n);
 					}
 
 					var returnType = GetType(function.ReturnType);
+					var retAttr = "";
 					if (funcMap != null && funcMap.Parameters.TryGetValue("-1", out var newR))
 					{
 						returnType = newR;
@@ -362,9 +363,27 @@ namespace SkiaSharpGenerator
 					else if (GetCppType(function.ReturnType) == "bool")
 					{
 						returnType = "bool";
-						writer.WriteLine($"\t\t[return: MarshalAs (UnmanagedType.I1)]");
+						retAttr = $"[return: MarshalAs (UnmanagedType.I1)]";
 					}
+
+					writer.WriteLine();
+					writer.WriteLine($"\t\t// {function}");
+					writer.WriteLine($"\t\t#if !USE_DELEGATES");
+					writer.WriteLine($"\t\t[DllImport ({config.DllName}, CallingConvention = CallingConvention.Cdecl)]");
+					if (!string.IsNullOrEmpty(retAttr))
+						writer.WriteLine($"\t\t{retAttr}");
 					writer.WriteLine($"\t\tinternal static extern {returnType} {name} ({string.Join(", ", paramsList)});");
+					writer.WriteLine($"\t\t#else");
+					writer.WriteLine($"\t\tprivate partial class Delegates {{");
+					writer.WriteLine($"\t\t\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
+					if (!string.IsNullOrEmpty(retAttr))
+						writer.WriteLine($"\t\t\t{retAttr}");
+					writer.WriteLine($"\t\t\tinternal delegate {returnType} {name} ({string.Join(", ", paramsList)});");
+					writer.WriteLine($"\t\t}}");
+					writer.WriteLine($"\t\tprivate static Delegates.{name} {name}_delegate;");
+					writer.WriteLine($"\t\tinternal static {returnType} {name} ({string.Join(", ", paramsList)}) =>");
+					writer.WriteLine($"\t\t\t({name}_delegate ??= GetSymbol<Delegates.{name}> (\"{name}\")).Invoke ({string.Join(", ", paramNamesList)});");
+					writer.WriteLine($"\t\t#endif");
 				}
 				writer.WriteLine();
 				writer.WriteLine($"\t\t#endregion");

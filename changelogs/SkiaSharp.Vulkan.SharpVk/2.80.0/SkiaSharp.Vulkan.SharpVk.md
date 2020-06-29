@@ -37,10 +37,10 @@ public sealed delegate GRSharpVkGetProcedureAddressDelegate : System.MulticastDe
 }
 ```
 
-#### New Type: SkiaSharp.GRVkExtensionsExtensions
+#### New Type: SkiaSharp.GRVkExtensionsSharpVkExtensions
 
 ```csharp
-public static class GRVkExtensionsExtensions {
+public static class GRVkExtensionsSharpVkExtensions {
 	// methods
 	public static void Initialize (this GRVkExtensions extensions, GRSharpVkGetProcedureAddressDelegate getProc, SharpVk.Instance instance, SharpVk.PhysicalDevice physicalDevice);
 	public static void Initialize (this GRVkExtensions extensions, GRSharpVkGetProcedureAddressDelegate getProc, SharpVk.Instance instance, SharpVk.PhysicalDevice physicalDevice, string[] instanceExtensions, string[] deviceExtensions);

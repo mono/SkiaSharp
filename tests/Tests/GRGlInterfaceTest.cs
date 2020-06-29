@@ -37,21 +37,21 @@ namespace SkiaSharp.Tests
 				ctx.MakeCurrent();
 
 				if (IsMac) {
-					var lib = MacDynamicLibraries.dlopen("/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib", 1);
+					var lib = LibraryLoader.LoadLibrary("/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib");
 
 					var glInterface = GRGlInterface.Create(name => {
-						return MacDynamicLibraries.dlsym(lib, name);
+						return LibraryLoader.GetSymbol(lib, name);
 					});
 
 					Assert.NotNull(glInterface);
 					Assert.True(glInterface.Validate());
 
-					MacDynamicLibraries.dlclose(lib);
+					LibraryLoader.FreeLibrary(lib);
 				} else if (IsWindows) {
-					var lib = WindowsDynamicLibraries.LoadLibrary("opengl32.dll");
+					var lib = LibraryLoader.LoadLibrary("opengl32.dll");
 
 					var glInterface = GRGlInterface.Create(name => {
-						var ptr = WindowsDynamicLibraries.GetProcAddress(lib, name);
+						var ptr = LibraryLoader.GetSymbol(lib, name);
 						if (ptr == IntPtr.Zero) {
 							ptr = wglGetProcAddress(name);
 						}
@@ -61,7 +61,7 @@ namespace SkiaSharp.Tests
 					Assert.NotNull(glInterface);
 					Assert.True(glInterface.Validate());
 
-					WindowsDynamicLibraries.FreeLibrary(lib);
+					LibraryLoader.FreeLibrary(lib);
 				} else if (IsLinux) {
 					var glInterface = GRGlInterface.Create(name => {
 						return glXGetProcAddress(name);

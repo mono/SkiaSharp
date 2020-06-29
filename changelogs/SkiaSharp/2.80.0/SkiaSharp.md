@@ -42,12 +42,18 @@ Obsoleted methods:
  public static GRContext Create (GRBackend backend);
  [Obsolete ("Use CreateGl(GRGlInterface) instead.")]
  public static GRContext Create (GRBackend backend, GRGlInterface backendContext);
+ [Obsolete ("Use GetResourceCacheLimit() instead.")]
+ public void GetResourceCacheLimits (out int maxResources, out long maxResourceBytes);
+ [Obsolete ("Use SetResourceCacheLimit(long) instead.")]
+ public void SetResourceCacheLimits (int maxResources, long maxResourceBytes);
 ```
 
-Added method:
+Added methods:
 
 ```csharp
 public static GRContext CreateVulkan (GRVkBackendContext backendContext);
+public long GetResourceCacheLimit ();
+public void SetResourceCacheLimit (long maxResourceBytes);
 ```
 
 
@@ -259,9 +265,9 @@ public SKColorSpace ToSrgbGamma ();
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use ToMatrix44() instead.")]
+ [Obsolete ("Use ToColorSpaceXyz() instead.")]
  public SKMatrix44 ToXyzD50 ();
- [Obsolete ("Use ToMatrix44(SKMatrix44) instead.")]
+ [Obsolete ("Use ToColorSpaceXyz(out SKColorSpaceXyz) instead.")]
  public bool ToXyzD50 (SKMatrix44 toXyzD50);
 ```
 
@@ -270,8 +276,6 @@ Added methods:
 ```csharp
 public SKColorSpaceXyz ToColorSpaceXyz ();
 public bool ToColorSpaceXyz (out SKColorSpaceXyz toXyzD50);
-public SKMatrix44 ToMatrix44 ();
-public bool ToMatrix44 (out SKMatrix44 toXyzD50);
 ```
 
 
@@ -318,6 +322,30 @@ Added method:
 
 ```csharp
 public SKImage ToTextureImage (GRContext context, bool mipmapped);
+```
+
+
+#### Type Changed: SkiaSharp.SKImageFilter
+
+Obsoleted methods:
+
+```diff
+ [Obsolete ("Use CreateDisplacementMapEffect(SKColorChannel, SKColorChannel, float, SKImageFilter, SKImageFilter, SKImageFilter.CropRect) instead.")]
+ public static SKImageFilter CreateDisplacementMapEffect (SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input, SKImageFilter.CropRect cropRect);
+ [Obsolete ("Use CreateDropShadow or CreateDropShadowOnly instead.")]
+ public static SKImageFilter CreateDropShadow (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKDropShadowImageFilterShadowMode shadowMode, SKImageFilter input, SKImageFilter.CropRect cropRect);
+ [Obsolete ("Use CreateMatrixConvolution(SKSizeI, float[], float, float, SKPointI, SKShaderTileMode, bool, SKImageFilter, SKImageFilter.CropRect) instead.")]
+ public static SKImageFilter CreateMatrixConvolution (SKSizeI kernelSize, float[] kernel, float gain, float bias, SKPointI kernelOffset, SKMatrixConvolutionTileMode tileMode, bool convolveAlpha, SKImageFilter input, SKImageFilter.CropRect cropRect);
+```
+
+Added methods:
+
+```csharp
+public static SKImageFilter CreateBlur (float sigmaX, float sigmaY, SKShaderTileMode tileMode, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDisplacementMapEffect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDropShadow (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDropShadowOnly (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateMatrixConvolution (SKSizeI kernelSize, float[] kernel, float gain, float bias, SKPointI kernelOffset, SKShaderTileMode tileMode, bool convolveAlpha, SKImageFilter input, SKImageFilter.CropRect cropRect);
 ```
 
 
@@ -388,6 +416,24 @@ Obsoleted methods:
  public static SKMatrix MakeSkew (float sx, float sy);
  [Obsolete ("Use CreateTranslation(float, float) instead.")]
  public static SKMatrix MakeTranslation (float dx, float dy);
+```
+
+
+#### Type Changed: SkiaSharp.SKNativeObject
+
+Added method:
+
+```csharp
+protected virtual void DisposeUnownedManaged ();
+```
+
+
+#### Type Changed: SkiaSharp.SKObject
+
+Added method:
+
+```csharp
+protected override void DisposeUnownedManaged ();
 ```
 
 
@@ -583,6 +629,15 @@ Decal = 3,
 ```
 
 
+#### Type Changed: SkiaSharp.SKSurface
+
+Added method:
+
+```csharp
+public SKImage Snapshot (SKRectI bounds);
+```
+
+
 #### Type Changed: SkiaSharp.SKTextBlob
 
 Added methods:
@@ -770,6 +825,9 @@ Added methods:
 
 ```csharp
 
+[Obsolete ("Use SKColorChannel instead.")]
+public static SKColorChannel ToColorChannel (this SKDisplacementMapEffectChannelSelectorType channelSelectorType);
+
 [Obsolete]
 public static SKColorSpaceTransferFn ToColorSpaceTransferFn (this SKColorSpaceRenderTargetGamma gamma);
 
@@ -781,6 +839,9 @@ public static SKColorSpaceXyz ToColorSpaceXyz (this SKColorSpaceGamut gamut);
 
 [Obsolete]
 public static SKColorSpaceXyz ToColorSpaceXyz (this SKMatrix44 matrix);
+
+[Obsolete ("Use SKShaderTileMode instead.")]
+public static SKShaderTileMode ToShaderTileMode (this SKMatrixConvolutionTileMode tileMode);
 ```
 
 
@@ -912,6 +973,18 @@ public struct GrVkYcbcrConversionInfo, System.IEquatable<GrVkYcbcrConversionInfo
 }
 ```
 
+#### New Type: SkiaSharp.SKColorChannel
+
+```csharp
+[Serializable]
+public enum SKColorChannel {
+	A = 3,
+	B = 2,
+	G = 1,
+	R = 0,
+}
+```
+
 #### New Type: SkiaSharp.SKColorSpaceIccProfile
 
 ```csharp
@@ -956,7 +1029,6 @@ public struct SKColorSpaceXyz, System.IEquatable<SKColorSpaceXyz> {
 	public override bool Equals (object obj);
 	public override int GetHashCode ();
 	public SKColorSpaceXyz Invert ();
-	public SKMatrix44 ToMatrix44 ();
 	public static bool op_Equality (SKColorSpaceXyz left, SKColorSpaceXyz right);
 	public static bool op_Inequality (SKColorSpaceXyz left, SKColorSpaceXyz right);
 }
@@ -1056,6 +1128,18 @@ public sealed class SKRotationScaleRunBuffer : SkiaSharp.SKRunBuffer {
 	// methods
 	public System.Span<SKRotationScaleMatrix> GetRotationScaleSpan ();
 	public void SetRotationScale (System.ReadOnlySpan<SKRotationScaleMatrix> positions);
+}
+```
+
+#### New Type: SkiaSharp.SkiaSharpVersion
+
+```csharp
+public static class SkiaSharpVersion {
+	// properties
+	public static System.Version Native { get; }
+	public static System.Version NativeMinimum { get; }
+	// methods
+	public static bool CheckNativeLibraryCompatible (bool throwIfIncompatible);
 }
 ```
 
