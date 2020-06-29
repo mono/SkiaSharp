@@ -530,7 +530,7 @@ stages:
           name: tests_wasm_linux
           displayName: Tests (Linux)
           vmImage: $(VM_IMAGE_LINUX)
-          packages: $(MANAGED_LINUX_PACKAGES)
+          packages: $(MANAGED_LINUX_PACKAGES) ninja-build
           target: tests-wasm
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=false
           shouldPublish: false
