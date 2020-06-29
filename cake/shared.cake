@@ -66,6 +66,12 @@ void RunProcess(FilePath process, ProcessSettings settings)
     }
 }
 
+IProcess RunAndReturnProcess(FilePath process, ProcessSettings settings)
+{
+    var proc = StartAndReturnProcess(process, settings);
+    return proc;
+}
+
 bool IsRunningOnMac()
 {
     return System.Environment.OSVersion.Platform == PlatformID.MacOSX || MacPlatformDetector.IsMac.Value;

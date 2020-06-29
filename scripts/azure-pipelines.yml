@@ -32,6 +32,7 @@ variables:
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
   ENABLE_CODE_COVERAGE: true
+  EMSCRIPTEN_VERSION: 1.39.11
 
 resources:
   repositories:
@@ -525,6 +526,30 @@ stages:
               inputs:
                 artifactName: coverage_linux
                 pathToPublish: 'output/coverage'
+      - template: azure-templates-bootstrapper.yml # Tests [WASM] (Linux)
+        parameters:
+          name: tests_wasm_linux
+          displayName: Tests [WASM] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(MANAGED_LINUX_PACKAGES) ninja-build
+          target: tests-wasm
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=false
+          shouldPublish: false
+          requiredArtifacts:
+            - native_wasm_linux
+          initScript: |
+            git clone https://github.com/emscripten-core/emsdk ~/emsdk
+            ~/emsdk/emsdk install $(EMSCRIPTEN_VERSION)
+            ~/emsdk/emsdk activate $(EMSCRIPTEN_VERSION)
+            source ~/emsdk/emsdk_env.sh
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the WASM test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp*.Wasm.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux WASM Tests'
       # TODO: add tests for linux alpine
       # TODO: add tests for linux no dependencies
       # TODO: add tests for windows nano server

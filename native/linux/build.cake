@@ -10,7 +10,7 @@ string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUP
 bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
 string CC = Argument("cc", EnvironmentVariable("CC"));
-string CXX = Argument("ccx", EnvironmentVariable("CXX"));
+string CXX = Argument("cxx", EnvironmentVariable("CXX"));
 string AR = Argument("ar", EnvironmentVariable("AR"));
 
 string VARIANT = BUILD_VARIANT ?? "linux";
@@ -20,19 +20,19 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
+    var COMPILERS = "";
+    if (!string.IsNullOrEmpty(CC))
+        COMPILERS += $"cc='{CC}' ";
+    if (!string.IsNullOrEmpty(CXX))
+        COMPILERS += $"cxx='{CXX}' ";
+    if (!string.IsNullOrEmpty(AR))
+        COMPILERS += $"ar='{AR}' ";
+
     Build("x64", "x64", "x64");
 
     void Build(string arch, string skiaArch, string dir)
     {
         if (Skip(arch)) return;
-
-        var compilers = "";
-        if (!string.IsNullOrEmpty(CC))
-            compilers += $"cc='{CC}' ";
-        if (!string.IsNullOrEmpty(CXX))
-            compilers += $"cxx='{CXX}' ";
-        if (!string.IsNullOrEmpty(AR))
-            compilers += $"ar='{AR}' ";
 
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
@@ -55,7 +55,7 @@ Task("libSkiaSharp")
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
-            compilers +
+            COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
 
@@ -71,6 +71,12 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
+    var COMPILERS = "";
+    if (!string.IsNullOrEmpty(CC))
+        COMPILERS += $"CC='{CC}' ";
+    if (!string.IsNullOrEmpty(CXX))
+        COMPILERS += $"CXX='{CXX}' ";
+
     Build("x64", "x64");
 
     void Build(string arch, string dir)
@@ -80,7 +86,7 @@ Task("libHarfBuzzSharp")
         var soname = GetVersion("HarfBuzz", "soname");
 
         RunProcess("make", new ProcessSettings {
-            Arguments = $"ARCH={arch} SONAME_VERSION={soname} VARIANT={VARIANT} LDFLAGS=-static-libstdc++",
+            Arguments = $"{COMPILERS} ARCH={arch} SONAME_VERSION={soname} VARIANT={VARIANT} LDFLAGS=-static-libstdc++",
             WorkingDirectory = "libHarfBuzzSharp",
         });
 
