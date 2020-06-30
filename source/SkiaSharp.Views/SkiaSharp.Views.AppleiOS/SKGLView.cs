@@ -101,6 +101,10 @@ namespace SkiaSharp.Views.iOS
 				context = GRContext.CreateGl(glInterface);
 			}
 
+			// it was not possible to access the context, so wait for a redraw
+			if (context == null)
+				return;	
+
 			// get the new surface size
 			var newSize = new SKSizeI((int)DrawableWidth, (int)DrawableHeight);
 
