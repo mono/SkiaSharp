@@ -64,8 +64,8 @@
     <Compile Remove="..\SkiaSharp.Views.AppleiOS\SKGLLayer.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='xamarinmac20'">
-    <Compile Include="..\SkiaSharp.Views.Mac\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Mac\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" Exclude="..\SkiaSharp.Views.Mac\obj\**\*.cs" />
+    <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" Exclude="..\SkiaSharp.Views.Apple\obj\**\*.cs" />
     <Compile Remove="..\SkiaSharp.Views.Mac\SKCanvasView.cs" />
     <Compile Remove="..\SkiaSharp.Views.Apple\SKCanvasLayer.cs" />
     <Compile Remove="..\SkiaSharp.Views.Mac\SKGLView.cs" />
