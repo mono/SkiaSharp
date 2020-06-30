@@ -133,6 +133,14 @@ namespace SkiaSharp.Views.UWP
 				pixels = (IntPtr)ptr;
 				_pixelWidth = info.Width;
 				_pixelHeight = info.Height;
+
+				// Reset the buffer
+				var data = (byte*)ptr.ToPointer();
+
+				for (int i = 0; i < info.BytesSize; i++)
+				{
+					data[i] = 0;
+				}
 			}
 		}
 
