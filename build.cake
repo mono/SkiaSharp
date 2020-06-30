@@ -448,9 +448,10 @@ Task ("nuget")
         if (id != null && version != null) {
             var v = GetVersion (id.Value);
             if (!string.IsNullOrEmpty (v)) {
+                if (id.Value.StartsWith("SkiaSharp") || id.Value.StartsWith("HarfBuzzSharp"))
+                    v += suffix;
                 version.Value = v;
             }
-            version.Value += suffix;
         }
 
         // <dependency>
@@ -467,7 +468,9 @@ Task ("nuget")
             if (depId != null && depVersion != null) {
                 var v = GetVersion (depId.Value);
                 if (!string.IsNullOrEmpty (v)) {
-                    depVersion.Value = v + suffix;
+                    if (depId.Value.StartsWith("SkiaSharp") || depId.Value.StartsWith("HarfBuzzSharp"))
+                        v += suffix;
+                    depVersion.Value = v;
                 }
             }
         }
