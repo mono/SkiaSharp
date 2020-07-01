@@ -227,6 +227,38 @@ Task ("tests")
     }
 });
 
+Task ("tests-wasm")
+    .Description ("Run WASM tests.")
+    .IsDependentOn ("externals-wasm")
+    .Does (() =>
+{
+    var failedTests = 0;
+
+    RunMSBuild ("./tests/SkiaSharp.Wasm.Tests.sln",
+        bl: $"./output/binlogs/tests-wasm.binlog");
+
+    var pubDir = "./tests/SkiaSharp.Wasm.Tests/bin/publish/";
+    RunNetCorePublish("./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj", pubDir);
+    IProcess serverProc = null;
+    try {
+        serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
+            Arguments = "server.py",
+            WorkingDirectory = pubDir,
+        });
+        DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj", "http://localhost:8000/ -o ./tests/SkiaSharp.Wasm.Tests/TestResults/");
+    } catch {
+        failedTests++;
+    } finally {
+        serverProc?.Kill();
+    }
+
+    if (failedTests > 0)
+        if (THROW_ON_TEST_FAILURE)
+            throw new Exception ($"There were {failedTests} failed tests.");
+        else
+            Warning ($"There were {failedTests} failed tests.");
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAMPLES - the demo apps showing off the work
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -416,9 +448,10 @@ Task ("nuget")
         if (id != null && version != null) {
             var v = GetVersion (id.Value);
             if (!string.IsNullOrEmpty (v)) {
+                if (id.Value.StartsWith("SkiaSharp") || id.Value.StartsWith("HarfBuzzSharp"))
+                    v += suffix;
                 version.Value = v;
             }
-            version.Value += suffix;
         }
 
         // <dependency>
@@ -435,7 +468,9 @@ Task ("nuget")
             if (depId != null && depVersion != null) {
                 var v = GetVersion (depId.Value);
                 if (!string.IsNullOrEmpty (v)) {
-                    depVersion.Value = v + suffix;
+                    if (depId.Value.StartsWith("SkiaSharp") || depId.Value.StartsWith("HarfBuzzSharp"))
+                        v += suffix;
+                    depVersion.Value = v;
                 }
             }
         }
