@@ -36,6 +36,7 @@ var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
+var COVERAGE = Argument ("coverage", false);
 
 var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
 var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
@@ -202,6 +203,53 @@ Task ("tests")
         } catch {
             failedTests++;
         }
+    }
+
+    if (failedTests > 0)
+        if (THROW_ON_TEST_FAILURE)
+            throw new Exception ($"There were {failedTests} failed tests.");
+        else
+            Warning ($"There were {failedTests} failed tests.");
+
+    if (COVERAGE) {
+        try {
+            RunProcess ("reportgenerator", new ProcessSettings {
+                Arguments = "-reports:./tests/**/Coverage/**/*.xml -targetdir:./output/coverage -reporttypes:HtmlInline_AzurePipelines;Cobertura"
+            });
+        } catch (Exception ex) {
+            Error ("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
+            Error (ex);
+            throw;
+        }
+        var xml = "./output/coverage/Cobertura.xml";
+        var root = FindRegexMatchGroupsInFile (xml, @"<source>(.*)<\/source>", 0)[1].Value;
+        ReplaceTextInFiles (xml, root, "");
+    }
+});
+
+Task ("tests-wasm")
+    .Description ("Run WASM tests.")
+    .IsDependentOn ("externals-wasm")
+    .Does (() =>
+{
+    var failedTests = 0;
+
+    RunMSBuild ("./tests/SkiaSharp.Wasm.Tests.sln",
+        bl: $"./output/binlogs/tests-wasm.binlog");
+
+    var pubDir = "./tests/SkiaSharp.Wasm.Tests/bin/publish/";
+    RunNetCorePublish("./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj", pubDir);
+    IProcess serverProc = null;
+    try {
+        serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
+            Arguments = "server.py",
+            WorkingDirectory = pubDir,
+        });
+        DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj", "http://localhost:8000/ -o ./tests/SkiaSharp.Wasm.Tests/TestResults/");
+    } catch {
+        failedTests++;
+    } finally {
+        serverProc?.Kill();
     }
 
     if (failedTests > 0)
@@ -400,9 +448,10 @@ Task ("nuget")
         if (id != null && version != null) {
             var v = GetVersion (id.Value);
             if (!string.IsNullOrEmpty (v)) {
+                if (id.Value.StartsWith("SkiaSharp") || id.Value.StartsWith("HarfBuzzSharp"))
+                    v += suffix;
                 version.Value = v;
             }
-            version.Value += suffix;
         }
 
         // <dependency>
@@ -419,7 +468,9 @@ Task ("nuget")
             if (depId != null && depVersion != null) {
                 var v = GetVersion (depId.Value);
                 if (!string.IsNullOrEmpty (v)) {
-                    depVersion.Value = v + suffix;
+                    if (depId.Value.StartsWith("SkiaSharp") || depId.Value.StartsWith("HarfBuzzSharp"))
+                        v += suffix;
+                    depVersion.Value = v;
                 }
             }
         }

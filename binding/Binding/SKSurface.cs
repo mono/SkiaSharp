@@ -312,6 +312,9 @@ namespace SkiaSharp
 		public SKImage Snapshot () =>
 			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot (Handle));
 
+		public SKImage Snapshot (SKRectI bounds) =>
+			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot_with_crop (Handle, &bounds));
+
 		public void Draw (SKCanvas canvas, float x, float y, SKPaint paint)
 		{
 			if (canvas == null)

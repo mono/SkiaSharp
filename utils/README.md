@@ -35,3 +35,17 @@ dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- verif
   The path to the root of the skia source.
 * `--output binding/Binding/SkiaApi.generated.cs`  
   The path to the generated file.
+
+## WasmTestRunner
+
+Run the WASM unit tests in a browser.
+
+This can be run with:
+
+```pwsh
+dotnet run --project=utils/WasmTestRunner/WasmTestRunner.csproj -- "http://localhost:5000/"
+```
+
+* `--output TestResults.xml`  
+* `--timeout 30`  
+* `--no-headless`  

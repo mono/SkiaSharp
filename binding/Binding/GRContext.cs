@@ -66,7 +66,7 @@ namespace SkiaSharp
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));
 
-			return GetObject(SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
+			return GetObject (SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
 		}
 
 		//
@@ -81,17 +81,24 @@ namespace SkiaSharp
 				SkiaApi.gr_context_abandon_context (Handle);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use GetResourceCacheLimit() instead.")]
 		public void GetResourceCacheLimits (out int maxResources, out long maxResourceBytes)
 		{
-			IntPtr maxResBytes;
-			fixed (int* maxRes = &maxResources) {
-				SkiaApi.gr_context_get_resource_cache_limits (Handle, maxRes, &maxResBytes);
-			}
-			maxResourceBytes = (long)maxResBytes;
+			maxResources = -1;
+			maxResourceBytes = GetResourceCacheLimit ();
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use SetResourceCacheLimit(long) instead.")]
 		public void SetResourceCacheLimits (int maxResources, long maxResourceBytes) =>
-			SkiaApi.gr_context_set_resource_cache_limits (Handle, maxResources, (IntPtr)maxResourceBytes);
+			SetResourceCacheLimit (maxResourceBytes);
+
+		public long GetResourceCacheLimit () =>
+			(long)SkiaApi.gr_context_get_resource_cache_limit (Handle);
+
+		public void SetResourceCacheLimit (long maxResourceBytes) =>
+			SkiaApi.gr_context_set_resource_cache_limit (Handle, (IntPtr)maxResourceBytes);
 
 		public void GetResourceCacheUsage (out int maxResources, out long maxResourceBytes)
 		{

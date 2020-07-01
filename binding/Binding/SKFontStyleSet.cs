@@ -27,6 +27,7 @@ namespace SkiaSharp
 		{
 			using (var str = new SKString ()) {
 				SkiaApi.sk_fontstyleset_get_style (Handle, index, IntPtr.Zero, str.Handle);
+				GC.KeepAlive(this);
 				return (string)str;
 			}
 		}
@@ -38,6 +39,7 @@ namespace SkiaSharp
 
 			var tf = SKTypeface.GetObject (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
 			tf?.PreventPublicDisposal ();
+			GC.KeepAlive(this);
 			return tf;
 		}
 
@@ -48,6 +50,7 @@ namespace SkiaSharp
 
 			var tf = SKTypeface.GetObject (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
 			tf?.PreventPublicDisposal ();
+			GC.KeepAlive(this);
 			return tf;
 		}
 

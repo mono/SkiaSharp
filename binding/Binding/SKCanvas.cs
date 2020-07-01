@@ -793,7 +793,7 @@ namespace SkiaSharp
 
 		public void DrawAnnotation (SKRect rect, string key, SKData value)
 		{
-			var bytes = StringUtilities.GetEncodedText (key, SKTextEncoding.Utf8);
+			var bytes = StringUtilities.GetEncodedText (key, SKTextEncoding.Utf8, true);
 			fixed (byte* b = bytes) {
 				SkiaApi.sk_canvas_draw_annotation (base.Handle, &rect, b, value == null ? IntPtr.Zero : value.Handle);
 			}
