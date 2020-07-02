@@ -5,4 +5,4 @@ jobs:
     steps:
       - checkout: none
       - pwsh: |
-          Invoke-WebRequest -Uri "$(TIZEN_STUDIO_URL)" -Headers @{"Authorization"="token $(TIZEN_STUDIO_TOKEN)"} -OutFile "tizen-studio.zip"
+          Invoke-WebRequest -Uri "$(TIZEN_STUDIO_URL)" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile "tizen-studio.zip"
