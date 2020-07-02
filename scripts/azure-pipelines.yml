@@ -106,7 +106,7 @@ stages:
                 $parts = "$(TIZEN_STUDIO_URL)".Split(";")
                 $index = 1
                 $parts | ForEach-Object {
-                  Invoke-WebRequest -Uri "$_" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile "$env:USERPROFILE\tizen-download-temp\part.zip." + $index.ToString("000")
+                  Invoke-WebRequest -Uri "$_" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile ("$env:USERPROFILE\tizen-download-temp\part.zip." + $index.ToString("000"))
                   $index++
                 }
                 Get-ChildItem -Path $env:USERPROFILE\tizen-download-temp -Filter part.zip.* | .\scripts\merge-files.ps1 -Path "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip"
