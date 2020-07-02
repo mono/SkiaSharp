@@ -5,4 +5,4 @@ jobs:
     steps:
       - checkout: none
       - pwsh: |
-          echo "hello"
+          Invoke-WebRequest -Uri $(TIZEN_STUDIO_URL) -Headers @{"Authorization"="token $(GitHub.Token)"} -OutFile "tizen-studio.zip"
