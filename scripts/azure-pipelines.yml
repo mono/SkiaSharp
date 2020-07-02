@@ -94,6 +94,12 @@ stages:
           displayName: Build Native Tizen (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
+          preBuildSteps:
+            - pwsh: |
+                Remove-Item -Path "$(Agent.HomeDirectory)/tizen-studio" -Recurse -Force
+                Invoke-WebRequest -Uri "$(TIZEN_STUDIO_URL)" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile "$(Agent.HomeDirectory)/tizen-studio.zip"
+                Expand-Archive -Path "$(Agent.HomeDirectory)/tizen-studio.zip" -DestinationPath "$(Agent.HomeDirectory)/tizen-studio"
+            - displayName: Download Tizen Studio Patch
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
         parameters:
           name: native_uwp_angle_x86_windows
@@ -280,6 +286,7 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(TIZEN_LINUX_PACKAGES)
           target: externals-tizen
+          condition: false # TODO: TIZEN INSTALL BUGS
       # NATIVE JOBS - WASM
       - template: azure-templates-bootstrapper.yml # Build Native WASM (Linux)
         parameters:
@@ -333,7 +340,7 @@ stages:
             - native_ios_macos
             - native_macos_macos
             # - native_tizen_macos
-            - native_tizen_linux
+            - native_tizen_windows
             - native_tvos_macos
             - native_watchos_macos
       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
@@ -349,7 +356,8 @@ stages:
             - native_linux_nodependencies_linux
             - native_linux_alpinenodependencies_linux
             - native_linux_alpine_linux
-            - native_tizen_linux
+            # - native_tizen_linux
+            - native_tizen_windows
 
   - stage: package
     displayName: Package NuGets
