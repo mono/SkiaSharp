@@ -99,7 +99,7 @@ stages:
                 Remove-Item -Path "$(Agent.HomeDirectory)/tizen-studio" -Recurse -Force
                 Invoke-WebRequest -Uri "$(TIZEN_STUDIO_URL)" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile "$(Agent.HomeDirectory)/tizen-studio.zip"
                 Expand-Archive -Path "$(Agent.HomeDirectory)/tizen-studio.zip" -DestinationPath "$(Agent.HomeDirectory)/tizen-studio"
-            - displayName: Download Tizen Studio Patch
+              displayName: Download Tizen Studio Patch
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
         parameters:
           name: native_uwp_angle_x86_windows
