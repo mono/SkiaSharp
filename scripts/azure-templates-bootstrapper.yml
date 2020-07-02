@@ -82,15 +82,15 @@ jobs:
             architecture: 'x64'
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
-          - ${{ if and(parameters.installAndroidNdk, contains(parameters.name, '_android_')) }}:
+          - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
             - pwsh: .\scripts\install-android-ndk.ps1
               displayName: Install the Android NDK
           # install tizen
-          - ${{ if and(parameters.installTizenSdk, contains(parameters.name, '_tizen_')) }}:
+          - ${{ if and(eq(parameters.installTizenSdk, 'true'), contains(parameters.name, '_tizen_')) }}:
             - pwsh: .\scripts\install-tizen.ps1
               displayName: Install the Tizen SDK
           # install llvm
-          - ${{ if and(parameters.installLlvm, contains(parameters.name, '_win32_')) }}:
+          - ${{ if and(eq(parameters.installLlvm, 'true'), contains(parameters.name, '_win32_')) }}:
             - pwsh: .\scripts\install-llvm.ps1
               displayName: Install LLVM
 
@@ -112,7 +112,7 @@ jobs:
       - ${{ if endsWith(parameters.name, '_windows') }}:
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install the older Windows SDKs
-          - ${{ if parameters.installWindowsSdk }}:
+          - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
             - pwsh: |
                 $uri = 'https://go.microsoft.com/fwlink/p/?LinkId=619296'
                 .\scripts\download-file.ps1 -Uri $uri -OutFile sdksetup.exe
