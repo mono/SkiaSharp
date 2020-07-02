@@ -67,6 +67,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=x86
+          installWindowsSdk: false
       - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Windows)
         parameters:
           name: native_android_x64_windows
@@ -74,6 +75,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=x64
+          installWindowsSdk: false
       - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Windows)
         parameters:
           name: native_android_arm_windows
@@ -81,6 +83,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=arm
+          installWindowsSdk: false
       - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Windows)
         parameters:
           name: native_android_arm64_windows
@@ -88,17 +91,19 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=arm64
+          installWindowsSdk: false
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
         parameters:
           name: native_tizen_windows
           displayName: Build Native Tizen (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
+          installTizenSdk: false
+          installWindowsSdk: false
           preBuildSteps:
             - pwsh: |
-                Remove-Item -Path "$(Agent.HomeDirectory)/tizen-studio" -Recurse -Force
-                Invoke-WebRequest -Uri "$(TIZEN_STUDIO_URL)" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile "$(Agent.HomeDirectory)/tizen-studio.zip"
-                Expand-Archive -Path "$(Agent.HomeDirectory)/tizen-studio.zip" -DestinationPath "$(Agent.HomeDirectory)/tizen-studio"
+                Invoke-WebRequest -Uri "$(TIZEN_STUDIO_URL)" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile "$env:USERPROFILE/tizen-studio.zip"
+                Expand-Archive -Path "$env:USERPROFILE/tizen-studio.zip" -DestinationPath "$env:USERPROFILE/tizen-studio"
               displayName: Download Tizen Studio Patch
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
         parameters:
@@ -370,6 +375,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget
           additionalArgs: --packall=true --exclusive
+          installWindowsSdk: false
           shouldPublish: true
           requiredArtifacts:
             - managed_linux
@@ -398,6 +404,7 @@ stages:
           vmImage: Hosted VS2017
           target: docs-api-diff
           additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
+          installWindowsSdk: false
           shouldPublish: false
           requiredArtifacts:
             - package_windows
@@ -438,6 +445,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          installWindowsSdk: false
           shouldPublish: false
           requiredArtifacts:
             - native_win32_x86_windows
@@ -603,6 +611,7 @@ stages:
           displayName: Build Samples (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
+          installWindowsSdk: false
           shouldPublish: false
           requiredArtifacts:
             - nuget
@@ -675,6 +684,7 @@ stages:
             # condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
             vmImage: Hosted VS2017
             target: git-sync-deps
+            installWindowsSdk: false
             shouldPublish: false
             postBuildSteps:
               - task: CredScan@2

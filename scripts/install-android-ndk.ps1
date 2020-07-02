@@ -4,7 +4,10 @@ Param(
 )
 
 $ErrorActionPreference = 'Stop'
+
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+$HOME_DIR = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
 
 if ($IsMacOS) {
     $platform = "darwin-x86_64"
@@ -16,13 +19,13 @@ if ($IsMacOS) {
 
 $url = "https://dl.google.com/android/repository/android-ndk-${Version}-${platform}.zip"
 
-$ndk = "$HOME/android-ndk"
+$ndk = "$HOME_DIR/android-ndk"
 if ($InstallDestination) {
     $ndk = $InstallDestination
 }
 Write-Host "Install destination is '$ndk'..."
 
-$ndkTemp = "$HOME/android-ndk-temp"
+$ndkTemp = "$HOME_DIR/android-ndk-temp"
 $install = "$ndkTemp/android-ndk.zip"
 
 # download
