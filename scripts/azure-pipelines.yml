@@ -5,4 +5,9 @@ jobs:
     steps:
       - checkout: none
       - pwsh: |
-          Invoke-WebRequest -Uri "$(TIZEN_STUDIO_URL)" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile "tizen-studio.zip"
+          Invoke-WebRequest -Uri "$(TIZEN_STUDIO_URL)" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile "$env:HOME/tizen-studio.zip"
+          Remove-Item -Path "$env:HOME/tizen-studio" -Recurse -Force
+          Expand-Archive -Path "$(Agent.HomeDirectory)/tizen-studio.zip" -DestinationPath "$env:HOME/tizen-studio"
+          Remove-Item -Path "$env:HOME/tizen-studio" -Recurse -Force
+          Expand-Archive -Path "$(Agent.HomeDirectory)/tizen-studio.zip" -DestinationPath "$env:HOME/tizen-studio"
+          cat $(Agent.HomeDirectory)/tizen-studio/sdk.version
