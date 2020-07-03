@@ -23,8 +23,8 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    foreach (var ARCH in BUILD_ARCH) {
-        if (Skip(ARCH)) return;
+    foreach (var arch in BUILD_ARCH) {
+        if (Skip(arch)) return;
 
         var COMPILERS = "";
         if (!string.IsNullOrEmpty(CC))
@@ -37,9 +37,9 @@ Task("libSkiaSharp")
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
 
-        GnNinja($"{VARIANT}/{ARCH}", "SkiaSharp",
+        GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
-            $"target_cpu='{ARCH}' " +
+            $"target_cpu='{arch}' " +
             $"is_official_build=true " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"skia_enable_tools=false " +
@@ -60,9 +60,9 @@ Task("libSkiaSharp")
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
 
-        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{ARCH}");
+        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{arch}");
         EnsureDirectoryExists(outDir);
-        var so = SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{ARCH}/libSkiaSharp.so.{soname}");
+        var so = SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.so.{soname}");
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libSkiaSharp.so"));
     }
@@ -72,8 +72,8 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    foreach (var ARCH in BUILD_ARCH) {
-        if (Skip(ARCH)) return;
+    foreach (var arch in BUILD_ARCH) {
+        if (Skip(arch)) return;
 
         var COMPILERS = "";
         if (!string.IsNullOrEmpty(CC))
@@ -84,13 +84,13 @@ Task("libHarfBuzzSharp")
         var soname = GetVersion("HarfBuzz", "soname");
 
         RunProcess("make", new ProcessSettings {
-            Arguments = $"{COMPILERS} ARCH={ARCH} SONAME_VERSION={soname} VARIANT={VARIANT} LDFLAGS=-static-libstdc++",
+            Arguments = $"{COMPILERS} ARCH={arch} SONAME_VERSION={soname} VARIANT={VARIANT} LDFLAGS=-static-libstdc++",
             WorkingDirectory = "libHarfBuzzSharp",
         });
 
-        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{ARCH}");
+        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{arch}");
         EnsureDirectoryExists(outDir);
-        var so = $"libHarfBuzzSharp/bin/{VARIANT}/{ARCH}/libHarfBuzzSharp.so.{soname}";
+        var so = $"libHarfBuzzSharp/bin/{VARIANT}/{arch}/libHarfBuzzSharp.so.{soname}";
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
     }
