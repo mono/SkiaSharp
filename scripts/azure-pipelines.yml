@@ -254,7 +254,7 @@ stages:
           name: native_linux_armhf_linux
           displayName: Build Native Linux|armhf (Linux)
           vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/ubuntu16/armhf
+          docker: scripts/Docker/ubuntu16/mono
           target: externals-linux
           additionalArgs: --buildarch=arm --gnArgs=""extra_cflags+=[ '-Wno-psabi' ]""
       - template: azure-templates-bootstrapper.yml # Build Native Linux [No Dependencies] (Linux)
