@@ -15,31 +15,31 @@ string AR = Argument("ar", EnvironmentVariable("AR"));
 
 string VARIANT = BUILD_VARIANT ?? "linux";
 
+if (BUILD_ARCH.Length == 0)
+    BUILD_ARCH = new [] { "x64" };
+
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    var COMPILERS = "";
-    if (!string.IsNullOrEmpty(CC))
-        COMPILERS += $"cc='{CC}' ";
-    if (!string.IsNullOrEmpty(CXX))
-        COMPILERS += $"cxx='{CXX}' ";
-    if (!string.IsNullOrEmpty(AR))
-        COMPILERS += $"ar='{AR}' ";
+    foreach (var ARCH in BUILD_ARCH) {
+        if (Skip(ARCH)) return;
 
-    Build("x64", "x64", "x64");
-
-    void Build(string arch, string skiaArch, string dir)
-    {
-        if (Skip(arch)) return;
+        var COMPILERS = "";
+        if (!string.IsNullOrEmpty(CC))
+            COMPILERS += $"cc='{CC}' ";
+        if (!string.IsNullOrEmpty(CXX))
+            COMPILERS += $"cxx='{CXX}' ";
+        if (!string.IsNullOrEmpty(AR))
+            COMPILERS += $"ar='{AR}' ";
 
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
 
-        GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
+        GnNinja($"{VARIANT}/{ARCH}", "SkiaSharp",
             $"target_os='linux' " +
-            $"target_cpu='{arch}' " +
+            $"target_cpu='{ARCH}' " +
             $"is_official_build=true " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"skia_enable_tools=false " +
@@ -53,15 +53,16 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
+            $"extra_asmflags=[] " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
 
-        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
+        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{ARCH}");
         EnsureDirectoryExists(outDir);
-        var so = SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.so.{soname}");
+        var so = SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{ARCH}/libSkiaSharp.so.{soname}");
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libSkiaSharp.so"));
     }
@@ -71,28 +72,25 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    var COMPILERS = "";
-    if (!string.IsNullOrEmpty(CC))
-        COMPILERS += $"CC='{CC}' ";
-    if (!string.IsNullOrEmpty(CXX))
-        COMPILERS += $"CXX='{CXX}' ";
+    foreach (var ARCH in BUILD_ARCH) {
+        if (Skip(ARCH)) return;
 
-    Build("x64", "x64");
-
-    void Build(string arch, string dir)
-    {
-        if (Skip(arch)) return;
+        var COMPILERS = "";
+        if (!string.IsNullOrEmpty(CC))
+            COMPILERS += $"CC='{CC}' ";
+        if (!string.IsNullOrEmpty(CXX))
+            COMPILERS += $"CXX='{CXX}' ";
 
         var soname = GetVersion("HarfBuzz", "soname");
 
         RunProcess("make", new ProcessSettings {
-            Arguments = $"{COMPILERS} ARCH={arch} SONAME_VERSION={soname} VARIANT={VARIANT} LDFLAGS=-static-libstdc++",
+            Arguments = $"{COMPILERS} ARCH={ARCH} SONAME_VERSION={soname} VARIANT={VARIANT} LDFLAGS=-static-libstdc++",
             WorkingDirectory = "libHarfBuzzSharp",
         });
 
-        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
+        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{ARCH}");
         EnsureDirectoryExists(outDir);
-        var so = $"libHarfBuzzSharp/bin/{VARIANT}/{arch}/libHarfBuzzSharp.so.{soname}";
+        var so = $"libHarfBuzzSharp/bin/{VARIANT}/{ARCH}/libHarfBuzzSharp.so.{soname}";
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
     }
