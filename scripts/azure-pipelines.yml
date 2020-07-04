@@ -265,10 +265,12 @@ stages:
             - arch: arm
               docker: scripts/Docker/ubuntu16/gcc-cross
               gnArgs: extra_cflags+=[ \'-Wno-psabi\' ]
+              alt: _gcc
             - arch: arm64
               docker: scripts/Docker/ubuntu16/gcc-cross
               dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
               gnArgs: extra_cflags+=[ \'-Wno-psabi\' ]
+              alt: _gcc
 
 
       # - template: azure-templates-bootstrapper.yml # Build Native Linux (Linux)
