@@ -330,7 +330,17 @@ stages:
 
   - stage: managed
     displayName: Build Managed
-    dependsOn: native
+    dependsOn:
+      - native_android_windows
+      - native_tizen_windows
+      - native_uwp_windows
+      - native_win32_windows
+      - native_android_macos
+      - native_apple_macos
+      - native_tizen_macos
+      - native_linux_linux
+      - native_tizen_linux
+      - native_wasm_linux
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Managed (Windows)
         parameters:
@@ -464,7 +474,17 @@ stages:
 
   - stage: tests
     displayName: Run Tests
-    dependsOn: native
+    dependsOn:
+      - native_android_windows
+      - native_tizen_windows
+      - native_uwp_windows
+      - native_win32_windows
+      - native_android_macos
+      - native_apple_macos
+      - native_tizen_macos
+      - native_linux_linux
+      - native_tizen_linux
+      - native_wasm_linux
     jobs:
       - template: azure-templates-bootstrapper.yml # Tests (Windows)
         parameters:
