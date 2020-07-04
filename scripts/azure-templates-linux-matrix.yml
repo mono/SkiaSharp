@@ -14,8 +14,8 @@ parameters:
       alt: ''
 
 jobs:
-  - ${{ each item in parameters.matrix }}:
-    - ${{ each build in parameters.builds }}:
+  - ${{ each build in parameters.builds }}:
+    - ${{ each item in parameters.matrix }}:
       - template: azure-templates-bootstrapper.yml
         parameters:
           name: native_${{ build.name }}_${{ item.arch }}_${{ coalesce(item.variant, 'default') }}${{ coalesce(item.alt, '_') }}_linux
