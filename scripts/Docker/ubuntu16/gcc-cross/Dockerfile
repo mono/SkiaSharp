@@ -8,17 +8,17 @@ ARG FONTCONFIG_ARCH=armhf
 
 # pre-requisites for building (python, git, mono)
 RUN apt-get update \
-    && apt-get install -y apt-transport-https curl wget python git \
+    && apt-get install -y apt-transport-https curl wget python git make \
     && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
     && echo "deb https://download.mono-project.com/repo/ubuntu stable-xenial/snapshots/${MONO_VERSION} main" | tee /etc/apt/sources.list.d/mono-official-stable.list \
     && apt-get update \
-    && apt-get install -y mono-devel
+    && apt-get install -y mono-devel \
+    && rm -rf /var/lib/apt/lists/*
 
 # toolchain (gcc/g++)
-ARG TOOLCHAIN_URL=https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/${TOOLCHAIN_VERSION}/binrel/gcc-arm-${TOOLCHAIN_VERSION}-x86_64-${TOOLCHAIN_ARCH}.tar.xz
 RUN (mkdir -p /skia-utils/toolchain \
     && cd /skia-utils/toolchain \
-    && wget -O toolchain.tar.xz ${TOOLCHAIN_URL} \
+    && wget -O toolchain.tar.xz https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/${TOOLCHAIN_VERSION}/binrel/gcc-arm-${TOOLCHAIN_VERSION}-x86_64-${TOOLCHAIN_ARCH}.tar.xz \
     && tar -xJvf toolchain.tar.xz \
     && mv gcc-arm-${TOOLCHAIN_VERSION}-x86_64-${TOOLCHAIN_ARCH} /opt/${TOOLCHAIN_ARCH})
 

@@ -1,11 +1,5 @@
 #load "shared.cake"
 
-var BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
-    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-
-var BUILD_VARIANT = Argument("variant", EnvironmentVariable("BUILD_VARIANT"));
-var ADDITIONAL_GN_ARGS = Argument("gnArgs", EnvironmentVariable("ADDITIONAL_GN_ARGS"));
-
 var PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? "python");
 
 if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
@@ -85,7 +79,7 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
 void StripSign(FilePath target)
 {
     if (!IsRunningOnMac())
-        throw new InvalidOperationException("lipo is only available on Unix.");
+        throw new InvalidOperationException("lipo is only available on macOS.");
 
     target = MakeAbsolute(target);
     var archive = target;
@@ -107,7 +101,7 @@ void StripSign(FilePath target)
 void RunLipo(DirectoryPath directory, FilePath output, FilePath[] inputs)
 {
     if (!IsRunningOnMac())
-        throw new InvalidOperationException("lipo is only available on Unix.");
+        throw new InvalidOperationException("lipo is only available on macOS.");
 
     EnsureDirectoryExists(directory.CombineWithFilePath(output).GetDirectory());
 

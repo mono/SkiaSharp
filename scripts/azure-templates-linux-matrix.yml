@@ -1,0 +1,26 @@
+parameters:
+  builds:
+    - name: ''
+      desc: ''
+      additionalArgs: ''
+      gnArgs: ''
+  matrix:
+    - arch: ''
+      variant: ''
+      docker: ''
+      dockerArgs: ''
+      target: 'externals-linux'
+      gnArgs: ''
+
+jobs:
+  - ${{ each item in parameters.matrix }}:
+    - ${{ each build in parameters.builds }}:
+      - template: azure-templates-bootstrapper.yml # Build Native Linux (Linux)
+        parameters:
+          name: native_linux_${{ item.arch }}_${{ build.variant }}_${{ build.name }}_linux
+          displayName: Build Native Linux|${{ item.arch }} [${{ build.variant }}|${{ build.desc }}]
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: ${{ item.docker }}
+          dockerArgs: ${{ item.dockerArgs }}
+          target: ${{ item.target }}
+          additionalArgs: --buildarch=${{ item.arch }} --variant=${{ build.variant }} ${{ item.additionalArgs }} ${{ build.additionalArgs }}

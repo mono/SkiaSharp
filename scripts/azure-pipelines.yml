@@ -241,72 +241,105 @@ stages:
           vmImage: $(VM_IMAGE_MAC)
           target: externals-watchos
       # NATIVE JOBS - LINUX
-      - template: azure-templates-bootstrapper.yml # Build Native Linux (Linux)
+      - template: azure-templates-linux-matrix.yml # Build Native Linux (Linux)
         parameters:
-          name: native_linux_linux
-          displayName: Build Native Linux (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/ubuntu16/amd64
-          target: externals-linux
-          additionalArgs: --buildarch=x64
-      - template: azure-templates-bootstrapper.yml # Build Native Linux|arm (Linux)
-        parameters:
-          name: native_linux_arm_linux
-          displayName: Build Native Linux|arm (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/ubuntu16/gcc-cross
-          target: externals-linux
-          additionalArgs: --buildarch=arm --gnArgs="\"extra_cflags+=[ \'-Wno-psabi\' ]\""
-      - template: azure-templates-bootstrapper.yml # Build Native Linux|arm64 (Linux)
-        parameters:
-          name: native_linux_arm64_linux
-          displayName: Build Native Linux|arm64 (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/ubuntu16/gcc-cross
-          dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
-          target: externals-linux
-          additionalArgs: --buildarch=arm64 --gnArgs="\"extra_cflags+=[ \'-Wno-psabi\' ]\""
-      - template: azure-templates-bootstrapper.yml # Build Native Linux [No Dependencies] (Linux)
-        parameters:
-          name: native_linux_nodependencies_linux
-          displayName: Build Native Linux [No Dependencies] (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/ubuntu16/amd64
-          target: externals-linuxnodeps
-          additionalArgs: --buildarch=x64
-      - template: azure-templates-bootstrapper.yml # Build Native Linux|arm [No Dependencies] (Linux)
-        parameters:
-          name: native_linux_arm_nodependencies_linux
-          displayName: Build Native Linux|arm [No Dependencies] (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/ubuntu16/gcc-cross
-          target: externals-linuxnodeps
-          additionalArgs: --buildarch=arm --gnArgs="\"extra_cflags+=[ \'-Wno-psabi\' ]\""
-      - template: azure-templates-bootstrapper.yml # Build Native Linux|arm64 [No Dependencies] (Linux)
-        parameters:
-          name: native_linux_arm64_nodependencies_linux
-          displayName: Build Native Linux|arm64 [No Dependencies] (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/ubuntu16/gcc-cross
-          dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
-          target: externals-linuxnodeps
-          additionalArgs: --buildarch=arm64 --gnArgs="\"extra_cflags+=[ \'-Wno-psabi\' ]\""
-      - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine] (Linux)
-        parameters:
-          name: native_linux_alpine_linux
-          displayName: Build Native Linux [Alpine] (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/alpine/amd64
-          target: externals-linux
-          additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpine
-      - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine, No Dependencies] (Linux)
-        parameters:
-          name: native_linux_alpinenodependencies_linux
-          displayName: Build Native Linux [Alpine, No Dependencies] (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/alpine/amd64
-          target: externals-linuxnodeps
-          additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpinenodeps
+          # target: externals-linux
+          builds:
+            - name: default
+              desc: ''
+            - name: nodependencies
+              desc: 'No Dependencies'
+              additionalArgs: --verifyExcluded=fontconfig
+              gnArgs: skia_use_fontconfig=false
+          matrix:
+            - arch: x64
+              docker: scripts/Docker/ubuntu16/amd64
+            - arch: x64
+              variant: alpine
+              docker: scripts/Docker/alpine/amd64
+            - arch: arm
+              docker: scripts/Docker/ubuntu16/clang-cross
+              target: externals-linux-clang-cross
+            - arch: arm64
+              docker: scripts/Docker/ubuntu16/clang-cross
+              dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
+              target: externals-linux-clang-cross
+            - arch: arm
+              docker: scripts/Docker/ubuntu16/gcc-cross
+              gnArgs: 'extra_cflags+=[ \'-Wno-psabi\' ]'
+            - arch: arm64
+              docker: scripts/Docker/ubuntu16/gcc-cross
+              dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
+              gnArgs: 'extra_cflags+=[ \'-Wno-psabi\' ]'
+
+
+      # - template: azure-templates-bootstrapper.yml # Build Native Linux (Linux)
+      #   parameters:
+      #     name: native_linux_linux
+      #     displayName: Build Native Linux (Linux)
+      #     vmImage: $(VM_IMAGE_LINUX)
+      #     docker: scripts/Docker/ubuntu16/amd64
+      #     target: externals-linux
+      #     additionalArgs: --buildarch=x64
+      # - template: azure-templates-bootstrapper.yml # Build Native Linux|arm (Linux)
+      #   parameters:
+      #     name: native_linux_arm_linux
+      #     displayName: Build Native Linux|arm (Linux)
+      #     vmImage: $(VM_IMAGE_LINUX)
+      #     docker: scripts/Docker/ubuntu16/gcc-cross
+      #     target: externals-linux
+      #     additionalArgs: --buildarch=arm --gnArgs="\"extra_cflags+=[ \'-Wno-psabi\' ]\""
+      # - template: azure-templates-bootstrapper.yml # Build Native Linux|arm64 (Linux)
+      #   parameters:
+      #     name: native_linux_arm64_linux
+      #     displayName: Build Native Linux|arm64 (Linux)
+      #     vmImage: $(VM_IMAGE_LINUX)
+      #     docker: scripts/Docker/ubuntu16/gcc-cross
+      #     dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
+      #     target: externals-linux
+      #     additionalArgs: --buildarch=arm64 --gnArgs="\"extra_cflags+=[ \'-Wno-psabi\' ]\""
+      # - template: azure-templates-bootstrapper.yml # Build Native Linux [No Dependencies] (Linux)
+      #   parameters:
+      #     name: native_linux_nodependencies_linux
+      #     displayName: Build Native Linux [No Dependencies] (Linux)
+      #     vmImage: $(VM_IMAGE_LINUX)
+      #     docker: scripts/Docker/ubuntu16/amd64
+      #     target: externals-linuxnodeps
+      #     additionalArgs: --buildarch=x64
+      # - template: azure-templates-bootstrapper.yml # Build Native Linux|arm [No Dependencies] (Linux)
+      #   parameters:
+      #     name: native_linux_arm_nodependencies_linux
+      #     displayName: Build Native Linux|arm [No Dependencies] (Linux)
+      #     vmImage: $(VM_IMAGE_LINUX)
+      #     docker: scripts/Docker/ubuntu16/gcc-cross
+      #     target: externals-linuxnodeps
+      #     additionalArgs: --buildarch=arm --gnArgs="\"extra_cflags+=[ \'-Wno-psabi\' ]\""
+      # - template: azure-templates-bootstrapper.yml # Build Native Linux|arm64 [No Dependencies] (Linux)
+      #   parameters:
+      #     name: native_linux_arm64_nodependencies_linux
+      #     displayName: Build Native Linux|arm64 [No Dependencies] (Linux)
+      #     vmImage: $(VM_IMAGE_LINUX)
+      #     docker: scripts/Docker/ubuntu16/gcc-cross
+      #     dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
+      #     target: externals-linuxnodeps
+      #     additionalArgs: --buildarch=arm64 --gnArgs="\"extra_cflags+=[ \'-Wno-psabi\' ]\""
+      # - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine] (Linux)
+      #   parameters:
+      #     name: native_linux_alpine_linux
+      #     displayName: Build Native Linux [Alpine] (Linux)
+      #     vmImage: $(VM_IMAGE_LINUX)
+      #     docker: scripts/Docker/alpine/amd64
+      #     target: externals-linux
+      #     additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpine
+      # - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine, No Dependencies] (Linux)
+      #   parameters:
+      #     name: native_linux_alpinenodependencies_linux
+      #     displayName: Build Native Linux [Alpine, No Dependencies] (Linux)
+      #     vmImage: $(VM_IMAGE_LINUX)
+      #     docker: scripts/Docker/alpine/amd64
+      #     target: externals-linuxnodeps
+      #     additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpinenodeps
+
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
         parameters:
           name: native_tizen_linux
