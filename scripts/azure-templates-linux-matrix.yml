@@ -9,7 +9,7 @@ parameters:
       variant: ''
       docker: ''
       dockerArgs: ''
-      target: 'externals-linux'
+      target: ''
       gnArgs: ''
 
 jobs:
@@ -22,5 +22,5 @@ jobs:
           vmImage: $(VM_IMAGE_LINUX)
           docker: ${{ item.docker }}
           dockerArgs: ${{ item.dockerArgs }}
-          target: ${{ item.target }}
+          target: ${{ coalesce(item.target, 'externals-linux') }}
           additionalArgs: --buildarch=${{ item.arch }} --variant=${{ item.variant }} ${{ item.additionalArgs }} ${{ build.additionalArgs }}
