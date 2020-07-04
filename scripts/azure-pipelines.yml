@@ -56,31 +56,31 @@ stages:
               updateBuild: true
 
   - stage: native_android_windows
-    displayName: Build Native Android (Windows)
+    displayName: Native Android (Win)
     dependsOn: prepare
     jobs:
-      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Win)
         parameters:
           name: native_android_x86_windows
           displayName: x86
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=x86
-      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Win)
         parameters:
           name: native_android_x64_windows
           displayName: x64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=x64
-      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Win)
         parameters:
           name: native_android_arm_windows
           displayName: arm
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=arm
-      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Win)
         parameters:
           name: native_android_arm64_windows
           displayName: arm64
@@ -89,10 +89,10 @@ stages:
           additionalArgs: --buildarch=arm64
 
   - stage: native_tizen_windows
-    displayName: Build Native Tizen (Windows)
+    displayName: Native Tizen (Win)
     dependsOn: prepare
     jobs:
-      - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native Tizen (Win)
         parameters:
           name: native_tizen_windows
           displayName: arm + x86
@@ -100,59 +100,59 @@ stages:
           target: externals-tizen
 
   - stage: native_uwp_windows
-    displayName: Build Native UWP (Windows)
+    displayName: Native UWP (Win)
     dependsOn: prepare
     jobs:
-      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Win)
         parameters:
           name: native_uwp_angle_x86_windows
           displayName: ANGLE x86
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
-      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Win)
         parameters:
           name: native_uwp_angle_x64_windows
           displayName: ANGLE x64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
-      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Windows)
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Win)
         parameters:
           name: native_uwp_angle_arm_windows
           displayName: ANGLE arm
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
-      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Win)
         parameters:
           name: native_uwp_angle_arm64_windows
           displayName: ANGLE arm64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
-      - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Win)
         parameters:
           name: native_uwp_x86_windows
           displayName: x86
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
           additionalArgs: --buildarch=x86 --skipAngle=true
-      - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Win)
         parameters:
           name: native_uwp_x64_windows
           displayName: x64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
           additionalArgs: --buildarch=x64 --skipAngle=true
-      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Win)
         parameters:
           name: native_uwp_arm_windows
           displayName: arm
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
           additionalArgs: --buildarch=arm --skipAngle=true
-      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Win)
         parameters:
           name: native_uwp_arm64_windows
           displayName: arm64
@@ -161,31 +161,31 @@ stages:
           additionalArgs: --buildarch=arm64 --skipAngle=true
 
   - stage: native_win32_windows
-    displayName: Build Native Win32 (Windows)
+    displayName: Native Win32 (Win)
     dependsOn: prepare
     jobs:
-      - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Win)
         parameters:
           name: native_win32_x86_windows
           displayName: x86
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
           additionalArgs: --buildarch=x86
-      - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Win)
         parameters:
           name: native_win32_x64_windows
           displayName: x64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
           additionalArgs: --buildarch=x64
-      - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Win)
         parameters:
           name: native_win32_arm64_windows
           displayName: arm64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
           additionalArgs: --buildarch=arm64
-      - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Win)
         parameters:
           name: native_win32_x64_nanoserver_windows
           displayName: NanoServer x64
@@ -196,7 +196,7 @@ stages:
             - nano-api-scan
 
   - stage: native_android_macos
-    displayName: Build Native Android (macOS)
+    displayName: Native Android (macOS)
     dependsOn: prepare
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
@@ -229,7 +229,7 @@ stages:
           additionalArgs: --buildarch=arm64
 
   - stage: native_apple_macos
-    displayName: Build Native Apple (macOS)
+    displayName: Native Apple (macOS)
     dependsOn: prepare
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
@@ -258,7 +258,7 @@ stages:
           target: externals-watchos
 
   - stage: native_tizen_macos
-    displayName: Build Native Tizen (macOS)
+    displayName: Native Tizen (macOS)
     dependsOn: prepare
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
@@ -270,7 +270,7 @@ stages:
           condition: false # TODO: TIZEN INSTALL BUGS
 
   - stage: native_linux_linux
-    displayName: Build Native Linux (Linux)
+    displayName: Native Linux (Linux)
     dependsOn: prepare
     jobs:
       - template: azure-templates-linux-matrix.yml # Build Native Linux (Linux)
@@ -305,19 +305,19 @@ stages:
               alt: gcc
 
   - stage: native_tizen_linux
-    displayName: Build Native Tizen (Linux)
+    displayName: Native Tizen (Linux)
     dependsOn: prepare
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
         parameters:
           name: native_tizen_linux
-          displayName: Build Native Tizen (Linux)
+          displayName: Native Tizen (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(TIZEN_LINUX_PACKAGES)
           target: externals-tizen
 
   - stage: native_wasm_linux
-    displayName: Build Native WASM (Linux)
+    displayName: Native WASM (Linux)
     dependsOn: prepare
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Native WASM (Linux)
@@ -345,7 +345,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Build Managed (Windows)
         parameters:
           name: managed_windows
-          displayName: Build Managed (Windows)
+          displayName: Managed (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs
           additionalArgs: --exclusive
@@ -370,7 +370,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
-          displayName: Build Managed (macOS)
+          displayName: Managed (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: libs
           additionalArgs: --exclusive
@@ -388,7 +388,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
         parameters:
           name: managed_linux
-          displayName: Build Managed (Linux)
+          displayName: Managed (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: libs
