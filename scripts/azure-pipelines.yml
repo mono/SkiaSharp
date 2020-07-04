@@ -473,7 +473,7 @@ stages:
             additionalConditions: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   - stage: tests
-    displayName: Run Tests
+    displayName: Tests
     dependsOn:
       - native_android_windows
       - native_tizen_windows
@@ -489,7 +489,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Tests (Windows)
         parameters:
           name: tests_windows
-          displayName: Tests (Windows)
+          displayName: Windows
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -522,7 +522,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
           name: tests_macos
-          displayName: Tests (macOS)
+          displayName: macOS
           vmImage: $(VM_IMAGE_MAC)
           target: tests
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -554,7 +554,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
           name: tests_linux
-          displayName: Tests (Linux)
+          displayName: Linux
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: tests
@@ -587,7 +587,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Tests [WASM] (Linux)
         parameters:
           name: tests_wasm_linux
-          displayName: Tests [WASM] (Linux)
+          displayName: WASM (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES) ninja-build
           target: tests-wasm
@@ -644,13 +644,13 @@ stages:
               summaryFileLocation: 'output/**/Cobertura.xml'
 
   - stage: samples
-    displayName: Build Samples
+    displayName: Samples
     dependsOn: package
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
         parameters:
           name: samples_windows
-          displayName: Build Samples (Windows)
+          displayName: Windows
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
           shouldPublish: false
@@ -664,7 +664,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
         parameters:
           name: samples_macos
-          displayName: Build Samples (macOS)
+          displayName: macOS
           vmImage: $(VM_IMAGE_MAC)
           target: samples
           shouldPublish: false
@@ -693,7 +693,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
         parameters:
           name: samples_linux
-          displayName: Build Samples (Linux)
+          displayName: Linux
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
