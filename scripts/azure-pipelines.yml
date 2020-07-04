@@ -278,7 +278,7 @@ stages:
           builds:
             - name: linux
             - name: linux_nodeps
-              desc: 'No Dependencies'
+              desc: 'No Deps'
               additionalArgs: --verifyExcluded=fontconfig
               gnArgs: skia_use_fontconfig=false
           matrix:
@@ -297,12 +297,12 @@ stages:
             - arch: arm
               docker: scripts/Docker/ubuntu16/gcc-cross
               gnArgs: extra_cflags+=[ \'-Wno-psabi\' ]
-              alt: _gcc
+              alt: gcc
             - arch: arm64
               docker: scripts/Docker/ubuntu16/gcc-cross
               dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
               gnArgs: extra_cflags+=[ \'-Wno-psabi\' ]
-              alt: _gcc
+              alt: gcc
 
   - stage: native_tizen_linux
     displayName: Build Native Tizen (Linux)
