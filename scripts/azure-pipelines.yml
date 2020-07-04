@@ -266,11 +266,11 @@ stages:
               target: externals-linux-clang-cross
             - arch: arm
               docker: scripts/Docker/ubuntu16/gcc-cross
-              gnArgs: 'extra_cflags+=[ \'-Wno-psabi\' ]'
+              gnArgs: extra_cflags+=[ \'-Wno-psabi\' ]
             - arch: arm64
               docker: scripts/Docker/ubuntu16/gcc-cross
               dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
-              gnArgs: 'extra_cflags+=[ \'-Wno-psabi\' ]'
+              gnArgs: extra_cflags+=[ \'-Wno-psabi\' ]
 
 
       # - template: azure-templates-bootstrapper.yml # Build Native Linux (Linux)
