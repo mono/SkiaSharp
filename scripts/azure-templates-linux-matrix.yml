@@ -15,9 +15,9 @@ parameters:
 jobs:
   - ${{ each item in parameters.matrix }}:
     - ${{ each build in parameters.builds }}:
-      - template: azure-templates-bootstrapper.yml # Build Native Linux (Linux)
+      - template: azure-templates-bootstrapper.yml
         parameters:
-          name: native_linux_${{ item.arch }}_${{ coalesce(item.variant, 'default') }}_${{ build.name }}_linux
+          name: native_${{ build.name }}_${{ item.arch }}_${{ coalesce(item.variant, 'default') }}_linux
           displayName: Build Native Linux|${{ item.arch }} [${{ coalesce(item.variant, 'default') }}|${{ build.desc }}]
           vmImage: $(VM_IMAGE_LINUX)
           docker: ${{ item.docker }}
