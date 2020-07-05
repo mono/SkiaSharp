@@ -24,4 +24,4 @@ jobs:
           docker: ${{ item.docker }}
           dockerArgs: ${{ item.dockerArgs }}
           target: ${{ coalesce(item.target, 'externals-linux') }}
-          additionalArgs: --buildarch=${{ item.arch }} --variant=${{ item.variant }} ${{ build.additionalArgs }} ${{ item.additionalArgs }}
+          additionalArgs: --buildarch=${{ item.arch }} --variant=${{ item.variant }}${{ build.name }} ${{ build.additionalArgs }} ${{ item.additionalArgs }}
