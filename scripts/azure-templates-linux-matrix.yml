@@ -19,7 +19,7 @@ jobs:
       - template: azure-templates-bootstrapper.yml
         parameters:
           name: ${{ replace(format('native_linux_{0}_{1}_{2}_{3}_linux', item.arch, item.variant, build.name, item.alt), '__', '_') }}
-          displayName: ${{ item.arch }} (${{ replace(replace(format('{0},{1},{2},{3}', item.arch, item.variant, build.name, item.alt), ',,', ','), ',', ', ') }})
+          displayName: ${{ item.arch }} ${{ replace(replace(replace(replace(format('({0}|{1}|{2}|{3})', item.arch, item.variant, build.name, item.alt), '||', '|'), '(|', '('), '|)', ')'), '|', ', ') }}
           vmImage: $(VM_IMAGE_LINUX)
           docker: ${{ item.docker }}
           dockerArgs: ${{ item.dockerArgs }}
