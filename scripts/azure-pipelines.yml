@@ -276,8 +276,8 @@ stages:
       - template: azure-templates-linux-matrix.yml # Build Native Linux (Linux)
         parameters:
           builds:
-            - name: linux
-            - name: linux_nodeps
+            - name: ''
+            - name: nodeps
               desc: 'No Deps'
               additionalArgs: --verifyExcluded=fontconfig
               gnArgs: skia_use_fontconfig=false
@@ -394,14 +394,14 @@ stages:
           target: libs
           additionalArgs: --exclusive
           requiredArtifacts:
-            - native_linux_linux
+            - native_linux_x64_linux
             - native_linux_arm_linux
             - native_linux_arm64_linux
-            - native_linux_nodependencies_linux
-            - native_linux_arm_nodependencies_linux
-            - native_linux_arm64_nodependencies_linux
-            - native_linux_alpinenodependencies_linux
+            - native_linux_x64_nodeps_linux
+            - native_linux_arm_nodeps_linux
+            - native_linux_arm64_nodeps_linux
             - native_linux_alpine_linux
+            - native_linux_alpine_nodeps_linux
             - native_tizen_linux
 
   - stage: package

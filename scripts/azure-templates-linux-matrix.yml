@@ -18,7 +18,7 @@ jobs:
     - ${{ each item in parameters.matrix }}:
       - template: azure-templates-bootstrapper.yml
         parameters:
-          name: native_${{ build.name }}_${{ item.arch }}_${{ coalesce(item.variant, 'default') }}${{ item.alt }}_linux
+          name: ${{ replace(format('native_linux_{0}_{1}_{2}_{3}_linux', item.arch, item.variant, build.name, item.alt), '__', '_') }}
           displayName: ${{ item.arch }} (${{ join(',', [ item.variant, item.alt, build.desc ])  }})
           vmImage: $(VM_IMAGE_LINUX)
           docker: ${{ item.docker }}
