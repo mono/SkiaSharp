@@ -56,7 +56,7 @@ stages:
               updateBuild: true
 
   - stage: native_windows
-    displayName: Native Android (Win)
+    displayName: Native Windows
     dependsOn: prepare
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Win)
@@ -181,7 +181,7 @@ stages:
             - nano-api-scan
 
   - stage: native_macos
-    displayName: Native Android (macOS)
+    displayName: Native macOS
     dependsOn: prepare
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
@@ -245,7 +245,7 @@ stages:
           condition: false # TODO: TIZEN INSTALL BUGS
 
   - stage: native_linux
-    displayName: Native Linux (Linux)
+    displayName: Native Linux
     dependsOn: prepare
     jobs:
       - template: azure-templates-linux-matrix.yml # Build Native Linux (Linux)
