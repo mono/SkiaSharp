@@ -93,7 +93,7 @@ Task("libHarfBuzzSharp")
             $"target_os='linux' " +
             $"target_cpu='{arch}' " +
             $"is_official_build=true " +
-            $"strip_unused_symbols=false " +
+            $"visibility_hidden=false " +
             $"extra_asmflags=[] " +
             $"extra_cflags=[] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
