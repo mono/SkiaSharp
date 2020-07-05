@@ -75,6 +75,11 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 57, 0) },
 };
 
+Information("Arguments:");
+foreach (var arg in CAKE_ARGUMENTS) {
+    Information($"    {arg.Key.PadRight(30)} {{0}}", arg.Value);
+}
+
 #load "cake/msbuild.cake"
 #load "cake/UtilsManaged.cake"
 #load "cake/externals.cake"
