@@ -51,6 +51,18 @@ stages:
           name: $(VM_IMAGE_LINUX)
         steps:
           - checkout: none
+          - template: azure-templates-variables.yml
+            parameters:
+              updateBuild: true
+
+  - stage: testing
+    jobs:
+      - job: testing
+        displayName: Prepare Build
+        pool:
+          name: $(VM_IMAGE_LINUX)
+        steps:
+          - checkout: none
           - pwsh: |
               echo "Downloading Tizen Studio..."
               New-Item "$env:USERPROFILE\tizen-download-temp" -Type Directory -Force | Out-Null
@@ -62,18 +74,6 @@ stages:
               dir $env:USERPROFILE
               dir $env:USERPROFILE\tizen-studio
             displayName: Download Tizen Studio Patch
-
-  - stage: testing
-    jobs:
-      - job: testing
-        displayName: Prepare Build
-        pool:
-          name: $(VM_IMAGE_LINUX)
-        steps:
-          - checkout: none
-          - template: azure-templates-variables.yml
-            parameters:
-              updateBuild: true
 
 
   - stage: native
