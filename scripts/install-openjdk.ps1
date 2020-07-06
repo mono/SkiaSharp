@@ -6,6 +6,8 @@ $ErrorActionPreference = 'Stop'
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+$HOME_DIR = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
+
 $version = "13.0.2"
 if ($IsMacOS) {
     $ext = "tar.gz"
@@ -18,13 +20,13 @@ if ($IsMacOS) {
     $url = "https://download.java.net/java/GA/jdk13.0.2/d4173c853231432d94f001e99d882ca7/8/GPL/openjdk-13.0.2_windows-x64_bin.zip"
 }
 
-$jdk = Join-Path "$HOME" "openjdk"
+$jdk = Join-Path "$HOME_DIR" "openjdk"
 if ($InstallDestination) {
     $jdk = $InstallDestination
 }
 Write-Host "Install destination is '$jdk'..."
 
-$jdkTemp = Join-Path "$HOME" "openjdk-temp"
+$jdkTemp = Join-Path "$HOME_DIR" "openjdk-temp"
 $archive = Join-Path "$jdkTemp" "openjdk.$ext"
 
 # download
