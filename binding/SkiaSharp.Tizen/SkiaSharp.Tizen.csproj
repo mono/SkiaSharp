@@ -12,9 +12,9 @@
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\tizen\armel\libSkiaSharp.so" Link="nuget\build\tizen40\runtimes\tizen-arm\native\libSkiaSharp.so" />
-    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.so" Link="nuget\build\tizen40\runtimes\tizen-x86\native\libSkiaSharp.so" />
-    <None Include="nuget\build\tizen40\SkiaSharp.targets" />
+    <None Include="..\..\output\native\tizen\armel\libSkiaSharp.so" Link="nuget\build\$(TargetFramework)\arm\libSkiaSharp.so" />
+    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.so" Link="nuget\build\$(TargetFramework)\x86\libSkiaSharp.so" />
+    <None Include="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
