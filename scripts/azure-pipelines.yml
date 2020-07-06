@@ -105,6 +105,8 @@ stages:
                 New-Item "$env:USERPROFILE\tizen-download-temp" -Type Directory -Force | Out-Null
                 Invoke-WebRequest -Uri "$(TIZEN_STUDIO_URL)" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip"
                 Expand-Archive -Path "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -DestinationPath "$env:USERPROFILE\tizen-studio"
+                dir $env:USERPROFILE
+                dir $env:USERPROFILE\tizen-studio
               displayName: Download Tizen Studio Patch
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
         parameters:
