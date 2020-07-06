@@ -80,15 +80,15 @@ stages:
     displayName: Build Native
     dependsOn: prepare
     jobs:
-      # # NATIVE JOBS - WINDOWS
-      # - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Windows)
-      #   parameters:
-      #     name: native_android_x86_windows
-      #     displayName: Build Native Android|x86 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-android
-      #     additionalArgs: --buildarch=x86
-      #     installWindowsSdk: false
+      # NATIVE JOBS - WINDOWS
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Windows)
+        parameters:
+          name: native_android_x86_windows
+          displayName: Build Native Android|x86 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+          additionalArgs: --buildarch=x86
+          installWindowsSdk: false
       # - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Windows)
       #   parameters:
       #     name: native_android_x64_windows
