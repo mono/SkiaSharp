@@ -55,26 +55,6 @@ stages:
             parameters:
               updateBuild: true
 
-  - stage: testing
-    jobs:
-      - job: testing
-        displayName: Prepare Build
-        pool:
-          name: $(VM_IMAGE_WINDOWS)
-        steps:
-          - checkout: none
-          - pwsh: |
-              echo "Downloading Tizen Studio..."
-              New-Item "$env:USERPROFILE\tizen-download-temp" -Type Directory -Force | Out-Null
-              curl -L -o "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -H "Authorization: $(TIZEN_STUDIO_TOKEN)" "$(TIZEN_STUDIO_URL)"
-              echo "Download complete, extracting..."
-              Expand-Archive -Path "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -DestinationPath "$env:USERPROFILE\tizen-studio"
-              echo "Extraction complete."
-              dir $env:USERPROFILE
-              dir $env:USERPROFILE\tizen-studio
-            displayName: Download Tizen Studio Patch
-
-
   - stage: native
     displayName: Build Native
     dependsOn: prepare
@@ -88,244 +68,242 @@ stages:
           target: externals-android
           additionalArgs: --buildarch=x86
           installWindowsSdk: false
-      # - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Windows)
-      #   parameters:
-      #     name: native_android_x64_windows
-      #     displayName: Build Native Android|x64 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-android
-      #     additionalArgs: --buildarch=x64
-      #     installWindowsSdk: false
-      # - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Windows)
-      #   parameters:
-      #     name: native_android_arm_windows
-      #     displayName: Build Native Android|arm (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-android
-      #     additionalArgs: --buildarch=arm
-      #     installWindowsSdk: false
-      # - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Windows)
-      #   parameters:
-      #     name: native_android_arm64_windows
-      #     displayName: Build Native Android|arm64 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-android
-      #     additionalArgs: --buildarch=arm64
-      #     installWindowsSdk: false
-      # - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
-      #   parameters:
-      #     name: native_tizen_windows
-      #     displayName: Build Native Tizen (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-tizen
-      #     installTizenSdk: false
-      #     installWindowsSdk: false
-      #     preBuildSteps:
-      #       - pwsh: |
-      #           echo "Downloading Tizen Studio..."
-      #           New-Item "$env:USERPROFILE\tizen-download-temp" -Type Directory -Force | Out-Null
-      #           curl "$(TIZEN_STUDIO_URL)" -H "Authorization: $(TIZEN_STUDIO_TOKEN)" -o "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip"
-      #           echo "Download complete, extracting..."
-      #           Expand-Archive -Path "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -DestinationPath "$env:USERPROFILE\tizen-studio"
-      #           echo "Extraction complete."
-      #           dir $env:USERPROFILE
-      #           dir $env:USERPROFILE\tizen-studio
-      #         displayName: Download Tizen Studio Patch
-      # - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
-      #   parameters:
-      #     name: native_uwp_angle_x86_windows
-      #     displayName: Build ANGLE UWP|x86 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: ANGLE
-      #     additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
-      # - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Windows)
-      #   parameters:
-      #     name: native_uwp_angle_x64_windows
-      #     displayName: Build ANGLE UWP|x64 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: ANGLE
-      #     additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
-      # - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Windows)
-      #   parameters:
-      #     name: native_uwp_angle_arm_windows
-      #     displayName: Build ANGLE UWP|arm (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: ANGLE
-      #     additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
-      # - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Windows)
-      #   parameters:
-      #     name: native_uwp_angle_arm64_windows
-      #     displayName: Build ANGLE UWP|arm64 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: ANGLE
-      #     additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
-      # - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
-      #   parameters:
-      #     name: native_uwp_x86_windows
-      #     displayName: Build Native UWP|x86 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-uwp
-      #     additionalArgs: --buildarch=x86 --skipAngle=true
-      # - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Windows)
-      #   parameters:
-      #     name: native_uwp_x64_windows
-      #     displayName: Build Native UWP|x64 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-uwp
-      #     additionalArgs: --buildarch=x64 --skipAngle=true
-      # - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
-      #   parameters:
-      #     name: native_uwp_arm_windows
-      #     displayName: Build Native UWP|arm (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-uwp
-      #     additionalArgs: --buildarch=arm --skipAngle=true
-      # - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
-      #   parameters:
-      #     name: native_uwp_arm64_windows
-      #     displayName: Build Native UWP|arm64 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-uwp
-      #     additionalArgs: --buildarch=arm64 --skipAngle=true
-      # - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
-      #   parameters:
-      #     name: native_win32_x86_windows
-      #     displayName: Build Native Win32|x86 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-windows
-      #     additionalArgs: --buildarch=x86
-      # - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
-      #   parameters:
-      #     name: native_win32_x64_windows
-      #     displayName: Build Native Win32|x64 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-windows
-      #     additionalArgs: --buildarch=x64
-      # - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Windows)
-      #   parameters:
-      #     name: native_win32_arm64_windows
-      #     displayName: Build Native Win32|arm64 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-windows
-      #     additionalArgs: --buildarch=arm64
-      # - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Windows)
-      #   parameters:
-      #     name: native_win32_x64_nanoserver_windows
-      #     displayName: Build Native NanoServer|x64 (Windows)
-      #     vmImage: $(VM_IMAGE_WINDOWS)
-      #     target: externals-nanoserver
-      #     additionalArgs: --buildarch=x64
-      #     tools:
-      #       - nano-api-scan
-      # # NATIVE JOBS - MAC
-      # - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
-      #   parameters:
-      #     name: native_android_x86_macos
-      #     displayName: Build Native Android|x86 (macOS)
-      #     vmImage: $(VM_IMAGE_MAC)
-      #     target: externals-android
-      #     additionalArgs: --buildarch=x86
-      # - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
-      #   parameters:
-      #     name: native_android_x64_macos
-      #     displayName: Build Native Android|x64 (macOS)
-      #     vmImage: $(VM_IMAGE_MAC)
-      #     target: externals-android
-      #     additionalArgs: --buildarch=x64
-      # - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
-      #   parameters:
-      #     name: native_android_arm_macos
-      #     displayName: Build Native Android|arm (macOS)
-      #     vmImage: $(VM_IMAGE_MAC)
-      #     target: externals-android
-      #     additionalArgs: --buildarch=arm
-      # - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
-      #   parameters:
-      #     name: native_android_arm64_macos
-      #     displayName: Build Native Android|arm64 (macOS)
-      #     vmImage: $(VM_IMAGE_MAC)
-      #     target: externals-android
-      #     additionalArgs: --buildarch=arm64
-      # - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
-      #   parameters:
-      #     name: native_ios_macos
-      #     displayName: Build Native iOS (macOS)
-      #     vmImage: $(VM_IMAGE_MAC)
-      #     target: externals-ios
-      # - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
-      #   parameters:
-      #     name: native_macos_macos
-      #     displayName: Build Native macOS (macOS)
-      #     vmImage: $(VM_IMAGE_MAC)
-      #     target: externals-macos
-      # - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
-      #   parameters:
-      #     name: native_tizen_macos
-      #     displayName: Build Native Tizen (macOS)
-      #     vmImage: $(VM_IMAGE_MAC)
-      #     target: externals-tizen
-      #     condition: false # TODO: TIZEN INSTALL BUGS
-      # - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
-      #   parameters:
-      #     name: native_tvos_macos
-      #     displayName: Build Native tvOS (macOS)
-      #     vmImage: $(VM_IMAGE_MAC)
-      #     target: externals-tvos
-      # - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
-      #   parameters:
-      #     name: native_watchos_macos
-      #     displayName: Build Native watchOS (macOS)
-      #     vmImage: $(VM_IMAGE_MAC)
-      #     target: externals-watchos
-      # # NATIVE JOBS - LINUX
-      # - template: azure-templates-bootstrapper.yml # Build Native Linux (Linux)
-      #   parameters:
-      #     name: native_linux_linux
-      #     displayName: Build Native Linux (Linux)
-      #     vmImage: $(VM_IMAGE_LINUX)
-      #     docker: scripts/Docker/ubuntu16/amd64
-      #     target: externals-linux
-      #     additionalArgs: --buildarch=x64
-      # - template: azure-templates-bootstrapper.yml # Build Native Linux [No Dependencies] (Linux)
-      #   parameters:
-      #     name: native_linux_nodependencies_linux
-      #     displayName: Build Native Linux [No Dependencies] (Linux)
-      #     vmImage: $(VM_IMAGE_LINUX)
-      #     docker: scripts/Docker/ubuntu16/amd64
-      #     target: externals-linuxnodeps
-      #     additionalArgs: --buildarch=x64
-      # - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine] (Linux)
-      #   parameters:
-      #     name: native_linux_alpine_linux
-      #     displayName: Build Native Linux [Alpine] (Linux)
-      #     vmImage: $(VM_IMAGE_LINUX)
-      #     docker: scripts/Docker/alpine/amd64
-      #     target: externals-linux
-      #     additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpine
-      # - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine, No Dependencies] (Linux)
-      #   parameters:
-      #     name: native_linux_alpinenodependencies_linux
-      #     displayName: Build Native Linux [Alpine, No Dependencies] (Linux)
-      #     vmImage: $(VM_IMAGE_LINUX)
-      #     docker: scripts/Docker/alpine/amd64
-      #     target: externals-linuxnodeps
-      #     additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpinenodeps
-      # - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
-      #   parameters:
-      #     name: native_tizen_linux
-      #     displayName: Build Native Tizen (Linux)
-      #     vmImage: $(VM_IMAGE_LINUX)
-      #     packages: $(TIZEN_LINUX_PACKAGES)
-      #     target: externals-tizen
-      #     condition: false # TODO: TIZEN INSTALL BUGS
-      # # NATIVE JOBS - WASM
-      # - template: azure-templates-bootstrapper.yml # Build Native WASM (Linux)
-      #   parameters:
-      #     name: native_wasm_linux
-      #     displayName: Build Native WASM (Linux)
-      #     vmImage: $(VM_IMAGE_LINUX)
-      #     docker: scripts/Docker/wasm
-      #     target: externals-wasm
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Windows)
+        parameters:
+          name: native_android_x64_windows
+          displayName: Build Native Android|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+          additionalArgs: --buildarch=x64
+          installWindowsSdk: false
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Windows)
+        parameters:
+          name: native_android_arm_windows
+          displayName: Build Native Android|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+          additionalArgs: --buildarch=arm
+          installWindowsSdk: false
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Windows)
+        parameters:
+          name: native_android_arm64_windows
+          displayName: Build Native Android|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+          additionalArgs: --buildarch=arm64
+          installWindowsSdk: false
+      - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
+        parameters:
+          name: native_tizen_windows
+          displayName: Build Native Tizen (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-tizen
+          installTizenSdk: false
+          installWindowsSdk: false
+          preBuildSteps:
+            - pwsh: |
+                echo "Downloading Tizen Studio..."
+                New-Item "$env:USERPROFILE\tizen-download-temp" -Type Directory -Force | Out-Null
+                curl -L -o "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -H "Authorization: $(TIZEN_STUDIO_TOKEN)" "$(TIZEN_STUDIO_URL)"
+                echo "Download complete, extracting..."
+                Expand-Archive -Path "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -DestinationPath "$env:USERPROFILE"
+                echo "Extraction complete."
+              displayName: Download Tizen Studio Patch
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
+        parameters:
+          name: native_uwp_angle_x86_windows
+          displayName: Build ANGLE UWP|x86 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Windows)
+        parameters:
+          name: native_uwp_angle_x64_windows
+          displayName: Build ANGLE UWP|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Windows)
+        parameters:
+          name: native_uwp_angle_arm_windows
+          displayName: Build ANGLE UWP|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Windows)
+        parameters:
+          name: native_uwp_angle_arm64_windows
+          displayName: Build ANGLE UWP|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: ANGLE
+          additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
+        parameters:
+          name: native_uwp_x86_windows
+          displayName: Build Native UWP|x86 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=x86 --skipAngle=true
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Windows)
+        parameters:
+          name: native_uwp_x64_windows
+          displayName: Build Native UWP|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=x64 --skipAngle=true
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
+        parameters:
+          name: native_uwp_arm_windows
+          displayName: Build Native UWP|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=arm --skipAngle=true
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
+        parameters:
+          name: native_uwp_arm64_windows
+          displayName: Build Native UWP|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=arm64 --skipAngle=true
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
+        parameters:
+          name: native_win32_x86_windows
+          displayName: Build Native Win32|x86 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-windows
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
+        parameters:
+          name: native_win32_x64_windows
+          displayName: Build Native Win32|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-windows
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Windows)
+        parameters:
+          name: native_win32_arm64_windows
+          displayName: Build Native Win32|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-windows
+          additionalArgs: --buildarch=arm64
+      - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Windows)
+        parameters:
+          name: native_win32_x64_nanoserver_windows
+          displayName: Build Native NanoServer|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-nanoserver
+          additionalArgs: --buildarch=x64
+          tools:
+            - nano-api-scan
+      # NATIVE JOBS - MAC
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
+        parameters:
+          name: native_android_x86_macos
+          displayName: Build Native Android|x86 (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
+        parameters:
+          name: native_android_x64_macos
+          displayName: Build Native Android|x64 (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
+        parameters:
+          name: native_android_arm_macos
+          displayName: Build Native Android|arm (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
+        parameters:
+          name: native_android_arm64_macos
+          displayName: Build Native Android|arm64 (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=arm64
+      - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
+        parameters:
+          name: native_ios_macos
+          displayName: Build Native iOS (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-ios
+      - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
+        parameters:
+          name: native_macos_macos
+          displayName: Build Native macOS (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-macos
+      - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
+        parameters:
+          name: native_tizen_macos
+          displayName: Build Native Tizen (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-tizen
+          condition: false # TODO: TIZEN INSTALL BUGS
+      - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
+        parameters:
+          name: native_tvos_macos
+          displayName: Build Native tvOS (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-tvos
+      - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
+        parameters:
+          name: native_watchos_macos
+          displayName: Build Native watchOS (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-watchos
+      # NATIVE JOBS - LINUX
+      - template: azure-templates-bootstrapper.yml # Build Native Linux (Linux)
+        parameters:
+          name: native_linux_linux
+          displayName: Build Native Linux (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: scripts/Docker/ubuntu16/amd64
+          target: externals-linux
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Linux [No Dependencies] (Linux)
+        parameters:
+          name: native_linux_nodependencies_linux
+          displayName: Build Native Linux [No Dependencies] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: scripts/Docker/ubuntu16/amd64
+          target: externals-linuxnodeps
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine] (Linux)
+        parameters:
+          name: native_linux_alpine_linux
+          displayName: Build Native Linux [Alpine] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: scripts/Docker/alpine/amd64
+          target: externals-linux
+          additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpine
+      - template: azure-templates-bootstrapper.yml # Build Native Linux [Alpine, No Dependencies] (Linux)
+        parameters:
+          name: native_linux_alpinenodependencies_linux
+          displayName: Build Native Linux [Alpine, No Dependencies] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: scripts/Docker/alpine/amd64
+          target: externals-linuxnodeps
+          additionalArgs: --buildarch=x64 --gn=gn --ninja=ninja --variant=alpinenodeps
+      - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
+        parameters:
+          name: native_tizen_linux
+          displayName: Build Native Tizen (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(TIZEN_LINUX_PACKAGES)
+          target: externals-tizen
+          condition: false # TODO: TIZEN INSTALL BUGS
+      # NATIVE JOBS - WASM
+      - template: azure-templates-bootstrapper.yml # Build Native WASM (Linux)
+        parameters:
+          name: native_wasm_linux
+          displayName: Build Native WASM (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: scripts/Docker/wasm
+          target: externals-wasm
 
   - stage: managed
     displayName: Build Managed
