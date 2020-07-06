@@ -4,8 +4,8 @@ namespace SkiaSharp
 {
 	public unsafe class SKPicture : SKObject, ISKReferenceCounted
 	{
-		internal SKPicture (IntPtr h, bool owns)
-			: base (h, owns)
+		private SKPicture (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -40,6 +40,6 @@ namespace SkiaSharp
 		//
 
 		internal static SKPicture GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKPicture (h, o));
+			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKPicture (h, o, false));
 	}
 }

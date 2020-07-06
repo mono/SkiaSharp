@@ -4,17 +4,9 @@ namespace SkiaSharp
 {
 	public unsafe class SKPictureRecorder : SKObject, ISKSkipObjectRegistration
 	{
-		internal SKPictureRecorder (IntPtr handle, bool owns)
-			: base (handle, owns)
-		{
-		}
-
 		public SKPictureRecorder ()
-			: this (SkiaApi.sk_picture_recorder_new (), true)
+			: base (SkiaApi.sk_picture_recorder_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKPictureRecorder instance.");
-			}
 		}
 
 		protected override void Dispose (bool disposing) =>

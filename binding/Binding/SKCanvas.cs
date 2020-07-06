@@ -10,17 +10,17 @@ namespace SkiaSharp
 		private const int PatchCornerCount = 4;
 		private const int PatchCubicsCount = 12;
 
-		internal SKCanvas (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private protected SKCanvas (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
 		public SKCanvas (SKBitmap bitmap)
-			: this (IntPtr.Zero, true)
+			: base (IntPtr.Zero, true, false)
 		{
 			if (bitmap == null)
 				throw new ArgumentNullException (nameof (bitmap));
-			Handle = SkiaApi.sk_canvas_new_from_bitmap (bitmap.Handle);
+			RegisterHandle (SkiaApi.sk_canvas_new_from_bitmap (bitmap.Handle));
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -1082,7 +1082,7 @@ namespace SkiaSharp
 		}
 
 		internal static SKCanvas GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKCanvas (h, o));
+			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKCanvas (h, o, false));
 	}
 
 	public class SKAutoCanvasRestore : IDisposable

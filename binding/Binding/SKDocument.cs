@@ -8,8 +8,8 @@ namespace SkiaSharp
 	{
 		public const float DefaultRasterDpi = 72.0f;
 
-		internal SKDocument (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKDocument (IntPtr handle)
+			: base (handle)
 		{
 		}
 
@@ -178,7 +178,7 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static SKDocument GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKDocument (handle, true);
+		private static SKDocument GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new SKDocument (handle);
 	}
 }

@@ -4,13 +4,8 @@ namespace SkiaSharp
 {
 	public unsafe class SKRegion : SKObject, ISKSkipObjectRegistration
 	{
-		internal SKRegion (IntPtr handle, bool owns)
-			: base (handle, owns)
-		{
-		}
-
 		public SKRegion ()
-			: this (SkiaApi.sk_region_new (), true)
+			: base (SkiaApi.sk_region_new ())
 		{
 		}
 
@@ -235,7 +230,7 @@ namespace SkiaSharp
 			private readonly SKRegion region;
 
 			internal RectIterator (SKRegion region)
-				: base (SkiaApi.sk_region_iterator_new (region.Handle), true)
+				: base (SkiaApi.sk_region_iterator_new (region.Handle))
 			{
 				this.region = region;
 			}
@@ -266,7 +261,7 @@ namespace SkiaSharp
 			private readonly SKRectI clip;
 
 			internal ClipIterator (SKRegion region, SKRectI clip)
-				: base (SkiaApi.sk_region_cliperator_new (region.Handle, &clip), true)
+				: base (SkiaApi.sk_region_cliperator_new (region.Handle, &clip))
 			{
 				this.region = region;
 				this.clip = clip;
@@ -295,7 +290,7 @@ namespace SkiaSharp
 		public class SpanIterator : SKObject, ISKSkipObjectRegistration
 		{
 			internal SpanIterator (SKRegion region, int y, int left, int right)
-				: base (SkiaApi.sk_region_spanerator_new (region.Handle, y, left, right), true)
+				: base (SkiaApi.sk_region_spanerator_new (region.Handle, y, left, right))
 			{
 			}
 

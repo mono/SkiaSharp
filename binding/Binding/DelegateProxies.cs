@@ -121,7 +121,7 @@ namespace SkiaSharp
 		private static void SKGlyphPathDelegateProxyImplementation (IntPtr pathOrNull, SKMatrix* matrix, void* context)
 		{
 			var del = Get<SKGlyphPathDelegate> ((IntPtr)context, out _);
-			var path = SKPath.GetObject (pathOrNull, false);
+			var path = new SKPath (pathOrNull, false, false);
 			del.Invoke (path, *matrix);
 		}
 	}

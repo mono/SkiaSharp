@@ -5,11 +5,11 @@ namespace SkiaSharp
 {
 	public unsafe abstract class SKStream : SKObject
 	{
-		internal SKStream (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private protected SKStream (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
-		
+
 		public bool IsAtEnd {
 			get {
 				return SkiaApi.sk_stream_is_at_end (Handle);
@@ -173,7 +173,7 @@ namespace SkiaSharp
 			get {
 				return (int)SkiaApi.sk_stream_get_position (Handle);
 			}
-			set { 
+			set {
 				Seek (value);
 			}
 		}
@@ -191,85 +191,82 @@ namespace SkiaSharp
 		}
 
 		internal static SKStream GetObject (IntPtr handle) =>
-			GetOrAddObject<SKStream> (handle, (h, o) => new SKStreamImplementation (h, o));
-	}
+			GetOrAddObject<SKStream> (handle, (h, o) => new SKStreamImplementation (h, o, false));
 
-	internal class SKStreamImplementation : SKStream
-	{
-		internal SKStreamImplementation (IntPtr handle, bool owns)
-			: base (handle, owns)
+		internal class SKStreamImplementation : SKStream
 		{
+			internal SKStreamImplementation (IntPtr handle, bool owns = true, bool registerHandle = true)
+				: base (handle, owns, registerHandle)
+			{
+			}
+
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
+
+			protected override void DisposeNative () =>
+				SkiaApi.sk_stream_destroy (Handle);
 		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
-		protected override void DisposeNative () =>
-			SkiaApi.sk_stream_destroy (Handle);
 	}
 
 	public abstract class SKStreamRewindable : SKStream
 	{
-		internal SKStreamRewindable (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private protected SKStreamRewindable (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 	}
 
 	public abstract class SKStreamSeekable : SKStreamRewindable
 	{
-		internal SKStreamSeekable (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private protected SKStreamSeekable (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 	}
 
 	public abstract class SKStreamAsset : SKStreamSeekable
 	{
-		internal SKStreamAsset (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private protected SKStreamAsset (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
 		internal static new SKStreamAsset GetObject (IntPtr handle) =>
-			GetOrAddObject<SKStreamAsset> (handle, (h, o) => new SKStreamAssetImplementation (h, o));
-	}
+			GetOrAddObject<SKStreamAsset> (handle, (h, o) => new SKStreamAssetImplementation (h, o, false));
 
-	internal class SKStreamAssetImplementation : SKStreamAsset
-	{
-		internal SKStreamAssetImplementation (IntPtr handle, bool owns)
-			: base (handle, owns)
+		internal class SKStreamAssetImplementation : SKStreamAsset
 		{
+			internal SKStreamAssetImplementation (IntPtr handle, bool owns = true, bool registerHandle = true)
+				: base (handle, owns, registerHandle)
+			{
+			}
+
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
+
+			protected override void DisposeNative () =>
+				SkiaApi.sk_stream_asset_destroy (Handle);
 		}
-
-		protected override void Dispose (bool disposing) =>
-			base.Dispose (disposing);
-
-		protected override void DisposeNative () =>
-			SkiaApi.sk_stream_asset_destroy (Handle);
 	}
 
 	public abstract class SKStreamMemory : SKStreamAsset
 	{
-		internal SKStreamMemory (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private protected SKStreamMemory (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 	}
 
 	public unsafe class SKFileStream : SKStreamAsset
 	{
-		internal SKFileStream (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKFileStream (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
 		public SKFileStream (string path)
-			: base (CreateNew (path), true)
+			: base (CreateNew (path))
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKFileStream instance.");
-			}
 		}
 
 		private static IntPtr CreateNew (string path)
@@ -303,41 +300,29 @@ namespace SkiaSharp
 
 	public unsafe class SKMemoryStream : SKStreamMemory
 	{
-		internal SKMemoryStream (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKMemoryStream (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
 		public SKMemoryStream ()
-			: this (SkiaApi.sk_memorystream_new (), true)
+			: base (SkiaApi.sk_memorystream_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");
-			}
 		}
 
 		public SKMemoryStream (ulong length)
-			: this(SkiaApi.sk_memorystream_new_with_length ((IntPtr)length), true)
+			: base (SkiaApi.sk_memorystream_new_with_length ((IntPtr)length))
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");
-			}
 		}
 
 		internal SKMemoryStream (IntPtr data, IntPtr length, bool copyData = false)
-			: this(SkiaApi.sk_memorystream_new_with_data ((void*)data, length, copyData), true)
+			: base (SkiaApi.sk_memorystream_new_with_data ((void*)data, length, copyData))
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");
-			}
 		}
 
 		public SKMemoryStream (SKData data)
-			: this(SkiaApi.sk_memorystream_new_with_skdata (data.Handle), true)
+			: base (SkiaApi.sk_memorystream_new_with_skdata (data.Handle))
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");
-			}
 		}
 
 		public SKMemoryStream (byte[] data)
@@ -372,11 +357,11 @@ namespace SkiaSharp
 
 	public unsafe abstract class SKWStream : SKObject
 	{
-		internal SKWStream (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private protected SKWStream (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
-		
+
 		public virtual int BytesWritten {
 			get {
 				return (int)SkiaApi.sk_wstream_bytes_written (Handle);
@@ -458,7 +443,7 @@ namespace SkiaSharp
 		public bool WriteStream (SKStream input, int length)
 		{
 			if (input == null) {
-				throw new ArgumentNullException (nameof(input));
+				throw new ArgumentNullException (nameof (input));
 			}
 
 			return SkiaApi.sk_wstream_write_stream (Handle, input.Handle, (IntPtr)length);
@@ -466,23 +451,20 @@ namespace SkiaSharp
 
 		public static int GetSizeOfPackedUInt32 (UInt32 value)
 		{
-			return SkiaApi.sk_wstream_get_size_of_packed_uint ((IntPtr) value);
+			return SkiaApi.sk_wstream_get_size_of_packed_uint ((IntPtr)value);
 		}
 	}
 
 	public unsafe class SKFileWStream : SKWStream
 	{
-		internal SKFileWStream (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKFileWStream (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
 		public SKFileWStream (string path)
-			: base (CreateNew (path), true)
+			: base (CreateNew (path))
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKFileWStream instance.");
-			}
 		}
 
 		private static IntPtr CreateNew (string path)
@@ -516,17 +498,14 @@ namespace SkiaSharp
 
 	public unsafe class SKDynamicMemoryWStream : SKWStream
 	{
-		internal SKDynamicMemoryWStream (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKDynamicMemoryWStream (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
 		public SKDynamicMemoryWStream ()
-			: base (SkiaApi.sk_dynamicmemorywstream_new (), true)
+			: base (SkiaApi.sk_dynamicmemorywstream_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKDynamicMemoryWStream instance.");
-			}
 		}
 
 		public SKData CopyToData ()
@@ -538,7 +517,7 @@ namespace SkiaSharp
 
 		public SKStreamAsset DetachAsStream ()
 		{
-			return SKStreamAssetImplementation.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
+			return SKStreamAsset.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
 		}
 
 		public SKData DetachAsData ()

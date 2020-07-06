@@ -5,60 +5,26 @@ namespace SkiaSharp
 {
 	public unsafe class GRBackendRenderTarget : SKObject, ISKSkipObjectRegistration
 	{
-		internal GRBackendRenderTarget (IntPtr handle, bool owns)
-			: base (handle, owns)
-		{
-		}
-
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use GRBackendRenderTarget(int, int, int, int, GRGlFramebufferInfo) instead.")]
 		public GRBackendRenderTarget (GRBackend backend, GRBackendRenderTargetDesc desc)
-			: this (IntPtr.Zero, true)
+			: base (IntPtr.Zero, true, false)
 		{
-			switch (backend) {
-				case GRBackend.Metal:
-					throw new NotSupportedException ();
-				case GRBackend.OpenGL:
-					var glInfo = new GRGlFramebufferInfo ((uint)desc.RenderTargetHandle, desc.Config.ToGlSizedFormat ());
-					CreateGl (desc.Width, desc.Height, desc.SampleCount, desc.StencilBits, glInfo);
-					break;
-				case GRBackend.Vulkan:
-					throw new NotSupportedException ();
-				case GRBackend.Dawn:
-					throw new NotSupportedException ();
-				default:
-					throw new ArgumentOutOfRangeException (nameof (backend));
-			}
+			if (backend != GRBackend.OpenGL)
+				throw new ArgumentOutOfRangeException (nameof (backend));
+
+			var glInfo = new GRGlFramebufferInfo ((uint)desc.RenderTargetHandle, desc.Config.ToGlSizedFormat ());
+			RegisterHandle (SkiaApi.gr_backendrendertarget_new_gl (desc.Width, desc.Height, desc.SampleCount, desc.StencilBits, &glInfo));
 		}
 
 		public GRBackendRenderTarget (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
-			: this (IntPtr.Zero, true)
+			: base (SkiaApi.gr_backendrendertarget_new_gl (width, height, sampleCount, stencilBits, &glInfo))
 		{
-			CreateGl (width, height, sampleCount, stencilBits, glInfo);
 		}
 
 		public GRBackendRenderTarget (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo)
-			: this (IntPtr.Zero, true)
+			: base (SkiaApi.gr_backendrendertarget_new_vulkan (width, height, sampleCount, &vkImageInfo))
 		{
-			CreateVulkan (width, height, sampleCount, vkImageInfo);
-		}
-
-		private void CreateGl (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
-		{
-			Handle = SkiaApi.gr_backendrendertarget_new_gl (width, height, sampleCount, stencilBits, &glInfo);
-
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
-			}
-		}
-
-		private void CreateVulkan (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo)
-		{
-			Handle = SkiaApi.gr_backendrendertarget_new_vulkan (width, height, sampleCount, &vkImageInfo);
-
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
-			}
 		}
 
 		protected override void Dispose (bool disposing) =>

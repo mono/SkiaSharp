@@ -17,8 +17,8 @@ namespace SkiaSharp
 			boldItalic = new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
 		}
 
-		internal SKFontStyle (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKFontStyle (IntPtr handle)
+			: base (handle)
 		{
 		}
 
@@ -33,7 +33,7 @@ namespace SkiaSharp
 		}
 
 		public SKFontStyle (int weight, int width, SKFontStyleSlant slant)
-			: this (SkiaApi.sk_fontstyle_new (weight, width, slant), true)
+			: base (SkiaApi.sk_fontstyle_new (weight, width, slant))
 		{
 		}
 
@@ -57,10 +57,20 @@ namespace SkiaSharp
 
 		public static SKFontStyle BoldItalic => boldItalic;
 
+		internal static SKFontStyle Create (SKTypeface typeface)
+		{
+			if (typeface == null)
+				throw new ArgumentNullException (nameof (typeface));
+
+			return GetObject (SkiaApi.sk_typeface_get_fontstyle (typeface.Handle));
+		}
+
 		//
 
 		internal static SKFontStyle GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKFontStyle (handle, true);
+			handle == IntPtr.Zero ? null : new SKFontStyle (handle);
+
+		//
 
 		private sealed class SKFontStyleStatic : SKFontStyle
 		{

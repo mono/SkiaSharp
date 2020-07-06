@@ -6,13 +6,13 @@ namespace SkiaSharp
 {
 	public class SKFontStyleSet : SKObject, ISKReferenceCounted, IEnumerable<SKFontStyle>, IReadOnlyCollection<SKFontStyle>, IReadOnlyList<SKFontStyle>
 	{
-		internal SKFontStyleSet (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKFontStyleSet (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
 		public SKFontStyleSet ()
-			: this (SkiaApi.sk_fontstyleset_create_empty (), true)
+			: base (SkiaApi.sk_fontstyleset_create_empty ())
 		{
 		}
 
@@ -74,6 +74,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKFontStyleSet GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKFontStyleSet (h, o));
+			GetOrAddObject (handle, (h, o) => new SKFontStyleSet (h, o, false));
 	}
 }

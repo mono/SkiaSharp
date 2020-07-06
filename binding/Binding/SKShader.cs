@@ -4,8 +4,8 @@ namespace SkiaSharp
 {
 	public unsafe class SKShader : SKObject, ISKReferenceCounted
 	{
-		internal SKShader (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKShader (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -455,6 +455,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKShader GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKShader (h, o));
+			GetOrAddObject (handle, (h, o) => new SKShader (h, o, false));
 	}
 }

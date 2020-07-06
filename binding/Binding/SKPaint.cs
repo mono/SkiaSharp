@@ -15,29 +15,23 @@ namespace SkiaSharp
 	{
 		private SKFont font;
 
-		internal SKPaint (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKPaint (IntPtr handle)
+			: base (handle)
 		{
 		}
 
 		public SKPaint ()
-			: this (SkiaApi.sk_compatpaint_new (), true)
+			: base (SkiaApi.sk_compatpaint_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
-			}
 		}
 
 		public SKPaint (SKFont font)
-			: this (IntPtr.Zero, true)
+			: base (IntPtr.Zero, true, false)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			Handle = SkiaApi.sk_compatpaint_new_with_font (font.Handle);
-
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
+			RegisterHandle (SkiaApi.sk_compatpaint_new_with_font (font.Handle));
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -248,7 +242,7 @@ namespace SkiaSharp
 		// Clone
 
 		public SKPaint Clone () =>
-			GetObject (SkiaApi.sk_compatpaint_clone (Handle));
+			new SKPaint (SkiaApi.sk_compatpaint_clone (Handle));
 
 		// MeasureText
 
@@ -700,10 +694,5 @@ namespace SkiaSharp
 
 		internal SKFont GetFont () =>
 			font ??= OwnedBy (SKFont.GetObject (SkiaApi.sk_compatpaint_get_font (Handle), false), this);
-
-		//
-
-		internal static SKPaint GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKPaint (handle, true);
 	}
 }

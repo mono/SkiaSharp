@@ -4,13 +4,8 @@ namespace SkiaSharp
 {
 	public unsafe class GRVkExtensions : SKObject, ISKSkipObjectRegistration
 	{
-		internal GRVkExtensions (IntPtr h, bool owns)
-			: base (h, owns)
-		{
-		}
-
-		private GRVkExtensions ()
-			: this (SkiaApi.gr_vk_extensions_new (), true)
+		public GRVkExtensions ()
+			: base (SkiaApi.gr_vk_extensions_new ())
 		{
 		}
 
@@ -41,8 +36,5 @@ namespace SkiaSharp
 			extensions.Initialize (getProc, vkInstance, vkPhysicalDevice, instanceExtensions, deviceExtensions);
 			return extensions;
 		}
-
-		internal static GRVkExtensions GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new GRVkExtensions (handle, true);
 	}
 }

@@ -5,25 +5,19 @@ namespace SkiaSharp
 {
 	internal unsafe class SKString : SKObject, ISKSkipObjectRegistration
 	{
-		internal SKString (IntPtr handle, bool owns)
-			: base (handle, owns)
+		internal SKString (IntPtr handle)
+			: base (handle)
 		{
 		}
 
 		public SKString ()
-			: base (SkiaApi.sk_string_new_empty (), true)
+			: base (SkiaApi.sk_string_new_empty ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKString instance.");
-			}
 		}
 		
 		public SKString (byte [] src, long length)
-			: base (CreateCopy (src, length), true)
+			: base (CreateCopy (src, length))
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to copy the SKString instance.");
-			}
 		}
 		
 		private static IntPtr CreateCopy (byte [] src, long length)
@@ -70,7 +64,7 @@ namespace SkiaSharp
 			SkiaApi.sk_string_destructor (Handle);
 
 		internal static SKString GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKString (handle, true);
+			handle == IntPtr.Zero ? null : new SKString (handle);
 	}
 }
 

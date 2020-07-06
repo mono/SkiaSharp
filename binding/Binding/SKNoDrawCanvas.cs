@@ -4,15 +4,14 @@ namespace SkiaSharp
 {
 	public class SKNoDrawCanvas : SKCanvas
 	{
-		internal SKNoDrawCanvas (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private protected SKNoDrawCanvas (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
 		public SKNoDrawCanvas (int width, int height)
-			: this (IntPtr.Zero, true)
+			: base (SkiaApi.sk_nodraw_canvas_new (width, height))
 		{
-			Handle = SkiaApi.sk_nodraw_canvas_new (width, height);
 		}
 	}
 }

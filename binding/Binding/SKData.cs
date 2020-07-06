@@ -27,8 +27,8 @@ namespace SkiaSharp
 			//            are initialized before any access is made to them
 		}
 
-		internal SKData (IntPtr x, bool owns)
-			: base (x, owns)
+		private protected SKData (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -250,7 +250,7 @@ namespace SkiaSharp
 		}
 
 		internal static SKData GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKData (h, o));
+			GetOrAddObject (handle, (h, o) => new SKData (h, o, false));
 
 		//
 
@@ -281,8 +281,8 @@ namespace SkiaSharp
 
 		private sealed class SKDataStatic : SKData
 		{
-			internal SKDataStatic (IntPtr x)
-				: base (x, true)
+			internal SKDataStatic (IntPtr handle)
+				: base (handle)
 			{
 				IgnorePublicDispose = true;
 			}

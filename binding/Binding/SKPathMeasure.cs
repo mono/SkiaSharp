@@ -4,30 +4,18 @@ namespace SkiaSharp
 {
 	public unsafe class SKPathMeasure : SKObject, ISKSkipObjectRegistration
 	{
-		internal SKPathMeasure (IntPtr handle, bool owns)
-			: base (handle, owns)
-		{
-		}
-
 		public SKPathMeasure ()
-			: this (SkiaApi.sk_pathmeasure_new (), true)
+			: base (SkiaApi.sk_pathmeasure_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKPathMeasure instance.");
-			}
 		}
 
 		public SKPathMeasure (SKPath path, bool forceClosed = false, float resScale = 1)
-			: this (IntPtr.Zero, true)
+			: base (IntPtr.Zero, true, false)
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 
-			Handle = SkiaApi.sk_pathmeasure_new_with_path (path.Handle, forceClosed, resScale);
-
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKPathMeasure instance.");
-			}
+			RegisterHandle (SkiaApi.sk_pathmeasure_new_with_path (path.Handle, forceClosed, resScale));
 		}
 
 		protected override void Dispose (bool disposing) =>

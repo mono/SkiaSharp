@@ -64,8 +64,8 @@ namespace SkiaSharp
 
 	public unsafe class SKImageFilter : SKObject, ISKReferenceCounted
 	{
-		internal SKImageFilter(IntPtr handle, bool owns)
-			: base(handle, owns)
+		private SKImageFilter (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -337,24 +337,19 @@ namespace SkiaSharp
 		}
 
 		internal static SKImageFilter GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKImageFilter (h, o));
+			GetOrAddObject (handle, (h, o) => new SKImageFilter (h, o, false));
 
 		//
 
 		public class CropRect : SKObject
 		{
-			internal CropRect(IntPtr handle, bool owns)
-				: base(handle, owns)
-			{
-			}
-
 			public CropRect()
-				: this(SkiaApi.sk_imagefilter_croprect_new(), true)
+				: base(SkiaApi.sk_imagefilter_croprect_new())
 			{
 			}
 
 			public CropRect(SKRect rect, SKCropRectFlags flags = SKCropRectFlags.HasAll)
-				: this(SkiaApi.sk_imagefilter_croprect_new_with_rect(&rect, (uint)flags), true)
+				: base(SkiaApi.sk_imagefilter_croprect_new_with_rect(&rect, (uint)flags))
 			{
 			}
 

@@ -9,11 +9,6 @@ namespace SkiaSharp
 	{
 		public const int MaxLength = 256;
 
-		internal SKColorTable (IntPtr x, bool owns)
-			: base (x, owns)
-		{
-		}
-
 		public SKColorTable ()
 			: this (new SKPMColor[MaxLength])
 		{
@@ -40,17 +35,10 @@ namespace SkiaSharp
 		}
 
 		public SKColorTable (SKPMColor[] colors, int count)
-			: this (CreateNew (colors, count), true)
-		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKColorTable instance.");
-			}
-		}
-
-		private static IntPtr CreateNew (SKPMColor[] colors, int count)
+			: base (IntPtr.Zero, true, false)
 		{
 			fixed (SKPMColor* c = colors) {
-				return SkiaApi.sk_colortable_new ((uint*)c, count);
+				RegisterHandle (SkiaApi.sk_colortable_new ((uint*)c, count));
 			}
 		}
 

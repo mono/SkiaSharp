@@ -4,17 +4,9 @@ namespace SkiaSharp
 {
 	public unsafe class SK3dView : SKObject, ISKSkipObjectRegistration
 	{
-		internal SK3dView (IntPtr x, bool owns)
-			: base (x, owns)
-		{
-		}
-
 		public SK3dView ()
-			: this (SkiaApi.sk_3dview_new (), true)
+			: base (SkiaApi.sk_3dview_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SK3dView instance.");
-			}
 		}
 
 		protected override void Dispose (bool disposing) =>

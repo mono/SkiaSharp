@@ -20,8 +20,8 @@ namespace SkiaSharp
 			//            are initialized before any access is made to them
 		}
 
-		internal SKColorSpace (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private protected SKColorSpace (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -260,12 +260,12 @@ namespace SkiaSharp
 		//
 
 		internal static SKColorSpace GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
+			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o, false));
 
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{
-			internal SKColorSpaceStatic (IntPtr x)
-				: base (x, true)
+			internal SKColorSpaceStatic (IntPtr handle)
+				: base (handle)
 			{
 				IgnorePublicDispose = true;
 			}

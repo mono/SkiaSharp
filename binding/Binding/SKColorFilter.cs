@@ -9,8 +9,8 @@ namespace SkiaSharp
 		public const int ColorMatrixSize = 20;
 		public const int TableMaxLength = 256;
 
-		internal SKColorFilter(IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKColorFilter (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -93,6 +93,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKColorFilter GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
+			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o, false));
 	}
 }

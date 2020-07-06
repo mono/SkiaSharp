@@ -9,8 +9,8 @@ namespace SkiaSharp
 
 	public unsafe class SKCodec : SKObject, ISKSkipObjectRegistration
 	{
-		internal SKCodec (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKCodec (IntPtr handle)
+			: base (handle)
 		{
 		}
 
@@ -340,7 +340,7 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static SKCodec GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKCodec (handle, true);
+		private static SKCodec GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new SKCodec (handle);
 	}
 }

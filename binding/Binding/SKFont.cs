@@ -10,23 +10,19 @@ namespace SkiaSharp
 		internal const float DefaultScaleX = 1f;
 		internal const float DefaultSkewX = 0f;
 
-		internal SKFont (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKFont (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
 		public SKFont ()
-			: this (SkiaApi.sk_font_new (), true)
+			: base (SkiaApi.sk_font_new ())
 		{
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKFont instance.");
 		}
 
 		public SKFont (SKTypeface typeface, float size = DefaultSize, float scaleX = DefaultScaleX, float skewX = DefaultSkewX)
-			: this (SkiaApi.sk_font_new_with_values (typeface?.Handle ?? IntPtr.Zero, size, scaleX, skewX), true)
+			: base (SkiaApi.sk_font_new_with_values (typeface?.Handle ?? IntPtr.Zero, size, scaleX, skewX))
 		{
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKFont instance.");
 		}
 
 		protected override void DisposeNative () =>
@@ -965,7 +961,7 @@ namespace SkiaSharp
 		//
 
 		internal static SKFont GetObject (IntPtr handle, bool owns = true) =>
-			GetOrAddObject (handle, owns, (h, o) => new SKFont (h, o));
+			GetOrAddObject (handle, owns, (h, o) => new SKFont (h, o, false));
 
 		//
 

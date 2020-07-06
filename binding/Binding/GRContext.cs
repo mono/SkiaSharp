@@ -5,8 +5,8 @@ namespace SkiaSharp
 {
 	public unsafe class GRContext : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
-		internal GRContext (IntPtr h, bool owns)
-			: base (h, owns)
+		private GRContext (IntPtr handle)
+			: base (handle)
 		{
 		}
 
@@ -128,7 +128,7 @@ namespace SkiaSharp
 		[Obsolete]
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
 
-		internal static GRContext GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new GRContext (handle, true);
+		private static GRContext GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new GRContext (handle);
 	}
 }

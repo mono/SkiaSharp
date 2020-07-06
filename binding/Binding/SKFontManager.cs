@@ -20,8 +20,8 @@ namespace SkiaSharp
 			//            are initialized before any access is made to them
 		}
 
-		internal SKFontManager (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private protected SKFontManager (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -195,14 +195,14 @@ namespace SkiaSharp
 		//
 
 		internal static SKFontManager GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o));
+			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o, false));
 
 		//
 
 		private sealed class SKFontManagerStatic : SKFontManager
 		{
-			internal SKFontManagerStatic (IntPtr x)
-				: base (x, true)
+			internal SKFontManagerStatic (IntPtr handle)
+				: base (handle)
 			{
 				IgnorePublicDispose = true;
 			}

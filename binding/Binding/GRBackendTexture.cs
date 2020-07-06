@@ -6,63 +6,38 @@ namespace SkiaSharp
 {
 	public unsafe class GRBackendTexture : SKObject, ISKSkipObjectRegistration
 	{
-		internal GRBackendTexture (IntPtr handle, bool owns)
-			: base (handle, owns)
-		{
-		}
-
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.")]
 		public GRBackendTexture (GRGlBackendTextureDesc desc)
-			: this (IntPtr.Zero, true)
+			: base (IntPtr.Zero, true, false)
 		{
 			var handle = desc.TextureHandle;
 			if (handle.Format == 0) {
 				handle.Format = desc.Config.ToGlSizedFormat ();
 			}
-			CreateGl (desc.Width, desc.Height, false, handle);
+			RegisterHandle (SkiaApi.gr_backendtexture_new_gl (desc.Width, desc.Height, false, &handle));
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.")]
 		public GRBackendTexture (GRBackendTextureDesc desc)
-			: this (IntPtr.Zero, true)
+			: base (IntPtr.Zero, true, false)
 		{
 			var handlePtr = desc.TextureHandle;
 			var oldHandle = Marshal.PtrToStructure<GRTextureInfoObsolete> (handlePtr);
 
-			var handle = new GRGlTextureInfo (oldHandle.fTarget, oldHandle.fID, desc.Config.ToGlSizedFormat ());
-			CreateGl (desc.Width, desc.Height, false, handle);
+			var glInfo = new GRGlTextureInfo (oldHandle.fTarget, oldHandle.fID, desc.Config.ToGlSizedFormat ());
+			RegisterHandle (SkiaApi.gr_backendtexture_new_gl (desc.Width, desc.Height, false, &glInfo));
 		}
 
 		public GRBackendTexture (int width, int height, bool mipmapped, GRGlTextureInfo glInfo)
-			: this (IntPtr.Zero, true)
+			: base (SkiaApi.gr_backendtexture_new_gl (width, height, mipmapped, &glInfo))
 		{
-			CreateGl (width, height, mipmapped, glInfo);
 		}
 
 		public GRBackendTexture (int width, int height, GRVkImageInfo vkInfo)
-			: this (IntPtr.Zero, true)
+			: base (SkiaApi.gr_backendtexture_new_vulkan (width, height, &vkInfo))
 		{
-			CreateVulkan (width, height, vkInfo);
-		}
-
-		private void CreateGl (int width, int height, bool mipmapped, GRGlTextureInfo glInfo)
-		{
-			Handle = SkiaApi.gr_backendtexture_new_gl (width, height, mipmapped, &glInfo);
-
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
-			}
-		}
-
-		private void CreateVulkan (int width, int height, GRVkImageInfo vkInfo)
-		{
-			Handle = SkiaApi.gr_backendtexture_new_vulkan (width, height, &vkInfo);
-
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
-			}
 		}
 
 		protected override void Dispose (bool disposing) =>

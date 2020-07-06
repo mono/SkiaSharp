@@ -23,8 +23,8 @@ namespace SkiaSharp
 		private const float BlurSigmaScale = 0.57735f;
 		public const int TableMaxLength = 256;
 
-		internal SKMaskFilter (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKMaskFilter (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -101,7 +101,7 @@ namespace SkiaSharp
 		}
 
 		internal static SKMaskFilter GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKMaskFilter (h, o));
+			GetOrAddObject (handle, (h, o) => new SKMaskFilter (h, o, false));
 	}
 }
 

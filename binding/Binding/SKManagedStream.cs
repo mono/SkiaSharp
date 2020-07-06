@@ -23,7 +23,6 @@ namespace SkiaSharp
 		}
 
 		public SKManagedStream (Stream managedStream, bool disposeManagedStream)
-			: base (true)
 		{
 			stream = managedStream ?? throw new ArgumentNullException (nameof (managedStream));
 			disposeStream = disposeManagedStream;

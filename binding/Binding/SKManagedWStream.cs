@@ -16,12 +16,6 @@ namespace SkiaSharp
 		}
 
 		public SKManagedWStream (Stream managedStream, bool disposeManagedStream)
-			: this (managedStream, disposeManagedStream, true)
-		{
-		}
-
-		private SKManagedWStream (Stream managedStream, bool disposeManagedStream, bool owns)
-			: base (owns)
 		{
 			stream = managedStream;
 			disposeStream = disposeManagedStream;

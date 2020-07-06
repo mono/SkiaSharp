@@ -10,8 +10,8 @@ namespace SkiaSharp
 {
 	public unsafe class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
-		internal GRGlInterface (IntPtr h, bool owns)
-			: base (h, owns)
+		private GRGlInterface (IntPtr handle)
+			: base (handle)
 		{
 		}
 
@@ -166,8 +166,8 @@ namespace SkiaSharp
 
 		//
 
-		internal static GRGlInterface GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new GRGlInterface (handle, true);
+		private static GRGlInterface GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new GRGlInterface (handle);
 
 		//
 

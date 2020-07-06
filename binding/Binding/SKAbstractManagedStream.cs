@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SkiaSharp
@@ -31,15 +30,17 @@ namespace SkiaSharp
 		}
 
 		protected SKAbstractManagedStream ()
-			: this (true)
-		{
-		}
-
-		protected SKAbstractManagedStream (bool owns)
-			: base (IntPtr.Zero, owns)
+			: base (IntPtr.Zero, true, false)
 		{
 			var ctx = DelegateProxies.CreateUserData (this, true);
-			Handle = SkiaApi.sk_managedstream_new ((void*)ctx);
+			RegisterHandle (SkiaApi.sk_managedstream_new ((void*)ctx));
+		}
+
+		[Obsolete ("Use SKAbstractManagedStream() instead.")]
+		protected SKAbstractManagedStream (bool owns)
+			: this ()
+		{
+			OwnsHandle = owns;
 		}
 
 		protected override void Dispose (bool disposing) =>

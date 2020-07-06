@@ -5,8 +5,8 @@ namespace SkiaSharp
 {
 	public class SKSurfaceProperties : SKObject
 	{
-		internal SKSurfaceProperties (IntPtr h, bool owns)
-			: base (h, owns)
+		private SKSurfaceProperties (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -23,12 +23,12 @@ namespace SkiaSharp
 		}
 
 		public SKSurfaceProperties (uint flags, SKPixelGeometry pixelGeometry)
-			: this (SkiaApi.sk_surfaceprops_new (flags, pixelGeometry), true)
+			: base (SkiaApi.sk_surfaceprops_new (flags, pixelGeometry))
 		{
 		}
 
 		public SKSurfaceProperties (SKSurfacePropsFlags flags, SKPixelGeometry pixelGeometry)
-			: this (SkiaApi.sk_surfaceprops_new ((uint)flags, pixelGeometry), true)
+			: base (SkiaApi.sk_surfaceprops_new ((uint)flags, pixelGeometry))
 		{
 		}
 
@@ -48,6 +48,6 @@ namespace SkiaSharp
 			Flags.HasFlag (SKSurfacePropsFlags.UseDeviceIndependentFonts);
 
 		internal static SKSurfaceProperties GetObject (IntPtr handle, bool owns = true) =>
-			GetOrAddObject (handle, owns, (h, o) => new SKSurfaceProperties (h, o));
+			GetOrAddObject (handle, owns, (h, o) => new SKSurfaceProperties (h, o, false));
 	}
 }

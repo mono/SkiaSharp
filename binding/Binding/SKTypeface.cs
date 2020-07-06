@@ -32,8 +32,8 @@ namespace SkiaSharp
 			//            are initialized before any access is made to them
 		}
 
-		internal SKTypeface (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKTypeface (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -160,7 +160,7 @@ namespace SkiaSharp
 
 		public string FamilyName => (string)SKString.GetObject (SkiaApi.sk_typeface_get_family_name (Handle));
 
-		public SKFontStyle FontStyle => SKFontStyle.GetObject (SkiaApi.sk_typeface_get_fontstyle (Handle));
+		public SKFontStyle FontStyle => SKFontStyle.Create (this);
 
 		public int FontWeight => SkiaApi.sk_typeface_get_font_weight (Handle);
 
@@ -451,14 +451,14 @@ namespace SkiaSharp
 		//
 
 		internal static SKTypeface GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o));
+			GetOrAddObject (handle, (h, o) => new SKTypeface (h, o, false));
 
 		//
 
 		private sealed class SKTypefaceStatic : SKTypeface
 		{
-			internal SKTypefaceStatic (IntPtr x)
-				: base (x, true)
+			internal SKTypefaceStatic (IntPtr handle)
+				: base (handle)
 			{
 				IgnorePublicDispose = true;
 			}

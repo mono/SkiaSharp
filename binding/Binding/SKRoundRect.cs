@@ -4,26 +4,15 @@ namespace SkiaSharp
 {
 	public unsafe class SKRoundRect : SKObject, ISKSkipObjectRegistration
 	{
-		internal SKRoundRect (IntPtr handle, bool owns)
-			: base (handle, owns)
-		{
-		}
-
 		public SKRoundRect ()
-			: this (SkiaApi.sk_rrect_new (), true)
+			: base (SkiaApi.sk_rrect_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKRoundRect instance.");
-			}
 			SetEmpty ();
 		}
 
 		public SKRoundRect (SKRect rect)
-			: this (SkiaApi.sk_rrect_new (), true)
+			: base (SkiaApi.sk_rrect_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKRoundRect instance.");
-			}
 			SetRect (rect);
 		}
 
@@ -33,16 +22,13 @@ namespace SkiaSharp
 		}
 
 		public SKRoundRect (SKRect rect, float xRadius, float yRadius)
-			: this (SkiaApi.sk_rrect_new (), true)
+			: base (SkiaApi.sk_rrect_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKRoundRect instance.");
-			}
 			SetRect (rect, xRadius, yRadius);
 		}
 
 		public SKRoundRect (SKRoundRect rrect)
-			: this (SkiaApi.sk_rrect_new_copy (rrect.Handle), true)
+			: base (SkiaApi.sk_rrect_new_copy (rrect.Handle))
 		{
 		}
 
@@ -172,14 +158,14 @@ namespace SkiaSharp
 
 		public bool TryTransform (SKMatrix matrix, out SKRoundRect transformed)
 		{
-			var destHandle = SkiaApi.sk_rrect_new ();
-			if (SkiaApi.sk_rrect_transform (Handle, &matrix, destHandle)) {
-				transformed = new SKRoundRect (destHandle, true);
-				return true;
+			var dest = new SKRoundRect ();
+			if (!SkiaApi.sk_rrect_transform (Handle, &matrix, dest.Handle)) {
+				dest.Dispose ();
+				transformed = null;
+				return false;
 			}
-			SkiaApi.sk_rrect_delete (destHandle);
-			transformed = null;
-			return false;
+			transformed = dest;
+			return true;
 		}
 
 		public SKRoundRect Transform (SKMatrix matrix)

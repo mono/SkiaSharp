@@ -109,7 +109,7 @@ namespace SkiaSharp.Tests
 
 			var dupe = stream.Duplicate();
 			Assert.NotSame(stream, dupe);
-			Assert.IsType<SKStreamImplementation>(dupe);
+			Assert.IsType<SKStream.SKStreamImplementation>(dupe);
 			Assert.Equal(1, dupe.ReadByte());
 			Assert.Equal(4, stream.ReadByte());
 			Assert.Equal(2, dupe.ReadByte());
@@ -126,7 +126,7 @@ namespace SkiaSharp.Tests
 
 			var dupe = stream.Fork();
 			Assert.NotSame(stream, dupe);
-			Assert.IsType<SKStreamImplementation>(dupe);
+			Assert.IsType<SKStream.SKStreamImplementation>(dupe);
 			Assert.Equal(3, dupe.ReadByte());
 			Assert.Equal(3, stream.ReadByte());
 			Assert.Equal(4, dupe.ReadByte());

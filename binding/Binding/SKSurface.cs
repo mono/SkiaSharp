@@ -18,8 +18,8 @@ namespace SkiaSharp
 		[Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props);
 
-		internal SKSurface (IntPtr h, bool owns)
-			: base (h, owns)
+		private SKSurface (IntPtr handle)
+			: base (handle)
 		{
 		}
 
@@ -354,7 +354,7 @@ namespace SkiaSharp
 			return result;
 		}
 
-		internal static SKSurface GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKSurface (handle, true);
+		private static SKSurface GetObject (IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new SKSurface (handle);
 	}
 }

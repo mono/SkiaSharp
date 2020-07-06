@@ -23,23 +23,21 @@ namespace SkiaSharp
 		}
 
 		protected SKDrawable ()
-			: this (true)
-		{
-		}
-
-		protected SKDrawable (bool owns)
-			: base (IntPtr.Zero, owns)
+			: base (IntPtr.Zero, true, false)
 		{
 			var ctx = DelegateProxies.CreateUserData (this, true);
-			Handle = SkiaApi.sk_manageddrawable_new ((void*)ctx);
-
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKDrawable instance.");
-			}
+			RegisterHandle (SkiaApi.sk_manageddrawable_new ((void*)ctx));
 		}
 
-		internal SKDrawable (IntPtr x, bool owns)
-			: base (x, owns)
+		[Obsolete ("Use SKDrawable() instead.")]
+		protected SKDrawable (bool owns)
+			: this ()
+		{
+			OwnsHandle = owns;
+		}
+
+		private SKDrawable (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -131,6 +129,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKDrawable GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKDrawable (h, o));
+			GetOrAddObject (handle, (h, o) => new SKDrawable (h, o, false));
 	}
 }

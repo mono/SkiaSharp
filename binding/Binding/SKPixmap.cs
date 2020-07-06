@@ -6,22 +6,12 @@ namespace SkiaSharp
 {
 	public unsafe class SKPixmap : SKObject
 	{
-		private const string UnableToCreateInstanceMessage = "Unable to create a new SKPixmap instance.";
-
 		// this is not meant to be anything but a GC reference to keep the actual pixel data alive
 		internal SKObject pixelSource;
 
-		internal SKPixmap (IntPtr handle, bool owns)
-			: base (handle, owns)
-		{
-		}
-
 		public SKPixmap ()
-			: this (SkiaApi.sk_pixmap_new (), true)
+			: base (SkiaApi.sk_pixmap_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException (UnableToCreateInstanceMessage);
-			}
 		}
 
 		public SKPixmap (SKImageInfo info, IntPtr addr)
@@ -37,13 +27,10 @@ namespace SkiaSharp
 		}
 
 		public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes)
-			: this (IntPtr.Zero, true)
+			: base (IntPtr.Zero, true, false)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			Handle = SkiaApi.sk_pixmap_new_with_params (&cinfo, (void*)addr, (IntPtr)rowBytes);
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException (UnableToCreateInstanceMessage);
-			}
+			RegisterHandle (SkiaApi.sk_pixmap_new_with_params (&cinfo, (void*)addr, (IntPtr)rowBytes));
 		}
 
 		protected override void Dispose (bool disposing) =>

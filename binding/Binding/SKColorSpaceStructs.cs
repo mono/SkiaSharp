@@ -441,16 +441,9 @@ namespace SkiaSharp
 
 	public unsafe class SKColorSpaceIccProfile : SKObject
 	{
-		internal SKColorSpaceIccProfile (IntPtr handle, bool owns)
-			: base (handle, owns)
-		{
-		}
-
 		public SKColorSpaceIccProfile ()
-			: this (SkiaApi.sk_colorspace_icc_profile_new (), true)
+			: base (SkiaApi.sk_colorspace_icc_profile_new ())
 		{
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SK3dView instance.");
 		}
 
 		protected override void DisposeNative () =>

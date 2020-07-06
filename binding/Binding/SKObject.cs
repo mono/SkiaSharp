@@ -44,25 +44,30 @@ namespace SkiaSharp
 			SKTypeface.EnsureStaticInstanceAreInitialized ();
 		}
 
-		internal SKObject (IntPtr handle, bool owns)
+		private protected SKObject (IntPtr handle, bool owns = true, bool registerHandle = true)
 			: base (handle, owns)
 		{
+			Handle = handle;
+
+			if (!(this is ISKSkipObjectRegistration)) {
+				WeakRef = new WeakReference (this);
+				if (registerHandle)
+					RegisterHandle (handle);
+			}
 		}
 
-		protected override void Dispose (bool disposing) =>
+		protected override void Dispose (bool disposing)
+		{
+			HandleDictionary.DeregisterHandle (Handle, this);
+
 			base.Dispose (disposing);
+		}
+
+		internal WeakReference WeakRef { get; }
 
 		public override IntPtr Handle {
 			get => base.Handle;
-			protected set {
-				if (value == IntPtr.Zero) {
-					DeregisterHandle (Handle, this);
-					base.Handle = value;
-				} else {
-					base.Handle = value;
-					RegisterHandle (Handle, this);
-				}
-			}
+			protected set => base.Handle = value;
 		}
 
 		protected override void DisposeUnownedManaged ()
@@ -120,22 +125,6 @@ namespace SkiaSharp
 			return HandleDictionary.GetOrAddObject (handle, owns, unrefExisting, objectFactory);
 		}
 
-		internal static void RegisterHandle (IntPtr handle, SKObject instance)
-		{
-			if (handle == IntPtr.Zero || instance == null)
-				return;
-
-			HandleDictionary.RegisterHandle (handle, instance);
-		}
-
-		internal static void DeregisterHandle (IntPtr handle, SKObject instance)
-		{
-			if (handle == IntPtr.Zero)
-				return;
-
-			HandleDictionary.DeregisterHandle (handle, instance);
-		}
-
 		internal static bool GetInstance<TSkiaObject> (IntPtr handle, out TSkiaObject instance)
 			where TSkiaObject : SKObject
 		{
@@ -144,7 +133,17 @@ namespace SkiaSharp
 				return false;
 			}
 
-			return HandleDictionary.GetInstance<TSkiaObject> (handle, out instance);
+			return HandleDictionary.GetInstance (handle, out instance);
+		}
+
+		private protected void RegisterHandle (IntPtr handle)
+		{
+			if (handle == IntPtr.Zero)
+				throw new InvalidOperationException ($"Unable to create an instance of {GetType ().Name}.");
+
+			Handle = handle;
+
+			HandleDictionary.RegisterHandle (handle, this);
 		}
 
 		// indicate that the user cannot dispose the object
@@ -229,18 +228,8 @@ namespace SkiaSharp
 
 		private int isDisposed = 0;
 
-		internal WeakReference WeakHandle { get; }
-
-		internal SKNativeObject (IntPtr handle)
-			: this (handle, true)
+		private protected SKNativeObject (IntPtr handle, bool ownsHandle)
 		{
-		}
-
-		internal SKNativeObject (IntPtr handle, bool ownsHandle)
-		{
-			if (!(this is ISKSkipObjectRegistration)) {
-				WeakHandle = new WeakReference (this);
-			}
 			Handle = handle;
 			OwnsHandle = ownsHandle;
 		}

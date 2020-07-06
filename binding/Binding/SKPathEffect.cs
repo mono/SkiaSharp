@@ -4,8 +4,8 @@ namespace SkiaSharp
 {
 	public unsafe class SKPathEffect : SKObject, ISKReferenceCounted
 	{
-		internal SKPathEffect (IntPtr handle, bool owns)
-			: base (handle, owns)
+		private SKPathEffect (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
@@ -81,7 +81,7 @@ namespace SkiaSharp
 		}
 
 		internal static SKPathEffect GetObject (IntPtr handle) =>
-			GetOrAddObject (handle, (h, o) => new SKPathEffect (h, o));
+			GetOrAddObject (handle, (h, o) => new SKPathEffect (h, o, false));
 	}
 }
 

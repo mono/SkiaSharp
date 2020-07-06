@@ -5,11 +5,6 @@ namespace SkiaSharp
 {
 	public unsafe class SKMatrix44 : SKObject
 	{
-		internal SKMatrix44 (IntPtr x, bool owns)
-			: base (x, owns)
-		{
-		}
-
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
@@ -17,43 +12,33 @@ namespace SkiaSharp
 			SkiaApi.sk_matrix44_destroy (Handle);
 
 		public SKMatrix44 ()
-			: this (SkiaApi.sk_matrix44_new (), true)
+			: base (SkiaApi.sk_matrix44_new ())
 		{
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
 		}
 
 		public SKMatrix44 (SKMatrix44 src)
-			: this (IntPtr.Zero, true)
+			: base (IntPtr.Zero, true, false)
 		{
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			Handle = SkiaApi.sk_matrix44_new_copy (src.Handle);
-
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
+			RegisterHandle (SkiaApi.sk_matrix44_new_copy (src.Handle));
 		}
 
 		public SKMatrix44 (SKMatrix44 a, SKMatrix44 b)
-			: this (IntPtr.Zero, true)
+			: base (IntPtr.Zero, true, false)
 		{
 			if (a == null)
 				throw new ArgumentNullException (nameof (a));
 			if (b == null)
 				throw new ArgumentNullException (nameof (b));
 
-			Handle = SkiaApi.sk_matrix44_new_concat (a.Handle, b.Handle);
-
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
+			RegisterHandle (SkiaApi.sk_matrix44_new_concat (a.Handle, b.Handle));
 		}
 
 		public SKMatrix44 (SKMatrix src)
-			: this (SkiaApi.sk_matrix44_new_matrix (&src), true)
+			: base (SkiaApi.sk_matrix44_new_matrix (&src))
 		{
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
 		}
 
 		// properties
@@ -426,8 +411,5 @@ namespace SkiaSharp
 
 		public static implicit operator SKMatrix44 (SKMatrix matrix) =>
 			new SKMatrix44 (matrix);
-
-		internal static SKMatrix44 GetObject (IntPtr handle, bool owns = true) =>
-			GetOrAddObject (handle, owns, (h, o) => new SKMatrix44 (h, o));
 	}
 }

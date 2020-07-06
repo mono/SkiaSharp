@@ -8,8 +8,8 @@ namespace SkiaSharp
 {
 	public unsafe class SKVertices : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
-		internal SKVertices (IntPtr x, bool owns)
-			: base (x, owns)
+		private SKVertices (IntPtr handle)
+			: base (handle)
 		{
 		}
 
@@ -52,6 +52,6 @@ namespace SkiaSharp
 		}
 
 		internal static SKVertices GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKVertices (handle, true);
+			handle == IntPtr.Zero ? null : new SKVertices (handle);
 	}
 }

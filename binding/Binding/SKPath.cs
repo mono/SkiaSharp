@@ -5,25 +5,19 @@ namespace SkiaSharp
 {
 	public unsafe class SKPath : SKObject, ISKSkipObjectRegistration
 	{
-		internal SKPath (IntPtr handle, bool owns)
-			: base (handle, owns)
+		internal SKPath (IntPtr handle, bool owns = true, bool registerHandle = true)
+			: base (handle, owns, registerHandle)
 		{
 		}
 
 		public SKPath ()
-			: this (SkiaApi.sk_path_new (), true)
+			: base (SkiaApi.sk_path_new ())
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKPath instance.");
-			}
 		}
 
 		public SKPath (SKPath path)
-			: this (SkiaApi.sk_path_clone (path.Handle), true)
+			: base (SkiaApi.sk_path_clone (path.Handle))
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to copy the SKPath instance.");
-			}
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -500,17 +494,12 @@ namespace SkiaSharp
 
 		//
 
-		internal static SKPath GetObject (IntPtr handle, bool owns = true) =>
-			handle == IntPtr.Zero ? null : new SKPath (handle, owns);
-
-		//
-
 		public class Iterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKPath path;
 
 			internal Iterator (SKPath path, bool forceClose)
-				: base (SkiaApi.sk_path_create_iter (path.Handle, forceClose ? 1 : 0), true)
+				: base (SkiaApi.sk_path_create_iter (path.Handle, forceClose ? 1 : 0))
 			{
 				this.path = path;
 			}
@@ -556,7 +545,7 @@ namespace SkiaSharp
 			private readonly SKPath path;
 
 			internal RawIterator (SKPath path)
-				: base (SkiaApi.sk_path_create_rawiter (path.Handle), true)
+				: base (SkiaApi.sk_path_create_rawiter (path.Handle))
 			{
 				this.path = path;
 			}
@@ -591,7 +580,7 @@ namespace SkiaSharp
 		public class OpBuilder : SKObject, ISKSkipObjectRegistration
 		{
 			public OpBuilder ()
-				: base (SkiaApi.sk_opbuilder_new (), true)
+				: base (SkiaApi.sk_opbuilder_new ())
 			{
 			}
 

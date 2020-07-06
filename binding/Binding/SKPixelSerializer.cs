@@ -8,7 +8,7 @@ namespace SkiaSharp
 	public abstract class SKPixelSerializer : SKObject, ISKSkipObjectRegistration
 	{
 		protected SKPixelSerializer ()
-			: base (IntPtr.Zero, false)
+			: base (IntPtr.Zero, false, false)
 		{
 		}
 

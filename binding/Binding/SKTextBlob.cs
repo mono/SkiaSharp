@@ -5,8 +5,8 @@ namespace SkiaSharp
 {
 	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
-		internal SKTextBlob (IntPtr x, bool owns)
-			: base (x, owns)
+		internal SKTextBlob (IntPtr handle)
+			: base (handle)
 		{
 		}
 
@@ -257,18 +257,13 @@ namespace SkiaSharp
 		//
 
 		internal static SKTextBlob GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKTextBlob (handle, true);
+			handle == IntPtr.Zero ? null : new SKTextBlob (handle);
 	}
 
 	public unsafe class SKTextBlobBuilder : SKObject, ISKSkipObjectRegistration
 	{
-		internal SKTextBlobBuilder (IntPtr x, bool owns)
-			: base (x, owns)
-		{
-		}
-
 		public SKTextBlobBuilder ()
-			: this (SkiaApi.sk_textblob_builder_new (), true)
+			: base (SkiaApi.sk_textblob_builder_new ())
 		{
 		}
 

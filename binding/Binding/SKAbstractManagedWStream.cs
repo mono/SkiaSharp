@@ -23,15 +23,17 @@ namespace SkiaSharp
 		}
 
 		protected SKAbstractManagedWStream ()
-			: this (true)
-		{
-		}
-
-		protected SKAbstractManagedWStream (bool owns)
-			: base (IntPtr.Zero, owns)
+			: base (IntPtr.Zero, true, false)
 		{
 			var ctx = DelegateProxies.CreateUserData (this, true);
-			Handle = SkiaApi.sk_managedwstream_new ((void*)ctx);
+			RegisterHandle (SkiaApi.sk_managedwstream_new ((void*)ctx));
+		}
+
+		[Obsolete ("Use SKAbstractManagedStream() instead.")]
+		protected SKAbstractManagedWStream (bool owns)
+			: this ()
+		{
+			OwnsHandle = owns;
 		}
 
 		protected override void Dispose (bool disposing) =>
