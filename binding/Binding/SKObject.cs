@@ -229,6 +229,8 @@ namespace SkiaSharp
 
 		private int isDisposed = 0;
 
+		internal WeakReference WeakHandle { get; }
+
 		internal SKNativeObject (IntPtr handle)
 			: this (handle, true)
 		{
@@ -236,6 +238,9 @@ namespace SkiaSharp
 
 		internal SKNativeObject (IntPtr handle, bool ownsHandle)
 		{
+			if (!(this is ISKSkipObjectRegistration)) {
+				WeakHandle = new WeakReference (this);
+			}
 			Handle = handle;
 			OwnsHandle = ownsHandle;
 		}

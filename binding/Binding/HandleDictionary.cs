@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-#if THROW_OBJECT_EXCEPTIONS
 using System.Collections.Concurrent;
-#endif
+
+using NonBlockingDictionary = NonBlocking.ConcurrentDictionary<System.IntPtr, System.WeakReference>;
 
 namespace SkiaSharp
 {
@@ -14,9 +12,7 @@ namespace SkiaSharp
 #if THROW_OBJECT_EXCEPTIONS
 		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
 #endif
-		internal static readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference> ();
-
-		internal static readonly ReaderWriterLockSlim instancesLock = new ReaderWriterLockSlim ();
+		internal static readonly NonBlockingDictionary instances = new NonBlockingDictionary ();
 
 		/// <summary>
 		/// Retrieve the living instance if there is one, or null if not.
@@ -35,12 +31,7 @@ namespace SkiaSharp
 				return false;
 			}
 
-			instancesLock.EnterReadLock ();
-			try {
-				return GetInstanceNoLocks (handle, out instance);
-			} finally {
-				instancesLock.ExitReadLock ();
-			}
+			return GetInstanceNoLocks (handle, out instance);
 		}
 
 		/// <summary>
@@ -63,30 +54,24 @@ namespace SkiaSharp
 #endif
 			}
 
-			instancesLock.EnterUpgradeableReadLock ();
-			try {
-				if (GetInstanceNoLocks<TSkiaObject> (handle, out var instance)) {
-					// some object get automatically referenced on the native side,
-					// but managed code just has the same reference
-					if (unrefExisting && instance is ISKReferenceCounted refcnt) {
+			if (GetInstanceNoLocks<TSkiaObject> (handle, out var instance)) {
+				// some object get automatically referenced on the native side,
+				// but managed code just has the same reference
+				if (unrefExisting && instance is ISKReferenceCounted refcnt) {
 #if THROW_OBJECT_EXCEPTIONS
-						if (refcnt.GetReferenceCount () == 1)
-							throw new InvalidOperationException (
-								$"About to unreference an object that has no references. " +
-								$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
+					if (refcnt.GetReferenceCount () == 1)
+						throw new InvalidOperationException (
+							$"About to unreference an object that has no references. " +
+							$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
 #endif
-						refcnt.SafeUnRef ();
-					}
-
-					return instance;
+					refcnt.SafeUnRef ();
 				}
 
-				var obj = objectFactory.Invoke (handle, owns);
-
-				return obj;
-			} finally {
-				instancesLock.ExitUpgradeableReadLock ();
+				return instance;
 			}
+
+			// adding to the dictionary actually happens in the Handle set
+			return objectFactory.Invoke (handle, owns);
 		}
 
 		/// <summary>
@@ -132,11 +117,18 @@ namespace SkiaSharp
 			if (instance is ISKSkipObjectRegistration)
 				return;
 
+			instances.AddOrUpdate (handle, Add, Update);
+
+			WeakReference Add (IntPtr h)
+			{
+				return instance.WeakHandle;
+			}
+
 			SKObject objectToDispose = null;
 
-			instancesLock.EnterWriteLock ();
-			try {
-				if (instances.TryGetValue (handle, out var oldValue) && oldValue.Target is SKObject obj && !obj.IsDisposed) {
+			WeakReference Update (IntPtr h, WeakReference oldValue)
+			{
+				if (oldValue.Target is SKObject obj && !obj.IsDisposed) {
 #if THROW_OBJECT_EXCEPTIONS
 					if (obj.OwnsHandle) {
 						// a mostly recoverable error
@@ -150,14 +142,14 @@ namespace SkiaSharp
 					objectToDispose = obj;
 				}
 
-				instances[handle] = new WeakReference (instance);
-			} finally {
-				instancesLock.ExitWriteLock ();
+				return instance.WeakHandle;
 			}
 
 			// dispose the object we just replaced
 			objectToDispose?.DisposeInternal ();
 		}
+
+		private static readonly WeakReference emptyRef = new WeakReference (null);
 
 		/// <summary>
 		/// Removes the registered instance from the dictionary.
@@ -170,45 +162,31 @@ namespace SkiaSharp
 			if (instance is ISKSkipObjectRegistration)
 				return;
 
-			instancesLock.EnterWriteLock ();
-			try {
-				var existed = instances.TryGetValue (handle, out var weak);
-				if (existed && (!weak.IsAlive || weak.Target == instance)) {
-					instances.Remove (handle);
-				} else {
+			var existed = instances.TryUpdate (handle, emptyRef, instance.WeakHandle);
+			if (existed) {
+				// TODO: remove from the dictionary
+				//       or, better yet, do this in a single op
+			} else {
 #if THROW_OBJECT_EXCEPTIONS
-					InvalidOperationException ex = null;
-					if (!existed) {
-						// the object may have been replaced
+				InvalidOperationException ex = null;
+				if (!existed) {
+					// the object may have been replaced
 
-						if (!instance.IsDisposed) {
-							// recoverable error
-							// there was no object there, but we are still alive
-							ex = new InvalidOperationException (
-								$"A managed object did not exist for the specified native object. " +
-								$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
-						}
-					} else if (weak.Target is SKObject o && o != instance) {
-						// there was an object in the dictionary, but it was NOT this object
-
-						if (!instance.IsDisposed) {
-							// recoverable error
-							// there was a new living object there, but we are still alive
-							ex = new InvalidOperationException (
-								$"Trying to remove a different object with the same native handle. " +
-								$"H: {handle.ToString ("x")} Type: ({o.GetType ()}, {instance.GetType ()})");
-						}
+					if (!instance.IsDisposed) {
+						// recoverable error
+						// there was no object there, but we are still alive
+						ex = new InvalidOperationException (
+							$"A managed object did not exist for the specified native object. " +
+							$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
 					}
-					if (ex != null) {
-						if (instance.fromFinalizer)
-							exceptions.Add (ex);
-						else
-							throw ex;
-					}
-#endif
 				}
-			} finally {
-				instancesLock.ExitWriteLock ();
+				if (ex != null) {
+					if (instance.fromFinalizer)
+						exceptions.Add (ex);
+					else
+						throw ex;
+				}
+#endif
 			}
 		}
 	}
