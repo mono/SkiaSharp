@@ -58,9 +58,9 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing)
 		{
-			HandleDictionary.DeregisterHandle (Handle, this);
-
+			var handle = Handle;
 			base.Dispose (disposing);
+			HandleDictionary.DeregisterHandle (handle, this);
 		}
 
 		internal WeakReference WeakRef { get; }

@@ -225,19 +225,13 @@ namespace SkiaSharp
 				// TODO: remove from the dictionary or, better yet, do this in a single op
 			} else {
 #if THROW_OBJECT_EXCEPTIONS
-				InvalidOperationException? ex = null;
-				if (!existed) {
-					// the object may have been replaced
-
-					if (!instance.IsDisposed) {
-						// recoverable error
-						// there was no object there, but we are still alive
-						ex = new InvalidOperationException (
-							$"A managed object did not exist for the specified native object. " +
-							$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
-					}
-				}
-				if (ex != null) {
+				// the object may have been replaced
+				if (!instance.IsDisposed) {
+					// recoverable error
+					// there was no object there, but we are still alive
+					var ex = new InvalidOperationException (
+						$"A managed object did not exist for the specified native object. " +
+						$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
 					if (instance.fromFinalizer)
 						exceptions.Add (ex);
 					else
