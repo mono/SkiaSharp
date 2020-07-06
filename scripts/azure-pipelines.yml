@@ -103,13 +103,7 @@ stages:
           preBuildSteps:
             - pwsh: |
                 New-Item "$env:USERPROFILE\tizen-download-temp" -Type Directory -Force | Out-Null
-                $parts = "$(TIZEN_STUDIO_URL)".Split(";")
-                $index = 1
-                $parts | ForEach-Object {
-                  Invoke-WebRequest -Uri "$_" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile ("$env:USERPROFILE\tizen-download-temp\part.zip." + $index.ToString("000"))
-                  $index++
-                }
-                Get-ChildItem -Path $env:USERPROFILE\tizen-download-temp -Filter part.zip.* | .\scripts\merge-files.ps1 -Path "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip"
+                Invoke-WebRequest -Uri "$(TIZEN_STUDIO_URL)" -Headers @{"Authorization"="$(TIZEN_STUDIO_TOKEN)"} -OutFile "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip"
                 Expand-Archive -Path "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -DestinationPath "$env:USERPROFILE\tizen-studio"
               displayName: Download Tizen Studio Patch
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Windows)
