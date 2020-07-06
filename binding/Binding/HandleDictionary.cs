@@ -117,14 +117,17 @@ namespace SkiaSharp
 			if (instance is ISKSkipObjectRegistration)
 				return;
 
+			SKObject objectToDispose = null;
+
 			instances.AddOrUpdate (handle, Add, Update);
+
+			// dispose the object we just replaced
+			objectToDispose?.DisposeInternal ();
 
 			WeakReference Add (IntPtr h)
 			{
 				return instance.WeakHandle;
 			}
-
-			SKObject objectToDispose = null;
 
 			WeakReference Update (IntPtr h, WeakReference oldValue)
 			{
@@ -144,9 +147,6 @@ namespace SkiaSharp
 
 				return instance.WeakHandle;
 			}
-
-			// dispose the object we just replaced
-			objectToDispose?.DisposeInternal ();
 		}
 
 		private static readonly WeakReference emptyRef = new WeakReference (null);
