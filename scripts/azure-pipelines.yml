@@ -66,8 +66,7 @@ stages:
           - pwsh: |
               echo "Downloading Tizen Studio..."
               New-Item "$env:USERPROFILE\tizen-download-temp" -Type Directory -Force | Out-Null
-              echo "curl $(TIZEN_STUDIO_URL) -H Authorization: $(TIZEN_STUDIO_TOKEN) -o $env:USERPROFILE\tizen-download-temp\tizen-studio.zip"
-              curl "$(TIZEN_STUDIO_URL)" -H "Authorization: $(TIZEN_STUDIO_TOKEN)" -o "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip"
+              curl -L -o "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -H "Authorization: $(TIZEN_STUDIO_TOKEN)" "$(TIZEN_STUDIO_URL)"
               echo "Download complete, extracting..."
               Expand-Archive -Path "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -DestinationPath "$env:USERPROFILE\tizen-studio"
               echo "Extraction complete."
