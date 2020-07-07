@@ -5,4 +5,6 @@ RUN apk add --no-cache samurai --repository http://dl-cdn.alpinelinux.org/alpine
 RUN apk add --no-cache mono clang gn --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing
 RUN cert-sync /etc/ssl/certs/ca-certificates.crt
 
+ENV GN_EXE=gn NINJA_EXE=ninja
+
 WORKDIR /work
