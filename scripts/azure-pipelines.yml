@@ -66,6 +66,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=x86
+          installWindowsSdk: false
       - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Win)
         parameters:
           name: native_android_x64_windows
@@ -73,6 +74,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=x64
+          installWindowsSdk: false
       - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Win)
         parameters:
           name: native_android_arm_windows
@@ -80,6 +82,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=arm
+          installWindowsSdk: false
       - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Win)
         parameters:
           name: native_android_arm64_windows
@@ -87,6 +90,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
           additionalArgs: --buildarch=arm64
+          installWindowsSdk: false
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Win)
         parameters:
           name: native_tizen_windows
