@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 
-//using NonBlockingDictionary = NonBlocking.ConcurrentDictionary<System.IntPtr, System.WeakReference>;
+using NonBlockingDictionary = NonBlocking.ConcurrentDictionary<System.IntPtr, System.WeakReference>;
 
 namespace SkiaSharp
 {
@@ -16,7 +16,7 @@ namespace SkiaSharp
 #if THROW_OBJECT_EXCEPTIONS
 		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
 #endif
-		internal static readonly ConcurrentDictionary<System.IntPtr, System.WeakReference> instances = new ConcurrentDictionary<System.IntPtr, System.WeakReference> ();
+		internal static readonly NonBlockingDictionary instances = new NonBlockingDictionary ();
 
 		/// <summary>
 		/// Retrieve the living instance if there is one, or null if not.

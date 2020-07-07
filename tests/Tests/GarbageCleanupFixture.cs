@@ -29,6 +29,9 @@ namespace SkiaSharp.Tests
 
 		public void Dispose()
 		{
+			// TODO: THIS MUST NOT BE SKIPPED!!!
+			return;
+
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 

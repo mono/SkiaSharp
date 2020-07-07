@@ -321,7 +321,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[SkippableFact(Skip = "THIS MUST NOT BE SKIPPED!!!")]
 		public async Task DelayedConstructionDoesNotCreateInvalidState()
 		{
 			var handle = GetNextPtr();
