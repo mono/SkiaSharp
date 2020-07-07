@@ -313,6 +313,7 @@ stages:
           displayName: WASM
           vmImage: $(VM_IMAGE_LINUX)
           docker: scripts/Docker/wasm
+          dockerArgs: --build-arg EMSCRIPTEN_VERSION=$(EMSCRIPTEN_VERSION)
           target: externals-wasm
 
   - stage: managed
@@ -575,7 +576,7 @@ stages:
           requiredArtifacts:
             - native_wasm_linux
           initScript: |
-            git clone https://github.com/emscripten-core/emsdk ~/emsdk
+            git clone --branch $(EMSCRIPTEN_VERSION) https://github.com/emscripten-core/emsdk ~/emsdk
             ~/emsdk/emsdk install $(EMSCRIPTEN_VERSION)
             ~/emsdk/emsdk activate $(EMSCRIPTEN_VERSION)
             source ~/emsdk/emsdk_env.sh

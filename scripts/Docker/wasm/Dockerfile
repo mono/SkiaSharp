@@ -10,7 +10,7 @@ RUN apt-get update \
     && apt-get install -y mono-devel  \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/emscripten-core/emsdk ~/emsdk && \
+RUN git clone --branch ${EMSCRIPTEN_VERSION} https://github.com/emscripten-core/emsdk ~/emsdk && \
     cd ~/emsdk && \
     ./emsdk install ${EMSCRIPTEN_VERSION} && \
     ./emsdk activate ${EMSCRIPTEN_VERSION}
