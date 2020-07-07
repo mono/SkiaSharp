@@ -54,25 +54,21 @@ Task("libSkiaSharp")
 Task("libHarfBuzzSharp")
     .Does(() =>
 {
-    var cmd = IsRunningOnWindows() ? ".cmd" : "";
-    var ndkbuild = TIZEN_STUDIO_HOME.CombineWithFilePath($"ndk-build{cmd}").FullPath;
+    Build("armel", "arm", "mobile-4.0-device.core");
+    Build("i386", "x86", "mobile-4.0-emulator.core");
 
-    Build("armel", "arm");
-    Build("i386", "x86");
-
-    void Build(string arch, string cliArch)
+    void Build(string arch, string cliArch, string rootstrap)
     {
         if (Skip(arch)) return;
 
-        // RunProcess(tizen, new ProcessSettings {
-        //     Arguments = $"build-native -a {cliArch} -c llvm -C {CONFIGURATION}",
-        //     WorkingDirectory = MakeAbsolute((DirectoryPath)"libHarfBuzzSharp").FullPath,
-        // });
+        RunProcess(tizen, new ProcessSettings {
+            Arguments = $"build-native -a {cliArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
+            WorkingDirectory = MakeAbsolute((DirectoryPath)"libHarfBuzzSharp").FullPath,
+        });
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        // CopyFile($"libHarfBuzzSharp/{CONFIGURATION}/libharfbuzzsharp.so", outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
-        FileWriteText(outDir.CombineWithFilePath("libHarfBuzzSharp.so"), "");
+        CopyFile($"libHarfBuzzSharp/{CONFIGURATION}/libharfbuzzsharp.so", outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
     }
 });
 
