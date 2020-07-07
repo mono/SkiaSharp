@@ -1,0 +1,27 @@
+parameters:
+  builds:
+    - name: ''
+      desc: ''
+      additionalArgs: ''
+      gnArgs: ''
+  matrix:
+    - arch: ''
+      variant: ''
+      docker: ''
+      dockerArgs: ''
+      target: ''
+      gnArgs: ''
+      alt: ''
+
+jobs:
+  - ${{ each build in parameters.builds }}:
+    - ${{ each item in parameters.matrix }}:
+      - template: azure-templates-bootstrapper.yml
+        parameters:
+          name: ${{ replace(replace(format('native_linux_{0}_{1}_{2}_{3}_linux', item.arch, item.variant, build.name, item.alt), '__', '_'), '__', '_') }}
+          displayName: Linux ${{ replace(replace(replace(replace(replace(format('({0}|{1}|{2}|{3})', item.arch, item.variant, build.name, item.alt), '||', '|'), '||', '|'), '(|', '('), '|)', ')'), '|', ', ') }}
+          vmImage: $(VM_IMAGE_LINUX)
+          docker: ${{ item.docker }}
+          dockerArgs: ${{ item.dockerArgs }}
+          target: ${{ coalesce(item.target, 'externals-linux') }}
+          additionalArgs: --buildarch=${{ item.arch }} --variant=${{ coalesce(item.variant, 'linux') }}${{ build.name }} ${{ build.additionalArgs }} ${{ item.additionalArgs }}

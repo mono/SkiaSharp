@@ -18,6 +18,7 @@ parameters:
   buildExternals: ''                            # the build number to download externals from
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
+  dockerArgs: ''                                # any additional arguments to pass to docker build
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installTizenSdk: true                         # whether or not to install the Tizen SDK
   installWindowsSdk: true                       # whether or not to install the Windows SDK
@@ -163,7 +164,7 @@ jobs:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
       - ${{ if ne(parameters.docker, '') }}:
-        - bash: docker build --tag skiasharp .
+        - bash: docker build --tag skiasharp ${{ parameters.dockerArgs }} .
           workingDirectory: ${{ parameters.docker }}
           displayName: Build the Docker image for ${{ parameters.docker }}
         - bash: |
