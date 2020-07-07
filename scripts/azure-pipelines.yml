@@ -296,7 +296,7 @@ stages:
           displayName: WASM
           vmImage: $(VM_IMAGE_LINUX)
           docker: scripts/Docker/wasm
-          dockerArgs: EMSCRIPTEN_VERSION=$(EMSCRIPTEN_VERSION)
+          dockerArgs: --build-arg EMSCRIPTEN_VERSION=$(EMSCRIPTEN_VERSION)
           target: externals-wasm
 
   - stage: managed
