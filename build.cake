@@ -60,6 +60,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (1, 57, 0) },
     { "SkiaSharp.Views",                               new Version (1, 57, 0) },
     { "SkiaSharp.Views.Desktop.Common",                new Version (1, 57, 0) },
     { "SkiaSharp.Views.Gtk2",                          new Version (1, 57, 0) },
