@@ -84,13 +84,10 @@ namespace SkiaSharp
 			}
 		}
 
-		public static GRGlInterface CreateEvas (IntPtr evas) =>
-			CreateEvas (evas, IntPtr.Zero);
-
-		public static GRGlInterface CreateEvas (IntPtr evas, IntPtr evasGlContext)
+		public static GRGlInterface CreateEvas (IntPtr evas)
 		{
 #if __TIZEN__
-			var evasLoader = new EvasGlLoader (evas, evasGlContext);
+			var evasLoader = new EvasGlLoader (evas);
 			return CreateGles (name => evasLoader.GetFunctionPointer (name));
 #else
 			return null;
@@ -241,21 +238,25 @@ namespace SkiaSharp
 #if __TIZEN__
 		private class EvasGlLoader
 		{
+			private const string libevas = "libevas.so.1";
+
 			private static readonly Type IntPtrType;
 			private static readonly Type EvasGlApiType;
 			private static readonly FieldInfo[] apiFields;
 
 			private readonly IntPtr glEvas;
-			private readonly IntPtr glContext;
 			private readonly EvasGlApi api;
 
-			[DllImport ("libevas.so.1")]
+			[DllImport (libevas)]
 			internal static extern IntPtr evas_gl_api_get (IntPtr evas_gl);
 
-			[DllImport ("libevas.so.1")]
+			[DllImport (libevas)]
 			internal static extern IntPtr evas_gl_context_api_get (IntPtr evas_gl, IntPtr ctx);
 
-			[DllImport ("libevas.so.1")]
+			[DllImport (libevas)]
+			internal static extern IntPtr evas_gl_current_context_get (IntPtr evas_gl);
+
+			[DllImport (libevas)]
 			internal static extern IntPtr evas_gl_proc_address_get (IntPtr evas_gl, string name);
 
 			static EvasGlLoader ()
@@ -266,14 +267,9 @@ namespace SkiaSharp
 			}
 
 			public EvasGlLoader (IntPtr evas)
-				: this (evas, IntPtr.Zero)
-			{
-			}
-
-			public EvasGlLoader (IntPtr evas, IntPtr evasGlContext)
 			{
 				glEvas = evas;
-				glContext = evasGlContext;
+				var glContext = evas_gl_current_context_get (glEvas);
 
 				var apiPtr = glContext != IntPtr.Zero
 					? evas_gl_context_api_get (glEvas, glContext)
