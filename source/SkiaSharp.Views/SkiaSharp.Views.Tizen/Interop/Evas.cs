@@ -18,6 +18,9 @@ namespace SkiaSharp.Views.Tizen.Interop
 		internal static extern IntPtr evas_gl_context_create(IntPtr evas_gl, IntPtr share_ctx);
 
 		[DllImport(Libraries.Evas)]
+		internal static extern IntPtr evas_gl_context_version_create(IntPtr evas_gl, IntPtr share_ctx, GLContextVersion version);
+
+		[DllImport(Libraries.Evas)]
 		internal static extern void evas_gl_context_destroy(IntPtr evas_gl, IntPtr ctx);
 
 		[DllImport(Libraries.Evas)]
@@ -39,6 +42,14 @@ namespace SkiaSharp.Views.Tizen.Interop
 		[DllImport(Libraries.Evas)]
 		[return: MarshalAs(UnmanagedType.U1)]
 		internal static extern bool evas_gl_make_current(IntPtr evas_gl, IntPtr surf, IntPtr ctx);
+
+		internal enum GLContextVersion
+		{
+			EVAS_GL_GLES_1_X = 1,  // OpenGL-ES 1.x
+			EVAS_GL_GLES_2_X = 2,  // OpenGL-ES 2.x (default)
+			EVAS_GL_GLES_3_X = 3,  // OpenGL-ES 3.x (since 2.4)
+			EVAS_GL_DEBUG = 0x1000 // Enable debug mode on this context (see GL_KHR_debug) (since 4.0)
+		}
 
 		internal struct Config
 		{

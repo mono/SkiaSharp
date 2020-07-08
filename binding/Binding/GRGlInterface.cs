@@ -84,10 +84,13 @@ namespace SkiaSharp
 			}
 		}
 
-		public static GRGlInterface CreateEvas (IntPtr evas)
+		public static GRGlInterface CreateEvas (IntPtr evas) =>
+			CreateEvas (evas, IntPtr.Zero);
+
+		public static GRGlInterface CreateEvas (IntPtr evas, IntPtr evasGlContext)
 		{
 #if __TIZEN__
-			var evasLoader = new EvasGlLoader (evas);
+			var evasLoader = new EvasGlLoader (evas, evasGlContext);
 			return CreateGles (name => evasLoader.GetFunctionPointer (name));
 #else
 			return null;
@@ -238,35 +241,62 @@ namespace SkiaSharp
 #if __TIZEN__
 		private class EvasGlLoader
 		{
-			private IntPtr glEvas;
-			private EvasGlApi api;
+			private static readonly Type IntPtrType;
+			private static readonly Type EvasGlApiType;
+			private static readonly FieldInfo[] apiFields;
+
+			private readonly IntPtr glEvas;
+			private readonly IntPtr glContext;
+			private readonly EvasGlApi api;
 
 			[DllImport ("libevas.so.1")]
 			internal static extern IntPtr evas_gl_api_get (IntPtr evas_gl);
 
 			[DllImport ("libevas.so.1")]
+			internal static extern IntPtr evas_gl_context_api_get (IntPtr evas_gl, IntPtr ctx);
+
+			[DllImport ("libevas.so.1")]
 			internal static extern IntPtr evas_gl_proc_address_get (IntPtr evas_gl, string name);
 
-			public EvasGlLoader (IntPtr evas)
+			static EvasGlLoader ()
 			{
-				glEvas = evas;
-
-				var unmanagedGlApi = evas_gl_api_get (glEvas);
-				api = Marshal.PtrToStructure<EvasGlApi> (unmanagedGlApi);
+				IntPtrType = typeof (IntPtr);
+				EvasGlApiType = typeof (EvasGlApi);
+				apiFields = EvasGlApiType.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 			}
 
-			public IntPtr GetFunctionPointer(string name)
+			public EvasGlLoader (IntPtr evas)
+				: this (evas, IntPtr.Zero)
 			{
-				var ret = evas_gl_proc_address_get (glEvas, name);
+			}
 
-				if (ret == IntPtr.Zero) {
-					var field = typeof (EvasGlApi).GetField (name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+			public EvasGlLoader (IntPtr evas, IntPtr evasGlContext)
+			{
+				glEvas = evas;
+				glContext = evasGlContext;
 
-					if (field?.FieldType == typeof (IntPtr))
-						ret = (IntPtr) field.GetValue (api);
+				var apiPtr = glContext != IntPtr.Zero
+					? evas_gl_context_api_get (glEvas, glContext)
+					: evas_gl_api_get (glEvas);
+
+				api = Marshal.PtrToStructure<EvasGlApi> (apiPtr);
+			}
+
+			public IntPtr GetFunctionPointer (string name)
+			{
+				// try evas_gl_proc_address_get
+				var address = evas_gl_proc_address_get (glEvas, name);
+				if (address != IntPtr.Zero)
+					return address;
+
+				// try the API struct
+				for (var i = 0; i < apiFields.Length; i++) {
+					var field = apiFields[i];
+					if (field.Name == name && field.FieldType == IntPtrType)
+						return (IntPtr)field.GetValue (api);
 				}
 
-				return ret;
+				return IntPtr.Zero;
 			}
 		}
 
