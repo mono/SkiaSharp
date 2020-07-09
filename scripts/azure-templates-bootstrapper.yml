@@ -18,6 +18,11 @@ parameters:
   buildExternals: ''                            # the build number to download externals from
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
+  dockerArgs: ''                                # any additional arguments to pass to docker build
+  installAndroidNdk: true                       # whether or not to install the Android NDK
+  installTizenSdk: true                         # whether or not to install the Tizen SDK
+  installWindowsSdk: true                       # whether or not to install the Windows SDK
+  installLlvm: true                             # whether or not to install the LLVM compiler
 
 jobs:
 # - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
@@ -78,15 +83,15 @@ jobs:
             architecture: 'x64'
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
-          - ${{ if contains(parameters.name, '_android_') }}:
+          - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
             - pwsh: .\scripts\install-android-ndk.ps1
               displayName: Install the Android NDK
           # install tizen
-          - ${{ if contains(parameters.name, '_tizen_') }}:
+          - ${{ if and(eq(parameters.installTizenSdk, 'true'), contains(parameters.name, '_tizen_')) }}:
             - pwsh: .\scripts\install-tizen.ps1
               displayName: Install the Tizen SDK
           # install llvm
-          - ${{ if contains(parameters.name, '_win32_') }}:
+          - ${{ if and(eq(parameters.installLlvm, 'true'), contains(parameters.name, '_win32_')) }}:
             - pwsh: .\scripts\install-llvm.ps1
               displayName: Install LLVM
 
@@ -108,7 +113,7 @@ jobs:
       - ${{ if endsWith(parameters.name, '_windows') }}:
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install the older Windows SDKs
-          - ${{ if or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_')) }}:
+          - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
             - pwsh: |
                 $uri = 'https://go.microsoft.com/fwlink/p/?LinkId=619296'
                 .\scripts\download-file.ps1 -Uri $uri -OutFile sdksetup.exe
@@ -159,7 +164,7 @@ jobs:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
       - ${{ if ne(parameters.docker, '') }}:
-        - bash: docker build --tag skiasharp .
+        - bash: docker build --tag skiasharp ${{ parameters.dockerArgs }} .
           workingDirectory: ${{ parameters.docker }}
           displayName: Build the Docker image for ${{ parameters.docker }}
         - bash: |

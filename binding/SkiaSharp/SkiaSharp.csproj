@@ -46,6 +46,9 @@
     <None Include="..\..\output\native\alpinenodeps\x86\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-musl-x86\native\%(Filename)%(Extension)" />
     <None Include="..\..\output\native\alpinenodeps\arm64\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-musl-arm64\native\%(Filename)%(Extension)" />
     <None Include="..\..\output\native\alpinenodeps\arm\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-musl-arm\native\%(Filename)%(Extension)" />
+    <!-- WASM -->
+    <None Include="..\..\output\native\wasm\libSkiaSharp*" Link="nuget\build\wasm\%(Filename)%(Extension)" />
+    <None Include="nuget\build\wasm\SkiaSharp.props" Link="nuget\build\wasm\SkiaSharp.props" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <None Include="nuget\build\net462\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
