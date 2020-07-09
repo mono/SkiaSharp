@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using ElmSharp;
 using SkiaSharp.Views.GlesInterop;
 using SkiaSharp.Views.Tizen.Interop;
+using Tizen;
 
 namespace SkiaSharp.Views.Tizen
 {
@@ -61,8 +62,22 @@ namespace SkiaSharp.Views.Tizen
 				glConfigPtr = Marshal.AllocHGlobal(Marshal.SizeOf(glConfig));
 				Marshal.StructureToPtr(glConfig, glConfigPtr, false);
 
-				// initialize the context
-				glContext = Evas.evas_gl_context_create(glEvas, IntPtr.Zero);
+				// try initialize the context with Open GL ES 3.x first
+				glContext = Evas.evas_gl_context_version_create(glEvas, IntPtr.Zero, Evas.GLContextVersion.EVAS_GL_GLES_3_X);
+
+				// if we could not get 3.x, try 2.x
+				if (glContext == IntPtr.Zero)
+				{
+					Log.Debug("SKGLSurfaceView", "OpenGL ES 3.x was not available, trying 2.x.");
+					glContext = Evas.evas_gl_context_version_create(glEvas, IntPtr.Zero, Evas.GLContextVersion.EVAS_GL_GLES_2_X);
+				}
+
+				// if that is not available, the default
+				if (glContext == IntPtr.Zero)
+				{
+					Log.Debug("SKGLSurfaceView", "OpenGL ES 2.x was not available, trying the default.");
+					glContext = Evas.evas_gl_context_create(glEvas, IntPtr.Zero);
+				}
 			}
 		}
 
@@ -140,8 +155,14 @@ namespace SkiaSharp.Views.Tizen
 
 				// create the interface using the function pointers provided by the EFL
 				var glInterface = GRGlInterface.CreateEvas(glEvas);
+				if (glInterface == null)
+					Log.Error("SKGLSurfaceView", "Unable to create GRGlInterface.");
+				if (!glInterface.Validate())
+					Log.Error("SKGLSurfaceView", "The created GRGlInterface was not valid.");
 				context?.Dispose();
 				context = GRContext.CreateGl(glInterface);
+				if (context == null)
+					Log.Error("SKGLSurfaceView", "Unable to create the GRContext.");
 
 				// create the render target
 				renderTarget?.Dispose();

@@ -14,66 +14,61 @@ Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .Does(() =>
 {
-    Build("armel", "arm");
-    Build("i386", "x86");
+    Build("armel", "arm", "mobile-4.0-device.core");
+    Build("i386", "x86", "mobile-4.0-emulator.core");
 
-    void Build(string arch, string skiaArch)
+    void Build(string arch, string skiaArch, string rootstrap)
     {
         if (Skip(arch)) return;
 
-        //GnNinja($"tizen/{arch}", "skia",
-        //    $"target_os='tizen' " +
-        //    $"target_cpu='{skiaArch}' " +
-        //    $"is_official_build=true " +
-        //    $"skia_enable_gpu=true " +
-        //    $"skia_enable_tools=false " +
-        //    $"skia_use_icu=false " +
-        //    $"skia_use_piex=true " +
-        //    $"skia_use_sfntly=false " +
-        //    $"skia_use_system_expat=false " +
-        //    $"skia_use_system_freetype2=true " +
-        //    $"skia_use_system_libjpeg_turbo=false " +
-        //    $"skia_use_system_libpng=false " +
-        //    $"skia_use_system_libwebp=false " +
-        //    $"skia_use_system_zlib=true " +
-        //    $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_BUILD_FOR_TIZEN', '-DXML_DEV_URANDOM' ] " +
-        //    $"ncli='{TIZEN_STUDIO_HOME}' " +
-        //    $"ncli_version='4.0'");
+        GnNinja($"tizen/{arch}", "skia",
+           $"target_os='tizen' " +
+           $"target_cpu='{skiaArch}' " +
+           $"is_official_build=true " +
+           $"skia_enable_gpu=true " +
+           $"skia_enable_tools=false " +
+           $"skia_use_icu=false " +
+           $"skia_use_piex=true " +
+           $"skia_use_sfntly=false " +
+           $"skia_use_system_expat=false " +
+           $"skia_use_system_freetype2=true " +
+           $"skia_use_system_libjpeg_turbo=false " +
+           $"skia_use_system_libpng=false " +
+           $"skia_use_system_libwebp=false " +
+           $"skia_use_system_zlib=true " +
+           $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_BUILD_FOR_TIZEN', '-DXML_DEV_URANDOM' ] " +
+           $"ncli='{TIZEN_STUDIO_HOME}' " +
+           $"ncli_version='4.0'");
 
-        //RunProcess(tizen, new ProcessSettings {
-        //    Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION}" ,
-        //    WorkingDirectory = MakeAbsolute((DirectoryPath)"libSkiaSharp").FullPath,
-        //});
+        RunProcess(tizen, new ProcessSettings {
+           Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
+           WorkingDirectory = MakeAbsolute((DirectoryPath)"libSkiaSharp").FullPath,
+        });
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        // CopyFile($"libSkiaSharp/{CONFIGURATION}/libskiasharp.so", outDir.CombineWithFilePath("libSkiaSharp.so"));
-        FileWriteText(outDir.CombineWithFilePath("libSkiaSharp.so"), "");
+        CopyFile($"libSkiaSharp/{CONFIGURATION}/libskiasharp.so", outDir.CombineWithFilePath("libSkiaSharp.so"));
     }
 });
 
 Task("libHarfBuzzSharp")
     .Does(() =>
 {
-    var cmd = IsRunningOnWindows() ? ".cmd" : "";
-    var ndkbuild = TIZEN_STUDIO_HOME.CombineWithFilePath($"ndk-build{cmd}").FullPath;
+    Build("armel", "arm", "mobile-4.0-device.core");
+    Build("i386", "x86", "mobile-4.0-emulator.core");
 
-    Build("armel", "arm");
-    Build("i386", "x86");
-
-    void Build(string arch, string cliArch)
+    void Build(string arch, string cliArch, string rootstrap)
     {
         if (Skip(arch)) return;
 
-        // RunProcess(tizen, new ProcessSettings {
-        //     Arguments = $"build-native -a {cliArch} -c llvm -C {CONFIGURATION}",
-        //     WorkingDirectory = MakeAbsolute((DirectoryPath)"libHarfBuzzSharp").FullPath,
-        // });
+        RunProcess(tizen, new ProcessSettings {
+            Arguments = $"build-native -a {cliArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
+            WorkingDirectory = MakeAbsolute((DirectoryPath)"libHarfBuzzSharp").FullPath,
+        });
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        // CopyFile($"libHarfBuzzSharp/{CONFIGURATION}/libharfbuzzsharp.so", outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
-        FileWriteText(outDir.CombineWithFilePath("libHarfBuzzSharp.so"), "");
+        CopyFile($"libHarfBuzzSharp/{CONFIGURATION}/libharfbuzzsharp.so", outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
     }
 });
 
