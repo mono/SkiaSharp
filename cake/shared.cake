@@ -13,6 +13,12 @@ var CAKE_ARGUMENTS = (IReadOnlyDictionary<string, string>)Context.Arguments
     .GetProperty("Arguments")
     .GetValue(Context.Arguments);
 
+var BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
+    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+var BUILD_VARIANT = Argument("variant", EnvironmentVariable("BUILD_VARIANT"));
+var ADDITIONAL_GN_ARGS = Argument("gnArgs", EnvironmentVariable("ADDITIONAL_GN_ARGS"));
+
 DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME");
 
 void RunCake(FilePath cake, string target = null, Dictionary<string, string> arguments = null)
@@ -64,6 +70,12 @@ void RunProcess(FilePath process, ProcessSettings settings)
     if (result != 0) {
         throw new Exception($"Process '{process}' failed with error: {result}");
     }
+}
+
+IProcess RunAndReturnProcess(FilePath process, ProcessSettings settings)
+{
+    var proc = StartAndReturnProcess(process, settings);
+    return proc;
 }
 
 bool IsRunningOnMac()

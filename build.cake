@@ -60,6 +60,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (1, 57, 0) },
     { "SkiaSharp.Views",                               new Version (1, 57, 0) },
     { "SkiaSharp.Views.Desktop.Common",                new Version (1, 57, 0) },
     { "SkiaSharp.Views.Gtk2",                          new Version (1, 57, 0) },
@@ -76,6 +77,11 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 57, 0) },
     { "SkiaSharp.WebAssembly",                         new Version (1, 57, 0) },
 };
+
+Information("Arguments:");
+foreach (var arg in CAKE_ARGUMENTS) {
+    Information($"    {arg.Key.PadRight(30)} {{0}}", arg.Value);
+}
 
 #load "cake/msbuild.cake"
 #load "cake/UtilsManaged.cake"
@@ -227,6 +233,38 @@ Task ("tests")
         var root = FindRegexMatchGroupsInFile (xml, @"<source>(.*)<\/source>", 0)[1].Value;
         ReplaceTextInFiles (xml, root, "");
     }
+});
+
+Task ("tests-wasm")
+    .Description ("Run WASM tests.")
+    .IsDependentOn ("externals-wasm")
+    .Does (() =>
+{
+    var failedTests = 0;
+
+    RunMSBuild ("./tests/SkiaSharp.Wasm.Tests.sln",
+        bl: $"./output/binlogs/tests-wasm.binlog");
+
+    var pubDir = "./tests/SkiaSharp.Wasm.Tests/bin/publish/";
+    RunNetCorePublish("./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj", pubDir);
+    IProcess serverProc = null;
+    try {
+        serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
+            Arguments = "server.py",
+            WorkingDirectory = pubDir,
+        });
+        DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj", "http://localhost:8000/ -o ./tests/SkiaSharp.Wasm.Tests/TestResults/");
+    } catch {
+        failedTests++;
+    } finally {
+        serverProc?.Kill();
+    }
+
+    if (failedTests > 0)
+        if (THROW_ON_TEST_FAILURE)
+            throw new Exception ($"There were {failedTests} failed tests.");
+        else
+            Warning ($"There were {failedTests} failed tests.");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -418,9 +456,10 @@ Task ("nuget")
         if (id != null && version != null) {
             var v = GetVersion (id.Value);
             if (!string.IsNullOrEmpty (v)) {
+                if (id.Value.StartsWith("SkiaSharp") || id.Value.StartsWith("HarfBuzzSharp"))
+                    v += suffix;
                 version.Value = v;
             }
-            version.Value += suffix;
         }
 
         // <dependency>
@@ -437,7 +476,9 @@ Task ("nuget")
             if (depId != null && depVersion != null) {
                 var v = GetVersion (depId.Value);
                 if (!string.IsNullOrEmpty (v)) {
-                    depVersion.Value = v + suffix;
+                    if (depId.Value.StartsWith("SkiaSharp") || depId.Value.StartsWith("HarfBuzzSharp"))
+                        v += suffix;
+                    depVersion.Value = v;
                 }
             }
         }

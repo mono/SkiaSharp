@@ -66,6 +66,18 @@ void RunNetCoreTests(FilePath testAssembly)
     DotNetCoreTest(testAssembly.GetFilename().ToString(), settings);
 }
 
+void RunNetCorePublish(FilePath testProject, DirectoryPath output)
+{
+    var dir = testProject.GetDirectory();
+    var settings = new DotNetCorePublishSettings {
+        Configuration = CONFIGURATION,
+        NoBuild = true,
+        WorkingDirectory = dir,
+        OutputDirectory = output,
+    };
+    DotNetCorePublish(testProject.GetFilename().ToString(), settings);
+}
+
 IEnumerable<(string Name, string Value)> CreateTraitsDictionary(string args)
 {
     if (!string.IsNullOrEmpty(args)) {

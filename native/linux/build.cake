@@ -6,33 +6,36 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
-string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
-bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
+string SUPPORT_VULKAN_VAR = Argument("supportVulkan", EnvironmentVariable("SUPPORT_VULKAN") ?? "true");
+bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower() == "true";
+
+var VERIFY_EXCLUDED = Argument("verifyExcluded", "")
+    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
 string CC = Argument("cc", EnvironmentVariable("CC"));
-string CXX = Argument("ccx", EnvironmentVariable("CXX"));
+string CXX = Argument("cxx", EnvironmentVariable("CXX"));
 string AR = Argument("ar", EnvironmentVariable("AR"));
 
-string VARIANT = BUILD_VARIANT ?? "linux";
+string VARIANT = string.IsNullOrEmpty(BUILD_VARIANT) ? "linux" : BUILD_VARIANT?.Trim();
+
+if (BUILD_ARCH.Length == 0)
+    BUILD_ARCH = new [] { "x64" };
+
+var COMPILERS = "";
+if (!string.IsNullOrEmpty(CC))
+    COMPILERS += $"cc='{CC}' ";
+if (!string.IsNullOrEmpty(CXX))
+    COMPILERS += $"cxx='{CXX}' ";
+if (!string.IsNullOrEmpty(AR))
+    COMPILERS += $"ar='{AR}' ";
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    Build("x64", "x64", "x64");
-
-    void Build(string arch, string skiaArch, string dir)
-    {
+    foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
-
-        var compilers = "";
-        if (!string.IsNullOrEmpty(CC))
-            compilers += $"cc='{CC}' ";
-        if (!string.IsNullOrEmpty(CXX))
-            compilers += $"cxx='{CXX}' ";
-        if (!string.IsNullOrEmpty(AR))
-            compilers += $"ar='{AR}' ";
 
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
@@ -52,43 +55,64 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
-            $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
+            $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
+            $"extra_asmflags=[] " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
-            compilers +
+            COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
 
-        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
+        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{arch}");
         EnsureDirectoryExists(outDir);
         var so = SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.so.{soname}");
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libSkiaSharp.so"));
+
+        foreach (var exclude in VERIFY_EXCLUDED) {
+            RunProcess("readelf", $"-d {so}", out var stdout);
+
+            if (stdout.Any(o => o.Contains($"[{exclude}.")))
+                throw new Exception($"libSkiaSharp.so contained a dependency on {exclude}.");
+        }
     }
 });
 
 Task("libHarfBuzzSharp")
+    .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    Build("x64", "x64");
-
-    void Build(string arch, string dir)
-    {
+    foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
 
         var soname = GetVersion("HarfBuzz", "soname");
+        var map = MakeAbsolute((FilePath)"libHarfBuzzSharp/libHarfBuzzSharp.map");
 
-        RunProcess("make", new ProcessSettings {
-            Arguments = $"ARCH={arch} SONAME_VERSION={soname} VARIANT={VARIANT} LDFLAGS=-static-libstdc++",
-            WorkingDirectory = "libHarfBuzzSharp",
-        });
+        GnNinja($"{VARIANT}/{arch}", "HarfBuzzSharp",
+            $"target_os='linux' " +
+            $"target_cpu='{arch}' " +
+            $"is_official_build=true " +
+            $"visibility_hidden=false " +
+            $"extra_asmflags=[] " +
+            $"extra_cflags=[] " +
+            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
+            COMPILERS +
+            $"linux_soname_version='{soname}' " +
+            ADDITIONAL_GN_ARGS);
 
-        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
+        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{arch}");
         EnsureDirectoryExists(outDir);
-        var so = $"libHarfBuzzSharp/bin/{VARIANT}/{arch}/libHarfBuzzSharp.so.{soname}";
+        var so = SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libHarfBuzzSharp.so.{soname}");
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
+
+        foreach (var exclude in VERIFY_EXCLUDED) {
+            RunProcess("readelf", $"-d {so}", out var stdout);
+
+            if (stdout.Any(o => o.Contains($"[{exclude}.")))
+                throw new Exception($"libHarfBuzzSharp.so contained a dependency on {exclude}.");
+        }
     }
 });
 
