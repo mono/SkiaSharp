@@ -110,6 +110,21 @@ namespace SkiaSharp
 		}
 	}
 
+	public unsafe partial struct GRMetalTextureInfo
+	{
+		public GRMetalTextureInfo (Metal.IMTLTexture texture)
+		{
+			Texture = texture;
+		}
+
+		public Metal.IMTLTexture Texture { get; set; }
+
+		internal GRMetalTextureInfoNative ToNative () =>
+			new GRMetalTextureInfoNative {
+				fTexture = (void*)Texture.Handle
+			};
+	}
+
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Flags]
 	[Obsolete]

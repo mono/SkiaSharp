@@ -13,16 +13,8 @@ namespace SkiaSharpSample
     [Register ("ViewController")]
     partial class ViewController
     {
-        [Outlet]
-        [GeneratedCode ("iOS Designer", "1.0")]
-        SkiaSharp.Views.iOS.SKCanvasView skiaView { get; set; }
-
         void ReleaseDesignerOutlets ()
         {
-            if (skiaView != null) {
-                skiaView.Dispose ();
-                skiaView = null;
-            }
         }
     }
 }

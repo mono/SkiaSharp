@@ -47,6 +47,17 @@ namespace SkiaSharp
 			CreateVulkan (width, height, vkInfo);
 		}
 
+		public GRBackendTexture (int width, int height, bool mipmapped, GRMetalTextureInfo mtlInfo)
+			: this (IntPtr.Zero, true)
+		{
+			var info = mtlInfo.ToNative ();
+			Handle = SkiaApi.gr_backendtexture_new_metal (width, height, mipmapped, &info);
+
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
+			}
+		}
+
 		private void CreateGl (int width, int height, bool mipmapped, GRGlTextureInfo glInfo)
 		{
 			Handle = SkiaApi.gr_backendtexture_new_gl (width, height, mipmapped, &glInfo);

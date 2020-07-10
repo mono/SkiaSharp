@@ -30,9 +30,10 @@ Task("libSkiaSharp")
         GnNinja($"ios/{arch}", "skia",
             $"target_cpu='{skiaArch}' " +
             $"target_os='ios' " +
-            $"is_official_build=true " +
+            $"is_official_build=false " +
             $"skia_enable_tools=false " +
             $"skia_use_icu=false " +
+            $"skia_use_metal=true " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +
@@ -49,7 +50,7 @@ Task("libSkiaSharp")
         EnsureDirectoryExists(outDir);
         CopyDirectory($"libSkiaSharp/bin/{CONFIGURATION}/{arch}/{CONFIGURATION}-{sdk}", outDir);
 
-        StripSign(outDir.CombineWithFilePath("libSkiaSharp.framework"));
+        // StripSign(outDir.CombineWithFilePath("libSkiaSharp.framework"));
     }
 });
 
