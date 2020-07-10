@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Xunit;
@@ -86,6 +87,45 @@ namespace SkiaSharp.Tests
 		{
 			var metadata = SKDocumentPdfMetadata.Default;
 			metadata.Author = "SkiaSharp Team";
+
+			using (var stream = new MemoryStream())
+			{
+				using (var doc = SKDocument.CreatePdf(stream, metadata))
+				{
+					Assert.NotNull(doc);
+					Assert.NotNull(doc.BeginPage(100, 100));
+
+					doc.EndPage();
+					doc.Close();
+				}
+
+				Assert.True(stream.Length > 0);
+				Assert.True(stream.Position > 0);
+
+				stream.Position = 0;
+				using (var reader = new StreamReader(stream))
+				{
+					var contents = reader.ReadToEnd();
+					Assert.Contains("/Author (SkiaSharp Team)", contents);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void CanCreatePdfWithSubsetter()
+		{
+			var metadata = SKDocumentPdfMetadata.Default;
+			metadata.FontSubsetterDelegate = (SKData fontData, IEnumerable<int> codepoints, string fontName, int ttcIndex) =>
+			{
+				SKData data = null;
+				// do something
+				foreach (var cp in codepoints)
+				{
+					// add cp
+				}
+				// do last
+				return data;
+			};
 
 			using (var stream = new MemoryStream())
 			{

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace SkiaSharp
@@ -427,6 +428,7 @@ namespace SkiaSharp
 			RasterDpi = rasterDpi;
 			PdfA = false;
 			EncodingQuality = DefaultEncodingQuality;
+			FontSubsetterDelegate = null;
 		}
 
 		public SKDocumentPdfMetadata (int encodingQuality)
@@ -442,6 +444,7 @@ namespace SkiaSharp
 			RasterDpi = DefaultRasterDpi;
 			PdfA = false;
 			EncodingQuality = encodingQuality;
+			FontSubsetterDelegate = null;
 		}
 
 		public SKDocumentPdfMetadata (float rasterDpi, int encodingQuality)
@@ -457,6 +460,7 @@ namespace SkiaSharp
 			RasterDpi = rasterDpi;
 			PdfA = false;
 			EncodingQuality = encodingQuality;
+			FontSubsetterDelegate = null;
 		}
 
 		public string Title { readonly get; set; }
@@ -470,6 +474,8 @@ namespace SkiaSharp
 		public float RasterDpi { readonly get; set; }
 		public bool PdfA { readonly get; set; }
 		public int EncodingQuality { readonly get; set; }
+
+		public Func<SKData, IEnumerable<int>, string, int, SKData> FontSubsetterDelegate { readonly get; set; }
 
 		public readonly bool Equals (SKDocumentPdfMetadata obj) =>
 			Title == obj.Title &&
