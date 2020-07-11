@@ -22,8 +22,6 @@ Task("libSkiaSharp")
         GnNinja($"macos/{arch}", "skia",
             $"target_os='mac' " +
             $"target_cpu='{skiaArch}' " +
-            $"is_official_build=true " +
-            $"skia_enable_tools=false " +
             $"skia_use_icu=false " +
             $"skia_use_metal=true " +
             $"skia_use_piex=true " +

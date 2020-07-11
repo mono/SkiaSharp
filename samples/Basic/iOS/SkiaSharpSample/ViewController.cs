@@ -52,11 +52,14 @@ namespace SkiaSharpSample
 			mtkView.Delegate = this;
 		}
 
-
-		private SKSurface SkMtkViewToSurface(MTKView mtkView)
+		public void DrawableSizeWillChange(MTKView view, CGSize size)
 		{
-			if (mtkView?.CurrentDrawable?.Texture == null || grContext == null)
-				return null;
+		}
+
+		public void Draw(MTKView view)
+		{
+			if (grContext == null || view == null)
+				return;
 
 			var colorType = SKColorType.Bgra8888;
 			var origin = GRSurfaceOrigin.TopLeft;
@@ -67,75 +70,34 @@ namespace SkiaSharpSample
 
 			var fbInfo = new GRMetalTextureInfo(mtkView.CurrentDrawable.Texture);
 
-			if (sampleCount == 1)
+			using (var backendRT = new GRBackendRenderTarget(width, height, 1, fbInfo))
+			using (var surface = SKSurface.Create(grContext, backendRT, origin, colorType))
 			{
-				var backendRT = new GRBackendRenderTarget(width, height, 1, fbInfo);
-				return SKSurface.Create(grContext, backendRT, origin, colorType);
+				if (surface == null)
+				{
+					Console.WriteLine("Unable to create SKSurface.");
+					return;
+				}
+
+				OnPaintSurface(mtkView, new SKPaintGLSurfaceEventArgs(surface, backendRT));
+
+				// Must flush *and* present for this to work!
+				surface.Flush();
 			}
-			else
-			{
-				var backendTexture = new GRBackendTexture(width, height, false, fbInfo);
-				return SKSurface.Create(grContext, backendTexture, origin, sampleCount, colorType);
-			}
-		}
-
-		public void DrawableSizeWillChange(MTKView view, CGSize size)
-		{
-		}
-
-		public void Draw(MTKView view)
-		{
-			if (grContext == null || view == null)
-				return;
-
-			//// Do as much as possible before creating surface.
-			//config_paint(&fPaint);
-			//float rotation = (float)(180 * 1e-9 * SkTime::GetNSecs());
-
-			// Create surface:
-			var surface = SkMtkViewToSurface(view);
-			if (surface == null)
-			{
-				Console.WriteLine("Unable to create SKSurface.");
-				return;
-			}
-
-			//draw_example(surface.get(), fPaint, rotation);
-
-			// Must flush *and* present for this to work!
-			surface.Flush();
-			surface = null;
 
 			var commandBuffer = metalQueue.CommandBuffer();
 			commandBuffer.PresentDrawable(view.CurrentDrawable);
 			commandBuffer.Commit();
 		}
 
-		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+		private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
 		{
-			// the the canvas and properties
 			var canvas = e.Surface.Canvas;
 
-			// get the screen density for scaling
-			var scale = (float)mtkView.ContentScaleFactor;
+			canvas.Clear(SKColors.Red);
+			canvas.DrawRect(SKRect.Create(100, 400, 400, 100), new SKPaint { Color = SKColors.Violet });
+			canvas.DrawText("This is METAL! " + DateTime.Now.ToString("mm:ss.fff"), 50, 550, new SKPaint { TextSize = 50 });
 
-			// handle the device screen density
-			canvas.Scale(scale);
-
-			// make sure the canvas is blank
-			canvas.Clear(SKColors.White);
-
-			// draw some text
-			var paint = new SKPaint
-			{
-				Color = SKColors.Black,
-				IsAntialias = true,
-				Style = SKPaintStyle.Fill,
-				TextAlign = SKTextAlign.Center,
-				TextSize = 24
-			};
-			var coord = new SKPoint((float)mtkView.Bounds.Width / 2, ((float)mtkView.Bounds.Height + paint.TextSize) / 2);
-			canvas.DrawText("SkiaSharp", coord, paint);
 		}
 	}
 }

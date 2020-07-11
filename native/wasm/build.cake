@@ -20,7 +20,6 @@ Task("libSkiaSharp")
     GnNinja($"wasm", "SkiaSharp",
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
-        $"is_official_build=true " +
         $"is_static_skiasharp=true " +
         $"skia_enable_ccpr=false " +
         $"skia_enable_fontmgr_custom_empty=false " +
@@ -29,7 +28,6 @@ Task("libSkiaSharp")
         (SUPPORT_GPU ? "skia_gl_standard='webgl'" : "") +
         $"skia_enable_nvpr=false " +
         $"skia_enable_pdf=false " +
-        $"skia_enable_tools=false " +
         $"skia_use_dng_sdk=false " +
         $"skia_use_egl=true " +
         $"skia_use_fontconfig=false " +

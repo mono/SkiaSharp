@@ -24,9 +24,7 @@ Task("libSkiaSharp")
         GnNinja($"uwp/{arch}", "SkiaSharp",
             $"target_os='winrt' " +
             $"target_cpu='{skiaArch}' " +
-            $"is_official_build=true " +
             $"skia_enable_fontmgr_win_gdi=false " +
-            $"skia_enable_tools=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +

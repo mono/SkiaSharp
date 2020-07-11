@@ -25,8 +25,6 @@ Task("libSkiaSharp")
         GnNinja($"android/{arch}", "SkiaSharp",
             $"target_cpu='{skiaArch}' " +
             $"target_os='android' " +
-            $"is_official_build=true " +
-            $"skia_enable_tools=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +

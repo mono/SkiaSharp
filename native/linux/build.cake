@@ -43,9 +43,7 @@ Task("libSkiaSharp")
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
             $"target_cpu='{arch}' " +
-            $"is_official_build=true " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
-            $"skia_enable_tools=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +
@@ -92,7 +90,6 @@ Task("libHarfBuzzSharp")
         GnNinja($"{VARIANT}/{arch}", "HarfBuzzSharp",
             $"target_os='linux' " +
             $"target_cpu='{arch}' " +
-            $"is_official_build=true " +
             $"visibility_hidden=false " +
             $"extra_asmflags=[] " +
             $"extra_cflags=[] " +
