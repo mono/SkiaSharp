@@ -1,4 +1,4 @@
-﻿#if !__WATCHOS__
+﻿#if !__WATCHOS__ && !HAS_UNO
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Views.GlesInterop
