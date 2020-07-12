@@ -196,6 +196,11 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("GLibSharp", "netstandard2.0");
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");
+    await AddDep("Uno.UI", "netstandard2.0");
+    await AddDep("Uno.UI", "MonoAndroid90");
+    await AddDep("Uno.UI", "xamarinios10");
+    await AddDep("Uno.UI", "xamarinmac20");
+    await AddDep("Uno.UI", "UAP");
 
     await AddDep("OpenTK.GLControl", "NET40", "reference");
     await AddDep("Xamarin.Forms", "Xamarin.iOS10", "reference");
