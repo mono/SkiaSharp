@@ -28,7 +28,3 @@ See documentation about assets here : https://github.com/unoplatform/uno/blob/ma
 | `200` | scale-200   | @2x      | xhdpi   |
 | `300` | scale-300   | @3x      | xxhdpi  |
 | `400` | scale-400   | N/A      | xxxhdpi |
-
-
-
-
