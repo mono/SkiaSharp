@@ -18,10 +18,10 @@ void RunMSBuild(
         c.Verbosity = VERBOSITY;
         c.MaxCpuCount = 0;
 
-        var blPath = ROOT_PATH.CombineWithFilePath("output/binlogs", solution.GetRelativePath(ROOT_PATH) + ".binlog");
+        var blPath = ROOT_PATH.Combine("output/binlogs").CombineWithFilePath(solution.GetRelativePath(ROOT_PATH) + ".binlog");
         c.BinaryLogger = new MSBuildBinaryLogSettings {
             Enabled = true,
-            FileName = blPath,
+            FileName = blPath.FullPath,
         };
 
         if (!string.IsNullOrEmpty(MSBUILD_EXE)) {
