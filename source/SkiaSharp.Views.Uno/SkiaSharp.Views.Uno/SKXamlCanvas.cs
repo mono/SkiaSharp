@@ -1,22 +1,52 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using SkiaSharp;
 using Windows.ApplicationModel;
 using Windows.Graphics.Display;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Data;
 
 namespace SkiaSharp.Views.UWP
 {
 	public partial class SKXamlCanvas : FrameworkElement
 	{
+		private static readonly DependencyProperty ProxyVisibilityProperty =
+			DependencyProperty.Register(
+				"ProxyVisibility",
+				typeof(Visibility),
+				typeof(SKXamlCanvas),
+				new PropertyMetadata(Visibility.Visible, OnVisibilityChanged));
+
+		private static bool designMode = DesignMode.DesignModeEnabled;
+
 		private bool ignorePixelScaling;
-		private bool isVisible;
+		private bool isVisible = true;
+
+		// workaround for https://github.com/mono/SkiaSharp/issues/1118
+		private int loadUnloadCounter = 0;
+
+		public SKXamlCanvas()
+		{
+			if (designMode)
+				return;
+
+			var display = DisplayInformation.GetForCurrentView();
+			OnDpiChanged(display);
+
+			Loaded += OnLoaded;
+			Unloaded += OnUnloaded;
+			SizeChanged += OnSizeChanged;
+
+			var binding = new Binding
+			{
+				Path = new PropertyPath(nameof(Visibility)),
+				Source = this
+			};
+			SetBinding(ProxyVisibilityProperty, binding);
+
+			DoInitialize();
+		}
+
+		public SKSize CanvasSize => GetCanvasSize();
 
 		public bool IgnorePixelScaling
 		{
@@ -28,11 +58,7 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-		public SKSize CanvasSize => GetCanvasSize();
-
 		public double Dpi { get; private set; } = 1;
-
-		public static bool IsInitialized => GetIsInitialized();
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
@@ -41,13 +67,19 @@ namespace SkiaSharp.Views.UWP
 			PaintSurface?.Invoke(this, e);
 		}
 
-		private static void OnVisibilityChanged(DependencyObject d)
+		private static void OnVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			if (d is SKXamlCanvas canvas)
+			if (d is SKXamlCanvas canvas && e.NewValue is Visibility visibility)
 			{
-				canvas.isVisible = canvas.Visibility == Visibility.Visible;
+				canvas.isVisible = visibility == Visibility.Visible;
 				canvas.Invalidate();
 			}
+		}
+
+		private void OnDpiChanged(DisplayInformation sender, object args = null)
+		{
+			Dpi = sender.LogicalDpi / 96.0f;
+			Invalidate();
 		}
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -55,16 +87,44 @@ namespace SkiaSharp.Views.UWP
 			Invalidate();
 		}
 
+		private void OnLoaded(object sender, RoutedEventArgs e)
+		{
+			loadUnloadCounter++;
+			if (loadUnloadCounter != 1)
+				return;
+
+			DoLoaded();
+
+			var display = DisplayInformation.GetForCurrentView();
+			display.DpiChanged += OnDpiChanged;
+
+			OnDpiChanged(display);
+		}
+
+		private void OnUnloaded(object sender, RoutedEventArgs e)
+		{
+			loadUnloadCounter--;
+			if (loadUnloadCounter != 0)
+				return;
+
+			DoUnloaded();
+
+			var display = DisplayInformation.GetForCurrentView();
+			display.DpiChanged -= OnDpiChanged;
+		}
+
 		public void Invalidate()
 		{
 			if (Dispatcher.HasThreadAccess)
-			{
 				DoInvalidate();
-			}
 			else
-			{
-				Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
-			}
+				Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate).AsTask().Wait();
 		}
+
+		partial void DoInitialize();
+
+		partial void DoLoaded();
+
+		partial void DoUnloaded();
 	}
 }

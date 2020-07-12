@@ -10,56 +10,14 @@ namespace SkiaSharp.Views.UWP
 		private Bitmap bitmap;
 		private SKImageInfo info;
 
-		private bool designMode;
-
-		public SKXamlCanvas()
-		{
-			Loaded += OnLoaded;
-			Unloaded += OnUnloaded;
-			SizeChanged += OnSizeChanged;
-
-			RegisterPropertyChangedCallback(VisibilityProperty, (s, e) => OnVisibilityChanged(s));
-			OnVisibilityChanged(this);
-
+		partial void DoInitialize() =>
 			SetWillNotDraw(false);
-		}
 
-		private SKSize GetCanvasSize() => new SKSize(info.Width, info.Height);
+		partial void DoUnloaded() =>
+			FreeBitmap();
 
-		private void Initialize()
-		{
-			designMode = !Extensions.IsValidEnvironment;
-
-			if (designMode)
-				return;
-
-			// create the initial info
-			info = new SKImageInfo(0, 0, SKColorType.Rgba8888, SKAlphaType.Premul);
-		}
-
-
-		private static bool GetIsInitialized() => true;
-
-		private void OnDpiChanged(DisplayInformation sender, object args = null)
-		{
-			Dpi = sender.LogicalDpi / 96.0f;
-			Invalidate();
-		}
-
-		private void OnLoaded(object sender, RoutedEventArgs e)
-		{
-			var display = DisplayInformation.GetForCurrentView();
-			display.DpiChanged += OnDpiChanged;
-
-			OnDpiChanged(display);
-			Invalidate();
-		}
-
-		private void OnUnloaded(object sender, RoutedEventArgs e)
-		{
-			var display = DisplayInformation.GetForCurrentView();
-			display.DpiChanged -= OnDpiChanged;
-		}
+		private SKSize GetCanvasSize() =>
+			info.Size;
 
 		private void DoInvalidate()
 		{
@@ -92,8 +50,11 @@ namespace SkiaSharp.Views.UWP
 			if (designMode)
 				return;
 
-			if (info.Width == 0 || info.Height == 0 || Visibility != Visibility.Visible)
+			if (info.Width == 0 || info.Height == 0 || Visibility != Visibility.Visible || !isVisible)
+			{
+				FreeBitmap();
 				return;
+			}
 
 			// create the bitmap data if we need it
 			if (bitmap == null || bitmap.Handle == IntPtr.Zero || bitmap.Width != info.Width || bitmap.Height != info.Height)
@@ -114,9 +75,15 @@ namespace SkiaSharp.Views.UWP
 
 			// draw bitmap to canvas
 			if (IgnorePixelScaling)
-				canvas.DrawBitmap(bitmap, new Rect(0, 0, info.Rect.Width, info.Rect.Height), new RectF(0, 0, (float)Width, (float)Height), null);
+			{
+				var src = new Rect(0, 0, info.Rect.Width, info.Rect.Height);
+				var dst = new RectF(0, 0, (float)Width, (float)Height);
+				canvas.DrawBitmap(bitmap, src, dst, null);
+			}
 			else
+			{
 				canvas.DrawBitmap(bitmap, 0, 0, null);
+			}
 		}
 
 		private void FreeBitmap()
@@ -125,9 +92,7 @@ namespace SkiaSharp.Views.UWP
 			{
 				// free and recycle the bitmap data
 				if (bitmap.Handle != IntPtr.Zero && !bitmap.IsRecycled)
-				{
 					bitmap.Recycle();
-				}
 				bitmap.Dispose();
 				bitmap = null;
 			}
