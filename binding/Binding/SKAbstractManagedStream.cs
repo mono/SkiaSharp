@@ -1,10 +1,7 @@
 ﻿using System;
-#if __WASM__
 using System.Globalization;
 using System.Linq;
-#else
 using System.Runtime.InteropServices;
-#endif
 using System.Threading;
 
 namespace SkiaSharp
@@ -19,7 +16,7 @@ namespace SkiaSharp
 		{
 #if __WASM__
 			const string js =
-				"SkiaSharp.SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.SKAbstractManagedStream', {" +
+				"SkiaSharp_SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.SKAbstractManagedStream', {" +
 				"  'ReadInternal': 'iiiii'," +
 				"  'PeekInternal': 'iiiii'," +
 				"  'IsAtEndInternal': 'iii'," +

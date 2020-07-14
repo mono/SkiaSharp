@@ -8,8 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.3" />
-    <PackageReference Include="Microsoft.TypeScript.Compiler" Version="3.1.5" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.9.5" />
   </ItemGroup>
   <ItemGroup>
     <None Include="nuget\build\wasm\SkiaSharp.targets" Link="nuget\build\$(PackagingPlatform)\SkiaSharp.WebAssembly.targets" />
@@ -20,14 +18,6 @@
     <Compile Include="WebAssembly.Runtime.cs" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Remove="WasmScripts\**\*" />
-    <TypeScriptCompile Include="ts\tsconfig.json" />
-    <TypeScriptCompile Include="..\..\externals\typescript\**\*.ts" Link="ts\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Remove="ts\**\*" />
-    <TypeScriptCompile Include="ts\**\*.ts" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="WasmScripts\**\*" />
     <EmbeddedResource Include="WasmScripts\**\*" />
   </ItemGroup>
 </Project>
