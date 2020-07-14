@@ -199,6 +199,10 @@ Task ("docs-update-frameworks")
     // generate the temp frameworks.xml
     var xFrameworks = new XElement ("Frameworks");
     foreach (var id in TRACKED_NUGETS.Keys) {
+        // skip doc generatgion for Uno, this is the same as UWP and it is not needed
+        if (id == "SkiaSharp.Views.Uno")
+            continue;
+
         // get the versions
         Information ($"Comparing the assemblies in '{id}'...");
         var allVersions = await NuGetVersions.GetAllAsync (id, new NuGetVersions.Filter {
