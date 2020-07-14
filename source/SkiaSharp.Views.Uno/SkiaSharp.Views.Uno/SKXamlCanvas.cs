@@ -116,7 +116,7 @@ namespace SkiaSharp.Views.UWP
 			if (Dispatcher.HasThreadAccess)
 				DoInvalidate();
 			else
-				Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate).AsTask().Wait();
+				Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
 		}
 
 		partial void DoLoaded();
