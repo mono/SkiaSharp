@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" />
-  <Import Project="..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.props" Condition="Exists('..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.props')" />
+  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props')" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -16,7 +16,7 @@
   <ItemGroup>
     <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharp" />
     <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharp.Views.UWP" />
-    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharpSample" />
+    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharpSample.Wasm" />
   </ItemGroup>
   <ItemGroup>
     <WasmShellMonoEnvironment Include="MONO_GC_PARAMS" Value="soft-heap-limit=512m,nursery-size=64m,evacuation-threshold=66,major=marksweep" />
@@ -46,4 +46,5 @@
   <ItemGroup>
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
+  <Import Project="..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.targets')" />
 </Project>
