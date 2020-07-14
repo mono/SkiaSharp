@@ -28,7 +28,9 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 #load "cake/native-shared.cake"
 
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
-    .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+    .ToLower ().Split (new [] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+var JUST_EXTERNALS = Argument ("justexternals", "")
+    .ToLower ().Split (new [] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
 var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);

@@ -84,5 +84,8 @@ bool ShouldBuildExternal(string platform)
     if (SKIP_EXTERNALS.Contains(platform))
         return false;
 
+    if (JUST_EXTERNALS.Length > 0)
+        return JUST_EXTERNALS.Contains(platform);
+
     return true;
 }
