@@ -10,8 +10,11 @@ namespace SkiaSharp.Views.UWP
 		private Bitmap bitmap;
 		private SKImageInfo info;
 
-		partial void DoInitialize() =>
+		public SKXamlCanvas()
+		{
+			Initialize();
 			SetWillNotDraw(false);
+		}
 
 		partial void DoUnloaded() =>
 			FreeBitmap();

@@ -24,7 +24,7 @@ namespace SkiaSharp.Views.UWP
 		// workaround for https://github.com/mono/SkiaSharp/issues/1118
 		private int loadUnloadCounter = 0;
 
-		public SKXamlCanvas()
+		private void Initialize()
 		{
 			if (designMode)
 				return;
@@ -42,8 +42,6 @@ namespace SkiaSharp.Views.UWP
 				Source = this
 			};
 			SetBinding(ProxyVisibilityProperty, binding);
-
-			DoInitialize();
 		}
 
 		public SKSize CanvasSize => GetCanvasSize();
@@ -120,8 +118,6 @@ namespace SkiaSharp.Views.UWP
 			else
 				Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate).AsTask().Wait();
 		}
-
-		partial void DoInitialize();
 
 		partial void DoLoaded();
 
