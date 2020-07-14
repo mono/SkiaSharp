@@ -7,25 +7,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <WasmHead>true</WasmHead>
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
-    <NoWarn>NU1701</NoWarn>
-    <MonoRuntimeDebuggerEnabled Condition="'$(Configuration)'=='Debug'">true</MonoRuntimeDebuggerEnabled>
-    <WasmShellMonoRuntimeExecutionMode Condition="$([MSBuild]::IsOsPlatform('Linux')) and '$(Configuration)'=='Release'">InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharp" />
-    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharp.Views.UWP" />
-    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharpSample.Wasm" />
-  </ItemGroup>
-  <ItemGroup>
-    <WasmShellMonoEnvironment Include="MONO_GC_PARAMS" Value="soft-heap-limit=512m,nursery-size=64m,evacuation-threshold=66,major=marksweep" />
-    <WasmShellMonoEnvironment Include="MONO_LOG_LEVEL" Value="debug" />
-    <WasmShellMonoEnvironment Include="MONO_LOG_MASK" Value="gc" />
-  </ItemGroup>
-  <ItemGroup>
-    <WasmShellExtraEmccFlags Include="-lidbfs.js" />
-  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <MonoRuntimeDebuggerEnabled>true</MonoRuntimeDebuggerEnabled>
+    <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
@@ -39,11 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\**\*" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="WasmScripts\*.js" />
-  </ItemGroup>
-  <ItemGroup>
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
   <Import Project="..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.targets')" />

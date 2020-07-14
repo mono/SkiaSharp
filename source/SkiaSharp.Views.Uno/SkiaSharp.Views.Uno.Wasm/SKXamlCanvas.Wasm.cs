@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using Microsoft.Extensions.Logging;
-using Uno.Extensions;
 using Uno.Foundation;
-using Uno.Logging;
 using Windows.UI.Xaml;
 
 namespace SkiaSharp.Views.UWP
@@ -31,13 +28,11 @@ namespace SkiaSharp.Views.UWP
 			if (designMode)
 				return;
 
-			if (ActualWidth <= 0 || ActualHeight <= 0 || !isVisible)
-			{
-				if (this.Log().IsEnabled(LogLevel.Trace))
-					this.Log().Trace($"Ignore Invalidate. ActualSize: {ActualWidth}x{ActualHeight}, isVisible:{isVisible}");
-
+			if (!isVisible)
 				return;
-			}
+
+			if (ActualWidth <= 0 || ActualHeight <= 0)
+				return;
 
 			int width, height;
 			if (IgnorePixelScaling)
@@ -56,9 +51,6 @@ namespace SkiaSharp.Views.UWP
 
 			using (var surface = SKSurface.Create(info, pixels, info.RowBytes))
 			{
-				if (this.Log().IsEnabled(LogLevel.Trace))
-					this.Log().Trace($"Invalidated. BytesSize={info.BytesSize} ColorType={info.ColorType} IsOpaque:{info.IsOpaque} {info.Width}x{info.Height}");
-
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 			}
 
@@ -72,9 +64,6 @@ namespace SkiaSharp.Views.UWP
 				FreeBitmap();
 
 				var ptr = Marshal.AllocHGlobal(info.BytesSize);
-
-				if (this.Log().IsEnabled(LogLevel.Trace))
-					this.Log().Trace($"Allocated new buffer. ptr: {ptr}, newSize: {info.Width}x{info.Height}, oldSize: {pixelWidth}x{pixelHeight}");
 
 				pixels = ptr;
 				pixelWidth = info.Width;
