@@ -69,7 +69,7 @@ namespace SkiaSharp.Views.Mac
 			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
 			using (var image = new CGImage(info.Width, info.Height, BitsPerByte, info.BytesPerPixel * BitsPerByte, info.RowBytes, colorSpace, BitmapFlags, dataProvider, null, false, CGColorRenderingIntent.Default))
 			{
-#if __IOS__ || __TVOS__ || __WATCHOS__
+#if __IOS__ || __TVOS__ || __WATCHOS__ || HAS_UNO
 				// we need to flip the image as we are mixing CoreGraphics and UIKit functions:
 				// https://developer.apple.com/library/ios/documentation/2DDrawing/Conceptual/DrawingPrintingiOS/GraphicsDrawingOverview/GraphicsDrawingOverview.html#//apple_ref/doc/uid/TP40010156-CH14-SW26
 				ctx.SaveState();

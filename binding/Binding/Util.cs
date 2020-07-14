@@ -90,6 +90,17 @@ namespace SkiaSharp
 				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported.")
 			};
 
+		// GetCharacterByteSize
+
+		internal static int GetCharacterByteSize (this SKTextEncoding encoding) =>
+			encoding switch
+			{
+				SKTextEncoding.Utf8 => 1,
+				SKTextEncoding.Utf16 => 2,
+				SKTextEncoding.Utf32 => 4,
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported.")
+			};
+
 		// GetUnicodeCharacterCode
 
 		public static int GetUnicodeCharacterCode (string character, SKTextEncoding encoding)
