@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.Globalization;
+using System.Linq;
 using System.Threading;
 
 namespace SkiaSharp
@@ -12,6 +13,31 @@ namespace SkiaSharp
 
 		static SKDrawable ()
 		{
+#if __WASM__
+			const string js =
+				"SkiaSharp_SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.SKDrawable', {" +
+				"  '" + nameof (SKDrawable.DrawInternal) + "':               'viii'," +
+				"  '" + nameof (SKDrawable.GetBoundsInternal) + "':          'viii'," +
+				"  '" + nameof (SKDrawable.NewPictureSnapshotInternal) + "': 'iii'," +
+				"  '" + nameof (SKDrawable.DestroyInternal) + "':            'vii'," +
+				"});";
+			const int expected = 4;
+
+			var ret = WebAssembly.Runtime.InvokeJS (js);
+			var funcs = ret.Split (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+				.Select (f => (IntPtr)int.Parse (f, CultureInfo.InvariantCulture))
+				.ToArray ();
+
+			if (funcs.Length != expected)
+				throw new InvalidOperationException ($"Mismatch when binding 'SkiaSharp.SKDrawable' members. Returned {funcs.Length}, expected {expected}.");
+
+			// we can do magic with variables
+			var DrawInternal = funcs[0];
+			var GetBoundsInternal = funcs[1];
+			var NewPictureSnapshotInternal = funcs[2];
+			var DestroyInternal = funcs[3];
+#endif
+
 			delegates = new SKManagedDrawableDelegates {
 				fDraw = DrawInternal,
 				fGetBounds = GetBoundsInternal,
@@ -98,29 +124,45 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableDrawProxyDelegate))]
+#if __WASM__
+		private static void DrawInternal (IntPtr d, IntPtr context, IntPtr canvas)
+#else
 		private static void DrawInternal (IntPtr d, void* context, IntPtr canvas)
+#endif
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			drawable.OnDraw (SKCanvas.GetObject (canvas, false));
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableGetBoundsProxyDelegate))]
+#if __WASM__
+		private static void GetBoundsInternal (IntPtr d, IntPtr context, IntPtr rect)
+#else
 		private static void GetBoundsInternal (IntPtr d, void* context, SKRect* rect)
+#endif
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			var bounds = drawable.OnGetBounds ();
-			*rect = bounds;
+			*(SKRect*)rect = bounds;
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableNewPictureSnapshotProxyDelegate))]
+#if __WASM__
+		private static IntPtr NewPictureSnapshotInternal (IntPtr d, IntPtr context)
+#else
 		private static IntPtr NewPictureSnapshotInternal (IntPtr d, void* context)
+#endif
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			return drawable.OnSnapshot ()?.Handle ?? IntPtr.Zero;
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableDestroyProxyDelegate))]
+#if __WASM__
+		private static void DestroyInternal (IntPtr d, IntPtr context)
+#else
 		private static void DestroyInternal (IntPtr d, void* context)
+#endif
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out var gch);
 			if (drawable != null) {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SkiaSharp
@@ -17,19 +16,19 @@ namespace SkiaSharp
 #if __WASM__
 			const string js =
 				"SkiaSharp_SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.SKAbstractManagedStream', {" +
-				"  'ReadInternal': 'iiiii'," +
-				"  'PeekInternal': 'iiiii'," +
-				"  'IsAtEndInternal': 'iii'," +
-				"  'HasPositionInternal': 'iii'," +
-				"  'HasLengthInternal': 'iii'," +
-				"  'RewindInternal': 'iii'," +
-				"  'GetPositionInternal': 'iii'," +
-				"  'SeekInternal': 'iiii'," +
-				"  'MoveInternal': 'iiii'," +
-				"  'GetLengthInternal': 'iii'," +
-				"  'DuplicateInternal': 'iii'," +
-				"  'ForkInternal': 'iii'," +
-				"  'DestroyInternal': 'vii'," +
+				"  '" + nameof (SKAbstractManagedStream.ReadInternal) + "':        'iiiii'," +
+				"  '" + nameof (SKAbstractManagedStream.PeekInternal) + "':        'iiiii'," +
+				"  '" + nameof (SKAbstractManagedStream.IsAtEndInternal) + "':     'iii'," +
+				"  '" + nameof (SKAbstractManagedStream.HasPositionInternal) + "': 'iii'," +
+				"  '" + nameof (SKAbstractManagedStream.HasLengthInternal) + "':   'iii'," +
+				"  '" + nameof (SKAbstractManagedStream.RewindInternal) + "':      'iii'," +
+				"  '" + nameof (SKAbstractManagedStream.GetPositionInternal) + "': 'iii'," +
+				"  '" + nameof (SKAbstractManagedStream.SeekInternal) + "':        'iiii'," +
+				"  '" + nameof (SKAbstractManagedStream.MoveInternal) + "':        'iiii'," +
+				"  '" + nameof (SKAbstractManagedStream.GetLengthInternal) + "':   'iii'," +
+				"  '" + nameof (SKAbstractManagedStream.DuplicateInternal) + "':   'iii'," +
+				"  '" + nameof (SKAbstractManagedStream.ForkInternal) + "':        'iii'," +
+				"  '" + nameof (SKAbstractManagedStream.DestroyInternal) + "':     'vii'," +
 				"});";
 			const int expected = 13;
 

@@ -536,7 +536,11 @@ namespace SkiaSharp
 		// const gr_glinterface_t* gr_glinterface_assemble_gl_interface(void* ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern gr_glinterface_t gr_glinterface_assemble_gl_interface (void* ctx, IntPtr get);
+		#else
 		internal static extern gr_glinterface_t gr_glinterface_assemble_gl_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -550,7 +554,11 @@ namespace SkiaSharp
 		// const gr_glinterface_t* gr_glinterface_assemble_gles_interface(void* ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern gr_glinterface_t gr_glinterface_assemble_gles_interface (void* ctx, IntPtr get);
+		#else
 		internal static extern gr_glinterface_t gr_glinterface_assemble_gles_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -564,7 +572,11 @@ namespace SkiaSharp
 		// const gr_glinterface_t* gr_glinterface_assemble_interface(void* ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern gr_glinterface_t gr_glinterface_assemble_interface (void* ctx, IntPtr get);
+		#else
 		internal static extern gr_glinterface_t gr_glinterface_assemble_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -578,7 +590,11 @@ namespace SkiaSharp
 		// const gr_glinterface_t* gr_glinterface_assemble_webgl_interface(void* ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern gr_glinterface_t gr_glinterface_assemble_webgl_interface (void* ctx, IntPtr get);
+		#else
 		internal static extern gr_glinterface_t gr_glinterface_assemble_webgl_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -682,7 +698,11 @@ namespace SkiaSharp
 		// void gr_vk_extensions_init(gr_vk_extensions_t* extensions, gr_vk_get_proc getProc, void* userData, vk_instance_t* instance, vk_physical_device_t* physDev, uint32_t instanceExtensionCount, const char** instanceExtensions, uint32_t deviceExtensionCount, const char** deviceExtensions)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern void gr_vk_extensions_init (gr_vk_extensions_t extensions, IntPtr getProc, void* userData, vk_instance_t instance, vk_physical_device_t physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
+		#else
 		internal static extern void gr_vk_extensions_init (gr_vk_extensions_t extensions, GRVkGetProcProxyDelegate getProc, void* userData, vk_instance_t instance, vk_physical_device_t physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -945,7 +965,11 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, IntPtr releaseProc, void* context);
+		#else
 		internal static extern bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, SKBitmapReleaseProxyDelegate releaseProc, void* context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1717,6 +1741,20 @@ namespace SkiaSharp
 		private static Delegates.sk_canvas_draw_rrect sk_canvas_draw_rrect_delegate;
 		internal static void sk_canvas_draw_rrect (sk_canvas_t param0, sk_rrect_t param1, sk_paint_t param2) =>
 			(sk_canvas_draw_rrect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_rrect> ("sk_canvas_draw_rrect")).Invoke (param0, param1, param2);
+		#endif
+
+		// void sk_canvas_draw_simple_text(sk_canvas_t* ccanvas, const void* text, size_t byte_length, sk_text_encoding_t encoding, float x, float y, const sk_font_t* cfont, const sk_paint_t* cpaint)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint);
+		}
+		private static Delegates.sk_canvas_draw_simple_text sk_canvas_draw_simple_text_delegate;
+		internal static void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint) =>
+			(sk_canvas_draw_simple_text_delegate ??= GetSymbol<Delegates.sk_canvas_draw_simple_text> ("sk_canvas_draw_simple_text")).Invoke (ccanvas, text, byte_length, encoding, x, y, cfont, cpaint);
 		#endif
 
 		// void sk_canvas_draw_text_blob(sk_canvas_t*, sk_textblob_t* text, float x, float y, const sk_paint_t* paint)
@@ -3376,7 +3414,11 @@ namespace SkiaSharp
 		// sk_data_t* sk_data_new_with_proc(const void* ptr, size_t length, sk_data_release_proc proc, void* ctx)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern sk_data_t sk_data_new_with_proc (void* ptr, /* size_t */ IntPtr length, IntPtr proc, void* ctx);
+		#else
 		internal static extern sk_data_t sk_data_new_with_proc (void* ptr, /* size_t */ IntPtr length, SKDataReleaseProxyDelegate proc, void* ctx);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3712,7 +3754,11 @@ namespace SkiaSharp
 		// void sk_font_get_paths(const sk_font_t* font, uint16_t[-1] glyphs, int count, const sk_glyph_path_proc glyphPathProc, void* context)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern void sk_font_get_paths (sk_font_t font, UInt16* glyphs, Int32 count, IntPtr glyphPathProc, void* context);
+		#else
 		internal static extern void sk_font_get_paths (sk_font_t font, UInt16* glyphs, Int32 count, SKGlyphPathProxyDelegate glyphPathProc, void* context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4696,7 +4742,11 @@ namespace SkiaSharp
 		// sk_image_t* sk_image_new_from_texture(gr_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, sk_colorspace_t* colorSpace, sk_image_texture_release_proc releaseProc, void* releaseContext)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern sk_image_t sk_image_new_from_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorTypeNative colorType, SKAlphaType alpha, sk_colorspace_t colorSpace, IntPtr releaseProc, void* releaseContext);
+		#else
 		internal static extern sk_image_t sk_image_new_from_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorTypeNative colorType, SKAlphaType alpha, sk_colorspace_t colorSpace, SKImageTextureReleaseProxyDelegate releaseProc, void* releaseContext);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4710,7 +4760,11 @@ namespace SkiaSharp
 		// sk_image_t* sk_image_new_raster(const sk_pixmap_t* pixmap, sk_image_raster_release_proc releaseProc, void* context)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern sk_image_t sk_image_new_raster (sk_pixmap_t pixmap, IntPtr releaseProc, void* context);
+		#else
 		internal static extern sk_image_t sk_image_new_raster (sk_pixmap_t pixmap, SKImageRasterReleaseProxyDelegate releaseProc, void* context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11132,7 +11186,11 @@ namespace SkiaSharp
 		// sk_surface_t* sk_surface_new_raster_direct(const sk_imageinfo_t*, void* pixels, size_t rowBytes, const sk_surface_raster_release_proc releaseProc, void* context, const sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		#if USE_INTPTR_DELEGATES
+		internal static extern sk_surface_t sk_surface_new_raster_direct (SKImageInfoNative* param0, void* pixels, /* size_t */ IntPtr rowBytes, IntPtr releaseProc, void* context, sk_surfaceprops_t props);
+		#else
 		internal static extern sk_surface_t sk_surface_new_raster_direct (SKImageInfoNative* param0, void* pixels, /* size_t */ IntPtr rowBytes, SKSurfaceRasterReleaseProxyDelegate releaseProc, void* context, sk_surfaceprops_t props);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12895,7 +12953,11 @@ namespace SkiaSharp
 		public gr_vk_memory_allocator_t fMemoryAllocator;
 
 		// public gr_vk_get_proc fGetProc
+		#if USE_INTPTR_DELEGATES
+		public IntPtr fGetProc;
+		#else
 		public GRVkGetProcProxyDelegate fGetProc;
+		#endif
 
 		// public void* fGetProcUserData
 		public void* fGetProcUserData;
@@ -13983,16 +14045,32 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKManagedDrawableDelegates : IEquatable<SKManagedDrawableDelegates> {
 		// public sk_manageddrawable_draw_proc fDraw
+		#if USE_INTPTR_DELEGATES
+		public IntPtr fDraw;
+		#else
 		public SKManagedDrawableDrawProxyDelegate fDraw;
+		#endif
 
 		// public sk_manageddrawable_getBounds_proc fGetBounds
+		#if USE_INTPTR_DELEGATES
+		public IntPtr fGetBounds;
+		#else
 		public SKManagedDrawableGetBoundsProxyDelegate fGetBounds;
+		#endif
 
 		// public sk_manageddrawable_newPictureSnapshot_proc fNewPictureSnapshot
+		#if USE_INTPTR_DELEGATES
+		public IntPtr fNewPictureSnapshot;
+		#else
 		public SKManagedDrawableNewPictureSnapshotProxyDelegate fNewPictureSnapshot;
+		#endif
 
 		// public sk_manageddrawable_destroy_proc fDestroy
+		#if USE_INTPTR_DELEGATES
+		public IntPtr fDestroy;
+		#else
 		public SKManagedDrawableDestroyProxyDelegate fDestroy;
+		#endif
 
 		public readonly bool Equals (SKManagedDrawableDelegates obj) =>
 			fDraw == obj.fDraw && fGetBounds == obj.fGetBounds && fNewPictureSnapshot == obj.fNewPictureSnapshot && fDestroy == obj.fDestroy;
@@ -14022,91 +14100,91 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKManagedStreamDelegates : IEquatable<SKManagedStreamDelegates> {
 		// public sk_managedstream_read_proc fRead
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fRead;
 		#else
 		public SKManagedStreamReadProxyDelegate fRead;
 		#endif
 
 		// public sk_managedstream_peek_proc fPeek
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fPeek;
 		#else
 		public SKManagedStreamPeekProxyDelegate fPeek;
 		#endif
 
 		// public sk_managedstream_isAtEnd_proc fIsAtEnd
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fIsAtEnd;
 		#else
 		public SKManagedStreamIsAtEndProxyDelegate fIsAtEnd;
 		#endif
 
 		// public sk_managedstream_hasPosition_proc fHasPosition
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fHasPosition;
 		#else
 		public SKManagedStreamHasPositionProxyDelegate fHasPosition;
 		#endif
 
 		// public sk_managedstream_hasLength_proc fHasLength
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fHasLength;
 		#else
 		public SKManagedStreamHasLengthProxyDelegate fHasLength;
 		#endif
 
 		// public sk_managedstream_rewind_proc fRewind
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fRewind;
 		#else
 		public SKManagedStreamRewindProxyDelegate fRewind;
 		#endif
 
 		// public sk_managedstream_getPosition_proc fGetPosition
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fGetPosition;
 		#else
 		public SKManagedStreamGetPositionProxyDelegate fGetPosition;
 		#endif
 
 		// public sk_managedstream_seek_proc fSeek
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fSeek;
 		#else
 		public SKManagedStreamSeekProxyDelegate fSeek;
 		#endif
 
 		// public sk_managedstream_move_proc fMove
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fMove;
 		#else
 		public SKManagedStreamMoveProxyDelegate fMove;
 		#endif
 
 		// public sk_managedstream_getLength_proc fGetLength
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fGetLength;
 		#else
 		public SKManagedStreamGetLengthProxyDelegate fGetLength;
 		#endif
 
 		// public sk_managedstream_duplicate_proc fDuplicate
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fDuplicate;
 		#else
 		public SKManagedStreamDuplicateProxyDelegate fDuplicate;
 		#endif
 
 		// public sk_managedstream_fork_proc fFork
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fFork;
 		#else
 		public SKManagedStreamForkProxyDelegate fFork;
 		#endif
 
 		// public sk_managedstream_destroy_proc fDestroy
-		#if __WASM__
+		#if USE_INTPTR_DELEGATES
 		public IntPtr fDestroy;
 		#else
 		public SKManagedStreamDestroyProxyDelegate fDestroy;
@@ -14149,16 +14227,32 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKManagedWStreamDelegates : IEquatable<SKManagedWStreamDelegates> {
 		// public sk_managedwstream_write_proc fWrite
+		#if USE_INTPTR_DELEGATES
+		public IntPtr fWrite;
+		#else
 		public SKManagedWStreamWriteProxyDelegate fWrite;
+		#endif
 
 		// public sk_managedwstream_flush_proc fFlush
+		#if USE_INTPTR_DELEGATES
+		public IntPtr fFlush;
+		#else
 		public SKManagedWStreamFlushProxyDelegate fFlush;
+		#endif
 
 		// public sk_managedwstream_bytesWritten_proc fBytesWritten
+		#if USE_INTPTR_DELEGATES
+		public IntPtr fBytesWritten;
+		#else
 		public SKManagedWStreamBytesWrittenProxyDelegate fBytesWritten;
+		#endif
 
 		// public sk_managedwstream_destroy_proc fDestroy
+		#if USE_INTPTR_DELEGATES
+		public IntPtr fDestroy;
+		#else
 		public SKManagedWStreamDestroyProxyDelegate fDestroy;
+		#endif
 
 		public readonly bool Equals (SKManagedWStreamDelegates obj) =>
 			fWrite == obj.fWrite && fFlush == obj.fFlush && fBytesWritten == obj.fBytesWritten && fDestroy == obj.fDestroy;

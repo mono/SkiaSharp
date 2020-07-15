@@ -26,9 +26,6 @@ namespace SkiaSharpGenerator
 		[JsonPropertyName("equality")]
 		public bool GenerateEquality { get; set; } = true;
 
-		[JsonPropertyName("delegateStruct")]
-		public bool IsDelegateStruct { get; set; } = false;
-
 		[JsonPropertyName("members")]
 		public Dictionary<string, string> Members { get; set; } = new Dictionary<string, string>();
 	}

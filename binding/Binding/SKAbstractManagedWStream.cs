@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.Globalization;
+using System.Linq;
 using System.Threading;
 
 namespace SkiaSharp
@@ -12,6 +13,31 @@ namespace SkiaSharp
 
 		static SKAbstractManagedWStream ()
 		{
+#if __WASM__
+			const string js =
+				"SkiaSharp_SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.SKAbstractManagedWStream', {" +
+				"  '" + nameof (SKAbstractManagedWStream.WriteInternal) + "':        'iiiii'," +
+				"  '" + nameof (SKAbstractManagedWStream.FlushInternal) + "':        'vii'," +
+				"  '" + nameof (SKAbstractManagedWStream.BytesWrittenInternal) + "': 'iii'," +
+				"  '" + nameof (SKAbstractManagedWStream.DestroyInternal) + "':      'vii'," +
+				"});";
+			const int expected = 4;
+
+			var ret = WebAssembly.Runtime.InvokeJS (js);
+			var funcs = ret.Split (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+				.Select (f => (IntPtr)int.Parse (f, CultureInfo.InvariantCulture))
+				.ToArray ();
+
+			if (funcs.Length != expected)
+				throw new InvalidOperationException ($"Mismatch when binding 'SkiaSharp.SKAbstractManagedWStream' members. Returned {funcs.Length}, expected {expected}.");
+
+			// we can do magic with variables
+			var WriteInternal = funcs[0];
+			var FlushInternal = funcs[1];
+			var BytesWrittenInternal = funcs[2];
+			var DestroyInternal = funcs[3];
+#endif
+
 			delegates = new SKManagedWStreamDelegates {
 				fWrite = WriteInternal,
 				fFlush = FlushInternal,
@@ -50,28 +76,44 @@ namespace SkiaSharp
 		protected abstract IntPtr OnBytesWritten ();
 
 		[MonoPInvokeCallback (typeof (SKManagedWStreamWriteProxyDelegate))]
+#if __WASM__
+		private static bool WriteInternal (IntPtr s, IntPtr context, IntPtr buffer, IntPtr size)
+#else
 		private static bool WriteInternal (IntPtr s, void* context, void* buffer, IntPtr size)
+#endif
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
 			return stream.OnWrite ((IntPtr)buffer, size);
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedWStreamFlushProxyDelegate))]
+#if __WASM__
+		private static void FlushInternal (IntPtr s, IntPtr context)
+#else
 		private static void FlushInternal (IntPtr s, void* context)
+#endif
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
 			stream.OnFlush ();
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedWStreamBytesWrittenProxyDelegate))]
+#if __WASM__
+		private static IntPtr BytesWrittenInternal (IntPtr s, IntPtr context)
+#else
 		private static IntPtr BytesWrittenInternal (IntPtr s, void* context)
+#endif
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
 			return stream.OnBytesWritten ();
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedWStreamDestroyProxyDelegate))]
+#if __WASM__
+		private static void DestroyInternal (IntPtr s, IntPtr context)
+#else
 		private static void DestroyInternal (IntPtr s, void* context)
+#endif
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out var gch);
 			if (stream != null) {
