@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Globalization;
-using System.Linq;
 using System.Threading;
 
 namespace SkiaSharp
@@ -14,33 +12,22 @@ namespace SkiaSharp
 		static SKAbstractManagedStream ()
 		{
 #if __WASM__
-			const string js =
-				"SkiaSharp_SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.SKAbstractManagedStream', {" +
-				"  '" + nameof (SKAbstractManagedStream.ReadInternal) + "':        'iiiii'," +
-				"  '" + nameof (SKAbstractManagedStream.PeekInternal) + "':        'iiiii'," +
-				"  '" + nameof (SKAbstractManagedStream.IsAtEndInternal) + "':     'iii'," +
-				"  '" + nameof (SKAbstractManagedStream.HasPositionInternal) + "': 'iii'," +
-				"  '" + nameof (SKAbstractManagedStream.HasLengthInternal) + "':   'iii'," +
-				"  '" + nameof (SKAbstractManagedStream.RewindInternal) + "':      'iii'," +
-				"  '" + nameof (SKAbstractManagedStream.GetPositionInternal) + "': 'iii'," +
-				"  '" + nameof (SKAbstractManagedStream.SeekInternal) + "':        'iiii'," +
-				"  '" + nameof (SKAbstractManagedStream.MoveInternal) + "':        'iiii'," +
-				"  '" + nameof (SKAbstractManagedStream.GetLengthInternal) + "':   'iii'," +
-				"  '" + nameof (SKAbstractManagedStream.DuplicateInternal) + "':   'iii'," +
-				"  '" + nameof (SKAbstractManagedStream.ForkInternal) + "':        'iii'," +
-				"  '" + nameof (SKAbstractManagedStream.DestroyInternal) + "':     'vii'," +
-				"});";
-			const int expected = 13;
+			var funcs = SkiaApi.BindWasmMembers<SKAbstractManagedStream> (new[] {
+				(nameof (SKAbstractManagedStream.ReadInternal), "iiiii"),
+				(nameof (SKAbstractManagedStream.PeekInternal), "iiiii"),
+				(nameof (SKAbstractManagedStream.IsAtEndInternal), "iii"),
+				(nameof (SKAbstractManagedStream.HasPositionInternal), "iii"),
+				(nameof (SKAbstractManagedStream.HasLengthInternal), "iii"),
+				(nameof (SKAbstractManagedStream.RewindInternal), "iii"),
+				(nameof (SKAbstractManagedStream.GetPositionInternal), "iii"),
+				(nameof (SKAbstractManagedStream.SeekInternal), "iiii"),
+				(nameof (SKAbstractManagedStream.MoveInternal), "iiii"),
+				(nameof (SKAbstractManagedStream.GetLengthInternal), "iii"),
+				(nameof (SKAbstractManagedStream.DuplicateInternal), "iii"),
+				(nameof (SKAbstractManagedStream.ForkInternal), "iii"),
+				(nameof (SKAbstractManagedStream.DestroyInternal), "vii"),
+			});
 
-			var ret = WebAssembly.Runtime.InvokeJS (js);
-			var funcs = ret.Split (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-				.Select (f => (IntPtr)int.Parse (f, CultureInfo.InvariantCulture))
-				.ToArray ();
-
-			if (funcs.Length != expected)
-				throw new InvalidOperationException ($"Mismatch when binding 'SkiaSharp.SKAbstractManagedStream' members. Returned {funcs.Length}, expected {expected}.");
-
-			// we can do magic with variables
 			var ReadInternal = funcs[0];
 			var PeekInternal = funcs[1];
 			var IsAtEndInternal = funcs[2];

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Globalization;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -56,29 +54,18 @@ namespace SkiaSharp
 		static DelegateProxies ()
 		{
 #if __WASM__
-			const string js =
-				"SkiaSharp_SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.DelegateProxies', {" +
-				"  '" + nameof (DelegateProxies.SKBitmapReleaseDelegateProxyImplementation) + "':                  'vii'," +
-				"  '" + nameof (DelegateProxies.SKDataReleaseDelegateProxyImplementation) + "':                    'vii'," +
-				"  '" + nameof (DelegateProxies.SKImageRasterReleaseDelegateProxyImplementation) + "':             'vii'," +
-				"  '" + nameof (DelegateProxies.SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem) + "': 'vii'," +
-				"  '" + nameof (DelegateProxies.SKImageTextureReleaseDelegateProxyImplementation) + "':            'vi'," +
-				"  '" + nameof (DelegateProxies.SKSurfaceReleaseDelegateProxyImplementation) + "':                 'vii'," +
-				"  '" + nameof (DelegateProxies.GRGlGetProcDelegateProxyImplementation) + "':                      'iii'," +
-				"  '" + nameof (DelegateProxies.GRVkGetProcDelegateProxyImplementation) + "':                      'iiiii'," +
-				"  '" + nameof (DelegateProxies.SKGlyphPathDelegateProxyImplementation) + "':                      'viii'," +
-				"});";
-			const int expected = 9;
+			var funcs = SkiaApi.BindWasmMembers (typeof (DelegateProxies), new[] {
+				(nameof (DelegateProxies.SKBitmapReleaseDelegateProxyImplementation), "vii"),
+				(nameof (DelegateProxies.SKDataReleaseDelegateProxyImplementation), "vii"),
+				(nameof (DelegateProxies.SKImageRasterReleaseDelegateProxyImplementation), "vii"),
+				(nameof (DelegateProxies.SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem), "vii"),
+				(nameof (DelegateProxies.SKImageTextureReleaseDelegateProxyImplementation), "vi"),
+				(nameof (DelegateProxies.SKSurfaceReleaseDelegateProxyImplementation), "vii"),
+				(nameof (DelegateProxies.GRGlGetProcDelegateProxyImplementation), "iii"),
+				(nameof (DelegateProxies.GRVkGetProcDelegateProxyImplementation), "iiiii"),
+				(nameof (DelegateProxies.SKGlyphPathDelegateProxyImplementation), "viii"),
+			});
 
-			var ret = WebAssembly.Runtime.InvokeJS (js);
-			var funcs = ret.Split (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-				.Select (f => (IntPtr)int.Parse (f, CultureInfo.InvariantCulture))
-				.ToArray ();
-
-			if (funcs.Length != expected)
-				throw new InvalidOperationException ($"Mismatch when binding 'SkiaSharp.DelegateProxies' members. Returned {funcs.Length}, expected {expected}.");
-
-			// we can do magic with variables
 			var SKBitmapReleaseDelegateProxyImplementation = funcs[0];
 			var SKDataReleaseDelegateProxyImplementation = funcs[1];
 			var SKImageRasterReleaseDelegateProxyImplementation = funcs[2];

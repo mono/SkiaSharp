@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Globalization;
-using System.Linq;
 using System.Threading;
 
 namespace SkiaSharp
@@ -14,24 +12,13 @@ namespace SkiaSharp
 		static SKDrawable ()
 		{
 #if __WASM__
-			const string js =
-				"SkiaSharp_SkiaApi.bindMembers('[SkiaSharp] SkiaSharp.SKDrawable', {" +
-				"  '" + nameof (SKDrawable.DrawInternal) + "':               'viii'," +
-				"  '" + nameof (SKDrawable.GetBoundsInternal) + "':          'viii'," +
-				"  '" + nameof (SKDrawable.NewPictureSnapshotInternal) + "': 'iii'," +
-				"  '" + nameof (SKDrawable.DestroyInternal) + "':            'vii'," +
-				"});";
-			const int expected = 4;
+			var funcs = SkiaApi.BindWasmMembers<SKDrawable> (new[] {
+				(nameof (SKDrawable.DrawInternal), "viii"),
+				(nameof (SKDrawable.GetBoundsInternal), "viii"),
+				(nameof (SKDrawable.NewPictureSnapshotInternal), "iii"),
+				(nameof (SKDrawable.DestroyInternal), "vii"),
+			});
 
-			var ret = WebAssembly.Runtime.InvokeJS (js);
-			var funcs = ret.Split (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-				.Select (f => (IntPtr)int.Parse (f, CultureInfo.InvariantCulture))
-				.ToArray ();
-
-			if (funcs.Length != expected)
-				throw new InvalidOperationException ($"Mismatch when binding 'SkiaSharp.SKDrawable' members. Returned {funcs.Length}, expected {expected}.");
-
-			// we can do magic with variables
 			var DrawInternal = funcs[0];
 			var GetBoundsInternal = funcs[1];
 			var NewPictureSnapshotInternal = funcs[2];
