@@ -1,0 +1,2 @@
+﻿namespace SkiaSharpSample.Wasm {
+}
