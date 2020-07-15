@@ -32,8 +32,11 @@ namespace SkiaSharpSample
 			protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
 			{
 				var builder = new UriBuilder(request.RequestUri);
+
+#if __WASM__
 				builder.Host = "cors-anywhere.herokuapp.com";
 				builder.Path = request.RequestUri.Host + builder.Path;
+#endif
 
 				return base.SendAsync(new HttpRequestMessage(request.Method, builder.Uri), cancellationToken);
 			}
