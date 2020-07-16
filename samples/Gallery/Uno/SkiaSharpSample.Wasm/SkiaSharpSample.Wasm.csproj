@@ -1,40 +1,32 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
-  <Import Project="..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.props" Condition="Exists('..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.props')" />
+  <Import Project="..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" />
+  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props')" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
     <WasmHead>true</WasmHead>
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
-    <NoWarn>NU1701</NoWarn>
-    <MonoRuntimeDebuggerEnabled Condition="'$(Configuration)'=='Debug'">true</MonoRuntimeDebuggerEnabled>
-    <WasmShellMonoRuntimeExecutionMode Condition="'$(Configuration)' == 'Release' and $([MSBuild]::IsOsPlatform('Linux'))">InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <CompileTypeScriptDependsOn>_UnoSourceGenerator; $(CompileTypeScriptDependsOn)</CompileTypeScriptDependsOn>
-    <IsUiAutomationMappingEnabled>true</IsUiAutomationMappingEnabled>
     <LangVersion>8.0</LangVersion>
+    <WasmShellILLinkerEnabled>true</WasmShellILLinkerEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <MonoRuntimeDebuggerEnabled>true</MonoRuntimeDebuggerEnabled>
+    <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <WasmShellMonoRuntimeExecutionMode>InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <WasmShellMonoRuntimeExecutionMode>FullAOT</WasmShellMonoRuntimeExecutionMode>
   </PropertyGroup>
   <ItemGroup>
-    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharp" />
-    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharp.Views.UWP" />
-    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharpSample.Wasm" />
-  </ItemGroup>
-  <ItemGroup>
-    <WasmShellMonoEnvironment Include="MONO_GC_PARAMS" Value="soft-heap-limit=512m,nursery-size=64m,evacuation-threshold=66,major=marksweep" />
-    <WasmShellMonoEnvironment Include="MONO_LOG_LEVEL" Value="debug" />
-    <WasmShellMonoEnvironment Include="MONO_LOG_MASK" Value="gc" />
-  </ItemGroup>
-  <ItemGroup>
-    <WasmShellExtraEmccFlags Include="-lidbfs.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.TypeScript.Compiler" Version="3.1.5" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.9.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
-    <PackageReference Include="Uno.UI" Version="2.3.0-dev.118" />
-    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.2.0-dev.37" />
-    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.2.0-dev.37" />
+    <PackageReference Include="Uno.UI" Version="2.4.4" />
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.3.0" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.3.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
@@ -42,18 +34,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\**\*" />
-    <Content Include="Fonts\**\*" />
-    <Content Include="..\..\Shared\Media\content-font.ttf">
-      <Link>Assets\Media\content-font.ttf</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="WasmCSS\*" />
     <EmbeddedResource Include="WasmScripts\*.js" />
-  </ItemGroup>
-  <ItemGroup>
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
-  <Import Project="..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" />
+  <Import Project="..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.WebAssembly.targets')" />
 </Project>

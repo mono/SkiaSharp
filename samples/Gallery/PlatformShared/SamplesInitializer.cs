@@ -2,15 +2,13 @@
 using System.IO;
 using System.Linq;
 using Xamarin.Essentials;
-#if WINDOWS_UWP || HAS_UNO
+#if WINDOWS_UWP
 using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.System;
-
-#if !HAS_UNO
+#if !__WASM__
 using Launcher = Xamarin.Essentials.Launcher;
 #endif
-
 #elif __MACOS__
 using AppKit;
 using Foundation;

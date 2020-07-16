@@ -3,7 +3,7 @@ using Uno.Extensions;
 using Uno.UI;
 using Windows.UI.Xaml;
 
-namespace SkiaSharpSample.Wasm
+namespace SkiaSharpSample
 {
 	public class Program
 	{
