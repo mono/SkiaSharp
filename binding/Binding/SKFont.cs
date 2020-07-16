@@ -876,9 +876,10 @@ namespace SkiaSharp
 				if (x1 >= 0 && x0 <= contourLength) {
 					var glyphId = glyphs[index];
 					var glyphPath = glyphPathCache.GetPath (glyphId);
-
-					var transformation = SKMatrix.CreateTranslation (x0, glyphOffset.Y);
-					MorphPath (textPath, glyphPath, pathMeasure, transformation);
+					if (glyphPath != null) {
+						var transformation = SKMatrix.CreateTranslation (x0, glyphOffset.Y);
+						MorphPath (textPath, glyphPath, pathMeasure, transformation);
+					}
 				}
 			}
 
@@ -991,7 +992,7 @@ namespace SkiaSharp
 			public void Dispose ()
 			{
 				foreach (var path in Values) {
-					path.Dispose ();
+					path?.Dispose ();
 				}
 				Clear ();
 			}
