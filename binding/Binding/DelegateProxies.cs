@@ -171,7 +171,7 @@ namespace SkiaSharp
 		{
 			var del = Get<SKGlyphPathDelegate> ((IntPtr)context, out _);
 			var path = SKPath.GetObject (pathOrNull, false);
-			del.Invoke (path, *(SKMatrix*)matrix);
+			del.Invoke (path, *matrix);
 		}
 	}
 }

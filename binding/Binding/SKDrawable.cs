@@ -122,7 +122,7 @@ namespace SkiaSharp
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			var bounds = drawable.OnGetBounds ();
-			*(SKRect*)rect = bounds;
+			*rect = bounds;
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableNewPictureSnapshotProxyDelegate))]
