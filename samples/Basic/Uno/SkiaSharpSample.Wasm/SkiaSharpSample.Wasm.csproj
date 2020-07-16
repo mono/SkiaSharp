@@ -29,14 +29,12 @@
     <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.4.0-dev.7" />
   </ItemGroup>
   <ItemGroup>
-    <WasmShellExtraEmccFlags Include="-s USE_WEBGL2=1"/>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.Wasm\SkiaSharp.Views.Uno.Wasm.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\**\*" />
+    <EmbeddedResource Include="WasmCSS\*.css" />
     <EmbeddedResource Include="WasmScripts\*.js" />
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
