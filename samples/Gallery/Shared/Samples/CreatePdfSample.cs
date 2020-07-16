@@ -1,5 +1,4 @@
-﻿#if !__WASM__
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -10,7 +9,8 @@ namespace SkiaSharpSample.Samples
 	[Preserve(AllMembers = true)]
 	public class CreatePdfSample : SampleBase
 	{
-		private string root;
+		private string path;
+		private bool isSupported = true;
 
 		[Preserve]
 		public CreatePdfSample()
@@ -22,7 +22,8 @@ namespace SkiaSharpSample.Samples
 			await base.OnInit();
 
 			// create the folder for this sample
-			root = SamplesManager.EnsureTempDataDirectory("CreatePdfSample");
+			var root = SamplesManager.EnsureTempDataDirectory("CreatePdfSample");
+			path = Path.Combine(root, $"{Guid.NewGuid():N}.pdf");
 		}
 
 		public override string Title => "Create PDF Document";
@@ -33,23 +34,24 @@ namespace SkiaSharpSample.Samples
 		{
 			canvas.Clear(SKColors.White);
 
-			using (var paint = new SKPaint())
-			{
-				paint.TextSize = 60.0f;
-				paint.IsAntialias = true;
-				paint.Color = (SKColor)0xFF9CAFB7;
-				paint.StrokeWidth = 3;
-				paint.TextAlign = SKTextAlign.Center;
+			GenerateDocument();
 
-				canvas.DrawText("tap to open PDF", width / 2f, height / 3, paint);
-			}
+			using var paint = new SKPaint
+			{
+				TextSize = 60.0f,
+				IsAntialias = true,
+				Color = 0xFF9CAFB7,
+				StrokeWidth = 3,
+				TextAlign = SKTextAlign.Center
+			};
+
+			canvas.DrawText(isSupported ? "tap to open PDF" : "Oops! No PDF support!", width / 2f, height / 3, paint);
 		}
 
-		protected override void OnTapped()
+		private void GenerateDocument()
 		{
-			base.OnTapped();
-
-			var path = Path.Combine(root, $"{Guid.NewGuid().ToString("N")}.pdf");
+			if (isSupported && File.Exists(path))
+				return;
 
 			var metadata = new SKDocumentPdfMetadata
 			{
@@ -63,59 +65,70 @@ namespace SkiaSharpSample.Samples
 				Title = "Sample PDF",
 			};
 
-			using (var stream = new SKFileWStream(path))
-			using (var document = SKDocument.CreatePdf(stream, metadata))
-			using (var paint = new SKPaint())
+			using var document = SKDocument.CreatePdf(path, metadata);
+
+			if (document == null)
 			{
-				paint.TextSize = 64.0f;
-				paint.IsAntialias = true;
-				paint.Color = (SKColor)0xFF9CAFB7;
-				paint.IsStroke = true;
-				paint.StrokeWidth = 3;
-				paint.TextAlign = SKTextAlign.Center;
-
-				var width = 840;
-				var height = 1188;
-
-				// draw page 1
-				using (var pdfCanvas = document.BeginPage(width, height))
-				{
-					// draw button
-					var nextPagePaint = new SKPaint
-					{
-						IsAntialias = true,
-						TextSize = 16,
-						Color = SKColors.OrangeRed
-					};
-					var nextText = "Next Page >>";
-					var btn = new SKRect(width - nextPagePaint.MeasureText(nextText) - 24, 0, width, nextPagePaint.TextSize + 24);
-					pdfCanvas.DrawText(nextText, btn.Left + 12, btn.Bottom - 12, nextPagePaint);
-					// make button link
-					pdfCanvas.DrawLinkDestinationAnnotation(btn, "next-page");
-
-					// draw contents
-					pdfCanvas.DrawText("...PDF 1/2...", width / 2, height / 4, paint);
-					document.EndPage();
-				}
-
-				// draw page 2
-				using (var pdfCanvas = document.BeginPage(width, height))
-				{
-					// draw link destintion
-					pdfCanvas.DrawNamedDestinationAnnotation(SKPoint.Empty, "next-page");
-
-					// draw contents
-					pdfCanvas.DrawText("...PDF 2/2...", width / 2, height / 4, paint);
-					document.EndPage();
-				}
-
-				// end the doc
-				document.Close();
+				isSupported = false;
+				Refresh();
+				return;
 			}
+
+			using var paint = new SKPaint
+			{
+				TextSize = 64.0f,
+				IsAntialias = true,
+				Color = 0xFF9CAFB7,
+				IsStroke = true,
+				StrokeWidth = 3,
+				TextAlign = SKTextAlign.Center
+			};
+
+			var pageWidth = 840;
+			var pageHeight = 1188;
+
+			// draw page 1
+			using (var pdfCanvas = document.BeginPage(pageWidth, pageHeight))
+			{
+				// draw button
+				using var nextPagePaint = new SKPaint
+				{
+					IsAntialias = true,
+					TextSize = 16,
+					Color = SKColors.OrangeRed
+				};
+				var nextText = "Next Page >>";
+				var btn = new SKRect(pageWidth - nextPagePaint.MeasureText(nextText) - 24, 0, pageWidth, nextPagePaint.TextSize + 24);
+				pdfCanvas.DrawText(nextText, btn.Left + 12, btn.Bottom - 12, nextPagePaint);
+				// make button link
+				pdfCanvas.DrawLinkDestinationAnnotation(btn, "next-page");
+
+				// draw contents
+				pdfCanvas.DrawText("...PDF 1/2...", pageWidth / 2, pageHeight / 4, paint);
+				document.EndPage();
+			}
+
+			// draw page 2
+			using (var pdfCanvas = document.BeginPage(pageWidth, pageHeight))
+			{
+				// draw link destintion
+				pdfCanvas.DrawNamedDestinationAnnotation(SKPoint.Empty, "next-page");
+
+				// draw contents
+				pdfCanvas.DrawText("...PDF 2/2...", pageWidth / 2, pageHeight / 4, paint);
+				document.EndPage();
+			}
+
+			// end the doc
+			document.Close();
+		}
+
+		protected override void OnTapped()
+		{
+			base.OnTapped();
 
 			// display to the user
 			SamplesManager.OnOpenFile(path);
 		}
 	}
 }
-#endif

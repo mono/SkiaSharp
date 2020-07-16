@@ -3,9 +3,11 @@ using System.IO;
 using System.Linq;
 using Xamarin.Essentials;
 #if __WASM__
+using System.Runtime.InteropServices;
 using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.System;
+using Uno.Foundation;
 #endif
 #if WINDOWS_UWP
 using Windows.ApplicationModel;
@@ -114,6 +116,17 @@ namespace SkiaSharpSample
 #elif __DESKTOP__
 			Process.Start(path);
 #elif HAS_UNO
+			var data = File.ReadAllBytes(path);
+			var gch = GCHandle.Alloc(data, GCHandleType.Pinned);
+			var pinnedData = gch.AddrOfPinnedObject();
+			try
+			{
+				WebAssemblyRuntime.InvokeJS($"fileSaveAs('{Path.GetFileName(path)}', {pinnedData}, {data.Length})");
+			}
+			finally
+			{
+				gch.Free();
+			}
 #endif
 		}
 	}
