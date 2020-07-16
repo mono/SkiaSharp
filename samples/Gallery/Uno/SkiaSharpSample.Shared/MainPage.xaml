@@ -14,50 +14,44 @@
             <!--<Setter Property="BorderBrush" Value="{x:Null}" />-->
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Margin" Value="0" />
-            <Setter Property="Width" Value="{ThemeResource SplitViewCompactPaneThemeLength}" />
-            <Setter Property="Height" Value="{ThemeResource SplitViewCompactPaneThemeLength}" />
+            <Setter Property="Width" Value="{ThemeResource PaneToggleButtonHeight}" />
+            <Setter Property="Height" Value="{ThemeResource PaneToggleButtonWidth}" />
             <Setter Property="HorizontalAlignment" Value="Left" />
             <Setter Property="VerticalAlignment" Value="Top" />
         </Style>
         <SolidColorBrush x:Key="XamarinLightBlue" Color="#3498DB" />
     </Page.Resources>
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="{ThemeResource SplitViewCompactPaneThemeLength}" />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <SplitView
-                Name="splitView"
-                Grid.Row="1"
-                DisplayMode="Inline"
-                IsPaneOpen="true"
-                OpenPaneLength="320">
-                <SplitView.Pane>
-                    <!--  the samples menu  -->
-                    <ListView x:Name="listView" SelectionChanged="OnSampleSelected">
-                        <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="sample:SampleBase">
-                                <TextBlock Name="{x:Bind Title}" Text="{x:Bind Title}" />
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </SplitView.Pane>
-
-                <SplitView.Content>
-                    <!--  the samples canvas  -->
-                    <Grid Tapped="OnSampleTapped">
-                        <views:SKXamlCanvas x:Name="canvas" Grid.Row="1" PaintSurface="OnPaintCanvas" />
-                    </Grid>
-                </SplitView.Content>
-            </SplitView>
-        </Grid>
+    <Grid>
+        <SplitView
+            Name="splitView"
+            DisplayMode="Inline"
+            IsPaneOpen="True"
+            Margin="0,40,0,0"
+            OpenPaneLength="320">
+            <SplitView.Pane>
+                <!--  the samples menu  -->
+                <ListView x:Name="listView" SelectionChanged="OnSampleSelected">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="sample:SampleBase">
+                            <TextBlock Name="{x:Bind Title}" Text="{x:Bind Title}" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </SplitView.Pane>
+      
+            <SplitView.Content>
+                <!--  the samples canvas  -->
+                <Grid Tapped="OnSampleTapped">
+                    <views:SKXamlCanvas x:Name="canvas" Grid.Row="1" PaintSurface="OnPaintCanvas" />
+                </Grid>
+            </SplitView.Content>
+        </SplitView>
 
         <CommandBar
             x:Name="commandBar"
-            Height="{ThemeResource SplitViewCompactPaneThemeLength}"
             Background="{StaticResource XamarinLightBlue}"
+            OverflowButtonVisibility="Collapsed"
             Foreground="White">
             <!--  the toolbar items  -->
             <AppBarButton
@@ -78,7 +72,9 @@
                     <ToggleButton
                         ClickMode="Press"
                         Foreground="White"
-                        IsChecked="{Binding IsPaneOpen, ElementName=splitView, Mode=TwoWay}"
+                        IsChecked="True"
+                        Checked="OnToggleSplitView"
+                        Unchecked="OnToggleSplitView"
                         IsTabStop="False"
                         IsThreeState="False"
                         Style="{StaticResource ShellButton}">
@@ -96,6 +92,6 @@
                 </Grid>
             </CommandBar.Content>
         </CommandBar>
-
     </Grid>
+
 </Page>

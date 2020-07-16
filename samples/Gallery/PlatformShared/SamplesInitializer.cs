@@ -2,6 +2,11 @@
 using System.IO;
 using System.Linq;
 using Xamarin.Essentials;
+#if __WASM__
+using Windows.ApplicationModel;
+using Windows.Storage;
+using Windows.System;
+#endif
 #if WINDOWS_UWP
 using Windows.ApplicationModel;
 using Windows.Storage;

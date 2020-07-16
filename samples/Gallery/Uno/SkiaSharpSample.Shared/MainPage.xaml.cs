@@ -1,29 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Foundation.Metadata;
-using Windows.UI;
-using Windows.UI.Core;
-using Windows.UI.Popups;
-using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Navigation;
 using SkiaSharp;
 using SkiaSharp.Views.UWP;
+using Windows.UI.Core;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Navigation;
 
 namespace SkiaSharpSample
 {
 	public sealed partial class MainPage : Page
 	{
-		private static Color XamarinLightBlue = Color.FromArgb(0xff, 0x34, 0x98, 0xdb);
-		private static Color XamarinDarkBlue = Color.FromArgb(0xff, 0x2c, 0x3e, 0x50);
-
 		private CancellationTokenSource cancellations;
 		private IList<SampleBase> samples;
 		private SampleBase sample;
@@ -55,6 +47,15 @@ namespace SkiaSharpSample
 		{
 			var sample = e.AddedItems?.FirstOrDefault() as SampleBase;
 			SetSample(sample);
+		}
+
+		private void OnToggleSplitView(object sender, RoutedEventArgs e)
+		{
+			if (!IsLoaded)
+				return;
+
+			var menuButton = (ToggleButton)sender;
+			splitView.IsPaneOpen = menuButton.IsChecked == true;
 		}
 
 		private void OnToggleSlideshow(object sender, RoutedEventArgs e)
