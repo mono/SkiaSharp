@@ -1,8 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project>
 
-  <ItemGroup>
+  <!-- if ShouldCheckPlatformSupport == False then don't check to see if the platform is supported -->
+  <PropertyGroup>
+    <ShouldCheckPlatformSupport Condition=" '$(ShouldCheckPlatformSupport)' == '' ">True</ShouldCheckPlatformSupport>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(DefineConstants.Contains('HAS_UNO'))">
     <Content Include="$(SkiaSharpStaticLibraryPath)" Visible="false" />
   </ItemGroup>
+
+  <Target Name="_SkiaSharpWarnUnsupported" BeforeTargets="Build" Condition="!$(DefineConstants.Contains('HAS_UNO')) and '$(ShouldCheckPlatformSupport)' == 'True'">
+    <Warning Text="SkiaSharp for Web Assembly is only supported for the Uno Platform." Code="SK1002" />
+  </Target>
 
 </Project>
