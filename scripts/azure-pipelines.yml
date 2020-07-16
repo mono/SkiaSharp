@@ -578,11 +578,8 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - native_wasm_linux
-          initScript: |
-            git clone --branch $(EMSCRIPTEN_VERSION) https://github.com/emscripten-core/emsdk ~/emsdk
-            ~/emsdk/emsdk install $(EMSCRIPTEN_VERSION)
-            ~/emsdk/emsdk activate $(EMSCRIPTEN_VERSION)
-            source ~/emsdk/emsdk_env.sh
+          installEmsdk: true
+          initScript: source ~/emsdk/emsdk_env.sh
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the WASM test results
@@ -684,6 +681,8 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - nuget
+          installEmsdk: true
+          initScript: source ~/emsdk/emsdk_env.sh
           preBuildSteps:
             - pwsh: |
                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
