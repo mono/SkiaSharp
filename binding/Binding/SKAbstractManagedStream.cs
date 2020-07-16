@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SkiaSharp
@@ -11,38 +12,6 @@ namespace SkiaSharp
 
 		static SKAbstractManagedStream ()
 		{
-#if __WASM__ && USE_INTPTR_DELEGATES
-			var funcs = SkiaApi.BindWasmMembers<SKAbstractManagedStream> (new[] {
-				(nameof (SKAbstractManagedStream.ReadInternal), "iiiii"),
-				(nameof (SKAbstractManagedStream.PeekInternal), "iiiii"),
-				(nameof (SKAbstractManagedStream.IsAtEndInternal), "iii"),
-				(nameof (SKAbstractManagedStream.HasPositionInternal), "iii"),
-				(nameof (SKAbstractManagedStream.HasLengthInternal), "iii"),
-				(nameof (SKAbstractManagedStream.RewindInternal), "iii"),
-				(nameof (SKAbstractManagedStream.GetPositionInternal), "iii"),
-				(nameof (SKAbstractManagedStream.SeekInternal), "iiii"),
-				(nameof (SKAbstractManagedStream.MoveInternal), "iiii"),
-				(nameof (SKAbstractManagedStream.GetLengthInternal), "iii"),
-				(nameof (SKAbstractManagedStream.DuplicateInternal), "iii"),
-				(nameof (SKAbstractManagedStream.ForkInternal), "iii"),
-				(nameof (SKAbstractManagedStream.DestroyInternal), "vii"),
-			});
-
-			var ReadInternal = funcs[0];
-			var PeekInternal = funcs[1];
-			var IsAtEndInternal = funcs[2];
-			var HasPositionInternal = funcs[3];
-			var HasLengthInternal = funcs[4];
-			var RewindInternal = funcs[5];
-			var GetPositionInternal = funcs[6];
-			var SeekInternal = funcs[7];
-			var MoveInternal = funcs[8];
-			var GetLengthInternal = funcs[9];
-			var DuplicateInternal = funcs[10];
-			var ForkInternal = funcs[11];
-			var DestroyInternal = funcs[12];
-#endif
-
 			delegates = new SKManagedStreamDelegates {
 				fRead = ReadInternal,
 				fPeek = PeekInternal,

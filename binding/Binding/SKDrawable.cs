@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SkiaSharp
@@ -11,20 +12,6 @@ namespace SkiaSharp
 
 		static SKDrawable ()
 		{
-#if __WASM__ && USE_INTPTR_DELEGATES
-			var funcs = SkiaApi.BindWasmMembers<SKDrawable> (new[] {
-				(nameof (SKDrawable.DrawInternal), "viii"),
-				(nameof (SKDrawable.GetBoundsInternal), "viii"),
-				(nameof (SKDrawable.NewPictureSnapshotInternal), "iii"),
-				(nameof (SKDrawable.DestroyInternal), "vii"),
-			});
-
-			var DrawInternal = funcs[0];
-			var GetBoundsInternal = funcs[1];
-			var NewPictureSnapshotInternal = funcs[2];
-			var DestroyInternal = funcs[3];
-#endif
-
 			delegates = new SKManagedDrawableDelegates {
 				fDraw = DrawInternal,
 				fGetBounds = GetBoundsInternal,

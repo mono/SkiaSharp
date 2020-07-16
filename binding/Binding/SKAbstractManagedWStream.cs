@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SkiaSharp
@@ -11,20 +12,6 @@ namespace SkiaSharp
 
 		static SKAbstractManagedWStream ()
 		{
-#if __WASM__ && USE_INTPTR_DELEGATES
-			var funcs = SkiaApi.BindWasmMembers<SKAbstractManagedWStream> (new[] {
-				(nameof (SKAbstractManagedWStream.WriteInternal), "iiiii"),
-				(nameof (SKAbstractManagedWStream.FlushInternal), "vii"),
-				(nameof (SKAbstractManagedWStream.BytesWrittenInternal), "iii"),
-				(nameof (SKAbstractManagedWStream.DestroyInternal), "vii"),
-			});
-
-			var WriteInternal = funcs[0];
-			var FlushInternal = funcs[1];
-			var BytesWrittenInternal = funcs[2];
-			var DestroyInternal = funcs[3];
-#endif
-
 			delegates = new SKManagedWStreamDelegates {
 				fWrite = WriteInternal,
 				fFlush = FlushInternal,

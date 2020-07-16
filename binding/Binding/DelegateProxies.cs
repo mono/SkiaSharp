@@ -29,64 +29,15 @@ namespace SkiaSharp
 	internal unsafe static partial class DelegateProxies
 	{
 		// references to the proxy implementations
-#if USE_INTPTR_DELEGATES
-		public static readonly IntPtr SKBitmapReleaseDelegateProxy;
-		public static readonly IntPtr SKDataReleaseDelegateProxy;
-		public static readonly IntPtr SKImageRasterReleaseDelegateProxy;
-		public static readonly IntPtr SKImageRasterReleaseDelegateProxyForCoTaskMem;
-		public static readonly IntPtr SKImageTextureReleaseDelegateProxy;
-		public static readonly IntPtr SKSurfaceReleaseDelegateProxy;
-		public static readonly IntPtr GRGlGetProcDelegateProxy;
-		public static readonly IntPtr GRVkGetProcDelegateProxy;
-		public static readonly IntPtr SKGlyphPathDelegateProxy;
-#else
-		public static readonly SKBitmapReleaseProxyDelegate SKBitmapReleaseDelegateProxy;
-		public static readonly SKDataReleaseProxyDelegate SKDataReleaseDelegateProxy;
-		public static readonly SKImageRasterReleaseProxyDelegate SKImageRasterReleaseDelegateProxy;
-		public static readonly SKImageRasterReleaseProxyDelegate SKImageRasterReleaseDelegateProxyForCoTaskMem;
-		public static readonly SKImageTextureReleaseProxyDelegate SKImageTextureReleaseDelegateProxy;
-		public static readonly SKSurfaceRasterReleaseProxyDelegate SKSurfaceReleaseDelegateProxy;
-		public static readonly GRGlGetProcProxyDelegate GRGlGetProcDelegateProxy;
-		public static readonly GRVkGetProcProxyDelegate GRVkGetProcDelegateProxy;
-		public static readonly SKGlyphPathProxyDelegate SKGlyphPathDelegateProxy;
-#endif
-
-		static DelegateProxies ()
-		{
-#if __WASM__ && USE_INTPTR_DELEGATES
-			var funcs = SkiaApi.BindWasmMembers (typeof (DelegateProxies), new[] {
-				(nameof (DelegateProxies.SKBitmapReleaseDelegateProxyImplementation), "vii"),
-				(nameof (DelegateProxies.SKDataReleaseDelegateProxyImplementation), "vii"),
-				(nameof (DelegateProxies.SKImageRasterReleaseDelegateProxyImplementation), "vii"),
-				(nameof (DelegateProxies.SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem), "vii"),
-				(nameof (DelegateProxies.SKImageTextureReleaseDelegateProxyImplementation), "vi"),
-				(nameof (DelegateProxies.SKSurfaceReleaseDelegateProxyImplementation), "vii"),
-				(nameof (DelegateProxies.GRGlGetProcDelegateProxyImplementation), "iii"),
-				(nameof (DelegateProxies.GRVkGetProcDelegateProxyImplementation), "iiiii"),
-				(nameof (DelegateProxies.SKGlyphPathDelegateProxyImplementation), "viii"),
-			});
-
-			var SKBitmapReleaseDelegateProxyImplementation = funcs[0];
-			var SKDataReleaseDelegateProxyImplementation = funcs[1];
-			var SKImageRasterReleaseDelegateProxyImplementation = funcs[2];
-			var SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem = funcs[3];
-			var SKImageTextureReleaseDelegateProxyImplementation = funcs[4];
-			var SKSurfaceReleaseDelegateProxyImplementation = funcs[5];
-			var GRGlGetProcDelegateProxyImplementation = funcs[6];
-			var GRVkGetProcDelegateProxyImplementation = funcs[7];
-			var SKGlyphPathDelegateProxyImplementation = funcs[8];
-#endif
-
-			SKBitmapReleaseDelegateProxy = SKBitmapReleaseDelegateProxyImplementation;
-			SKDataReleaseDelegateProxy = SKDataReleaseDelegateProxyImplementation;
-			SKImageRasterReleaseDelegateProxy = SKImageRasterReleaseDelegateProxyImplementation;
-			SKImageRasterReleaseDelegateProxyForCoTaskMem = SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem;
-			SKImageTextureReleaseDelegateProxy = SKImageTextureReleaseDelegateProxyImplementation;
-			SKSurfaceReleaseDelegateProxy = SKSurfaceReleaseDelegateProxyImplementation;
-			GRGlGetProcDelegateProxy = GRGlGetProcDelegateProxyImplementation;
-			GRVkGetProcDelegateProxy = GRVkGetProcDelegateProxyImplementation;
-			SKGlyphPathDelegateProxy = SKGlyphPathDelegateProxyImplementation;
-		}
+		public static readonly SKBitmapReleaseProxyDelegate SKBitmapReleaseDelegateProxy = SKBitmapReleaseDelegateProxyImplementation;
+		public static readonly SKDataReleaseProxyDelegate SKDataReleaseDelegateProxy = SKDataReleaseDelegateProxyImplementation;
+		public static readonly SKImageRasterReleaseProxyDelegate SKImageRasterReleaseDelegateProxy = SKImageRasterReleaseDelegateProxyImplementation;
+		public static readonly SKImageRasterReleaseProxyDelegate SKImageRasterReleaseDelegateProxyForCoTaskMem = SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem;
+		public static readonly SKImageTextureReleaseProxyDelegate SKImageTextureReleaseDelegateProxy = SKImageTextureReleaseDelegateProxyImplementation;
+		public static readonly SKSurfaceRasterReleaseProxyDelegate SKSurfaceReleaseDelegateProxy = SKSurfaceReleaseDelegateProxyImplementation;
+		public static readonly GRGlGetProcProxyDelegate GRGlGetProcDelegateProxy = GRGlGetProcDelegateProxyImplementation;
+		public static readonly GRVkGetProcProxyDelegate GRVkGetProcDelegateProxy = GRVkGetProcDelegateProxyImplementation;
+		public static readonly SKGlyphPathProxyDelegate SKGlyphPathDelegateProxy = SKGlyphPathDelegateProxyImplementation;
 
 		// internal proxy implementations
 

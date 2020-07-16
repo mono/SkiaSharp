@@ -150,11 +150,6 @@ namespace SkiaSharpGenerator
 					var type = GetType(field.Type);
 					var cppT = GetCppType(field.Type);
 
-					var isDelegateMember =
-						((field.Type as CppQualifiedType)?.ElementType ?? field.Type) is CppTypedef typedef &&
-						typedef.ElementType is CppPointerType pointer &&
-						pointer.ElementType is CppFunctionType function;
-
 					writer.WriteLine($"\t\t// {field}");
 
 					var fieldName = field.Name;
@@ -166,15 +161,7 @@ namespace SkiaSharpGenerator
 
 					var vis = map?.IsInternal == true ? "public" : "private";
 					var ro = map?.IsReadOnly == true ? " readonly" : "";
-					if (isDelegateMember) {
-						writer.WriteLine($"\t\t#if USE_INTPTR_DELEGATES");
-						writer.WriteLine($"\t\t{vis}{ro} IntPtr {fieldName};");
-						writer.WriteLine($"\t\t#else");
-					}
 					writer.WriteLine($"\t\t{vis}{ro} {type} {fieldName};");
-					if (isDelegateMember) {
-						writer.WriteLine($"\t\t#endif");
-					}
 
 					if (!isPrivate && (map == null || (map.GenerateProperties && !map.IsInternal)))
 					{
@@ -352,9 +339,7 @@ namespace SkiaSharpGenerator
 					functionMappings.TryGetValue(name, out var funcMap);
 
 					var paramsList = new List<string>();
-					var paramsListNonDelegate = new List<string>();
 					var paramNamesList = new List<string>();
-					var hasDelegateParams = false;
 					for (var i = 0; i < function.Parameters.Count; i++)
 					{
 						var p = function.Parameters[i];
@@ -367,18 +352,6 @@ namespace SkiaSharpGenerator
 							t = newT;
 						paramsList.Add($"{t} {n}");
 						paramNamesList.Add(n);
-
-						// make sure delegates are IntPtr
-						var isDelegateParam =
-							((p.Type as CppQualifiedType)?.ElementType ?? p.Type) is CppTypedef tdef &&
-							tdef.ElementType is CppPointerType ptr &&
-							ptr.ElementType is CppFunctionType func;
-						var tNonDel = t;
-						if (isDelegateParam) {
-							tNonDel = "IntPtr";
-							hasDelegateParams = true;
-						}
-						paramsListNonDelegate.Add($"{tNonDel} {n}");
 					}
 
 					var returnType = GetType(function.ReturnType);
@@ -399,15 +372,7 @@ namespace SkiaSharpGenerator
 					writer.WriteLine($"\t\t[DllImport ({config.DllName}, CallingConvention = CallingConvention.Cdecl)]");
 					if (!string.IsNullOrEmpty(retAttr))
 						writer.WriteLine($"\t\t{retAttr}");
-					if (hasDelegateParams) {
-						writer.WriteLine($"\t\t#if USE_INTPTR_DELEGATES");
-						writer.WriteLine($"\t\tinternal static extern {returnType} {name} ({string.Join(", ", paramsListNonDelegate)});");
-						writer.WriteLine($"\t\t#else");
-					}
 					writer.WriteLine($"\t\tinternal static extern {returnType} {name} ({string.Join(", ", paramsList)});");
-					if (hasDelegateParams) {
-						writer.WriteLine($"\t\t#endif");
-					}
 					writer.WriteLine($"\t\t#else");
 					writer.WriteLine($"\t\tprivate partial class Delegates {{");
 					writer.WriteLine($"\t\t\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
