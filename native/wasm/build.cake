@@ -28,9 +28,9 @@ Task("libSkiaSharp")
         $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
         (SUPPORT_GPU ? "skia_gl_standard='webgl'" : "") +
         $"skia_enable_nvpr=false " +
-        $"skia_enable_pdf=false " +
+        $"skia_enable_pdf=true " +
         $"skia_enable_tools=false " +
-        $"skia_use_dng_sdk=false " +
+        $"skia_use_dng_sdk=true " +
         $"skia_use_egl=true " +
         $"skia_use_fontconfig=false " +
         $"skia_use_freetype=true " +
