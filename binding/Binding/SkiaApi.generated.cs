@@ -12625,7 +12625,7 @@ namespace SkiaSharp
 
 	// typedef gr_gl_func_ptr (*)(void* ctx, const char* name)* gr_gl_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate IntPtr GRGlGetProcProxyDelegate(void* ctx, [MarshalAs (UnmanagedType.LPStr)] String name);
+	internal unsafe delegate IntPtr GRGlGetProcProxyDelegate(void* ctx, /* char */ void* name);
 
 	// typedef void (*)()* gr_vk_func_ptr
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12633,7 +12633,7 @@ namespace SkiaSharp
 
 	// typedef gr_vk_func_ptr (*)(void* ctx, const char* name, vk_instance_t* instance, vk_device_t* device)* gr_vk_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate IntPtr GRVkGetProcProxyDelegate(void* ctx, [MarshalAs (UnmanagedType.LPStr)] String name, vk_instance_t instance, vk_device_t device);
+	internal unsafe delegate IntPtr GRVkGetProcProxyDelegate(void* ctx, /* char */ void* name, vk_instance_t instance, vk_device_t device);
 
 	// typedef void (*)(void* addr, void* context)* sk_bitmap_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]

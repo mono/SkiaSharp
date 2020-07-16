@@ -32,7 +32,7 @@ namespace SkiaSharp
 			LibraryLoader.GetSymbolDelegate<T> (libSkiaSharpHandle.Value, name);
 #endif
 
-#if __WASM__
+#if __WASM__ && USE_INTPTR_DELEGATES
 		static SkiaApi ()
 		{
 			const string js = @"

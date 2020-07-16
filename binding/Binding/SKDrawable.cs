@@ -11,7 +11,7 @@ namespace SkiaSharp
 
 		static SKDrawable ()
 		{
-#if __WASM__
+#if __WASM__ && USE_INTPTR_DELEGATES
 			var funcs = SkiaApi.BindWasmMembers<SKDrawable> (new[] {
 				(nameof (SKDrawable.DrawInternal), "viii"),
 				(nameof (SKDrawable.GetBoundsInternal), "viii"),
@@ -111,22 +111,14 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableDrawProxyDelegate))]
-#if __WASM__
-		private static void DrawInternal (IntPtr d, IntPtr context, IntPtr canvas)
-#else
 		private static void DrawInternal (IntPtr d, void* context, IntPtr canvas)
-#endif
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			drawable.OnDraw (SKCanvas.GetObject (canvas, false));
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableGetBoundsProxyDelegate))]
-#if __WASM__
-		private static void GetBoundsInternal (IntPtr d, IntPtr context, IntPtr rect)
-#else
 		private static void GetBoundsInternal (IntPtr d, void* context, SKRect* rect)
-#endif
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			var bounds = drawable.OnGetBounds ();
@@ -134,22 +126,14 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableNewPictureSnapshotProxyDelegate))]
-#if __WASM__
-		private static IntPtr NewPictureSnapshotInternal (IntPtr d, IntPtr context)
-#else
 		private static IntPtr NewPictureSnapshotInternal (IntPtr d, void* context)
-#endif
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			return drawable.OnSnapshot ()?.Handle ?? IntPtr.Zero;
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableDestroyProxyDelegate))]
-#if __WASM__
-		private static void DestroyInternal (IntPtr d, IntPtr context)
-#else
 		private static void DestroyInternal (IntPtr d, void* context)
-#endif
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out var gch);
 			if (drawable != null) {

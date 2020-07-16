@@ -53,7 +53,7 @@ namespace SkiaSharp
 
 		static DelegateProxies ()
 		{
-#if __WASM__
+#if __WASM__ && USE_INTPTR_DELEGATES
 			var funcs = SkiaApi.BindWasmMembers (typeof (DelegateProxies), new[] {
 				(nameof (DelegateProxies.SKBitmapReleaseDelegateProxyImplementation), "vii"),
 				(nameof (DelegateProxies.SKDataReleaseDelegateProxyImplementation), "vii"),
@@ -91,11 +91,7 @@ namespace SkiaSharp
 		// internal proxy implementations
 
 		[MonoPInvokeCallback (typeof (SKBitmapReleaseProxyDelegate))]
-#if __WASM__
-		private static void SKBitmapReleaseDelegateProxyImplementation (IntPtr address, IntPtr context)
-#else
 		private static void SKBitmapReleaseDelegateProxyImplementation (void* address, void* context)
-#endif
 		{
 			var del = Get<SKBitmapReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
@@ -106,11 +102,7 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKDataReleaseProxyDelegate))]
-#if __WASM__
-		private static void SKDataReleaseDelegateProxyImplementation (IntPtr address, IntPtr context)
-#else
 		private static void SKDataReleaseDelegateProxyImplementation (void* address, void* context)
-#endif
 		{
 			var del = Get<SKDataReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
@@ -121,21 +113,13 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKImageRasterReleaseProxyDelegate))]
-#if __WASM__
-		private static void SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem (IntPtr pixels, IntPtr context)
-#else
 		private static void SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem (void* pixels, void* context)
-#endif
 		{
 			Marshal.FreeCoTaskMem ((IntPtr)pixels);
 		}
 
 		[MonoPInvokeCallback (typeof (SKImageRasterReleaseProxyDelegate))]
-#if __WASM__
-		private static void SKImageRasterReleaseDelegateProxyImplementation (IntPtr pixels, IntPtr context)
-#else
 		private static void SKImageRasterReleaseDelegateProxyImplementation (void* pixels, void* context)
-#endif
 		{
 			var del = Get<SKImageRasterReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
@@ -146,11 +130,7 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKImageTextureReleaseProxyDelegate))]
-#if __WASM__
-		private static void SKImageTextureReleaseDelegateProxyImplementation (IntPtr context)
-#else
 		private static void SKImageTextureReleaseDelegateProxyImplementation (void* context)
-#endif
 		{
 			var del = Get<SKImageTextureReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
@@ -161,11 +141,7 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKSurfaceRasterReleaseProxyDelegate))]
-#if __WASM__
-		private static void SKSurfaceReleaseDelegateProxyImplementation (IntPtr address, IntPtr context)
-#else
 		private static void SKSurfaceReleaseDelegateProxyImplementation (void* address, void* context)
-#endif
 		{
 			var del = Get<SKSurfaceReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
@@ -176,40 +152,22 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (GRGlGetProcProxyDelegate))]
-#if __WASM__
-		private static IntPtr GRGlGetProcDelegateProxyImplementation (IntPtr context, IntPtr namePtr)
-#else
-		private static IntPtr GRGlGetProcDelegateProxyImplementation (void* context, string name)
-#endif
+		private static IntPtr GRGlGetProcDelegateProxyImplementation (void* context, void* name)
 		{
-#if __WASM__
-			var name = Marshal.PtrToStringAnsi (namePtr);
-#endif
 			var del = Get<GRGlGetProcedureAddressDelegate> ((IntPtr)context, out _);
-			return del.Invoke (name);
+			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name));
 		}
 
 		[MonoPInvokeCallback (typeof (GRVkGetProcProxyDelegate))]
-#if __WASM__
-		private static IntPtr GRVkGetProcDelegateProxyImplementation (IntPtr context, IntPtr namePtr, IntPtr instance, IntPtr device)
-#else
-		private static IntPtr GRVkGetProcDelegateProxyImplementation (void* context, string name, IntPtr instance, IntPtr device)
-#endif
+		private static IntPtr GRVkGetProcDelegateProxyImplementation (void* context, void* name, IntPtr instance, IntPtr device)
 		{
-#if __WASM__
-			var name = Marshal.PtrToStringAnsi (namePtr);
-#endif
 			var del = Get<GRVkGetProcedureAddressDelegate> ((IntPtr)context, out _);
 
-			return del.Invoke (name, instance, device);
+			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name), instance, device);
 		}
 
 		[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]
-#if __WASM__
-		private static void SKGlyphPathDelegateProxyImplementation (IntPtr pathOrNull, IntPtr matrix, IntPtr context)
-#else
 		private static void SKGlyphPathDelegateProxyImplementation (IntPtr pathOrNull, SKMatrix* matrix, void* context)
-#endif
 		{
 			var del = Get<SKGlyphPathDelegate> ((IntPtr)context, out _);
 			var path = SKPath.GetObject (pathOrNull, false);
