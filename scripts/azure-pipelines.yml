@@ -19,7 +19,7 @@ variables:
   PREVIEW_LABEL: 'preview'
   BUILD_NUMBER: $[counter(format('{0}_{1}_{2}', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch'], variables['PREVIEW_LABEL']), 1)]
   TIZEN_LINUX_PACKAGES: libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
-  MANAGED_LINUX_PACKAGES: ttf-ancient-fonts
+  MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build
   MONO_VERSION_MACOS: 6_8_0
   MONO_VERSION_LINUX: stable-xenial/snapshots/6.8.0.123
   XCODE_VERSION: 11.3.1
@@ -634,7 +634,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
           installWindowsSdk: false
-          shouldPublish: false
           requiredArtifacts:
             - nuget
           preBuildSteps:
@@ -648,7 +647,6 @@ stages:
           displayName: macOS
           vmImage: $(VM_IMAGE_MAC)
           target: samples
-          shouldPublish: false
           requiredArtifacts:
             - nuget
           preBuildSteps:
@@ -678,7 +676,6 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
-          shouldPublish: false
           requiredArtifacts:
             - nuget
           installEmsdk: true
@@ -688,13 +685,6 @@ stages:
                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
               displayName: Copy the *.nupkgs into the correct folder for the samples
-          postBuildSteps:
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the samples artifacts
-              condition: always()
-              inputs:
-                artifactName: samples
-                pathToPublish: 'output'
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: checks
