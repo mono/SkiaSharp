@@ -20,6 +20,7 @@ namespace SkiaSharpGenerator
 				{ "v|verbose", "Use a more verbose output", _ => Log.Verbose = true },
 				"",
 				"Available commands:",
+				new CookieCommand(),
 				new GenerateCommand(),
 				new VerifyCommand(),
 			};
