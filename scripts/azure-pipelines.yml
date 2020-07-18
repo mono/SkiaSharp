@@ -26,6 +26,7 @@ variables:
   DOTNET_VERSION: 3.0.x
   CONFIGURATION: 'Release'
   VM_IMAGE_WINDOWS: windows-2019
+  VM_IMAGE_WINDOWS_PREVIOUS: vs2017-win2016
   VM_IMAGE_MAC: macOS-10.15
   VM_IMAGE_LINUX: ubuntu-18.04
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
@@ -426,7 +427,7 @@ stages:
         parameters:
           name: api_diff_windows
           displayName: API Diff
-          vmImage: Hosted VS2017
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: docs-api-diff
           additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
           installWindowsSdk: false
@@ -695,7 +696,7 @@ stages:
             name: native_checks_windows
             displayName: Run Code Checks
             # condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
-            vmImage: Hosted VS2017
+            vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
             target: git-sync-deps
             installWindowsSdk: false
             shouldPublish: false
