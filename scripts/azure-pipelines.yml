@@ -21,13 +21,13 @@ variables:
   TIZEN_LINUX_PACKAGES: libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build
   MONO_VERSION_MACOS: 6_8_0
-  MONO_VERSION_LINUX: stable-xenial/snapshots/6.8.0.123
+  MONO_VERSION_LINUX: stable-bionic/snapshots/6.8.0.123
   XCODE_VERSION: 11.3.1
   DOTNET_VERSION: 3.0.x
   CONFIGURATION: 'Release'
   VM_IMAGE_WINDOWS: Hosted Windows 2019 with VS2019
   VM_IMAGE_MAC: Hosted macOS
-  VM_IMAGE_LINUX: Hosted Ubuntu 1604
+  VM_IMAGE_LINUX: Hosted Ubuntu 1804
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
@@ -313,7 +313,6 @@ stages:
           displayName: WASM
           vmImage: $(VM_IMAGE_LINUX)
           docker: scripts/Docker/wasm
-          dockerArgs: --build-arg EMSCRIPTEN_VERSION=$(EMSCRIPTEN_VERSION)
           target: externals-wasm
 
   - stage: managed
