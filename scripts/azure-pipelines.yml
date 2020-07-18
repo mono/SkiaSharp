@@ -25,9 +25,9 @@ variables:
   XCODE_VERSION: 11.3.1
   DOTNET_VERSION: 3.0.x
   CONFIGURATION: 'Release'
-  VM_IMAGE_WINDOWS: Hosted Windows 2019 with VS2019
-  VM_IMAGE_MAC: Hosted macOS
-  VM_IMAGE_LINUX: Hosted Ubuntu 1804
+  VM_IMAGE_WINDOWS: windows-2019
+  VM_IMAGE_MAC: macOS-10.15
+  VM_IMAGE_LINUX: ubuntu-18.04
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
@@ -48,7 +48,7 @@ stages:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
         pool:
-          name: $(VM_IMAGE_LINUX)
+          vmImage: $(VM_IMAGE_LINUX)
         steps:
           - checkout: none
           - template: azure-templates-variables.yml
@@ -593,7 +593,7 @@ stages:
       - job: coverage_reports                      # Coverage Reports
         displayName: Coverage Reports
         pool:
-          name: $(VM_IMAGE_LINUX)
+          vmImage: $(VM_IMAGE_LINUX)
         dependsOn:
           - tests_windows
           - tests_macos
