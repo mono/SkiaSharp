@@ -6,6 +6,7 @@
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Uno</PackagingGroup>
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
+    <!-- <DefineConstants>$(DefineConstants);INCLUDE_GPU_VIEWS</DefineConstants> -->
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Uno.UI" Version="2.0.532" />
@@ -17,5 +18,8 @@
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\UWPExtensions.cs" />
     <Compile Include="..\SkiaSharp.Views.Uno\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="WasmScripts\*.js" />
   </ItemGroup>
 </Project>
