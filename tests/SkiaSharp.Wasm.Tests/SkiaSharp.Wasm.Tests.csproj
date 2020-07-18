@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -13,6 +13,7 @@
   <ItemGroup>
     <WasmShellExtraEmccFlags Include="-s ASSERTIONS=1" />
     <Content Include="..\..\output\native\wasm\libSkiaSharp.a" Visible="false" />
+    <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.7" />
