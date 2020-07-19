@@ -29,6 +29,24 @@ if (!string.IsNullOrEmpty(CXX))
 if (!string.IsNullOrEmpty(AR))
     COMPILERS += $"ar='{AR}' ";
 
+void CheckDeps(FilePath so)
+{
+    if (VERIFY_EXCLUDED == null || VERIFY_EXCLUDED.Length == 0)
+        return;
+
+    RunProcess("readelf", $"-d {so}", out var stdout);
+    Information(stdout);
+
+    var needed = stdout
+        .Where(l => l.Contains("(NEEDED)"))
+        .ToList();
+
+    foreach (var exclude in VERIFY_EXCLUDED) {
+        if (needed.Any(o => o.Contains(exclude, StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{so} contained a dependency on {exclude}.");
+    }
+}
+
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnLinux())
@@ -69,12 +87,7 @@ Task("libSkiaSharp")
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libSkiaSharp.so"));
 
-        foreach (var exclude in VERIFY_EXCLUDED) {
-            RunProcess("readelf", $"-d {so}", out var stdout);
-
-            if (stdout.Any(o => o.Contains($"[{exclude}.")))
-                throw new Exception($"libSkiaSharp.so contained a dependency on {exclude}.");
-        }
+        CheckDeps(so);
     }
 });
 
@@ -107,12 +120,7 @@ Task("libHarfBuzzSharp")
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
 
-        foreach (var exclude in VERIFY_EXCLUDED) {
-            RunProcess("readelf", $"-d {so}", out var stdout);
-
-            if (stdout.Any(o => o.Contains($"[{exclude}.")))
-                throw new Exception($"libHarfBuzzSharp.so contained a dependency on {exclude}.");
-        }
+        CheckDeps(so);
     }
 });
 
