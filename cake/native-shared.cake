@@ -63,6 +63,10 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
         skiaArgs += $" win_vc='{win_vc}' ";
     }
 
+    skiaArgs += 
+        $" skia_enable_tools=false " +
+        $" is_official_build={CONFIGURATION.ToLower() == "release"} ".ToLower();
+
     // generate native skia build files
     RunProcess(GN_EXE, new ProcessSettings {
         Arguments = $"gen out/{outDir} --script-executable={quote}{PYTHON_EXE}{quote} --args={quote}{skiaArgs.Replace("'", innerQuote)}{quote}",
