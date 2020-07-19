@@ -1,12 +1,12 @@
 ################################################################################
 # Build Environment
 ################################################################################
-FROM mcr.microsoft.com/dotnet/core/sdk:2.1 AS build-env
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
 WORKDIR /app
 
 # set up the contents
 RUN mkdir packages
-COPY . ./
+COPY . .
 
 # build and publish
 RUN dotnet publish -c Release -o /app/out
@@ -15,7 +15,7 @@ RUN dotnet publish -c Release -o /app/out
 ################################################################################
 # Run Environment
 ################################################################################
-FROM mcr.microsoft.com/dotnet/core/runtime:2.1
+FROM mcr.microsoft.com/dotnet/core/runtime:3.1
 WORKDIR /app
 
 # copy from the build environment

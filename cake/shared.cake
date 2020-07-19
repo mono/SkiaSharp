@@ -17,7 +17,7 @@ var BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUI
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
 var BUILD_VARIANT = Argument("variant", EnvironmentVariable("BUILD_VARIANT"));
-var ADDITIONAL_GN_ARGS = Argument("gnArgs", EnvironmentVariable("ADDITIONAL_GN_ARGS"));
+var ADDITIONAL_GN_ARGS = Argument("gnArgs", Argument("gnargs", EnvironmentVariable("ADDITIONAL_GN_ARGS")));
 
 DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME");
 
@@ -58,7 +58,8 @@ void RunProcess(FilePath process, string args, out IEnumerable<string> stdout)
         RedirectStandardOutput = true,
         Arguments = args,
     };
-    var result = StartProcess(process, settings, out stdout);
+    var result = StartProcess(process, settings, out var stdoutActual);
+    stdout = stdoutActual.ToArray();
     if (result != 0) {
         throw new Exception($"Process '{process}' failed with error: {result}");
     }
