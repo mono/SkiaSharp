@@ -133,6 +133,16 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKDataReleaseDelegate was not called.");
 		}
 
+		[SkippableFact]
+		public void CanCreateFromNonSeekable()
+		{
+			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
+			using var nonSeekable = new NonSeekableReadOnlyStream(stream);
+			using var data = SKData.Create(nonSeekable);
+
+			Assert.NotNull(data);
+		}
+
 		[SkippableFact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
 		public void DataDisposedReturnsInvalidStream()
 		{
