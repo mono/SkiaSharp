@@ -168,7 +168,7 @@ jobs:
           workingDirectory: ${{ parameters.docker }}
           displayName: Build the Docker image for ${{ parameters.docker }}
         - bash: |
-            docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
+            echo run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
               scripts/retry-command.sh ${{ parameters.retryCount }} \
                 ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
