@@ -21,6 +21,8 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
+        var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
+
         GnNinja($"uwp/{arch}", "SkiaSharp",
             $"target_os='winrt' " +
             $"target_cpu='{skiaArch}' " +
@@ -34,7 +36,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"extra_cflags=[  " +
-            $"  '-DSKIA_C_DLL', '/MD', '/EHsc', '/Z7', " +
+            $"  '-DSKIA_C_DLL', '/MD{d}', '/EHsc', '/Z7', " +
             $"  '-DWINAPI_FAMILY=WINAPI_FAMILY_APP', '-DSK_BUILD_FOR_WINRT', '-DSK_HAS_DWRITE_1_H', '-DSK_HAS_DWRITE_2_H', '-DNO_GETENV', '-D_HAS_AUTO_PTR_ETC=1' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL', '/APPCONTAINER', 'WindowsApp.lib' ]");
 
