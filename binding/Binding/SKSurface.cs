@@ -267,7 +267,7 @@ namespace SkiaSharp
 			Create (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft, null, false);
 
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin) =>
-			Create (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft, null, false);
+			Create (context, budgeted, info, sampleCount, origin, null, false);
 
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, SKSurfaceProperties props) =>
 			Create (context, budgeted, info, 0, GRSurfaceOrigin.BottomLeft, props, false);

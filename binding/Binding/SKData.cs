@@ -97,7 +97,15 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
-			return Create (stream, stream.Length);
+			if (stream.CanSeek) {
+				return Create (stream, stream.Length);
+			} else {
+				using var memory = new SKDynamicMemoryWStream ();
+				using (var managed = new SKManagedStream (stream)) {
+					managed.CopyTo (memory);
+				}
+				return memory.DetachAsData ();
+			}
 		}
 
 		public static SKData Create (Stream stream, int length)

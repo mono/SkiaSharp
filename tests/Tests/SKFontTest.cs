@@ -32,6 +32,23 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public unsafe void UnicharCountReturnsCorrectCount()
+		{
+			var text = new uint[] { 79 };
+			var count = text.Length * sizeof(uint);
+
+			using var font = new SKFont();
+
+			fixed (uint* t = text)
+			{
+				Assert.Equal(1, font.CountGlyphs((IntPtr)t, count, SKTextEncoding.Utf32));
+
+				var glyphs = font.GetGlyphs((IntPtr)t, count, SKTextEncoding.Utf32);
+				Assert.Single(glyphs);
+			}
+		}
+
+		[SkippableFact]
 		public void CountGlyphsReturnsTheCorrectNumberOfGlyphsForEmtptyString()
 		{
 			using var font = new SKFont();
