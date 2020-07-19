@@ -9,7 +9,7 @@ bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 string SUPPORT_VULKAN_VAR = Argument("supportVulkan", EnvironmentVariable("SUPPORT_VULKAN") ?? "true");
 bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower() == "true";
 
-var VERIFY_EXCLUDED = Argument("verifyExcluded", "")
+var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
 string CC = Argument("cc", EnvironmentVariable("CC"));
@@ -34,17 +34,17 @@ void CheckDeps(FilePath so)
     if (VERIFY_EXCLUDED == null || VERIFY_EXCLUDED.Length == 0)
         return;
 
-    RunProcess("readelf", $"-d {so}", out var stdout);
+    Information($"Making sure that there are no dependencies on: {string.Join(", ", VERIFY_EXCLUDED)}");
 
-    foreach (var line in stdout)
-        Information(line);
+    RunProcess("readelf", $"-d {so}", out var stdout);
+    Information(String.Join(Environment.NewLine + "    ", stdout));
 
     var needed = stdout
         .Where(l => l.Contains("(NEEDED)"))
         .ToList();
 
     foreach (var exclude in VERIFY_EXCLUDED) {
-        if (needed.Any(o => o.Contains(exclude, StringComparison.OrdinalIgnoreCase)))
+        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
             throw new Exception($"{so} contained a dependency on {exclude}.");
     }
 }
