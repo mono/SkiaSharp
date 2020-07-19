@@ -35,7 +35,9 @@ void CheckDeps(FilePath so)
         return;
 
     RunProcess("readelf", $"-d {so}", out var stdout);
-    Information(stdout);
+
+    foreach (var line in stdout)
+        Information(line);
 
     var needed = stdout
         .Where(l => l.Contains("(NEEDED)"))
