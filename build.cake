@@ -75,7 +75,6 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 57, 0) },
-    { "SkiaSharp.WebAssembly",                         new Version (1, 57, 0) },
 };
 
 Information("Arguments:");
