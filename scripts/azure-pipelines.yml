@@ -19,20 +19,21 @@ variables:
   PREVIEW_LABEL: 'preview'
   BUILD_NUMBER: $[counter(format('{0}_{1}_{2}', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch'], variables['PREVIEW_LABEL']), 1)]
   TIZEN_LINUX_PACKAGES: libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
-  MANAGED_LINUX_PACKAGES: ttf-ancient-fonts
+  MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build
   MONO_VERSION_MACOS: 6_8_0
-  MONO_VERSION_LINUX: stable-xenial/snapshots/6.8.0.123
+  MONO_VERSION_LINUX: stable-bionic/snapshots/6.8.0.123
   XCODE_VERSION: 11.3.1
   DOTNET_VERSION: 3.1.x
   CONFIGURATION: 'Release'
-  VM_IMAGE_WINDOWS: Hosted Windows 2019 with VS2019
-  VM_IMAGE_MAC: Hosted macOS
-  VM_IMAGE_LINUX: Hosted Ubuntu 1604
+  VM_IMAGE_WINDOWS: windows-2019
+  VM_IMAGE_WINDOWS_PREVIOUS: vs2017-win2016
+  VM_IMAGE_MAC: macOS-10.15
+  VM_IMAGE_LINUX: ubuntu-18.04
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
   ENABLE_CODE_COVERAGE: true
-  EMSCRIPTEN_VERSION: 1.39.11
+  EMSCRIPTEN_VERSION: 1.39.18
 
 resources:
   repositories:
@@ -48,7 +49,7 @@ stages:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
         pool:
-          name: $(VM_IMAGE_LINUX)
+          vmImage: $(VM_IMAGE_LINUX)
         steps:
           - checkout: none
           - template: azure-templates-variables.yml
@@ -313,7 +314,6 @@ stages:
           displayName: WASM
           vmImage: $(VM_IMAGE_LINUX)
           docker: scripts/Docker/wasm
-          dockerArgs: --build-arg EMSCRIPTEN_VERSION=$(EMSCRIPTEN_VERSION)
           target: externals-wasm
 
   - stage: managed
@@ -427,7 +427,7 @@ stages:
         parameters:
           name: api_diff_windows
           displayName: API Diff
-          vmImage: Hosted VS2017
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: docs-api-diff
           additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
           installWindowsSdk: false
@@ -578,11 +578,8 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - native_wasm_linux
-          initScript: |
-            git clone --branch $(EMSCRIPTEN_VERSION) https://github.com/emscripten-core/emsdk ~/emsdk
-            ~/emsdk/emsdk install $(EMSCRIPTEN_VERSION)
-            ~/emsdk/emsdk activate $(EMSCRIPTEN_VERSION)
-            source ~/emsdk/emsdk_env.sh
+          installEmsdk: true
+          initScript: source ~/emsdk/emsdk_env.sh
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the WASM test results
@@ -597,7 +594,7 @@ stages:
       - job: coverage_reports                      # Coverage Reports
         displayName: Coverage Reports
         pool:
-          name: $(VM_IMAGE_LINUX)
+          vmImage: $(VM_IMAGE_LINUX)
         dependsOn:
           - tests_windows
           - tests_macos
@@ -637,7 +634,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
           installWindowsSdk: false
-          shouldPublish: false
           requiredArtifacts:
             - nuget
           preBuildSteps:
@@ -651,7 +647,6 @@ stages:
           displayName: macOS
           vmImage: $(VM_IMAGE_MAC)
           target: samples
-          shouldPublish: false
           requiredArtifacts:
             - nuget
           preBuildSteps:
@@ -681,21 +676,15 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
-          shouldPublish: false
           requiredArtifacts:
             - nuget
+          installEmsdk: true
+          initScript: source ~/emsdk/emsdk_env.sh
           preBuildSteps:
             - pwsh: |
                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
               displayName: Copy the *.nupkgs into the correct folder for the samples
-          postBuildSteps:
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the samples artifacts
-              condition: always()
-              inputs:
-                artifactName: samples
-                pathToPublish: 'output'
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: checks
@@ -707,7 +696,7 @@ stages:
             name: native_checks_windows
             displayName: Run Code Checks
             # condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
-            vmImage: Hosted VS2017
+            vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
             target: git-sync-deps
             installWindowsSdk: false
             shouldPublish: false

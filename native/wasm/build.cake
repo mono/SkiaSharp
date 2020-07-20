@@ -27,7 +27,7 @@ Task("libSkiaSharp")
         $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
         (SUPPORT_GPU ? "skia_gl_standard='webgl'" : "") +
         $"skia_enable_nvpr=false " +
-        $"skia_enable_pdf=false " +
+        $"skia_enable_pdf=true " +
         $"skia_use_dng_sdk=false " +
         $"skia_use_egl=true " +
         $"skia_use_fontconfig=false " +
@@ -47,7 +47,7 @@ Task("libSkiaSharp")
         $"use_PIC=false " +
         $"werror=true " +
         $"extra_cflags=[ " +
-        $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
+        $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', '-DSK_BUILD_FOR_WASM', '-DSK_EMSCRIPTEN', " + 
         $"  '-DSK_DISABLE_READBUFFER', '-DSK_DISABLE_EFFECT_DESERIALIZATION', " +
         $"  '-s', 'WARN_UNALIGNED=1', '-DSKNX_NO_SIMD', '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0' ] " +
         $"extra_cflags_cc=[ '-frtti' ] " +

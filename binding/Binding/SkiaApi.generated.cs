@@ -1719,6 +1719,20 @@ namespace SkiaSharp
 			(sk_canvas_draw_rrect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_rrect> ("sk_canvas_draw_rrect")).Invoke (param0, param1, param2);
 		#endif
 
+		// void sk_canvas_draw_simple_text(sk_canvas_t* ccanvas, const void* text, size_t byte_length, sk_text_encoding_t encoding, float x, float y, const sk_font_t* cfont, const sk_paint_t* cpaint)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint);
+		}
+		private static Delegates.sk_canvas_draw_simple_text sk_canvas_draw_simple_text_delegate;
+		internal static void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint) =>
+			(sk_canvas_draw_simple_text_delegate ??= GetSymbol<Delegates.sk_canvas_draw_simple_text> ("sk_canvas_draw_simple_text")).Invoke (ccanvas, text, byte_length, encoding, x, y, cfont, cpaint);
+		#endif
+
 		// void sk_canvas_draw_text_blob(sk_canvas_t*, sk_textblob_t* text, float x, float y, const sk_paint_t* paint)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -12567,7 +12581,7 @@ namespace SkiaSharp
 
 	// typedef gr_gl_func_ptr (*)(void* ctx, const char* name)* gr_gl_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate IntPtr GRGlGetProcProxyDelegate(void* ctx, [MarshalAs (UnmanagedType.LPStr)] String name);
+	internal unsafe delegate IntPtr GRGlGetProcProxyDelegate(void* ctx, /* char */ void* name);
 
 	// typedef void (*)()* gr_vk_func_ptr
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12575,7 +12589,7 @@ namespace SkiaSharp
 
 	// typedef gr_vk_func_ptr (*)(void* ctx, const char* name, vk_instance_t* instance, vk_device_t* device)* gr_vk_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate IntPtr GRVkGetProcProxyDelegate(void* ctx, [MarshalAs (UnmanagedType.LPStr)] String name, vk_instance_t instance, vk_device_t device);
+	internal unsafe delegate IntPtr GRVkGetProcProxyDelegate(void* ctx, /* char */ void* name, vk_instance_t instance, vk_device_t device);
 
 	// typedef void (*)(void* addr, void* context)* sk_bitmap_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
