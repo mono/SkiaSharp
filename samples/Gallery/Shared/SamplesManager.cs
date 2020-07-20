@@ -21,7 +21,6 @@ namespace SkiaSharpSample
 				.ToArray();
 
 			SkiaSharpVersion = GetAssemblyVersion<SkiaSharp.SKSurface>();
-
 #if !HAS_UNO
 			HarfBuzzSharpVersion = GetAssemblyVersion<HarfBuzzSharp.Blob>();
 #endif
