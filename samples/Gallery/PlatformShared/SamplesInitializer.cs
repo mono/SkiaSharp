@@ -64,8 +64,8 @@ namespace SkiaSharpSample
 			var path = Path.Combine(root, "Media", fontName);
 #elif __TIZEN__
 			var path = ResourcePath.GetPath(fontName);
-#elif HAS_UNO
-			// Uno does not have a uniform app package, so just use the embedded font
+#elif __WASM__
+			// WASM does not have an app package, so just use the embedded font
 			string path;
 			using (var stream = SampleMedia.Fonts.EmbeddedFont)
 			{
@@ -86,7 +86,7 @@ namespace SkiaSharpSample
 			var localStorage = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
 #elif __DESKTOP__
 			var localStorage = System.Windows.Forms.Application.LocalUserAppDataPath;
-#elif HAS_UNO
+#elif __WASM__
 			var localStorage = ApplicationData.Current.LocalFolder.Path;
 #endif
 
@@ -115,7 +115,7 @@ namespace SkiaSharpSample
 			}
 #elif __DESKTOP__
 			Process.Start(path);
-#elif HAS_UNO
+#elif __WASM__
 			var data = File.ReadAllBytes(path);
 			var gch = GCHandle.Alloc(data, GCHandleType.Pinned);
 			var pinnedData = gch.AddrOfPinnedObject();
