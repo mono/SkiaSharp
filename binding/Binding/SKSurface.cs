@@ -294,9 +294,9 @@ namespace SkiaSharp
 
 		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props, out CoreAnimation.ICAMetalDrawable drawable)
 		{
-			IntPtr drawablePtr;
-			var surface = GetObject (SkiaApi.sk_surface_new_metal_layer (context.Handle, layer.Handle, origin, sampleCount, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero, &drawablePtr));
-			drawable = ObjCRuntime.Runtime.GetINativeObject<CoreAnimation.ICAMetalDrawable> (drawablePtr, true);
+			void* drawablePtr;
+			var surface = GetObject (SkiaApi.sk_surface_new_metal_layer (context.Handle, (void*)layer.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero, &drawablePtr));
+			drawable = ObjCRuntime.Runtime.GetINativeObject<CoreAnimation.ICAMetalDrawable> ((IntPtr)drawablePtr, true);
 			return surface;
 		}
 
