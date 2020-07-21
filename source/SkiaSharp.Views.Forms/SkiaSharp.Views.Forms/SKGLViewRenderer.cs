@@ -4,7 +4,7 @@
 	{
 		public SKGLViewRenderer()
 		{
-			throw new System.PlatformNotSupportedException("SKGLView is not yet supported on GTK.");
+			throw new System.PlatformNotSupportedException("SKGLView is not yet supported on this platform.");
 		}
 	}
 }

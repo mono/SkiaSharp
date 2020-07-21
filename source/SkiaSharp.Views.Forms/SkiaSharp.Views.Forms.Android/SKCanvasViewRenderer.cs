@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Android.Content;
 using Xamarin.Forms;
 
@@ -23,5 +22,10 @@ namespace SkiaSharp.Views.Forms
 			: base()
 		{
 		}
+
+		protected override SKNativeView CreateNativeControl() =>
+			GetType() == typeof(SKCanvasViewRenderer)
+				? new SKNativeView(Context)
+				: base.CreateNativeControl();
 	}
 }

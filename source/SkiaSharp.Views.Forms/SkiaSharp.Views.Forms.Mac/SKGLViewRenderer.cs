@@ -1,5 +1,4 @@
 ﻿using CoreVideo;
-using Foundation;
 using Xamarin.Forms;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
@@ -13,11 +12,10 @@ namespace SkiaSharp.Views.Forms
 	{
 		private CVDisplayLink displayLink;
 
-		protected override SKNativeView CreateNativeControl()
-		{
-			var view = base.CreateNativeControl();
-			return view;
-		}
+		protected override SKNativeView CreateNativeControl() =>
+			GetType() == typeof(SKGLViewRenderer)
+				? new SKNativeView()
+				: base.CreateNativeControl();
 
 		protected override void Dispose(bool disposing)
 		{

@@ -39,7 +39,9 @@ namespace SkiaSharp.Views.Forms
 
 		protected override SKNativeView CreateNativeControl()
 		{
-			var view = base.CreateNativeControl();
+			var view = GetType() == typeof(SKGLViewRenderer)
+				? new SKNativeView(Context)
+				: base.CreateNativeControl();
 
 			// Force the opacity to false for consistency with the other platforms
 			view.SetOpaque(false);

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows.Threading;
+﻿using System.Windows.Threading;
 using Xamarin.Forms.Platform.WPF;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
@@ -12,6 +11,11 @@ namespace SkiaSharp.Views.Forms
 	public class SKGLViewRenderer : SKGLViewRendererBase<SKFormsView, SKNativeView>
 	{
 		private DispatcherTimer renderTimer;
+
+		protected override SKNativeView CreateNativeControl() =>
+			GetType() == typeof(SKGLViewRenderer)
+				? new SKNativeView()
+				: base.CreateNativeControl();
 
 		protected override void SetupRenderLoop(bool oneShot)
 		{
