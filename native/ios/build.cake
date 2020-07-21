@@ -48,7 +48,7 @@ Task("libSkiaSharp")
         EnsureDirectoryExists(outDir);
         CopyDirectory($"libSkiaSharp/bin/{CONFIGURATION}/{arch}/{CONFIGURATION}-{sdk}", outDir);
 
-        // StripSign(outDir.CombineWithFilePath("libSkiaSharp.framework"));
+        StripSign(outDir.CombineWithFilePath("libSkiaSharp.framework"));
     }
 });
 
