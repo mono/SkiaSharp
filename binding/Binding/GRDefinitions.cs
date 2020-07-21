@@ -110,6 +110,8 @@ namespace SkiaSharp
 		}
 	}
 
+#if __IOS__ || __MACOS__
+
 	public unsafe partial struct GRMetalTextureInfo
 	{
 		public GRMetalTextureInfo (Metal.IMTLTexture texture)
@@ -124,6 +126,8 @@ namespace SkiaSharp
 				fTexture = (void*)Texture.Handle
 			};
 	}
+
+#endif
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Flags]

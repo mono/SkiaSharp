@@ -69,7 +69,7 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
 		}
 
-#if __MACOS__ || __IOS__
+#if __IOS__ || __MACOS__
 
 		// CreateMetal
 
