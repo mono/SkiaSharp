@@ -23,6 +23,7 @@ parameters:
   installTizenSdk: true                         # whether or not to install the Tizen SDK
   installWindowsSdk: true                       # whether or not to install the Windows SDK
   installLlvm: true                             # whether or not to install the LLVM compiler
+  installEmsdk: false                           # whether or not to install the Emscripten SDK
 
 jobs:
 # - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
@@ -39,7 +40,7 @@ jobs:
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
     pool:
-      name: ${{ parameters.vmImage }}
+      vmImage: ${{ parameters.vmImage }}
       demands: ${{ parameters.demands }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
@@ -108,6 +109,14 @@ jobs:
       - ${{ if endsWith(parameters.name, '_macos') }}:
         - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
           displayName: Switch to the latest Xcode
+
+      # install the linux tools
+      - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
+        - bash: |
+            git clone --branch $(EMSCRIPTEN_VERSION) https://github.com/emscripten-core/emsdk ~/emsdk
+            ~/emsdk/emsdk install $(EMSCRIPTEN_VERSION)
+            ~/emsdk/emsdk activate $(EMSCRIPTEN_VERSION)
+          displayName: Install the Emscripten SDK
 
       # install the Windows tools
       - ${{ if endsWith(parameters.name, '_windows') }}:

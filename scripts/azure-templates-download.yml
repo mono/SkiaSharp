@@ -9,7 +9,7 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     pool:
-      name: ${{ parameters.vmImage }}
+      vmImage: ${{ parameters.vmImage }}
     condition: ${{ parameters.condition }}
     steps:
       - checkout: none

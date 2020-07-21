@@ -2,11 +2,20 @@
 using System.IO;
 using System.Linq;
 using Xamarin.Essentials;
+#if __WASM__
+using System.Runtime.InteropServices;
+using Windows.ApplicationModel;
+using Windows.Storage;
+using Windows.System;
+using Uno.Foundation;
+#endif
 #if WINDOWS_UWP
 using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.System;
+#if !__WASM__
 using Launcher = Xamarin.Essentials.Launcher;
+#endif
 #elif __MACOS__
 using AppKit;
 using Foundation;
@@ -55,6 +64,20 @@ namespace SkiaSharpSample
 			var path = Path.Combine(root, "Media", fontName);
 #elif __TIZEN__
 			var path = ResourcePath.GetPath(fontName);
+#elif __WASM__
+			// WASM does not have an app package, so just use the embedded font
+			string path;
+			using (var stream = SampleMedia.Fonts.EmbeddedFont)
+			{
+				var appData = ApplicationData.Current.LocalFolder.Path;
+				var temp = Path.Combine(appData, "SkiaSharpSample", "Assets", "Media");
+				if (!Directory.Exists(temp))
+					Directory.CreateDirectory(temp);
+
+				path = Path.Combine(temp, fontName);
+				using (var writer = File.OpenWrite(path))
+					stream.CopyTo(writer);
+			}
 #endif
 
 #if WINDOWS_UWP || __IOS__ || __TVOS__ || __ANDROID__ || __TIZEN__
@@ -63,6 +86,8 @@ namespace SkiaSharpSample
 			var localStorage = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
 #elif __DESKTOP__
 			var localStorage = System.Windows.Forms.Application.LocalUserAppDataPath;
+#elif __WASM__
+			var localStorage = ApplicationData.Current.LocalFolder.Path;
 #endif
 
 			SamplesManager.ContentFontPath = path;
@@ -90,6 +115,18 @@ namespace SkiaSharpSample
 			}
 #elif __DESKTOP__
 			Process.Start(path);
+#elif __WASM__
+			var data = File.ReadAllBytes(path);
+			var gch = GCHandle.Alloc(data, GCHandleType.Pinned);
+			var pinnedData = gch.AddrOfPinnedObject();
+			try
+			{
+				WebAssemblyRuntime.InvokeJS($"fileSaveAs('{Path.GetFileName(path)}', {pinnedData}, {data.Length})");
+			}
+			finally
+			{
+				gch.Free();
+			}
 #endif
 		}
 	}

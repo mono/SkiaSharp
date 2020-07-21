@@ -20,6 +20,7 @@ SkiaSharp provides cross-platform bindings for:
  - Xamarin.Mac
  - Windows Classic Desktop (Windows.Forms / WPF)
  - Windows UWP (Desktop / Mobile / Xbox / HoloLens)
+ - Web Assembly (WASM)
 
 The [API Documentation](https://docs.microsoft.com/en-us/dotnet/api/SkiaSharp/) is
 available on the web to browse.

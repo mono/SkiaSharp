@@ -36,6 +36,17 @@ dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- verif
 * `--output binding/Binding/SkiaApi.generated.cs`  
   The path to the generated file.
 
+### Cookie Detector
+
+This can be run with:
+
+```pwsh
+dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- cookie --assembly binding\SkiaSharp\bin\Debug\netstandard2.0\SkiaSharp.dll
+```
+
+* `--assembly <assembly>`  
+  Read the assembly and log any missing interops.
+
 ## WasmTestRunner
 
 Run the WASM unit tests in a browser.
