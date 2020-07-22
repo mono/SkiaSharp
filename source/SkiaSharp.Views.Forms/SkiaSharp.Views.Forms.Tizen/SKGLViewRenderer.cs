@@ -1,4 +1,5 @@
-﻿using Xamarin.Forms;
+﻿using SkiaSharp.Views.Tizen;
+using Xamarin.Forms;
 
 using TForms = Xamarin.Forms.Forms;
 

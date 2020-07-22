@@ -1,4 +1,5 @@
-﻿using System.Windows.Threading;
+﻿using System;
+using System.Windows.Threading;
 using Xamarin.Forms.Platform.WPF;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
