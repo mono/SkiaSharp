@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <MonoRuntimeDebuggerEnabled Condition="'$(Configuration)'=='Debug'">true</MonoRuntimeDebuggerEnabled>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+
+    <_Destination>bin\publish\</_Destination>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.9" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.4.0-dev.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\source\*.cs" />
+    <Content Include="..\..\..\output\native\wasm\*.a" />
+  </ItemGroup>
+
+  <Target Name="CleanThings" BeforeTargets="BuildDist">
+    <RemoveDir Directories="$(_Destination);$(OutputPath)dist" />
+  </Target>
+
+  <Target Name="CopyThings" AfterTargets="BuildDist">
+    <ItemGroup>
+      <_WebAssets Include="$(OutputPath)dist\package_*\managed\*" Dest="$(_Destination)managed" />
+      <_WebAssets Include="$(OutputPath)dist\package_*\*" Dest="$(_Destination)" />
+      <_WebAssets Include="$(OutputPath)dist\*" Dest="$(_Destination)" />
+      <_WebAssets Include="assets\*" Dest="$(_Destination)" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_WebAssets)" DestinationFolder="%(Dest)" />
+
+    <ItemGroup>
+      <_ManagedAssets Include="$(_Destination)\managed\*.clr" />
+    </ItemGroup>
+    <Move SourceFiles="@(_ManagedAssets)" DestinationFiles="%(RootDir)%(Directory)%(Filename).dll" />
+  </Target>
+
+</Project>

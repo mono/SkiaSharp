@@ -11,10 +11,11 @@
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <TargetFrameworkIdentifier>Xamarin.Mac</TargetFrameworkIdentifier>
     <MonoMacResourcePrefix>Resources</MonoMacResourcePrefix>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>__UNIFIED__;DEBUG;__MACOS__</DefineConstants>
@@ -57,7 +58,7 @@
     <Reference Include="Xamarin.Mac" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="4.4.0.991757" />
+    <PackageReference Include="Xamarin.Forms" Version="4.5.0.725" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.OSX\HarfBuzzSharp.OSX.csproj">
@@ -90,15 +91,8 @@
     <Compile Include="AppDelegate.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Contents.json" />
-    <ImageAsset Include="Assets.xcassets\Contents.json" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\skia_1024x1024.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\skia_512x512.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\skia_256x256.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\skia_128x128.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\skia_64x64.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\skia_32x32.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\skia_16x16.png" />
+    <ImageAsset Include="Assets.xcassets\**\*.json" Visible="false" />
+    <ImageAsset Include="Assets.xcassets\**\*.png" Visible="false" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -117,7 +111,6 @@
     <BundleResource Include="Resources\hamburger.png" />
     <BundleResource Include="Resources\hamburger%402x.png" />
     <BundleResource Include="Resources\hamburger%403x.png" />
-    <BundleResource Include="Resources\ic_launcher.png" />
     <BundleResource Include="Resources\slideshow.png" />
     <BundleResource Include="Resources\slideshow%402x.png" />
     <BundleResource Include="Resources\slideshow%403x.png" />
@@ -129,4 +122,6 @@
     <Compile Include="..\..\PlatformShared\*.cs" Link="PlatformShared\%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
+  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\xamarinmac2.0\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\xamarinmac2.0\SkiaSharp.targets')" />
+  <Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\xamarinmac2.0\HarfBuzzSharp.targets" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\xamarinmac2.0\HarfBuzzSharp.targets')" />
 </Project>

@@ -13,6 +13,12 @@ var CAKE_ARGUMENTS = (IReadOnlyDictionary<string, string>)Context.Arguments
     .GetProperty("Arguments")
     .GetValue(Context.Arguments);
 
+var BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
+    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+var BUILD_VARIANT = Argument("variant", EnvironmentVariable("BUILD_VARIANT"));
+var ADDITIONAL_GN_ARGS = Argument("gnArgs", Argument("gnargs", EnvironmentVariable("ADDITIONAL_GN_ARGS")));
+
 DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME");
 
 void RunCake(FilePath cake, string target = null, Dictionary<string, string> arguments = null)
@@ -52,7 +58,8 @@ void RunProcess(FilePath process, string args, out IEnumerable<string> stdout)
         RedirectStandardOutput = true,
         Arguments = args,
     };
-    var result = StartProcess(process, settings, out stdout);
+    var result = StartProcess(process, settings, out var stdoutActual);
+    stdout = stdoutActual.ToArray();
     if (result != 0) {
         throw new Exception($"Process '{process}' failed with error: {result}");
     }
@@ -64,6 +71,12 @@ void RunProcess(FilePath process, ProcessSettings settings)
     if (result != 0) {
         throw new Exception($"Process '{process}' failed with error: {result}");
     }
+}
+
+IProcess RunAndReturnProcess(FilePath process, ProcessSettings settings)
+{
+    var proc = StartAndReturnProcess(process, settings);
+    return proc;
 }
 
 bool IsRunningOnMac()
@@ -78,10 +91,14 @@ bool IsRunningOnLinux()
 
 string GetVersion(string lib, string type = "nuget")
 {
+    return GetRegexValue($@"^{lib}\s*{type}\s*(.*)$", ROOT_PATH.CombineWithFilePath("VERSIONS.txt"));
+}
+
+string GetRegexValue(string regex, FilePath file)
+{
     try {
-        var file = ROOT_PATH.CombineWithFilePath("VERSIONS.txt");
         var contents = System.IO.File.ReadAllText(file.FullPath);
-        var match = Regex.Match(contents, $@"^{lib}\s*{type}\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        var match = Regex.Match(contents, regex, RegexOptions.IgnoreCase | RegexOptions.Multiline);
         return match.Groups[1].Value.Trim();
     } catch {
         return "";

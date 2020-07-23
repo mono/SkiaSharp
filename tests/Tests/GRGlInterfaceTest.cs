@@ -7,6 +7,14 @@ namespace SkiaSharp.Tests
 {
 	public class GRGlInterfaceTest : SKTest
 	{
+		[SkippableFact]
+		public void InterfaceConstructionWithoutContextDoesNotCrash()
+		{
+			var glInterface = GRGlInterface.Create();
+
+			Assert.Null(glInterface);
+		}
+
 		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void CreateDefaultInterfaceIsValid()
@@ -14,7 +22,7 @@ namespace SkiaSharp.Tests
 			using (var ctx = CreateGlContext()) {
 				ctx.MakeCurrent();
 
-				var glInterface = GRGlInterface.CreateNativeGlInterface();
+				var glInterface = GRGlInterface.Create();
 
 				Assert.NotNull(glInterface);
 				Assert.True(glInterface.Validate());
@@ -29,21 +37,21 @@ namespace SkiaSharp.Tests
 				ctx.MakeCurrent();
 
 				if (IsMac) {
-					var lib = MacDynamicLibraries.dlopen("/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib", 1);
+					var lib = LibraryLoader.LoadLibrary("/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib");
 
-					var glInterface = GRGlInterface.AssembleGlInterface((context, name) => {
-						return MacDynamicLibraries.dlsym(lib, name);
+					var glInterface = GRGlInterface.Create(name => {
+						return LibraryLoader.GetSymbol(lib, name);
 					});
 
 					Assert.NotNull(glInterface);
 					Assert.True(glInterface.Validate());
 
-					MacDynamicLibraries.dlclose(lib);
+					LibraryLoader.FreeLibrary(lib);
 				} else if (IsWindows) {
-					var lib = WindowsDynamicLibraries.LoadLibrary("opengl32.dll");
+					var lib = LibraryLoader.LoadLibrary("opengl32.dll");
 
-					var glInterface = GRGlInterface.AssembleGlInterface((context, name) => {
-						var ptr = WindowsDynamicLibraries.GetProcAddress(lib, name);
+					var glInterface = GRGlInterface.Create(name => {
+						var ptr = LibraryLoader.GetSymbol(lib, name);
 						if (ptr == IntPtr.Zero) {
 							ptr = wglGetProcAddress(name);
 						}
@@ -53,9 +61,9 @@ namespace SkiaSharp.Tests
 					Assert.NotNull(glInterface);
 					Assert.True(glInterface.Validate());
 
-					WindowsDynamicLibraries.FreeLibrary(lib);
+					LibraryLoader.FreeLibrary(lib);
 				} else if (IsLinux) {
-					var glInterface = GRGlInterface.AssembleGlInterface((context, name) => {
+					var glInterface = GRGlInterface.Create(name => {
 						return glXGetProcAddress(name);
 					});
 

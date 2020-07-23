@@ -14,7 +14,7 @@ namespace SkiaSharp
 
 		public bool UseEncodedData (IntPtr data, ulong length)
 		{
-			if (SKObject.SizeOf<IntPtr> () == 4 && length > UInt32.MaxValue)
+			if (!PlatformConfiguration.Is64Bit && length > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
 
 			return OnUseEncodedData (data, (IntPtr)length);

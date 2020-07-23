@@ -24,6 +24,8 @@ namespace SkiaSharp
 					break;
 				case GRBackend.Vulkan:
 					throw new NotSupportedException ();
+				case GRBackend.Dawn:
+					throw new NotSupportedException ();
 				default:
 					throw new ArgumentOutOfRangeException (nameof (backend));
 			}
@@ -35,9 +37,24 @@ namespace SkiaSharp
 			CreateGl (width, height, sampleCount, stencilBits, glInfo);
 		}
 
+		public GRBackendRenderTarget (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo)
+			: this (IntPtr.Zero, true)
+		{
+			CreateVulkan (width, height, sampleCount, vkImageInfo);
+		}
+
 		private void CreateGl (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
 		{
 			Handle = SkiaApi.gr_backendrendertarget_new_gl (width, height, sampleCount, stencilBits, &glInfo);
+
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
+			}
+		}
+
+		private void CreateVulkan (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo)
+		{
+			Handle = SkiaApi.gr_backendrendertarget_new_vulkan (width, height, sampleCount, &vkImageInfo);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
@@ -55,7 +72,7 @@ namespace SkiaSharp
 		public int Height => SkiaApi.gr_backendrendertarget_get_height (Handle);
 		public int SampleCount => SkiaApi.gr_backendrendertarget_get_samples (Handle);
 		public int StencilBits => SkiaApi.gr_backendrendertarget_get_stencils (Handle);
-		public GRBackend Backend => SkiaApi.gr_backendrendertarget_get_backend (Handle);
+		public GRBackend Backend => SkiaApi.gr_backendrendertarget_get_backend (Handle).FromNative ();
 		public SKSizeI Size => new SKSizeI (Width, Height);
 		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 

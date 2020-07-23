@@ -37,6 +37,47 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
+		[SkippableTheory]
+		[InlineData(null, 0, 0, 0)]
+		[InlineData("", 0, 0, 0)]
+		[InlineData("H", 1, 1, 2)]
+		[InlineData("Hello World!", 12, 12, 13)]
+		[InlineData("Hello World!!", 13, 13, 14)]
+		[InlineData("上田雅美", 4, 12, 13)]
+		public void StringsAreConvertedWithNullTerminator(string str, int length, int byteLength, int terminatedLength)
+		{
+			Assert.Equal(length, str?.Length ?? 0);
+
+			var bytes = StringUtilities.GetEncodedText(str, SKTextEncoding.Utf8);
+			Assert.Equal(byteLength, bytes.Length);
+
+			bytes = StringUtilities.GetEncodedText(str, SKTextEncoding.Utf8, true);
+			Assert.Equal(terminatedLength, bytes.Length);
+		}
+
+		[SkippableFact]
+		public void DataCanBeCreatedFromStream()
+		{
+			using var stream = new SKFileStream(Path.Combine(PathToImages, "baboon.jpg"));
+			Assert.True(stream.IsValid);
+
+			using var data = SKData.Create(stream);
+
+			Assert.NotNull(data);
+			Assert.True(data.Size > 0);
+		}
+
+		[SkippableFact]
+		public void DataCanBeCreatedFromManagedStream()
+		{
+			using var managed = File.OpenRead(Path.Combine(PathToImages, "baboon.jpg"));
+			using var stream = new SKManagedStream(managed);
+			using var data = SKData.Create(stream);
+
+			Assert.NotNull(data);
+			Assert.True(data.Size > 0);
+		}
+
 		[SkippableFact]
 		public void DataCanBeCreatedFromFile()
 		{
@@ -90,6 +131,16 @@ namespace SkiaSharp.Tests
 			}
 
 			Assert.True(released, "The SKDataReleaseDelegate was not called.");
+		}
+
+		[SkippableFact]
+		public void CanCreateFromNonSeekable()
+		{
+			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
+			using var nonSeekable = new NonSeekableReadOnlyStream(stream);
+			using var data = SKData.Create(nonSeekable);
+
+			Assert.NotNull(data);
 		}
 
 		[SkippableFact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]

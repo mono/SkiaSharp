@@ -16,6 +16,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(blob);
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void NonGlyphTextEncodingDoesNotThrow()
 		{

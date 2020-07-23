@@ -1,24 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <!-- HACK: temporary until the Tizen/.NET Core tooling can understand the tizen-x86 RID as opposed to linux-x86 -->
-    <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
-        <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\..\runtimes\tizen-x86\native\libHarfBuzzSharp.so">
-            <Visible>false</Visible>
-            <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
-            <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
-        </TizenTpkFiles>
-    </ItemGroup>
-
-  <!-- HACK: temporary until the Tizen/.NET Core tooling can remove the non-tizen RIDs -->
-  <Target Name="RemoveTizenPlatformAssemblies" AfterTargets="TizenResolveTpkPackageFiles">
-    <ItemGroup>
-      <_SuppressPackaging Include="@(TizenResolvedFileToTpk)" Condition="
-        $([System.String]::Copy('%(TizenTpkFileName)').StartsWith('runtimes\')) and
-        !$([System.String]::Copy('%(TizenTpkFileName)').StartsWith('runtimes\linux-x86\native\')) and
-        !$([System.String]::Copy('%(TizenTpkFileName)').StartsWith('runtimes\tizen-armel\native\'))" />
-      <TizenResolvedFileToTpk Remove="@(_SuppressPackaging)" />
-    </ItemGroup>
-  </Target>
+  <ItemGroup>
+    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)x86\libHarfBuzzSharp.so">
+      <Visible>false</Visible>
+      <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
+      <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
+    </TizenTpkFiles>
+    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)arm\libHarfBuzzSharp.so">
+      <Visible>false</Visible>
+      <TizenTpkSubDir>bin\runtimes\tizen-armel\native\</TizenTpkSubDir>
+      <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
+    </TizenTpkFiles>
+  </ItemGroup>
 
 </Project>

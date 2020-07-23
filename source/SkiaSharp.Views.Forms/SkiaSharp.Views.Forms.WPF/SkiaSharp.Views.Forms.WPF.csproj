@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <RootNamespace>SkiaSharp.Views.Forms</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Forms.WPF</PackagingGroup>
-    <PackagingPlatform>net45</PackagingPlatform>
     <DefineConstants>$(DefineConstants);__DESKTOP__;__WPF__;</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -18,8 +17,8 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="4.4.0.991757" />
-    <PackageReference Include="Xamarin.Forms.Platform.WPF" Version="4.4.0.991757" />
+    <PackageReference Include="Xamarin.Forms" Version="4.5.0.725" />
+    <PackageReference Include="Xamarin.Forms.Platform.WPF" Version="4.5.0.725" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
@@ -27,7 +26,7 @@
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WindowsForms\SkiaSharp.Views.WindowsForms.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="nuget\build\net45\SkiaSharp.Views.Forms.WPF.props" />
+    <None Include="nuget\build\net462\SkiaSharp.Views.Forms.WPF.props" Link="nuget\build\$(TargetFramework)\SkiaSharp.Views.Forms.WPF.props" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Forms.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />

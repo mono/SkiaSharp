@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
+    <PropertyGroup>
+        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
+    </PropertyGroup>
+
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libSkiaSharp.dylib" Kind="Dynamic" />
+    </ItemGroup>
+
+</Project>

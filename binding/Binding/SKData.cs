@@ -45,7 +45,7 @@ namespace SkiaSharp
 
 		public static SKData CreateCopy (IntPtr bytes, ulong length)
 		{
-			if (SizeOf <IntPtr> () == 4 && length > UInt32.MaxValue)
+			if (!PlatformConfiguration.Is64Bit && length > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
 			return GetObject (SkiaApi.sk_data_new_with_copy ((void*)bytes, (IntPtr) length));
 		}
@@ -76,7 +76,7 @@ namespace SkiaSharp
 
 		public static SKData Create (ulong size)
 		{
-			if (SizeOf <IntPtr> () == 4 && size > UInt32.MaxValue)
+			if (!PlatformConfiguration.Is64Bit && size > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (size), "The size exceeds the size of pointers.");
 				
 			return GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
@@ -87,7 +87,7 @@ namespace SkiaSharp
 			if (string.IsNullOrEmpty (filename))
 				throw new ArgumentException ("The filename cannot be empty.", nameof (filename));
 
-			var utf8path = StringUtilities.GetEncodedText (filename, SKTextEncoding.Utf8);
+			var utf8path = StringUtilities.GetEncodedText (filename, SKTextEncoding.Utf8, true);
 			fixed (byte* u = utf8path) {
 				return GetObject (SkiaApi.sk_data_new_from_file (u));
 			}
@@ -97,7 +97,15 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
-			return Create (stream, stream.Length);
+			if (stream.CanSeek) {
+				return Create (stream, stream.Length);
+			} else {
+				using var memory = new SKDynamicMemoryWStream ();
+				using (var managed = new SKManagedStream (stream)) {
+					managed.CopyTo (memory);
+				}
+				return memory.DetachAsData ();
+			}
 		}
 
 		public static SKData Create (Stream stream, int length)
@@ -188,7 +196,7 @@ namespace SkiaSharp
 
 		public SKData Subset (ulong offset, ulong length)
 		{
-			if (SizeOf <IntPtr> () == 4) {
+			if (!PlatformConfiguration.Is64Bit) {
 				if (length > UInt32.MaxValue)
 					throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
 				if (offset > UInt32.MaxValue)
@@ -238,18 +246,13 @@ namespace SkiaSharp
 
 			var ptr = Data;
 			var total = Size;
-			var pool = ArrayPool<byte>.Shared;
-			var buffer = pool.Rent (CopyBufferSize);
-			try {
-				for (var left = total; left > 0;) {
-					var copyCount = (int)Math.Min (CopyBufferSize, left);
-					Marshal.Copy (ptr, buffer, 0, copyCount);
-					left -= copyCount;
-					ptr += copyCount;
-					target.Write (buffer, 0, copyCount);
-				}
-			} finally {
-				pool.Return (buffer);
+			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
+			for (var left = total; left > 0;) {
+				var copyCount = (int)Math.Min (CopyBufferSize, left);
+				Marshal.Copy (ptr, (byte[])buffer, 0, copyCount);
+				left -= copyCount;
+				ptr += copyCount;
+				target.Write ((byte[])buffer, 0, copyCount);
 			}
 			GC.KeepAlive (this);
 		}

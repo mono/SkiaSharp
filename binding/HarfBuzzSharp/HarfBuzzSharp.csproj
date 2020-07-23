@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0;net45;net462</TargetFrameworks>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;net462</TargetFrameworks>
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
@@ -9,7 +9,7 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('net45'))">
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);__DESKTOP__</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
@@ -19,21 +19,37 @@
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x64\native\libHarfBuzzSharp.dll"
-          Condition=" Exists('..\..\output\native\windows\x64\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
-    <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x86\native\libHarfBuzzSharp.dll"
-          Condition=" Exists('..\..\output\native\windows\x86\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
-    <None Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" Link="nuget\runtimes\osx\native\libHarfBuzzSharp.dylib"
-          Condition=" Exists('..\..\output\native\osx\libHarfBuzzSharp.dylib') or '$(IsMacOS)' == 'true' " />
-    <None Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" Link="nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so"
-          Condition=" Exists('..\..\output\native\linux\x64\libHarfBuzzSharp.so') or '$(IsLinux)' == 'true' " />
-    <None Include="..\..\output\native\nanoserver\x64\libHarfBuzzSharp.dll" Link="nuget\runtimes\nanoserver-x64\native\libHarfBuzzSharp.dll"
-          Condition=" Exists('..\..\output\native\nanoserver\x64\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
-    <None Include="..\..\output\native\linuxnodeps\x64\libHarfBuzzSharp.so" Link="nuget\runtimes\linuxnodeps-x64\native\libHarfBuzzSharp.so"
-          Condition=" Exists('..\..\output\native\linuxnodeps\x64\libHarfBuzzSharp.so') or '$(IsLinux)' == 'true' " />
+    <!-- macOS -->
+    <None Include="..\..\output\native\osx\libHarfBuzzSharp*" Link="nuget\runtimes\osx\native\%(Filename)%(Extension)" />
+    <!-- Windows -->
+    <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp*" Link="nuget\runtimes\win-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp*" Link="nuget\runtimes\win-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\windows\arm64\libHarfBuzzSharp*" Link="nuget\runtimes\win-arm64\native\%(Filename)%(Extension)" />
+    <!-- Windows: Nano Server -->
+    <None Include="..\..\output\native\nanoserver\x64\libHarfBuzzSharp*" Link="nuget\runtimes\nanoserver-x64\native\%(Filename)%(Extension)" />
+    <!-- Linux -->
+    <None Include="..\..\output\native\linux\x64\libHarfBuzzSharp*" Link="nuget\runtimes\linux-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\linux\x86\libHarfBuzzSharp*" Link="nuget\runtimes\linux-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\linux\arm64\libHarfBuzzSharp*" Link="nuget\runtimes\linux-arm64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\linux\arm\libHarfBuzzSharp*" Link="nuget\runtimes\linux-arm\native\%(Filename)%(Extension)" />
+    <!-- Linux: Musl -->
+    <None Include="..\..\output\native\alpine\x64\libHarfBuzzSharp*" Link="nuget\runtimes\linux-musl-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\alpine\x86\libHarfBuzzSharp*" Link="nuget\runtimes\linux-musl-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\alpine\arm64\libHarfBuzzSharp*" Link="nuget\runtimes\linux-musl-arm64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\alpine\arm\libHarfBuzzSharp*" Link="nuget\runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
+    <!-- Linux: No Dependencies -->
+    <None Include="..\..\output\native\linuxnodeps\x64\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\linuxnodeps\x86\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\linuxnodeps\arm64\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-arm64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\linuxnodeps\arm\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-arm\native\%(Filename)%(Extension)" />
+    <!-- Linux: Musl, No Dependencies -->
+    <None Include="..\..\output\native\alpinenodeps\x64\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-musl-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\alpinenodeps\x86\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-musl-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\alpinenodeps\arm64\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-musl-arm64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\alpinenodeps\arm\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-musl-arm\native\%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <None Include="nuget\build\net45\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
+    <None Include="nuget\build\net462\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />

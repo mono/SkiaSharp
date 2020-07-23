@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
+    <RootNamespace>SkiaSharp.Vulkan.Tests</RootNamespace>
+    <AssemblyName>SkiaSharp.Vulkan.Tests</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+    <SkipCopyToOutputDirectory>true</SkipCopyToOutputDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
+    <PackageReference Include="XunitXml.TestLogger" Version="2.1.26" />
+    <PackageReference Include="xunit.skippablefact" Version="1.3.12" />
+    <PackageReference Include="SharpVk" Version="0.4.2" />
+    <PackageReference Include="SharpVk.Glfw" Version="0.4.1" />
+    <PackageReference Include="coverlet.msbuild" Version="2.9.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.SharpVk\SkiaSharp.Vulkan.SharpVk.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NetCore.Tests\SkiaSharp.NetCore.Tests.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\VulkanTests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+</Project>

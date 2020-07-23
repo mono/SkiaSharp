@@ -1,11 +1,5 @@
 #load "shared.cake"
 
-var BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
-    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-
-var BUILD_VARIANT = Argument("variant", EnvironmentVariable("BUILD_VARIANT"));
-var ADDITIONAL_GN_ARGS = Argument("gn", EnvironmentVariable("ADDITIONAL_GN_ARGS"));
-
 var PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? "python");
 
 if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
@@ -18,6 +12,10 @@ DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz"));
 
+var EXE_EXTENSION = IsRunningOnWindows() ? ".exe" : "";
+var GN_EXE = Argument("gn", EnvironmentVariable("GN_EXE") ?? SKIA_PATH.CombineWithFilePath($"bin/gn{EXE_EXTENSION}").FullPath);
+var NINJA_EXE = Argument("ninja", EnvironmentVariable("NINJA_EXE") ?? DEPOT_PATH.CombineWithFilePath($"ninja{EXE_EXTENSION}").FullPath);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TASKS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -25,6 +23,22 @@ DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz
 Task("git-sync-deps")
     .Does(() =>
 {
+    // first run some checks to make sure all the versions are in sync
+
+    var milestoneFile = SKIA_PATH.CombineWithFilePath("include/core/SkMilestone.h");
+    var incrementFile = SKIA_PATH.CombineWithFilePath("include/c/sk_types.h");
+
+    var expectedMilestone = GetVersion("libSkiaSharp", "milestone");
+    var expectedIncrement = GetVersion("libSkiaSharp", "increment");
+
+    var actualMilestone = GetRegexValue(@"^#define SK_MILESTONE (\d+)\s*$", milestoneFile);
+    var actualIncrement = GetRegexValue(@"^#define SK_C_INCREMENT (\d+)\s*$", incrementFile);
+
+    if (actualMilestone != expectedMilestone)
+        throw new Exception($"The libskia C++ API version did not match the expected '{expectedMilestone}', instead was '{actualMilestone}'.");
+    if (actualIncrement != expectedIncrement)
+        throw new Exception($"The libSkiaSharp C API version did not match the expected '{expectedIncrement}', instead was '{actualIncrement}'.");
+
     RunProcess(PYTHON_EXE, new ProcessSettings {
         Arguments = SKIA_PATH.CombineWithFilePath("tools/git-sync-deps").FullPath,
         WorkingDirectory = SKIA_PATH.FullPath,
@@ -39,7 +53,6 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
 {
     var isCore = Context.Environment.Runtime.IsCoreClr;
 
-    var exe = IsRunningOnWindows() ? ".exe" : "";
     var quote = IsRunningOnWindows() || isCore ? "\"" : "'";
     var innerQuote = IsRunningOnWindows() || isCore ? "\\\"" : "\"";
 
@@ -50,15 +63,19 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
         skiaArgs += $" win_vc='{win_vc}' ";
     }
 
+    skiaArgs += 
+        $" skia_enable_tools=false " +
+        $" is_official_build={CONFIGURATION.ToLower() == "release"} ".ToLower();
+
     // generate native skia build files
-    RunProcess(SKIA_PATH.CombineWithFilePath($"bin/gn{exe}"), new ProcessSettings {
-        Arguments = $"gen out/{outDir} --args={quote}{skiaArgs.Replace("'", innerQuote)}{quote}",
+    RunProcess(GN_EXE, new ProcessSettings {
+        Arguments = $"gen out/{outDir} --script-executable={quote}{PYTHON_EXE}{quote} --args={quote}{skiaArgs.Replace("'", innerQuote)}{quote}",
         WorkingDirectory = SKIA_PATH.FullPath,
     });
 
     // build native skia
-    RunProcess(DEPOT_PATH.CombineWithFilePath($"ninja{exe}"), new ProcessSettings {
-        Arguments = $"{target} -C out/{outDir}",
+    RunProcess(NINJA_EXE, new ProcessSettings {
+        Arguments = $"-C out/{outDir} {target}",
         WorkingDirectory = SKIA_PATH.FullPath,
     });
 }
@@ -66,7 +83,7 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
 void StripSign(FilePath target)
 {
     if (!IsRunningOnMac())
-        throw new InvalidOperationException("lipo is only available on Unix.");
+        throw new InvalidOperationException("lipo is only available on macOS.");
 
     target = MakeAbsolute(target);
     var archive = target;
@@ -88,7 +105,7 @@ void StripSign(FilePath target)
 void RunLipo(DirectoryPath directory, FilePath output, FilePath[] inputs)
 {
     if (!IsRunningOnMac())
-        throw new InvalidOperationException("lipo is only available on Unix.");
+        throw new InvalidOperationException("lipo is only available on macOS.");
 
     EnsureDirectoryExists(directory.CombineWithFilePath(output).GetDirectory());
 

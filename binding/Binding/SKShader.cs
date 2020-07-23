@@ -55,7 +55,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject (SkiaApi.sk_shader_new_bitmap (src.Handle, tmx, tmy, null));
+			return src.ToShader (tmx, tmy);
 		}
 
 		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix)
@@ -63,7 +63,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject (SkiaApi.sk_shader_new_bitmap (src.Handle, tmx, tmy, &localMatrix));
+			return src.ToShader (tmx, tmy, localMatrix);
 		}
 
 		// CreateImage
@@ -97,7 +97,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, null, null));
+			return src.ToShader (tmx, tmy);
 		}
 
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile)
@@ -105,7 +105,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, null, &tile));
+			return src.ToShader (tmx, tmy, tile);
 		}
 
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile)
@@ -113,7 +113,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, &localMatrix, &tile));
+			return src.ToShader (tmx, tmy, localMatrix, tile);
 		}
 
 		// CreateLinearGradient
@@ -417,7 +417,19 @@ namespace SkiaSharp
 			if (shaderB == null)
 				throw new ArgumentNullException (nameof (shaderB));
 
-			return GetObject (SkiaApi.sk_shader_new_compose (shaderA.Handle, shaderB.Handle, mode));
+			return GetObject (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle, null));
+		}
+
+		// CreateLerp
+
+		public static SKShader CreateLerp (float weight, SKShader dst, SKShader src)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return GetObject (SkiaApi.sk_shader_new_lerp (weight, dst.Handle, src.Handle, null));
 		}
 
 		// CreateColorFilter

@@ -10,6 +10,29 @@ namespace SkiaSharp.Tests
 		private const int Precision = 2;
 
 		[SkippableFact]
+		public void MakeSureColorsAreNotBroken()
+		{
+			var color = new SKColorF(0.4f, 0, 0, 0.6f);
+
+			var paint = new SKPaint();
+			paint.ColorF = color;
+
+			Assert.Equal(color, paint.ColorF);
+			Assert.Equal((SKColor)color, paint.Color);
+		}
+
+		[SkippableFact]
+		public void MakeSureColorsWithColorSpacesWork()
+		{
+			var color = new SKColorF(0.3f, 0, 0, 0.6f);
+
+			var paint = new SKPaint();
+			paint.SetColor(color, SKColorSpace.CreateSrgbLinear());
+
+			Assert.NotEqual(color, paint.ColorF);
+		}
+
+		[SkippableFact]
 		public void ColorWithComponent()
 		{
 			var color = new SKColorF();

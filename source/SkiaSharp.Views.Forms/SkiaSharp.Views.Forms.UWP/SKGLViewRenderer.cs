@@ -9,6 +9,11 @@ namespace SkiaSharp.Views.Forms
 {
 	public class SKGLViewRenderer : SKGLViewRendererBase<SKFormsView, SKNativeView>
 	{
+		protected override SKNativeView CreateNativeControl() =>
+			GetType() == typeof(SKGLViewRenderer)
+				? new SKNativeView()
+				: base.CreateNativeControl();
+
 		protected override void SetupRenderLoop(bool oneShot)
 		{
 			if (oneShot)

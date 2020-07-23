@@ -5,6 +5,9 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/androi
 
 DirectoryPath ANDROID_NDK_HOME = Argument("ndk", EnvironmentVariable("ANDROID_NDK_HOME") ?? EnvironmentVariable("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine("android-ndk").FullPath);
 
+string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
+bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
+
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnMac() || IsRunningOnWindows())
@@ -20,10 +23,18 @@ Task("libSkiaSharp")
         if (Skip(arch)) return;
 
         GnNinja($"android/{arch}", "SkiaSharp",
-            $"is_official_build=true skia_enable_tools=false " +
-            $"target_os='android' target_cpu='{skiaArch}' " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            $"target_cpu='{skiaArch}' " +
+            $"target_os='android' " +
+            $"skia_use_icu=false " +
+            $"skia_use_piex=true " +
+            $"skia_use_sfntly=false " +
+            $"skia_use_system_expat=false " +
+            $"skia_use_system_freetype2=false " +
+            $"skia_use_system_libjpeg_turbo=false " +
+            $"skia_use_system_libpng=false " +
+            $"skia_use_system_libwebp=false " +
+            $"skia_use_system_zlib=false " +
+            $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
             $"ndk='{ANDROID_NDK_HOME}' " +
             $"ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 16)}");

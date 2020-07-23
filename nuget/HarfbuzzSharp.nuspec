@@ -16,7 +16,7 @@ HarfBuzzSharp is a cross-platform OpenType text shaping engine for .NET platform
 Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release notes.
     </releaseNotes>
     <projectUrl>https://go.microsoft.com/fwlink/?linkid=868515</projectUrl>
-    <iconUrl>https://go.microsoft.com/fwlink/?linkid=868516</iconUrl>
+    <iconUrl>https://go.microsoft.com/fwlink/?linkid=2130524</iconUrl>
     <tags>xamarin text harfbuzz ios android linux windows uwp tvos macos tizen cross-platform harfbuzzsharp</tags>
 
     <!-- legal -->
@@ -27,9 +27,6 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
 
     <dependencies>
-      <group targetFramework="net45">
-        <dependency id="System.Memory" version="4.5.3" />
-      </group>
       <group targetFramework="net462">
         <dependency id="System.Memory" version="4.5.3" />
       </group>
@@ -65,8 +62,6 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
   <files>
 
     <!-- HarfBuzzSharp.dll -->
-    <file src="lib/net45/HarfBuzzSharp.dll" />
-    <file src="lib/net45/HarfBuzzSharp.xml" />
     <file src="lib/net462/HarfBuzzSharp.dll" />
     <file src="lib/net462/HarfBuzzSharp.xml" />
     <file src="lib/netstandard1.3/HarfBuzzSharp.dll" />
@@ -91,21 +86,44 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file src="lib/tizen40/HarfBuzzSharp.xml" />
 
     <!-- the build bits -->
-    <file src="build/net45/HarfBuzzSharp.targets" />
-    <file src="build/net45/HarfBuzzSharp.targets" target="buildTransitive/net45/HarfBuzzSharp.targets" />
+    <!-- net4x (win32/macos/linux) -->
     <file src="build/net462/HarfBuzzSharp.targets" />
     <file src="build/net462/HarfBuzzSharp.targets" target="buildTransitive/net462/HarfBuzzSharp.targets" />
+    <!-- others -->
+    <file src="build/monoandroid1.0/HarfBuzzSharp.targets" />
+    <file src="build/xamarinios1.0/HarfBuzzSharp.targets" />
+    <file src="build/xamarintvos1.0/HarfBuzzSharp.targets" />
+    <file src="build/xamarinwatchos1.0/HarfBuzzSharp.targets" />
+    <file src="build/xamarinmac2.0/HarfBuzzSharp.targets" />
     <file src="build/tizen40/HarfBuzzSharp.targets" />
 
-    <!-- harfbuzz.dll and other native files -->
+    <!-- libHarfBuzzSharp.dll and other native files -->
+    <!-- win -->
     <file platform="windows" src="runtimes/win-x64/native/libHarfBuzzSharp.dll" />
     <file platform="windows" src="runtimes/win-x86/native/libHarfBuzzSharp.dll" />
+    <file platform="windows" src="runtimes/win-arm64/native/libHarfBuzzSharp.dll" />
+    <!-- macos -->
     <file platform="macos" src="runtimes/osx/native/libHarfBuzzSharp.dylib" />
+    <!-- win10 -->
     <file platform="windows" src="runtimes/win10-x64/nativeassets/uap10.0/libHarfBuzzSharp.dll" />
     <file platform="windows" src="runtimes/win10-x86/nativeassets/uap10.0/libHarfBuzzSharp.dll" />
     <file platform="windows" src="runtimes/win10-arm/nativeassets/uap10.0/libHarfBuzzSharp.dll" />
-    <file src="runtimes/tizen-armel/native/libHarfBuzzSharp.so" />
-    <file src="runtimes/tizen-x86/native/libHarfBuzzSharp.so" />
+    <file platform="windows" src="runtimes/win10-arm64/nativeassets/uap10.0/libHarfBuzzSharp.dll" />
+    <!-- tizen -->
+    <file src="build/tizen40/arm/libHarfBuzzSharp.so" />
+    <file src="build/tizen40/x86/libHarfBuzzSharp.so" />
+    <!-- android -->
+    <file platform="macos,windows" src="build/monoandroid1.0/x64/libHarfBuzzSharp.so" />
+    <file platform="macos,windows" src="build/monoandroid1.0/x86/libHarfBuzzSharp.so" />
+    <file platform="macos,windows" src="build/monoandroid1.0/arm/libHarfBuzzSharp.so" />
+    <file platform="macos,windows" src="build/monoandroid1.0/arm64/libHarfBuzzSharp.so" />
+    <!-- ios -->
+    <file platform="macos" src="build/xamarinios1.0/libHarfBuzzSharp.a" />
+    <!-- tvos -->
+    <file platform="macos" src="build/xamarintvos1.0/libHarfBuzzSharp.a" />
+    <!-- watchos -->
+    <file platform="macos" src="build/xamarinwatchos1.0/libHarfBuzzSharp.a" />
+
 
     <!-- legal -->
     <file src="LICENSE.txt" />

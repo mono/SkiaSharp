@@ -176,7 +176,7 @@ namespace SkiaSharp
 			Offset (offset.X, offset.Y);
 
 		public void Offset (float dx, float dy) =>
-			Transform (SKMatrix.MakeTranslation (dx, dy));
+			Transform (SKMatrix.CreateTranslation (dx, dy));
 
 		public void MoveTo (SKPoint point) =>
 			SkiaApi.sk_path_move_to (Handle, point.X, point.Y);
@@ -437,6 +437,25 @@ namespace SkiaSharp
 			}
 		}
 
+		public bool ToWinding (SKPath result)
+		{
+			if (result == null)
+				throw new ArgumentNullException (nameof (result));
+
+			return SkiaApi.sk_pathop_as_winding (Handle, result.Handle);
+		}
+
+		public SKPath ToWinding ()
+		{
+			var result = new SKPath ();
+			if (ToWinding (result)) {
+				return result;
+			} else {
+				result.Dispose ();
+				return null;
+			}
+		}
+
 		public string ToSvgPathData ()
 		{
 			using (var str = new SKString ()) {
@@ -481,8 +500,8 @@ namespace SkiaSharp
 
 		//
 
-		internal static SKPath GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKPath (handle, true);
+		internal static SKPath GetObject (IntPtr handle, bool owns = true) =>
+			handle == IntPtr.Zero ? null : new SKPath (handle, owns);
 
 		//
 
@@ -502,21 +521,32 @@ namespace SkiaSharp
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_iter_destroy (Handle);
 
-			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates = true, bool exact = false)
+			[EditorBrowsable (EditorBrowsableState.Never)]
+			[Obsolete ("Use Next(SKPoint[]) instead.")]
+			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates, bool exact) =>
+				Next (points);
+
+			public SKPathVerb Next (SKPoint[] points) =>
+				Next (new Span<SKPoint> (points));
+
+			public SKPathVerb Next (Span<SKPoint> points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
+
 				fixed (SKPoint* p = points) {
-					return SkiaApi.sk_path_iter_next (Handle, p, doConsumeDegenerates ? 1 : 0, exact ? 1 : 0);
+					return SkiaApi.sk_path_iter_next (Handle, p);
 				}
 			}
 
 			public float ConicWeight () =>
 				SkiaApi.sk_path_iter_conic_weight (Handle);
+
 			public bool IsCloseLine () =>
 				SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
+
 			public bool IsCloseContour () =>
 				SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
 		}
@@ -537,7 +567,10 @@ namespace SkiaSharp
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_rawiter_destroy (Handle);
 
-			public SKPathVerb Next (SKPoint[] points)
+			public SKPathVerb Next (SKPoint[] points) =>
+				Next (new Span<SKPoint> (points));
+
+			public SKPathVerb Next (Span<SKPoint> points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
@@ -550,6 +583,7 @@ namespace SkiaSharp
 
 			public float ConicWeight () =>
 				SkiaApi.sk_path_rawiter_conic_weight (Handle);
+
 			public SKPathVerb Peek () =>
 				SkiaApi.sk_path_rawiter_peek (Handle);
 		}

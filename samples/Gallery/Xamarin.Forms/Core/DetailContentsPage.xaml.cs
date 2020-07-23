@@ -70,8 +70,6 @@ namespace SkiaSharpSample
 					glview.InvalidateSurface();
 					canvas.IsVisible = false;
 					break;
-				case SampleBackends.Vulkan:
-				case SampleBackends.Metal:
 				default:
 					DisplayAlert("Configure Backend", "This functionality is not yet implemented.", "OK");
 					break;

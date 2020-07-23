@@ -162,6 +162,95 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableFact]
+		public void Snapshot()
+		{
+			var info = new SKImageInfo(100, 100);
+			using var surface = SKSurface.Create(info);
+			Assert.NotNull(surface);
+
+			var image = surface.Snapshot();
+			Assert.NotNull(image);
+
+			Assert.Equal(info.Width, image.Width);
+			Assert.Equal(info.Height, image.Height);
+		}
+
+		[SkippableFact]
+		public void SnapshotReturnsSameInstance()
+		{
+			var info = new SKImageInfo(100, 100);
+			using var surface = SKSurface.Create(info);
+			Assert.NotNull(surface);
+
+			var image1 = surface.Snapshot();
+			Assert.NotNull(image1);
+			var image2 = surface.Snapshot();
+			Assert.NotNull(image2);
+
+			Assert.Equal(image1, image2);
+		}
+
+		[SkippableFact]
+		public void SnapshotWithBoundsReturnsSameInstance()
+		{
+			var info = new SKImageInfo(100, 100);
+			using var surface = SKSurface.Create(info);
+			Assert.NotNull(surface);
+
+			var image1 = surface.Snapshot();
+			Assert.NotNull(image1);
+			var image2 = surface.Snapshot(info.Rect);
+			Assert.NotNull(image2);
+
+			Assert.Equal(image1, image2);
+		}
+
+		[SkippableFact]
+		public void SnapshotWithBoundsReturnsDifferentInstance()
+		{
+			var info = new SKImageInfo(100, 100);
+			using var surface = SKSurface.Create(info);
+			Assert.NotNull(surface);
+
+			var image1 = surface.Snapshot();
+			Assert.NotNull(image1);
+			var image2 = surface.Snapshot(new SKRectI(10, 10, 90, 90));
+			Assert.NotNull(image2);
+
+			Assert.NotEqual(image1, image2);
+		}
+
+		[SkippableFact]
+		public void SnapshotWithSameBoundsReturnsSameInstance()
+		{
+			var info = new SKImageInfo(100, 100);
+			using var surface = SKSurface.Create(info);
+			Assert.NotNull(surface);
+
+			var image1 = surface.Snapshot(new SKRectI(10, 10, 90, 90));
+			Assert.NotNull(image1);
+			var image2 = surface.Snapshot(new SKRectI(10, 10, 90, 90));
+			Assert.NotNull(image2);
+
+			Assert.NotEqual(image1, image2);
+		}
+
+		[SkippableFact]
+		public void SnapshotWithDifferentBoundsReturnsDifferentInstance()
+		{
+			var info = new SKImageInfo(100, 100);
+			using var surface = SKSurface.Create(info);
+			Assert.NotNull(surface);
+
+			var image1 = surface.Snapshot(new SKRectI(10, 20, 90, 90));
+			Assert.NotNull(image1);
+			var image2 = surface.Snapshot(new SKRectI(10, 10, 80, 90));
+			Assert.NotNull(image2);
+
+			Assert.NotEqual(image1, image2);
+		}
+
 		[Obsolete]
 		[SkippableFact]
 		public void SimpleSurfaceWithPropsIsCorrect()

@@ -175,7 +175,7 @@ namespace SkiaSharp.Tests
 
 			using var p = new SKPaint
 			{
-				Shader = SKShader.CreatePicture(picture, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, SKMatrix.MakeIdentity(), tile)
+				Shader = SKShader.CreatePicture(picture, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, SKMatrix.Identity, tile)
 			};
 			var r = SKRect.Create(bitmap.Width, bitmap.Height);
 			canvas.DrawRect(r, p);

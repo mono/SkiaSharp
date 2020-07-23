@@ -9,7 +9,7 @@ namespace SkiaSharp
 			native.colorspace = managed.ColorSpace?.Handle ?? IntPtr.Zero;
 			native.width = managed.Width;
 			native.height = managed.Height;
-			native.colorType = managed.ColorType;
+			native.colorType = managed.ColorType.ToNative ();
 			native.alphaType = managed.AlphaType;
 		}
 
@@ -18,7 +18,7 @@ namespace SkiaSharp
 				colorspace = managed.ColorSpace?.Handle ?? IntPtr.Zero,
 				width = managed.Width,
 				height = managed.Height,
-				colorType = managed.ColorType,
+				colorType = managed.ColorType.ToNative (),
 				alphaType = managed.AlphaType,
 			};
 
@@ -27,7 +27,7 @@ namespace SkiaSharp
 				ColorSpace = SKColorSpace.GetObject (native.colorspace),
 				Width = native.width,
 				Height = native.height,
-				ColorType = native.colorType,
+				ColorType = native.colorType.FromNative (),
 				AlphaType = native.alphaType,
 			};
 	}
@@ -43,7 +43,7 @@ namespace SkiaSharp
 
 		static SKImageInfo ()
 		{
-			PlatformColorType = SkiaApi.sk_colortype_get_default_8888 ();
+			PlatformColorType = SkiaApi.sk_colortype_get_default_8888 ().FromNative ();
 
 			fixed (int* a = &PlatformColorAlphaShift)
 			fixed (int* r = &PlatformColorRedShift)

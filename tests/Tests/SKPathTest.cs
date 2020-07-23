@@ -488,5 +488,24 @@ namespace SkiaSharp.Tests
 				Assert.Equal(SKColors.Black, bitmap.GetPixel(90, 50));
 			}
 		}
+
+		[SkippableFact]
+		public void ToWinding()
+		{
+			using var path = new SKPath();
+			path.AddRect(new SKRect(1, 2, 3, 4));
+
+			using var result = new SKPath();
+
+			path.FillType = SKPathFillType.Winding;
+			Assert.True(path.ToWinding(result));
+			Assert.NotEqual(path, result);
+			Assert.Equal(SKPathFillType.Winding, path.FillType);
+
+			path.FillType = SKPathFillType.EvenOdd;
+			Assert.True(path.ToWinding(result));
+			Assert.NotEqual(path, result);
+			Assert.Equal(SKPathFillType.Winding, result.FillType);
+		}
 	}
 }

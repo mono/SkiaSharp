@@ -11,8 +11,8 @@ namespace SkiaSharpSample.Platform
 	{
 		protected override void OnCreate(Bundle bundle)
 		{
-			TabLayoutResource = Resource.Layout.Tabbar;
-			ToolbarResource = Resource.Layout.Toolbar;
+			TabLayoutResource = Resource.Layout.tabbar;
+			ToolbarResource = Resource.Layout.toolbar;
 
 			base.OnCreate(bundle);
 
@@ -29,4 +29,3 @@ namespace SkiaSharpSample.Platform
 		}
 	}
 }
-

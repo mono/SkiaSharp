@@ -46,28 +46,37 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_maskfilter_new_blur (blurStyle, sigma));
 		}
 
+		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, bool respectCTM)
+		{
+			return GetObject (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, respectCTM));
+		}
+
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateBlur(SKBlurStyle, float) instead.")]
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKBlurMaskFilterFlags flags)
 		{
-			return CreateBlur (blurStyle, sigma, SKRect.Empty, true);
-		}
-
-		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder)
-		{
-			return CreateBlur (blurStyle, sigma, occluder, true);
+			return CreateBlur (blurStyle, sigma, true);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateBlur(SKBlurStyle, float, SKRect) instead.")]
-		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, SKBlurMaskFilterFlags flags)
+		[Obsolete ("Use CreateBlur(SKBlurStyle, float) instead.")]
+		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder)
 		{
-			return CreateBlur (blurStyle, sigma, occluder, true);
+			return CreateBlur (blurStyle, sigma, true);
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateBlur(SKBlurStyle, float) instead.")]
+		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, SKBlurMaskFilterFlags flags)
+		{
+			return CreateBlur (blurStyle, sigma, true);
+		}
+
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use CreateBlur(SKBlurStyle, float, bool) instead.")]
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, bool respectCTM)
 		{
-			return GetObject (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, &occluder, respectCTM));
+			return CreateBlur (blurStyle, sigma, respectCTM);
 		}
 
 		public static SKMaskFilter CreateTable (byte[] table)

@@ -1,4 +1,6 @@
-﻿namespace SkiaSharp
+﻿using System;
+
+namespace SkiaSharp
 {
 	internal partial class SkiaApi
 	{
@@ -12,14 +14,20 @@
 		private const string SKIA = "libSkiaSharp.so";
 #elif __MACOS__
 		private const string SKIA = "libSkiaSharp.dylib";
-#elif __DESKTOP__
-		private const string SKIA = "libSkiaSharp";
 #elif WINDOWS_UWP
 		private const string SKIA = "libSkiaSharp.dll";
-#elif NET_STANDARD
-		private const string SKIA = "libSkiaSharp";
+#elif __TIZEN__
+		private const string SKIA = "libSkiaSharp.so";
 #else
 		private const string SKIA = "libSkiaSharp";
+#endif
+
+#if USE_DELEGATES
+		private static readonly Lazy<IntPtr> libSkiaSharpHandle =
+			new Lazy<IntPtr> (() => LibraryLoader.LoadLocalLibrary<SkiaApi> (SKIA));
+
+		private static T GetSymbol<T> (string name) where T : Delegate =>
+			LibraryLoader.GetSymbolDelegate<T> (libSkiaSharpHandle.Value, name);
 #endif
 	}
 }

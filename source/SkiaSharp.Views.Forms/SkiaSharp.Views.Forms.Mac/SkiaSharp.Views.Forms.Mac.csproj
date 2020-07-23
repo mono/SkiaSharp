@@ -7,8 +7,11 @@
     <PackagingGroup>SkiaSharp.Views.Forms</PackagingGroup>
     <DefineConstants>$(DefineConstants);__MACOS__</DefineConstants>
   </PropertyGroup>
+  <ItemGroup Condition=" '$(IsWindows)' == 'true' ">
+    <Reference Include="netstandard" />
+  </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="4.4.0.991757" />
+    <PackageReference Include="Xamarin.Forms" Version="4.5.0.725" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.OSX\SkiaSharp.OSX.csproj" />

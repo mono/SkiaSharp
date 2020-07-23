@@ -83,7 +83,10 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                     var packageId = projItem.Attribute("Include").Value;
                     var version = GetVersion(packageId);
                     if (!string.IsNullOrWhiteSpace(version)) {
-                        version += suffix;
+                        // only add the suffix for our nugets
+                        if (packageId.StartsWith("SkiaSharp") || packageId.StartsWith("HarfBuzzSharp")) {
+                            version += suffix;
+                        }
                         Debug($"Substituting package version {packageId} for {version}.");
                         projItem.Attribute("Version").Value = version;
                     } else if (packageId.StartsWith("SkiaSharp") || packageId.StartsWith("HarfBuzzSharp")) {
@@ -112,9 +115,13 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                     if (!string.IsNullOrWhiteSpace(version)) {
                         Debug($"Substituting project reference {relFilePath} for project {rel}.");
                         var name = projItem.Name.Namespace + "PackageReference";
+                        // only add the suffix for our nugets
+                        if (packagingGroup.StartsWith("SkiaSharp") || packagingGroup.StartsWith("HarfBuzzSharp")) {
+                            version += suffix;
+                        }
                         projItem.AddAfterSelf(new XElement(name, new object[] {
                             new XAttribute("Include", packagingGroup),
-                            new XAttribute("Version", version + suffix),
+                            new XAttribute("Version", version),
                         }));
                     } else {
                         Warning($"Unable to find version information for package '{packagingGroup}'.");

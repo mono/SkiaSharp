@@ -87,10 +87,12 @@ namespace SkiaSharp.Views.Android
 			{
 				colorType = SKColorType.Alpha8;
 			}
+#pragma warning disable CS0618 // Type or member is obsolete
 			else if (config == Bitmap.Config.Argb4444)
 			{
 				colorType = SKColorType.Argb4444;
 			}
+#pragma warning restore CS0618 // Type or member is obsolete
 			else if (config == Bitmap.Config.Rgb565)
 			{
 				colorType = SKColorType.Rgb565;
@@ -157,10 +159,12 @@ namespace SkiaSharp.Views.Android
 					dstInfo.ColorType = SKColorType.Rgb565;
 					dstInfo.AlphaType = SKAlphaType.Opaque;
 					break;
+#pragma warning disable CS0618 // Type or member is obsolete
 				case SKColorType.Argb4444:
 					config = Bitmap.Config.Argb4444;
 					dstInfo.ColorType = SKColorType.Argb4444;
 					break;
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			// destination bitmap

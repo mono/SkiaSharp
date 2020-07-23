@@ -357,7 +357,7 @@ namespace SkiaSharp
 				? new SKImageTextureReleaseDelegate ((_) => releaseProc (releaseContext))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageTextureReleaseDelegateProxy, out _, out var ctx);
-			return GetObject (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs, proxy, (void*)ctx));
+			return GetObject (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType.ToNative (), alpha, cs, proxy, (void*)ctx));
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -413,7 +413,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (texture));
 
 			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
-			return GetObject (SkiaApi.sk_image_new_from_adopted_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs));
+			return GetObject (SkiaApi.sk_image_new_from_adopted_texture (context.Handle, texture.Handle, origin, colorType.ToNative (), alpha, cs));
 		}
 
 		// create a new image from a picture
@@ -501,7 +501,7 @@ namespace SkiaSharp
 			SkiaApi.sk_image_get_alpha_type (Handle);
 
 		public SKColorType ColorType =>
-			SkiaApi.sk_image_get_color_type (Handle);
+			SkiaApi.sk_image_get_color_type (Handle).FromNative ();
 
 		public SKColorSpace ColorSpace =>
 			SKColorSpace.GetObject (SkiaApi.sk_image_get_colorspace (Handle));
@@ -624,14 +624,19 @@ namespace SkiaSharp
 		// ToTextureImage
 
 		public SKImage ToTextureImage (GRContext context) =>
-			ToTextureImage (context, null);
+			ToTextureImage (context, false);
 
-		public SKImage ToTextureImage (GRContext context, SKColorSpace colorspace)
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use ToTextureImage(GRContext) instead.")]
+		public SKImage ToTextureImage (GRContext context, SKColorSpace colorspace) =>
+			ToTextureImage (context, false);
+
+		public SKImage ToTextureImage (GRContext context, bool mipmapped)
 		{
 			if (context == null)
 				throw new ArgumentNullException (nameof (context));
 
-			return GetObject (SkiaApi.sk_image_make_texture_image (Handle, context.Handle, colorspace?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_image_make_texture_image (Handle, context.Handle, mipmapped));
 		}
 
 		// ApplyImageFilter

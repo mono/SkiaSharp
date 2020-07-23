@@ -77,16 +77,25 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ImmutableBitmapsAreNotCopied()
 		{
-			// this is a really weird test as it is a mutable bitmap that is marked as immutable
+			// create "pixel data"
+			var pixelData = new SKBitmap(100, 100);
+			pixelData.Erase(SKColors.Red);
 
-			var bitmap = new SKBitmap(100, 100);
-			bitmap.Erase(SKColors.Red);
+			// create text bitmap
+			var bitmap = new SKBitmap();
+			bitmap.InstallPixels(pixelData.PeekPixels());
+
+			// mark it as immutable
 			bitmap.SetImmutable();
 
+			// create an image
 			var image = SKImage.FromBitmap(bitmap);
 			Assert.Equal(SKColors.Red, image.PeekPixels().GetPixelColor(50, 50));
 
-			bitmap.Erase(SKColors.Blue);
+			// modify the "pixel data"
+			pixelData.Erase(SKColors.Blue);
+
+			// ensure that the pixels are modified
 			Assert.Equal(SKColors.Blue, image.PeekPixels().GetPixelColor(50, 50));
 		}
 

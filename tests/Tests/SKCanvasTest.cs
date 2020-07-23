@@ -20,21 +20,24 @@ namespace SkiaSharp.Tests
 				{
 					var canvas = surface.Canvas;
 
-					Assert.Equal(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
+					Assert.Equal(SKMatrix.Identity, canvas.TotalMatrix);
 
 					using (new SKAutoCanvasRestore(canvas))
 					{
 						canvas.Translate(10, 10);
-						Assert.Equal(SKMatrix.MakeTranslation(10, 10), canvas.TotalMatrix);
+						Assert.Equal(SKMatrix.CreateTranslation(10, 10), canvas.TotalMatrix);
 					}
 
-					Assert.Equal(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
+					Assert.Equal(SKMatrix.Identity, canvas.TotalMatrix);
 				}
 			}
 		}
 
-		[SkippableFact]
-		public void DrawTextBlobIsTheSameAsDrawText()
+		[SkippableTheory]
+		[InlineData(SKTextAlign.Left)]
+		//[InlineData(SKTextAlign.Center)]
+		//[InlineData(SKTextAlign.Right)]
+		public void DrawTextBlobIsTheSameAsDrawText(SKTextAlign align)
 		{
 			var info = new SKImageInfo(300, 300);
 			var text = "SkiaSharp";
@@ -45,7 +48,7 @@ namespace SkiaSharp.Tests
 			using (var paint = new SKPaint())
 			{
 				paint.TextSize = 50;
-				paint.TextAlign = SKTextAlign.Center;
+				paint.TextAlign = align;
 
 				canvas.Clear(SKColors.White);
 				canvas.DrawText(text, 150, 175, paint);
@@ -63,7 +66,7 @@ namespace SkiaSharp.Tests
 					glyphs = glyphsp.GetGlyphs(text);
 
 				paint.TextSize = 50;
-				paint.TextAlign = SKTextAlign.Center;
+				paint.TextAlign = align;
 				paint.TextEncoding = SKTextEncoding.GlyphId;
 
 				canvas.Clear(SKColors.White);
@@ -185,6 +188,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void CanDrawNullPointerZeroLengthText()
 		{
@@ -196,6 +200,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void ThrowsOnDrawNullPointerText()
 		{
@@ -380,10 +385,10 @@ namespace SkiaSharp.Tests
 			using (var canvas = new SKCanvas(bitmap))
 			{
 				canvas.Translate(10, 20);
-				Assert.Equal(SKMatrix.MakeTranslation(10, 20).Values, canvas.TotalMatrix.Values);
+				Assert.Equal(SKMatrix.CreateTranslation(10, 20).Values, canvas.TotalMatrix.Values);
 
 				canvas.Translate(10, 20);
-				Assert.Equal(SKMatrix.MakeTranslation(20, 40).Values, canvas.TotalMatrix.Values);
+				Assert.Equal(SKMatrix.CreateTranslation(20, 40).Values, canvas.TotalMatrix.Values);
 			}
 		}
 
@@ -418,8 +423,8 @@ namespace SkiaSharp.Tests
 
 				var rect = svg.Element(ns + "rect");
 				Assert.Equal(ns + "rect", rect.Name);
-				Assert.Equal("rgb(255,0,0)", rect.Attribute("fill")?.Value);
-				Assert.Equal("none", rect.Attribute("stroke")?.Value);
+				Assert.Equal("red", rect.Attribute("fill")?.Value);
+				Assert.Null(rect.Attribute("stroke")?.Value);
 				Assert.Equal("10", rect.Attribute("x")?.Value);
 				Assert.Equal("10", rect.Attribute("y")?.Value);
 				Assert.Equal("80", rect.Attribute("width")?.Value);
@@ -461,8 +466,8 @@ namespace SkiaSharp.Tests
 
 				var rect = svg.Element(ns + "rect");
 				Assert.Equal(ns + "rect", rect.Name);
-				Assert.Equal("rgb(255,0,0)", rect.Attribute("fill")?.Value);
-				Assert.Equal("none", rect.Attribute("stroke")?.Value);
+				Assert.Equal("red", rect.Attribute("fill")?.Value);
+				Assert.Null(rect.Attribute("stroke")?.Value);
 				Assert.Equal("10", rect.Attribute("x")?.Value);
 				Assert.Equal("10", rect.Attribute("y")?.Value);
 				Assert.Equal("80", rect.Attribute("width")?.Value);
@@ -489,26 +494,195 @@ namespace SkiaSharp.Tests
 			paint.IsAntialias = true;
 			paint.TextSize = 64;
 			paint.Color = SKColors.Black;
-
 			paint.TextAlign = align;
+
 			canvas.DrawText("SkiaSharp", 300, 100, paint);
 
+			SaveBitmap(bitmap, $"output-{align}.png");
+
+			AssertTextAlign(bitmap, offset, 0);
+		}
+
+		[SkippableTheory]
+		[InlineData(SKTextAlign.Left, 300)]
+		//[InlineData(SKTextAlign.Center, 162)]
+		//[InlineData(SKTextAlign.Right, 23)]
+		public void TextAlignMovesTextBlobPosition(SKTextAlign align, int offset)
+		{
+			var font = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(font);
+
+			using var bitmap = new SKBitmap(600, 200);
+			using var canvas = new SKCanvas(bitmap);
+
+			canvas.Clear(SKColors.White);
+
+			using var paint = new SKPaint();
+			paint.Typeface = tf;
+			paint.IsAntialias = true;
+			paint.TextSize = 64;
+			paint.Color = SKColors.Black;
+			paint.TextAlign = align;
+
+			var glyphs = paint.GetGlyphs("SkiaSharp");
+			using var blobBuilder = new SKTextBlobBuilder();
+			blobBuilder.AddRun(paint, 0, 0, glyphs);
+			using var blob = blobBuilder.Build();
+
+			canvas.DrawText(blob, 300, 100, paint);
+
+			SaveBitmap(bitmap, $"output-b-{align}.png");
+
+			AssertTextAlign(bitmap, offset, 0);
+		}
+
+		[SkippableTheory]
+		[InlineData(SKTextAlign.Left, 300)]
+		[InlineData(SKTextAlign.Center, 300)]
+		[InlineData(SKTextAlign.Right, 300)]
+		public void TextAlignMovesHorizontalTextBlobPosition(SKTextAlign align, int offset)
+		{
+			var font = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(font);
+
+			using var bitmap = new SKBitmap(600, 200);
+			using var canvas = new SKCanvas(bitmap);
+
+			canvas.Clear(SKColors.White);
+
+			using var paint = new SKPaint();
+			paint.Typeface = tf;
+			paint.IsAntialias = true;
+			paint.TextSize = 64;
+			paint.Color = SKColors.Black;
+			paint.TextAlign = align;
+
+			var glyphs = paint.GetGlyphs("SkiaSharp");
+			var widths = paint.GetGlyphWidths("SkiaSharp");
+			var positions = new float[widths.Length];
+			for (var i = 1; i < positions.Length; i++)
+			{
+				positions[i] = positions[i - 1] + widths[i - 1];
+			}
+
+			using var blobBuilder = new SKTextBlobBuilder();
+			var run = blobBuilder.AllocateHorizontalRun(paint, glyphs.Length, 0);
+			run.SetGlyphs(glyphs);
+			run.SetPositions(positions);
+			using var blob = blobBuilder.Build();
+
+			canvas.DrawText(blob, 300, 100, paint);
+
+			SaveBitmap(bitmap, $"output-h-{align}.png");
+
+			AssertTextAlign(bitmap, offset, 0);
+		}
+
+		[SkippableTheory]
+		[InlineData(SKTextAlign.Left, 300)]
+		[InlineData(SKTextAlign.Center, 300)]
+		[InlineData(SKTextAlign.Right, 300)]
+		public void TextAlignMovesPositionedTextBlobPosition(SKTextAlign align, int offset)
+		{
+			var font = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(font);
+
+			using var bitmap = new SKBitmap(600, 200);
+			using var canvas = new SKCanvas(bitmap);
+
+			canvas.Clear(SKColors.White);
+
+			using var paint = new SKPaint();
+			paint.Typeface = tf;
+			paint.IsAntialias = true;
+			paint.TextSize = 64;
+			paint.Color = SKColors.Black;
+			paint.TextAlign = align;
+
+			var glyphs = paint.GetGlyphs("SkiaSharp");
+			var widths = paint.GetGlyphWidths("SkiaSharp");
+			var positions = new SKPoint[widths.Length];
+			for (var i = 1; i < positions.Length; i++)
+			{
+				positions[i] = new SKPoint(positions[i - 1].X + widths[i - 1], 0);
+			}
+
+			using var blobBuilder = new SKTextBlobBuilder();
+			var run = blobBuilder.AllocatePositionedRun(paint, glyphs.Length);
+			run.SetGlyphs(glyphs);
+			run.SetPositions(positions);
+			using var blob = blobBuilder.Build();
+
+			canvas.DrawText(blob, 300, 100, paint);
+
+			SaveBitmap(bitmap, $"output-p-{align}.png");
+
+			AssertTextAlign(bitmap, offset, 0);
+		}
+
+		[SkippableTheory]
+		[InlineData(SKTextAlign.Left, 300, 300)]
+		//[InlineData(SKTextAlign.Center, 300, 162)]
+		//[InlineData(SKTextAlign.Right, 300, 23)]
+		public void TextAlignMovesMixedTextBlobPosition(SKTextAlign align, int offsetPositioned, int offsetDefault)
+		{
+			var font = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(font);
+
+			using var bitmap = new SKBitmap(600, 300);
+			using var canvas = new SKCanvas(bitmap);
+
+			canvas.Clear(SKColors.White);
+
+			using var paint = new SKPaint();
+			paint.Typeface = tf;
+			paint.IsAntialias = true;
+			paint.TextSize = 64;
+			paint.Color = SKColors.Black;
+			paint.TextAlign = align;
+
+			var glyphs = paint.GetGlyphs("SkiaSharp");
+			var widths = paint.GetGlyphWidths("SkiaSharp");
+			var positions = new SKPoint[widths.Length];
+			for (var i = 1; i < positions.Length; i++)
+			{
+				positions[i] = new SKPoint(positions[i - 1].X + widths[i - 1], 0);
+			}
+
+			using var blobBuilder = new SKTextBlobBuilder();
+			var run = blobBuilder.AllocatePositionedRun(paint, glyphs.Length);
+			run.SetGlyphs(glyphs);
+			run.SetPositions(positions);
+			blobBuilder.AddRun(paint, 0, 100, glyphs);
+			using var blob = blobBuilder.Build();
+
+			canvas.DrawText(blob, 300, 100, paint);
+
+			SaveBitmap(bitmap, $"output-m-{align}.png");
+
+			AssertTextAlign(bitmap, offsetPositioned, 0);
+			AssertTextAlign(bitmap, offsetDefault, 100);
+		}
+
+		private static void AssertTextAlign(SKBitmap bitmap, int x, int y)
+		{
 			// [S]kia[S]har[p]
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 6, 66));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 28, 87));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 28, 66));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 6, 87));
 
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 120, 66));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 142, 87));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 142, 66));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 120, 87));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 6, y + 66));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 28, y + 87));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 28, y + 66));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 6, y + 87));
 
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 246, 70));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 246, 113));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(offset + 271, 83));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 258, 83));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(offset + 258, 113));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 120, y + 66));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 142, y + 87));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 142, y + 66));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 120, y + 87));
+
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 246, y + 70));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 246, y + 113));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 271, y + 83));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 83));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 113));
 		}
 	}
 }

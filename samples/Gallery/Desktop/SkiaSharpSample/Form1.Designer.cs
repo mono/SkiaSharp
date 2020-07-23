@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
 			this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
 			this.glview = new SkiaSharp.Views.Desktop.SKGLControl();
 			this.canvas = new SkiaSharp.Views.Desktop.SKControl();
@@ -193,6 +194,7 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
 			this.ClientSize = new System.Drawing.Size(774, 529);
 			this.Controls.Add(this.toolStripContainer1);
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MainMenuStrip = this.menuStrip1;
 			this.Margin = new System.Windows.Forms.Padding(4);
 			this.Name = "Form1";

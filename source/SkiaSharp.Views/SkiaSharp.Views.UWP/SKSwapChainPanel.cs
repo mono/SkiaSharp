@@ -42,8 +42,8 @@ namespace SkiaSharp.Views.UWP
 			// create the SkiaSharp context
 			if (context == null)
 			{
-				glInterface = GRGlInterface.CreateNativeAngleInterface();
-				context = GRContext.Create(GRBackend.OpenGL, glInterface);
+				glInterface = GRGlInterface.Create();
+				context = GRContext.CreateGl(glInterface);
 			}
 
 			// get the new surface size

@@ -79,8 +79,8 @@ namespace SkiaSharp.Views.Desktop
 			// create the contexts if not done already
 			if (grContext == null)
 			{
-				var glInterface = GRGlInterface.CreateNativeGlInterface();
-				grContext = GRContext.Create(GRBackend.OpenGL, glInterface);
+				var glInterface = GRGlInterface.Create();
+				grContext = GRContext.CreateGl(glInterface);
 			}
 
 			// get the new surface size

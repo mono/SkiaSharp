@@ -16,8 +16,8 @@ This package adds text shaping support to SkiaSharp via HarfBuzz.
 Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release notes.
     </releaseNotes>
     <projectUrl>https://go.microsoft.com/fwlink/?linkid=868515</projectUrl>
-    <iconUrl>https://go.microsoft.com/fwlink/?linkid=868516</iconUrl>
-    <tags>xamarin graphics ios android windows uwp tvos watchos macos tizen cross-platform skiasharp</tags>
+    <iconUrl>https://go.microsoft.com/fwlink/?linkid=2130524</iconUrl>
+    <tags>xamarin graphics ios android windows uwp tvos watchos macos tizen cross-platform skiasharp harfbuzz</tags>
 
     <!-- legal -->
     <licenseUrl>https://go.microsoft.com/fwlink/?linkid=868514</licenseUrl>
@@ -27,8 +27,18 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
 
     <dependencies>
-      <dependency id="SkiaSharp" version="1.0.0" />
-      <dependency id="HarfBuzzSharp" version="1.0.0" />
+      <group targetFramework="net462">
+        <dependency id="SkiaSharp" version="1.0.0" />
+        <dependency id="HarfBuzzSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="netstandard1.3">
+        <dependency id="SkiaSharp" version="1.0.0" />
+        <dependency id="HarfBuzzSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="netstandard2.0">
+        <dependency id="SkiaSharp" version="1.0.0" />
+        <dependency id="HarfBuzzSharp" version="1.0.0" />
+      </group>
     </dependencies>
 
   </metadata>
@@ -39,8 +49,8 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file src="lib/netstandard1.3/SkiaSharp.HarfBuzz.xml" />
     <file src="lib/netstandard2.0/SkiaSharp.HarfBuzz.dll" />
     <file src="lib/netstandard2.0/SkiaSharp.HarfBuzz.xml" />
-    <file src="lib/net45/SkiaSharp.HarfBuzz.dll" />
-    <file src="lib/net45/SkiaSharp.HarfBuzz.xml" />
+    <file src="lib/net462/SkiaSharp.HarfBuzz.dll" />
+    <file src="lib/net462/SkiaSharp.HarfBuzz.xml" />
 
     <!-- legal -->
     <file src="LICENSE.txt" />

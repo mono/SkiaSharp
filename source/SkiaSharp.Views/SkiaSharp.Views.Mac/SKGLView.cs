@@ -79,8 +79,8 @@ namespace SkiaSharp.Views.Mac
 			base.PrepareOpenGL();
 
 			// create the context
-			var glInterface = GRGlInterface.CreateNativeGlInterface();
-			context = GRContext.Create(GRBackend.OpenGL, glInterface);
+			var glInterface = GRGlInterface.Create();
+			context = GRContext.CreateGl(glInterface);
 		}
 
 		public override void Reshape()

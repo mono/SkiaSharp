@@ -34,6 +34,13 @@ var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", f
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
+var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
+var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
+var COVERAGE = Argument ("coverage", false);
+
+var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
+var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
+var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
@@ -53,6 +60,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (1, 57, 0) },
     { "SkiaSharp.Views",                               new Version (1, 57, 0) },
     { "SkiaSharp.Views.Desktop.Common",                new Version (1, 57, 0) },
     { "SkiaSharp.Views.Gtk2",                          new Version (1, 57, 0) },
@@ -62,10 +70,17 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.Forms",                         new Version (1, 57, 0) },
     { "SkiaSharp.Views.Forms.WPF",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.Forms.GTK",                     new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Uno",                           new Version (1, 57, 0) },
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
+    { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 57, 0) },
 };
+
+Information("Arguments:");
+foreach (var arg in CAKE_ARGUMENTS) {
+    Information($"    {arg.Key.PadRight(30)} {{0}}", arg.Value);
+}
 
 #load "cake/msbuild.cake"
 #load "cake/UtilsManaged.cake"
@@ -119,8 +134,7 @@ Task ("libs")
             platform = ".Linux";
         }
     }
-    RunMSBuild ($"./source/SkiaSharpSource{platform}.sln",
-        bl: $"./output/binlogs/libs{platform}.binlog");
+    RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
 
     // assemble the mdoc docs
     EnsureDirectoryExists ("./output/docs/mdoc/");
@@ -143,13 +157,22 @@ Task ("tests")
 
     void RunDesktopTest (string arch)
     {
-        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln",
-            platform: arch == "AnyCPU" ? "Any CPU" : arch,
-            bl: $"./output/binlogs/tests-desktop.{arch}.binlog");
+        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
+
+        // SkiaSharp.Tests.dll
         try {
             RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
         } catch {
             failedTests++;
+        }
+
+        // SkiaSharp.Vulkan.Tests.dll
+        if (SUPPORT_VULKAN) {
+            try {
+                RunTests ($"./tests/SkiaSharp.Vulkan.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
+            } catch {
+                failedTests++;
+            }
         }
     }
 
@@ -167,16 +190,75 @@ Task ("tests")
     }
 
     // .NET Core
-    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln",
-        bl: $"./output/binlogs/tests-netcore.binlog");
+
+    // SkiaSharp.NetCore.Tests.csproj
+    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests.sln");
     try {
         RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
     } catch {
         failedTests++;
     }
 
+    // SkiaSharp.Vulkan.NetCore.Tests.csproj
+    if (SUPPORT_VULKAN) {
+        try {
+            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.NetCore.Tests/SkiaSharp.Vulkan.NetCore.Tests.csproj");
+        } catch {
+            failedTests++;
+        }
+    }
+
     if (failedTests > 0)
-        throw new Exception ($"There were {failedTests} failed tests.");
+        if (THROW_ON_TEST_FAILURE)
+            throw new Exception ($"There were {failedTests} failed tests.");
+        else
+            Warning ($"There were {failedTests} failed tests.");
+
+    if (COVERAGE) {
+        try {
+            RunProcess ("reportgenerator", new ProcessSettings {
+                Arguments = "-reports:./tests/**/Coverage/**/*.xml -targetdir:./output/coverage -reporttypes:HtmlInline_AzurePipelines;Cobertura"
+            });
+        } catch (Exception ex) {
+            Error ("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
+            Error (ex);
+            throw;
+        }
+        var xml = "./output/coverage/Cobertura.xml";
+        var root = FindRegexMatchGroupsInFile (xml, @"<source>(.*)<\/source>", 0)[1].Value;
+        ReplaceTextInFiles (xml, root, "");
+    }
+});
+
+Task ("tests-wasm")
+    .Description ("Run WASM tests.")
+    .IsDependentOn ("externals-wasm")
+    .Does (() =>
+{
+    var failedTests = 0;
+
+    RunMSBuild ("./tests/SkiaSharp.Wasm.Tests.sln");
+
+    var pubDir = "./tests/SkiaSharp.Wasm.Tests/bin/publish/";
+    RunNetCorePublish("./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj", pubDir);
+    IProcess serverProc = null;
+    try {
+        serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
+            Arguments = "server.py",
+            WorkingDirectory = pubDir,
+        });
+        DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj", "http://localhost:8000/ -o ./tests/SkiaSharp.Wasm.Tests/TestResults/");
+    } catch {
+        failedTests++;
+    } finally {
+        serverProc?.Kill();
+    }
+
+    if (failedTests > 0)
+        if (THROW_ON_TEST_FAILURE)
+            throw new Exception ($"There were {failedTests} failed tests.");
+        else
+            Warning ($"There were {failedTests} failed tests.");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -368,9 +450,10 @@ Task ("nuget")
         if (id != null && version != null) {
             var v = GetVersion (id.Value);
             if (!string.IsNullOrEmpty (v)) {
+                if (id.Value.StartsWith("SkiaSharp") || id.Value.StartsWith("HarfBuzzSharp"))
+                    v += suffix;
                 version.Value = v;
             }
-            version.Value += suffix;
         }
 
         // <dependency>
@@ -387,7 +470,9 @@ Task ("nuget")
             if (depId != null && depVersion != null) {
                 var v = GetVersion (depId.Value);
                 if (!string.IsNullOrEmpty (v)) {
-                    depVersion.Value = v + suffix;
+                    if (depId.Value.StartsWith("SkiaSharp") || depId.Value.StartsWith("HarfBuzzSharp"))
+                        v += suffix;
+                    depVersion.Value = v;
                 }
             }
         }

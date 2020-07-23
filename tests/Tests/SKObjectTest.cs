@@ -484,5 +484,121 @@ namespace SkiaSharp.Tests
 			public static DelayedDestructionObject GetObject(IntPtr handle, bool owns = true) =>
 				GetOrAddObject(handle, owns, (h, o) => new DelayedDestructionObject(h, o));
 		}
+
+		[SkippableFact]
+		public void ManagedObjectsAreDisposedBeforeNative()
+		{
+			var parent1 = ParentChildWorld.GetParent("Root");
+			var child1 = parent1.Child;
+
+			parent1.Dispose();
+
+			var unownedParent = ParentChildWorld.DisposeUnownedManagedParent;
+			var unownedChild =  ParentChildWorld.DisposeUnownedManagedChild;
+
+			var managedParent = ParentChildWorld.DisposeManagedParent;
+			var managedChild = ParentChildWorld.DisposeManagedChild;
+
+			var nativeParent = ParentChildWorld.DisposeNativeParent;
+			var nativeChild = ParentChildWorld.DisposeNativeChild;
+
+			Assert.True(child1.IsDisposed);
+			Assert.True(parent1.IsDisposed);
+
+			Assert.Equal("DisposeUnownedManaged", unownedParent.State);
+			Assert.Equal("DisposeUnownedManaged", unownedChild.State);
+
+			Assert.Equal("DisposeUnownedManaged", managedParent.State);
+			Assert.Equal("DisposeUnownedManaged", managedChild.State);
+
+			Assert.Equal("DisposeUnownedManaged", nativeParent.State);
+			Assert.Equal("DisposeUnownedManaged", nativeChild.State);
+
+			unownedParent.Dispose();
+			managedParent.Dispose();
+			nativeParent.Dispose();
+		}
+
+		private static class ParentChildWorld
+		{
+			public static readonly IntPtr ParentHandle = GetNextPtr();
+			public static readonly IntPtr ChildHandle = GetNextPtr();
+
+			public static ParentObject GetParent(string state) =>
+				SKObject.GetOrAddObject(ParentHandle, (h, o) => new ParentObject(state, h, o));
+
+			public static ParentObject DisposeManagedParent;
+			public static ChildObject DisposeManagedChild;
+
+			public static ParentObject DisposeNativeParent;
+			public static ChildObject DisposeNativeChild;
+
+			public static ParentObject DisposeUnownedManagedParent;
+			public static ChildObject DisposeUnownedManagedChild;
+		}
+
+		private class ParentObject : SKObject
+		{
+			public ParentObject(string state, IntPtr handle, bool owns)
+				: base(handle, owns)
+			{
+				State = state;
+			}
+
+			public ChildObject Child =>
+				OwnedBy(GetOrAddObject(ParentChildWorld.ChildHandle, false, (h, o) => new ChildObject(State, h, o)), this);
+
+			public string State { get; }
+
+			protected override void DisposeUnownedManaged()
+			{
+				base.DisposeUnownedManaged();
+
+				if (State == "Root")
+				{
+					ParentChildWorld.DisposeUnownedManagedParent = ParentChildWorld.GetParent("DisposeUnownedManaged");
+					ParentChildWorld.DisposeUnownedManagedChild = ParentChildWorld.DisposeUnownedManagedParent.Child;
+				}
+			}
+
+			protected override void DisposeManaged()
+			{
+				base.DisposeManaged();
+
+				if (State == "Root")
+				{
+					ParentChildWorld.DisposeManagedParent = ParentChildWorld.GetParent("DisposeManaged");
+					ParentChildWorld.DisposeManagedChild = ParentChildWorld.DisposeManagedParent.Child;
+				}
+			}
+
+			protected override void DisposeNative()
+			{
+				base.DisposeNative();
+
+				if (State == "Root")
+				{
+					ParentChildWorld.DisposeNativeParent = ParentChildWorld.GetParent("DisposeNative");
+					ParentChildWorld.DisposeNativeChild = ParentChildWorld.DisposeNativeParent.Child;
+				}
+			}
+
+			public override string ToString() =>
+				$"Parent: {State}";
+		}
+
+		private class ChildObject : SKObject
+		{
+			public ChildObject(string state, IntPtr handle, bool owns)
+				: base(handle, owns)
+			{
+				State = state;
+			}
+
+			public string State { get; }
+
+			public override string ToString() =>
+				$"Child: {State}";
+		}
 	}
 }

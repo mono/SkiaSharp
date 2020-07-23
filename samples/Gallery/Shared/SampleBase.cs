@@ -7,10 +7,10 @@ namespace SkiaSharpSample
 {
 	public abstract class SampleBase
 	{
-		protected SKMatrix Matrix = SKMatrix.MakeIdentity();
+		protected SKMatrix Matrix = SKMatrix.Identity;
 
-		private SKMatrix startPanMatrix = SKMatrix.MakeIdentity();
-		private SKMatrix startPinchMatrix = SKMatrix.MakeIdentity();
+		private SKMatrix startPanMatrix = SKMatrix.Identity;
+		private SKMatrix startPinchMatrix = SKMatrix.Identity;
 		private SKPoint startPinchOrigin = SKPoint.Empty;
 		private float totalPinchScale = 1f;
 
@@ -40,7 +40,7 @@ namespace SkiaSharpSample
 		public async void Init()
 		{
 			// reset the matrix for the new sample
-			Matrix = SKMatrix.MakeIdentity();
+			Matrix = SKMatrix.Identity;
 
 			if (!IsInitialized)
 			{
@@ -91,11 +91,11 @@ namespace SkiaSharpSample
 					startPanMatrix = Matrix;
 					break;
 				case GestureState.Running:
-					var canvasTranslation = SKMatrix.MakeTranslation(translation.X, translation.Y);
+					var canvasTranslation = SKMatrix.CreateTranslation(translation.X, translation.Y);
 					SKMatrix.Concat(ref Matrix, ref canvasTranslation, ref startPanMatrix);
 					break;
 				default:
-					startPanMatrix = SKMatrix.MakeIdentity();
+					startPanMatrix = SKMatrix.Identity;
 					break;
 			}
 		}
@@ -112,14 +112,14 @@ namespace SkiaSharpSample
 				case GestureState.Running:
 					totalPinchScale *= scale;
 					var pinchTranslation = origin - startPinchOrigin;
-					var canvasTranslation = SKMatrix.MakeTranslation(pinchTranslation.X, pinchTranslation.Y);
-					var canvasScaling = SKMatrix.MakeScale(totalPinchScale, totalPinchScale, origin.X, origin.Y);
-					var canvasCombined = SKMatrix.MakeIdentity();
+					var canvasTranslation = SKMatrix.CreateTranslation(pinchTranslation.X, pinchTranslation.Y);
+					var canvasScaling = SKMatrix.CreateScale(totalPinchScale, totalPinchScale, origin.X, origin.Y);
+					var canvasCombined = SKMatrix.Identity;
 					SKMatrix.Concat(ref canvasCombined, ref canvasScaling, ref canvasTranslation);
 					SKMatrix.Concat(ref Matrix, ref canvasCombined, ref startPinchMatrix);
 					break;
 				default:
-					startPinchMatrix = SKMatrix.MakeIdentity();
+					startPinchMatrix = SKMatrix.Identity;
 					startPinchOrigin = SKPoint.Empty;
 					totalPinchScale = 1f;
 					break;

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Tests
 {
@@ -11,10 +10,10 @@ namespace SkiaSharp.Tests
 		protected const string GpuCategory = "GPU";
 		protected const string MatchCharacterCategory = "MatchCharacter";
 
-		protected static bool IsLinux;
-		protected static bool IsMac;
-		protected static bool IsUnix;
-		protected static bool IsWindows;
+		protected static bool IsLinux = PlatformConfiguration.IsLinux;
+		protected static bool IsMac = PlatformConfiguration.IsMac;
+		protected static bool IsUnix = PlatformConfiguration.IsUnix;
+		protected static bool IsWindows = PlatformConfiguration.IsWindows;
 
 		protected static bool IsRuntimeMono;
 
@@ -54,19 +53,6 @@ namespace SkiaSharp.Tests
 			}
 #endif
 
-			// set the OS fields
-#if NET_STANDARD
-			IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-			IsMac = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-			IsUnix = IsLinux || IsMac;
-			IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-#else
-			IsMac = MacPlatformDetector.IsMac.Value;
-			IsUnix = Environment.OSVersion.Platform == PlatformID.Unix || IsMac;
-			IsLinux = IsUnix && !IsMac;
-			IsWindows = !IsUnix;
-#endif
-
 			IsRuntimeMono = Type.GetType("Mono.Runtime") != null;
 
 			// set the test fields
@@ -81,72 +67,6 @@ namespace SkiaSharp.Tests
 		{
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
-		}
-
-		private static class MacPlatformDetector
-		{
-			internal static readonly Lazy<bool> IsMac = new Lazy<bool>(IsRunningOnMac);
-
-			[DllImport("libc")]
-			static extern int uname(IntPtr buf);
-
-			static bool IsRunningOnMac()
-			{
-				IntPtr buf = IntPtr.Zero;
-				try
-				{
-					buf = Marshal.AllocHGlobal(8192);
-					// This is a hacktastic way of getting sysname from uname ()
-					if (uname(buf) == 0)
-					{
-						string os = Marshal.PtrToStringAnsi(buf);
-						if (os == "Darwin")
-							return true;
-					}
-				}
-				catch
-				{
-				}
-				finally
-				{
-					if (buf != IntPtr.Zero)
-						Marshal.FreeHGlobal(buf);
-				}
-				return false;
-			}
-		}
-
-		public static class MacDynamicLibraries
-		{
-			private const string SystemLibrary = "/usr/lib/libSystem.dylib";
-			[DllImport(SystemLibrary)]
-			public static extern IntPtr dlopen(string path, int mode);
-			[DllImport(SystemLibrary)]
-			public static extern IntPtr dlsym(IntPtr handle, string symbol);
-			[DllImport(SystemLibrary)]
-			public static extern void dlclose(IntPtr handle);
-		}
-
-		public static class LinuxDynamicLibraries
-		{
-			private const string SystemLibrary = "libdl.so";
-			[DllImport(SystemLibrary)]
-			public static extern IntPtr dlopen(string path, int mode);
-			[DllImport(SystemLibrary)]
-			public static extern IntPtr dlsym(IntPtr handle, string symbol);
-			[DllImport(SystemLibrary)]
-			public static extern void dlclose(IntPtr handle);
-		}
-
-		public static class WindowsDynamicLibraries
-		{
-			private const string SystemLibrary = "Kernel32.dll";
-			[DllImport(SystemLibrary, SetLastError = true, CharSet = CharSet.Ansi)]
-			public static extern IntPtr LoadLibrary(string lpFileName);
-			[DllImport(SystemLibrary, SetLastError = true, CharSet = CharSet.Ansi)]
-			public static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
-			[DllImport(SystemLibrary, SetLastError = true, CharSet = CharSet.Ansi)]
-			public static extern void FreeLibrary(IntPtr hModule);
 		}
 	}
 }

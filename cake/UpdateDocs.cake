@@ -84,11 +84,18 @@ Task ("docs-api-diff")
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
+    // some libraries depend in SkiaSharp
+    comparer.SearchPaths.Add($"./output/SkiaSharp/nuget/lib/netstandard2.0");
+
+    var filter = new NuGetVersions.Filter {
+        IncludePrerelease = NUGET_DIFF_PRERELEASE
+    };
+
     foreach (var id in TRACKED_NUGETS.Keys) {
         Information ($"Comparing the assemblies in '{id}'...");
 
         var version = GetVersion (id);
-        var latestVersion = (await NuGetVersions.GetLatestAsync (id))?.ToNormalizedString ();
+        var latestVersion = (await NuGetVersions.GetLatestAsync (id, filter))?.ToNormalizedString ();
         Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");
 
         // pre-cache so we can have better logs
@@ -192,6 +199,10 @@ Task ("docs-update-frameworks")
     // generate the temp frameworks.xml
     var xFrameworks = new XElement ("Frameworks");
     foreach (var id in TRACKED_NUGETS.Keys) {
+        // skip doc generatgion for Uno, this is the same as UWP and it is not needed
+        if (id == "SkiaSharp.Views.Uno")
+            continue;
+
         // get the versions
         Information ($"Comparing the assemblies in '{id}'...");
         var allVersions = await NuGetVersions.GetAllAsync (id, new NuGetVersions.Filter {

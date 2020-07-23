@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
-    <TargetFrameworks>net45;netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks>net462;netcoreapp3.0</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>SkiaSharp.Views.Desktop</RootNamespace>
     <AssemblyName>SkiaSharp.Views.WindowsForms</AssemblyName>
@@ -11,7 +11,7 @@
     <PackageReference Include="OpenTK" Version="3.0.1" NoWarn="NU1701" />
     <PackageReference Include="OpenTK.GLControl" Version="3.0.1" NoWarn="NU1701" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>

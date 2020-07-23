@@ -1,34 +1,15 @@
-﻿<Project Sdk="Tizen.NET.Sdk/1.0.8">
+﻿<Project Sdk="Tizen.NET.Sdk/1.0.9">
 
   <PropertyGroup>
     <TargetFramework>tizen40</TargetFramework>
     <OutputType>Exe</OutputType>
     <DefineConstants>$(DefineConstants);__TIZEN__;</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugType>portable</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>None</DebugType>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Tizen\SkiaSharp.Views.Tizen.csproj" />
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Tizen\SkiaSharp.Tizen.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!--
-    <None Include="..\..\..\..\output\native\tizen\i386\libSkiaSharp.so">
-      <Link>tpkroot\bin\runtimes\tizen-x86\native\libSkiaSharp.so</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    -->
-    <None Include="..\..\..\..\output\native\tizen\armel\libSkiaSharp.so">
-      <Link>tpkroot\bin\runtimes\tizen-armel\native\libSkiaSharp.so</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets')" />

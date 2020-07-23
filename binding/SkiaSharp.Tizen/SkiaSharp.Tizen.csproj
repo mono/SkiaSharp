@@ -1,4 +1,4 @@
-﻿<Project Sdk="Tizen.NET.Sdk/1.0.8">
+﻿<Project Sdk="Tizen.NET.Sdk/1.0.9">
   <PropertyGroup>
     <TargetFramework>tizen40</TargetFramework>
     <RootNamespace>SkiaSharp</RootNamespace>
@@ -12,9 +12,9 @@
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\tizen\armel\libSkiaSharp.so" Link="nuget\runtimes\tizen-armel\native\libSkiaSharp.so" />
-    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.so" Link="nuget\runtimes\tizen-x86\native\libSkiaSharp.so" />
-    <None Include="nuget\build\tizen40\SkiaSharp.targets" />
+    <None Include="..\..\output\native\tizen\armel\libSkiaSharp.so" Link="nuget\build\$(TargetFramework)\arm\libSkiaSharp.so" />
+    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.so" Link="nuget\build\$(TargetFramework)\x86\libSkiaSharp.so" />
+    <None Include="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />

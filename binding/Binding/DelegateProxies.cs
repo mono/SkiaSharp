@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -15,7 +16,15 @@ namespace SkiaSharp
 
 	public delegate void SKSurfaceReleaseDelegate (IntPtr address, object context);
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
+	[Obsolete ("Use GRGlGetProcedureAddressDelegate instead.")]
 	public delegate IntPtr GRGlGetProcDelegate (object context, string name);
+
+	public delegate IntPtr GRGlGetProcedureAddressDelegate (string name);
+
+	public delegate IntPtr GRVkGetProcedureAddressDelegate (string name, IntPtr instance, IntPtr device);
+
+	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix);
 
 	internal unsafe static partial class DelegateProxies
 	{
@@ -27,6 +36,8 @@ namespace SkiaSharp
 		public static readonly SKImageTextureReleaseProxyDelegate SKImageTextureReleaseDelegateProxy = SKImageTextureReleaseDelegateProxyImplementation;
 		public static readonly SKSurfaceRasterReleaseProxyDelegate SKSurfaceReleaseDelegateProxy = SKSurfaceReleaseDelegateProxyImplementation;
 		public static readonly GRGlGetProcProxyDelegate GRGlGetProcDelegateProxy = GRGlGetProcDelegateProxyImplementation;
+		public static readonly GRVkGetProcProxyDelegate GRVkGetProcDelegateProxy = GRVkGetProcDelegateProxyImplementation;
+		public static readonly SKGlyphPathProxyDelegate SKGlyphPathDelegateProxy = SKGlyphPathDelegateProxyImplementation;
 
 		// internal proxy implementations
 
@@ -92,10 +103,26 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (GRGlGetProcProxyDelegate))]
-		private static IntPtr GRGlGetProcDelegateProxyImplementation (void* context, string name)
+		private static IntPtr GRGlGetProcDelegateProxyImplementation (void* context, void* name)
 		{
-			var del = Get<GRGlGetProcDelegate> ((IntPtr)context, out _);
-			return del.Invoke (null, name);
+			var del = Get<GRGlGetProcedureAddressDelegate> ((IntPtr)context, out _);
+			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name));
+		}
+
+		[MonoPInvokeCallback (typeof (GRVkGetProcProxyDelegate))]
+		private static IntPtr GRVkGetProcDelegateProxyImplementation (void* context, void* name, IntPtr instance, IntPtr device)
+		{
+			var del = Get<GRVkGetProcedureAddressDelegate> ((IntPtr)context, out _);
+
+			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name), instance, device);
+		}
+
+		[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]
+		private static void SKGlyphPathDelegateProxyImplementation (IntPtr pathOrNull, SKMatrix* matrix, void* context)
+		{
+			var del = Get<SKGlyphPathDelegate> ((IntPtr)context, out _);
+			var path = SKPath.GetObject (pathOrNull, false);
+			del.Invoke (path, *matrix);
 		}
 	}
 }

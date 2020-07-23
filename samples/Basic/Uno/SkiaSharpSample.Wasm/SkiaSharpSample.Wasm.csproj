@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" />
+  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props')" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <WasmHead>true</WasmHead>
+    <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
+    <LangVersion>8.0</LangVersion>
+    <WasmShellILLinkerEnabled>true</WasmShellILLinkerEnabled>
+    <WasmShellForceDisableWSL Condition="'$(OS)' != 'Unix' and ('$(CI)' == 'true' or '$(BUILD_BUILDID)' != '')">true</WasmShellForceDisableWSL>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <MonoRuntimeDebuggerEnabled>true</MonoRuntimeDebuggerEnabled>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <WasmShellMonoRuntimeExecutionMode>Interpreter</WasmShellMonoRuntimeExecutionMode>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <WasmShellMonoRuntimeExecutionMode>FullAOT</WasmShellMonoRuntimeExecutionMode>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
+    <PackageReference Include="Uno.UI" Version="2.4.4" />
+  </ItemGroup>
+  <!-- workaround for https://github.com/unoplatform/Uno.Wasm.Bootstrap/issues/253 -->
+  <ItemGroup Condition=" '$(WasmShellForceDisableWSL)' != 'true' ">
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.9" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.4.0-dev.9" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.Wasm\SkiaSharp.Views.Uno.Wasm.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\**\*" />
+    <EmbeddedResource Include="WasmCSS\*.css" />
+    <EmbeddedResource Include="WasmScripts\*.js" />
+    <LinkerDescriptor Include="LinkerConfig.xml" />
+  </ItemGroup>
+  <Import Project="..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets')" />
+</Project>

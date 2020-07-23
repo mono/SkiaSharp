@@ -3,10 +3,13 @@ parameters:
 
 steps:
   - pwsh: |
-      if ($env:GIT_BRANCH_NAME.StartsWith($env:FEATURE_NAME_PREFIX)) {
-        $feature = $env:GIT_BRANCH_NAME.Substring($env:FEATURE_NAME_PREFIX.Length)
+      $featurePrefix = "refs/heads/$env:FEATURE_NAME_PREFIX"
+      if ($env:BUILD_SOURCEBRANCH.StartsWith($featurePrefix)) {
+        $feature = $env:BUILD_SOURCEBRANCH.Substring($featurePrefix.Length)
         Write-Host "Feature name: $feature"
         Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
+      } else {
+        Write-Host "No feature name."
       }
     displayName: Determine the feature name, if any
   - pwsh: |
@@ -16,10 +19,12 @@ steps:
     displayName: Use a special preview label for PRs
     condition: eq(variables['Build.Reason'], 'PullRequest')
   - pwsh: |
-      $label = "$env:PREVIEW_LABEL"
-      if (-not $label.StartsWith("pr.")) {
-        $label = "build"
+      $label = ""
+      if ($env:BUILD_REASON -ne "PullRequest") {
+        $label = "+" + $env:BUILD_SOURCEBRANCHNAME
       }
-      Write-Host "##vso[build.updatebuildnumber]$env:SKIASHARP_VERSION-$label.$env:BUILD_NUMBER"
+      $label = "$env:SKIASHARP_VERSION-$env:PREVIEW_LABEL.$env:BUILD_NUMBER$label"
+      Write-Host "Build label: $label"
+      Write-Host "##vso[build.updatebuildnumber]$label"
     displayName: Update the build number with a more readable one
     condition: ${{ parameters.updateBuild }}

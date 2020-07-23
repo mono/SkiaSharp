@@ -18,6 +18,17 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public unsafe void StreamLosesOwnershipTddoCodecButIsNotForgotten()
+		{
+			var codec = SKCodec.Create(Path.Combine(PathToImages, "color-wheel.png"));
+
+			for (var i = 0; i < 1000; ++i)
+			{
+				Assert.Equal(SKCodecResult.Success, codec.GetPixels(out _));
+			}
+		}
+
+		[SkippableFact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheCodecWasFinished()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -146,16 +157,34 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void CanCreateStreamCodec ()
+		public void CanCreateStreamCodec()
 		{
-			var stream = new SKFileStream (Path.Combine (PathToImages, "color-wheel.png"));
-			using (var codec = SKCodec.Create (stream)) {
-				Assert.Equal (SKEncodedImageFormat.Png, codec.EncodedFormat);
-				Assert.Equal (128, codec.Info.Width);
-				Assert.Equal (128, codec.Info.Height);
-				Assert.Equal (SKAlphaType.Unpremul, codec.Info.AlphaType);
-				Assert.Equal (SKImageInfo.PlatformColorType, codec.Info.ColorType);
-			}
+			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
+			Assert.True(stream.IsValid);
+
+			using var codec = SKCodec.Create(stream);
+
+			Assert.Equal(SKEncodedImageFormat.Png, codec.EncodedFormat);
+			Assert.Equal(128, codec.Info.Width);
+			Assert.Equal(128, codec.Info.Height);
+			Assert.Equal(SKAlphaType.Unpremul, codec.Info.AlphaType);
+			Assert.Equal(SKImageInfo.PlatformColorType, codec.Info.ColorType);
+		}
+
+		[SkippableFact]
+		public void CanCreateStreamCodecWithResult()
+		{
+			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
+			Assert.True(stream.IsValid);
+
+			using var codec = SKCodec.Create(stream, out var result);
+
+			Assert.Equal(SKCodecResult.Success, result);
+			Assert.Equal(SKEncodedImageFormat.Png, codec.EncodedFormat);
+			Assert.Equal(128, codec.Info.Width);
+			Assert.Equal(128, codec.Info.Height);
+			Assert.Equal(SKAlphaType.Unpremul, codec.Info.AlphaType);
+			Assert.Equal(SKImageInfo.PlatformColorType, codec.Info.ColorType);
 		}
 
 		[SkippableFact]
@@ -265,7 +294,7 @@ namespace SkiaSharp.Tests
 
 					// only decode every second line
 					for	(int y = 0; y < info.Height; y += 2) {
-						Assert.Equal (1, codec.GetScanlines (scanlineBitmap.GetAddr (0, y), 1, info.RowBytes));
+						Assert.Equal (1, codec.GetScanlines (scanlineBitmap.GetAddress (0, y), 1, info.RowBytes));
 						Assert.Equal (y + 1, codec.NextScanline);
 						if (codec.SkipScanlines (1))
 							Assert.Equal (y + 2, codec.NextScanline);
@@ -376,6 +405,14 @@ namespace SkiaSharp.Tests
 			Assert.Equal (codecPixels, bitmapPixels);
 		}
 
+		[SkippableFact]
+		public void CanReadManagedStream()
+		{
+			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
+			using (var codec = SKCodec.Create(stream))
+				Assert.NotNull(codec);
+		}
+
 		[SkippableFact (Skip = "This keeps breaking CI for some reason.")]
 		public async Task DownloadedStream ()
 		{
@@ -392,14 +429,6 @@ namespace SkiaSharp.Tests
 			using (var nonSeekable = new NonSeekableReadOnlyStream (stream))
 			using (var bitmap = SKBitmap.Decode (nonSeekable))
 				Assert.NotNull (bitmap);
-		}
-
-		[SkippableFact]
-		public void CanReadManagedStream()
-		{
-			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
-			using (var codec = SKCodec.Create(stream))
-				Assert.NotNull(codec);
 		}
 
 		[SkippableTheory]

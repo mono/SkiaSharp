@@ -29,7 +29,7 @@ namespace SkiaSharp
 			: this (IntPtr.Zero, true)
 		{
 			var handlePtr = desc.TextureHandle;
-			var oldHandle = PtrToStructure<GRTextureInfoObsolete> (handlePtr);
+			var oldHandle = Marshal.PtrToStructure<GRTextureInfoObsolete> (handlePtr);
 
 			var handle = new GRGlTextureInfo (oldHandle.fTarget, oldHandle.fID, desc.Config.ToGlSizedFormat ());
 			CreateGl (desc.Width, desc.Height, false, handle);
@@ -41,9 +41,24 @@ namespace SkiaSharp
 			CreateGl (width, height, mipmapped, glInfo);
 		}
 
+		public GRBackendTexture (int width, int height, GRVkImageInfo vkInfo)
+			: this (IntPtr.Zero, true)
+		{
+			CreateVulkan (width, height, vkInfo);
+		}
+
 		private void CreateGl (int width, int height, bool mipmapped, GRGlTextureInfo glInfo)
 		{
 			Handle = SkiaApi.gr_backendtexture_new_gl (width, height, mipmapped, &glInfo);
+
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
+			}
+		}
+
+		private void CreateVulkan (int width, int height, GRVkImageInfo vkInfo)
+		{
+			Handle = SkiaApi.gr_backendtexture_new_vulkan (width, height, &vkInfo);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
@@ -60,7 +75,7 @@ namespace SkiaSharp
 		public int Width => SkiaApi.gr_backendtexture_get_width (Handle);
 		public int Height => SkiaApi.gr_backendtexture_get_height (Handle);
 		public bool HasMipMaps => SkiaApi.gr_backendtexture_has_mipmaps (Handle);
-		public GRBackend Backend => SkiaApi.gr_backendtexture_get_backend (Handle);
+		public GRBackend Backend => SkiaApi.gr_backendtexture_get_backend (Handle).FromNative ();
 		public SKSizeI Size => new SKSizeI (Width, Height);
 		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 

@@ -1,5 +1,4 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
-DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/linuxnodeps"));
 
 #load "../../cake/shared.cake"
 
@@ -8,14 +7,9 @@ Task("libSkiaSharp")
     .Does(() =>
 {
     RunCake("../linux/build.cake", "libSkiaSharp", new Dictionary<string, string> {
-        { "variant", "linuxnodeps" },
-        { "gn", "skia_use_fontconfig=false" },
+        { "gnArgs", "skia_use_fontconfig=false " + ADDITIONAL_GN_ARGS },
+        { "verifyExcluded", "fontconfig" },
     });
-
-    RunProcess("ldd", OUTPUT_PATH.CombineWithFilePath($"x64/libSkiaSharp.so").FullPath, out var stdout);
-
-    if (stdout.Any(o => o.Contains("fontconfig")))
-        throw new Exception("libSkiaSharp.so contained a dependency on fontconfig.");
 });
 
 Task("libHarfBuzzSharp")
@@ -23,13 +17,9 @@ Task("libHarfBuzzSharp")
     .Does(() =>
 {
     RunCake("../linux/build.cake", "libHarfBuzzSharp", new Dictionary<string, string> {
-        { "variant", "linuxnodeps" },
+        { "gnArgs", ADDITIONAL_GN_ARGS },
+        { "verifyExcluded", "fontconfig" },
     });
-
-    RunProcess("ldd", OUTPUT_PATH.CombineWithFilePath($"x64/libHarfBuzzSharp.so").FullPath, out var stdout);
-
-    if (stdout.Any(o => o.Contains("fontconfig")))
-        throw new Exception("libHarfBuzzSharp.so contained a dependency on fontconfig.");
 });
 
 Task("Default")

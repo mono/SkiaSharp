@@ -94,28 +94,28 @@ namespace SkiaSharp
 		public readonly byte GetAddr1 (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
-				return SkiaApi.sk_mask_get_addr_1 (t, x, y);
+				return *SkiaApi.sk_mask_get_addr_1 (t, x, y);
 			}
 		}
 
 		public readonly byte GetAddr8 (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
-				return SkiaApi.sk_mask_get_addr_8 (t, x, y);
+				return *SkiaApi.sk_mask_get_addr_8 (t, x, y);
 			}
 		}
 
 		public readonly UInt16 GetAddr16 (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
-				return SkiaApi.sk_mask_get_addr_lcd_16 (t, x, y);
+				return *SkiaApi.sk_mask_get_addr_lcd_16 (t, x, y);
 			}
 		}
 
 		public readonly UInt32 GetAddr32 (int x, int y)
 		{
 			fixed (SKMask* t = &this) {
-				return SkiaApi.sk_mask_get_addr_32 (t, x, y);
+				return *SkiaApi.sk_mask_get_addr_32 (t, x, y);
 			}
 		}
 

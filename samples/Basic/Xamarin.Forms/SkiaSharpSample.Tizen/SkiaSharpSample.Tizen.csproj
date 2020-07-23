@@ -1,18 +1,10 @@
-<Project Sdk="Tizen.NET.Sdk/1.0.8">
+<Project Sdk="Tizen.NET.Sdk/1.0.9">
 
   <PropertyGroup>
     <TargetFramework>tizen40</TargetFramework>
     <OutputType>Exe</OutputType>
     <DefineConstants>$(DefineConstants);__TIZEN__;</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugType>portable</DebugType>
-    <OutputPath>bin\Debug\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>None</DebugType>
-    <OutputPath>bin\Release\</OutputPath>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="4.4.0.991757" />
+    <PackageReference Include="Xamarin.Forms" Version="4.5.0.725" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,19 +20,6 @@
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SkiaSharp.Views.Forms.Tizen.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Tizen\SkiaSharp.Views.Tizen.csproj" />
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Tizen\SkiaSharp.Tizen.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!--
-    <None Include="..\..\..\..\output\native\tizen\i386\libSkiaSharp.so">
-      <Link>tpkroot\bin\runtimes\tizen-x86\native\libSkiaSharp.so</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    -->
-    <None Include="..\..\..\..\output\native\tizen\armel\libSkiaSharp.so">
-      <Link>tpkroot\bin\runtimes\tizen-armel\native\libSkiaSharp.so</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets')" />

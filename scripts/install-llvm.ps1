@@ -1,12 +1,14 @@
 Param(
-    [string] $Version = "9.0.0"
+    [string] $Version = "10.0.0"
 )
 
 $ErrorActionPreference = 'Stop'
 
-$url = "http://releases.llvm.org/${Version}/LLVM-${Version}-win64.exe"
+$HOME_DIR = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
 
-$llvmTemp = "$HOME/llvm-temp"
+$url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-${Version}/LLVM-${Version}-win64.exe"
+
+$llvmTemp = "$HOME_DIR/llvm-temp"
 $install = "$llvmTemp/llvm.exe"
 
 # download

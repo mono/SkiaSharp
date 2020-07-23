@@ -75,12 +75,25 @@
       <_VersionPackagingGroup>$(PackagingGroup.Split('.')[0])</_VersionPackagingGroup>
       <_VersionAssemblyPattern>^$(_VersionPackagingGroup)\s*assembly\s*(.*)$</_VersionAssemblyPattern>
       <_VersionFilePattern>^$(_VersionPackagingGroup)\s*file\s*(.*)$</_VersionFilePattern>
+      <_VersionMilestonePattern>^lib$(_VersionPackagingGroup)\s*milestone\s*(.*)$</_VersionMilestonePattern>
+      <_VersionIncrementPattern>^lib$(_VersionPackagingGroup)\s*increment\s*(.*)$</_VersionIncrementPattern>
       <_VersionAssemblyMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionAssemblyPattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionAssemblyMatch>
       <_VersionFileMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionFilePattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionFileMatch>
+      <_VersionMilestoneMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionMilestonePattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionMilestoneMatch>
+      <_VersionIncrementMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionIncrementPattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionIncrementMatch>
       <_VersionGeneratedContents>
 [assembly: System.Reflection.AssemblyVersion("$(_VersionAssemblyMatch)")]
 [assembly: System.Reflection.AssemblyFileVersion("$(_VersionFileMatch)")]
 [assembly: System.Reflection.AssemblyInformationalVersion("$(_VersionFileMatch)$(_VersionGitSha)")]
+
+internal partial class VersionConstants {
+    public const string AssemblyVersion = "$(_VersionAssemblyMatch)"%3B
+    public const string AssemblyFileVersion = "$(_VersionFileMatch)"%3B
+    public const string AssemblyInformationalVersion = "$(_VersionFileMatch)$(_VersionGitSha)"%3B
+    public const string GitSha = "$(_VersionGitSha)"%3B
+    public const int Milestone = 0$(_VersionMilestoneMatch)%3B
+    public const int Increment = 0$(_VersionIncrementMatch)%3B
+}
       </_VersionGeneratedContents>
     </PropertyGroup>
     <WriteLinesToFile Condition=" !Exists('$(_VersionSourceFile)') or '$([System.IO.File]::ReadAllText($(_VersionSourceFile)).Trim())' != '$(_VersionGeneratedContents.Trim())' "
@@ -171,7 +184,7 @@
           SourceFiles="@(_CopyItems)"
           DestinationFiles="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(PackagingGroup)\%(Dest)')"
           ContinueOnError="false"
-          Retries="0" />
+          Retries="3" />
   </Target>
 
   <!--

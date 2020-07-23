@@ -36,6 +36,8 @@ namespace SkiaSharp
 
 		static SKObject ()
 		{
+			SkiaSharpVersion.CheckNativeLibraryCompatible (true);
+
 			SKColorSpace.EnsureStaticInstanceAreInitialized ();
 			SKData.EnsureStaticInstanceAreInitialized ();
 			SKFontManager.EnsureStaticInstanceAreInitialized ();
@@ -63,11 +65,22 @@ namespace SkiaSharp
 			}
 		}
 
+		protected override void DisposeUnownedManaged ()
+		{
+			if (ownedObjects != null) {
+				foreach (var child in ownedObjects) {
+					if (child.Value is SKObject c && !c.OwnsHandle)
+						c.DisposeInternal ();
+				}
+			}
+		}
+
 		protected override void DisposeManaged ()
 		{
 			if (ownedObjects != null) {
 				foreach (var child in ownedObjects) {
-					child.Value?.DisposeInternal ();
+					if (child.Value is SKObject c && c.OwnsHandle)
+						c.DisposeInternal ();
 				}
 				ownedObjects.Clear ();
 			}
@@ -191,36 +204,22 @@ namespace SkiaSharp
 			return owner;
 		}
 
-		internal static int SizeOf<T> () =>
-#if WINDOWS_UWP || NET_STANDARD
-			Marshal.SizeOf<T> ();
-#else
-			Marshal.SizeOf (typeof (T));
-#endif
-
-		internal static T PtrToStructure<T> (IntPtr intPtr) =>
-#if WINDOWS_UWP || NET_STANDARD
-			Marshal.PtrToStructure<T> (intPtr);
-#else
-			(T)Marshal.PtrToStructure (intPtr, typeof (T));
-#endif
-
 		internal static T[] PtrToStructureArray<T> (IntPtr intPtr, int count)
 		{
 			var items = new T[count];
-			var size = SizeOf<T> ();
+			var size = Marshal.SizeOf<T> ();
 			for (var i = 0; i < count; i++) {
 				var newPtr = new IntPtr (intPtr.ToInt64 () + (i * size));
-				items[i] = PtrToStructure<T> (newPtr);
+				items[i] = Marshal.PtrToStructure<T> (newPtr);
 			}
 			return items;
 		}
 
 		internal static T PtrToStructure<T> (IntPtr intPtr, int index)
 		{
-			var size = SizeOf<T> ();
+			var size = Marshal.SizeOf<T> ();
 			var newPtr = new IntPtr (intPtr.ToInt64 () + (index * size));
-			return PtrToStructure<T> (newPtr);
+			return Marshal.PtrToStructure<T> (newPtr);
 		}
 	}
 
@@ -256,6 +255,11 @@ namespace SkiaSharp
 
 		protected internal bool IsDisposed => isDisposed == 1;
 
+		protected virtual void DisposeUnownedManaged ()
+		{
+			// dispose of any managed resources that are not actually owned
+		}
+
 		protected virtual void DisposeManaged ()
 		{
 			// dispose of any managed resources
@@ -271,9 +275,15 @@ namespace SkiaSharp
 			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
 				return;
 
+			// dispose any objects that are owned/created by native code
+			if (disposing)
+				DisposeUnownedManaged ();
+
+			// destroy the native object
 			if (Handle != IntPtr.Zero && OwnsHandle)
 				DisposeNative ();
 
+			// dispose any remaining managed-created objects
 			if (disposing)
 				DisposeManaged ();
 

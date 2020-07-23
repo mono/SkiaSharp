@@ -16,7 +16,7 @@ HarfBuzzSharp is a cross-platform OpenType text shaping engine for .NET platform
 Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release notes.
     </releaseNotes>
     <projectUrl>https://go.microsoft.com/fwlink/?linkid=868515</projectUrl>
-    <iconUrl>https://go.microsoft.com/fwlink/?linkid=868516</iconUrl>
+    <iconUrl>https://go.microsoft.com/fwlink/?linkid=2130524</iconUrl>
     <tags>xamarin text harfbuzz ios android linux windows uwp tvos macos tizen cross-platform harfbuzzsharp</tags>
 
     <!-- legal -->
@@ -27,22 +27,30 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
 
     <dependencies>
-      <dependency id="HarfBuzzSharp" version="1.0.0" />
+      <group targetFramework="net462">
+        <dependency id="HarfBuzzSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="netstandard1.3">
+        <dependency id="HarfBuzzSharp" version="1.0.0" />
+      </group>
     </dependencies>
 
   </metadata>
   <files>
 
     <!-- the build bits -->
-    <file src="build/net45/HarfBuzzSharp.targets" target="build/net45/HarfBuzzSharp.NativeAssets.Linux.targets" />
-    <file src="build/net45/HarfBuzzSharp.targets" target="buildTransitive/net45/HarfBuzzSharp.NativeAssets.Linux.targets" />
+    <file src="build/net462/HarfBuzzSharp.targets" target="build/net462/HarfBuzzSharp.NativeAssets.Linux.targets" />
+    <file src="build/net462/HarfBuzzSharp.targets" target="buildTransitive/net462/HarfBuzzSharp.NativeAssets.Linux.targets" />
 
     <!-- harfbuzz.dll and other native files -->
     <file platform="linux" src="runtimes/linux-x64/native/libHarfBuzzSharp.so" />
+    <file platform="linux" src="runtimes/linux-arm/native/libHarfBuzzSharp.so" />
+    <file platform="linux" src="runtimes/linux-arm64/native/libHarfBuzzSharp.so" />
+    <file platform="linux" src="runtimes/linux-musl-x64/native/libHarfBuzzSharp.so" />
 
     <!-- placeholders -->
-    <file src="_._" target="lib/net45/_._" />
-    <file src="_._" target="lib/netstandard/_._" />
+    <file src="_._" target="lib/net462/_._" />
+    <file src="_._" target="lib/netstandard1.3/_._" />
 
     <!-- legal -->
     <file src="LICENSE.txt" />

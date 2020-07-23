@@ -1,6 +1,6 @@
 ﻿using Android.App;
 using Android.OS;
-using Android.Support.V7.App;
+using AndroidX.AppCompat.App;
 
 using SkiaSharp;
 using SkiaSharp.Views.Android;
@@ -16,11 +16,23 @@ namespace SkiaSharpSample
 		{
 			base.OnCreate(savedInstanceState);
 
-			SetContentView(Resource.Layout.Main);
+			SetContentView(Resource.Layout.main);
 
 			skiaView = FindViewById<SKCanvasView>(Resource.Id.skiaView);
+		}
+
+		protected override void OnResume()
+		{
+			base.OnResume();
 
 			skiaView.PaintSurface += OnPaintSurface;
+		}
+
+		protected override void OnPause()
+		{
+			skiaView.PaintSurface -= OnPaintSurface;
+
+			base.OnPause();
 		}
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -49,12 +61,6 @@ namespace SkiaSharpSample
 			};
 			var coord = new SKPoint(scaledSize.Width / 2, (scaledSize.Height + paint.TextSize) / 2);
 			canvas.DrawText("SkiaSharp", coord, paint);
-		}
-
-		protected override void OnDestroy()
-		{
-			skiaView.PaintSurface -= OnPaintSurface;
-			base.OnDestroy();
 		}
 	}
 }

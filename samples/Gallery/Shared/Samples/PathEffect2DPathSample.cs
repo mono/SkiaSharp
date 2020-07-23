@@ -27,9 +27,9 @@ namespace SkiaSharpSample.Samples
 			path.AddRect(rect);
 
 			// move the path around: across 1 block
-			var offsetMatrix = SKMatrix.MakeScale(2 * blockSize, blockSize);
+			var offsetMatrix = SKMatrix.CreateScale(2 * blockSize, blockSize);
 			// each row, move across a bit / offset
-			SKMatrix.PreConcat(ref offsetMatrix, SKMatrix.MakeSkew(0.5f, 0));
+			offsetMatrix = SKMatrix.Concat(offsetMatrix, SKMatrix.CreateSkew(0.5f, 0));
 
 			// create the paint
 			var paint = new SKPaint

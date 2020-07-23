@@ -163,5 +163,59 @@ namespace SkiaSharp.Tests
 				}
 			}
 		}
+
+		[SkippableTheory]
+		// too old
+		[InlineData("80.0", "0.0", "[80.0, 81.0)")]
+		// same version
+		[InlineData("68.0", "68.0")]
+		// older C API
+		[InlineData("68.3", "68.0", "[68.3, 69.0)")]
+		[InlineData("68.3", "68.2", "[68.3, 69.0)")]
+		// older skia milestone
+		[InlineData("68.0", "60.0", "[68.0, 69.0)")]
+		[InlineData("68.3", "60.0", "[68.3, 69.0)")]
+		[InlineData("68.3", "60.3", "[68.3, 69.0)")]
+		[InlineData("68.3", "60.9", "[68.3, 69.0)")]
+		// newer skia milestone
+		[InlineData("68.0", "80.0", "[68.0, 69.0)")]
+		[InlineData("68.3", "80.0", "[68.3, 69.0)")]
+		[InlineData("68.0", "80.3", "[68.0, 69.0)")]
+		[InlineData("68.3", "80.3", "[68.3, 69.0)")]
+		// newer C API
+		[InlineData("80.0", "80.0")]
+		[InlineData("80.0", "80.1")]
+		[InlineData("80.0", "80.2")]
+		[InlineData("80.0", "80.4")]
+		[InlineData("80.0", "80.9")]
+		// possibly bad compliations
+		[InlineData("0.0", "80.0")]
+		[InlineData("0.0", "0.0")]
+		public void CheckNativeLibraryCompatible(string minimum, string current, string exception = null)
+		{
+			var m = new Version(minimum);
+			var c = new Version(current);
+
+			var compatible = exception == null;
+
+			Assert.Equal(compatible, SkiaSharpVersion.CheckNativeLibraryCompatible(m, c));
+			if (!compatible)
+			{
+				var ex = Assert.Throws<InvalidOperationException>(() => SkiaSharpVersion.CheckNativeLibraryCompatible(m, c, true));
+				Assert.Contains(exception, ex.Message);
+			}
+		}
+
+		[SkippableFact]
+		public void TestLibraryVersions()
+		{
+			Assert.True(SkiaSharpVersion.CheckNativeLibraryCompatible());
+		}
+
+		[SkippableFact]
+		public void TestVersionsString()
+		{
+			Assert.Equal(SkiaSharpVersion.Native.ToString(2), SkiaSharpVersion.NativeString);
+		}
 	}
 }

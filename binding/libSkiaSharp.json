@@ -4,6 +4,7 @@
   "namespace": "SkiaSharp",
   "className": "SkiaApi",
   "includeDirs": [
+    "."
   ],
   "headers": {
     "include/c": [ "sk_*", "gr_*" ],
@@ -16,6 +17,9 @@
   "mappings": {
     "types": {
       // type aliases
+      "gr_vk_backendmemory_t": {
+        "cs": "IntPtr"
+      },
       "sk_color_t": {
         "cs": "UInt32"
       },
@@ -29,16 +33,25 @@
         "cs": "UInt32"
       },
       // the rest
+      "gr_vk_imageinfo_t": {
+        "cs": "GRVkImageInfo"
+      },
+      "gr_vk_ycbcrconversioninfo_t": {
+        "cs": "GrVkYcbcrConversionInfo"
+      },
       "gr_pixelconfig_t": {
-        "cs": "GRPixelConfig"
+        "cs": "GRPixelConfigNative",
+        "internal": true
       },
       "gr_surfaceorigin_t": {
         "cs": "GRSurfaceOrigin"
       },
       "gr_backend_t": {
+        "cs": "GRBackendNative",
         "members": {
           "OPENGL_GR_BACKEND": "OpenGL"
-        }
+        },
+        "internal": true
       },
       "gr_gl_framebufferinfo_t": {
         "cs": "GRGlFramebufferInfo",
@@ -51,6 +64,10 @@
         "members": {
           "fID": "Id"
         }
+      },
+      "gr_vk_backendcontext_t": {
+        "cs": "GRVkBackendContextNative",
+        "internal": true
       },
       "sk_color4f_t": {
         "cs": "SKColorF",
@@ -68,8 +85,15 @@
       "sk_colorspace_transfer_fn_t": {
         "cs": "SKColorSpaceTransferFn"
       },
-      "sk_colorspaceprimaries_t": {
+      "sk_colorspace_primaries_t": {
         "cs": "SKColorSpacePrimaries"
+      },
+      "sk_colorspace_xyz_t": {
+        "cs": "SKColorSpaceXyz",
+        "properties": false
+      },
+      "sk_colorspace_icc_profile_t": {
+        "cs": "SKColorSpaceIccProfile"
       },
       "sk_jpegencoder_alphaoption_t": {
         "cs": "SKJpegEncoderAlphaOption"
@@ -114,7 +138,8 @@
         "cs": "SKAlphaType"
       },
       "sk_colortype_t": {
-        "cs": "SKColorType"
+        "cs": "SKColorTypeNative",
+        "internal": true
       },
       "sk_rsxform_t": {
         "cs": "SKRotationScaleMatrix"
@@ -324,8 +349,16 @@
       "gr_gl_get_proc": {
         "cs": "GRGlGetProcProxyDelegate",
         "parameters": {
-          "-1": "IntPtr",
-          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+          "-1": "IntPtr"
+        }
+      },
+      "gr_vk_func_ptr": {
+        "convention": "stdcall"
+      },
+      "gr_vk_get_proc": {
+        "cs": "GRVkGetProcProxyDelegate",
+        "parameters": {
+          "-1": "IntPtr"
         }
       },
       "sk_managedwstream_write_proc": {
@@ -346,6 +379,17 @@
           "1": "[MarshalAs (UnmanagedType.LPStr)] String"
         }
       },
+      "gr_vk_extensions_has_extension": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "gr_vk_extensions_init": {
+        "parameters": {
+          "6": "[MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[]",
+          "8": "[MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[]"
+        }
+      },
       "sk_fontmgr_match_family": {
         "parameters": {
           "1": "[MarshalAs (UnmanagedType.LPStr)] String"
@@ -362,7 +406,7 @@
           "3": "[MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[]"
         }
       },
-      "sk_typeface_create_from_name_with_font_style": {
+      "sk_typeface_create_from_name": {
         "parameters": {
           "0": "[MarshalAs (UnmanagedType.LPStr)] String"
         }

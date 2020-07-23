@@ -144,7 +144,7 @@ namespace SkiaSharp
 			if (renderTarget == null)
 				throw new ArgumentNullException (nameof (renderTarget));
 
-			return GetObject (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND TEXTURE surface
@@ -197,7 +197,7 @@ namespace SkiaSharp
 			if (texture == null)
 				throw new ArgumentNullException (nameof (texture));
 
-			return GetObject (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND TEXTURE AS RENDER TARGET surface
@@ -250,7 +250,7 @@ namespace SkiaSharp
 			if (texture == null)
 				throw new ArgumentNullException (nameof (texture));
 
-			return GetObject (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			return GetObject (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU NEW surface
@@ -267,7 +267,7 @@ namespace SkiaSharp
 			Create (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft, null, false);
 
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin) =>
-			Create (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft, null, false);
+			Create (context, budgeted, info, sampleCount, origin, null, false);
 
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, SKSurfaceProperties props) =>
 			Create (context, budgeted, info, 0, GRSurfaceOrigin.BottomLeft, props, false);
@@ -311,6 +311,9 @@ namespace SkiaSharp
 
 		public SKImage Snapshot () =>
 			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot (Handle));
+
+		public SKImage Snapshot (SKRectI bounds) =>
+			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot_with_crop (Handle, &bounds));
 
 		public void Draw (SKCanvas canvas, float x, float y, SKPaint paint)
 		{

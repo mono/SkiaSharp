@@ -7,7 +7,8 @@ if ($Platform -eq "") {
     $Platform = if ($IsLinux -or $IsMacOS) { "linux" } else { "windows" }
 }
 
-$name = "skiasharp_webapi"
+$tag = "skiasharpsample/webapi"
+$name = "skiasharpsample-webapi"
 
 # we can only do --platform with Experimental=true
 $buildPlatform = ""
@@ -16,15 +17,14 @@ if ($isExperimental -eq "true") {
     $buildPlatform = "--platform=$Platform"
 }
 
-# build the container
 docker stop $name
 docker rm $name
-docker build $buildPlatform --tag $name --file "$Platform.Dockerfile" .
+
+# build the container
+docker build $buildPlatform --tag $tag --file "$Platform.Dockerfile" .
 
 # run
-docker stop $name
-docker rm $name
-docker run --detach --name $name --publish "80:80" $name
+docker run --detach --name $name --publish "80:80" $tag
 
 # get the IP so we can talk
 $ip = docker inspect -f "{{ .NetworkSettings.Networks.nat.IPAddress }}" $name

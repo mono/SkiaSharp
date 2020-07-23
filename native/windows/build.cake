@@ -3,6 +3,9 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 DirectoryPath LLVM_HOME = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Program Files/LLVM");
 
+string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
+bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
+
 #load "../../cake/native-shared.cake"
 #load "../../cake/msbuild.cake"
 
@@ -15,20 +18,31 @@ Task("libSkiaSharp")
 {
     Build("Win32", "x86", "x86");
     Build("x64", "x64", "x64");
+    Build("ARM64", "arm64", "ARM64");
 
     void Build(string arch, string skiaArch, string dir)
     {
         if (Skip(arch)) return;
 
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
+        var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
-            $"is_official_build=true skia_enable_tools=false " +
-            $"target_os='win' target_cpu='{skiaArch}' " +
+            $"target_os='win'" +
+            $"target_cpu='{skiaArch}' " +
+            $"skia_enable_fontmgr_win_gdi=false " +
+            $"skia_use_dng_sdk=true " +
+            $"skia_use_icu=false " +
+            $"skia_use_piex=true " +
+            $"skia_use_sfntly=false " +
+            $"skia_use_system_expat=false " +
+            $"skia_use_system_libjpeg_turbo=false " +
+            $"skia_use_system_libpng=false " +
+            $"skia_use_system_libwebp=false " +
+            $"skia_use_system_zlib=false " +
+            $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             clang +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true " +
-            $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT', '/EHsc', '/Z7' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '-D_HAS_AUTO_PTR_ETC=1' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL' ] " +
             ADDITIONAL_GN_ARGS);
 
@@ -45,6 +59,7 @@ Task("libHarfBuzzSharp")
 {
     Build("Win32", "x86");
     Build("x64", "x64");
+    Build("ARM64", "arm64");
 
     void Build(string arch, string dir)
     {

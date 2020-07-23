@@ -20,6 +20,7 @@ SkiaSharp provides cross-platform bindings for:
  - Xamarin.Mac
  - Windows Classic Desktop (Windows.Forms / WPF)
  - Windows UWP (Desktop / Mobile / Xbox / HoloLens)
+ - Web Assembly (WASM)
 
 The [API Documentation](https://docs.microsoft.com/en-us/dotnet/api/SkiaSharp/) is
 available on the web to browse.
@@ -53,6 +54,6 @@ However, these are easy to install as they are found on the various websites. If
 
 Here are some links to show the differences in our code as compared to Google's code.
 
-What version are we on? [**m68**](https://github.com/google/skia/tree/chrome/m68)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m68)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m68...mono:xamarin-mobile-bindings)  
+What version are we on? [**m80**](https://github.com/google/skia/tree/chrome/m80)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m80)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m80...mono:xamarin-mobile-bindings)  
