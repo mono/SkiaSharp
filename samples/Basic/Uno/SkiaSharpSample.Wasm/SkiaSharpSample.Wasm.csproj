@@ -24,11 +24,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
     <PackageReference Include="Uno.UI" Version="2.4.4" />
-  </ItemGroup>
-  <!-- workaround for https://github.com/unoplatform/Uno.Wasm.Bootstrap/issues/253 -->
-  <ItemGroup Condition=" '$(WasmShellForceDisableWSL)' != 'true' ">
-    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.9" />
-    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.4.0-dev.9" />
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.12" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.4.0-dev.12" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
@@ -40,5 +37,5 @@
     <EmbeddedResource Include="WasmScripts\*.js" />
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
-  <Import Project="..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets')" />
+  <Import Project="..\..\..\..\output\SkiaSharp.Views.Uno.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.WebAssembly.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.Views.Uno.WebAssembly\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.WebAssembly.targets')" />
 </Project>
