@@ -126,9 +126,9 @@ namespace SkiaSharp.Views.Forms
 			switch (evt.Pointer.PointerDeviceType)
 			{
 				case PointerDeviceType.Pen:
-					var isEraser = false;
-					isEraser |= pointerPoint?.Properties?.IsInverted == true;
-					isEraser |= pointerPoint?.Properties?.IsEraser == true;
+					var isEraser =
+						pointerPoint?.Properties?.IsInverted == true ||
+						pointerPoint?.Properties?.IsEraser == true;
 
 					device = isEraser ? SKTouchDeviceType.Eraser : SKTouchDeviceType.Pen;
 					break;
