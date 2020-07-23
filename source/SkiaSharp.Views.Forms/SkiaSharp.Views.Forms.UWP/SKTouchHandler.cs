@@ -113,7 +113,7 @@ namespace SkiaSharp.Views.Forms
 			var device = GetTouchDevice(evt, pointerPoint);
 
 			var wheelDelta = pointerPoint?.Properties?.MouseWheelDelta ?? 0;
-			var pressure = pointerPoint?.Properties?.Pressure ?? 1;
+			var pressure = pointerPoint?.Properties?.Pressure ?? 0.5;
 
 			var args = new SKTouchEventArgs(id, touchActionType, mouse, device, skPoint, evt.Pointer.IsInContact, wheelDelta, pressure);
 			onTouchAction(args);
