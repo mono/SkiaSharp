@@ -13,6 +13,11 @@ namespace SkiaSharp.Views.Forms
 	{
 		private DispatcherTimer renderTimer;
 
+		protected override SKNativeView CreateNativeControl() =>
+			GetType() == typeof(SKGLViewRenderer)
+				? new SKNativeView()
+				: base.CreateNativeControl();
+
 		protected override void SetupRenderLoop(bool oneShot)
 		{
 			// only start if we haven't already
