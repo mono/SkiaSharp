@@ -102,9 +102,9 @@ namespace SkiaSharpSample
 			}
 		}
 
-		private void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)
+		private void OnPaintCanvas(object sender, SKPaintGLSurfaceEventArgs e)
 		{
-			OnPaintSurface(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+			OnPaintSurface(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
 		}
 
 		private void SetSample(SampleBase newSample)
