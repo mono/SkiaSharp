@@ -20,6 +20,7 @@ namespace SkiaSharp.Views.UWP
 		private static bool designMode = DesignMode.DesignModeEnabled;
 
 		private bool isVisible = true;
+		private bool enableRenderLoop = false;
 
 		// workaround for https://github.com/mono/SkiaSharp/issues/1118
 		private int loadUnloadCounter = 0;
@@ -57,19 +58,22 @@ namespace SkiaSharp.Views.UWP
 			set => throw new NotImplementedException();
 		}
 
-		[NotImplemented]
 		public bool EnableRenderLoop
 		{
-			get => throw new NotImplementedException();
-			set => throw new NotImplementedException();
+			get => enableRenderLoop;
+			set
+			{
+				if (enableRenderLoop != value)
+				{
+					enableRenderLoop = value;
+					DoEnableRenderLoop(enableRenderLoop);
+				}
+			}
 		}
 
 		public new void Invalidate()
 		{
-			if (Dispatcher.HasThreadAccess)
-				DoInvalidate();
-			else
-				_ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
+			_ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
 		}
 
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
@@ -129,5 +133,7 @@ namespace SkiaSharp.Views.UWP
 		partial void DoLoaded();
 
 		partial void DoUnloaded();
+
+		partial void DoEnableRenderLoop(bool enable);
 	}
 }
