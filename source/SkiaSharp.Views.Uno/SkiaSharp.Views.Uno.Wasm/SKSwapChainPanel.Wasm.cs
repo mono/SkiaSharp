@@ -42,6 +42,12 @@ namespace SkiaSharp.Views.UWP
 			Invalidate();
 		}
 
+		partial void DoEnableRenderLoop(bool enable) =>
+			jsInterop.SetEnableRenderLoop(enable);
+
+		//partial void DoUpdateBounds() =>
+		//	jsInterop.ResizeCanvas();
+
 		private void DoInvalidate()
 		{
 			if (designMode)
@@ -53,7 +59,7 @@ namespace SkiaSharp.Views.UWP
 			if ((int)ActualWidth <= 0 || (int)ActualHeight <= 0)
 				return;
 
-			jsInterop.RequestAnimationFrame();
+			jsInterop.RequestAnimationFrame(EnableRenderLoop);
 		}
 
 		internal void RenderFrame()
@@ -146,8 +152,14 @@ namespace SkiaSharp.Views.UWP
 			public void RenderFrame() =>
 				Panel.RenderFrame();
 
-			public void RequestAnimationFrame() =>
-				WebAssemblyRuntime.InvokeJSWithInterop($"{this}.requestAnimationFrame();");
+			public void RequestAnimationFrame(bool renderLoop) =>
+				WebAssemblyRuntime.InvokeJSWithInterop($"{this}.requestAnimationFrame({(renderLoop ? "true" : "false")});");
+
+			public void SetEnableRenderLoop(bool enable) =>
+				WebAssemblyRuntime.InvokeJSWithInterop($"{this}.setEnableRenderLoop({(enable ? "true" : "false")});");
+
+			public void ResizeCanvas() =>
+				WebAssemblyRuntime.InvokeJSWithInterop($"{this}.resizeCanvas();");
 
 			public JsInfo CreateContext()
 			{

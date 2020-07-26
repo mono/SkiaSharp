@@ -30,6 +30,8 @@
                     this.managedHandle = managedHandle;
                     this.canvas = undefined;
                     this.jsInfo = undefined;
+                    this.renderLoop = false;
+                    this.currentRequest = 0;
                 }
 
                 // JSObject
@@ -43,16 +45,54 @@
                     delete SKSwapChainPanel.activeInstances[jsHandle];
                 }
 
-                requestAnimationFrame() {
-                    if (this.canvas) {
-                        var scale = window.devicePixelRatio || 1;
-                        this.canvas.width = this.canvas.clientWidth * scale;
-                        this.canvas.height = this.canvas.clientHeight * scale;
-                    }
+                requestAnimationFrame(renderLoop) {
+                    // optionally update the render loop
+                    if (renderLoop !== undefined && this.renderLoop !== renderLoop)
+                        this.setEnableRenderLoop(renderLoop);
 
-                    window.requestAnimationFrame(() => {
+                    // skip because we have a render loop
+                    if (this.currentRequest !== 0)
+                        return;
+
+                    // make sure the canvas is scaled correctly for the drawing
+                    this.resizeCanvas();
+
+                    // add the draw to the next frame
+                    this.currentRequest = window.requestAnimationFrame(() => {
                         Uno.Foundation.Interop.ManagedObject.dispatch(this.managedHandle, 'RenderFrame', null);
+
+                        this.currentRequest = 0;
+
+                        // we may want to draw the next frame
+                        if (this.renderLoop)
+                            this.requestAnimationFrame();
                     });
+                }
+
+                resizeCanvas() {
+                    if (!this.canvas)
+                        return;
+
+                    var scale = window.devicePixelRatio || 1;
+                    var w = this.canvas.clientWidth * scale
+                    var h = this.canvas.clientHeight * scale;
+
+                    if (this.canvas.width !== w)
+                        this.canvas.width = w;
+                    if (this.canvas.height !== h)
+                        this.canvas.height = h;
+                }
+
+                setEnableRenderLoop(enable) {
+                    this.renderLoop = enable;
+
+                    // either start the new frame or cancel the existing one
+                    if (enable) {
+                        this.requestAnimationFrame();
+                    } else if (this.currentRequest !== 0) {
+                        window.cancelAnimationFrame(this.currentRequest);
+                        this.currentRequest = 0;
+                    }
                 }
 
                 createContext(canvasOrCanvasId) {

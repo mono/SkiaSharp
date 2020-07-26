@@ -89,6 +89,7 @@ namespace SkiaSharp.Views.UWP
 			if (d is SKSwapChainPanel canvas && e.NewValue is Visibility visibility)
 			{
 				canvas.isVisible = visibility == Visibility.Visible;
+				canvas.DoUpdateBounds();
 				canvas.Invalidate();
 			}
 		}
@@ -96,11 +97,13 @@ namespace SkiaSharp.Views.UWP
 		private void OnDpiChanged(DisplayInformation sender, object args = null)
 		{
 			ContentsScale = sender.LogicalDpi / 96.0f;
+			DoUpdateBounds();
 			Invalidate();
 		}
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
+			DoUpdateBounds();
 			Invalidate();
 		}
 
@@ -133,6 +136,8 @@ namespace SkiaSharp.Views.UWP
 		partial void DoLoaded();
 
 		partial void DoUnloaded();
+
+		partial void DoUpdateBounds();
 
 		partial void DoEnableRenderLoop(bool enable);
 	}
