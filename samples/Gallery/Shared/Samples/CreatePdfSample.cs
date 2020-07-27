@@ -50,7 +50,7 @@ namespace SkiaSharpSample.Samples
 
 		private void GenerateDocument()
 		{
-			if (isSupported && File.Exists(path))
+			if (!isSupported || (isSupported && File.Exists(path)))
 				return;
 
 			var metadata = new SKDocumentPdfMetadata
@@ -70,7 +70,6 @@ namespace SkiaSharpSample.Samples
 			if (document == null)
 			{
 				isSupported = false;
-				Refresh();
 				return;
 			}
 

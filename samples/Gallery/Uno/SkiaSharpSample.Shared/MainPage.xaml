@@ -44,6 +44,7 @@
                 <!--  the samples canvas  -->
                 <Grid Tapped="OnSampleTapped" Background="White">
                     <views:SKXamlCanvas x:Name="canvas" Grid.Row="1" PaintSurface="OnPaintCanvas" />
+                    <views:SKSwapChainPanel x:Name="glview" Grid.Row="1" PaintSurface="OnPaintGL" Visibility="Collapsed" />
                 </Grid>
             </SplitView.Content>
         </SplitView>
@@ -54,6 +55,14 @@
             OverflowButtonVisibility="Collapsed"
             Foreground="White">
             <!--  the toolbar items  -->
+            <AppBarButton Icon="Repair" Label="Backend" IsCompact="True" Foreground="White">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="Memory" Tag="Memory" Click="OnBackendSelected" />
+                        <MenuFlyoutItem Text="OpenGL" Tag="OpenGL" Click="OnBackendSelected" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </AppBarButton>
             <AppBarButton
                 Click="OnToggleSlideshow"
                 Foreground="White"
