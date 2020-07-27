@@ -58,6 +58,26 @@ namespace SkiaSharpSample
 			splitView.IsPaneOpen = menuButton.IsChecked == true;
 		}
 
+		private void OnBackendSelected(object sender, RoutedEventArgs e)
+		{
+			var menu = sender as MenuFlyoutItem;
+
+			var backend = (SampleBackends)Enum.Parse(typeof(SampleBackends), menu.Tag.ToString());
+			switch (backend)
+			{
+				case SampleBackends.Memory:
+					glview.Visibility = Visibility.Collapsed;
+					canvas.Visibility = Visibility.Visible;
+					canvas.Invalidate();
+					break;
+				case SampleBackends.OpenGL:
+					glview.Visibility = Visibility.Visible;
+					canvas.Visibility = Visibility.Collapsed;
+					glview.Invalidate();
+					break;
+			}
+		}
+
 		private void OnToggleSlideshow(object sender, RoutedEventArgs e)
 		{
 			if (cancellations != null)
@@ -102,7 +122,12 @@ namespace SkiaSharpSample
 			}
 		}
 
-		private void OnPaintCanvas(object sender, SKPaintGLSurfaceEventArgs e)
+		private void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)
+		{
+			OnPaintSurface(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+		}
+
+		private void OnPaintGL(object sender, SKPaintGLSurfaceEventArgs e)
 		{
 			OnPaintSurface(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
 		}
@@ -145,7 +170,10 @@ namespace SkiaSharpSample
 
 		private void OnRefreshRequested(object sender, EventArgs e)
 		{
-			canvas.Invalidate();
+			if (canvas.Visibility == Visibility.Visible)
+				canvas.Invalidate();
+			if (glview.Visibility == Visibility.Visible)
+				glview.Invalidate();
 		}
 
 		private void OnPaintSurface(SKCanvas canvas, int width, int height)
