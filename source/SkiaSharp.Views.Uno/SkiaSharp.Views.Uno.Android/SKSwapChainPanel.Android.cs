@@ -1,4 +1,5 @@
-﻿using Windows.UI.Xaml;
+﻿using Android.Opengl;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 namespace SkiaSharp.Views.UWP
@@ -21,19 +22,30 @@ namespace SkiaSharp.Views.UWP
 		partial void DoLoaded()
 		{
 			glTextureView = new SKGLTextureView(Context);
+			DoEnableRenderLoop(EnableRenderLoop);
 			glTextureView.PaintSurface += OnPaintSurface;
 			AddView(glTextureView);
 		}
 
 		partial void DoUnloaded()
 		{
-			if (glTextureView != null)
-			{
-				RemoveView(glTextureView);
-				glTextureView.PaintSurface -= OnPaintSurface;
-				glTextureView.Dispose();
-				glTextureView = null;
-			}
+			if (glTextureView == null)
+				return;
+
+			RemoveView(glTextureView);
+			glTextureView.PaintSurface -= OnPaintSurface;
+			glTextureView.Dispose();
+			glTextureView = null;
+		}
+
+		partial void DoEnableRenderLoop(bool enable)
+		{
+			if (glTextureView == null)
+				return;
+
+			glTextureView.RenderMode = enable
+				? Rendermode.Continuously
+				: Rendermode.WhenDirty;
 		}
 
 		private void DoInvalidate() =>
