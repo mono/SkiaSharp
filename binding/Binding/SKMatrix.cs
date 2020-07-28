@@ -219,7 +219,7 @@ namespace SkiaSharp
 
 		public static SKMatrix CreateScaleTranslation (float sx, float sy, float tx, float ty)
 		{
-			if (sx == 0 && sy == 0 && tx == 0 && ty == y)
+			if (sx == 0 && sy == 0 && tx == 0 && ty == 0)
 				return Identity;
 
 			return new SKMatrix {
