@@ -33,16 +33,13 @@ namespace SkiaSharp.Tests
 			return new SKMemoryStream(bytes);
 		}
 
-		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png") =>
-			SaveImage(SKImage.FromBitmap(bmp), filename);
-
-		protected static void SaveImage(SKImage img, string filename = "output.png")
+		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
 		{
-			using (var bitmap = new SKBitmap(img.Width, img.Height))
+			using (var bitmap = new SKBitmap(bmp.Width, bmp.Height))
 			using (var canvas = new SKCanvas(bitmap))
 			{
 				canvas.Clear(SKColors.Transparent);
-				canvas.DrawImage(img, 0, 0);
+				canvas.DrawBitmap(bmp, 0, 0);
 				canvas.Flush();
 
 				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
