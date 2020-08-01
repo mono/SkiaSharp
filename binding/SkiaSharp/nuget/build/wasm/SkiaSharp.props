@@ -2,7 +2,13 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <PropertyGroup>
-        <SkiaSharpStaticLibraryPath>$(MSBuildThisFileDirectory)..\build\libSkiaSharp.a</SkiaSharpStaticLibraryPath>
+        <_NativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_NativeLibraryCurrPath>
+        <_NativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_NativeLibraryCurrPath)'))</_NativeLibraryDirName>
+        <_NativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_NativeLibraryDirName)\</_NativeLibraryRootDir>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <SkiaSharpStaticLibraryPath>$(_NativeLibraryRootDir)libSkiaSharp.a</SkiaSharpStaticLibraryPath>
     </PropertyGroup>
 
     <ItemGroup>

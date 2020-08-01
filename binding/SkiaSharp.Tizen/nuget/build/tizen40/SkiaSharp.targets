@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <PropertyGroup>
+    <_NativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_NativeLibraryCurrPath>
+    <_NativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_NativeLibraryCurrPath)'))</_NativeLibraryDirName>
+    <_NativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_NativeLibraryDirName)\</_NativeLibraryRootDir>
+  </PropertyGroup>
+
   <ItemGroup>
-    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\build\x86\libSkiaSharp.so">
+    <TizenTpkFiles Include="$(_NativeLibraryRootDir)x86\libSkiaSharp.so">
       <Visible>false</Visible>
       <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
       <TizenTpkFileName>libSkiaSharp.so</TizenTpkFileName>
     </TizenTpkFiles>
-    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\build\arm\libSkiaSharp.so">
+    <TizenTpkFiles Include="$(_NativeLibraryRootDir)arm\libSkiaSharp.so">
       <Visible>false</Visible>
       <TizenTpkSubDir>bin\runtimes\tizen-armel\native\</TizenTpkSubDir>
       <TizenTpkFileName>libSkiaSharp.so</TizenTpkFileName>
