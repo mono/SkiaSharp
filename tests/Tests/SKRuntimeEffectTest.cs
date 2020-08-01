@@ -576,15 +576,48 @@ void main(float2 p, inout half4 color) {
 			using var paint = new SKPaint { Shader = shader };
 			canvas.DrawRect(SKRect.Create(400, 400), paint);
 
-			using var snap = surface.Snapshot();
-			SaveImage(snap);
-
 			var actual = new SKColor[500 * 500];
 			fixed (void* a = actual)
 				Assert.True(surface.ReadPixels(info, (IntPtr)a, info.RowBytes, 0, 0));
 
 			Assert.Equal(backgroundColor, actual[100 * info.Width + 100]);
 			Assert.Equal(shirtColor, actual[230 * info.Width + 300]);
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void ColorFiltersRunOnGpu()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+
+			using var grContext = GRContext.CreateGl();
+
+			var info = new SKImageInfo(512, 256, SKColorType.Rgba8888);
+			using var surface = SKSurface.Create(grContext, false, info);
+			using var canvas = surface.Canvas;
+
+			var src = @"
+void main(inout half4 color) {
+    color.a = color.r*0.3 + color.g*0.6 + color.b*0.1;
+    color.r = 0;
+    color.g = 0;
+    color.b = 0;
+}";
+
+			using var img = SKImage.FromEncodedData(Path.Combine(PathToImages, "baboon.jpg"));
+			canvas.DrawImage(img, 0, 0);
+
+			using var effect = SKRuntimeEffect.Create(src, out var errorText);
+			Assert.Null(errorText);
+			Assert.NotNull(effect);
+
+			var cf1 = effect.ToColorFilter();
+			using var p = new SKPaint
+			{
+				ColorFilter = cf1,
+			};
+			canvas.DrawImage(img, 256, 0, p);
 		}
 	}
 }

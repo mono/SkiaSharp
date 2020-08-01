@@ -84,47 +84,37 @@ namespace SkiaSharp
 		public SKShader ToShader (SKRuntimeEffectInputs inputs, SKRuntimeEffectChildren children, SKMatrix localMatrix, bool isOpaque) =>
 			ToShader (inputs.ToData (), children.ToArray (), &localMatrix, isOpaque);
 
-		private unsafe SKShader ToShader (SKData inputs, SKShader[] children, SKMatrix* localMatrix, bool isOpaque)
+		private SKShader ToShader (SKData inputs, SKShader[] children, SKMatrix* localMatrix, bool isOpaque)
 		{
 			var inputsHandle = inputs?.Handle ?? IntPtr.Zero;
-
-			IntPtr[] childrenHandles = null;
-			var childLength = IntPtr.Zero;
-			if (children != null && children.Length > 0) {
-				childrenHandles = new IntPtr[children.Length];
-				for (int i = 0; i < children.Length; i++) {
-					childrenHandles[i] = children[i]?.Handle ?? IntPtr.Zero;
-				}
-				childLength = (IntPtr)children.Length;
-			}
+			using var childrenHandles = Utils.RentHandlesArray (children, true);
 
 			fixed (IntPtr* ch = childrenHandles) {
-				return SKShader.GetObject (SkiaApi.sk_runtimeeffect_make_shader (Handle, inputsHandle, ch, childLength, localMatrix, isOpaque));
+				return SKShader.GetObject (SkiaApi.sk_runtimeeffect_make_shader (Handle, inputsHandle, ch, (IntPtr)childrenHandles.Length, localMatrix, isOpaque));
 			}
 		}
 
 		// ToColorFilter
 
 		public SKColorFilter ToColorFilter () =>
-			ToColorFilter (null, null);
+			ToColorFilter ((SKData)null, null);
 
-		public SKColorFilter ToColorFilter (SKData inputs) =>
+		public SKColorFilter ToColorFilter (SKRuntimeEffectInputs inputs) =>
+			ToColorFilter (inputs.ToData (), null);
+
+		private SKColorFilter ToColorFilter (SKData inputs) =>
 			ToColorFilter (inputs, null);
 
-		internal SKColorFilter ToColorFilter (SKData inputs, SKShader[] children)
+		public SKColorFilter ToColorFilter (SKRuntimeEffectInputs inputs, SKRuntimeEffectChildren children) =>
+			ToColorFilter (inputs.ToData (), children.ToArray ());
+
+		private SKColorFilter ToColorFilter (SKData inputs, SKShader[] children)
 		{
 			var inputsHandle = inputs?.Handle ?? IntPtr.Zero;
-
-			IntPtr[] childrenHandles = null;
-			if (children != null && children.Length > 0) {
-				childrenHandles = new IntPtr[children.Length];
-				for (int i = 0; i < children.Length; i++) {
-					childrenHandles[i] = children[i]?.Handle ?? IntPtr.Zero;
-				}
-			}
+			using var childrenHandles = Utils.RentHandlesArray (children, true);
 
 			fixed (IntPtr* ch = childrenHandles) {
-				return SKColorFilter.GetObject (SkiaApi.sk_runtimeeffect_make_color_filter (Handle, inputsHandle, ch, (IntPtr)children?.Length));
+				return SKColorFilter.GetObject (SkiaApi.sk_runtimeeffect_make_color_filter (Handle, inputsHandle, ch, (IntPtr)childrenHandles.Length));
 			}
 		}
 
