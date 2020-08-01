@@ -7,16 +7,16 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <_NativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_NativeLibraryCurrPath>
-        <_NativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_NativeLibraryCurrPath)'))</_NativeLibraryDirName>
-        <_NativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_NativeLibraryDirName)\</_NativeLibraryRootDir>
+        <_SkiaSharpNativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_SkiaSharpNativeLibraryCurrPath>
+        <_SkiaSharpNativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_SkiaSharpNativeLibraryCurrPath)'))</_SkiaSharpNativeLibraryDirName>
+        <_SkiaSharpNativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_SkiaSharpNativeLibraryDirName)\</_SkiaSharpNativeLibraryRootDir>
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
-        <AndroidNativeLibrary Include="$(_NativeLibraryRootDir)x86\libSkiaSharp.so" Abi="x86" />
-        <AndroidNativeLibrary Include="$(_NativeLibraryRootDir)x64\libSkiaSharp.so" Abi="x86_64" />
-        <AndroidNativeLibrary Include="$(_NativeLibraryRootDir)arm\libSkiaSharp.so" Abi="armeabi-v7a" />
-        <AndroidNativeLibrary Include="$(_NativeLibraryRootDir)arm64\libSkiaSharp.so" Abi="arm64-v8a" />
+        <AndroidNativeLibrary Include="$(_SkiaSharpNativeLibraryRootDir)x86\libSkiaSharp.so" Abi="x86" />
+        <AndroidNativeLibrary Include="$(_SkiaSharpNativeLibraryRootDir)x64\libSkiaSharp.so" Abi="x86_64" />
+        <AndroidNativeLibrary Include="$(_SkiaSharpNativeLibraryRootDir)arm\libSkiaSharp.so" Abi="armeabi-v7a" />
+        <AndroidNativeLibrary Include="$(_SkiaSharpNativeLibraryRootDir)arm64\libSkiaSharp.so" Abi="arm64-v8a" />
     </ItemGroup>
 
 </Project>

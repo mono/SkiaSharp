@@ -7,13 +7,13 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <_NativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_NativeLibraryCurrPath>
-        <_NativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_NativeLibraryCurrPath)'))</_NativeLibraryDirName>
-        <_NativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_NativeLibraryDirName)\</_NativeLibraryRootDir>
+        <_SkiaSharpNativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_SkiaSharpNativeLibraryCurrPath>
+        <_SkiaSharpNativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_SkiaSharpNativeLibraryCurrPath)'))</_SkiaSharpNativeLibraryDirName>
+        <_SkiaSharpNativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_SkiaSharpNativeLibraryDirName)\</_SkiaSharpNativeLibraryRootDir>
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
-        <NativeReference Include="$(_NativeLibraryRootDir)libSkiaSharp.framework" Kind="Framework" />
+        <NativeReference Include="$(_SkiaSharpNativeLibraryRootDir)libSkiaSharp.framework" Kind="Framework" />
     </ItemGroup>
 
 </Project>

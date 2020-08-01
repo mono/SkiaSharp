@@ -2,18 +2,18 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <_NativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_NativeLibraryCurrPath>
-    <_NativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_NativeLibraryCurrPath)'))</_NativeLibraryDirName>
-    <_NativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_NativeLibraryDirName)\</_NativeLibraryRootDir>
+    <_HarfBuzzSharpNativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_HarfBuzzSharpNativeLibraryCurrPath>
+    <_HarfBuzzSharpNativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_HarfBuzzSharpNativeLibraryCurrPath)'))</_HarfBuzzSharpNativeLibraryDirName>
+    <_HarfBuzzSharpNativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_HarfBuzzSharpNativeLibraryDirName)\</_HarfBuzzSharpNativeLibraryRootDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <TizenTpkFiles Include="$(_NativeLibraryRootDir)x86\libHarfBuzzSharp.so">
+    <TizenTpkFiles Include="$(_HarfBuzzSharpNativeLibraryRootDir)x86\libHarfBuzzSharp.so">
       <Visible>false</Visible>
       <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
       <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
     </TizenTpkFiles>
-    <TizenTpkFiles Include="$(_NativeLibraryRootDir)arm\libHarfBuzzSharp.so">
+    <TizenTpkFiles Include="$(_HarfBuzzSharpNativeLibraryRootDir)arm\libHarfBuzzSharp.so">
       <Visible>false</Visible>
       <TizenTpkSubDir>bin\runtimes\tizen-armel\native\</TizenTpkSubDir>
       <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>

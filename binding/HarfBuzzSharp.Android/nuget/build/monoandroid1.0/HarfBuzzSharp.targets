@@ -7,16 +7,16 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <_NativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_NativeLibraryCurrPath>
-        <_NativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_NativeLibraryCurrPath)'))</_NativeLibraryDirName>
-        <_NativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_NativeLibraryDirName)\</_NativeLibraryRootDir>
+        <_HarfBuzzSharpNativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_HarfBuzzSharpNativeLibraryCurrPath>
+        <_HarfBuzzSharpNativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_HarfBuzzSharpNativeLibraryCurrPath)'))</_HarfBuzzSharpNativeLibraryDirName>
+        <_HarfBuzzSharpNativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_HarfBuzzSharpNativeLibraryDirName)\</_HarfBuzzSharpNativeLibraryRootDir>
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' ">
-        <AndroidNativeLibrary Include="$(_NativeLibraryRootDir)x86\libHarfBuzzSharp.so" Abi="x86" />
-        <AndroidNativeLibrary Include="$(_NativeLibraryRootDir)x64\libHarfBuzzSharp.so" Abi="x86_64" />
-        <AndroidNativeLibrary Include="$(_NativeLibraryRootDir)arm\libHarfBuzzSharp.so" Abi="armeabi-v7a" />
-        <AndroidNativeLibrary Include="$(_NativeLibraryRootDir)arm64\libHarfBuzzSharp.so" Abi="arm64-v8a" />
+        <AndroidNativeLibrary Include="$(_HarfBuzzSharpNativeLibraryRootDir)x86\libHarfBuzzSharp.so" Abi="x86" />
+        <AndroidNativeLibrary Include="$(_HarfBuzzSharpNativeLibraryRootDir)x64\libHarfBuzzSharp.so" Abi="x86_64" />
+        <AndroidNativeLibrary Include="$(_HarfBuzzSharpNativeLibraryRootDir)arm\libHarfBuzzSharp.so" Abi="armeabi-v7a" />
+        <AndroidNativeLibrary Include="$(_HarfBuzzSharpNativeLibraryRootDir)arm64\libHarfBuzzSharp.so" Abi="arm64-v8a" />
     </ItemGroup>
 
 </Project>

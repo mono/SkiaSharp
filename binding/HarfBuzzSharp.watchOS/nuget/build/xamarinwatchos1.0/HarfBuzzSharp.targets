@@ -7,13 +7,13 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <_NativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_NativeLibraryCurrPath>
-        <_NativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_NativeLibraryCurrPath)'))</_NativeLibraryDirName>
-        <_NativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_NativeLibraryDirName)\</_NativeLibraryRootDir>
+        <_HarfBuzzSharpNativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_HarfBuzzSharpNativeLibraryCurrPath>
+        <_HarfBuzzSharpNativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_HarfBuzzSharpNativeLibraryCurrPath)'))</_HarfBuzzSharpNativeLibraryDirName>
+        <_HarfBuzzSharpNativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_HarfBuzzSharpNativeLibraryDirName)\</_HarfBuzzSharpNativeLibraryRootDir>
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' ">
-        <NativeReference Include="$(_NativeLibraryRootDir)libHarfBuzzSharp.a" Kind="Static" IsCxx="true" ForceLoad="True" SmartLink="true" />
+        <NativeReference Include="$(_HarfBuzzSharpNativeLibraryRootDir)libHarfBuzzSharp.a" Kind="Static" IsCxx="true" ForceLoad="True" SmartLink="true" />
     </ItemGroup>
 
 </Project>
