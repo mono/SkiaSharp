@@ -835,7 +835,7 @@ namespace SkiaSharp.Tests
 			if (xRatio != 0 || yRatio != 0 || wRatio != 0 || hRatio != 0)
 			{
 				var floatingRect = new SKRect(width * xRatio, height * yRatio, width * wRatio, height * hRatio);
-				rect = SKRectI.Round(floatingRect);
+				rect = SKRectI.Floor(floatingRect);
 				subset = image.Subset(rect);
 			}
 
@@ -845,9 +845,18 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rect.Width, img2.Width);
 			Assert.Equal(rect.Height, img2.Height);
 
-			var subsetPixels = subset.ToRasterImage(true).PeekPixels().GetPixelSpan();
-			var img2Pixels = img2.ToRasterImage(true).PeekPixels().GetPixelSpan();
-			Assert.Equal(subsetPixels.ToArray(), img2Pixels.ToArray());
+			var subsetPixels = GetPixels(subset);
+			var img2Pixels = GetPixels(img2);
+
+			Assert.Equal(subsetPixels, img2Pixels);
+
+			static SKColor[] GetPixels(SKImage image)
+			{
+				using var bmp = new SKBitmap(image.Width, image.Height);
+				using var cnv = new SKCanvas(bmp);
+				cnv.DrawImage(image, 0, 0);
+				return bmp.Pixels;
+			}
 		}
 
 		[Obsolete]
