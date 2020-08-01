@@ -196,6 +196,23 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public unsafe void UnicharCountReturnsCorrectCount()
+		{
+			var text = new uint[] { 79 };
+			var count = text.Length;
+
+			var typeface = SKTypeface.Default;
+
+			fixed (uint* t = text)
+			{
+				Assert.Equal(1, typeface.CountGlyphs((IntPtr)t, count, SKTextEncoding.Utf32));
+
+				var glyphs = typeface.GetGlyphs((IntPtr)t, count, SKTextEncoding.Utf32);
+				Assert.Single(glyphs);
+			}
+		}
+
+		[SkippableFact]
 		public void PlainGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			const string text = "Hello World!";

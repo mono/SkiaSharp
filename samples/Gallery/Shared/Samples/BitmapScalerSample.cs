@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using SkiaSharp;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace SkiaSharpSample.Samples
 {
@@ -25,10 +24,17 @@ namespace SkiaSharpSample.Samples
 
 		protected override Task OnInit()
 		{
-			methods = Enum.GetValues(typeof(SKBitmapResizeMethod)).Cast<SKBitmapResizeMethod>().ToList();
+			methods = new List<SKBitmapResizeMethod>
+			{
+				SKBitmapResizeMethod.Box,
+				SKBitmapResizeMethod.Triangle,
+				SKBitmapResizeMethod.Lanczos3,
+				SKBitmapResizeMethod.Hamming,
+				SKBitmapResizeMethod.Mitchell,
+			};
 			method = methods[0];
 
-			using (var stream = new SKManagedStream(SampleMedia.Images.AdobeDng))
+			using (var stream = new SKManagedStream(SampleMedia.Images.Baboon))
 			{
 				bitmap = SKBitmap.Decode(stream);
 			}

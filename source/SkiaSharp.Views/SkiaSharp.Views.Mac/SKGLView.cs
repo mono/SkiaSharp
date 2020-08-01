@@ -5,11 +5,20 @@ using CoreGraphics;
 using Foundation;
 using SkiaSharp.Views.GlesInterop;
 
+#if HAS_UNO
+namespace SkiaSharp.Views.UWP
+#else
 namespace SkiaSharp.Views.Mac
+#endif
 {
 	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]
-	public class SKGLView : NSOpenGLView
+#if HAS_UNO
+	internal
+#else
+	public
+#endif
+	partial class SKGLView : NSOpenGLView
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -88,7 +97,8 @@ namespace SkiaSharp.Views.Mac
 			base.Reshape();
 
 			// get the new surface size
-			newSize = ConvertSizeToBacking(Bounds.Size).ToSKSize().ToSizeI();
+			var size = ConvertSizeToBacking(Bounds.Size);
+			newSize = new SKSizeI((int)size.Width, (int)size.Height);
 		}
 
 		public override void DrawRect(CGRect dirtyRect)
