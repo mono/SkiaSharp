@@ -51,6 +51,24 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		protected static void SaveImage(SKImage img, string filename = "output.png")
+		{
+			using (var bitmap = new SKBitmap(img.Width, img.Height))
+			using (var canvas = new SKCanvas(bitmap))
+			{
+				canvas.Clear(SKColors.Transparent);
+				canvas.DrawImage(img, 0, 0);
+				canvas.Flush();
+
+				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
+				using (var image = SKImage.FromBitmap(bitmap))
+				using (var data = image.Encode())
+				{
+					data.SaveTo(stream);
+				}
+			}
+		}
+
 		protected static SKBitmap CreateTestBitmap(byte alpha = 255)
 		{
 			var bmp = new SKBitmap(40, 40);

@@ -6,16 +6,18 @@
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Uno</PackagingGroup>
     <PackagingPlatform>monoandroid1.0</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);HAS_UNO</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Uno.UI" Version="2.0.532" />
+    <PackageReference Include="Uno.UI" Version="2.4.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Android\SkiaSharp.Android.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\GLTextureView.cs" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SKGLTextureView.cs" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SKGLTextureViewRenderer.cs" />
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\UWPExtensions.cs" />
     <Compile Include="..\SkiaSharp.Views.Uno\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

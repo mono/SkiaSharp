@@ -8,7 +8,9 @@ using GLKit;
 using OpenGLES;
 using SkiaSharp.Views.GlesInterop;
 
-#if __TVOS__
+#if HAS_UNO
+namespace SkiaSharp.Views.UWP
+#elif __TVOS__
 namespace SkiaSharp.Views.tvOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
@@ -16,7 +18,12 @@ namespace SkiaSharp.Views.iOS
 {
 	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]
-	public class SKGLView : GLKView, IGLKViewDelegate, IComponent
+#if HAS_UNO
+	internal
+#else
+	public
+#endif
+	class SKGLView : GLKView, IGLKViewDelegate, IComponent
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;

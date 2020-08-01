@@ -9,6 +9,11 @@ namespace SkiaSharp.Views.UWP
 	{
 		private SKCGSurfaceFactory drawable;
 
+		public SKXamlCanvas()
+		{
+			Initialize();
+		}
+
 		partial void DoLoaded() =>
 			drawable = new SKCGSurfaceFactory();
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
 namespace SkiaSharpSample.Controllers
@@ -8,6 +9,13 @@ namespace SkiaSharpSample.Controllers
 	[ApiController]
 	public class ImagesController : ControllerBase
 	{
+		private readonly ILogger<ImagesController> logger;
+
+		public ImagesController(ILogger<ImagesController> logger)
+		{
+			this.logger = logger;
+		}
+
 		// GET api/images
 		[HttpGet]
 		public ActionResult<IEnumerable<string>> Get()
@@ -30,6 +38,8 @@ namespace SkiaSharpSample.Controllers
 
 		private SKData CreateImage(string text)
 		{
+			logger.LogInformation($"Creating image with text: {text}");
+
 			// create a surface
 			var info = new SKImageInfo(256, 256);
 			using (var surface = SKSurface.Create(info))

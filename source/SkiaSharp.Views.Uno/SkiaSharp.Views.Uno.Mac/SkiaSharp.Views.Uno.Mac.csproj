@@ -5,10 +5,10 @@
     <AssemblyName>SkiaSharp.Views.UWP</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Uno</PackagingGroup>
-    <DefineConstants>$(DefineConstants);HAS_UNO;__MACOS__</DefineConstants>
+    <DefineConstants>$(DefineConstants);__MACOS__</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Uno.UI" Version="2.0.532" />
+    <PackageReference Include="Uno.UI" Version="2.4.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.OSX\SkiaSharp.OSX.csproj" />
@@ -16,6 +16,7 @@
   <ItemGroup>
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Apple\SKCGSurfaceFactory.cs" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Mac\SKGLView.cs" />
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\UWPExtensions.cs" />
     <Compile Include="..\SkiaSharp.Views.Uno\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
