@@ -16,7 +16,7 @@ RUN apt-get update \
     && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 60C317803A41BA51845E371A1E9377A2BA9EF27F \
     && echo "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main" | tee /etc/apt/sources.list.d/ubuntu-toolchain-r.list \
     && apt-get update \
-    && apt-get install -y mono-devel libfontconfig1-dev clang-${CLANG_VERSION} gcc-${TOOLCHAIN_VERSION} \
+    && apt-get install -y mono-devel libfontconfig1-dev clang-${CLANG_VERSION} gcc-${TOOLCHAIN_VERSION} g++-${TOOLCHAIN_VERSION} \
     && update-alternatives \
         --install /usr/bin/gcc gcc /usr/bin/gcc-${TOOLCHAIN_VERSION} 60 \
         --slave /usr/bin/g++ g++ /usr/bin/g++-${TOOLCHAIN_VERSION} \
