@@ -2,7 +2,7 @@ FROM amd64/ubuntu:16.04
 
 # Arguments:
 #   MONO_VERSION         - the version of mono for the Cake script          [ 6.4.0 | * ]
-#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 4.8 | * ]
+#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 7 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu]
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 ]
 #   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.11.0-6.7+b1 | * ]
@@ -23,7 +23,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # toolchain (gcc/g++)
-ARG TOOLCHAIN_VERSION=4.8
+ARG TOOLCHAIN_VERSION=7
 ARG TOOLCHAIN_ARCH=arm-linux-gnueabihf
 ARG TOOLCHAIN_ARCH_SHORT=armhf
 RUN apt-get update \
