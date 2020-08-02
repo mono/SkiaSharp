@@ -18,7 +18,7 @@ ARG TOOLCHAIN_VERSION=7
 ARG TOOLCHAIN_ARCH=arm-linux-gnueabihf
 ARG TOOLCHAIN_ARCH_SHORT=armhf
 RUN apt-get update \
-    && apt-get install -y apt-transport-https curl wget python git make \
+    && apt-get install -y apt-transport-https curl wget python git make gnupg \
         clang-${CLANG_VERSION} \
         libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross \
         libgcc-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross \
