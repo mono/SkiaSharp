@@ -37,7 +37,7 @@ Task("libSkiaSharp")
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
             $"ndk='{ANDROID_NDK_HOME}' " +
-            $"ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 16)}");
+            $"ndk_api=21");
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);

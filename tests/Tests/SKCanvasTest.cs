@@ -498,8 +498,6 @@ namespace SkiaSharp.Tests
 
 			canvas.DrawText("SkiaSharp", 300, 100, paint);
 
-			SaveBitmap(bitmap, $"output-{align}.png");
-
 			AssertTextAlign(bitmap, offset, 0);
 		}
 
@@ -530,8 +528,6 @@ namespace SkiaSharp.Tests
 			using var blob = blobBuilder.Build();
 
 			canvas.DrawText(blob, 300, 100, paint);
-
-			SaveBitmap(bitmap, $"output-b-{align}.png");
 
 			AssertTextAlign(bitmap, offset, 0);
 		}
@@ -573,8 +569,6 @@ namespace SkiaSharp.Tests
 
 			canvas.DrawText(blob, 300, 100, paint);
 
-			SaveBitmap(bitmap, $"output-h-{align}.png");
-
 			AssertTextAlign(bitmap, offset, 0);
 		}
 
@@ -614,8 +608,6 @@ namespace SkiaSharp.Tests
 			using var blob = blobBuilder.Build();
 
 			canvas.DrawText(blob, 300, 100, paint);
-
-			SaveBitmap(bitmap, $"output-p-{align}.png");
 
 			AssertTextAlign(bitmap, offset, 0);
 		}
@@ -657,8 +649,6 @@ namespace SkiaSharp.Tests
 			using var blob = blobBuilder.Build();
 
 			canvas.DrawText(blob, 300, 100, paint);
-
-			SaveBitmap(bitmap, $"output-m-{align}.png");
 
 			AssertTextAlign(bitmap, offsetPositioned, 0);
 			AssertTextAlign(bitmap, offsetDefault, 100);

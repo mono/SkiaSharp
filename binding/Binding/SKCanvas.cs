@@ -845,7 +845,8 @@ namespace SkiaSharp
 			if (!SKRect.Create (bitmap.Info.Size).Contains (center))
 				throw new ArgumentException ("Center rectangle must be contained inside the bitmap bounds.", nameof (center));
 
-			SkiaApi.sk_canvas_draw_bitmap_nine (Handle, bitmap.Handle, &center, &dst, paint == null ? IntPtr.Zero : paint.Handle);
+			using var image = SKImage.FromBitmap (bitmap);
+			DrawImageNinePatch (image, center, dst, paint);
 		}
 
 		public void DrawImageNinePatch (SKImage image, SKRectI center, SKRect dst, SKPaint paint = null)
@@ -888,25 +889,8 @@ namespace SkiaSharp
 			if (lattice.YDivs == null)
 				throw new ArgumentNullException (nameof (lattice.YDivs));
 
-			fixed (int* x = lattice.XDivs)
-			fixed (int* y = lattice.YDivs)
-			fixed (SKLatticeRectType* r = lattice.RectTypes)
-			fixed (SKColor* c = lattice.Colors) {
-				var nativeLattice = new SKLatticeInternal {
-					fBounds = null,
-					fRectTypes = r,
-					fXCount = lattice.XDivs.Length,
-					fXDivs = x,
-					fYCount = lattice.YDivs.Length,
-					fYDivs = y,
-					fColors = (uint*)c,
-				};
-				if (lattice.Bounds != null) {
-					var bounds = lattice.Bounds.Value;
-					nativeLattice.fBounds = &bounds;
-				}
-				SkiaApi.sk_canvas_draw_bitmap_lattice (Handle, bitmap.Handle, &nativeLattice, &dst, paint == null ? IntPtr.Zero : paint.Handle);
-			}
+			using var image = SKImage.FromBitmap (bitmap);
+			DrawImageLattice (image, lattice, dst, paint);
 		}
 
 		public void DrawImageLattice (SKImage image, SKLattice lattice, SKRect dst, SKPaint paint = null)

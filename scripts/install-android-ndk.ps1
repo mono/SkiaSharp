@@ -1,5 +1,5 @@
 Param(
-    [string] $Version = "r21",
+    [string] $Version = "r21c",
     [string] $InstallDestination = $null
 )
 

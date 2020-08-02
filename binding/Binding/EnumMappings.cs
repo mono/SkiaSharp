@@ -9,6 +9,7 @@ namespace SkiaSharp
 		OpenGL = 1,
 		Vulkan = 2,
 		Dawn = 3,
+		Direct3D = 4,
 	}
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
@@ -50,6 +51,7 @@ namespace SkiaSharp
 		Rg88 = 26,
 		Rgb888x = 27,
 		RgbEtc1 = 28,
+		Bgra1010102 = 29,
 	}
 
 	public static partial class SkiaExtensions
@@ -61,6 +63,7 @@ namespace SkiaSharp
 				GRBackend.OpenGL => GRBackendNative.OpenGL,
 				GRBackend.Vulkan => GRBackendNative.Vulkan,
 				GRBackend.Dawn => GRBackendNative.Dawn,
+				GRBackend.Direct3D => GRBackendNative.Direct3D,
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
@@ -71,6 +74,7 @@ namespace SkiaSharp
 				GRBackendNative.OpenGL => GRBackend.OpenGL,
 				GRBackendNative.Vulkan => GRBackend.Vulkan,
 				GRBackendNative.Dawn => GRBackend.Dawn,
+				GRBackendNative.Direct3D => GRBackend.Direct3D,
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
@@ -85,7 +89,9 @@ namespace SkiaSharp
 				SKColorType.Rgb888x => SKColorTypeNative.Rgb888x,
 				SKColorType.Bgra8888 => SKColorTypeNative.Bgra8888,
 				SKColorType.Rgba1010102 => SKColorTypeNative.Rgba1010102,
+				SKColorType.Bgra1010102 => SKColorTypeNative.Bgra1010102,
 				SKColorType.Rgb101010x => SKColorTypeNative.Rgb101010x,
+				SKColorType.Bgr101010x => SKColorTypeNative.Bgr101010x,
 				SKColorType.Gray8 => SKColorTypeNative.Gray8,
 				SKColorType.RgbaF16Clamped => SKColorTypeNative.RgbaF16Norm,
 				SKColorType.RgbaF16 => SKColorTypeNative.RgbaF16,
@@ -110,7 +116,9 @@ namespace SkiaSharp
 				SKColorTypeNative.Rgb888x => SKColorType.Rgb888x,
 				SKColorTypeNative.Bgra8888 => SKColorType.Bgra8888,
 				SKColorTypeNative.Rgba1010102 => SKColorType.Rgba1010102,
+				SKColorTypeNative.Bgra1010102 => SKColorType.Bgra1010102,
 				SKColorTypeNative.Rgb101010x => SKColorType.Rgb101010x,
+				SKColorTypeNative.Bgr101010x => SKColorType.Bgr101010x,
 				SKColorTypeNative.Gray8 => SKColorType.Gray8,
 				SKColorTypeNative.RgbaF16Norm => SKColorType.RgbaF16Clamped,
 				SKColorTypeNative.RgbaF16 => SKColorType.RgbaF16,
