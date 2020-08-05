@@ -2,7 +2,7 @@
 
 namespace HarfBuzzSharp
 {
-	public class Face : NativeObject
+	public unsafe class Face : NativeObject
 	{
 		private static readonly Lazy<Face> emptyFace = new Lazy<Face> (() => new StaticFace (HarfBuzzApi.hb_face_get_empty ()));
 
@@ -40,7 +40,7 @@ namespace HarfBuzzSharp
 
 			Handle = HarfBuzzApi.hb_face_create_for_tables (
 				DelegateProxies.GetTableDelegateProxy,
-				DelegateProxies.CreateMultiUserData (getTable, destroy, this),
+				(void*)DelegateProxies.CreateMultiUserData (getTable, destroy, this),
 				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 

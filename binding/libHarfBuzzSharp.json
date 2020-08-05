@@ -1,0 +1,149 @@
+// configuration for the libHarfBuzzSharp binary
+{
+  "dllName": "HARFBUZZ",
+  "namespace": "HarfBuzzSharp",
+  "className": "HarfBuzzApi",
+  "includeDirs": [
+    "src"
+  ],
+  "headers": {
+    "src": [
+      "hb.h",
+      "hb-ot.h"
+    ]
+  },
+  "source": {
+    "src": [ "hb-*" ]
+  },
+  "exclude": {
+    "files": [
+      "src/hb-deprecated.h",
+      "src/hb-shape-plan.h",
+      "src/hb-ot-deprecated.h",
+      "src/hb-ot-var.h"
+    ],
+    "types": [
+      "hb_segment_properties_t",
+      "hb_user_data_key_t",
+      "_hb_var_int_t"
+    ]
+  },
+  "mappings": {
+    "types": {
+      // type aliases
+      "hb_bool_t": {
+        "cs": "Boolean"
+      },
+      "hb_codepoint_t": {
+        "cs": "UInt32"
+      },
+      "hb_color_t": {
+        "cs": "UInt32"
+      },
+      "hb_mask_t": {
+        "cs": "UInt32"
+      },
+      "hb_position_t": {
+        "cs": "Int32"
+      },
+      "hb_tag_t": {
+        "cs": "Tag"
+      },
+      "hb_var_int_t": {
+        "cs": "Int32"
+      },
+      "hb_font_get_font_h_extents_func_t": {
+        "cs": "FontGetFontExtentsProxyDelegate"
+      },
+      "hb_font_get_font_v_extents_func_t": {
+        "cs": "FontGetFontExtentsProxyDelegate"
+      },
+      "hb_font_get_glyph_h_advance_func_t": {
+        "cs": "FontGetGlyphAdvanceProxyDelegate"
+      },
+      "hb_font_get_glyph_h_advances_func_t": {
+        "cs": "FontGetGlyphAdvancesProxyDelegate"
+      },
+      "hb_font_get_glyph_h_kerning_func_t": {
+        "cs": "FontGetGlyphKerningProxyDelegate"
+      },
+      "hb_font_get_glyph_h_origin_func_t": {
+        "cs": "FontGetGlyphOriginProxyDelegate"
+      },
+      "hb_font_get_glyph_v_advance_func_t": {
+        "cs": "FontGetGlyphAdvanceProxyDelegate"
+      },
+      "hb_font_get_glyph_v_advances_func_t": {
+        "cs": "FontGetGlyphAdvancesProxyDelegate"
+      },
+      "hb_font_get_glyph_v_origin_func_t": {
+        "cs": "FontGetGlyphOriginProxyDelegate"
+      },
+      "hb_ot_name_id_t": {
+        "cs": "OpenTypeNameId"
+      },
+      "hb_language_t": {
+        "cs": "IntPtr"
+      },
+      // structs
+      "hb_glyph_position_t": {
+        "members": {
+          "var": ""
+        }
+      },
+      // enums
+      "hb_buffer_flags_t": {
+        "flags": true,
+        "members": {
+          "HB_BUFFER_FLAG_BOT": "BeginningOfText",
+          "HB_BUFFER_FLAG_EOT": "EndOfText"
+        }
+      },
+      "hb_buffer_serialize_flags_t": {
+        "flags": true,
+        "cs": "SerializeFlag"
+      },
+      "hb_buffer_content_type_t": {
+        "cs": "ContentType"
+      },
+      "hb_buffer_cluster_level_t": {
+        "cs": "ClusterLevel"
+      },
+      "hb_buffer_serialize_format_t": {
+        "cs": "SerializeFormat"
+      },
+      "hb_direction_t": {
+        "members": {
+          "HB_DIRECTION_LTR": "LeftToRight",
+          "HB_DIRECTION_RTL": "RightToLeft",
+          "HB_DIRECTION_TTB": "TopToBottom",
+          "HB_DIRECTION_BTT": "BottomToTop"
+        }
+      },
+      "hb_glyph_flags_t": {
+        "flags": true
+      },
+      "hb_script_t": {
+        "cs": "UInt32",
+        "generate": false
+      }
+    },
+    "functions": {
+      "hb_language_from_string": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "hb_script_from_string": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "hb_buffer_deserialize_glyphs": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      }
+    }
+  }
+}

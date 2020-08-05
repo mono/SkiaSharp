@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
-	public class Font : NativeObject
+	public unsafe class Font : NativeObject
 	{
 		internal const int NameBufferLength = 128;
 
@@ -38,7 +38,7 @@ namespace HarfBuzzSharp
 		public OpenTypeMetrics OpenTypeMetrics { get; }
 
 		public string[] SupportedShapers =>
-			PtrToStringArray (HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
+			PtrToStringArray ((IntPtr)HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
 
 		public void SetFontFunctions (FontFunctions fontFunctions) =>
 			SetFontFunctions (fontFunctions, null, null);
@@ -55,8 +55,13 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, ctx, DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void GetScale (out int xScale, out int yScale) =>
-			HarfBuzzApi.hb_font_get_scale (Handle, out xScale, out yScale);
+		public void GetScale (out int xScale, out int yScale)
+		{
+			fixed (int* x = &xScale)
+			fixed (int* y = &yScale) {
+				HarfBuzzApi.hb_font_get_scale (Handle, x, y);
+			}
+		}
 
 		public void SetScale (int xScale, int yScale) =>
 			HarfBuzzApi.hb_font_set_scale (Handle, xScale, yScale);
@@ -177,7 +182,8 @@ namespace HarfBuzzSharp
 
 		public FontExtents GetFontExtentsForDirection (Direction direction)
 		{
-			HarfBuzzApi.hb_font_get_extents_for_direction (Handle, direction, out var extents);
+			FontExtents extents;
+			HarfBuzzApi.hb_font_get_extents_for_direction (Handle, direction, &extents);
 			return extents;
 		}
 
@@ -196,7 +202,7 @@ namespace HarfBuzzSharp
 			var advances = new int[count];
 
 			fixed (int* firstAdvance = advances) {
-				HarfBuzzApi.hb_font_get_glyph_advances_for_direction (Handle, direction, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
+				HarfBuzzApi.hb_font_get_glyph_advances_for_direction (Handle, direction, (uint)count, (uint*)firstGlyph, 4, firstAdvance, 4);
 			}
 
 			return advances;
@@ -211,7 +217,7 @@ namespace HarfBuzzSharp
 			var buffer = pool.Rent (NameBufferLength);
 			try {
 				fixed (byte* first = buffer) {
-					HarfBuzzApi.hb_font_glyph_to_string (Handle, glyph, first, buffer.Length);
+					HarfBuzzApi.hb_font_glyph_to_string (Handle, glyph, first, (uint)buffer.Length);
 					return Marshal.PtrToStringAnsi ((IntPtr)first);
 				}
 			} finally {
