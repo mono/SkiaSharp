@@ -14,6 +14,12 @@ This can be run with:
 dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libSkiaSharp.json --skia externals/skia --output binding/Binding/SkiaApi.generated.cs
 ```
 
+Or:
+
+```pwsh
+dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libHarfBuzzSharp.json --skia externals/harfbuzz --output binding/HarfBuzzSharp.Shared/HarfBuzzApi.generated.cs
+```
+
 * `--config binding/libSkiaSharp.json`  
   The path to the JSON file that help generate a useful set of p/invoke definions and structures.
 * `--skia externals/skia`  

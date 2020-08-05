@@ -131,14 +131,21 @@ namespace SkiaSharpGenerator
 				.ToList();
 			foreach (var klass in classes)
 			{
-				Log?.LogVerbose($"    {klass.GetDisplayName()}");
+				var cppClassName = klass.GetDisplayName();
 
-				var name = klass.GetDisplayName();
-				typeMappings.TryGetValue(name, out var map);
-				name = map?.CsType ?? Utils.CleanName(name);
+				if (excludedTypes.Contains(cppClassName) == true)
+				{
+					Log?.LogVerbose($"    Skipping struct '{cppClassName}' because it was in the exclude list.");
+					continue;
+				}
+
+				Log?.LogVerbose($"    {cppClassName}");
+
+				typeMappings.TryGetValue(cppClassName, out var map);
+				var name = map?.CsType ?? Utils.CleanName(cppClassName);
 
 				writer.WriteLine();
-				writer.WriteLine($"\t// {klass.GetDisplayName()}");
+				writer.WriteLine($"\t// {cppClassName}");
 				writer.WriteLine($"\t[StructLayout (LayoutKind.Sequential)]");
 				var visibility = map?.IsInternal == true ? "internal" : "public";
 				var isReadonly = map?.IsReadOnly == true ? " readonly" : "";
@@ -155,7 +162,8 @@ namespace SkiaSharpGenerator
 					var fieldName = field.Name;
 					var isPrivate = fieldName.StartsWith("_private_", StringComparison.OrdinalIgnoreCase);
 					if (isPrivate)
-						fieldName = fieldName.Substring(9);
+						fieldName = fieldName[9..];
+					isPrivate |= fieldName.StartsWith("reserved", StringComparison.OrdinalIgnoreCase);
 
 					allFields.Add(fieldName);
 
@@ -167,36 +175,48 @@ namespace SkiaSharpGenerator
 					{
 						var propertyName = fieldName;
 						if (map != null && map.Members.TryGetValue(propertyName, out var fieldMap))
-							propertyName = fieldMap;
-						else
-							propertyName = Utils.CleanName(propertyName);
-
-						if (cppT == "bool")
 						{
-							if (map?.IsReadOnly == true)
-							{
-								writer.WriteLine($"\t\tpublic readonly bool {propertyName} => {fieldName} > 0;");
-							}
-							else
-							{
-								writer.WriteLine($"\t\tpublic bool {propertyName} {{");
-								writer.WriteLine($"\t\t\treadonly get => {fieldName} > 0;");
-								writer.WriteLine($"\t\t\tset => {fieldName} = value ? (byte)1 : (byte)0;");
-								writer.WriteLine($"\t\t}}");
-							}
+							if (string.IsNullOrEmpty(fieldMap))
+								isPrivate = true;
+							propertyName = fieldMap;
 						}
 						else
 						{
-							if (map?.IsReadOnly == true)
+							propertyName = Utils.CleanName(propertyName);
+						}
+
+						if (!isPrivate)
+						{
+							if (fieldName == "value")
+								fieldName = "this." + fieldName;
+
+							if (cppT == "bool")
 							{
-								writer.WriteLine($"\t\tpublic readonly {type} {propertyName} => {fieldName};");
+								if (map?.IsReadOnly == true)
+								{
+									writer.WriteLine($"\t\tpublic readonly bool {propertyName} => {fieldName} > 0;");
+								}
+								else
+								{
+									writer.WriteLine($"\t\tpublic bool {propertyName} {{");
+									writer.WriteLine($"\t\t\treadonly get => {fieldName} > 0;");
+									writer.WriteLine($"\t\t\tset => {fieldName} = value ? (byte)1 : (byte)0;");
+									writer.WriteLine($"\t\t}}");
+								}
 							}
 							else
 							{
-								writer.WriteLine($"\t\tpublic {type} {propertyName} {{");
-								writer.WriteLine($"\t\t\treadonly get => {fieldName};");
-								writer.WriteLine($"\t\t\tset => {fieldName} = value;");
-								writer.WriteLine($"\t\t}}");
+								if (map?.IsReadOnly == true)
+								{
+									writer.WriteLine($"\t\tpublic readonly {type} {propertyName} => {fieldName};");
+								}
+								else
+								{
+									writer.WriteLine($"\t\tpublic {type} {propertyName} {{");
+									writer.WriteLine($"\t\t\treadonly get => {fieldName};");
+									writer.WriteLine($"\t\t\tset => {fieldName} = value;");
+									writer.WriteLine($"\t\t}}");
+								}
 							}
 						}
 					}
@@ -259,18 +279,28 @@ namespace SkiaSharpGenerator
 				.ToList();
 			foreach (var enm in enums)
 			{
-				Log?.LogVerbose($"    {enm.GetDisplayName()}");
+				var cppEnumName = enm.GetDisplayName();
 
-				var name = enm.GetDisplayName();
-				typeMappings.TryGetValue(name, out var map);
-				name = map?.CsType ?? Utils.CleanName(name);
+				if (string.IsNullOrEmpty(cppEnumName))
+				{
+					Log?.LogWarning($"Unknown enum type {enm}");
+					continue;
+				}
+
+				typeMappings.TryGetValue(cppEnumName, out var map);
+				if (map?.Generate == false)
+					continue;
+
+				Log?.LogVerbose($"    {cppEnumName}");
+
+				var name = map?.CsType ?? Utils.CleanName(cppEnumName);
 
 				var visibility = "public";
 				if (map?.IsInternal == true)
 					visibility = "internal";
 
 				writer.WriteLine();
-				writer.WriteLine($"\t// {enm.GetDisplayName()}");
+				writer.WriteLine($"\t// {cppEnumName}");
 				if (map?.IsObsolete == true)
 					writer.WriteLine($"\t[Obsolete]");
 				if (map?.IsFlags == true)
@@ -282,7 +312,7 @@ namespace SkiaSharpGenerator
 					if (map != null && map.Members.TryGetValue(fieldName, out var fieldMap))
 						fieldName = fieldMap;
 					else
-						fieldName = Utils.CleanName(fieldName, isEnumMember: true);
+						fieldName = Utils.CleanEnumFieldName(fieldName, cppEnumName);
 
 					writer.WriteLine($"\t\t// {field.Name} = {field.ValueExpression?.ToString() ?? field.Value.ToString()}");
 					writer.WriteLine($"\t\t{fieldName} = {field.Value},");
@@ -330,6 +360,13 @@ namespace SkiaSharpGenerator
 
 			foreach (var group in functionGroups)
 			{
+				var fullPath = Path.GetFullPath(group.Key).ToLower();
+				if (excludedFiles.Any(e => Path.GetFullPath(e).ToLower() == fullPath))
+				{
+					Log?.LogVerbose($"    Skipping file '{group.Key}' because it was in the exclude list.");
+					continue;
+				}
+
 				writer.WriteLine($"\t\t#region {Path.GetFileName(group.Key)}");
 				foreach (var function in group)
 				{
@@ -337,6 +374,7 @@ namespace SkiaSharpGenerator
 
 					var name = function.Name;
 					functionMappings.TryGetValue(name, out var funcMap);
+					var skipFunction = false;
 
 					var paramsList = new List<string>();
 					var paramNamesList = new List<string>();
@@ -344,8 +382,15 @@ namespace SkiaSharpGenerator
 					{
 						var p = function.Parameters[i];
 						var n = string.IsNullOrEmpty(p.Name) ? $"param{i}" : p.Name;
+						n = Utils.SafeName(n);
 						var t = GetType(p.Type);
 						var cppT = GetCppType(p.Type);
+						if (excludedTypes.Contains(cppT) == true)
+						{
+							Log?.LogVerbose($"    Skipping function '{function.Name}' because parameter '{cppT}' was in the exclude list.");
+							skipFunction = true;
+							break;
+						}
 						if (cppT == "bool")
 							t = $"[MarshalAs (UnmanagedType.I1)] bool";
 						if (funcMap != null && funcMap.Parameters.TryGetValue(i.ToString(), out var newT))
@@ -353,6 +398,9 @@ namespace SkiaSharpGenerator
 						paramsList.Add($"{t} {n}");
 						paramNamesList.Add(n);
 					}
+
+					if (skipFunction)
+						continue;
 
 					var returnType = GetType(function.ReturnType);
 					var retAttr = "";
