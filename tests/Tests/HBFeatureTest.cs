@@ -15,6 +15,14 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ToStringIsCorrect()
+		{
+			var feature = Feature.Parse("Kern");
+
+			Assert.Equal("Kern", feature.ToString());
+		}
+
+		[SkippableFact]
 		public void ShouldThrowFromUnknownString()
 		{
 			Assert.False(Feature.TryParse("", out var script));

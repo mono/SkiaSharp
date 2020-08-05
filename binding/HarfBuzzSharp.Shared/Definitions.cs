@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace HarfBuzzSharp
 {
@@ -27,11 +26,12 @@ namespace HarfBuzzSharp
 
 		public override string ToString ()
 		{
-			var buffer = new StringBuilder (MaxFeatureStringSize);
-			fixed (Feature* f = &this) {
-				HarfBuzzApi.hb_feature_to_string (f, buffer, MaxFeatureStringSize);
+			var buffer = new char[MaxFeatureStringSize];
+			fixed (Feature* f = &this)
+			fixed (char* b = buffer) {
+				HarfBuzzApi.hb_feature_to_string (f, b, (uint)buffer.Length);
+				return new string (b);
 			}
-			return buffer.ToString ();
 		}
 
 		public static bool TryParse (string s, out Feature feature)

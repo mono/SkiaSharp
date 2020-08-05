@@ -53,14 +53,14 @@ namespace HarfBuzzSharp
 		// extern hb_blob_t* hb_blob_create_from_file(const char* file_name)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern hb_blob_t hb_blob_create_from_file (/* char */ void* file_name);
+		internal static extern hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate hb_blob_t hb_blob_create_from_file (/* char */ void* file_name);
+			internal delegate hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name);
 		}
 		private static Delegates.hb_blob_create_from_file hb_blob_create_from_file_delegate;
-		internal static hb_blob_t hb_blob_create_from_file (/* char */ void* file_name) =>
+		internal static hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name) =>
 			(hb_blob_create_from_file_delegate ??= GetSymbol<Delegates.hb_blob_create_from_file> ("hb_blob_create_from_file")).Invoke (file_name);
 		#endif
 
@@ -985,14 +985,14 @@ namespace HarfBuzzSharp
 		// extern hb_bool_t hb_feature_from_string(const char* str, int len, hb_feature_t* feature)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_feature_from_string (/* char */ void* str, Int32 len, Feature* feature);
+		internal static extern Boolean hb_feature_from_string ([MarshalAs (UnmanagedType.LPStr)] String str, Int32 len, Feature* feature);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_feature_from_string (/* char */ void* str, Int32 len, Feature* feature);
+			internal delegate Boolean hb_feature_from_string ([MarshalAs (UnmanagedType.LPStr)] String str, Int32 len, Feature* feature);
 		}
 		private static Delegates.hb_feature_from_string hb_feature_from_string_delegate;
-		internal static Boolean hb_feature_from_string (/* char */ void* str, Int32 len, Feature* feature) =>
+		internal static Boolean hb_feature_from_string ([MarshalAs (UnmanagedType.LPStr)] String str, Int32 len, Feature* feature) =>
 			(hb_feature_from_string_delegate ??= GetSymbol<Delegates.hb_feature_from_string> ("hb_feature_from_string")).Invoke (str, len, feature);
 		#endif
 
@@ -5347,7 +5347,7 @@ namespace HarfBuzzSharp
 		// HB_MEMORY_MODE_DUPLICATE = 0
 		Duplicate = 0,
 		// HB_MEMORY_MODE_READONLY = 1
-		Readonly = 1,
+		ReadOnly = 1,
 		// HB_MEMORY_MODE_WRITABLE = 2
 		Writable = 2,
 		// HB_MEMORY_MODE_READONLY_MAY_MAKE_WRITABLE = 3

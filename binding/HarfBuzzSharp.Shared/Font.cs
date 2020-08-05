@@ -52,7 +52,7 @@ namespace HarfBuzzSharp
 
 			var container = new FontUserData (this, fontData);
 			var ctx = DelegateProxies.CreateMultiUserData (destroy, container);
-			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, ctx, DelegateProxies.ReleaseDelegateProxyForMulti);
+			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, (void*)ctx, DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
 		public void GetScale (out int xScale, out int yScale)
@@ -108,7 +108,7 @@ namespace HarfBuzzSharp
 			var advances = new int[count];
 
 			fixed (int* firstAdvance = advances) {
-				HarfBuzzApi.hb_font_get_glyph_h_advances (Handle, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
+				HarfBuzzApi.hb_font_get_glyph_h_advances (Handle, (uint)count, (uint*)firstGlyph, 4, firstAdvance, 4);
 			}
 
 			return advances;
@@ -126,7 +126,7 @@ namespace HarfBuzzSharp
 			var advances = new int[count];
 
 			fixed (int* firstAdvance = advances) {
-				HarfBuzzApi.hb_font_get_glyph_v_advances (Handle, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
+				HarfBuzzApi.hb_font_get_glyph_v_advances (Handle, (uint)count, (uint*)firstGlyph, 4, firstAdvance, 4);
 			}
 
 			return advances;
@@ -153,7 +153,7 @@ namespace HarfBuzzSharp
 			var buffer = pool.Rent (NameBufferLength);
 			try {
 				fixed (byte* first = buffer) {
-					if (!HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, buffer.Length)) {
+					if (!HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, (uint)buffer.Length)) {
 						name = string.Empty;
 						return false;
 					}
@@ -246,20 +246,34 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("Buffer's ContentType must of type Unicode.");
 			}
 
-			var featuresPtr = features == null || features.Count == 0 ? IntPtr.Zero : StructureArrayToPtr (features);
-			var shapersPtr = shapers == null || shapers.Count == 0 ? IntPtr.Zero : StructureArrayToPtr (shapers);
+			void*[] shapersPtrs = null;
+			if (shapers?.Count > 0) {
+				shapersPtrs = new void*[shapers.Count + 1];
+				int i;
+				for (i = 0; i < shapers.Count; i++) {
+					shapersPtrs[i] = (void*)Marshal.StringToHGlobalAnsi (shapers[i]);
+				}
+				shapersPtrs[i] = null;
+			}
 
-			HarfBuzzApi.hb_shape_full (
-				Handle,
-				buffer.Handle,
-				featuresPtr,
-				features?.Count ?? 0,
-				shapersPtr);
+			var featuresArray = features?.ToArray ();
 
-			if (featuresPtr != IntPtr.Zero)
-				Marshal.FreeCoTaskMem (featuresPtr);
-			if (shapersPtr != IntPtr.Zero)
-				Marshal.FreeCoTaskMem (shapersPtr);
+			fixed (Feature* fPtr = featuresArray)
+			fixed (void** sPtr = shapersPtrs) {
+				HarfBuzzApi.hb_shape_full (
+					Handle,
+					buffer.Handle,
+					fPtr,
+					(uint)(features?.Count ?? 0),
+					sPtr);
+			}
+
+			if (shapersPtrs != null) {
+				for (var i = 0; i < shapersPtrs.Length; i++) {
+					if (shapersPtrs[i] != null)
+						Marshal.FreeHGlobal ((IntPtr)shapersPtrs[i]);
+				}
+			}
 		}
 
 		protected override void Dispose (bool disposing) =>

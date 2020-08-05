@@ -24,7 +24,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentOutOfRangeException (nameof (index), "Index must be non negative.");
 			}
 
-			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
+			Handle = HarfBuzzApi.hb_face_create (blob.Handle, (uint)index);
 		}
 
 		public Face (GetTableDelegate getTable)
@@ -50,27 +50,27 @@ namespace HarfBuzzSharp
 		}
 
 		public int Index {
-			get => HarfBuzzApi.hb_face_get_index (Handle);
-			set => HarfBuzzApi.hb_face_set_index (Handle, value);
+			get => (int)HarfBuzzApi.hb_face_get_index (Handle);
+			set => HarfBuzzApi.hb_face_set_index (Handle, (uint)value);
 		}
 
 		public int UnitsPerEm {
-			get => HarfBuzzApi.hb_face_get_upem (Handle);
-			set => HarfBuzzApi.hb_face_set_upem (Handle, value);
+			get => (int)HarfBuzzApi.hb_face_get_upem (Handle);
+			set => HarfBuzzApi.hb_face_set_upem (Handle, (uint)value);
 		}
 
 		public int GlyphCount {
-			get => HarfBuzzApi.hb_face_get_glyph_count (Handle);
-			set => HarfBuzzApi.hb_face_set_glyph_count (Handle, value);
+			get => (int)HarfBuzzApi.hb_face_get_glyph_count (Handle);
+			set => HarfBuzzApi.hb_face_set_glyph_count (Handle, (uint)value);
 		}
 
 		public unsafe Tag[] Tables {
 			get {
-				var tableCount = 0;
-				var count = HarfBuzzApi.hb_face_get_table_tags (Handle, 0, ref tableCount, IntPtr.Zero);
+				uint tableCount;
+				var count = HarfBuzzApi.hb_face_get_table_tags (Handle, 0, &tableCount, null);
 				var buffer = new Tag[count];
 				fixed (Tag* ptr = buffer) {
-					HarfBuzzApi.hb_face_get_table_tags (Handle, 0, ref count, (IntPtr)ptr);
+					HarfBuzzApi.hb_face_get_table_tags (Handle, 0, &count, ptr);
 				}
 				return buffer;
 			}
