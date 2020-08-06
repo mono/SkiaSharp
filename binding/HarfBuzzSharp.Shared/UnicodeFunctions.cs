@@ -63,7 +63,12 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		public bool TryCompose (uint a, uint b, out uint ab) => HarfBuzzApi.hb_unicode_compose (Handle, a, b, out ab);
+		public bool TryCompose (uint a, uint b, out uint ab)
+		{
+			fixed (uint* abPtr = &ab) {
+				return HarfBuzzApi.hb_unicode_compose (Handle, a, b, abPtr);
+			}
+		}
 
 		public bool TryDecompose (int ab, out int a, out int b)
 		{
@@ -76,7 +81,13 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		public bool TryDecompose (uint ab, out uint a, out uint b) => HarfBuzzApi.hb_unicode_decompose (Handle, ab, out a, out b);
+		public bool TryDecompose (uint ab, out uint a, out uint b)
+		{
+			fixed (uint* aPtr = &a)
+			fixed (uint* bPtr = &b) {
+				return HarfBuzzApi.hb_unicode_decompose (Handle, ab, aPtr, bPtr);
+			}
+		}
 
 		public void SetCombiningClassDelegate (CombiningClassDelegate del, ReleaseDelegate destroy = null)
 		{

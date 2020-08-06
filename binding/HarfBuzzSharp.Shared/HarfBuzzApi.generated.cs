@@ -1987,14 +1987,14 @@ namespace HarfBuzzSharp
 		// extern hb_bool_t hb_font_get_glyph_from_name(hb_font_t* font, const char* name, int len, hb_codepoint_t* glyph)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_font_get_glyph_from_name (hb_font_t font, /* char */ void* name, Int32 len, UInt32* glyph);
+		internal static extern Boolean hb_font_get_glyph_from_name (hb_font_t font, [MarshalAs (UnmanagedType.LPStr)] String name, Int32 len, UInt32* glyph);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_font_get_glyph_from_name (hb_font_t font, /* char */ void* name, Int32 len, UInt32* glyph);
+			internal delegate Boolean hb_font_get_glyph_from_name (hb_font_t font, [MarshalAs (UnmanagedType.LPStr)] String name, Int32 len, UInt32* glyph);
 		}
 		private static Delegates.hb_font_get_glyph_from_name hb_font_get_glyph_from_name_delegate;
-		internal static Boolean hb_font_get_glyph_from_name (hb_font_t font, /* char */ void* name, Int32 len, UInt32* glyph) =>
+		internal static Boolean hb_font_get_glyph_from_name (hb_font_t font, [MarshalAs (UnmanagedType.LPStr)] String name, Int32 len, UInt32* glyph) =>
 			(hb_font_get_glyph_from_name_delegate ??= GetSymbol<Delegates.hb_font_get_glyph_from_name> ("hb_font_get_glyph_from_name")).Invoke (font, name, len, glyph);
 		#endif
 
@@ -2267,14 +2267,14 @@ namespace HarfBuzzSharp
 		// extern hb_bool_t hb_font_glyph_from_string(hb_font_t* font, const char* s, int len, hb_codepoint_t* glyph)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_font_glyph_from_string (hb_font_t font, /* char */ void* s, Int32 len, UInt32* glyph);
+		internal static extern Boolean hb_font_glyph_from_string (hb_font_t font, [MarshalAs (UnmanagedType.LPStr)] String s, Int32 len, UInt32* glyph);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_font_glyph_from_string (hb_font_t font, /* char */ void* s, Int32 len, UInt32* glyph);
+			internal delegate Boolean hb_font_glyph_from_string (hb_font_t font, [MarshalAs (UnmanagedType.LPStr)] String s, Int32 len, UInt32* glyph);
 		}
 		private static Delegates.hb_font_glyph_from_string hb_font_glyph_from_string_delegate;
-		internal static Boolean hb_font_glyph_from_string (hb_font_t font, /* char */ void* s, Int32 len, UInt32* glyph) =>
+		internal static Boolean hb_font_glyph_from_string (hb_font_t font, [MarshalAs (UnmanagedType.LPStr)] String s, Int32 len, UInt32* glyph) =>
 			(hb_font_glyph_from_string_delegate ??= GetSymbol<Delegates.hb_font_glyph_from_string> ("hb_font_glyph_from_string")).Invoke (font, s, len, glyph);
 		#endif
 
@@ -5349,7 +5349,7 @@ namespace HarfBuzzSharp
 		// HB_MEMORY_MODE_READONLY = 1
 		ReadOnly = 1,
 		// HB_MEMORY_MODE_WRITABLE = 2
-		Writable = 2,
+		Writeable = 2,
 		// HB_MEMORY_MODE_READONLY_MAY_MAKE_WRITABLE = 3
 		ReadonlyMayMakeWritable = 3,
 	}

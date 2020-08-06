@@ -27,7 +27,7 @@ namespace HarfBuzzSharp
 
 		public static Tag Parse (string tag)
 		{
-			if (string.IsNullOrEmpty(tag))
+			if (string.IsNullOrEmpty (tag))
 				return None;
 
 			var realTag = new char[4];

@@ -3,8 +3,6 @@ using System.ComponentModel;
 
 namespace HarfBuzzSharp
 {
-	// public delegates
-
 	public delegate void ReleaseDelegate ();
 
 	public delegate Blob GetTableDelegate (Face face, Tag tag);
