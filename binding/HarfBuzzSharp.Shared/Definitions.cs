@@ -2,49 +2,6 @@
 
 namespace HarfBuzzSharp
 {
-	public unsafe partial struct Feature
-	{
-		private const int MaxFeatureStringSize = 128;
-
-		public Feature (Tag tag)
-			: this (tag, 1u, 0, uint.MaxValue)
-		{
-		}
-
-		public Feature (Tag tag, uint value)
-			: this (tag, value, 0, uint.MaxValue)
-		{
-		}
-
-		public Feature (Tag tag, uint value, uint start, uint end)
-		{
-			this.tag = tag;
-			this.value = value;
-			this.start = start;
-			this.end = end;
-		}
-
-		public override string ToString ()
-		{
-			var buffer = new char[MaxFeatureStringSize];
-			fixed (Feature* f = &this)
-			fixed (char* b = buffer) {
-				HarfBuzzApi.hb_feature_to_string (f, b, (uint)buffer.Length);
-				return new string (b);
-			}
-		}
-
-		public static bool TryParse (string s, out Feature feature)
-		{
-			fixed (Feature* f = &feature) {
-				return HarfBuzzApi.hb_feature_from_string (s, -1, f);
-			}
-		}
-
-		public static Feature Parse (string s) =>
-			TryParse (s, out var feature) ? feature : throw new FormatException ("Unrecognized feature string format.");
-	}
-
 	public unsafe partial struct GlyphInfo
 	{
 		public GlyphFlags GlyphFlags {
@@ -85,31 +42,5 @@ namespace HarfBuzzSharp
 		VARIATIONS_PS_PREFIX = 25,
 
 		INVALID = 0xFFFF
-	}
-
-	public unsafe readonly struct OpenTypeMetrics
-	{
-		private readonly IntPtr font;
-
-		public OpenTypeMetrics (IntPtr font)
-		{
-			this.font = font;
-		}
-
-		public bool TryGetPosition (OpenTypeMetricsTag metricsTag, out int position)
-		{
-			fixed (int* p = &position) {
-				return HarfBuzzApi.hb_ot_metrics_get_position (font, metricsTag, p);
-			}
-		}
-
-		public float GetVariation (OpenTypeMetricsTag metricsTag) =>
-			HarfBuzzApi.hb_ot_metrics_get_variation (font, metricsTag);
-
-		public int GetXVariation (OpenTypeMetricsTag metricsTag) =>
-			HarfBuzzApi.hb_ot_metrics_get_x_variation (font, metricsTag);
-
-		public int GetYVariation (OpenTypeMetricsTag metricsTag) =>
-			HarfBuzzApi.hb_ot_metrics_get_y_variation (font, metricsTag);
 	}
 }

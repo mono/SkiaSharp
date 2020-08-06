@@ -69,7 +69,7 @@ namespace HarfBuzzSharp
 			if (a != null)
 				*a = aManaged;
 			if (b != null)
-				*b = aManaged;
+				*b = bManaged;
 			return result;
 		}
 	}
