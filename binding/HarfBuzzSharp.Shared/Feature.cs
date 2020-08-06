@@ -25,6 +25,26 @@ namespace HarfBuzzSharp
 			this.end = end;
 		}
 
+		public Tag Tag {
+			readonly get => tag;
+			set => tag = value;
+		}
+
+		public uint Value {
+			readonly get => value;
+			set => this.value = value;
+		}
+
+		public uint Start {
+			readonly get => start;
+			set => start = value;
+		}
+
+		public uint End {
+			readonly get => end;
+			set => end = value;
+		}
+
 		public override string ToString ()
 		{
 			fixed (Feature* f = &this) {

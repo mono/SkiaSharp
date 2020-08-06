@@ -69,8 +69,8 @@ namespace HarfBuzzSharp
 				uint tableCount;
 				var count = HarfBuzzApi.hb_face_get_table_tags (Handle, 0, &tableCount, null);
 				var buffer = new Tag[count];
-				fixed (Tag* ptr = buffer) {
-					HarfBuzzApi.hb_face_get_table_tags (Handle, 0, &count, ptr);
+				fixed (void* ptr = buffer) {
+					HarfBuzzApi.hb_face_get_table_tags (Handle, 0, &count, (uint*)ptr);
 				}
 				return buffer;
 			}

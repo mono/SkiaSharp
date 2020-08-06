@@ -1055,14 +1055,14 @@ namespace HarfBuzzSharp
 		// extern hb_script_t hb_script_from_iso15924_tag(hb_tag_t tag)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_script_from_iso15924_tag (Tag tag);
+		internal static extern UInt32 hb_script_from_iso15924_tag (UInt32 tag);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_script_from_iso15924_tag (Tag tag);
+			internal delegate UInt32 hb_script_from_iso15924_tag (UInt32 tag);
 		}
 		private static Delegates.hb_script_from_iso15924_tag hb_script_from_iso15924_tag_delegate;
-		internal static UInt32 hb_script_from_iso15924_tag (Tag tag) =>
+		internal static UInt32 hb_script_from_iso15924_tag (UInt32 tag) =>
 			(hb_script_from_iso15924_tag_delegate ??= GetSymbol<Delegates.hb_script_from_iso15924_tag> ("hb_script_from_iso15924_tag")).Invoke (tag);
 		#endif
 
@@ -1097,42 +1097,42 @@ namespace HarfBuzzSharp
 		// extern hb_tag_t hb_script_to_iso15924_tag(hb_script_t script)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Tag hb_script_to_iso15924_tag (UInt32 script);
+		internal static extern UInt32 hb_script_to_iso15924_tag (UInt32 script);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Tag hb_script_to_iso15924_tag (UInt32 script);
+			internal delegate UInt32 hb_script_to_iso15924_tag (UInt32 script);
 		}
 		private static Delegates.hb_script_to_iso15924_tag hb_script_to_iso15924_tag_delegate;
-		internal static Tag hb_script_to_iso15924_tag (UInt32 script) =>
+		internal static UInt32 hb_script_to_iso15924_tag (UInt32 script) =>
 			(hb_script_to_iso15924_tag_delegate ??= GetSymbol<Delegates.hb_script_to_iso15924_tag> ("hb_script_to_iso15924_tag")).Invoke (script);
 		#endif
 
 		// extern hb_tag_t hb_tag_from_string(const char* str, int len)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Tag hb_tag_from_string (/* char */ void* str, Int32 len);
+		internal static extern UInt32 hb_tag_from_string (/* char */ void* str, Int32 len);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Tag hb_tag_from_string (/* char */ void* str, Int32 len);
+			internal delegate UInt32 hb_tag_from_string (/* char */ void* str, Int32 len);
 		}
 		private static Delegates.hb_tag_from_string hb_tag_from_string_delegate;
-		internal static Tag hb_tag_from_string (/* char */ void* str, Int32 len) =>
+		internal static UInt32 hb_tag_from_string (/* char */ void* str, Int32 len) =>
 			(hb_tag_from_string_delegate ??= GetSymbol<Delegates.hb_tag_from_string> ("hb_tag_from_string")).Invoke (str, len);
 		#endif
 
 		// extern void hb_tag_to_string(hb_tag_t tag, char* buf)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_tag_to_string (Tag tag, /* char */ void* buf);
+		internal static extern void hb_tag_to_string (UInt32 tag, /* char */ void* buf);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_tag_to_string (Tag tag, /* char */ void* buf);
+			internal delegate void hb_tag_to_string (UInt32 tag, /* char */ void* buf);
 		}
 		private static Delegates.hb_tag_to_string hb_tag_to_string_delegate;
-		internal static void hb_tag_to_string (Tag tag, /* char */ void* buf) =>
+		internal static void hb_tag_to_string (UInt32 tag, /* char */ void* buf) =>
 			(hb_tag_to_string_delegate ??= GetSymbol<Delegates.hb_tag_to_string> ("hb_tag_to_string")).Invoke (tag, buf);
 		#endif
 
@@ -1171,14 +1171,14 @@ namespace HarfBuzzSharp
 		// extern hb_bool_t hb_face_builder_add_table(hb_face_t* face, hb_tag_t tag, hb_blob_t* blob)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_face_builder_add_table (hb_face_t face, Tag tag, hb_blob_t blob);
+		internal static extern Boolean hb_face_builder_add_table (hb_face_t face, UInt32 tag, hb_blob_t blob);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_face_builder_add_table (hb_face_t face, Tag tag, hb_blob_t blob);
+			internal delegate Boolean hb_face_builder_add_table (hb_face_t face, UInt32 tag, hb_blob_t blob);
 		}
 		private static Delegates.hb_face_builder_add_table hb_face_builder_add_table_delegate;
-		internal static Boolean hb_face_builder_add_table (hb_face_t face, Tag tag, hb_blob_t blob) =>
+		internal static Boolean hb_face_builder_add_table (hb_face_t face, UInt32 tag, hb_blob_t blob) =>
 			(hb_face_builder_add_table_delegate ??= GetSymbol<Delegates.hb_face_builder_add_table> ("hb_face_builder_add_table")).Invoke (face, tag, blob);
 		#endif
 
@@ -1339,14 +1339,14 @@ namespace HarfBuzzSharp
 		// extern unsigned int hb_face_get_table_tags(const hb_face_t* face, unsigned int start_offset, unsigned int* table_count, hb_tag_t* table_tags)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_face_get_table_tags (hb_face_t face, UInt32 start_offset, UInt32* table_count, Tag* table_tags);
+		internal static extern UInt32 hb_face_get_table_tags (hb_face_t face, UInt32 start_offset, UInt32* table_count, UInt32* table_tags);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_face_get_table_tags (hb_face_t face, UInt32 start_offset, UInt32* table_count, Tag* table_tags);
+			internal delegate UInt32 hb_face_get_table_tags (hb_face_t face, UInt32 start_offset, UInt32* table_count, UInt32* table_tags);
 		}
 		private static Delegates.hb_face_get_table_tags hb_face_get_table_tags_delegate;
-		internal static UInt32 hb_face_get_table_tags (hb_face_t face, UInt32 start_offset, UInt32* table_count, Tag* table_tags) =>
+		internal static UInt32 hb_face_get_table_tags (hb_face_t face, UInt32 start_offset, UInt32* table_count, UInt32* table_tags) =>
 			(hb_face_get_table_tags_delegate ??= GetSymbol<Delegates.hb_face_get_table_tags> ("hb_face_get_table_tags")).Invoke (face, start_offset, table_count, table_tags);
 		#endif
 
@@ -1423,14 +1423,14 @@ namespace HarfBuzzSharp
 		// extern hb_blob_t* hb_face_reference_table(const hb_face_t* face, hb_tag_t tag)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern hb_blob_t hb_face_reference_table (hb_face_t face, Tag tag);
+		internal static extern hb_blob_t hb_face_reference_table (hb_face_t face, UInt32 tag);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate hb_blob_t hb_face_reference_table (hb_face_t face, Tag tag);
+			internal delegate hb_blob_t hb_face_reference_table (hb_face_t face, UInt32 tag);
 		}
 		private static Delegates.hb_face_reference_table hb_face_reference_table_delegate;
-		internal static hb_blob_t hb_face_reference_table (hb_face_t face, Tag tag) =>
+		internal static hb_blob_t hb_face_reference_table (hb_face_t face, UInt32 tag) =>
 			(hb_face_reference_table_delegate ??= GetSymbol<Delegates.hb_face_reference_table> ("hb_face_reference_table")).Invoke (face, tag);
 		#endif
 
@@ -2871,84 +2871,84 @@ namespace HarfBuzzSharp
 		// extern void hb_ot_layout_collect_features(hb_face_t* face, hb_tag_t table_tag, const hb_tag_t* scripts, const hb_tag_t* languages, const hb_tag_t* features, hb_set_t* feature_indexes)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_ot_layout_collect_features (hb_face_t face, Tag table_tag, Tag* scripts, Tag* languages, Tag* features, hb_set_t feature_indexes);
+		internal static extern void hb_ot_layout_collect_features (hb_face_t face, UInt32 table_tag, UInt32* scripts, UInt32* languages, UInt32* features, hb_set_t feature_indexes);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_ot_layout_collect_features (hb_face_t face, Tag table_tag, Tag* scripts, Tag* languages, Tag* features, hb_set_t feature_indexes);
+			internal delegate void hb_ot_layout_collect_features (hb_face_t face, UInt32 table_tag, UInt32* scripts, UInt32* languages, UInt32* features, hb_set_t feature_indexes);
 		}
 		private static Delegates.hb_ot_layout_collect_features hb_ot_layout_collect_features_delegate;
-		internal static void hb_ot_layout_collect_features (hb_face_t face, Tag table_tag, Tag* scripts, Tag* languages, Tag* features, hb_set_t feature_indexes) =>
+		internal static void hb_ot_layout_collect_features (hb_face_t face, UInt32 table_tag, UInt32* scripts, UInt32* languages, UInt32* features, hb_set_t feature_indexes) =>
 			(hb_ot_layout_collect_features_delegate ??= GetSymbol<Delegates.hb_ot_layout_collect_features> ("hb_ot_layout_collect_features")).Invoke (face, table_tag, scripts, languages, features, feature_indexes);
 		#endif
 
 		// extern void hb_ot_layout_collect_lookups(hb_face_t* face, hb_tag_t table_tag, const hb_tag_t* scripts, const hb_tag_t* languages, const hb_tag_t* features, hb_set_t* lookup_indexes)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_ot_layout_collect_lookups (hb_face_t face, Tag table_tag, Tag* scripts, Tag* languages, Tag* features, hb_set_t lookup_indexes);
+		internal static extern void hb_ot_layout_collect_lookups (hb_face_t face, UInt32 table_tag, UInt32* scripts, UInt32* languages, UInt32* features, hb_set_t lookup_indexes);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_ot_layout_collect_lookups (hb_face_t face, Tag table_tag, Tag* scripts, Tag* languages, Tag* features, hb_set_t lookup_indexes);
+			internal delegate void hb_ot_layout_collect_lookups (hb_face_t face, UInt32 table_tag, UInt32* scripts, UInt32* languages, UInt32* features, hb_set_t lookup_indexes);
 		}
 		private static Delegates.hb_ot_layout_collect_lookups hb_ot_layout_collect_lookups_delegate;
-		internal static void hb_ot_layout_collect_lookups (hb_face_t face, Tag table_tag, Tag* scripts, Tag* languages, Tag* features, hb_set_t lookup_indexes) =>
+		internal static void hb_ot_layout_collect_lookups (hb_face_t face, UInt32 table_tag, UInt32* scripts, UInt32* languages, UInt32* features, hb_set_t lookup_indexes) =>
 			(hb_ot_layout_collect_lookups_delegate ??= GetSymbol<Delegates.hb_ot_layout_collect_lookups> ("hb_ot_layout_collect_lookups")).Invoke (face, table_tag, scripts, languages, features, lookup_indexes);
 		#endif
 
 		// extern unsigned int hb_ot_layout_feature_get_characters(hb_face_t* face, hb_tag_t table_tag, unsigned int feature_index, unsigned int start_offset, unsigned int* char_count, hb_codepoint_t* characters)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_layout_feature_get_characters (hb_face_t face, Tag table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* char_count, UInt32* characters);
+		internal static extern UInt32 hb_ot_layout_feature_get_characters (hb_face_t face, UInt32 table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* char_count, UInt32* characters);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_layout_feature_get_characters (hb_face_t face, Tag table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* char_count, UInt32* characters);
+			internal delegate UInt32 hb_ot_layout_feature_get_characters (hb_face_t face, UInt32 table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* char_count, UInt32* characters);
 		}
 		private static Delegates.hb_ot_layout_feature_get_characters hb_ot_layout_feature_get_characters_delegate;
-		internal static UInt32 hb_ot_layout_feature_get_characters (hb_face_t face, Tag table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* char_count, UInt32* characters) =>
+		internal static UInt32 hb_ot_layout_feature_get_characters (hb_face_t face, UInt32 table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* char_count, UInt32* characters) =>
 			(hb_ot_layout_feature_get_characters_delegate ??= GetSymbol<Delegates.hb_ot_layout_feature_get_characters> ("hb_ot_layout_feature_get_characters")).Invoke (face, table_tag, feature_index, start_offset, char_count, characters);
 		#endif
 
 		// extern unsigned int hb_ot_layout_feature_get_lookups(hb_face_t* face, hb_tag_t table_tag, unsigned int feature_index, unsigned int start_offset, unsigned int* lookup_count, unsigned int* lookup_indexes)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_layout_feature_get_lookups (hb_face_t face, Tag table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes);
+		internal static extern UInt32 hb_ot_layout_feature_get_lookups (hb_face_t face, UInt32 table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_layout_feature_get_lookups (hb_face_t face, Tag table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes);
+			internal delegate UInt32 hb_ot_layout_feature_get_lookups (hb_face_t face, UInt32 table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes);
 		}
 		private static Delegates.hb_ot_layout_feature_get_lookups hb_ot_layout_feature_get_lookups_delegate;
-		internal static UInt32 hb_ot_layout_feature_get_lookups (hb_face_t face, Tag table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes) =>
+		internal static UInt32 hb_ot_layout_feature_get_lookups (hb_face_t face, UInt32 table_tag, UInt32 feature_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes) =>
 			(hb_ot_layout_feature_get_lookups_delegate ??= GetSymbol<Delegates.hb_ot_layout_feature_get_lookups> ("hb_ot_layout_feature_get_lookups")).Invoke (face, table_tag, feature_index, start_offset, lookup_count, lookup_indexes);
 		#endif
 
 		// extern hb_bool_t hb_ot_layout_feature_get_name_ids(hb_face_t* face, hb_tag_t table_tag, unsigned int feature_index, hb_ot_name_id_t* label_id, hb_ot_name_id_t* tooltip_id, hb_ot_name_id_t* sample_id, unsigned int* num_named_parameters, hb_ot_name_id_t* first_param_id)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_ot_layout_feature_get_name_ids (hb_face_t face, Tag table_tag, UInt32 feature_index, OpenTypeNameId* label_id, OpenTypeNameId* tooltip_id, OpenTypeNameId* sample_id, UInt32* num_named_parameters, OpenTypeNameId* first_param_id);
+		internal static extern Boolean hb_ot_layout_feature_get_name_ids (hb_face_t face, UInt32 table_tag, UInt32 feature_index, OpenTypeNameId* label_id, OpenTypeNameId* tooltip_id, OpenTypeNameId* sample_id, UInt32* num_named_parameters, OpenTypeNameId* first_param_id);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_ot_layout_feature_get_name_ids (hb_face_t face, Tag table_tag, UInt32 feature_index, OpenTypeNameId* label_id, OpenTypeNameId* tooltip_id, OpenTypeNameId* sample_id, UInt32* num_named_parameters, OpenTypeNameId* first_param_id);
+			internal delegate Boolean hb_ot_layout_feature_get_name_ids (hb_face_t face, UInt32 table_tag, UInt32 feature_index, OpenTypeNameId* label_id, OpenTypeNameId* tooltip_id, OpenTypeNameId* sample_id, UInt32* num_named_parameters, OpenTypeNameId* first_param_id);
 		}
 		private static Delegates.hb_ot_layout_feature_get_name_ids hb_ot_layout_feature_get_name_ids_delegate;
-		internal static Boolean hb_ot_layout_feature_get_name_ids (hb_face_t face, Tag table_tag, UInt32 feature_index, OpenTypeNameId* label_id, OpenTypeNameId* tooltip_id, OpenTypeNameId* sample_id, UInt32* num_named_parameters, OpenTypeNameId* first_param_id) =>
+		internal static Boolean hb_ot_layout_feature_get_name_ids (hb_face_t face, UInt32 table_tag, UInt32 feature_index, OpenTypeNameId* label_id, OpenTypeNameId* tooltip_id, OpenTypeNameId* sample_id, UInt32* num_named_parameters, OpenTypeNameId* first_param_id) =>
 			(hb_ot_layout_feature_get_name_ids_delegate ??= GetSymbol<Delegates.hb_ot_layout_feature_get_name_ids> ("hb_ot_layout_feature_get_name_ids")).Invoke (face, table_tag, feature_index, label_id, tooltip_id, sample_id, num_named_parameters, first_param_id);
 		#endif
 
 		// extern unsigned int hb_ot_layout_feature_with_variations_get_lookups(hb_face_t* face, hb_tag_t table_tag, unsigned int feature_index, unsigned int variations_index, unsigned int start_offset, unsigned int* lookup_count, unsigned int* lookup_indexes)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_layout_feature_with_variations_get_lookups (hb_face_t face, Tag table_tag, UInt32 feature_index, UInt32 variations_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes);
+		internal static extern UInt32 hb_ot_layout_feature_with_variations_get_lookups (hb_face_t face, UInt32 table_tag, UInt32 feature_index, UInt32 variations_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_layout_feature_with_variations_get_lookups (hb_face_t face, Tag table_tag, UInt32 feature_index, UInt32 variations_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes);
+			internal delegate UInt32 hb_ot_layout_feature_with_variations_get_lookups (hb_face_t face, UInt32 table_tag, UInt32 feature_index, UInt32 variations_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes);
 		}
 		private static Delegates.hb_ot_layout_feature_with_variations_get_lookups hb_ot_layout_feature_with_variations_get_lookups_delegate;
-		internal static UInt32 hb_ot_layout_feature_with_variations_get_lookups (hb_face_t face, Tag table_tag, UInt32 feature_index, UInt32 variations_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes) =>
+		internal static UInt32 hb_ot_layout_feature_with_variations_get_lookups (hb_face_t face, UInt32 table_tag, UInt32 feature_index, UInt32 variations_index, UInt32 start_offset, UInt32* lookup_count, UInt32* lookup_indexes) =>
 			(hb_ot_layout_feature_with_variations_get_lookups_delegate ??= GetSymbol<Delegates.hb_ot_layout_feature_with_variations_get_lookups> ("hb_ot_layout_feature_with_variations_get_lookups")).Invoke (face, table_tag, feature_index, variations_index, start_offset, lookup_count, lookup_indexes);
 		#endif
 
@@ -2969,14 +2969,14 @@ namespace HarfBuzzSharp
 		// extern hb_bool_t hb_ot_layout_get_baseline(hb_font_t* font, hb_ot_layout_baseline_tag_t baseline_tag, hb_direction_t direction, hb_tag_t script_tag, hb_tag_t language_tag, hb_position_t* coord)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_ot_layout_get_baseline (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, Tag script_tag, Tag language_tag, Int32* coord);
+		internal static extern Boolean hb_ot_layout_get_baseline (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script_tag, UInt32 language_tag, Int32* coord);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_ot_layout_get_baseline (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, Tag script_tag, Tag language_tag, Int32* coord);
+			internal delegate Boolean hb_ot_layout_get_baseline (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script_tag, UInt32 language_tag, Int32* coord);
 		}
 		private static Delegates.hb_ot_layout_get_baseline hb_ot_layout_get_baseline_delegate;
-		internal static Boolean hb_ot_layout_get_baseline (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, Tag script_tag, Tag language_tag, Int32* coord) =>
+		internal static Boolean hb_ot_layout_get_baseline (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script_tag, UInt32 language_tag, Int32* coord) =>
 			(hb_ot_layout_get_baseline_delegate ??= GetSymbol<Delegates.hb_ot_layout_get_baseline> ("hb_ot_layout_get_baseline")).Invoke (font, baseline_tag, direction, script_tag, language_tag, coord);
 		#endif
 
@@ -3081,84 +3081,84 @@ namespace HarfBuzzSharp
 		// extern hb_bool_t hb_ot_layout_language_find_feature(hb_face_t* face, hb_tag_t table_tag, unsigned int script_index, unsigned int language_index, hb_tag_t feature_tag, unsigned int* feature_index)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_ot_layout_language_find_feature (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, Tag feature_tag, UInt32* feature_index);
+		internal static extern Boolean hb_ot_layout_language_find_feature (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32 feature_tag, UInt32* feature_index);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_ot_layout_language_find_feature (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, Tag feature_tag, UInt32* feature_index);
+			internal delegate Boolean hb_ot_layout_language_find_feature (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32 feature_tag, UInt32* feature_index);
 		}
 		private static Delegates.hb_ot_layout_language_find_feature hb_ot_layout_language_find_feature_delegate;
-		internal static Boolean hb_ot_layout_language_find_feature (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, Tag feature_tag, UInt32* feature_index) =>
+		internal static Boolean hb_ot_layout_language_find_feature (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32 feature_tag, UInt32* feature_index) =>
 			(hb_ot_layout_language_find_feature_delegate ??= GetSymbol<Delegates.hb_ot_layout_language_find_feature> ("hb_ot_layout_language_find_feature")).Invoke (face, table_tag, script_index, language_index, feature_tag, feature_index);
 		#endif
 
 		// extern unsigned int hb_ot_layout_language_get_feature_indexes(hb_face_t* face, hb_tag_t table_tag, unsigned int script_index, unsigned int language_index, unsigned int start_offset, unsigned int* feature_count, unsigned int* feature_indexes)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_layout_language_get_feature_indexes (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, UInt32* feature_indexes);
+		internal static extern UInt32 hb_ot_layout_language_get_feature_indexes (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, UInt32* feature_indexes);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_layout_language_get_feature_indexes (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, UInt32* feature_indexes);
+			internal delegate UInt32 hb_ot_layout_language_get_feature_indexes (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, UInt32* feature_indexes);
 		}
 		private static Delegates.hb_ot_layout_language_get_feature_indexes hb_ot_layout_language_get_feature_indexes_delegate;
-		internal static UInt32 hb_ot_layout_language_get_feature_indexes (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, UInt32* feature_indexes) =>
+		internal static UInt32 hb_ot_layout_language_get_feature_indexes (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, UInt32* feature_indexes) =>
 			(hb_ot_layout_language_get_feature_indexes_delegate ??= GetSymbol<Delegates.hb_ot_layout_language_get_feature_indexes> ("hb_ot_layout_language_get_feature_indexes")).Invoke (face, table_tag, script_index, language_index, start_offset, feature_count, feature_indexes);
 		#endif
 
 		// extern unsigned int hb_ot_layout_language_get_feature_tags(hb_face_t* face, hb_tag_t table_tag, unsigned int script_index, unsigned int language_index, unsigned int start_offset, unsigned int* feature_count, hb_tag_t* feature_tags)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_layout_language_get_feature_tags (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, Tag* feature_tags);
+		internal static extern UInt32 hb_ot_layout_language_get_feature_tags (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, UInt32* feature_tags);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_layout_language_get_feature_tags (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, Tag* feature_tags);
+			internal delegate UInt32 hb_ot_layout_language_get_feature_tags (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, UInt32* feature_tags);
 		}
 		private static Delegates.hb_ot_layout_language_get_feature_tags hb_ot_layout_language_get_feature_tags_delegate;
-		internal static UInt32 hb_ot_layout_language_get_feature_tags (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, Tag* feature_tags) =>
+		internal static UInt32 hb_ot_layout_language_get_feature_tags (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32 start_offset, UInt32* feature_count, UInt32* feature_tags) =>
 			(hb_ot_layout_language_get_feature_tags_delegate ??= GetSymbol<Delegates.hb_ot_layout_language_get_feature_tags> ("hb_ot_layout_language_get_feature_tags")).Invoke (face, table_tag, script_index, language_index, start_offset, feature_count, feature_tags);
 		#endif
 
 		// extern hb_bool_t hb_ot_layout_language_get_required_feature(hb_face_t* face, hb_tag_t table_tag, unsigned int script_index, unsigned int language_index, unsigned int* feature_index, hb_tag_t* feature_tag)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_ot_layout_language_get_required_feature (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index, Tag* feature_tag);
+		internal static extern Boolean hb_ot_layout_language_get_required_feature (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index, UInt32* feature_tag);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_ot_layout_language_get_required_feature (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index, Tag* feature_tag);
+			internal delegate Boolean hb_ot_layout_language_get_required_feature (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index, UInt32* feature_tag);
 		}
 		private static Delegates.hb_ot_layout_language_get_required_feature hb_ot_layout_language_get_required_feature_delegate;
-		internal static Boolean hb_ot_layout_language_get_required_feature (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index, Tag* feature_tag) =>
+		internal static Boolean hb_ot_layout_language_get_required_feature (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index, UInt32* feature_tag) =>
 			(hb_ot_layout_language_get_required_feature_delegate ??= GetSymbol<Delegates.hb_ot_layout_language_get_required_feature> ("hb_ot_layout_language_get_required_feature")).Invoke (face, table_tag, script_index, language_index, feature_index, feature_tag);
 		#endif
 
 		// extern hb_bool_t hb_ot_layout_language_get_required_feature_index(hb_face_t* face, hb_tag_t table_tag, unsigned int script_index, unsigned int language_index, unsigned int* feature_index)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_ot_layout_language_get_required_feature_index (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index);
+		internal static extern Boolean hb_ot_layout_language_get_required_feature_index (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_ot_layout_language_get_required_feature_index (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index);
+			internal delegate Boolean hb_ot_layout_language_get_required_feature_index (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index);
 		}
 		private static Delegates.hb_ot_layout_language_get_required_feature_index hb_ot_layout_language_get_required_feature_index_delegate;
-		internal static Boolean hb_ot_layout_language_get_required_feature_index (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index) =>
+		internal static Boolean hb_ot_layout_language_get_required_feature_index (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, UInt32* feature_index) =>
 			(hb_ot_layout_language_get_required_feature_index_delegate ??= GetSymbol<Delegates.hb_ot_layout_language_get_required_feature_index> ("hb_ot_layout_language_get_required_feature_index")).Invoke (face, table_tag, script_index, language_index, feature_index);
 		#endif
 
 		// extern void hb_ot_layout_lookup_collect_glyphs(hb_face_t* face, hb_tag_t table_tag, unsigned int lookup_index, hb_set_t* glyphs_before, hb_set_t* glyphs_input, hb_set_t* glyphs_after, hb_set_t* glyphs_output)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_ot_layout_lookup_collect_glyphs (hb_face_t face, Tag table_tag, UInt32 lookup_index, hb_set_t glyphs_before, hb_set_t glyphs_input, hb_set_t glyphs_after, hb_set_t glyphs_output);
+		internal static extern void hb_ot_layout_lookup_collect_glyphs (hb_face_t face, UInt32 table_tag, UInt32 lookup_index, hb_set_t glyphs_before, hb_set_t glyphs_input, hb_set_t glyphs_after, hb_set_t glyphs_output);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_ot_layout_lookup_collect_glyphs (hb_face_t face, Tag table_tag, UInt32 lookup_index, hb_set_t glyphs_before, hb_set_t glyphs_input, hb_set_t glyphs_after, hb_set_t glyphs_output);
+			internal delegate void hb_ot_layout_lookup_collect_glyphs (hb_face_t face, UInt32 table_tag, UInt32 lookup_index, hb_set_t glyphs_before, hb_set_t glyphs_input, hb_set_t glyphs_after, hb_set_t glyphs_output);
 		}
 		private static Delegates.hb_ot_layout_lookup_collect_glyphs hb_ot_layout_lookup_collect_glyphs_delegate;
-		internal static void hb_ot_layout_lookup_collect_glyphs (hb_face_t face, Tag table_tag, UInt32 lookup_index, hb_set_t glyphs_before, hb_set_t glyphs_input, hb_set_t glyphs_after, hb_set_t glyphs_output) =>
+		internal static void hb_ot_layout_lookup_collect_glyphs (hb_face_t face, UInt32 table_tag, UInt32 lookup_index, hb_set_t glyphs_before, hb_set_t glyphs_input, hb_set_t glyphs_after, hb_set_t glyphs_output) =>
 			(hb_ot_layout_lookup_collect_glyphs_delegate ??= GetSymbol<Delegates.hb_ot_layout_lookup_collect_glyphs> ("hb_ot_layout_lookup_collect_glyphs")).Invoke (face, table_tag, lookup_index, glyphs_before, glyphs_input, glyphs_after, glyphs_output);
 		#endif
 
@@ -3207,168 +3207,168 @@ namespace HarfBuzzSharp
 		// extern unsigned int hb_ot_layout_script_get_language_tags(hb_face_t* face, hb_tag_t table_tag, unsigned int script_index, unsigned int start_offset, unsigned int* language_count, hb_tag_t* language_tags)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_layout_script_get_language_tags (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 start_offset, UInt32* language_count, Tag* language_tags);
+		internal static extern UInt32 hb_ot_layout_script_get_language_tags (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 start_offset, UInt32* language_count, UInt32* language_tags);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_layout_script_get_language_tags (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 start_offset, UInt32* language_count, Tag* language_tags);
+			internal delegate UInt32 hb_ot_layout_script_get_language_tags (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 start_offset, UInt32* language_count, UInt32* language_tags);
 		}
 		private static Delegates.hb_ot_layout_script_get_language_tags hb_ot_layout_script_get_language_tags_delegate;
-		internal static UInt32 hb_ot_layout_script_get_language_tags (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 start_offset, UInt32* language_count, Tag* language_tags) =>
+		internal static UInt32 hb_ot_layout_script_get_language_tags (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 start_offset, UInt32* language_count, UInt32* language_tags) =>
 			(hb_ot_layout_script_get_language_tags_delegate ??= GetSymbol<Delegates.hb_ot_layout_script_get_language_tags> ("hb_ot_layout_script_get_language_tags")).Invoke (face, table_tag, script_index, start_offset, language_count, language_tags);
 		#endif
 
 		// extern hb_bool_t hb_ot_layout_script_select_language(hb_face_t* face, hb_tag_t table_tag, unsigned int script_index, unsigned int language_count, const hb_tag_t* language_tags, unsigned int* language_index)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_ot_layout_script_select_language (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_count, Tag* language_tags, UInt32* language_index);
+		internal static extern Boolean hb_ot_layout_script_select_language (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_count, UInt32* language_tags, UInt32* language_index);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_ot_layout_script_select_language (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_count, Tag* language_tags, UInt32* language_index);
+			internal delegate Boolean hb_ot_layout_script_select_language (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_count, UInt32* language_tags, UInt32* language_index);
 		}
 		private static Delegates.hb_ot_layout_script_select_language hb_ot_layout_script_select_language_delegate;
-		internal static Boolean hb_ot_layout_script_select_language (hb_face_t face, Tag table_tag, UInt32 script_index, UInt32 language_count, Tag* language_tags, UInt32* language_index) =>
+		internal static Boolean hb_ot_layout_script_select_language (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_count, UInt32* language_tags, UInt32* language_index) =>
 			(hb_ot_layout_script_select_language_delegate ??= GetSymbol<Delegates.hb_ot_layout_script_select_language> ("hb_ot_layout_script_select_language")).Invoke (face, table_tag, script_index, language_count, language_tags, language_index);
 		#endif
 
 		// extern hb_bool_t hb_ot_layout_table_find_feature_variations(hb_face_t* face, hb_tag_t table_tag, const int* coords, unsigned int num_coords, unsigned int* variations_index)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_ot_layout_table_find_feature_variations (hb_face_t face, Tag table_tag, Int32* coords, UInt32 num_coords, UInt32* variations_index);
+		internal static extern Boolean hb_ot_layout_table_find_feature_variations (hb_face_t face, UInt32 table_tag, Int32* coords, UInt32 num_coords, UInt32* variations_index);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_ot_layout_table_find_feature_variations (hb_face_t face, Tag table_tag, Int32* coords, UInt32 num_coords, UInt32* variations_index);
+			internal delegate Boolean hb_ot_layout_table_find_feature_variations (hb_face_t face, UInt32 table_tag, Int32* coords, UInt32 num_coords, UInt32* variations_index);
 		}
 		private static Delegates.hb_ot_layout_table_find_feature_variations hb_ot_layout_table_find_feature_variations_delegate;
-		internal static Boolean hb_ot_layout_table_find_feature_variations (hb_face_t face, Tag table_tag, Int32* coords, UInt32 num_coords, UInt32* variations_index) =>
+		internal static Boolean hb_ot_layout_table_find_feature_variations (hb_face_t face, UInt32 table_tag, Int32* coords, UInt32 num_coords, UInt32* variations_index) =>
 			(hb_ot_layout_table_find_feature_variations_delegate ??= GetSymbol<Delegates.hb_ot_layout_table_find_feature_variations> ("hb_ot_layout_table_find_feature_variations")).Invoke (face, table_tag, coords, num_coords, variations_index);
 		#endif
 
 		// extern hb_bool_t hb_ot_layout_table_find_script(hb_face_t* face, hb_tag_t table_tag, hb_tag_t script_tag, unsigned int* script_index)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_ot_layout_table_find_script (hb_face_t face, Tag table_tag, Tag script_tag, UInt32* script_index);
+		internal static extern Boolean hb_ot_layout_table_find_script (hb_face_t face, UInt32 table_tag, UInt32 script_tag, UInt32* script_index);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_ot_layout_table_find_script (hb_face_t face, Tag table_tag, Tag script_tag, UInt32* script_index);
+			internal delegate Boolean hb_ot_layout_table_find_script (hb_face_t face, UInt32 table_tag, UInt32 script_tag, UInt32* script_index);
 		}
 		private static Delegates.hb_ot_layout_table_find_script hb_ot_layout_table_find_script_delegate;
-		internal static Boolean hb_ot_layout_table_find_script (hb_face_t face, Tag table_tag, Tag script_tag, UInt32* script_index) =>
+		internal static Boolean hb_ot_layout_table_find_script (hb_face_t face, UInt32 table_tag, UInt32 script_tag, UInt32* script_index) =>
 			(hb_ot_layout_table_find_script_delegate ??= GetSymbol<Delegates.hb_ot_layout_table_find_script> ("hb_ot_layout_table_find_script")).Invoke (face, table_tag, script_tag, script_index);
 		#endif
 
 		// extern unsigned int hb_ot_layout_table_get_feature_tags(hb_face_t* face, hb_tag_t table_tag, unsigned int start_offset, unsigned int* feature_count, hb_tag_t* feature_tags)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_layout_table_get_feature_tags (hb_face_t face, Tag table_tag, UInt32 start_offset, UInt32* feature_count, Tag* feature_tags);
+		internal static extern UInt32 hb_ot_layout_table_get_feature_tags (hb_face_t face, UInt32 table_tag, UInt32 start_offset, UInt32* feature_count, UInt32* feature_tags);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_layout_table_get_feature_tags (hb_face_t face, Tag table_tag, UInt32 start_offset, UInt32* feature_count, Tag* feature_tags);
+			internal delegate UInt32 hb_ot_layout_table_get_feature_tags (hb_face_t face, UInt32 table_tag, UInt32 start_offset, UInt32* feature_count, UInt32* feature_tags);
 		}
 		private static Delegates.hb_ot_layout_table_get_feature_tags hb_ot_layout_table_get_feature_tags_delegate;
-		internal static UInt32 hb_ot_layout_table_get_feature_tags (hb_face_t face, Tag table_tag, UInt32 start_offset, UInt32* feature_count, Tag* feature_tags) =>
+		internal static UInt32 hb_ot_layout_table_get_feature_tags (hb_face_t face, UInt32 table_tag, UInt32 start_offset, UInt32* feature_count, UInt32* feature_tags) =>
 			(hb_ot_layout_table_get_feature_tags_delegate ??= GetSymbol<Delegates.hb_ot_layout_table_get_feature_tags> ("hb_ot_layout_table_get_feature_tags")).Invoke (face, table_tag, start_offset, feature_count, feature_tags);
 		#endif
 
 		// extern unsigned int hb_ot_layout_table_get_lookup_count(hb_face_t* face, hb_tag_t table_tag)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_layout_table_get_lookup_count (hb_face_t face, Tag table_tag);
+		internal static extern UInt32 hb_ot_layout_table_get_lookup_count (hb_face_t face, UInt32 table_tag);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_layout_table_get_lookup_count (hb_face_t face, Tag table_tag);
+			internal delegate UInt32 hb_ot_layout_table_get_lookup_count (hb_face_t face, UInt32 table_tag);
 		}
 		private static Delegates.hb_ot_layout_table_get_lookup_count hb_ot_layout_table_get_lookup_count_delegate;
-		internal static UInt32 hb_ot_layout_table_get_lookup_count (hb_face_t face, Tag table_tag) =>
+		internal static UInt32 hb_ot_layout_table_get_lookup_count (hb_face_t face, UInt32 table_tag) =>
 			(hb_ot_layout_table_get_lookup_count_delegate ??= GetSymbol<Delegates.hb_ot_layout_table_get_lookup_count> ("hb_ot_layout_table_get_lookup_count")).Invoke (face, table_tag);
 		#endif
 
 		// extern unsigned int hb_ot_layout_table_get_script_tags(hb_face_t* face, hb_tag_t table_tag, unsigned int start_offset, unsigned int* script_count, hb_tag_t* script_tags)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_layout_table_get_script_tags (hb_face_t face, Tag table_tag, UInt32 start_offset, UInt32* script_count, Tag* script_tags);
+		internal static extern UInt32 hb_ot_layout_table_get_script_tags (hb_face_t face, UInt32 table_tag, UInt32 start_offset, UInt32* script_count, UInt32* script_tags);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_layout_table_get_script_tags (hb_face_t face, Tag table_tag, UInt32 start_offset, UInt32* script_count, Tag* script_tags);
+			internal delegate UInt32 hb_ot_layout_table_get_script_tags (hb_face_t face, UInt32 table_tag, UInt32 start_offset, UInt32* script_count, UInt32* script_tags);
 		}
 		private static Delegates.hb_ot_layout_table_get_script_tags hb_ot_layout_table_get_script_tags_delegate;
-		internal static UInt32 hb_ot_layout_table_get_script_tags (hb_face_t face, Tag table_tag, UInt32 start_offset, UInt32* script_count, Tag* script_tags) =>
+		internal static UInt32 hb_ot_layout_table_get_script_tags (hb_face_t face, UInt32 table_tag, UInt32 start_offset, UInt32* script_count, UInt32* script_tags) =>
 			(hb_ot_layout_table_get_script_tags_delegate ??= GetSymbol<Delegates.hb_ot_layout_table_get_script_tags> ("hb_ot_layout_table_get_script_tags")).Invoke (face, table_tag, start_offset, script_count, script_tags);
 		#endif
 
 		// extern hb_bool_t hb_ot_layout_table_select_script(hb_face_t* face, hb_tag_t table_tag, unsigned int script_count, const hb_tag_t* script_tags, unsigned int* script_index, hb_tag_t* chosen_script)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Boolean hb_ot_layout_table_select_script (hb_face_t face, Tag table_tag, UInt32 script_count, Tag* script_tags, UInt32* script_index, Tag* chosen_script);
+		internal static extern Boolean hb_ot_layout_table_select_script (hb_face_t face, UInt32 table_tag, UInt32 script_count, UInt32* script_tags, UInt32* script_index, UInt32* chosen_script);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Boolean hb_ot_layout_table_select_script (hb_face_t face, Tag table_tag, UInt32 script_count, Tag* script_tags, UInt32* script_index, Tag* chosen_script);
+			internal delegate Boolean hb_ot_layout_table_select_script (hb_face_t face, UInt32 table_tag, UInt32 script_count, UInt32* script_tags, UInt32* script_index, UInt32* chosen_script);
 		}
 		private static Delegates.hb_ot_layout_table_select_script hb_ot_layout_table_select_script_delegate;
-		internal static Boolean hb_ot_layout_table_select_script (hb_face_t face, Tag table_tag, UInt32 script_count, Tag* script_tags, UInt32* script_index, Tag* chosen_script) =>
+		internal static Boolean hb_ot_layout_table_select_script (hb_face_t face, UInt32 table_tag, UInt32 script_count, UInt32* script_tags, UInt32* script_index, UInt32* chosen_script) =>
 			(hb_ot_layout_table_select_script_delegate ??= GetSymbol<Delegates.hb_ot_layout_table_select_script> ("hb_ot_layout_table_select_script")).Invoke (face, table_tag, script_count, script_tags, script_index, chosen_script);
 		#endif
 
 		// extern hb_language_t hb_ot_tag_to_language(hb_tag_t tag)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr hb_ot_tag_to_language (Tag tag);
+		internal static extern IntPtr hb_ot_tag_to_language (UInt32 tag);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate IntPtr hb_ot_tag_to_language (Tag tag);
+			internal delegate IntPtr hb_ot_tag_to_language (UInt32 tag);
 		}
 		private static Delegates.hb_ot_tag_to_language hb_ot_tag_to_language_delegate;
-		internal static IntPtr hb_ot_tag_to_language (Tag tag) =>
+		internal static IntPtr hb_ot_tag_to_language (UInt32 tag) =>
 			(hb_ot_tag_to_language_delegate ??= GetSymbol<Delegates.hb_ot_tag_to_language> ("hb_ot_tag_to_language")).Invoke (tag);
 		#endif
 
 		// extern hb_script_t hb_ot_tag_to_script(hb_tag_t tag)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 hb_ot_tag_to_script (Tag tag);
+		internal static extern UInt32 hb_ot_tag_to_script (UInt32 tag);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 hb_ot_tag_to_script (Tag tag);
+			internal delegate UInt32 hb_ot_tag_to_script (UInt32 tag);
 		}
 		private static Delegates.hb_ot_tag_to_script hb_ot_tag_to_script_delegate;
-		internal static UInt32 hb_ot_tag_to_script (Tag tag) =>
+		internal static UInt32 hb_ot_tag_to_script (UInt32 tag) =>
 			(hb_ot_tag_to_script_delegate ??= GetSymbol<Delegates.hb_ot_tag_to_script> ("hb_ot_tag_to_script")).Invoke (tag);
 		#endif
 
 		// extern void hb_ot_tags_from_script_and_language(hb_script_t script, hb_language_t language, unsigned int* script_count, hb_tag_t* script_tags, unsigned int* language_count, hb_tag_t* language_tags)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_ot_tags_from_script_and_language (UInt32 script, IntPtr language, UInt32* script_count, Tag* script_tags, UInt32* language_count, Tag* language_tags);
+		internal static extern void hb_ot_tags_from_script_and_language (UInt32 script, IntPtr language, UInt32* script_count, UInt32* script_tags, UInt32* language_count, UInt32* language_tags);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_ot_tags_from_script_and_language (UInt32 script, IntPtr language, UInt32* script_count, Tag* script_tags, UInt32* language_count, Tag* language_tags);
+			internal delegate void hb_ot_tags_from_script_and_language (UInt32 script, IntPtr language, UInt32* script_count, UInt32* script_tags, UInt32* language_count, UInt32* language_tags);
 		}
 		private static Delegates.hb_ot_tags_from_script_and_language hb_ot_tags_from_script_and_language_delegate;
-		internal static void hb_ot_tags_from_script_and_language (UInt32 script, IntPtr language, UInt32* script_count, Tag* script_tags, UInt32* language_count, Tag* language_tags) =>
+		internal static void hb_ot_tags_from_script_and_language (UInt32 script, IntPtr language, UInt32* script_count, UInt32* script_tags, UInt32* language_count, UInt32* language_tags) =>
 			(hb_ot_tags_from_script_and_language_delegate ??= GetSymbol<Delegates.hb_ot_tags_from_script_and_language> ("hb_ot_tags_from_script_and_language")).Invoke (script, language, script_count, script_tags, language_count, language_tags);
 		#endif
 
 		// extern void hb_ot_tags_to_script_and_language(hb_tag_t script_tag, hb_tag_t language_tag, hb_script_t* script, hb_language_t* language)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_ot_tags_to_script_and_language (Tag script_tag, Tag language_tag, UInt32* script, IntPtr* language);
+		internal static extern void hb_ot_tags_to_script_and_language (UInt32 script_tag, UInt32 language_tag, UInt32* script, IntPtr* language);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_ot_tags_to_script_and_language (Tag script_tag, Tag language_tag, UInt32* script, IntPtr* language);
+			internal delegate void hb_ot_tags_to_script_and_language (UInt32 script_tag, UInt32 language_tag, UInt32* script, IntPtr* language);
 		}
 		private static Delegates.hb_ot_tags_to_script_and_language hb_ot_tags_to_script_and_language_delegate;
-		internal static void hb_ot_tags_to_script_and_language (Tag script_tag, Tag language_tag, UInt32* script, IntPtr* language) =>
+		internal static void hb_ot_tags_to_script_and_language (UInt32 script_tag, UInt32 language_tag, UInt32* script, IntPtr* language) =>
 			(hb_ot_tags_to_script_and_language_delegate ??= GetSymbol<Delegates.hb_ot_tags_to_script_and_language> ("hb_ot_tags_to_script_and_language")).Invoke (script_tag, language_tag, script, language);
 		#endif
 
@@ -3675,14 +3675,14 @@ namespace HarfBuzzSharp
 		// extern void hb_ot_shape_plan_collect_lookups(hb_shape_plan_t* shape_plan, hb_tag_t table_tag, hb_set_t* lookup_indexes)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_ot_shape_plan_collect_lookups (hb_shape_plan_t shape_plan, Tag table_tag, hb_set_t lookup_indexes);
+		internal static extern void hb_ot_shape_plan_collect_lookups (hb_shape_plan_t shape_plan, UInt32 table_tag, hb_set_t lookup_indexes);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_ot_shape_plan_collect_lookups (hb_shape_plan_t shape_plan, Tag table_tag, hb_set_t lookup_indexes);
+			internal delegate void hb_ot_shape_plan_collect_lookups (hb_shape_plan_t shape_plan, UInt32 table_tag, hb_set_t lookup_indexes);
 		}
 		private static Delegates.hb_ot_shape_plan_collect_lookups hb_ot_shape_plan_collect_lookups_delegate;
-		internal static void hb_ot_shape_plan_collect_lookups (hb_shape_plan_t shape_plan, Tag table_tag, hb_set_t lookup_indexes) =>
+		internal static void hb_ot_shape_plan_collect_lookups (hb_shape_plan_t shape_plan, UInt32 table_tag, hb_set_t lookup_indexes) =>
 			(hb_ot_shape_plan_collect_lookups_delegate ??= GetSymbol<Delegates.hb_ot_shape_plan_collect_lookups> ("hb_ot_shape_plan_collect_lookups")).Invoke (shape_plan, table_tag, lookup_indexes);
 		#endif
 
@@ -4499,7 +4499,7 @@ namespace HarfBuzzSharp
 
 	// typedef hb_blob_t* (*)(hb_face_t* face, hb_tag_t tag, void* user_data)* hb_reference_table_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate hb_blob_t ReferenceTableProxyDelegate(hb_face_t face, Tag tag, void* user_data);
+	internal unsafe delegate hb_blob_t ReferenceTableProxyDelegate(hb_face_t face, UInt32 tag, void* user_data);
 
 	// typedef hb_unicode_combining_class_t (*)(hb_unicode_funcs_t* ufuncs, hb_codepoint_t unicode, void* user_data)* hb_unicode_combining_class_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4541,32 +4541,16 @@ namespace HarfBuzzSharp
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct Feature : IEquatable<Feature> {
 		// public hb_tag_t tag
-		private Tag tag;
-		public Tag Tag {
-			readonly get => tag;
-			set => tag = value;
-		}
+		private UInt32 tag;
 
 		// public uint32_t value
 		private UInt32 value;
-		public UInt32 Value {
-			readonly get => this.value;
-			set => this.value = value;
-		}
 
 		// public unsigned int start
 		private UInt32 start;
-		public UInt32 Start {
-			readonly get => start;
-			set => start = value;
-		}
 
 		// public unsigned int end
 		private UInt32 end;
-		public UInt32 End {
-			readonly get => end;
-			set => end = value;
-		}
 
 		public readonly bool Equals (Feature obj) =>
 			tag == obj.tag && value == obj.value && start == obj.start && end == obj.end;
@@ -5051,8 +5035,8 @@ namespace HarfBuzzSharp
 		}
 
 		// public hb_tag_t tag
-		private Tag tag;
-		public Tag Tag {
+		private UInt32 tag;
+		public UInt32 Tag {
 			readonly get => tag;
 			set => tag = value;
 		}
@@ -5127,8 +5111,8 @@ namespace HarfBuzzSharp
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct OpenTypeVarAxis : IEquatable<OpenTypeVarAxis> {
 		// public hb_tag_t tag
-		private Tag tag;
-		public Tag Tag {
+		private UInt32 tag;
+		public UInt32 Tag {
 			readonly get => tag;
 			set => tag = value;
 		}
@@ -5190,8 +5174,8 @@ namespace HarfBuzzSharp
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct Variation : IEquatable<Variation> {
 		// public hb_tag_t tag
-		private Tag tag;
-		public Tag Tag {
+		private UInt32 tag;
+		public UInt32 Tag {
 			readonly get => tag;
 			set => tag = value;
 		}

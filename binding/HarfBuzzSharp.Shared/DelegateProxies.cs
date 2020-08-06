@@ -32,7 +32,7 @@ namespace HarfBuzzSharp
 		}
 
 		[MonoPInvokeCallback (typeof (ReferenceTableProxyDelegate))]
-		private static IntPtr GetTableDelegateProxyImplementation (IntPtr face, Tag tag, void* context)
+		private static IntPtr GetTableDelegateProxyImplementation (IntPtr face, uint tag, void* context)
 		{
 			GetMultiUserData<GetTableDelegate, Face> ((IntPtr)context, out var getTable, out var userData, out _);
 			var blob = getTable.Invoke (userData, tag);
