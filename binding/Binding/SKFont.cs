@@ -315,7 +315,9 @@ namespace SkiaSharp
 			if (!ValidateTextArgs (text, length, encoding))
 				return 0;
 
-			return SkiaApi.sk_font_measure_text (Handle, text, (IntPtr)length, encoding, bounds, paint?.Handle ?? IntPtr.Zero);
+			float measuredWidth;
+			SkiaApi.sk_font_measure_text_no_return (Handle, text, (IntPtr)length, encoding, bounds, paint?.Handle ?? IntPtr.Zero, &measuredWidth);
+			return measuredWidth;
 		}
 
 		// MeasureText (glyphs)
