@@ -233,5 +233,5 @@ string GetDownloadUrl(string id)
     else
         version += "branch.master";
 
-    return string.Format (PREVIEW_FEED_URL, "skiasharp.harfbuzz", version);
+    return string.Format (PREVIEW_FEED_URL, id.ToLower(), version);
 }
