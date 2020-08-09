@@ -220,3 +220,14 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
         comparer.SearchPaths.Add(System.IO.Path.Combine(root, "lib", platform));
     }
 }
+
+string GetDownloadUrl(string id)
+{
+    var version = "0.0.0-branch.master";
+    if (!string.IsNullOrEmpty (GIT_SHA))
+        version = "0.0.0-commit." + GIT_SHA.ToLower ();
+    if (!string.IsNullOrEmpty (GIT_BRANCH_NAME))
+        version = "0.0.0-branch." + GIT_BRANCH_NAME.Replace ("/", ".").ToLower ();
+
+    return string.Format (PREVIEW_FEED_URL, "skiasharp.harfbuzz", version);
+}

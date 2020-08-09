@@ -32,7 +32,6 @@ var SKIP_EXTERNALS = Argument ("skipexternals", "")
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
 var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
-var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
@@ -54,8 +53,7 @@ var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitbranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? "");
 
-var AZURE_BUILD_SUCCESS = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds?statusFilter=completed&resultFilter=succeeded&definitions=4&branchName=refs/heads/master&$top=1&api-version=5.1";
-var AZURE_BUILD_URL = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds/{0}/artifacts?artifactName={1}&%24format=zip&api-version=5.1";
+var PREVIEW_FEED_URL = "https://nugetized.blob.core.windows.net/skiasharp-eap/flatcontainer/{0}/{1}/{0}.{1}.nupkg"; // 0=id, 1=version
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                                     new Version (1, 57, 0) },
@@ -89,20 +87,6 @@ foreach (var arg in CAKE_ARGUMENTS) {
 #load "cake/externals.cake"
 #load "cake/UpdateDocs.cake"
 #load "cake/samples.cake"
-
-Task ("determine-last-successful-build")
-    .WithCriteria (string.IsNullOrEmpty (AZURE_BUILD_ID))
-    .Does (() =>
-{
-    Warning ("A build ID (--azureBuildId=<ID>) was not specified, using the last successful build.");
-
-    var successUrl = string.Format(AZURE_BUILD_SUCCESS);
-    var json = ParseJson (FileReadText (DownloadFile (successUrl)));
-
-    AZURE_BUILD_ID = (string)json ["value"] [0] ["id"];
-
-    Information ($"Using last successful build ID {AZURE_BUILD_ID}");
-});
 
 Task ("__________________________________")
     .Description ("__________________________________________________");
