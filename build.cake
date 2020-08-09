@@ -32,7 +32,6 @@ var SKIP_EXTERNALS = Argument ("skipexternals", "")
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
 var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
-var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
@@ -48,12 +47,13 @@ var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
 
-var PREVIEW_LABEL = EnvironmentVariable ("PREVIEW_LABEL") ?? "preview";
+var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview");
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
+var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
+var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? "");
 
-var AZURE_BUILD_SUCCESS = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds?statusFilter=completed&resultFilter=succeeded&definitions=4&branchName=refs/heads/master&$top=1&api-version=5.1";
-var AZURE_BUILD_URL = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds/{0}/artifacts?artifactName={1}&%24format=zip&api-version=5.1";
+var PREVIEW_FEED_URL = "https://nugetized.blob.core.windows.net/skiasharp-eap/flatcontainer/{0}/{1}/{0}.{1}.nupkg"; // 0=id, 1=version
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                                     new Version (1, 57, 0) },
@@ -87,20 +87,6 @@ foreach (var arg in CAKE_ARGUMENTS) {
 #load "cake/externals.cake"
 #load "cake/UpdateDocs.cake"
 #load "cake/samples.cake"
-
-Task ("determine-last-successful-build")
-    .WithCriteria (string.IsNullOrEmpty (AZURE_BUILD_ID))
-    .Does (() =>
-{
-    Warning ("A build ID (--azureBuildId=<ID>) was not specified, using the last successful build.");
-
-    var successUrl = string.Format(AZURE_BUILD_SUCCESS);
-    var json = ParseJson (FileReadText (DownloadFile (successUrl)));
-
-    AZURE_BUILD_ID = (string)json ["value"] [0] ["id"];
-
-    Information ($"Using last successful build ID {AZURE_BUILD_ID}");
-});
 
 Task ("__________________________________")
     .Description ("__________________________________________________");
@@ -483,6 +469,8 @@ Task ("nuget")
         var xdoc = XDocument.Load (nuspec.FullPath);
         var metadata = xdoc.Root.Element ("metadata");
         var id = metadata.Element ("id").Value;
+        if (id.StartsWith ("_"))
+            continue;
         var dir = id;
         if (id.Contains(".NativeAssets.")) {
             dir = id.Substring(0, id.IndexOf(".NativeAssets."));
@@ -548,6 +536,41 @@ Task ("nuget")
 
         } else {
             Information ("Metadata validation passed for: {0}", nupkgFile.GetFilename ());
+        }
+    }
+
+    // special case for all the native assets
+    if (PACK_ALL_PLATFORMS)
+    {
+        var specials = new Dictionary<string, string> {
+            { "_NativeAssets", "native" },
+            { "_NuGets", "nugets" },
+        };
+        foreach (var pair in specials) {
+            DeleteFiles ($"./output/{pair.Value}/*.nuspec");
+
+            var nuspec = $"./output/{pair.Value}/{pair.Key}.nuspec";
+
+            // update the version
+            var xdoc = XDocument.Load ($"./nuget/{pair.Key}.nuspec");
+            var metadata = xdoc.Root.Element ("metadata");
+            var version = metadata.Element ("version");
+
+            if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
+                version.Value = "0.0.0-" + PREVIEW_LABEL;
+                xdoc.Save (nuspec);
+                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+            } else {
+                version.Value = "0.0.0-commit." + GIT_SHA;
+                xdoc.Save (nuspec);
+                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+
+                version.Value = "0.0.0-branch." + GIT_BRANCH_NAME.Replace ("/", ".");
+                xdoc.Save (nuspec);
+                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+            }
+
+            DeleteFiles ($"./output/{pair.Value}/*.nuspec");
         }
     }
 });
