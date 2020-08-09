@@ -223,11 +223,15 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
 
 string GetDownloadUrl(string id)
 {
-    var version = "0.0.0-branch.master";
-    if (!string.IsNullOrEmpty (GIT_SHA))
-        version = "0.0.0-commit." + GIT_SHA.ToLower ();
-    if (!string.IsNullOrEmpty (GIT_BRANCH_NAME))
-        version = "0.0.0-branch." + GIT_BRANCH_NAME.Replace ("/", ".").ToLower ();
+    var version = "0.0.0-";
+    if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr."))
+        version += PREVIEW_LABEL.ToLower ();
+    else if (!string.IsNullOrEmpty (GIT_SHA))
+        version += "commit." + GIT_SHA.ToLower ();
+    else if (!string.IsNullOrEmpty (GIT_BRANCH_NAME))
+        version += "branch." + GIT_BRANCH_NAME.Replace ("/", ".").ToLower ();
+    else
+        version += "branch.master";
 
     return string.Format (PREVIEW_FEED_URL, "skiasharp.harfbuzz", version);
 }

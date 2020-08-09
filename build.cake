@@ -47,7 +47,7 @@ var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
 
-var PREVIEW_LABEL = EnvironmentVariable ("PREVIEW_LABEL") ?? "preview";
+var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview");
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
@@ -556,13 +556,19 @@ Task ("nuget")
             var metadata = xdoc.Root.Element ("metadata");
             var version = metadata.Element ("version");
 
-            version.Value = "0.0.0-commit." + GIT_SHA;
-            xdoc.Save (nuspec);
-            PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+            if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
+                version.Value = "0.0.0-" + PREVIEW_LABEL;
+                xdoc.Save (nuspec);
+                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+            } else {
+                version.Value = "0.0.0-commit." + GIT_SHA;
+                xdoc.Save (nuspec);
+                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
 
-            version.Value = "0.0.0-branch." + GIT_BRANCH_NAME.Replace ("/", ".");
-            xdoc.Save (nuspec);
-            PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+                version.Value = "0.0.0-branch." + GIT_BRANCH_NAME.Replace ("/", ".");
+                xdoc.Save (nuspec);
+                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+            }
 
             DeleteFiles ($"./output/{pair.Value}/*.nuspec");
         }
