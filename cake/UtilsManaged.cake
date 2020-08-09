@@ -1,7 +1,7 @@
-void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath)
+void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefaultExcludes = false)
 {
     EnsureDirectoryExists(outputPath);
-    NuGetPack(nuspecPath, new NuGetPackSettings {
+    var settings = new NuGetPackSettings {
         OutputDirectory = MakeAbsolute(outputPath),
         BasePath = nuspecPath.GetDirectory(),
         ToolPath = NuGetToolPath,
@@ -11,7 +11,11 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath)
             // NU5125: The 'licenseUrl' element will be deprecated. Consider using the 'license' element instead.
             { "NoWarn", "NU5048,NU5105,NU5125" }
         },
-    });
+    };
+    if (allowDefaultExcludes) {
+        settings.ArgumentCustomization = args => args.Append("-NoDefaultExcludes");
+    }
+    NuGetPack(nuspecPath, settings);
 }
 
 void RunTests(FilePath testAssembly, bool is32)
