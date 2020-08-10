@@ -3919,6 +3919,20 @@ namespace SkiaSharp
 			(sk_font_measure_text_delegate ??= GetSymbol<Delegates.sk_font_measure_text> ("sk_font_measure_text")).Invoke (font, text, byteLength, encoding, bounds, paint);
 		#endif
 
+		// void sk_font_measure_text_no_return(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, sk_rect_t* bounds, const sk_paint_t* paint, float* measuredWidth)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_measure_text_no_return (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, sk_paint_t paint, Single* measuredWidth);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_font_measure_text_no_return (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, sk_paint_t paint, Single* measuredWidth);
+		}
+		private static Delegates.sk_font_measure_text_no_return sk_font_measure_text_no_return_delegate;
+		internal static void sk_font_measure_text_no_return (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, sk_paint_t paint, Single* measuredWidth) =>
+			(sk_font_measure_text_no_return_delegate ??= GetSymbol<Delegates.sk_font_measure_text_no_return> ("sk_font_measure_text_no_return")).Invoke (font, text, byteLength, encoding, bounds, paint, measuredWidth);
+		#endif
+
 		// sk_font_t* sk_font_new()
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

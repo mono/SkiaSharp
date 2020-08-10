@@ -288,8 +288,20 @@ namespace SkiaSharp
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CreateScaleTranslation(float, float, float, float) instead.")]
-		public void SetScaleTranslate (float sx, float sy, float tx, float ty) =>
-			CreateScaleTranslation (sx, sy, tx, ty);
+		public void SetScaleTranslate (float sx, float sy, float tx, float ty)
+		{
+			scaleX = sx;
+			skewX = 0;
+			transX = tx;
+
+			skewY = 0;
+			scaleY = sy;
+			transY = ty;
+
+			persp0 = 0;
+			persp1 = 0;
+			persp2 = 1;
+		}
 
 		// Rotate
 
