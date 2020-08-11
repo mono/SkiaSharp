@@ -2,7 +2,11 @@
 using SkiaSharp.Views.GlesInterop;
 using Windows.Foundation;
 
+#if __WINUI__
+namespace SkiaSharp.Views.WinUI
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public class SKSwapChainPanel : AngleSwapChainPanel
 	{

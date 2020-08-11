@@ -2,7 +2,9 @@
 using System;
 using System.ComponentModel;
 
-#if WINDOWS_UWP || HAS_UNO
+#if __WINUI__
+namespace SkiaSharp.Views.WinUI
+#elif WINDOWS_UWP || HAS_UNO
 namespace SkiaSharp.Views.UWP
 #elif __ANDROID__
 namespace SkiaSharp.Views.Android

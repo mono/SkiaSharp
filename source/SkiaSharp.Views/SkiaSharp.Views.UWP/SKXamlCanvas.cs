@@ -1,14 +1,27 @@
 ﻿using System;
 using Windows.ApplicationModel;
 using Windows.Graphics.Display;
+#if __WINUI__
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+using CoreDispatcherPriority = Windows.UI.Core.CoreDispatcherPriority;
+#else
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+#endif
 
+#if __WINUI__
+namespace SkiaSharp.Views.WinUI
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public partial class SKXamlCanvas : Canvas
 	{

@@ -2,7 +2,7 @@
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
-namespace SkiaSharp.Views.UWP.Interop
+namespace SkiaSharp.Views.Interop
 {
 	internal static class PropertySetExtensions
 	{
