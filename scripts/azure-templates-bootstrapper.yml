@@ -101,10 +101,16 @@ jobs:
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
-            version: $(DOTNET_VERSION)
+            version: $(DOTNET_PREVIEW_VERSION)
+            performMultiLevelLookup: true
+          displayName: Install the correct version of .NET Core
+        - task: UseDotNet@2
+          inputs:
+            packageType: 'sdk'
+            version: $(DOTNET_PREVIEW_VERSION)
             performMultiLevelLookup: true
             includePreviewVersions: true
-          displayName: Install the correct version of .NET Core
+          displayName: Install the correct preview version of .NET Core
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
