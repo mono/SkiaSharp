@@ -6,14 +6,20 @@
     <WasmHead>true</WasmHead>
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
     <NoWarn>NU1701</NoWarn>
-    <MonoRuntimeDebuggerEnabled Condition="'$(Configuration)'=='Debug'">true</MonoRuntimeDebuggerEnabled>
-    <WasmShellMonoRuntimeExecutionMode Condition="$([MSBuild]::IsOsPlatform('Linux'))">InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TypeScriptToolsVersion>3.3</TypeScriptToolsVersion>
     <CompileTypeScriptDependsOn>_UnoSourceGenerator; $(CompileTypeScriptDependsOn)</CompileTypeScriptDependsOn>
     <IsUiAutomationMappingEnabled>true</IsUiAutomationMappingEnabled>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <MonoRuntimeDebuggerEnabled Condition="'$(Configuration)'=='Debug'">true</MonoRuntimeDebuggerEnabled>
+    <UseAOT Condition="$([MSBuild]::IsOsPlatform('Linux')) or ( $([MSBuild]::IsOsPlatform('Windows')) and '$(BUILD_REPOSITORY_PROVIDER)'=='' )">true</UseAOT>
+    <WasmShellMonoRuntimeExecutionMode Condition="'$(UseAOT)'=='true'">InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
+    <!--<WasmShellGenerateAOTProfile>true</WasmShellGenerateAOTProfile>-->
+  </PropertyGroup>
+    
   <ItemGroup>
     <Content Include="..\SkiaSharpSample.UWP\Assets\*.png" Link="Assets\%(FileName)%(Extension)" />
     <None Remove="MainPage.xaml" />
@@ -25,11 +31,15 @@
     <Content Include="Fonts\winjs-symbols.woff2" />
     <Content Include="ts\GoogleAnalytics.ts" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <WasmShellMonoEnvironment Include="MONO_GC_PARAMS" Value="soft-heap-limit=512m,nursery-size=64m,evacuation-threshold=66,major=marksweep" />
     <WasmShellMonoEnvironment Include="MONO_LOG_LEVEL" Value="debug" />
     <WasmShellMonoEnvironment Include="MONO_LOG_MASK" Value="gc" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseAOT)'=='true'">
+    <WasmShellEnableAotProfile Include="aot.profile" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,7 +48,7 @@
     <WasmShellExtraEmccFlags Include="-lidbfs.js" />
   </ItemGroup>
 
-  <ItemGroup> 
+  <ItemGroup>
     <EmbeddedResource Include="WasmCSS\Fonts.css" />
     <EmbeddedResource Include="WasmScripts\*.js" />
   </ItemGroup>
@@ -49,20 +59,20 @@
   <ItemGroup>
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharp.Views.Uno" />
     <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharp.Wasm" />
     <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharpSample.Wasm" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
-    <PackageReference Include="Uno.UI" Version="3.0.0-dev.657" />
-    <PackageReference Include="Uno.UI.Sample.Banner" Version="1.44.0-dev.23" />
-    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.3.0-dev.44" />
-    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.3.0-dev.44" />
+    <PackageReference Include="Uno.UI.WebAssembly" Version="3.1.0-dev.35" />
+    <PackageReference Include="Uno.UI.Sample.Banner" Version="1.44.0-dev.33" />
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.3.4" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.3.4" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.TypeScript.Compiler" Version="3.1.5">
@@ -92,7 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
-    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.Wasm.csproj" />
   </ItemGroup>
   <Import Project="..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" />
 </Project>

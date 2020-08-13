@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -3807,130 +3807,130 @@ namespace SkiaSharp
 
 	// typedef gr_gl_func_ptr (*)(void* ctx, const char* name)* gr_gl_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate IntPtr GRGlGetProcProxyDelegate(void* ctx, [MarshalAs (UnmanagedType.LPStr)] String name);
+	internal unsafe delegate IntPtr GRGlGetProcProxyDelegate(IntPtr ctx, IntPtr name);
 
 	// typedef void (*)()* gr_vk_func_ptr
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void GRVkFuncPtr();
 
-	// typedef gr_vk_func_ptr (*)(void* ctx, const char* name, vk_instance_t* instance, vk_device_t* device)* gr_vk_get_proc
+	// typedef gr_vk_func_ptr (*)(IntPtr ctx, const char* name, vk_instance_t* instance, vk_device_t* device)* gr_vk_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate IntPtr GRVkGetProcProxyDelegate(void* ctx, [MarshalAs (UnmanagedType.LPStr)] String name, vk_instance_t instance, vk_device_t device);
+	internal unsafe delegate IntPtr GRVkGetProcProxyDelegate(IntPtr ctx, IntPtr name, vk_instance_t instance, vk_device_t device);
 
-	// typedef void (*)(void* addr, void* context)* sk_bitmap_release_proc
+	// typedef void (*)(IntPtr addr, IntPtr context)* sk_bitmap_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKBitmapReleaseProxyDelegate(void* addr, void* context);
+	internal unsafe delegate void SKBitmapReleaseProxyDelegate(IntPtr addr, IntPtr context);
 
-	// typedef void (*)(const void* ptr, void* context)* sk_data_release_proc
+	// typedef void (*)(const IntPtr ptr, IntPtr context)* sk_data_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKDataReleaseProxyDelegate(void* ptr, void* context);
+	internal unsafe delegate void SKDataReleaseProxyDelegate(IntPtr ptr, IntPtr context);
 
-	// typedef void (*)(const sk_path_t* pathOrNull, const sk_matrix_t* matrix, void* context)* sk_glyph_path_proc
+	// typedef void (*)(const sk_path_t* pathOrNull, const sk_matrix_t* matrix, IntPtr context)* sk_glyph_path_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKGlyphPathProxyDelegate(sk_path_t pathOrNull, SKMatrix* matrix, void* context);
+	internal unsafe delegate void SKGlyphPathProxyDelegate(sk_path_t pathOrNull, SKMatrix* matrix, IntPtr context);
 
-	// typedef void (*)(const void* addr, void* context)* sk_image_raster_release_proc
+	// typedef void (*)(const IntPtr addr, IntPtr context)* sk_image_raster_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKImageRasterReleaseProxyDelegate(void* addr, void* context);
+	internal unsafe delegate void SKImageRasterReleaseProxyDelegate(IntPtr addr, IntPtr context);
 
-	// typedef void (*)(void* context)* sk_image_texture_release_proc
+	// typedef void (*)(IntPtr context)* sk_image_texture_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKImageTextureReleaseProxyDelegate(void* context);
+	internal unsafe delegate void SKImageTextureReleaseProxyDelegate(IntPtr context);
 
-	// typedef void (*)(sk_manageddrawable_t* d, void* context)* sk_manageddrawable_destroy_proc
+	// typedef void (*)(sk_manageddrawable_t* d, IntPtr context)* sk_manageddrawable_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKManagedDrawableDestroyProxyDelegate(sk_manageddrawable_t d, void* context);
+	internal unsafe delegate void SKManagedDrawableDestroyProxyDelegate(sk_manageddrawable_t d, IntPtr context);
 
-	// typedef void (*)(sk_manageddrawable_t* d, void* context, sk_canvas_t* ccanvas)* sk_manageddrawable_draw_proc
+	// typedef void (*)(sk_manageddrawable_t* d, IntPtr context, sk_canvas_t* ccanvas)* sk_manageddrawable_draw_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKManagedDrawableDrawProxyDelegate(sk_manageddrawable_t d, void* context, sk_canvas_t ccanvas);
+	internal unsafe delegate void SKManagedDrawableDrawProxyDelegate(sk_manageddrawable_t d, IntPtr context, sk_canvas_t ccanvas);
 
-	// typedef void (*)(sk_manageddrawable_t* d, void* context, sk_rect_t* rect)* sk_manageddrawable_getBounds_proc
+	// typedef void (*)(sk_manageddrawable_t* d, IntPtr context, sk_rect_t* rect)* sk_manageddrawable_getBounds_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKManagedDrawableGetBoundsProxyDelegate(sk_manageddrawable_t d, void* context, SKRect* rect);
+	internal unsafe delegate void SKManagedDrawableGetBoundsProxyDelegate(sk_manageddrawable_t d, IntPtr context, SKRect* rect);
 
-	// typedef sk_picture_t* (*)(sk_manageddrawable_t* d, void* context)* sk_manageddrawable_newPictureSnapshot_proc
+	// typedef sk_picture_t* (*)(sk_manageddrawable_t* d, IntPtr context)* sk_manageddrawable_newPictureSnapshot_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate sk_picture_t SKManagedDrawableNewPictureSnapshotProxyDelegate(sk_manageddrawable_t d, void* context);
+	internal unsafe delegate sk_picture_t SKManagedDrawableNewPictureSnapshotProxyDelegate(sk_manageddrawable_t d, IntPtr context);
 
-	// typedef void (*)(sk_stream_managedstream_t* s, void* context)* sk_managedstream_destroy_proc
+	// typedef void (*)(sk_stream_managedstream_t* s, IntPtr context)* sk_managedstream_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKManagedStreamDestroyProxyDelegate(sk_stream_managedstream_t s, void* context);
+	internal unsafe delegate void SKManagedStreamDestroyProxyDelegate(sk_stream_managedstream_t s, IntPtr context);
 
-	// typedef sk_stream_managedstream_t* (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_duplicate_proc
+	// typedef sk_stream_managedstream_t* (*)(const sk_stream_managedstream_t* s, IntPtr context)* sk_managedstream_duplicate_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate sk_stream_managedstream_t SKManagedStreamDuplicateProxyDelegate(sk_stream_managedstream_t s, void* context);
+	internal unsafe delegate sk_stream_managedstream_t SKManagedStreamDuplicateProxyDelegate(sk_stream_managedstream_t s, IntPtr context);
 
-	// typedef sk_stream_managedstream_t* (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_fork_proc
+	// typedef sk_stream_managedstream_t* (*)(const sk_stream_managedstream_t* s, IntPtr context)* sk_managedstream_fork_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate sk_stream_managedstream_t SKManagedStreamForkProxyDelegate(sk_stream_managedstream_t s, void* context);
+	internal unsafe delegate sk_stream_managedstream_t SKManagedStreamForkProxyDelegate(sk_stream_managedstream_t s, IntPtr context);
 
-	// typedef size_t (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_getLength_proc
+	// typedef size_t (*)(const sk_stream_managedstream_t* s, IntPtr context)* sk_managedstream_getLength_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamGetLengthProxyDelegate(sk_stream_managedstream_t s, void* context);
+	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamGetLengthProxyDelegate(sk_stream_managedstream_t s, IntPtr context);
 
-	// typedef size_t (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_getPosition_proc
+	// typedef size_t (*)(const sk_stream_managedstream_t* s, IntPtr context)* sk_managedstream_getPosition_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamGetPositionProxyDelegate(sk_stream_managedstream_t s, void* context);
+	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamGetPositionProxyDelegate(sk_stream_managedstream_t s, IntPtr context);
 
-	// typedef bool (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_hasLength_proc
+	// typedef bool (*)(const sk_stream_managedstream_t* s, IntPtr context)* sk_managedstream_hasLength_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
-	internal unsafe delegate bool SKManagedStreamHasLengthProxyDelegate(sk_stream_managedstream_t s, void* context);
+	internal unsafe delegate bool SKManagedStreamHasLengthProxyDelegate(sk_stream_managedstream_t s, IntPtr context);
 
-	// typedef bool (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_hasPosition_proc
+	// typedef bool (*)(const sk_stream_managedstream_t* s, IntPtr context)* sk_managedstream_hasPosition_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
-	internal unsafe delegate bool SKManagedStreamHasPositionProxyDelegate(sk_stream_managedstream_t s, void* context);
+	internal unsafe delegate bool SKManagedStreamHasPositionProxyDelegate(sk_stream_managedstream_t s, IntPtr context);
 
-	// typedef bool (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_isAtEnd_proc
+	// typedef bool (*)(const sk_stream_managedstream_t* s, IntPtr context)* sk_managedstream_isAtEnd_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
-	internal unsafe delegate bool SKManagedStreamIsAtEndProxyDelegate(sk_stream_managedstream_t s, void* context);
+	internal unsafe delegate bool SKManagedStreamIsAtEndProxyDelegate(sk_stream_managedstream_t s, IntPtr context);
 
-	// typedef bool (*)(sk_stream_managedstream_t* s, void* context, int offset)* sk_managedstream_move_proc
+	// typedef bool (*)(sk_stream_managedstream_t* s, IntPtr context, int offset)* sk_managedstream_move_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
-	internal unsafe delegate bool SKManagedStreamMoveProxyDelegate(sk_stream_managedstream_t s, void* context, Int32 offset);
+	internal unsafe delegate bool SKManagedStreamMoveProxyDelegate(sk_stream_managedstream_t s, IntPtr context, Int32 offset);
 
-	// typedef size_t (*)(const sk_stream_managedstream_t* s, void* context, void* buffer, size_t size)* sk_managedstream_peek_proc
+	// typedef size_t (*)(const sk_stream_managedstream_t* s, IntPtr context, IntPtr buffer, size_t size)* sk_managedstream_peek_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamPeekProxyDelegate(sk_stream_managedstream_t s, void* context, void* buffer, /* size_t */ IntPtr size);
+	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamPeekProxyDelegate(sk_stream_managedstream_t s, IntPtr context, IntPtr buffer, /* size_t */ IntPtr size);
 
-	// typedef size_t (*)(sk_stream_managedstream_t* s, void* context, void* buffer, size_t size)* sk_managedstream_read_proc
+	// typedef size_t (*)(sk_stream_managedstream_t* s, IntPtr context, IntPtr buffer, size_t size)* sk_managedstream_read_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamReadProxyDelegate(sk_stream_managedstream_t s, void* context, void* buffer, /* size_t */ IntPtr size);
+	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamReadProxyDelegate(sk_stream_managedstream_t s, IntPtr context, IntPtr buffer, /* size_t */ IntPtr size);
 
-	// typedef bool (*)(sk_stream_managedstream_t* s, void* context)* sk_managedstream_rewind_proc
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	[return: MarshalAs (UnmanagedType.I1)]
-	internal unsafe delegate bool SKManagedStreamRewindProxyDelegate(sk_stream_managedstream_t s, void* context);
-
-	// typedef bool (*)(sk_stream_managedstream_t* s, void* context, size_t position)* sk_managedstream_seek_proc
+	// typedef bool (*)(sk_stream_managedstream_t* s, IntPtr context)* sk_managedstream_rewind_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
-	internal unsafe delegate bool SKManagedStreamSeekProxyDelegate(sk_stream_managedstream_t s, void* context, /* size_t */ IntPtr position);
+	internal unsafe delegate bool SKManagedStreamRewindProxyDelegate(sk_stream_managedstream_t s, IntPtr context);
 
-	// typedef size_t (*)(const sk_wstream_managedstream_t* s, void* context)* sk_managedwstream_bytesWritten_proc
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate /* size_t */ IntPtr SKManagedWStreamBytesWrittenProxyDelegate(sk_wstream_managedstream_t s, void* context);
-
-	// typedef void (*)(sk_wstream_managedstream_t* s, void* context)* sk_managedwstream_destroy_proc
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKManagedWStreamDestroyProxyDelegate(sk_wstream_managedstream_t s, void* context);
-
-	// typedef void (*)(sk_wstream_managedstream_t* s, void* context)* sk_managedwstream_flush_proc
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKManagedWStreamFlushProxyDelegate(sk_wstream_managedstream_t s, void* context);
-
-	// typedef bool (*)(sk_wstream_managedstream_t* s, void* context, const void* buffer, size_t size)* sk_managedwstream_write_proc
+	// typedef bool (*)(sk_stream_managedstream_t* s, IntPtr context, size_t position)* sk_managedstream_seek_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
-	internal unsafe delegate bool SKManagedWStreamWriteProxyDelegate(sk_wstream_managedstream_t s, void* context, void* buffer, /* size_t */ IntPtr size);
+	internal unsafe delegate bool SKManagedStreamSeekProxyDelegate(sk_stream_managedstream_t s, IntPtr context, /* size_t */ IntPtr position);
 
-	// typedef void (*)(void* addr, void* context)* sk_surface_raster_release_proc
+	// typedef size_t (*)(const sk_wstream_managedstream_t* s, IntPtr context)* sk_managedwstream_bytesWritten_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKSurfaceRasterReleaseProxyDelegate(void* addr, void* context);
+	internal unsafe delegate /* size_t */ IntPtr SKManagedWStreamBytesWrittenProxyDelegate(sk_wstream_managedstream_t s, IntPtr context);
+
+	// typedef void (*)(sk_wstream_managedstream_t* s, IntPtr context)* sk_managedwstream_destroy_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKManagedWStreamDestroyProxyDelegate(sk_wstream_managedstream_t s, IntPtr context);
+
+	// typedef void (*)(sk_wstream_managedstream_t* s, IntPtr context)* sk_managedwstream_flush_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKManagedWStreamFlushProxyDelegate(sk_wstream_managedstream_t s, IntPtr context);
+
+	// typedef bool (*)(sk_wstream_managedstream_t* s, IntPtr context, const IntPtr buffer, size_t size)* sk_managedwstream_write_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	[return: MarshalAs (UnmanagedType.I1)]
+	internal unsafe delegate bool SKManagedWStreamWriteProxyDelegate(sk_wstream_managedstream_t s, IntPtr context, IntPtr buffer, /* size_t */ IntPtr size);
+
+	// typedef void (*)(IntPtr addr, IntPtr context)* sk_surface_raster_release_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKSurfaceRasterReleaseProxyDelegate(IntPtr addr, IntPtr context);
 
 	#endregion
 

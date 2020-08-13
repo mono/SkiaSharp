@@ -83,13 +83,6 @@ namespace SkiaSharp.Views.UWP
 				}
 			}
 		}
-
-		protected override void Dispose(bool disposing)
-		{
-			base.Dispose(disposing);
-
-			drawable?.Dispose();
-		}
 	}
 }
 #endif

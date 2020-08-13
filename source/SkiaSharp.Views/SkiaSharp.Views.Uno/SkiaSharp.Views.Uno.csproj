@@ -1,10 +1,11 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54" ToolsVersion="15.0">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;xamarinios10;monoandroid80;monoandroid90;xamarinmac20</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;xamarinios10;monoandroid90;xamarinmac20</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <NoWarn>$(NoWarm);NU1701</NoWarn>
+    <LangVersion>8.0</LangVersion>
     
     <PackageId>Uno.SkiaSharp.Views</PackageId>
 
@@ -12,43 +13,20 @@
     <DesignTimeBuild>false</DesignTimeBuild>
     <PackagingGroup>SkiaSharp</PackagingGroup>
   </PropertyGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="WasmScripts\*.js" />
-  </ItemGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Uno.UI" Version="2.0.532" />
-    <PackageReference Include="Microsoft.TypeScript.Compiler" Version="3.1.5">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.3.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
   
-  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <EmbeddedResource Include="LinkerDefinition.Wasm.xml">
-      <LogicalName>$(AssemblyName).xml</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
-
   <ItemGroup>
-    <UpToDateCheckInput Include="ts\**\*" />
+    <UnoRuntimeProjectReference Include="SkiaSharp.Views.Uno.Wasm.csproj" />
   </ItemGroup>
   
   <ItemGroup>
-    <TypeScriptCompile Remove="ts\SurfaceManager.ts" />
+    <Content Include="buildTransitive\**">
+      <PackagePath>buildTransitive</PackagePath>
+      <Pack>true</Pack>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <UpToDateCheckInput Remove="ts\SurfaceManager.ts" />
+    <PackageReference Include="Uno.UI" Version="3.0.5" />
   </ItemGroup>
   
   <ItemGroup>
@@ -77,26 +55,16 @@
     <None Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
-  </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='xamarinios10' or '$(TargetFramework)'=='xamarinmac20' or '$(TargetFramework)'=='monoandroid80' or '$(TargetFramework)'=='monoandroid90'">
     <PackageReference Include="SkiaSharp" Version="1.68.0" />
   </ItemGroup>
-  
+
+  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <PackageReference Include="SkiaSharp" Version="1.68.0" PrivateAssets="all" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)'=='monoandroid80' or '$(TargetFramework)'=='monoandroid90'">
     <Compile Include="..\SkiaSharp.Views.Android\AndroidExtensions.cs" Link="AndroidExtensions.cs" />
   </ItemGroup>
-
-  <!-- 
-  Adjust the items list generate by the microsoft.typescript.msbuild package.
-  If those items are not removed, they end-up packaged in nuget, and get parsed 
-  incorrectly as duplicate typescript files.
-  -->
-  <Target Name="AdjustPackContent" BeforeTargets="GetTypeScriptOutputForPublishing">
-    <ItemGroup>
-      <GeneratedJavascript Remove="@(GeneratedJavascript)" />
-    </ItemGroup>
-  </Target>
 
 </Project>
