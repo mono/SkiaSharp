@@ -14,9 +14,11 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Uno.UI.Runtime.WebAssembly;
 
 namespace SkiaSharp.Views.UWP
 {
+	[HtmlElement("canvas")]
 	public partial class SKXamlCanvas : FrameworkElement
 	{
 		private IntPtr pixels;
@@ -26,7 +28,6 @@ namespace SkiaSharp.Views.UWP
 		private static bool designMode = DesignMode.DesignModeEnabled;
 
 		public SKXamlCanvas()
-			: base("canvas")
 		{
 			Loaded += OnLoaded;
 			Unloaded += OnUnloaded;
@@ -114,7 +115,7 @@ namespace SkiaSharp.Views.UWP
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 			}
 
-			WebAssemblyRuntime.InvokeJS($"SkiaSharp.SurfaceManager.invalidateCanvas({pixels}, \"{HtmlId}\", {info.Width}, {_pixelHeight});");
+			WebAssemblyRuntime.InvokeJS($"SkiaSharp.SurfaceManager.invalidateCanvas({pixels}, \"{this.GetHtmlId()}\", {info.Width}, {_pixelHeight});");
 		}
 
 		private unsafe void CreateBitmap(SKImageInfo info)

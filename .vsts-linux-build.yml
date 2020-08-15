@@ -17,7 +17,7 @@ jobs:
   - bash: |
       cd ~
       echo Installing emscripten $(EMSCRIPTEN_VERSION)
-      git clone https://github.com/emscripten-core/emsdk
+      git clone --branch $(EMSCRIPTEN_VERSION) https://github.com/emscripten-core/emsdk
       cd ~/emsdk
       ./emsdk install $(EMSCRIPTEN_VERSION)
       ./emsdk activate $(EMSCRIPTEN_VERSION)

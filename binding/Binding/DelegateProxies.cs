@@ -42,7 +42,7 @@ namespace SkiaSharp
 		// internal proxy implementations
 
 		[MonoPInvokeCallback (typeof (SKBitmapReleaseProxyDelegate))]
-		private static void SKBitmapReleaseDelegateProxyImplementation (void* address, void* context)
+		private static void SKBitmapReleaseDelegateProxyImplementation (IntPtr address, IntPtr context)
 		{
 			var del = Get<SKBitmapReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
@@ -53,7 +53,7 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKDataReleaseProxyDelegate))]
-		private static void SKDataReleaseDelegateProxyImplementation (void* address, void* context)
+		private static void SKDataReleaseDelegateProxyImplementation (IntPtr address, IntPtr context)
 		{
 			var del = Get<SKDataReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
@@ -64,13 +64,13 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKImageRasterReleaseProxyDelegate))]
-		private static void SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem (void* pixels, void* context)
+		private static void SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem (IntPtr pixels, IntPtr context)
 		{
 			Marshal.FreeCoTaskMem ((IntPtr)pixels);
 		}
 
 		[MonoPInvokeCallback (typeof (SKImageRasterReleaseProxyDelegate))]
-		private static void SKImageRasterReleaseDelegateProxyImplementation (void* pixels, void* context)
+		private static void SKImageRasterReleaseDelegateProxyImplementation (IntPtr pixels, IntPtr context)
 		{
 			var del = Get<SKImageRasterReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
@@ -81,7 +81,7 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKImageTextureReleaseProxyDelegate))]
-		private static void SKImageTextureReleaseDelegateProxyImplementation (void* context)
+		private static void SKImageTextureReleaseDelegateProxyImplementation (IntPtr context)
 		{
 			var del = Get<SKImageTextureReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
@@ -92,7 +92,7 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (SKSurfaceRasterReleaseProxyDelegate))]
-		private static void SKSurfaceReleaseDelegateProxyImplementation (void* address, void* context)
+		private static void SKSurfaceReleaseDelegateProxyImplementation (IntPtr address, IntPtr context)
 		{
 			var del = Get<SKSurfaceReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
@@ -103,22 +103,24 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (GRGlGetProcProxyDelegate))]
-		private static IntPtr GRGlGetProcDelegateProxyImplementation (void* context, string name)
+		private static IntPtr GRGlGetProcDelegateProxyImplementation (IntPtr context, IntPtr name)
 		{
-			var del = Get<GRGlGetProcedureAddressDelegate> ((IntPtr)context, out _);
-			return del.Invoke (name);
+			throw new NotImplementedException ();
+			// var del = Get<GRGlGetProcedureAddressDelegate> ((IntPtr)context, out _);
+			// return del.Invoke (name);
 		}
 
 		[MonoPInvokeCallback (typeof (GRVkGetProcProxyDelegate))]
-		private static IntPtr GRVkGetProcDelegateProxyImplementation (void* context, string name, IntPtr instance, IntPtr device)
+		private static IntPtr GRVkGetProcDelegateProxyImplementation (IntPtr context, IntPtr name, IntPtr instance, IntPtr device)
 		{
-			var del = Get<GRVkGetProcedureAddressDelegate> ((IntPtr)context, out _);
+			throw new NotImplementedException ();
+			//var del = Get<GRVkGetProcedureAddressDelegate> ((IntPtr)context, out _);
 
-			return del.Invoke (name, instance, device);
+			//return del.Invoke (name, instance, device);
 		}
 
 		[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]
-		private static void SKGlyphPathDelegateProxyImplementation (IntPtr pathOrNull, SKMatrix* matrix, void* context)
+		private static void SKGlyphPathDelegateProxyImplementation (IntPtr pathOrNull, SKMatrix* matrix, IntPtr context)
 		{
 			var del = Get<SKGlyphPathDelegate> ((IntPtr)context, out _);
 			var path = SKPath.GetObject (pathOrNull, false);

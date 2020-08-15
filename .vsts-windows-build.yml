@@ -20,15 +20,23 @@ jobs:
       useConfigFile: true
       configFilePath: gitversion.yml
 
-  - task: NuGetToolInstaller@0
-    inputs:
-      versionSpec: 4.9.1
-      checkLatest: false
-
   - task: DownloadBuildArtifacts@0
     inputs:
         artifactName: canvaskit_wasm
         downloadPath: '$(build.sourcesdirectory)\externals\skia\out'
+
+  - task: MSBuild@1
+    inputs:
+      solution: $(build.sourcesdirectory)/source/SkiaSharp.Views/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.Wasm.csproj
+      msbuildLocationMethod: version
+      msbuildVersion: latest
+      msbuildArchitecture: x86
+      msbuildArguments:  /r /p:Configuration=Release /detailedsummary "/p:PackageOutputPath=$(build.artifactstagingdirectory)\nuget" "/p:PackageVersion=$(GITVERSION.FullSemVer)" "/p:InformationalVersion=$(GITVERSION.InformationalVersion)" /detailedsummary
+      clean: false
+      maximumCpuCount: true
+      restoreNugetPackages: false
+      logProjectEvents: false
+      createLogFile: false
 
   - task: MSBuild@1
     inputs:

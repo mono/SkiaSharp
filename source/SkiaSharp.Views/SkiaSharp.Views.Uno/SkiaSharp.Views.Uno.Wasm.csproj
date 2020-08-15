@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>SkiaSharp.Views.Uno</AssemblyName>
+    <LangVersion>8.0</LangVersion>
+
+    <!-- The "FilterAssemblies" task was not given a value for the required parameter "DesignTimeBuild".-->
+    <DesignTimeBuild>false</DesignTimeBuild>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Uno.UI.Runtime.WebAssembly" Version="3.0.5" />
+    <PackageReference Include="Microsoft.TypeScript.Compiler" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.3.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Exclude="..\SkiaSharp.Views.Shared\Properties\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="WasmScripts\*.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Include="ts\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Remove="ts\SurfaceManager.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="ts\SurfaceManager.ts" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="LinkerDefinition.Wasm.xml">
+      <LogicalName>$(AssemblyName).xml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

@@ -50,28 +50,28 @@ namespace SkiaSharp
 		protected abstract IntPtr OnBytesWritten ();
 
 		[MonoPInvokeCallback (typeof (SKManagedWStreamWriteProxyDelegate))]
-		private static bool WriteInternal (IntPtr s, void* context, void* buffer, IntPtr size)
+		private static bool WriteInternal (IntPtr s, IntPtr context, IntPtr buffer, IntPtr size)
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
 			return stream.OnWrite ((IntPtr)buffer, size);
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedWStreamFlushProxyDelegate))]
-		private static void FlushInternal (IntPtr s, void* context)
+		private static void FlushInternal (IntPtr s, IntPtr context)
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
 			stream.OnFlush ();
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedWStreamBytesWrittenProxyDelegate))]
-		private static IntPtr BytesWrittenInternal (IntPtr s, void* context)
+		private static IntPtr BytesWrittenInternal (IntPtr s, IntPtr context)
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
 			return stream.OnBytesWritten ();
 		}
 
 		[MonoPInvokeCallback (typeof (SKManagedWStreamDestroyProxyDelegate))]
-		private static void DestroyInternal (IntPtr s, void* context)
+		private static void DestroyInternal (IntPtr s, IntPtr context)
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out var gch);
 			if (stream != null) {
