@@ -695,7 +695,7 @@ stages:
           parameters:
             name: native_checks_windows
             displayName: Run Code Checks
-            # condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
+            condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
             vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
             target: git-sync-deps
             installWindowsSdk: false
