@@ -60,5 +60,16 @@ namespace SkiaSharp
 
 		public static long SetResourceCacheSingleAllocationByteLimit (long bytes) =>
 			(long)SkiaApi.sk_graphics_set_resource_cache_single_allocation_byte_limit ((IntPtr)bytes);
+
+		// dump
+
+		public static void DumpMemoryStatistics (SKTraceMemoryDump dump) =>
+			SkiaApi.sk_graphics_dump_memory_statistics (dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));
+
+		public static void DumpMemoryStatistics (GRContext context, SKTraceMemoryDump dump)
+		{
+			_ = context ?? throw new ArgumentNullException (nameof (context));
+			context.DumpMemoryStatistics (dump);
+		}
 	}
 }

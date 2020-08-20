@@ -32,6 +32,7 @@ namespace SkiaSharp
 	using sk_imagefilter_croprect_t = IntPtr;
 	using sk_imagefilter_t = IntPtr;
 	using sk_manageddrawable_t = IntPtr;
+	using sk_managedtracememorydump_t = IntPtr;
 	using sk_maskfilter_t = IntPtr;
 	using sk_matrix44_t = IntPtr;
 	using sk_nodraw_canvas_t = IntPtr;
@@ -68,6 +69,7 @@ namespace SkiaSharp
 	using sk_svgcanvas_t = IntPtr;
 	using sk_textblob_builder_t = IntPtr;
 	using sk_textblob_t = IntPtr;
+	using sk_tracememorydump_t = IntPtr;
 	using sk_typeface_t = IntPtr;
 	using sk_vertices_t = IntPtr;
 	using sk_wstream_dynamicmemorystream_t = IntPtr;
@@ -377,6 +379,20 @@ namespace SkiaSharp
 		private static Delegates.gr_context_abandon_context gr_context_abandon_context_delegate;
 		internal static void gr_context_abandon_context (gr_context_t context) =>
 			(gr_context_abandon_context_delegate ??= GetSymbol<Delegates.gr_context_abandon_context> ("gr_context_abandon_context")).Invoke (context);
+		#endif
+
+		// void gr_context_dump_memory_statistics(const gr_context_t* context, sk_tracememorydump_t* dump)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_context_dump_memory_statistics (gr_context_t context, sk_tracememorydump_t dump);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_context_dump_memory_statistics (gr_context_t context, sk_tracememorydump_t dump);
+		}
+		private static Delegates.gr_context_dump_memory_statistics gr_context_dump_memory_statistics_delegate;
+		internal static void gr_context_dump_memory_statistics (gr_context_t context, sk_tracememorydump_t dump) =>
+			(gr_context_dump_memory_statistics_delegate ??= GetSymbol<Delegates.gr_context_dump_memory_statistics> ("gr_context_dump_memory_statistics")).Invoke (context, dump);
 		#endif
 
 		// void gr_context_flush(gr_context_t* context)
@@ -4404,6 +4420,20 @@ namespace SkiaSharp
 		#endregion
 
 		#region sk_graphics.h
+
+		// void sk_graphics_dump_memory_statistics(sk_tracememorydump_t* dump)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_graphics_dump_memory_statistics (sk_tracememorydump_t dump);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_graphics_dump_memory_statistics (sk_tracememorydump_t dump);
+		}
+		private static Delegates.sk_graphics_dump_memory_statistics sk_graphics_dump_memory_statistics_delegate;
+		internal static void sk_graphics_dump_memory_statistics (sk_tracememorydump_t dump) =>
+			(sk_graphics_dump_memory_statistics_delegate ??= GetSymbol<Delegates.sk_graphics_dump_memory_statistics> ("sk_graphics_dump_memory_statistics")).Invoke (dump);
+		#endif
 
 		// int sk_graphics_get_font_cache_count_limit()
 		#if !USE_DELEGATES
@@ -12827,6 +12857,52 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region sk_managedtracememorydump.h
+
+		// void sk_managedtracememorydump_delete(sk_managedtracememorydump_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managedtracememorydump_delete (sk_managedtracememorydump_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managedtracememorydump_delete (sk_managedtracememorydump_t param0);
+		}
+		private static Delegates.sk_managedtracememorydump_delete sk_managedtracememorydump_delete_delegate;
+		internal static void sk_managedtracememorydump_delete (sk_managedtracememorydump_t param0) =>
+			(sk_managedtracememorydump_delete_delegate ??= GetSymbol<Delegates.sk_managedtracememorydump_delete> ("sk_managedtracememorydump_delete")).Invoke (param0);
+		#endif
+
+		// sk_managedtracememorydump_t* sk_managedtracememorydump_new(bool detailed, bool dumpWrapped, void* context)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_managedtracememorydump_t sk_managedtracememorydump_new ([MarshalAs (UnmanagedType.I1)] bool detailed, [MarshalAs (UnmanagedType.I1)] bool dumpWrapped, void* context);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_managedtracememorydump_t sk_managedtracememorydump_new ([MarshalAs (UnmanagedType.I1)] bool detailed, [MarshalAs (UnmanagedType.I1)] bool dumpWrapped, void* context);
+		}
+		private static Delegates.sk_managedtracememorydump_new sk_managedtracememorydump_new_delegate;
+		internal static sk_managedtracememorydump_t sk_managedtracememorydump_new ([MarshalAs (UnmanagedType.I1)] bool detailed, [MarshalAs (UnmanagedType.I1)] bool dumpWrapped, void* context) =>
+			(sk_managedtracememorydump_new_delegate ??= GetSymbol<Delegates.sk_managedtracememorydump_new> ("sk_managedtracememorydump_new")).Invoke (detailed, dumpWrapped, context);
+		#endif
+
+		// void sk_managedtracememorydump_set_procs(sk_managedtracememorydump_procs_t procs)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managedtracememorydump_set_procs (SKManagedTraceMemoryDumpDelegates procs);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managedtracememorydump_set_procs (SKManagedTraceMemoryDumpDelegates procs);
+		}
+		private static Delegates.sk_managedtracememorydump_set_procs sk_managedtracememorydump_set_procs_delegate;
+		internal static void sk_managedtracememorydump_set_procs (SKManagedTraceMemoryDumpDelegates procs) =>
+			(sk_managedtracememorydump_set_procs_delegate ??= GetSymbol<Delegates.sk_managedtracememorydump_set_procs> ("sk_managedtracememorydump_set_procs")).Invoke (procs);
+		#endif
+
+		#endregion
+
 	}
 
 	#region Delegates
@@ -12940,6 +13016,14 @@ namespace SkiaSharp
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedStreamSeekProxyDelegate(sk_stream_managedstream_t s, void* context, /* size_t */ IntPtr position);
+
+	// typedef void (*)(sk_managedtracememorydump_t* d, void* context, const char* dumpName, const char* valueName, const char* units, uint64_t value)* sk_managedtraceMemoryDump_dumpNumericValue_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate(sk_managedtracememorydump_t d, void* context, /* char */ void* dumpName, /* char */ void* valueName, /* char */ void* units, UInt64 value);
+
+	// typedef void (*)(sk_managedtracememorydump_t* d, void* context, const char* dumpName, const char* valueName, const char* value)* sk_managedtraceMemoryDump_dumpStringValue_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKManagedTraceMemoryDumpDumpStringValueProxyDelegate(sk_managedtracememorydump_t d, void* context, /* char */ void* dumpName, /* char */ void* valueName, /* char */ void* value);
 
 	// typedef size_t (*)(const sk_wstream_managedstream_t* s, void* context)* sk_managedwstream_bytesWritten_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -14358,6 +14442,37 @@ namespace SkiaSharp
 			hash.Add (fDuplicate);
 			hash.Add (fFork);
 			hash.Add (fDestroy);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_managedtracememorydump_procs_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKManagedTraceMemoryDumpDelegates : IEquatable<SKManagedTraceMemoryDumpDelegates> {
+		// public sk_managedtraceMemoryDump_dumpNumericValue_proc fDumpNumericValue
+		public SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate fDumpNumericValue;
+
+		// public sk_managedtraceMemoryDump_dumpStringValue_proc fDumpStringValue
+		public SKManagedTraceMemoryDumpDumpStringValueProxyDelegate fDumpStringValue;
+
+		public readonly bool Equals (SKManagedTraceMemoryDumpDelegates obj) =>
+			fDumpNumericValue == obj.fDumpNumericValue && fDumpStringValue == obj.fDumpStringValue;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKManagedTraceMemoryDumpDelegates f && Equals (f);
+
+		public static bool operator == (SKManagedTraceMemoryDumpDelegates left, SKManagedTraceMemoryDumpDelegates right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKManagedTraceMemoryDumpDelegates left, SKManagedTraceMemoryDumpDelegates right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fDumpNumericValue);
+			hash.Add (fDumpStringValue);
 			return hash.ToHashCode ();
 		}
 
