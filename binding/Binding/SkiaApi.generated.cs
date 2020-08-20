@@ -4403,6 +4403,248 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region sk_graphics.h
+
+		// int sk_graphics_get_font_cache_count_limit()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_graphics_get_font_cache_count_limit ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_graphics_get_font_cache_count_limit ();
+		}
+		private static Delegates.sk_graphics_get_font_cache_count_limit sk_graphics_get_font_cache_count_limit_delegate;
+		internal static Int32 sk_graphics_get_font_cache_count_limit () =>
+			(sk_graphics_get_font_cache_count_limit_delegate ??= GetSymbol<Delegates.sk_graphics_get_font_cache_count_limit> ("sk_graphics_get_font_cache_count_limit")).Invoke ();
+		#endif
+
+		// int sk_graphics_get_font_cache_count_used()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_graphics_get_font_cache_count_used ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_graphics_get_font_cache_count_used ();
+		}
+		private static Delegates.sk_graphics_get_font_cache_count_used sk_graphics_get_font_cache_count_used_delegate;
+		internal static Int32 sk_graphics_get_font_cache_count_used () =>
+			(sk_graphics_get_font_cache_count_used_delegate ??= GetSymbol<Delegates.sk_graphics_get_font_cache_count_used> ("sk_graphics_get_font_cache_count_used")).Invoke ();
+		#endif
+
+		// size_t sk_graphics_get_font_cache_limit()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_graphics_get_font_cache_limit ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_graphics_get_font_cache_limit ();
+		}
+		private static Delegates.sk_graphics_get_font_cache_limit sk_graphics_get_font_cache_limit_delegate;
+		internal static /* size_t */ IntPtr sk_graphics_get_font_cache_limit () =>
+			(sk_graphics_get_font_cache_limit_delegate ??= GetSymbol<Delegates.sk_graphics_get_font_cache_limit> ("sk_graphics_get_font_cache_limit")).Invoke ();
+		#endif
+
+		// int sk_graphics_get_font_cache_point_size_limit()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_graphics_get_font_cache_point_size_limit ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_graphics_get_font_cache_point_size_limit ();
+		}
+		private static Delegates.sk_graphics_get_font_cache_point_size_limit sk_graphics_get_font_cache_point_size_limit_delegate;
+		internal static Int32 sk_graphics_get_font_cache_point_size_limit () =>
+			(sk_graphics_get_font_cache_point_size_limit_delegate ??= GetSymbol<Delegates.sk_graphics_get_font_cache_point_size_limit> ("sk_graphics_get_font_cache_point_size_limit")).Invoke ();
+		#endif
+
+		// size_t sk_graphics_get_font_cache_used()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_graphics_get_font_cache_used ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_graphics_get_font_cache_used ();
+		}
+		private static Delegates.sk_graphics_get_font_cache_used sk_graphics_get_font_cache_used_delegate;
+		internal static /* size_t */ IntPtr sk_graphics_get_font_cache_used () =>
+			(sk_graphics_get_font_cache_used_delegate ??= GetSymbol<Delegates.sk_graphics_get_font_cache_used> ("sk_graphics_get_font_cache_used")).Invoke ();
+		#endif
+
+		// size_t sk_graphics_get_resource_cache_single_allocation_byte_limit()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_graphics_get_resource_cache_single_allocation_byte_limit ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_graphics_get_resource_cache_single_allocation_byte_limit ();
+		}
+		private static Delegates.sk_graphics_get_resource_cache_single_allocation_byte_limit sk_graphics_get_resource_cache_single_allocation_byte_limit_delegate;
+		internal static /* size_t */ IntPtr sk_graphics_get_resource_cache_single_allocation_byte_limit () =>
+			(sk_graphics_get_resource_cache_single_allocation_byte_limit_delegate ??= GetSymbol<Delegates.sk_graphics_get_resource_cache_single_allocation_byte_limit> ("sk_graphics_get_resource_cache_single_allocation_byte_limit")).Invoke ();
+		#endif
+
+		// size_t sk_graphics_get_resource_cache_total_byte_limit()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_graphics_get_resource_cache_total_byte_limit ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_graphics_get_resource_cache_total_byte_limit ();
+		}
+		private static Delegates.sk_graphics_get_resource_cache_total_byte_limit sk_graphics_get_resource_cache_total_byte_limit_delegate;
+		internal static /* size_t */ IntPtr sk_graphics_get_resource_cache_total_byte_limit () =>
+			(sk_graphics_get_resource_cache_total_byte_limit_delegate ??= GetSymbol<Delegates.sk_graphics_get_resource_cache_total_byte_limit> ("sk_graphics_get_resource_cache_total_byte_limit")).Invoke ();
+		#endif
+
+		// size_t sk_graphics_get_resource_cache_total_bytes_used()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_graphics_get_resource_cache_total_bytes_used ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_graphics_get_resource_cache_total_bytes_used ();
+		}
+		private static Delegates.sk_graphics_get_resource_cache_total_bytes_used sk_graphics_get_resource_cache_total_bytes_used_delegate;
+		internal static /* size_t */ IntPtr sk_graphics_get_resource_cache_total_bytes_used () =>
+			(sk_graphics_get_resource_cache_total_bytes_used_delegate ??= GetSymbol<Delegates.sk_graphics_get_resource_cache_total_bytes_used> ("sk_graphics_get_resource_cache_total_bytes_used")).Invoke ();
+		#endif
+
+		// void sk_graphics_init()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_graphics_init ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_graphics_init ();
+		}
+		private static Delegates.sk_graphics_init sk_graphics_init_delegate;
+		internal static void sk_graphics_init () =>
+			(sk_graphics_init_delegate ??= GetSymbol<Delegates.sk_graphics_init> ("sk_graphics_init")).Invoke ();
+		#endif
+
+		// void sk_graphics_purge_all_caches()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_graphics_purge_all_caches ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_graphics_purge_all_caches ();
+		}
+		private static Delegates.sk_graphics_purge_all_caches sk_graphics_purge_all_caches_delegate;
+		internal static void sk_graphics_purge_all_caches () =>
+			(sk_graphics_purge_all_caches_delegate ??= GetSymbol<Delegates.sk_graphics_purge_all_caches> ("sk_graphics_purge_all_caches")).Invoke ();
+		#endif
+
+		// void sk_graphics_purge_font_cache()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_graphics_purge_font_cache ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_graphics_purge_font_cache ();
+		}
+		private static Delegates.sk_graphics_purge_font_cache sk_graphics_purge_font_cache_delegate;
+		internal static void sk_graphics_purge_font_cache () =>
+			(sk_graphics_purge_font_cache_delegate ??= GetSymbol<Delegates.sk_graphics_purge_font_cache> ("sk_graphics_purge_font_cache")).Invoke ();
+		#endif
+
+		// void sk_graphics_purge_resource_cache()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_graphics_purge_resource_cache ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_graphics_purge_resource_cache ();
+		}
+		private static Delegates.sk_graphics_purge_resource_cache sk_graphics_purge_resource_cache_delegate;
+		internal static void sk_graphics_purge_resource_cache () =>
+			(sk_graphics_purge_resource_cache_delegate ??= GetSymbol<Delegates.sk_graphics_purge_resource_cache> ("sk_graphics_purge_resource_cache")).Invoke ();
+		#endif
+
+		// int sk_graphics_set_font_cache_count_limit(int count)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_graphics_set_font_cache_count_limit (Int32 count);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_graphics_set_font_cache_count_limit (Int32 count);
+		}
+		private static Delegates.sk_graphics_set_font_cache_count_limit sk_graphics_set_font_cache_count_limit_delegate;
+		internal static Int32 sk_graphics_set_font_cache_count_limit (Int32 count) =>
+			(sk_graphics_set_font_cache_count_limit_delegate ??= GetSymbol<Delegates.sk_graphics_set_font_cache_count_limit> ("sk_graphics_set_font_cache_count_limit")).Invoke (count);
+		#endif
+
+		// size_t sk_graphics_set_font_cache_limit(size_t bytes)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_graphics_set_font_cache_limit (/* size_t */ IntPtr bytes);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_graphics_set_font_cache_limit (/* size_t */ IntPtr bytes);
+		}
+		private static Delegates.sk_graphics_set_font_cache_limit sk_graphics_set_font_cache_limit_delegate;
+		internal static /* size_t */ IntPtr sk_graphics_set_font_cache_limit (/* size_t */ IntPtr bytes) =>
+			(sk_graphics_set_font_cache_limit_delegate ??= GetSymbol<Delegates.sk_graphics_set_font_cache_limit> ("sk_graphics_set_font_cache_limit")).Invoke (bytes);
+		#endif
+
+		// int sk_graphics_set_font_cache_point_size_limit(int maxPointSize)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_graphics_set_font_cache_point_size_limit (Int32 maxPointSize);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_graphics_set_font_cache_point_size_limit (Int32 maxPointSize);
+		}
+		private static Delegates.sk_graphics_set_font_cache_point_size_limit sk_graphics_set_font_cache_point_size_limit_delegate;
+		internal static Int32 sk_graphics_set_font_cache_point_size_limit (Int32 maxPointSize) =>
+			(sk_graphics_set_font_cache_point_size_limit_delegate ??= GetSymbol<Delegates.sk_graphics_set_font_cache_point_size_limit> ("sk_graphics_set_font_cache_point_size_limit")).Invoke (maxPointSize);
+		#endif
+
+		// size_t sk_graphics_set_resource_cache_single_allocation_byte_limit(size_t newLimit)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_graphics_set_resource_cache_single_allocation_byte_limit (/* size_t */ IntPtr newLimit);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_graphics_set_resource_cache_single_allocation_byte_limit (/* size_t */ IntPtr newLimit);
+		}
+		private static Delegates.sk_graphics_set_resource_cache_single_allocation_byte_limit sk_graphics_set_resource_cache_single_allocation_byte_limit_delegate;
+		internal static /* size_t */ IntPtr sk_graphics_set_resource_cache_single_allocation_byte_limit (/* size_t */ IntPtr newLimit) =>
+			(sk_graphics_set_resource_cache_single_allocation_byte_limit_delegate ??= GetSymbol<Delegates.sk_graphics_set_resource_cache_single_allocation_byte_limit> ("sk_graphics_set_resource_cache_single_allocation_byte_limit")).Invoke (newLimit);
+		#endif
+
+		// size_t sk_graphics_set_resource_cache_total_byte_limit(size_t newLimit)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_graphics_set_resource_cache_total_byte_limit (/* size_t */ IntPtr newLimit);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_graphics_set_resource_cache_total_byte_limit (/* size_t */ IntPtr newLimit);
+		}
+		private static Delegates.sk_graphics_set_resource_cache_total_byte_limit sk_graphics_set_resource_cache_total_byte_limit_delegate;
+		internal static /* size_t */ IntPtr sk_graphics_set_resource_cache_total_byte_limit (/* size_t */ IntPtr newLimit) =>
+			(sk_graphics_set_resource_cache_total_byte_limit_delegate ??= GetSymbol<Delegates.sk_graphics_set_resource_cache_total_byte_limit> ("sk_graphics_set_resource_cache_total_byte_limit")).Invoke (newLimit);
+		#endif
+
+		#endregion
+
 		#region sk_image.h
 
 		// sk_data_t* sk_image_encode(const sk_image_t*)
