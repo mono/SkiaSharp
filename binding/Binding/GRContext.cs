@@ -128,6 +128,9 @@ namespace SkiaSharp
 		[Obsolete]
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
 
+		public void DumpMemoryStatistics (SKTraceMemoryDump dump) =>
+			SkiaApi.gr_context_dump_memory_statistics (Handle, dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));
+
 		internal static GRContext GetObject (IntPtr handle) =>
 			handle == IntPtr.Zero ? null : new GRContext (handle, true);
 	}

@@ -25,19 +25,19 @@ Task("externals-osx")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task("externals-download")
-    .IsDependentOn("determine-last-successful-build")
     .Does(() =>
 {
-    var artifactName = "native";
-    var artifactFilename = $"{artifactName}.zip";
-    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, artifactName);
+    EnsureDirectoryExists ("./output");
+    CleanDirectories ("./output");
+    EnsureDirectoryExists ("./output/temp");
 
-    var outputPath = "./output";
-    EnsureDirectoryExists(outputPath);
-    CleanDirectories(outputPath);
+    var url = GetDownloadUrl ("_nativeassets");
+    DownloadFile (url, "./output/temp/nativeassets.nupkg");
 
-    DownloadFile(url, $"{outputPath}/{artifactFilename}");
-    Unzip($"{outputPath}/{artifactFilename}", outputPath);
+    Unzip ("./output/temp/nativeassets.nupkg", "./output/temp");
+    MoveDirectory ("./output/temp/tools", "./output/native");
+
+    DeleteDirectory("./output/temp", new DeleteDirectorySettings { Recursive = true, Force = true });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
