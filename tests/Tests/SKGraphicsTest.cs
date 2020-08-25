@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -43,7 +44,7 @@ namespace SkiaSharp.Tests
 
 		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
-		public void CreateDefaultContextIsValid()
+		public void CanGetMemoryDumpOnGpuSurface()
 		{
 			using var ctx = CreateGlContext();
 			ctx.MakeCurrent();
@@ -54,7 +55,78 @@ namespace SkiaSharp.Tests
 
 			using var dump = new TextWriterDump(true, true);
 
-			SKGraphics.DumpMemoryStatistics(grContext, dump);
+			grContext.DumpMemoryStatistics(dump);
+
+			Assert.NotEmpty(dump.Lines);
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void CanGetMemoryDumpOnGpuImages()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+
+			using var grContext = GRContext.CreateGl();
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
+			var canvas = surface.Canvas;
+
+			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			using var image = SKImage.FromEncodedData(data);
+
+			canvas.DrawImage(image, 0, 0);
+
+			using var dump = new TextWriterDump(true, true);
+
+			grContext.DumpMemoryStatistics(dump);
+
+			Assert.NotEmpty(dump.Lines);
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void CanGetMemoryDumpOnGpuImagesAfterPurge()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+
+			using var grContext = GRContext.CreateGl();
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
+			var canvas = surface.Canvas;
+
+			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			using var image = SKImage.FromEncodedData(data);
+
+			canvas.DrawImage(image, 0, 0);
+
+			using var dump = new TextWriterDump(true, true);
+
+			grContext.PurgeResources();
+			grContext.DumpMemoryStatistics(dump);
+
+			Assert.NotEmpty(dump.Lines);
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void CanGetMemoryDumpOnGpuImagesAfterPurgeUnlocked()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+
+			using var grContext = GRContext.CreateGl();
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
+			var canvas = surface.Canvas;
+
+			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			using var image = SKImage.FromEncodedData(data);
+
+			canvas.DrawImage(image, 0, 0);
+
+			using var dump = new TextWriterDump(true, true);
+
+			grContext.PurgeUnlockedResources(1024 * 1024, true);
+			grContext.DumpMemoryStatistics(dump);
 
 			Assert.NotEmpty(dump.Lines);
 		}

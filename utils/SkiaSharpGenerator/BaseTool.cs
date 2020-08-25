@@ -104,6 +104,8 @@ namespace SkiaSharpGenerator
 				{ "unsigned int",         nameof(UInt32) },
 				{ "long",                 nameof(Int64) },
 				{ "long int",             nameof(Int64) },
+				{ "long long",            nameof(Int64) },
+				{ "long long int",        nameof(Int64) },
 				{ "signed long",          nameof(Int64) },
 				{ "signed long int",      nameof(Int64) },
 				{ "unsigned long",        nameof(UInt64) },
