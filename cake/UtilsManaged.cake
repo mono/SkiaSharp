@@ -20,8 +20,14 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefau
 
 void RunNuGetRestore(FilePath sln)
 {
+    var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
+
+    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
     var settings = new NuGetRestoreSettings {
         ToolPath = NuGetToolPath,
+        Source = nugetSources,
+        NoCache = true,
     };
     NuGetRestore(sln, settings);
 }
