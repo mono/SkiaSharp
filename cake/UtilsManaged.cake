@@ -18,6 +18,14 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefau
     NuGetPack(nuspecPath, settings);
 }
 
+void RunNuGetRestore(FilePath sln)
+{
+    var settings = new NuGetRestoreSettings {
+        ToolPath = NuGetToolPath,
+    };
+    NuGetRestore(sln, settings);
+}
+
 void RunTests(FilePath testAssembly, bool is32)
 {
     var dir = testAssembly.GetDirectory();

@@ -303,6 +303,8 @@ Task ("samples")
 
     void BuildSample (FilePath sln)
     {
+        var dir = sln.GetDirectory ();
+        var needsRestore = GetFiles (dir + "/**/packages.config").Any ();
         var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
         var name = sln.GetFilenameWithoutExtension ();
         var slnPlatform = name.GetExtension ();
@@ -321,6 +323,8 @@ Task ("samples")
                 buildPlatform = platformMatrix [platform];
             }
 
+            if (needsRestore)
+                RunNuGetRestore (sln);
             RunMSBuild (sln, platform: buildPlatform);
         }
     }
