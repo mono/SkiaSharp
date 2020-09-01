@@ -21,7 +21,8 @@ namespace SkiaSharp.Views.UWP
 	[HtmlElement("canvas")]
 	public partial class SKXamlCanvas : FrameworkElement
 	{
-		private IntPtr pixels;
+		private byte[] _pixels;
+		private GCHandle _pixelsHandle;
 		private int _pixelWidth;
 		private int _pixelHeight;
 
@@ -105,7 +106,7 @@ namespace SkiaSharp.Views.UWP
 
 			var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Opaque);
 			CreateBitmap(info);
-			using (var surface = SKSurface.Create(info, pixels, info.RowBytes))
+			using (var surface = SKSurface.Create(info, _pixelsHandle.AddrOfPinnedObject(), info.RowBytes))
 			{
 				if (this.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Trace))
 				{
@@ -115,42 +116,33 @@ namespace SkiaSharp.Views.UWP
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 			}
 
-			WebAssemblyRuntime.InvokeJS($"SkiaSharp.SurfaceManager.invalidateCanvas({pixels}, \"{this.GetHtmlId()}\", {info.Width}, {_pixelHeight});");
+			WebAssemblyRuntime.InvokeJS($"SkiaSharp.SurfaceManager.invalidateCanvas({_pixelsHandle.AddrOfPinnedObject()}, \"{this.GetHtmlId()}\", {info.Width}, {_pixelHeight});");
 		}
 
 		private unsafe void CreateBitmap(SKImageInfo info)
 		{
-			if (pixels == IntPtr.Zero || _pixelWidth != info.Width || _pixelHeight != info.Height)
+			if (_pixels == null || _pixelWidth != info.Width || _pixelHeight != info.Height)
 			{
 				FreeBitmap();
 
-				var ptr = Marshal.AllocHGlobal(info.BytesSize);
-
 				if (this.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Trace))
 				{
-					this.Log().Trace($"Allocated new buffer ({ptr}, {info.Width}x{info.Height}) was {_pixelWidth}x{_pixelHeight}");
+					this.Log().Trace($"Allocated new buffer ({info.Width}x{info.Height}) was {_pixelWidth}x{_pixelHeight}");
 				}
 
-				pixels = (IntPtr)ptr;
+				_pixels = new byte[info.BytesSize];
+				_pixelsHandle = GCHandle.Alloc(_pixels, GCHandleType.Pinned);
 				_pixelWidth = info.Width;
 				_pixelHeight = info.Height;
-
-				// Reset the buffer
-				var data = (byte*)ptr.ToPointer();
-
-				for (int i = 0; i < info.BytesSize; i++)
-				{
-					data[i] = 0;
-				}
 			}
 		}
 
 		private void FreeBitmap()
 		{
-			if (pixels != IntPtr.Zero)
+			if (_pixels != null)
 			{
-				Marshal.FreeHGlobal(pixels);
-				pixels = IntPtr.Zero;
+				_pixelsHandle.Free();
+				_pixels = null;
 			}
 		}
 	}
