@@ -1,11 +1,14 @@
-﻿using System;
+﻿#if __WASM__
+using System;
 using System.Threading;
 using Uno.Foundation;
 using Uno.Foundation.Interop;
+using Uno.UI.Runtime.WebAssembly;
 using Windows.UI.Xaml;
 
 namespace SkiaSharp.Views.UWP
 {
+	[HtmlElement("canvas")]
 	public partial class SKSwapChainPanel : FrameworkElement
 	{
 		private const int ResourceCacheBytes = 256 * 1024 * 1024; // 256 MB
@@ -25,7 +28,6 @@ namespace SkiaSharp.Views.UWP
 		private SKSizeI lastSize;
 
 		public SKSwapChainPanel()
-			: base("canvas")
 		{
 			jsInterop = new SKSwapChainPanelJsInterop(this);
 			Initialize();
@@ -163,7 +165,7 @@ namespace SkiaSharp.Views.UWP
 
 			public JsInfo CreateContext()
 			{
-				var resultString = WebAssemblyRuntime.InvokeJSWithInterop($"return {this}.createContext('{Panel.HtmlId}');");
+				var resultString = WebAssemblyRuntime.InvokeJSWithInterop($"return {this}.createContext('{Panel.GetHtmlId()}');");
 				var result = resultString?.Split(',');
 				if (result?.Length != 5)
 					return default;
@@ -208,3 +210,4 @@ namespace SkiaSharp.Views.UWP
 		}
 	}
 }
+#endif
