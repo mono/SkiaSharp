@@ -1,7 +1,5 @@
-﻿#if UNO_REFERENCE_API && !__WASM__
+﻿#if UNO_REFERENCE_API
 using System;
-using System.Threading;
-using Uno.Foundation;
 using Windows.UI.Xaml;
 
 namespace SkiaSharp.Views.UWP
@@ -10,27 +8,20 @@ namespace SkiaSharp.Views.UWP
 	{
 		public SKSwapChainPanel()
 		{
+			throw new NotImplementedException();
 		}
 
 		private SKSize GetCanvasSize() => throw new NotImplementedException();
 
 		private GRContext GetGRContext() => throw new NotImplementedException();
 
-		partial void DoLoaded()
-		{
-		}
+		partial void DoLoaded() => throw new NotImplementedException();
 
-		partial void DoEnableRenderLoop(bool enable) { }
+		partial void DoEnableRenderLoop(bool enable) => throw new NotImplementedException();
 
-		private void DoInvalidate()
-		{
-			
-		}
+		private void DoInvalidate() => throw new NotImplementedException();
 
-		internal void RenderFrame()
-		{
-			
-		}
+		internal void RenderFrame() => throw new NotImplementedException();
 	}
 }
 #endif

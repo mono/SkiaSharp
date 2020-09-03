@@ -1,5 +1,4 @@
-﻿#if __WASM__
-using System;
+﻿using System;
 using System.Threading;
 using Uno.Foundation;
 using Uno.Foundation.Interop;
@@ -210,4 +209,3 @@ namespace SkiaSharp.Views.UWP
 		}
 	}
 }
-#endif
