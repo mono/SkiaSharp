@@ -321,6 +321,7 @@ Task ("samples")
                 buildPlatform = platformMatrix [platform];
             }
 
+            RunNuGetRestorePackagesConfig (sln);
             RunMSBuild (sln, platform: buildPlatform);
         }
     }
