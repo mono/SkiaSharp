@@ -15,7 +15,7 @@ parameters:
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
-  buildExternals: ''                            # the build number to download externals from
+  buildExternals: '4047423'                            # the build number to download externals from
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -26,16 +26,16 @@ parameters:
   installEmsdk: false                           # whether or not to install the Emscripten SDK
 
 jobs:
-# - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
-#   - template: azure-templates-download.yml
-#     parameters:
-#       name: ${{ parameters.name }}
-#       displayName: ${{ parameters.displayName }}
-#       vmImage: ${{ parameters.vmImage }}
-#       condition: ${{ parameters.condition }}
-#       buildExternals: ${{ parameters.buildExternals }}
+- ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
+  - template: azure-templates-download.yml
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      vmImage: ${{ parameters.vmImage }}
+      condition: ${{ parameters.condition }}
+      buildExternals: ${{ parameters.buildExternals }}
 
-# - ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
+- ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
@@ -67,7 +67,7 @@ jobs:
             sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
             echo "deb https://download.mono-project.com/repo/ubuntu $(MONO_VERSION_LINUX) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
             sudo apt update
-            sudo apt install -y mono-complete msbuild
+            sudo apt install -y mono-complete=$(MONO_VERSION_LINUX_MONO) msbuild=$(MONO_VERSION_LINUX_MSBUILD)
             mono --version
           displayName: Install Mono and MSBuild
       - ${{ if endsWith(parameters.name, '_macos') }}:
