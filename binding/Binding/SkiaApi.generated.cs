@@ -409,6 +409,20 @@ namespace SkiaSharp
 			(gr_context_flush_delegate ??= GetSymbol<Delegates.gr_context_flush> ("gr_context_flush")).Invoke (context);
 		#endif
 
+		// void gr_context_free_gpu_resources(gr_context_t* context)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_context_free_gpu_resources (gr_context_t context);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_context_free_gpu_resources (gr_context_t context);
+		}
+		private static Delegates.gr_context_free_gpu_resources gr_context_free_gpu_resources_delegate;
+		internal static void gr_context_free_gpu_resources (gr_context_t context) =>
+			(gr_context_free_gpu_resources_delegate ??= GetSymbol<Delegates.gr_context_free_gpu_resources> ("gr_context_free_gpu_resources")).Invoke (context);
+		#endif
+
 		// gr_backend_t gr_context_get_backend(gr_context_t* context)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -491,6 +505,48 @@ namespace SkiaSharp
 		private static Delegates.gr_context_make_vulkan gr_context_make_vulkan_delegate;
 		internal static gr_context_t gr_context_make_vulkan (GRVkBackendContextNative vkBackendContext) =>
 			(gr_context_make_vulkan_delegate ??= GetSymbol<Delegates.gr_context_make_vulkan> ("gr_context_make_vulkan")).Invoke (vkBackendContext);
+		#endif
+
+		// void gr_context_perform_deferred_cleanup(gr_context_t* context, long long ms)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_context_perform_deferred_cleanup (gr_context_t context, Int64 ms);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_context_perform_deferred_cleanup (gr_context_t context, Int64 ms);
+		}
+		private static Delegates.gr_context_perform_deferred_cleanup gr_context_perform_deferred_cleanup_delegate;
+		internal static void gr_context_perform_deferred_cleanup (gr_context_t context, Int64 ms) =>
+			(gr_context_perform_deferred_cleanup_delegate ??= GetSymbol<Delegates.gr_context_perform_deferred_cleanup> ("gr_context_perform_deferred_cleanup")).Invoke (context, ms);
+		#endif
+
+		// void gr_context_purge_unlocked_resources(gr_context_t* context, bool scratchResourcesOnly)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_context_purge_unlocked_resources (gr_context_t context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_context_purge_unlocked_resources (gr_context_t context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly);
+		}
+		private static Delegates.gr_context_purge_unlocked_resources gr_context_purge_unlocked_resources_delegate;
+		internal static void gr_context_purge_unlocked_resources (gr_context_t context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly) =>
+			(gr_context_purge_unlocked_resources_delegate ??= GetSymbol<Delegates.gr_context_purge_unlocked_resources> ("gr_context_purge_unlocked_resources")).Invoke (context, scratchResourcesOnly);
+		#endif
+
+		// void gr_context_purge_unlocked_resources_bytes(gr_context_t* context, size_t bytesToPurge, bool preferScratchResources)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_context_purge_unlocked_resources_bytes (gr_context_t context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_context_purge_unlocked_resources_bytes (gr_context_t context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources);
+		}
+		private static Delegates.gr_context_purge_unlocked_resources_bytes gr_context_purge_unlocked_resources_bytes_delegate;
+		internal static void gr_context_purge_unlocked_resources_bytes (gr_context_t context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources) =>
+			(gr_context_purge_unlocked_resources_bytes_delegate ??= GetSymbol<Delegates.gr_context_purge_unlocked_resources_bytes> ("gr_context_purge_unlocked_resources_bytes")).Invoke (context, bytesToPurge, preferScratchResources);
 		#endif
 
 		// void gr_context_release_resources_and_abandon_context(gr_context_t* context)

@@ -70,7 +70,40 @@ namespace SkiaSharp
 						return lib;
 				}
 
-				// 3. use PATH or default loading mechanism
+				// 3. try app domain
+				try {
+					if (AppDomain.CurrentDomain is AppDomain domain) {
+						// 3.1 RelativeSearchPath
+						path = domain.RelativeSearchPath;
+						if (!string.IsNullOrEmpty (path)) {
+							// 3.1.1 in platform sub dir
+							var lib = Path.Combine (path, arch, libWithExt);
+							if (File.Exists (lib))
+								return lib;
+							// 3.1.2 in root
+							lib = Path.Combine (lib, libWithExt);
+							if (File.Exists (lib))
+								return lib;
+						}
+
+						// 3.2 BaseDirectory
+						path = domain.BaseDirectory;
+						if (!string.IsNullOrEmpty (path)) {
+							// 3.2.1 in platform sub dir
+							var lib = Path.Combine (path, arch, libWithExt);
+							if (File.Exists (lib))
+								return lib;
+							// 3.2.2 in root
+							lib = Path.Combine (lib, libWithExt);
+							if (File.Exists (lib))
+								return lib;
+						}
+					}
+				} catch {
+					// no-op as there may not be any domain or path
+				}
+
+				// 4. use PATH or default loading mechanism
 				return libWithExt;
 			}
 		}

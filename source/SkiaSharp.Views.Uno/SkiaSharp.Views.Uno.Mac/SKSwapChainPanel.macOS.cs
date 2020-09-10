@@ -69,7 +69,11 @@ namespace SkiaSharp.Views.UWP
 			displayLink.SetOutputCallback(delegate
 			{
 				// redraw the view
-				glView?.BeginInvokeOnMainThread(() => glView?.Display());
+				glView?.BeginInvokeOnMainThread(() =>
+				{
+					if (glView != null)
+						glView.NeedsDisplay = true;
+				});
 
 				// stop the render loop if it has been disabled or the views are disposed
 				if (glView == null || !EnableRenderLoop)
