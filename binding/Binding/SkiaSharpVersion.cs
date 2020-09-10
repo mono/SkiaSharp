@@ -33,34 +33,35 @@ namespace SkiaSharp
 		public static bool CheckNativeLibraryCompatible (bool throwIfIncompatible = false) =>
 			CheckNativeLibraryCompatible (NativeMinimum, Native, throwIfIncompatible);
 
-		internal static bool CheckNativeLibraryCompatible (Version minimum, Version current, bool throwIfIncompatible = false)
+		internal static bool CheckNativeLibraryCompatible (Version minSupported, Version current, bool throwIfIncompatible = false)
 		{
-			minimum ??= Zero;
+			minSupported ??= Zero;
 			current ??= Zero;
 
 			// fail fast to success if SkiaSharp is compiled without a minimum
-			if (minimum <= Zero)
+			if (minSupported <= Zero)
 				return true;
 
-			var max = new Version (minimum.Major + 1, 0);
+			// get the next MAJOR version which is always incompatible
+			var maxSupported = new Version (minSupported.Major + 1, 0);
 
 			// fail fast if a pre-2.80 version of libSkiaSharp is loaded
 			if (current <= Zero) {
 				if (throwIfIncompatible)
 					throw new InvalidOperationException (
 						$"The version of the native libSkiaSharp library is incompatible with this version of SkiaSharp. " +
-						$"Supported versions of the native libSkiaSharp library are in the range [{minimum.ToString (2)}, {max.ToString (2)}).");
+						$"Supported versions of the native libSkiaSharp library are in the range [{minSupported.ToString (2)}, {maxSupported.ToString (2)}).");
 				return false;
 			}
 
-			var compat = current >= minimum && current < max;
+			var isIncompatible = current < minSupported || current >= maxSupported;
 
-			if (!compat && throwIfIncompatible)
+			if (isIncompatible && throwIfIncompatible)
 				throw new InvalidOperationException (
 					$"The version of the native libSkiaSharp library ({current.ToString (2)}) is incompatible with this version of SkiaSharp. " +
-					$"Supported versions of the native libSkiaSharp library are in the range [{minimum.ToString (2)}, {max.ToString (2)}).");
+					$"Supported versions of the native libSkiaSharp library are in the range [{minSupported.ToString (2)}, {maxSupported.ToString (2)}).");
 
-			return compat;
+			return !isIncompatible;
 		}
 	}
 }
