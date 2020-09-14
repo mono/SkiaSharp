@@ -172,6 +172,7 @@ namespace SkiaSharp.Tests
 		// older C API
 		[InlineData("68.3", "68.0", "[68.3, 69.0)")]
 		[InlineData("68.3", "68.2", "[68.3, 69.0)")]
+		[InlineData("80.2", "80.0", "[80.2, 81.0)")]
 		// older skia milestone
 		[InlineData("68.0", "60.0", "[68.0, 69.0)")]
 		[InlineData("68.3", "60.0", "[68.3, 69.0)")]
@@ -210,6 +211,12 @@ namespace SkiaSharp.Tests
 		public void TestLibraryVersions()
 		{
 			Assert.True(SkiaSharpVersion.CheckNativeLibraryCompatible());
+		}
+
+		[SkippableFact]
+		public void TestLibraryVersionsDoesNotThrow()
+		{
+			SkiaSharpVersion.CheckNativeLibraryCompatible(true);
 		}
 
 		[SkippableFact]

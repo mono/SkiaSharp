@@ -128,6 +128,21 @@ namespace SkiaSharp
 		[Obsolete]
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
 
+		public void DumpMemoryStatistics (SKTraceMemoryDump dump) =>
+			SkiaApi.gr_context_dump_memory_statistics (Handle, dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));
+
+		public void PurgeResources () =>
+			SkiaApi.gr_context_free_gpu_resources (Handle);
+
+		public void PurgeUnusedResources (long milliseconds) =>
+			SkiaApi.gr_context_perform_deferred_cleanup (Handle, milliseconds);
+
+		public void PurgeUnlockedResources (bool scratchResourcesOnly) =>
+			SkiaApi.gr_context_purge_unlocked_resources (Handle, scratchResourcesOnly);
+
+		public void PurgeUnlockedResources (long bytesToPurge, bool preferScratchResources) =>
+			SkiaApi.gr_context_purge_unlocked_resources_bytes (Handle, (IntPtr)bytesToPurge, preferScratchResources);
+
 		internal static GRContext GetObject (IntPtr handle) =>
 			handle == IntPtr.Zero ? null : new GRContext (handle, true);
 	}

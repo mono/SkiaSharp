@@ -18,6 +18,25 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefau
     NuGetPack(nuspecPath, settings);
 }
 
+void RunNuGetRestorePackagesConfig(FilePath sln)
+{
+    var dir = sln.GetDirectory();
+
+    var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
+
+    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
+    var settings = new NuGetRestoreSettings {
+        ToolPath = NuGetToolPath,
+        Source = nugetSources,
+        NoCache = true,
+        PackagesDirectory = dir.Combine("packages"),
+    };
+
+    foreach (var config in GetFiles(dir + "/**/packages.config"))
+        NuGetRestore(config, settings);
+}
+
 void RunTests(FilePath testAssembly, bool is32)
 {
     var dir = testAssembly.GetDirectory();

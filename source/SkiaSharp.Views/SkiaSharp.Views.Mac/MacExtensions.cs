@@ -14,10 +14,18 @@ namespace SkiaSharp.Views.Mac
 			return new SKColor((byte)(r * 255), (byte)(g * 255), (byte)(b * 255), (byte)(a * 255));
 		}
 
-		public static NSColor ToNSColor(this SKColor color)
+		public static SKColorF ToSKColorF(this NSColor color)
 		{
-			return NSColor.FromRgba(color.Red, color.Green, color.Blue, color.Alpha);
+			System.nfloat r, g, b, a;
+			color.GetRgba(out r, out g, out b, out a);
+			return new SKColorF((float)r, (float)g, (float)b, (float)a);
 		}
+
+		public static NSColor ToNSColor(this SKColor color) =>
+			NSColor.FromRgba(color.Red, color.Green, color.Blue, color.Alpha);
+
+		public static NSColor ToNSColor(this SKColorF color) =>
+			NSColor.FromRgba(color.Red, color.Green, color.Blue, color.Alpha);
 
 
 		// NSImage

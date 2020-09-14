@@ -169,7 +169,7 @@ namespace SkiaSharp.Views.iOS
 
 		private void ResizeGLContexts()
 		{
-			// nuke old buffers
+			// delete old buffers
 			Gles.glDeleteRenderbuffers(1, ref renderBuffer);
 
 			// re-create render buffer
