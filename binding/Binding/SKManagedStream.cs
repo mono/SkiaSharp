@@ -90,18 +90,29 @@ namespace SkiaSharp
 
 		private IntPtr OnReadManagedStream (IntPtr buffer, IntPtr size)
 		{
-			byte[] managedBuffer;
-			using (var reader = new BinaryReader (stream, Encoding.UTF8, true)) {
-				managedBuffer = reader.ReadBytes ((int)size);
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (buffer));
+
+			var remaining = (int)size;
+			if (remaining < 0)
+				throw new ArgumentOutOfRangeException (nameof (size));
+
+			if (size == IntPtr.Zero)
+				return IntPtr.Zero;
+
+			var total = 0;
+			int len;
+			using var managedBuffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
+			while ((len = stream.Read ((byte[])managedBuffer, 0, Math.Min (managedBuffer.Length, remaining))) > 0) {
+				Marshal.Copy ((byte[])managedBuffer, 0, buffer, len);
+				remaining -= len;
+				total += len;
 			}
-			var result = managedBuffer.Length;
-			if (buffer != IntPtr.Zero) {
-				Marshal.Copy (managedBuffer, 0, buffer, result);
-			}
-			if (!stream.CanSeek && (int)size > 0 && result <= (int)size) {
+
+			if (!stream.CanSeek && (int)size > 0 && total <= (int)size)
 				isAsEnd = true;
-			}
-			return (IntPtr)result;
+
+			return (IntPtr)total;
 		}
 
 		protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
