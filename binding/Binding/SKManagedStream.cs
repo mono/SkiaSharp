@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Buffers;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace SkiaSharp
 {
@@ -92,27 +89,23 @@ namespace SkiaSharp
 		{
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
-
-			var remaining = (int)size;
-			if (remaining < 0)
+			if ((int)size < 0)
 				throw new ArgumentOutOfRangeException (nameof (size));
 
 			if (size == IntPtr.Zero)
 				return IntPtr.Zero;
 
-			var total = 0;
-			int len;
-			using var managedBuffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
-			while ((len = stream.Read ((byte[])managedBuffer, 0, Math.Min (managedBuffer.Length, remaining))) > 0) {
-				Marshal.Copy ((byte[])managedBuffer, 0, buffer, len);
-				remaining -= len;
-				total += len;
-			}
+			using var managedBuffer = Utils.RentArray<byte> ((int)size);
+			var len = stream.Read (managedBuffer.Array, 0, managedBuffer.Length);
 
-			if (!stream.CanSeek && (int)size > 0 && total <= (int)size)
+			var src = managedBuffer.Span.Slice (0, len);
+			var dst = buffer.AsSpan (managedBuffer.Length);
+			src.CopyTo (dst);
+
+			if (!stream.CanSeek && (int)size > 0 && len <= (int)size)
 				isAsEnd = true;
 
-			return (IntPtr)total;
+			return (IntPtr)len;
 		}
 
 		protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
