@@ -31,7 +31,7 @@ namespace SkiaSharp.Tests
 			picture.Serialize(stream);
 
 			Assert.True(stream.Length > 8);
-			Assert.Equal(MagicBytes, stream.ToArray().AsSpan(0, 8).ToArray());
+			Assert.Equal(MagicBytes, stream.ToArray().AsSpan().Slice(0, 8).ToArray());
 		}
 
 		[SkippableFact]
