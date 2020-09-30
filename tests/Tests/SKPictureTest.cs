@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 
 			var span = data.AsSpan();
 			Assert.True(span.Length > 8);
-			Assert.Equal(MagicBytes, span[0..8].ToArray());
+			Assert.Equal(MagicBytes, span.Slice(0, 8).ToArray());
 		}
 
 		[SkippableFact]
@@ -31,7 +31,7 @@ namespace SkiaSharp.Tests
 			picture.Serialize(stream);
 
 			Assert.True(stream.Length > 8);
-			Assert.Equal(MagicBytes, stream.ToArray()[0..8]);
+			Assert.Equal(MagicBytes, stream.ToArray().AsSpan(0, 8).ToArray());
 		}
 
 		[SkippableFact]
