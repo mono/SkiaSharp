@@ -128,6 +128,8 @@ jobs:
                 .\scripts\download-file.ps1 -Uri $uri -OutFile sdksetup.exe
                 .\sdksetup.exe /norestart /quiet | Out-Null
               displayName: Install the Windows 10 SDK 10.0.10240
+          - pwsh: ./scripts/install-vs.ps1
+            displayName: Install the Visual Studio Components
 
       # install any .NET Core global tools
       - ${{ each tool in parameters.tools }}:
