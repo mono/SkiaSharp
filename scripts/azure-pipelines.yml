@@ -35,6 +35,8 @@ variables:
   ENABLE_CODE_COVERAGE: true
   EMSCRIPTEN_VERSION: 1.40.0
 
+  TOOLCHAIN_VESION: 14.26.28801
+
 resources:
   repositories:
     - repository: xamarin-templates
@@ -144,56 +146,56 @@ stages:
           displayName: UWP x86
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-          additionalArgs: --buildarch=x86 --skipAngle=true
+          additionalArgs: --buildarch=x86 --skipAngle=true --gnArgs="win_toolchain_version='''$(TOOLCHAIN_VESION)'''"
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Win)
         parameters:
           name: native_uwp_x64_windows
           displayName: UWP x64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-          additionalArgs: --buildarch=x64 --skipAngle=true
+          additionalArgs: --buildarch=x64 --skipAngle=true --gnArgs="win_toolchain_version='''$(TOOLCHAIN_VESION)'''"
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Win)
         parameters:
           name: native_uwp_arm_windows
           displayName: UWP arm
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-          additionalArgs: --buildarch=arm --skipAngle=true
+          additionalArgs: --buildarch=arm --skipAngle=true --gnArgs="win_toolchain_version='''$(TOOLCHAIN_VESION)'''"
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Win)
         parameters:
           name: native_uwp_arm64_windows
           displayName: UWP arm64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-          additionalArgs: --buildarch=arm64 --skipAngle=true
+          additionalArgs: --buildarch=arm64 --skipAngle=true --gnArgs="win_toolchain_version='''$(TOOLCHAIN_VESION)'''"
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Win)
         parameters:
           name: native_win32_x86_windows
           displayName: Win32 x86
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
-          additionalArgs: --buildarch=x86
+          additionalArgs: --buildarch=x86 --gnArgs="win_toolchain_version='''$(TOOLCHAIN_VESION)'''"
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Win)
         parameters:
           name: native_win32_x64_windows
           displayName: Win32 x64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
-          additionalArgs: --buildarch=x64
+          additionalArgs: --buildarch=x64 --gnArgs="win_toolchain_version='''$(TOOLCHAIN_VESION)'''"
       - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Win)
         parameters:
           name: native_win32_arm64_windows
           displayName: Win32 arm64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
-          additionalArgs: --buildarch=arm64
+          additionalArgs: --buildarch=arm64 --gnArgs="win_toolchain_version='''$(TOOLCHAIN_VESION)'''"
       - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Win)
         parameters:
           name: native_win32_x64_nanoserver_windows
           displayName: Nano Server x64
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-nanoserver
-          additionalArgs: --buildarch=x64
+          additionalArgs: --buildarch=x64 --gnArgs="win_toolchain_version='''$(TOOLCHAIN_VESION)'''"
           tools:
             - nano-api-scan
 
