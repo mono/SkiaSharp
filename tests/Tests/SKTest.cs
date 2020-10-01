@@ -67,26 +67,43 @@ namespace SkiaSharp.Tests
 			bmp.Erase(SKColors.Transparent);
 
 			using (var canvas = new SKCanvas(bmp))
-			using (var paint = new SKPaint())
 			{
-
-				var x = bmp.Width / 2;
-				var y = bmp.Height / 2;
-
-				paint.Color = SKColors.Red.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(0, 0, x, y), paint);
-
-				paint.Color = SKColors.Green.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(x, 0, x, y), paint);
-
-				paint.Color = SKColors.Blue.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(0, y, x, y), paint);
-
-				paint.Color = SKColors.Yellow.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(x, y, x, y), paint);
+				DrawTestBitmap(canvas, 40, 40, alpha);
 			}
 
 			return bmp;
+		}
+
+		protected static SKPicture CreateTestPicture(byte alpha = 255)
+		{
+			using var recorder = new SKPictureRecorder();
+			using var canvas = recorder.BeginRecording(SKRect.Create(0, 0, 40, 40));
+
+			DrawTestBitmap(canvas, 40, 40, alpha);
+
+			return recorder.EndRecording();
+		}
+
+		private static void DrawTestBitmap(SKCanvas canvas, int width, int height, byte alpha = 255)
+		{
+			using var paint = new SKPaint();
+
+			var x = width / 2;
+			var y = height / 2;
+
+			canvas.Clear(SKColors.Transparent);
+
+			paint.Color = SKColors.Red.WithAlpha(alpha);
+			canvas.DrawRect(SKRect.Create(0, 0, x, y), paint);
+
+			paint.Color = SKColors.Green.WithAlpha(alpha);
+			canvas.DrawRect(SKRect.Create(x, 0, x, y), paint);
+
+			paint.Color = SKColors.Blue.WithAlpha(alpha);
+			canvas.DrawRect(SKRect.Create(0, y, x, y), paint);
+
+			paint.Color = SKColors.Yellow.WithAlpha(alpha);
+			canvas.DrawRect(SKRect.Create(x, y, x, y), paint);
 		}
 
 		protected static void ValidateTestBitmap(SKBitmap bmp, byte alpha = 255)
