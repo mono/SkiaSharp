@@ -8695,6 +8695,48 @@ namespace SkiaSharp
 
 		#region sk_picture.h
 
+		// sk_picture_t* sk_picture_deserialize_from_data(sk_data_t* data)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_picture_t sk_picture_deserialize_from_data (sk_data_t data);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_picture_t sk_picture_deserialize_from_data (sk_data_t data);
+		}
+		private static Delegates.sk_picture_deserialize_from_data sk_picture_deserialize_from_data_delegate;
+		internal static sk_picture_t sk_picture_deserialize_from_data (sk_data_t data) =>
+			(sk_picture_deserialize_from_data_delegate ??= GetSymbol<Delegates.sk_picture_deserialize_from_data> ("sk_picture_deserialize_from_data")).Invoke (data);
+		#endif
+
+		// sk_picture_t* sk_picture_deserialize_from_memory(void* buffer, size_t length)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_picture_t sk_picture_deserialize_from_memory (void* buffer, /* size_t */ IntPtr length);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_picture_t sk_picture_deserialize_from_memory (void* buffer, /* size_t */ IntPtr length);
+		}
+		private static Delegates.sk_picture_deserialize_from_memory sk_picture_deserialize_from_memory_delegate;
+		internal static sk_picture_t sk_picture_deserialize_from_memory (void* buffer, /* size_t */ IntPtr length) =>
+			(sk_picture_deserialize_from_memory_delegate ??= GetSymbol<Delegates.sk_picture_deserialize_from_memory> ("sk_picture_deserialize_from_memory")).Invoke (buffer, length);
+		#endif
+
+		// sk_picture_t* sk_picture_deserialize_from_stream(sk_stream_t* stream)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_picture_t sk_picture_deserialize_from_stream (sk_stream_t stream);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_picture_t sk_picture_deserialize_from_stream (sk_stream_t stream);
+		}
+		private static Delegates.sk_picture_deserialize_from_stream sk_picture_deserialize_from_stream_delegate;
+		internal static sk_picture_t sk_picture_deserialize_from_stream (sk_stream_t stream) =>
+			(sk_picture_deserialize_from_stream_delegate ??= GetSymbol<Delegates.sk_picture_deserialize_from_stream> ("sk_picture_deserialize_from_stream")).Invoke (stream);
+		#endif
+
 		// void sk_picture_get_cull_rect(sk_picture_t*, sk_rect_t*)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -8833,6 +8875,34 @@ namespace SkiaSharp
 		private static Delegates.sk_picture_ref sk_picture_ref_delegate;
 		internal static void sk_picture_ref (sk_picture_t param0) =>
 			(sk_picture_ref_delegate ??= GetSymbol<Delegates.sk_picture_ref> ("sk_picture_ref")).Invoke (param0);
+		#endif
+
+		// sk_data_t* sk_picture_serialize_to_data(const sk_picture_t* picture)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_data_t sk_picture_serialize_to_data (sk_picture_t picture);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_data_t sk_picture_serialize_to_data (sk_picture_t picture);
+		}
+		private static Delegates.sk_picture_serialize_to_data sk_picture_serialize_to_data_delegate;
+		internal static sk_data_t sk_picture_serialize_to_data (sk_picture_t picture) =>
+			(sk_picture_serialize_to_data_delegate ??= GetSymbol<Delegates.sk_picture_serialize_to_data> ("sk_picture_serialize_to_data")).Invoke (picture);
+		#endif
+
+		// void sk_picture_serialize_to_stream(const sk_picture_t* picture, sk_wstream_t* stream)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_picture_serialize_to_stream (sk_picture_t picture, sk_wstream_t stream);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_picture_serialize_to_stream (sk_picture_t picture, sk_wstream_t stream);
+		}
+		private static Delegates.sk_picture_serialize_to_stream sk_picture_serialize_to_stream_delegate;
+		internal static void sk_picture_serialize_to_stream (sk_picture_t picture, sk_wstream_t stream) =>
+			(sk_picture_serialize_to_stream_delegate ??= GetSymbol<Delegates.sk_picture_serialize_to_stream> ("sk_picture_serialize_to_stream")).Invoke (picture, stream);
 		#endif
 
 		// void sk_picture_unref(sk_picture_t*)
