@@ -47,11 +47,20 @@ dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- verif
 This can be run with:
 
 ```pwsh
-dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- cookie --assembly binding\SkiaSharp\bin\Debug\netstandard2.0\SkiaSharp.dll
+dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- cookie --assembly binding\SkiaSharp\bin\Debug\netstandard2.0\SkiaSharp.dll --type "SkiaSharp.SkiaApi"
 ```
+
+Or:
+
+```pwsh
+dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- cookie --assembly binding\HarfBuzzSharp\bin\Debug\netstandard2.0\HarfBuzzSharp.dll --type "HarfBuzzSharp.HarfBuzzApi"
+```
+
 
 * `--assembly <assembly>`  
   Read the assembly and log any missing interops.
+* `--type <full type name>`  
+  The type containing the interops.
 
 ## WasmTestRunner
 

@@ -14,11 +14,14 @@ namespace SkiaSharpGenerator
 
 		public string? AssemblyPath { get; set; }
 
+		public string? InteropType { get; set; }
+
 		public string? MonoBranch { get; set; } = "master";
 
 		protected override OptionSet OnCreateOptions() => new OptionSet
 		{
-			{ "a|assembly=", "The SkiaSharp assembly", v => AssemblyPath = v },
+			{ "a|assembly=", "The .NET assembly", v => AssemblyPath = v },
+			{ "t|type=", "The interop type", v => InteropType = v },
 			{ "b|branch=", "The mono branch [master]", v => MonoBranch = v },
 		};
 
@@ -28,12 +31,18 @@ namespace SkiaSharpGenerator
 
 			if (string.IsNullOrEmpty(AssemblyPath))
 			{
-				Program.Log.LogError($"{Program.Name}: Path to the SkiaSharp assembly was not provided: `--assembly=<path-to-SkiaSharp.dll>`.");
+				Program.Log.LogError($"{Program.Name}: Path to the .NET assembly was not provided: `--assembly=<path-to.dll>`.");
 				hasError = true;
 			}
 			else if (!File.Exists(AssemblyPath))
 			{
-				Program.Log.LogError($"{Program.Name}: Path to the SkiaSharp assembly does not exist: `{AssemblyPath}`.");
+				Program.Log.LogError($"{Program.Name}: Path to the .NET assembly does not exist: `{AssemblyPath}`.");
+				hasError = true;
+			}
+
+			if (string.IsNullOrEmpty(InteropType))
+			{
+				Program.Log.LogError($"{Program.Name}: The interop type was not specified: `{InteropType}`.");
 				hasError = true;
 			}
 
@@ -47,7 +56,7 @@ namespace SkiaSharpGenerator
 
 		protected override bool OnInvoke(IEnumerable<string> extras)
 		{
-			var detector = new CookieDetector(AssemblyPath!, MonoBranch!);
+			var detector = new CookieDetector(AssemblyPath!, InteropType!, MonoBranch!);
 			detector.Log = Program.Log;
 
 			try

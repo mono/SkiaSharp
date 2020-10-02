@@ -314,7 +314,14 @@ namespace SkiaSharpGenerator
 					else
 						fieldName = Utils.CleanEnumFieldName(fieldName, cppEnumName);
 
-					writer.WriteLine($"\t\t// {field.Name} = {field.ValueExpression?.ToString() ?? field.Value.ToString()}");
+					if (string.IsNullOrEmpty(fieldName))
+						continue;
+
+					var commentVal = field.ValueExpression?.ToString();
+					if (string.IsNullOrEmpty(commentVal))
+						commentVal = field.Value.ToString();
+
+					writer.WriteLine($"\t\t// {field.Name} = {commentVal}");
 					writer.WriteLine($"\t\t{fieldName} = {field.Value},");
 				}
 				writer.WriteLine($"\t}}");
