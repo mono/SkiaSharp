@@ -120,9 +120,9 @@ namespace SkiaSharpGenerator
 			return methods.OrderBy(s => s.Signature).ToArray();
 
 			static string GetSignature(MethodDefinition method, TypeReference ret)
-		{
+			{
 				if (ret.IsByReference || ret.IsArray || ret.IsPointer)
-				return "I";
+					return "I";
 
 				return GetTypeSignature(method, ret.Resolve());
 			}
@@ -131,6 +131,10 @@ namespace SkiaSharpGenerator
 		private static string GetTypeSignature(MethodDefinition method, TypeDefinition type)
 		{
 			if (type.IsEnum || type.IsPointer || type.IsArray)
+				return "I";
+
+			// special delegates
+			if ((type.FullName.StartsWith("SkiaSharp.") || type.FullName.StartsWith("HarfBuzzSharp.")) && type.FullName.EndsWith("ProxyDelegate"))
 				return "I";
 
 			switch (type.FullName)
@@ -144,14 +148,6 @@ namespace SkiaSharpGenerator
 				case "System.Byte":
 				case "System.Boolean":
 				case "System.Void*":
-				case "SkiaSharp.GRGlGetProcProxyDelegate":
-				case "SkiaSharp.GRVkGetProcProxyDelegate":
-				case "SkiaSharp.SKBitmapReleaseProxyDelegate":
-				case "SkiaSharp.SKDataReleaseProxyDelegate":
-				case "SkiaSharp.SKGlyphPathProxyDelegate":
-				case "SkiaSharp.SKImageTextureReleaseProxyDelegate":
-				case "SkiaSharp.SKImageRasterReleaseProxyDelegate":
-				case "SkiaSharp.SKSurfaceRasterReleaseProxyDelegate":
 				case "SkiaSharp.SKManagedDrawableDelegates":
 				case "SkiaSharp.SKManagedStreamDelegates":
 				case "SkiaSharp.SKManagedWStreamDelegates":
