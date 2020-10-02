@@ -4740,17 +4740,9 @@ namespace HarfBuzzSharp
 
 		// public hb_var_int_t var1
 		private Int32 var1;
-		public Int32 Var1 {
-			readonly get => var1;
-			set => var1 = value;
-		}
 
 		// public hb_var_int_t var2
 		private Int32 var2;
-		public Int32 Var2 {
-			readonly get => var2;
-			set => var2 = value;
-		}
 
 		public readonly bool Equals (GlyphInfo obj) =>
 			codepoint == obj.codepoint && mask == obj.mask && cluster == obj.cluster && var1 == obj.var1 && var2 == obj.var2;
@@ -5561,21 +5553,21 @@ namespace HarfBuzzSharp
 		// HB_OT_METRICS_TAG_CAP_HEIGHT = 
 		CapHeight = 1668311156,
 		// HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_SIZE = 
-		SubscriptEmXSize = 1935833203,
+		SubScriptEmXSize = 1935833203,
 		// HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_SIZE = 
-		SubscriptEmYSize = 1935833459,
+		SubScriptEmYSize = 1935833459,
 		// HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_OFFSET = 
-		SubscriptEmXOffset = 1935833199,
+		SubScriptEmXOffset = 1935833199,
 		// HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_OFFSET = 
-		SubscriptEmYOffset = 1935833455,
+		SubScriptEmYOffset = 1935833455,
 		// HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_SIZE = 
-		SuperscriptEmXSize = 1936750707,
+		SuperScriptEmXSize = 1936750707,
 		// HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_SIZE = 
-		SuperscriptEmYSize = 1936750963,
+		SuperScriptEmYSize = 1936750963,
 		// HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_OFFSET = 
-		SuperscriptEmXOffset = 1936750703,
+		SuperScriptEmXOffset = 1936750703,
 		// HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_OFFSET = 
-		SuperscriptEmYOffset = 1936750959,
+		SuperScriptEmYOffset = 1936750959,
 		// HB_OT_METRICS_TAG_STRIKEOUT_SIZE = 
 		StrikeoutSize = 1937011315,
 		// HB_OT_METRICS_TAG_STRIKEOUT_OFFSET = 
