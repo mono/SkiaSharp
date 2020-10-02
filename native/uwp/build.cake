@@ -38,7 +38,8 @@ Task("libSkiaSharp")
             $"extra_cflags=[  " +
             $"  '-DSKIA_C_DLL', '/MD{d}', '/EHsc', '/Z7', " +
             $"  '-DWINAPI_FAMILY=WINAPI_FAMILY_APP', '-DSK_BUILD_FOR_WINRT', '-DSK_HAS_DWRITE_1_H', '-DSK_HAS_DWRITE_2_H', '-DNO_GETENV', '-D_HAS_AUTO_PTR_ETC=1' ] " +
-            $"extra_ldflags=[ '/DEBUG:FULL', '/APPCONTAINER', 'WindowsApp.lib' ]");
+            $"extra_ldflags=[ '/DEBUG:FULL', '/APPCONTAINER', 'WindowsApp.lib' ] " +
+            ADDITIONAL_GN_ARGS);
 
         var outDir = OUTPUT_PATH.Combine(dir);
         EnsureDirectoryExists(outDir);

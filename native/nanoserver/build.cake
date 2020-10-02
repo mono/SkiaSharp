@@ -9,7 +9,7 @@ Task("libSkiaSharp")
 {
     RunCake("../windows/build.cake", "libSkiaSharp", new Dictionary<string, string> {
         { "variant", "nanoserver" },
-        { "gnArgs", "extra_cflags+=[ '-DSK_BUILD_FOR_NANOSERVER' ]" },
+        { "gnArgs", "extra_cflags+=[ '-DSK_BUILD_FOR_NANOSERVER' ] " + ADDITIONAL_GN_ARGS },
         { "arch", "x64" },
     });
 
