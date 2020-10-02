@@ -5514,8 +5514,6 @@ namespace HarfBuzzSharp
 		DesignLanguages = 1684827751,
 		// HB_OT_META_TAG_SUPPORTED_LANGUAGES = 1936485991
 		SupportedLanguages = 1936485991,
-		// _HB_OT_META_TAG_MAX_VALUE = 2147483647
-		HbOtMetaTagMaxValue = 2147483647,
 	}
 
 	// hb_ot_metrics_tag_t
@@ -5582,8 +5580,6 @@ namespace HarfBuzzSharp
 	public enum OpenTypeVarAxisFlags {
 		// HB_OT_VAR_AXIS_FLAG_HIDDEN = 0x00000001u
 		Hidden = 1,
-		// _HB_OT_VAR_AXIS_FLAG_MAX_VALUE = 2147483647
-		HbOtVarAxisFlagMaxValue = 2147483647,
 	}
 
 	// hb_unicode_combining_class_t
