@@ -94,7 +94,7 @@ namespace SkiaSharpGenerator
 					var n = string.IsNullOrEmpty(p.Name) ? $"param{i}" : p.Name;
 					var t = GetType(p.Type);
 					var cppT = GetCppType(p.Type);
-					if (cppT == "bool")
+					if (t == "Boolean" || cppT == "bool")
 						t = $"[MarshalAs (UnmanagedType.I1)] bool";
 					if (map != null && map.Parameters.TryGetValue(i.ToString(), out var newT))
 						t = newT;
@@ -106,7 +106,7 @@ namespace SkiaSharpGenerator
 				{
 					returnType = newR;
 				}
-				else if (GetCppType(function.ReturnType) == "bool")
+				else if (returnType == "Boolean" || GetCppType(function.ReturnType) == "bool")
 				{
 					returnType = "bool";
 					writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
@@ -398,7 +398,7 @@ namespace SkiaSharpGenerator
 							skipFunction = true;
 							break;
 						}
-						if (cppT == "bool")
+						if (t == "Boolean" || cppT == "bool")
 							t = $"[MarshalAs (UnmanagedType.I1)] bool";
 						if (funcMap != null && funcMap.Parameters.TryGetValue(i.ToString(), out var newT))
 							t = newT;
@@ -415,7 +415,7 @@ namespace SkiaSharpGenerator
 					{
 						returnType = newR;
 					}
-					else if (GetCppType(function.ReturnType) == "bool")
+					else if (returnType == "Boolean" || GetCppType(function.ReturnType) == "bool")
 					{
 						returnType = "bool";
 						retAttr = $"[return: MarshalAs (UnmanagedType.I1)]";

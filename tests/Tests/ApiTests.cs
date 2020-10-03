@@ -151,7 +151,8 @@ namespace SkiaSharp.Tests
 						var isSkippedType =
 							paramType.FullName != typeof(SKManagedStreamDelegates).FullName &&
 							paramType.FullName != typeof(SKManagedWStreamDelegates).FullName &&
-							paramType.FullName != typeof(SKManagedDrawableDelegates).FullName;
+							paramType.FullName != typeof(SKManagedDrawableDelegates).FullName &&
+							paramType.FullName != typeof(SKManagedTraceMemoryDumpDelegates).FullName;
 
 						// make sure our structs have a layout type
 						if (!paramType.GetTypeInfo().IsEnum && isLocalType && isSkippedType)
