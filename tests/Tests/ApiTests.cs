@@ -152,7 +152,8 @@ namespace SkiaSharp.Tests
 							paramType.FullName != typeof(SKManagedStreamDelegates).FullName &&
 							paramType.FullName != typeof(SKManagedWStreamDelegates).FullName &&
 							paramType.FullName != typeof(SKManagedDrawableDelegates).FullName &&
-							paramType.FullName != typeof(SKManagedTraceMemoryDumpDelegates).FullName;
+							paramType.FullName != typeof(SKManagedTraceMemoryDumpDelegates).FullName &&
+							paramType.FullName != typeof(GRVkBackendContextNative).FullName; // TODO: this type probably needs better checks as it is not 100% delegates
 
 						// make sure our structs have a layout type
 						if (!paramType.GetTypeInfo().IsEnum && isLocalType && isSkippedType)
