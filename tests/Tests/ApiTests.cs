@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 
 		private static IEnumerable<MethodInfo> InteropMembers =>
 			InteropApiTypes
-			.SelectMany(t => t.GetMethods())
+			.SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance))
 			.Where(a => a.GetCustomAttribute<DllImportAttribute>() != null)
 			.Distinct();
 
@@ -37,6 +37,13 @@ namespace SkiaSharp.Tests
 
 		public static IEnumerable<object[]> InteropDelegatesData =>
 			InteropDelegates.Select(m => new object[] { m });
+
+		[SkippableFact]
+		public void DelegateTypesAreValid()
+		{
+			var del = InteropDelegatesData;
+			Assert.NotEmpty(del);
+		}
 
 		[SkippableTheory]
 		[MemberData(nameof(InteropDelegatesData))]

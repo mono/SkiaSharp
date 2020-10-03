@@ -10,7 +10,7 @@
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <DefineConstants>$(DefineConstants);__DESKTOP__</DefineConstants>
+    <DefineConstants>$(DefineConstants);USE_DELEGATES;__DESKTOP__</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
     <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />

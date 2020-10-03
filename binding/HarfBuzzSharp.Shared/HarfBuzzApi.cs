@@ -26,7 +26,7 @@ namespace HarfBuzzSharp
 
 #if USE_DELEGATES
 		private static readonly Lazy<IntPtr> libHarfBuzzSharpHandle =
-			new Lazy<IntPtr> (() => LibraryLoader.LoadLocalLibrary<HarfBuzzApi> (SKIA));
+			new Lazy<IntPtr> (() => LibraryLoader.LoadLocalLibrary<HarfBuzzApi> (HARFBUZZ));
 
 		private static T GetSymbol<T> (string name) where T : Delegate =>
 			LibraryLoader.GetSymbolDelegate<T> (libHarfBuzzSharpHandle.Value, name);
