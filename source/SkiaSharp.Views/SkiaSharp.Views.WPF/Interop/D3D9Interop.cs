@@ -5,15 +5,15 @@ namespace SkiaSharp.Views.WPF.Angle
 {
 	internal class D3D9Interop
 	{
-		private bool _disposed;
-		private Texture? _texture;
-		private readonly Direct3DEx _d3dEx;
-		private readonly DeviceEx _deviceEx;
+		private bool disposed;
+		private Texture? texture;
+		private readonly Direct3DEx d3dEx;
+		private readonly DeviceEx deviceEx;
 
 		public D3D9Interop()
 		{
-			_d3dEx = new Direct3DEx();
-			_deviceEx = MakeDevice();
+			d3dEx = new Direct3DEx();
+			deviceEx = MakeDevice();
 		}
 
 		/// <summary>
@@ -22,7 +22,7 @@ namespace SkiaSharp.Views.WPF.Angle
 		/// </summary>
 		/// <returns></returns>
 		private DeviceEx MakeDevice() =>
-			new DeviceEx(_d3dEx, 0,
+			new DeviceEx(d3dEx, 0,
 				DeviceType.Hardware,
 				IntPtr.Zero,
 				CreateFlags.HardwareVertexProcessing
@@ -49,7 +49,7 @@ namespace SkiaSharp.Views.WPF.Angle
 		/// </summary>
 		public Texture CreateNewSharedTexture(IntPtr sharedHandle, int width, int height)
 		{
-			if (_disposed)
+			if (disposed)
 			{
 				throw new ObjectDisposedException(GetType().FullName);
 			}
@@ -59,13 +59,13 @@ namespace SkiaSharp.Views.WPF.Angle
 					"Unable to access resource. The texture needs to be created as a shared resource.", "render_target");
 			}
 
-			_texture?.Dispose();
-			_texture = new Texture(_deviceEx,
+			texture?.Dispose();
+			texture = new Texture(deviceEx,
 				width,
 				height,
 				1, Usage.RenderTarget, Format.A8R8G8B8,
 				Pool.Default, ref sharedHandle);
-			return _texture;
+			return texture;
 		}
 
 		~D3D9Interop()
@@ -81,16 +81,16 @@ namespace SkiaSharp.Views.WPF.Angle
 
 		private void Dispose(bool disposeManaged)
 		{
-			if (_disposed)
+			if (disposed)
 				return;
 
 			if (disposeManaged)
 			{
-				_texture?.Dispose();
-				_deviceEx?.Dispose();
-				_d3dEx?.Dispose();
+				texture?.Dispose();
+				deviceEx?.Dispose();
+				d3dEx?.Dispose();
 			}
-			_disposed = true;
+			disposed = true;
 		}
 	}
 }

@@ -11,45 +11,45 @@ namespace SkiaSharp.Views.WPF.Angle
 	/// </summary>
     internal class D3DAngleInterop : IDisposable
     {
-        private readonly Control _control;
-        private readonly GraphicsContext _context;
-        private readonly IAngleWindowInfo _windowInfo;
-        private readonly D3D9Interop _d3d9Interop;
+        private readonly Control control;
+        private readonly GraphicsContext context;
+        private readonly IAngleWindowInfo windowInfo;
+        private readonly D3D9Interop d3d9Interop;
 
         public D3DAngleInterop()
         {
-            _d3d9Interop = new D3D9Interop();
-            _control = new Control();
+            d3d9Interop = new D3D9Interop();
+            control = new Control();
 
-			var basicWindowInfo = Utilities.CreateWindowsWindowInfo(_control.Handle);
-            _windowInfo = Utilities.CreateAngleWindowInfo(basicWindowInfo);
+			var basicWindowInfo = Utilities.CreateWindowsWindowInfo(control.Handle);
+            windowInfo = Utilities.CreateAngleWindowInfo(basicWindowInfo);
 
-            _context = new GraphicsContext(
-                new GraphicsMode(32, 24), _windowInfo, 2, 0,
+            context = new GraphicsContext(
+                new GraphicsMode(32, 24), windowInfo, 2, 0,
                 GraphicsContextFlags.Embedded | GraphicsContextFlags.Offscreen | GraphicsContextFlags.AngleD3D9);
-            _context.MakeCurrent(_windowInfo);
-            _context.LoadAll();
+            context.MakeCurrent(windowInfo);
+            context.LoadAll();
         }
 
         public void Dispose()
         {
-            _context.Dispose();
-            _d3d9Interop.Dispose();
+            context.Dispose();
+            d3d9Interop.Dispose();
         }
 
         public IntPtr GetD3DSharedHandleForSurface(IntPtr eglSurface, int width, int height)
         {
-            var ptr = _windowInfo.QuerySurfacePointer(eglSurface);
-            var texture = _d3d9Interop.CreateNewSharedTexture(ptr, width, height);
+            var ptr = windowInfo.QuerySurfacePointer(eglSurface);
+            var texture = d3d9Interop.CreateNewSharedTexture(ptr, width, height);
             return texture.GetSurfaceLevel(0).NativePointer;
         }
 
-        public void EnsureContext() => _context.MakeCurrent(_windowInfo);
+        public void EnsureContext() => context.MakeCurrent(windowInfo);
 
-        public void MakeCurrent(IntPtr surface) => _windowInfo.MakeCurrent(surface);
+        public void MakeCurrent(IntPtr surface) => windowInfo.MakeCurrent(surface);
 
-        public IntPtr CreateOffscreenSurface(int width, int height) => _windowInfo.CreateSurface(width, height);
+        public IntPtr CreateOffscreenSurface(int width, int height) => windowInfo.CreateSurface(width, height);
 
-        public void DestroyOffscreenSurface(ref IntPtr surface) => _windowInfo.DestroySurface(ref surface);
+        public void DestroyOffscreenSurface(ref IntPtr surface) => windowInfo.DestroySurface(ref surface);
     }
 }

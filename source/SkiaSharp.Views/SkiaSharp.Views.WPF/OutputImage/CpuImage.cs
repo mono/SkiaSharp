@@ -8,8 +8,8 @@ namespace SkiaSharp.Views.WPF.OutputImage
     internal class CpuImage : IOutputImage
 	{
 		private static readonly Duration LockTimeout = new Duration(TimeSpan.FromMilliseconds(2000));
-		private WriteableBitmap _image;
-		private Int32Rect _rect;
+		private WriteableBitmap image;
+		private Int32Rect rect;
 
 		public SizeWithDpi Size { get; private set; }
 
@@ -18,13 +18,13 @@ namespace SkiaSharp.Views.WPF.OutputImage
 			TryResize(size);
 		}
 
-	    public ImageSource Source => _image;
+	    public ImageSource Source => image;
 
 	    public SKSurface CreateSurface(WaterfallContext context)
 	    {
 		    if (context.GrContext == null)
 		    {
-				return SKSurface.Create(new SKImageInfo(Size.Width, Size.Height, context.ColorType), _image.BackBuffer);
+				return SKSurface.Create(new SKImageInfo(Size.Width, Size.Height, context.ColorType), image.BackBuffer);
 		    }
 		    var glInfo = new GRGlFramebufferInfo(
 			    fboId: 0,
@@ -46,16 +46,16 @@ namespace SkiaSharp.Views.WPF.OutputImage
 			}
 
 			Size = size;
-			_image = new WriteableBitmap(size.Width, size.Height, size.DpiX, size.DpiY, PixelFormats.Pbgra32, null);
-			_rect = new Int32Rect(0, 0, size.Width, size.Height);
+			image = new WriteableBitmap(size.Width, size.Height, size.DpiX, size.DpiY, PixelFormats.Pbgra32, null);
+			rect = new Int32Rect(0, 0, size.Width, size.Height);
 		}
 
-	    public bool TryLock() => _image.TryLock(LockTimeout);
+	    public bool TryLock() => image.TryLock(LockTimeout);
 
 	    public void Unlock()
 		{
-			_image.AddDirtyRect(_rect);
-			_image.Unlock();
+			image.AddDirtyRect(rect);
+			image.Unlock();
 		}
 	}
 }

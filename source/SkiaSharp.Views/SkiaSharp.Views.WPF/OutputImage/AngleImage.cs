@@ -9,47 +9,47 @@ namespace SkiaSharp.Views.WPF.OutputImage
 	internal class AngleImage : IOutputImage
 	{
 		private static readonly Duration LockTimeout = new Duration(TimeSpan.FromMilliseconds(2000));
-		private readonly D3DAngleInterop _angleInterop;
-		private IntPtr _d3dSurface;
-		private IntPtr _eglSurface;
-		private GRBackendRenderTarget _renderTarget;
-		private WaterfallContext _context;
-		private D3DImage _image;
-		private Int32Rect _rect;
-		private bool _isBackBufferSet;
+		private readonly D3DAngleInterop angleInterop;
+		private IntPtr d3dSurface;
+		private IntPtr eglSurface;
+		private GRBackendRenderTarget renderTarget;
+		private readonly WaterfallContext context;
+		private D3DImage image;
+		private Int32Rect rect;
+		private bool isBackBufferSet;
 
 		public SizeWithDpi Size { get; private set; }
 
 		public AngleImage(SizeWithDpi size, D3DAngleInterop angleInterop, WaterfallContext context)
 		{
-			_angleInterop = angleInterop;
-			_context = context;
+			this.angleInterop = angleInterop;
+			this.context = context;
 			TryResize(size);
 		}
 
-		public ImageSource Source => _image;
+		public ImageSource Source => image;
 
 		public bool TryLock()
 		{
-			if (!_isBackBufferSet ||
-			    _image == null ||
-			    !_image.IsFrontBufferAvailable)
+			if (!isBackBufferSet ||
+			    image == null ||
+			    !image.IsFrontBufferAvailable)
 			{
 				return false;
 			}
 
-			return _image.TryLock(LockTimeout);
+			return image.TryLock(LockTimeout);
 		}
 
 		public void Unlock()
 		{
-			_image.AddDirtyRect(_rect);
-			_image.Unlock();
+			image.AddDirtyRect(rect);
+			image.Unlock();
 		}
 
 		public SKSurface CreateSurface(WaterfallContext context)
 		{
-			return SKSurface.Create(context.GrContext, _renderTarget, GRSurfaceOrigin.TopLeft, context.ColorType);
+			return SKSurface.Create(context.GrContext, renderTarget, GRSurfaceOrigin.TopLeft, context.ColorType);
 		}
 
 		public void TryResize(SizeWithDpi size)
@@ -62,24 +62,24 @@ namespace SkiaSharp.Views.WPF.OutputImage
 			if (Size.DpiX != size.DpiX ||
 			    Size.DpiY != size.DpiY)
 			{
-				_image = new D3DImage(size.DpiX, size.DpiX);
-				_isBackBufferSet = false;
+				image = new D3DImage(size.DpiX, size.DpiX);
+				isBackBufferSet = false;
 			}
 
 			Size = size;
 
-			_angleInterop.EnsureContext();
+			angleInterop.EnsureContext();
 
-			if (_eglSurface != IntPtr.Zero)
+			if (eglSurface != IntPtr.Zero)
 			{
-				_angleInterop.DestroyOffscreenSurface(ref _eglSurface);
+				angleInterop.DestroyOffscreenSurface(ref eglSurface);
 			}
 
-			_eglSurface = _angleInterop.CreateOffscreenSurface(size.Width, size.Height);
-			_angleInterop.MakeCurrent(_eglSurface);
+			eglSurface = angleInterop.CreateOffscreenSurface(size.Width, size.Height);
+			angleInterop.MakeCurrent(eglSurface);
 
-			_d3dSurface = _angleInterop.GetD3DSharedHandleForSurface(_eglSurface, size.Width, size.Height);
-			if (_d3dSurface != IntPtr.Zero)
+			d3dSurface = angleInterop.GetD3DSharedHandleForSurface(eglSurface, size.Width, size.Height);
+			if (d3dSurface != IntPtr.Zero)
 			{
 				SetSharedSurfaceToD3DImage();
 			}
@@ -87,31 +87,31 @@ namespace SkiaSharp.Views.WPF.OutputImage
 
 			var glInfo = new GRGlFramebufferInfo(
 				fboId: 0,
-				format: _context.ColorType.ToGlSizedFormat());
-			_renderTarget = new GRBackendRenderTarget(
+				format: context.ColorType.ToGlSizedFormat());
+			renderTarget = new GRBackendRenderTarget(
 				width: Size.Width,
 				height: Size.Height,
-				sampleCount: _context.SampleCount,
-				stencilBits: _context.StencilBits,
+				sampleCount: context.SampleCount,
+				stencilBits: context.StencilBits,
 				glInfo: glInfo);
 		}
 
 		private void SetSharedSurfaceToD3DImage()
 		{
-			if (_image == null)
+			if (image == null)
 			{
 				return;
 			}
-			if (_image.TryLock(LockTimeout))
+			if (image.TryLock(LockTimeout))
 			{
-				_image.SetBackBuffer(D3DResourceType.IDirect3DSurface9, _d3dSurface, true);
-				_isBackBufferSet = true;
-				_rect = new Int32Rect(0, 0, _image.PixelWidth, _image.PixelHeight);
-				_image.AddDirtyRect(_rect);
+				image.SetBackBuffer(D3DResourceType.IDirect3DSurface9, d3dSurface, true);
+				isBackBufferSet = true;
+				rect = new Int32Rect(0, 0, image.PixelWidth, image.PixelHeight);
+				image.AddDirtyRect(rect);
 			}
-			_image.Unlock();
+			image.Unlock();
 		}
 
-		public void MakeCurrent() => _angleInterop.MakeCurrent(_eglSurface);
+		public void MakeCurrent() => angleInterop.MakeCurrent(eglSurface);
 	}
 }

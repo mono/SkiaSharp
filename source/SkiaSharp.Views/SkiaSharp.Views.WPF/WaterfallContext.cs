@@ -15,8 +15,8 @@ namespace SkiaSharp.Views.WPF
 	/// </summary>
 	internal class WaterfallContext
     {
-	    private GameWindow? _gameWindow;
-	    private D3DAngleInterop? _angleInterop;
+	    private GameWindow? gameWindow;
+	    private D3DAngleInterop? angleInterop;
 
 		public GRContext? GrContext { get; private set; }
 
@@ -47,7 +47,7 @@ namespace SkiaSharp.Views.WPF
 		{
 			try
 			{
-				_angleInterop = new D3DAngleInterop();
+				angleInterop = new D3DAngleInterop();
 				var glInterface = GRGlInterface.CreateNativeAngleInterface();
 				GrContext = GRContext.CreateGl(glInterface);
 
@@ -71,8 +71,8 @@ namespace SkiaSharp.Views.WPF
 		{
 			try
 			{
-				_gameWindow = new GameWindow();
-				_gameWindow.MakeCurrent();
+				gameWindow = new GameWindow();
+				gameWindow.MakeCurrent();
 				GrContext = GRContext.CreateGl();
 
 				SampleCount = OpenTK.Graphics.OpenGL.GL.GetInteger(OpenTK.Graphics.OpenGL.GetPName.Samples);
@@ -104,7 +104,7 @@ namespace SkiaSharp.Views.WPF
 		{
 			if (Mode == GLMode.Angle)
 			{
-				return new AngleImage(size, _angleInterop, this);
+				return new AngleImage(size, angleInterop, this);
 			}
 
 			//openGL and CPU will work over CpuImage (WriteableBitmap)
@@ -115,8 +115,8 @@ namespace SkiaSharp.Views.WPF
 		{
 			GrContext?.Dispose();
 			GrContext = null;
-			_gameWindow?.Dispose();
-			_gameWindow = null;
+			gameWindow?.Dispose();
+			gameWindow = null;
 		}
 	}
 }
