@@ -15,8 +15,9 @@ namespace SkiaSharp.Views.WPF.Angle
         private readonly GraphicsContext context;
         private readonly IAngleWindowInfo windowInfo;
         private readonly D3D9Interop d3d9Interop;
+        private bool disposed;
 
-        public D3DAngleInterop()
+		public D3DAngleInterop()
         {
             d3d9Interop = new D3D9Interop();
             control = new Control();
@@ -29,12 +30,6 @@ namespace SkiaSharp.Views.WPF.Angle
                 GraphicsContextFlags.Embedded | GraphicsContextFlags.Offscreen | GraphicsContextFlags.AngleD3D9);
             context.MakeCurrent(windowInfo);
             context.LoadAll();
-        }
-
-        public void Dispose()
-        {
-            context.Dispose();
-            d3d9Interop.Dispose();
         }
 
         public IntPtr GetD3DSharedHandleForSurface(IntPtr eglSurface, int width, int height)
@@ -51,5 +46,29 @@ namespace SkiaSharp.Views.WPF.Angle
         public IntPtr CreateOffscreenSurface(int width, int height) => windowInfo.CreateSurface(width, height);
 
         public void DestroyOffscreenSurface(ref IntPtr surface) => windowInfo.DestroySurface(ref surface);
-    }
+
+        ~D3DAngleInterop()
+        {
+	        Dispose(false);
+        }
+
+        public void Dispose()
+        {
+	        Dispose(true);
+	        GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposeManaged)
+        {
+	        if (disposed)
+		        return;
+
+	        if (disposeManaged)
+			{
+				context.Dispose();
+				d3d9Interop.Dispose();
+			}
+	        disposed = true;
+        }
+	}
 }

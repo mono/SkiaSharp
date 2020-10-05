@@ -47,10 +47,7 @@ namespace SkiaSharp.Views.WPF.OutputImage
 			image.Unlock();
 		}
 
-		public SKSurface CreateSurface(WaterfallContext context)
-		{
-			return SKSurface.Create(context.GrContext, renderTarget, GRSurfaceOrigin.TopLeft, context.ColorType);
-		}
+		public SKSurface CreateSurface() => SKSurface.Create(context.GrContext, renderTarget, GRSurfaceOrigin.TopLeft, context.ColorType);
 
 		public void TryResize(SizeWithDpi size)
 		{
@@ -84,7 +81,12 @@ namespace SkiaSharp.Views.WPF.OutputImage
 				SetSharedSurfaceToD3DImage();
 			}
 
+			UpdateBackendRenderTarget();
+		}
 
+		private void UpdateBackendRenderTarget()
+		{
+			renderTarget?.Dispose();
 			var glInfo = new GRGlFramebufferInfo(
 				fboId: 0,
 				format: context.ColorType.ToGlSizedFormat());

@@ -12,7 +12,8 @@ namespace SkiaSharp.Views.WPF
 	/// ANGLE can be not itialized if ANGLE libs are missing or GPU device is missing.
 	/// </summary>
 	internal class WaterfallContext
-    {
+	{
+		private bool disposed;
 	    private GameWindow? gameWindow;
 	    private D3DAngleInterop? angleInterop;
 
@@ -68,15 +69,32 @@ namespace SkiaSharp.Views.WPF
 			}
 
 			//openGL and CPU will work over CpuImage (WriteableBitmap)
-			return new CpuImage(size);
+			return new CpuImage(size, ColorType);
+		}
+
+		~WaterfallContext()
+		{
+			Dispose(false);
 		}
 
 		public void Dispose()
 		{
-			GrContext?.Dispose();
-			GrContext = null;
-			gameWindow?.Dispose();
-			gameWindow = null;
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		private void Dispose(bool disposeManaged)
+		{
+			if (disposed)
+				return;
+
+			if (disposeManaged)
+			{
+				angleInterop?.Dispose();
+				gameWindow?.Dispose();
+				GrContext?.Dispose();
+			}
+			disposed = true;
 		}
 	}
 }

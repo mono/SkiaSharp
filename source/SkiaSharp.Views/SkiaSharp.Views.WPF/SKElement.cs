@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp.Views.WPF.OutputImage;
@@ -14,6 +13,7 @@ namespace SkiaSharp.Views.WPF
 	{
 		private static WaterfallContext context;
 		private readonly bool designMode;
+		private bool disposed;
 
 		private IOutputImage image;
 		private bool ignorePixelScaling;
@@ -30,15 +30,9 @@ namespace SkiaSharp.Views.WPF
 		public SKSize CanvasSize => image == null ? SKSize.Empty : new SKSize(image.Size.Width, image.Size.Height);
 
 		[Bindable(false)]
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public GLMode Mode => context.Mode;
 
 		[Bindable(false)]
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public GRContext? GRContext => context.GrContext;
 
 		public bool IgnorePixelScaling
@@ -58,7 +52,7 @@ namespace SkiaSharp.Views.WPF
 		{
 			base.OnRender(drawingContext);
 
-			if (designMode)
+			if (designMode || disposed)
 				return;
 
 			if (Visibility != Visibility.Visible)
@@ -83,25 +77,23 @@ namespace SkiaSharp.Views.WPF
 				image.TryResize(size);
 			}
 
-
 			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
 			// draw on the bitmap
 			if (image.TryLock())
 			{
-				using (var surface = image.CreateSurface(context))
+				using (var surface = image.CreateSurface())
 				{
 					OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 				}
+				if (context.IsGpuRendering)
+				{
+					context.GrContext?.Flush();
+					OpenTK.Graphics.ES20.GL.Flush();
+				}
 			}
 
-			if (context.IsGpuRendering)
-			{
-				context.GrContext?.Flush();
-				OpenTK.Graphics.ES20.GL.Flush();
-			}
-
-			image.Unlock();
+			image.Unlock();//we need to unlock D3DImage anyway even if we failed to get lock
 
 			drawingContext.DrawImage(image.Source, new Rect(0, 0, ActualWidth, ActualHeight));
 		}
@@ -136,6 +128,21 @@ namespace SkiaSharp.Views.WPF
 			bool IsPositive(double value)
 			{
 				return !double.IsNaN(value) && !double.IsInfinity(value) && value > 0;
+			}
+		}
+
+		public void StopRenderAndDisposeAllUnmanagedResources()//just in case someone will need to do this
+		{
+			if (disposed)
+			{
+				return;
+			}
+
+			disposed = true;
+			if (context != null)
+			{
+				context.Dispose();
+				context = null;
 			}
 		}
 	}

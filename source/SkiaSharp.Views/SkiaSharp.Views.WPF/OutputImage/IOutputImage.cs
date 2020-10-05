@@ -13,6 +13,6 @@ namespace SkiaSharp.Views.WPF.OutputImage
 		bool TryLock();
 		void Unlock();
 
-		SKSurface CreateSurface(WaterfallContext context);
+		SKSurface CreateSurface();
 	}
 }
