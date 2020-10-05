@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Windows;
-using System.Windows.Interop;
+using System.Windows.Forms;
 using OpenTK.Graphics;
 using OpenTK.Platform;
 using OpenTK.Platform.Egl;
@@ -12,7 +11,7 @@ namespace SkiaSharp.Views.WPF.Angle
 	/// </summary>
     internal class D3DAngleInterop : IDisposable
     {
-        private readonly Window _window;
+        private readonly Control _control;
         private readonly GraphicsContext _context;
         private readonly IAngleWindowInfo _windowInfo;
         private readonly D3D9Interop _d3d9Interop;
@@ -20,10 +19,9 @@ namespace SkiaSharp.Views.WPF.Angle
         public D3DAngleInterop()
         {
             _d3d9Interop = new D3D9Interop();
-            _window = new Window();
+            _control = new Control();
 
-			var handle = new WindowInteropHelper(_window).Handle;
-			var basicWindowInfo = Utilities.CreateWindowsWindowInfo(handle);
+			var basicWindowInfo = Utilities.CreateWindowsWindowInfo(_control.Handle);
             _windowInfo = Utilities.CreateAngleWindowInfo(basicWindowInfo);
 
             _context = new GraphicsContext(

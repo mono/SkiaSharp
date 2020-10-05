@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp.Views.WPF.OutputImage;
 
@@ -16,9 +12,8 @@ namespace SkiaSharp.Views.WPF
 	[DefaultProperty("Name")]
 	public class SKElement : FrameworkElement
 	{
-		private static FallbackContext context;
+		private static WaterfallContext context;
 		private readonly bool designMode;
-		private double dpiX, dpiY;
 
 		private IOutputImage image;
 		private bool ignorePixelScaling;
@@ -75,7 +70,8 @@ namespace SkiaSharp.Views.WPF
 
 			if (context == null)
 			{
-				context = new FallbackContext();
+				context = new WaterfallContext();
+				context.Initialize();
 			}
 
 			if (image == null)
@@ -90,8 +86,6 @@ namespace SkiaSharp.Views.WPF
 
 			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
-			context.TryInitialize();
-			image = context.CreateOutputImage(CreateSize());
 			// draw on the bitmap
 			if (image.TryLock())
 			{
@@ -100,6 +94,9 @@ namespace SkiaSharp.Views.WPF
 					OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 				}
 			}
+
+			context.GrContext?.Flush();
+			OpenTK.Graphics.ES20.GL.Flush();
 
 			image.Unlock();
 

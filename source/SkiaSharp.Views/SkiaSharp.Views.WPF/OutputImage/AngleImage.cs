@@ -12,15 +12,18 @@ namespace SkiaSharp.Views.WPF.OutputImage
 		private readonly D3DAngleInterop _angleInterop;
 		private IntPtr _d3dSurface;
 		private IntPtr _eglSurface;
+		private GRBackendRenderTarget _renderTarget;
+		private WaterfallContext _context;
 		private D3DImage _image;
 		private Int32Rect _rect;
 		private bool _isBackBufferSet;
 
 		public SizeWithDpi Size { get; private set; }
 
-		public AngleImage(SizeWithDpi size, D3DAngleInterop angleInterop)
+		public AngleImage(SizeWithDpi size, D3DAngleInterop angleInterop, WaterfallContext context)
 		{
 			_angleInterop = angleInterop;
+			_context = context;
 			TryResize(size);
 		}
 
@@ -44,18 +47,9 @@ namespace SkiaSharp.Views.WPF.OutputImage
 			_image.Unlock();
 		}
 
-		public SKSurface CreateSurface(FallbackContext context)
+		public SKSurface CreateSurface(WaterfallContext context)
 		{
-			var glInfo = new GRGlFramebufferInfo(
-				fboId: 0,
-				format: context.ColorType.ToGlSizedFormat());
-			var renderTarget = new GRBackendRenderTarget(
-				width: Size.Width,
-				height: Size.Height,
-				sampleCount: context.SampleCount,
-				stencilBits: context.StencilBits,
-				glInfo: glInfo);
-			return SKSurface.Create(context.GrContext, renderTarget, GRSurfaceOrigin.TopLeft, context.ColorType);
+			return SKSurface.Create(context.GrContext, _renderTarget, GRSurfaceOrigin.TopLeft, context.ColorType);
 		}
 
 		public void TryResize(SizeWithDpi size)
@@ -89,6 +83,17 @@ namespace SkiaSharp.Views.WPF.OutputImage
 			{
 				SetSharedSurfaceToD3DImage();
 			}
+
+
+			var glInfo = new GRGlFramebufferInfo(
+				fboId: 0,
+				format: _context.ColorType.ToGlSizedFormat());
+			_renderTarget = new GRBackendRenderTarget(
+				width: Size.Width,
+				height: Size.Height,
+				sampleCount: _context.SampleCount,
+				stencilBits: _context.StencilBits,
+				glInfo: glInfo);
 		}
 
 		private void SetSharedSurfaceToD3DImage()

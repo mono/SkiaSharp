@@ -20,7 +20,7 @@ namespace SkiaSharp.Views.WPF.OutputImage
 
 	    public ImageSource Source => _image;
 
-	    public SKSurface CreateSurface(FallbackContext context)
+	    public SKSurface CreateSurface(WaterfallContext context)
 	    {
 		    if (context.GrContext == null)
 		    {

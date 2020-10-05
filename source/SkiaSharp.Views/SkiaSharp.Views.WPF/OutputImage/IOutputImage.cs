@@ -1,8 +1,6 @@
-﻿using System;
-using System.Windows.Media;
-using SkiaSharp.Views.WPF.OutputImage;
+﻿using System.Windows.Media;
 
-namespace SkiaSharp.Views.WPF
+namespace SkiaSharp.Views.WPF.OutputImage
 {
 	internal interface IOutputImage
 	{
@@ -15,6 +13,6 @@ namespace SkiaSharp.Views.WPF
 		bool TryLock();
 		void Unlock();
 
-		SKSurface CreateSurface(FallbackContext context);
+		SKSurface CreateSurface(WaterfallContext context);
 	}
 }

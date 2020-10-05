@@ -1,20 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using OpenTK;
 using SkiaSharp.Views.WPF.Angle;
 using SkiaSharp.Views.WPF.OutputImage;
 
 namespace SkiaSharp.Views.WPF
 {
-	internal class FallbackContext
+	/// <summary>
+	/// Tryes to initialize ANGLE, then OpenGL, then uses CPU rendering.
+	///
+	/// ANGLE can be unitialized if ANGLE libs are missing or GPU device is missing.
+	/// OpenGL can initialize if ANGLE is not initialized by missing ANGLE libs, but there is GPU device exists.
+	/// CPU will be used if two choises above is failed.
+	/// </summary>
+	internal class WaterfallContext
     {
 	    private GameWindow? _gameWindow;
 	    private D3DAngleInterop? _angleInterop;
-	    private bool _initialized;
 
 		public GRContext? GrContext { get; private set; }
 
@@ -25,14 +27,8 @@ namespace SkiaSharp.Views.WPF
 	    public GLMode Mode { get; private set; }
 	    public SKColorType ColorType { get; private set; }
 
-		public void TryInitialize()
+		public void Initialize()
 		{
-			if (_initialized)
-			{
-				return;
-			}
-			_initialized = true;
-
 			TryInitializeAngleContext();
 
 			if (GrContext == null)
@@ -108,7 +104,7 @@ namespace SkiaSharp.Views.WPF
 		{
 			if (Mode == GLMode.Angle)
 			{
-				return new AngleImage(size, _angleInterop);
+				return new AngleImage(size, _angleInterop, this);
 			}
 
 			//openGL and CPU will work over CpuImage (WriteableBitmap)
