@@ -95,8 +95,11 @@ namespace SkiaSharp.Views.WPF
 				}
 			}
 
-			context.GrContext?.Flush();
-			OpenTK.Graphics.ES20.GL.Flush();
+			if (context.IsGpuRendering)
+			{
+				context.GrContext?.Flush();
+				OpenTK.Graphics.ES20.GL.Flush();
+			}
 
 			image.Unlock();
 

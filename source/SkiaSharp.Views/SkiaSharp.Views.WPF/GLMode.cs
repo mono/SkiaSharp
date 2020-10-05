@@ -4,7 +4,6 @@
 	{
 		NotInitialized = 0,
 		Angle = 1,
-		OpenGL = 2,
-		CPU = 3,
+		CPU = 2,
 	}
 }

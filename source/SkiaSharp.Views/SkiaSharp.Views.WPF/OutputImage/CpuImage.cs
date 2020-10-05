@@ -21,22 +21,9 @@ namespace SkiaSharp.Views.WPF.OutputImage
 	    public ImageSource Source => image;
 
 	    public SKSurface CreateSurface(WaterfallContext context)
-	    {
-		    if (context.GrContext == null)
-		    {
-				return SKSurface.Create(new SKImageInfo(Size.Width, Size.Height, context.ColorType), image.BackBuffer);
-		    }
-		    var glInfo = new GRGlFramebufferInfo(
-			    fboId: 0,
-			    format: context.ColorType.ToGlSizedFormat());
-		    var renderTarget = new GRBackendRenderTarget(
-			    width: Size.Width,
-			    height: Size.Height,
-			    sampleCount: context.SampleCount,
-			    stencilBits: context.StencilBits,
-			    glInfo: glInfo);
-		    return SKSurface.Create(context.GrContext, renderTarget, GRSurfaceOrigin.TopLeft, context.ColorType);
-	    }
+		{
+			return SKSurface.Create(new SKImageInfo(Size.Width, Size.Height, context.ColorType), image.BackBuffer);
+		}
 
 		public void TryResize(SizeWithDpi size)
 		{

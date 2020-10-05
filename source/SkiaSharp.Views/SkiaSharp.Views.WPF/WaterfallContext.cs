@@ -7,11 +7,9 @@ using SkiaSharp.Views.WPF.OutputImage;
 namespace SkiaSharp.Views.WPF
 {
 	/// <summary>
-	/// Tryes to initialize ANGLE, then OpenGL, then uses CPU rendering.
+	/// Tryes to initialize ANGLE, if failed - uses CPU rendering.
 	///
-	/// ANGLE can be unitialized if ANGLE libs are missing or GPU device is missing.
-	/// OpenGL can initialize if ANGLE is not initialized by missing ANGLE libs, but there is GPU device exists.
-	/// CPU will be used if two choises above is failed.
+	/// ANGLE can be not itialized if ANGLE libs are missing or GPU device is missing.
 	/// </summary>
 	internal class WaterfallContext
     {
@@ -31,12 +29,7 @@ namespace SkiaSharp.Views.WPF
 		{
 			TryInitializeAngleContext();
 
-			if (GrContext == null)
-			{
-				TryInitializeOpenGLContext();
-			}
-
-			if (GrContext == null)
+			if (!IsGpuRendering)
 			{
 				Mode = GLMode.CPU;
 				ColorType = SKColorType.Bgra8888;
@@ -65,39 +58,6 @@ namespace SkiaSharp.Views.WPF
 			{
 				Debug.WriteLine(ex);
 			}
-		}
-
-		private void TryInitializeOpenGLContext()
-		{
-			try
-			{
-				gameWindow = new GameWindow();
-				gameWindow.MakeCurrent();
-				GrContext = GRContext.CreateGl();
-
-				SampleCount = OpenTK.Graphics.OpenGL.GL.GetInteger(OpenTK.Graphics.OpenGL.GetPName.Samples);
-				StencilBits = OpenTK.Graphics.OpenGL.GL.GetInteger(OpenTK.Graphics.OpenGL.GetPName.StencilBits);
-				var maxSamples = GrContext.GetMaxSurfaceSampleCount(SKColorType.Bgra8888);
-				if (SampleCount > maxSamples)
-					SampleCount = maxSamples;
-
-				GC.SuppressFinalize(GrContext);
-				Mode = GLMode.OpenGL;
-				ColorType = SKColorType.Bgra8888;
-			}
-			catch (Exception ex)
-			{
-				Debug.WriteLine(ex);
-			}
-		}
-
-		public SKSurface CreateSurface(SKImageInfo info)
-		{
-			if (IsGpuRendering)
-			{
-				return SKSurface.Create(GrContext, false, info, 1, GRSurfaceOrigin.TopLeft);
-			}
-			return SKSurface.Create(info);
 		}
 
 		public IOutputImage CreateOutputImage(SizeWithDpi size)
