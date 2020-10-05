@@ -8,7 +8,7 @@ namespace HarfBuzzSharp
 
 		public OpenTypeMetrics (Font font)
 		{
-			this.font = font ?? throw new ArgumentNullException (nameof (font)));
+			this.font = font ?? throw new ArgumentNullException (nameof (font));
 		}
 
 		public bool TryGetPosition (OpenTypeMetricsTag metricsTag, out int position)
