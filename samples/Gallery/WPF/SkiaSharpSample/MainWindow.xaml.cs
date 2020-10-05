@@ -86,11 +86,9 @@ namespace SkiaSharpSample
 			switch (backend)
 			{
 				case SampleBackends.Memory:
-					glhost.Visibility = Visibility.Collapsed;
 					canvas.Visibility = Visibility.Visible;
 					break;
 				case SampleBackends.OpenGL:
-					glhost.Visibility = Visibility.Visible;
 					canvas.Visibility = Visibility.Collapsed;
 					break;
 				default:
@@ -148,22 +146,6 @@ namespace SkiaSharpSample
 			}
 		}
 
-		private void OnGLControlHost(object sender, EventArgs e)
-		{
-			var glControl = new SKGLControl();
-			glControl.PaintSurface += OnPaintGL;
-			glControl.Dock = System.Windows.Forms.DockStyle.Fill;
-			glControl.Click += OnSampleClicked;
-
-			var host = (WindowsFormsHost)sender;
-			host.Child = glControl;
-		}
-
-		private void OnPaintGL(object sender, SKPaintGLSurfaceEventArgs e)
-		{
-			OnPaintSurface(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
-		}
-
 		private void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)
 		{
 			OnPaintSurface(e.Surface.Canvas, e.Info.Width, e.Info.Height);
@@ -202,7 +184,6 @@ namespace SkiaSharpSample
 		private void OnRefreshRequested(object sender, EventArgs e)
 		{
 			canvas.InvalidateVisual();
-			glhost.Child?.Invalidate();
 		}
 
 		private void OnPaintSurface(SKCanvas canvas, int width, int height)
