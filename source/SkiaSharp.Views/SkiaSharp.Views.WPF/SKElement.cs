@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using SkiaSharp.Views.Desktop;
+using SkiaSharp.Views.WPF.OutputImage;
 
 namespace SkiaSharp.Views.WPF
 {
@@ -15,9 +16,11 @@ namespace SkiaSharp.Views.WPF
 	[DefaultProperty("Name")]
 	public class SKElement : FrameworkElement
 	{
+		private static FallbackContext context;
 		private readonly bool designMode;
+		private double dpiX, dpiY;
 
-		private WriteableBitmap bitmap;
+		private IOutputImage image;
 		private bool ignorePixelScaling;
 
 		public SKElement()
@@ -29,7 +32,19 @@ namespace SkiaSharp.Views.WPF
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.PixelWidth, bitmap.PixelHeight);
+		public SKSize CanvasSize => image == null ? SKSize.Empty : new SKSize(image.Size.Width, image.Size.Height);
+
+		[Bindable(false)]
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public GLMode Mode => context.Mode;
+
+		[Bindable(false)]
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public GRContext? GRContext => context.GrContext;
 
 		public bool IgnorePixelScaling
 		{
@@ -54,29 +69,41 @@ namespace SkiaSharp.Views.WPF
 			if (Visibility != Visibility.Visible)
 				return;
 
-			var size = CreateSize(out var scaleX, out var scaleY);
+			var size = CreateSize();
 			if (size.Width <= 0 || size.Height <= 0)
 				return;
 
+			if (context == null)
+			{
+				context = new FallbackContext();
+			}
+
+			if (image == null)
+			{
+				image = context.CreateOutputImage(size);
+			}
+			else
+			{
+				image.TryResize(size);
+			}
+
+
 			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
-			// reset the bitmap if the size has changed
-			if (bitmap == null || info.Width != bitmap.PixelWidth || info.Height != bitmap.PixelHeight)
-			{
-				bitmap = new WriteableBitmap(info.Width, size.Height, 96 * scaleX, 96 * scaleY, PixelFormats.Pbgra32, null);
-			}
-
+			context.TryInitialize();
+			image = context.CreateOutputImage(CreateSize());
 			// draw on the bitmap
-			bitmap.Lock();
-			using (var surface = SKSurface.Create(info, bitmap.BackBuffer, bitmap.BackBufferStride))
+			if (image.TryLock())
 			{
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+				using (var surface = image.CreateSurface(context))
+				{
+					OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+				}
 			}
 
-			// draw the bitmap to the screen
-			bitmap.AddDirtyRect(new Int32Rect(0, 0, info.Width, size.Height));
-			bitmap.Unlock();
-			drawingContext.DrawImage(bitmap, new Rect(0, 0, ActualWidth, ActualHeight));
+			image.Unlock();
+
+			drawingContext.DrawImage(image.Source, new Rect(0, 0, ActualWidth, ActualHeight));
 		}
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
@@ -92,24 +119,19 @@ namespace SkiaSharp.Views.WPF
 			InvalidateVisual();
 		}
 
-		private SKSizeI CreateSize(out double scaleX, out double scaleY)
+		private SizeWithDpi CreateSize()
 		{
-			scaleX = 1.0;
-			scaleY = 1.0;
-
 			var w = ActualWidth;
 			var h = ActualHeight;
 
 			if (!IsPositive(w) || !IsPositive(h))
-				return SKSizeI.Empty;
+				return SizeWithDpi.Empty;
 
 			if (IgnorePixelScaling)
-				return new SKSizeI((int)w, (int)h);
+				return new SizeWithDpi((int)w, (int)h);
 
 			var m = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice;
-			scaleX = m.M11;
-			scaleY = m.M22;
-			return new SKSizeI((int)(w * scaleX), (int)(h * scaleY));
+			return new SizeWithDpi((int)(w * m.M11), (int)(h * m.M22), 96.0 * m.M11, 96.0 * m.M22);
 
 			bool IsPositive(double value)
 			{
