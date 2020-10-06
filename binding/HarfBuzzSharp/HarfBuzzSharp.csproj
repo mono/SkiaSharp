@@ -47,6 +47,10 @@
     <None Include="..\..\output\native\alpinenodeps\x86\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-musl-x86\native\%(Filename)%(Extension)" />
     <None Include="..\..\output\native\alpinenodeps\arm64\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-musl-arm64\native\%(Filename)%(Extension)" />
     <None Include="..\..\output\native\alpinenodeps\arm\libHarfBuzzSharp*" Link="nuget\runtimes\linuxnodeps-musl-arm\native\%(Filename)%(Extension)" />
+    <!-- WASM -->
+    <None Include="..\..\output\native\wasm\libHarfBuzzSharp*" Link="nuget\build\wasm\%(Filename)%(Extension)" />
+    <None Include="nuget\build\wasm\HarfBuzzSharp.props" Link="nuget\build\wasm\HarfBuzzSharp.props" />
+    <None Include="nuget\build\wasm\HarfBuzzSharp.targets" Link="nuget\build\wasm\HarfBuzzSharp.targets" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <None Include="nuget\build\net462\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
