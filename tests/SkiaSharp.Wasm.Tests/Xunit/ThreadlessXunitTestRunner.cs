@@ -67,6 +67,7 @@ namespace SkiaSharp.Tests
 			var resultsXmlAssembly = new XElement("assembly");
 			var resultsSink = new DelegatingXmlCreationSink(summarySink, resultsXmlAssembly);
 
+			testSink.Execution.TestStartingEvent += args => { Log($"{args.Message.Test.DisplayName}", color: "gray"); };
 			testSink.Execution.TestPassedEvent += args => { Log($"[PASS] {args.Message.Test.DisplayName}", color: "green"); };
 			testSink.Execution.TestSkippedEvent += args => { Log($"[SKIP] {args.Message.Test.DisplayName}", color: "orange"); };
 			testSink.Execution.TestFailedEvent += args => { Log($"[FAIL] {args.Message.Test.DisplayName}{Environment.NewLine}{ExceptionUtility.CombineMessages(args.Message)}{Environment.NewLine}{ExceptionUtility.CombineStackTraces(args.Message)}", color: "red"); };

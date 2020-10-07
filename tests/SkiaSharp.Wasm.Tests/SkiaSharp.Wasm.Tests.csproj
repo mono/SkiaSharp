@@ -3,18 +3,22 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_LOADER</DefineConstants>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Tests</AssemblyName>
-    <WasmShellILLinkerEnabled>true</WasmShellILLinkerEnabled>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <SkipCopyToOutputDirectory>true</SkipCopyToOutputDirectory>
   </PropertyGroup>
-  <ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <WasmShellEnableEmccProfiling>true</WasmShellEnableEmccProfiling>
+    <MonoRuntimeDebuggerEnabled>true</MonoRuntimeDebuggerEnabled>
+    <WasmShellILLinkerEnabled>false</WasmShellILLinkerEnabled>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <WasmShellExtraEmccFlags Include="-s ASSERTIONS=1" />
-    <Content Include="..\..\output\native\wasm\libSkiaSharp.a" Visible="false" />
-    <Content Include="..\..\output\native\wasm\libHarfBuzzSharp.a" Visible="false" />
-    <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.52" />
@@ -22,5 +26,28 @@
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.extensibility.core" Version="2.4.1" />
     <PackageReference Include="xunit.runner.utility" Version="2.4.1" />
+    <PackageReference Include="xunit.skippablefact" Version="1.3.12" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="PlatformUtils\LibraryLoader.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\output\native\wasm\libSkiaSharp.a" Visible="false" />
+    <Content Include="..\..\output\native\wasm\libHarfBuzzSharp.a" Visible="false" />
+    <LinkerDescriptor Include="LinkerConfig.xml" />
+  </ItemGroup>
+  <Target Name="CreateFilesList" AfterTargets="BuildDist">
+    <ItemGroup>
+      
+    </ItemGroup>
+  </Target>
 </Project>
