@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,17 +10,11 @@ namespace SkiaSharp.Tests
 {
 	internal class ThreadlessXunitTestRunner
 	{
-		public bool Run(string assemblyFileName, IEnumerable<string> excludedTraits)
+		public bool Run(string assemblyFileName, XunitFilters filters)
 		{
 			WebAssembly.Runtime.InvokeJS($"if (document) document.body.innerHTML = ''");
 
 			Log("Starting tests...");
-
-			var filters = new XunitFilters();
-			foreach (var trait in excludedTraits ?? Array.Empty<string>())
-			{
-				ParseEqualSeparatedArgument(filters.ExcludedTraits, trait);
-			}
 
 			var configuration = new TestAssemblyConfiguration
 			{
@@ -107,22 +100,6 @@ namespace SkiaSharp.Tests
 				style += $"color: {color};";
 
 			WebAssembly.Runtime.InvokeJS($"if (document) document.body.innerHTML += '<pre {ele} style=\"{style}\">{contents.Replace("\n", "<br/>")}</pre>'");
-		}
-
-		private void ParseEqualSeparatedArgument(Dictionary<string, List<string>> targetDictionary, string argument)
-		{
-			var parts = argument.Split('=');
-			if (parts.Length != 2 || string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))
-				throw new ArgumentException("Invalid argument value '{argument}'.", nameof(argument));
-
-			var name = parts[0];
-			var value = parts[1];
-
-			List<string> excludedTraits;
-			if (targetDictionary.TryGetValue(name, out excludedTraits!))
-				excludedTraits.Add(value);
-			else
-				targetDictionary[name] = new List<string> { value };
 		}
 	}
 

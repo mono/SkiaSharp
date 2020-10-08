@@ -245,6 +245,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(PlatformKey, WasmPlatform)]
 		[SkippableTheory]
 		[InlineData(1)]
 		[InlineData(1000)]
@@ -321,6 +322,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(PlatformKey, WasmPlatform)]
 		[SkippableFact]
 		public async Task DelayedConstructionDoesNotCreateInvalidState()
 		{
@@ -371,6 +373,7 @@ namespace SkiaSharp.Tests
 			Assert.Same(objFast, objSlow);
 		}
 
+		[Trait(PlatformKey, WasmPlatform)]
 		[SkippableFact]
 		public async Task DelayedDestructionDoesNotCreateInvalidState()
 		{

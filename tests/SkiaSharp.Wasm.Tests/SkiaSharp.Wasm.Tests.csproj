@@ -38,16 +38,11 @@
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="PlatformUtils\LibraryLoader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
+    <EmbeddedResource Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\output\native\wasm\libSkiaSharp.a" Visible="false" />
     <Content Include="..\..\output\native\wasm\libHarfBuzzSharp.a" Visible="false" />
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
-  <Target Name="CreateFilesList" AfterTargets="BuildDist">
-    <ItemGroup>
-      
-    </ItemGroup>
-  </Target>
 </Project>
