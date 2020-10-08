@@ -44,7 +44,7 @@ namespace SkiaSharp.Tests
 			{
 				ExcludedTraits =
 				{
-					{ BaseTest.CategoryKey, new List<string> { BaseTest.GpuCategory } },
+					{ BaseTest.CategoryKey, new List<string> { BaseTest.GpuCategory, BaseTest.MatchCharacterCategory } },
 					{ BaseTest.PlatformKey, new List<string> { BaseTest.WasmPlatform } },
 				},
 				ExcludedClasses =

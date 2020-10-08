@@ -16,7 +16,6 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-
     GnNinja($"wasm", "SkiaSharp",
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
@@ -58,7 +57,8 @@ Task("libSkiaSharp")
 
     // separate all the .a files into .o files
     var skiaOut = SKIA_PATH.Combine("out/wasm");
-    var mergeDir = skiaOut.Combine("obj/merge");
+    var objDir = skiaOut.Combine("obj");
+    var mergeDir = objDir.Combine("merge");
     EnsureDirectoryExists(mergeDir);
     CleanDirectories(mergeDir.FullPath);
     foreach (var file in GetFiles($"{skiaOut}/*.a")) {
@@ -68,14 +68,11 @@ Task("libSkiaSharp")
         });
     }
 
-    // add the default font
-    var input = SKIA_PATH.CombineWithFilePath("modules/canvaskit/fonts/NotoMono-Regular.ttf");
-    var embed_resources = SKIA_PATH.CombineWithFilePath("tools/embed_resources.py");
-    RunProcess(PYTHON_EXE, new ProcessSettings {
-        Arguments = $"{embed_resources} --name SK_EMBEDDED_FONTS --input {input} --output {input}.cpp --align 4",
-        WorkingDirectory = SKIA_PATH.FullPath,
-    });
-    RunProcess(CC, $"-std=c++17 -I. {input}.cpp -r -o {mergeDir}/NotoMonoRegularttf.o");
+    // add the default fonts
+    CompileFonts(
+        ROOT_PATH.CombineWithFilePath("native/wasm/fonts/NotoMono-Regular.ttf").FullPath,
+        ROOT_PATH.CombineWithFilePath("native/wasm/fonts/DejaVuSans-Bold.ttf").FullPath,
+        ROOT_PATH.CombineWithFilePath("native/wasm/fonts/DejaVuSans.ttf").FullPath);
 
     // merge all the .o files into the final .a file
     var oFiles = GetFiles($"{mergeDir}/*.o");
@@ -84,6 +81,16 @@ Task("libSkiaSharp")
     var outDir = OUTPUT_PATH.Combine($"wasm");
     EnsureDirectoryExists(outDir);
     CopyFileToDirectory(a, outDir);
+
+    void CompileFonts(params string[] fonts)
+    {
+        var embed_resources = SKIA_PATH.CombineWithFilePath("tools/embed_resources.py");
+        RunProcess(PYTHON_EXE, new ProcessSettings {
+            Arguments = $"{embed_resources} --name SK_EMBEDDED_FONTS --input {string.Join(" ", fonts)} --output {objDir}/embeddedfonts.cpp --align 4",
+            WorkingDirectory = SKIA_PATH.FullPath,
+        });
+        RunProcess(CC, $"-std=c++17 -I. {objDir}/embeddedfonts.cpp -r -o {mergeDir}/embeddedfonts.o");
+    }
 });
 
 Task("libHarfBuzzSharp")
