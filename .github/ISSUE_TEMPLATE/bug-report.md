@@ -41,6 +41,17 @@ assignees: ''
 - Target Devices:   <!-- the devices that you noticed this on, e.g. iPhone X -->
   - <!-- Google Pixel 4 XL -->
   - <!-- iPhone 11 -->
+  
+<details>
+  <summary>Detailed IDE/OS information (click to expand)</summary>
+  
+```
+
+PASTE ANY DETAILED VERSION INFO HERE
+
+```
+</details>
+
 
 **Screenshots**
 
@@ -49,3 +60,4 @@ assignees: ''
 **Reproduction Link**
 
 <!-- please upload or provide a link to a reproduction case -->
+

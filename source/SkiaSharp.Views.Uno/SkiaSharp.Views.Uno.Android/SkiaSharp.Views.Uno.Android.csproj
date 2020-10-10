@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
+﻿<Project Sdk="MSBuild.Sdk.Extras/2.1.2">
   <PropertyGroup>
     <TargetFramework>monoandroid9.0</TargetFramework>
     <RootNamespace>SkiaSharp.Views.UWP</RootNamespace>
@@ -8,13 +8,16 @@
     <PackagingPlatform>monoandroid1.0</PackagingPlatform>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Uno.UI" Version="2.0.532" />
+    <PackageReference Include="Uno.UI" Version="3.0.12" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Android\SkiaSharp.Android.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\GLTextureView.cs" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SKGLTextureView.cs" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SKGLTextureViewRenderer.cs" />
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\UWPExtensions.cs" />
     <Compile Include="..\SkiaSharp.Views.Uno\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

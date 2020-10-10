@@ -23,5 +23,10 @@ namespace SkiaSharp.Views.Forms
 			: base()
 		{
 		}
+
+		protected override SKNativeView CreateNativeControl() =>
+			GetType() == typeof(SKCanvasViewRenderer)
+				? new SKNativeView(Context)
+				: base.CreateNativeControl();
 	}
 }

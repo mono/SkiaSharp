@@ -1,7 +1,7 @@
-void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath)
+void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefaultExcludes = false)
 {
     EnsureDirectoryExists(outputPath);
-    NuGetPack(nuspecPath, new NuGetPackSettings {
+    var settings = new NuGetPackSettings {
         OutputDirectory = MakeAbsolute(outputPath),
         BasePath = nuspecPath.GetDirectory(),
         ToolPath = NuGetToolPath,
@@ -11,7 +11,30 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath)
             // NU5125: The 'licenseUrl' element will be deprecated. Consider using the 'license' element instead.
             { "NoWarn", "NU5048,NU5105,NU5125" }
         },
-    });
+    };
+    if (allowDefaultExcludes) {
+        settings.ArgumentCustomization = args => args.Append("-NoDefaultExcludes");
+    }
+    NuGetPack(nuspecPath, settings);
+}
+
+void RunNuGetRestorePackagesConfig(FilePath sln)
+{
+    var dir = sln.GetDirectory();
+
+    var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
+
+    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
+    var settings = new NuGetRestoreSettings {
+        ToolPath = NuGetToolPath,
+        Source = nugetSources,
+        NoCache = true,
+        PackagesDirectory = dir.Combine("packages"),
+    };
+
+    foreach (var config in GetFiles(dir + "/**/packages.config"))
+        NuGetRestore(config, settings);
 }
 
 void RunTests(FilePath testAssembly, bool is32)
@@ -215,4 +238,19 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
         var root = await comparer.ExtractCachedPackageAsync(id, version);
         comparer.SearchPaths.Add(System.IO.Path.Combine(root, "lib", platform));
     }
+}
+
+string GetDownloadUrl(string id)
+{
+    var version = "0.0.0-";
+    if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr."))
+        version += PREVIEW_LABEL.ToLower ();
+    else if (!string.IsNullOrEmpty (GIT_SHA))
+        version += "commit." + GIT_SHA.ToLower ();
+    else if (!string.IsNullOrEmpty (GIT_BRANCH_NAME))
+        version += "branch." + GIT_BRANCH_NAME.Replace ("/", ".").ToLower ();
+    else
+        version += "branch.master";
+
+    return string.Format (PREVIEW_FEED_URL, id.ToLower(), version);
 }

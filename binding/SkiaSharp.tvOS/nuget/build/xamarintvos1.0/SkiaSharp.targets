@@ -6,8 +6,14 @@
         <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <_SkiaSharpNativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_SkiaSharpNativeLibraryCurrPath>
+        <_SkiaSharpNativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_SkiaSharpNativeLibraryCurrPath)'))</_SkiaSharpNativeLibraryDirName>
+        <_SkiaSharpNativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_SkiaSharpNativeLibraryDirName)\</_SkiaSharpNativeLibraryRootDir>
+    </PropertyGroup>
+
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
-        <NativeReference Include="$(MSBuildThisFileDirectory)libSkiaSharp.framework" Kind="Framework" />
+        <NativeReference Include="$(_SkiaSharpNativeLibraryRootDir)libSkiaSharp.framework" Kind="Framework" />
     </ItemGroup>
 
 </Project>

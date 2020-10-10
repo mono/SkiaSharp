@@ -52,7 +52,7 @@ namespace SkiaSharpSample.Samples
 
 		private void GenerateDocument()
 		{
-			if (isSupported && File.Exists(path))
+			if (!isSupported || (isSupported && File.Exists(path)))
 				return;
 
 			using var document = SKDocument.CreateXps(path);
@@ -60,7 +60,6 @@ namespace SkiaSharpSample.Samples
 			if (document == null)
 			{
 				isSupported = false;
-				Refresh();
 				return;
 			}
 

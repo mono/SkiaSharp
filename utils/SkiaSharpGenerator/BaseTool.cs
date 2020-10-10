@@ -13,6 +13,9 @@ namespace SkiaSharpGenerator
 		protected readonly Dictionary<string, FunctionMapping> functionMappings = new Dictionary<string, FunctionMapping>();
 		protected readonly Dictionary<string, bool> skiaTypes = new Dictionary<string, bool>();
 
+		protected readonly List<string> excludedFiles = new List<string>();
+		protected readonly List<string> excludedTypes = new List<string>();
+
 		protected CppCompilation compilation = new CppCompilation();
 		protected Config config = new Config();
 
@@ -56,6 +59,21 @@ namespace SkiaSharpGenerator
 					headers.AddRange(Directory.EnumerateFiles(path, filter));
 				}
 			}
+
+			foreach (var filter in config.Exclude.Files)
+			{
+				excludedFiles.AddRange(Directory.EnumerateFiles(SkiaRoot, filter));
+			}
+
+			foreach (var filter in config.Exclude.Types)
+			{
+				excludedTypes.Add(filter);
+				excludedTypes.Add(filter + "*");
+				excludedTypes.Add(filter + "**");
+			}
+
+			foreach (var f in excludedFiles)
+				Log?.LogVerbose("Skipping everything in: " + f);
 
 			compilation = CppParser.ParseFiles(headers, options);
 
@@ -104,6 +122,8 @@ namespace SkiaSharpGenerator
 				{ "unsigned int",         nameof(UInt32) },
 				{ "long",                 nameof(Int64) },
 				{ "long int",             nameof(Int64) },
+				{ "long long",            nameof(Int64) },
+				{ "long long int",        nameof(Int64) },
 				{ "signed long",          nameof(Int64) },
 				{ "signed long int",      nameof(Int64) },
 				{ "unsigned long",        nameof(UInt64) },

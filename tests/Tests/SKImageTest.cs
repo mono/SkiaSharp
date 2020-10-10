@@ -819,6 +819,46 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableTheory]
+		[InlineData(0f, 0f, 0f, 0f)]
+		[InlineData(0f, 0f, 1f, 1f)]
+		[InlineData(0.5f, 0.5f, 1f, 1f)]
+		public void SubsetEncodesSubset(float xRatio, float yRatio, float wRatio, float hRatio)
+		{
+			var path = Path.Combine(PathToImages, "baboon.jpg");
+			using var image = SKImage.FromEncodedData(path);
+			var width = image.Width;
+			var height = image.Height;
+
+			var rect = new SKRectI(0, 0, width, height);
+			var subset = image;
+			if (xRatio != 0 || yRatio != 0 || wRatio != 0 || hRatio != 0)
+			{
+				var floatingRect = new SKRect(width * xRatio, height * yRatio, width * wRatio, height * hRatio);
+				rect = SKRectI.Floor(floatingRect);
+				subset = image.Subset(rect);
+			}
+
+			using var encoded = subset.Encode();
+			using var img2 = SKImage.FromEncodedData(encoded);
+
+			Assert.Equal(rect.Width, img2.Width);
+			Assert.Equal(rect.Height, img2.Height);
+
+			var subsetPixels = GetPixels(subset);
+			var img2Pixels = GetPixels(img2);
+
+			Assert.Equal(subsetPixels, img2Pixels);
+
+			static SKColor[] GetPixels(SKImage image)
+			{
+				using var bmp = new SKBitmap(image.Width, image.Height);
+				using var cnv = new SKCanvas(bmp);
+				cnv.DrawImage(image, 0, 0);
+				return bmp.Pixels;
+			}
+		}
+
 		[Obsolete]
 		[SkippableFact]
 		public void EncodeWithSimpleSerializer()

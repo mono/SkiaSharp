@@ -2,6 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" />
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props')" />
+  <Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\wasm\HarfBuzzSharp.props" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\wasm\HarfBuzzSharp.props')" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -23,16 +24,16 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
-    <PackageReference Include="Uno.UI" Version="2.4.4" />
-  </ItemGroup>
-  <!-- workaround for https://github.com/unoplatform/Uno.Wasm.Bootstrap/issues/253 -->
-  <ItemGroup Condition=" '$(WasmShellForceDisableWSL)' != 'true' ">
-    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.9" />
-    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.4.0-dev.9" />
+    <PackageReference Include="Uno.UI.WebAssembly" Version="3.0.12" />
+    <PackageReference Include="Uno.UI.RemoteControl" Version="3.0.12" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.52" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.4.0-dev.52" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.Wasm\SkiaSharp.Views.Uno.Wasm.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\**\*" />
@@ -41,4 +42,6 @@
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
   <Import Project="..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets')" />
+  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.targets')" />
+  <Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\wasm\HarfBuzzSharp.targets" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\wasm\HarfBuzzSharp.targets')" />
 </Project>

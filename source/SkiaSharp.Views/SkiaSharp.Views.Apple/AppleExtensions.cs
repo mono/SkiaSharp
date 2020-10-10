@@ -62,12 +62,23 @@ namespace SkiaSharp.Views.Mac
 
 		// CGColor
 
-		public static SKColor ToSKColor(this CGColor color)
-		{
-			return UIColor.FromCGColor(color).ToSKColor();
-		}
+		public static SKColor ToSKColor(this CGColor color) =>
+			UIColor.FromCGColor(color).ToSKColor();
+
+		public static SKColorF ToSKColorF(this CGColor color) =>
+			UIColor.FromCGColor(color).ToSKColorF();
 
 		public static CGColor ToCGColor(this SKColor color)
+		{
+#if __TVOS__ || __WATCHOS__ || __IOS__
+			// see https://bugzilla.xamarin.com/show_bug.cgi?id=44507
+			return UIColor.FromRGBA(color.Red, color.Green, color.Blue, color.Alpha).CGColor;
+#else
+			return UIColor.FromRgba(color.Red, color.Green, color.Blue, color.Alpha).CGColor;
+#endif
+		}
+
+		public static CGColor ToCGColor(this SKColorF color)
 		{
 #if __TVOS__ || __WATCHOS__ || __IOS__
 			// see https://bugzilla.xamarin.com/show_bug.cgi?id=44507
@@ -81,15 +92,17 @@ namespace SkiaSharp.Views.Mac
 
 #if !__WATCHOS__
 
-		public static SKColor ToSKColor(this CIColor color)
-		{
-			return UIColor.FromCIColor(color).ToSKColor();
-		}
+		public static SKColor ToSKColor(this CIColor color) =>
+			UIColor.FromCIColor(color).ToSKColor();
 
-		public static CIColor ToCIColor(this SKColor color)
-		{
-			return new CIColor(color.Red / 255f, color.Green / 255f, color.Blue / 255f, color.Alpha / 255f);
-		}
+		public static SKColorF ToSKColorF(this CIColor color) =>
+			UIColor.FromCIColor(color).ToSKColorF();
+
+		public static CIColor ToCIColor(this SKColor color) =>
+			new CIColor(color.Red / 255f, color.Green / 255f, color.Blue / 255f, color.Alpha / 255f);
+
+		public static CIColor ToCIColor(this SKColorF color) =>
+			new CIColor(color.Red, color.Green, color.Blue, color.Alpha);
 
 #endif
 
