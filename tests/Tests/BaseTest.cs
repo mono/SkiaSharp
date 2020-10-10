@@ -5,10 +5,12 @@ namespace SkiaSharp.Tests
 {
 	public abstract class BaseTest
 	{
-		protected const string CategoryKey = "Category";
+		public const string CategoryKey = "Category";
+		public const string GpuCategory = "GPU";
+		public const string MatchCharacterCategory = "MatchCharacter";
 
-		protected const string GpuCategory = "GPU";
-		protected const string MatchCharacterCategory = "MatchCharacter";
+		public const string PlatformKey = "Platform";
+		public const string WasmPlatform = "WASM";
 
 		protected static bool IsLinux = PlatformConfiguration.IsLinux;
 		protected static bool IsMac = PlatformConfiguration.IsMac;

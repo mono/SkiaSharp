@@ -501,6 +501,7 @@ namespace SkiaSharp.Tests
 			mask.FreeImage();
 		}
 
+		[Trait(PlatformKey, WasmPlatform)]
 		[SkippableTheory]
 		[InlineData(100, 1000)]
 		public static void ImageScalingMultipleThreadsTest(int numThreads, int numIterationsPerThread)

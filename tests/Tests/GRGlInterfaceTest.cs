@@ -7,6 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class GRGlInterfaceTest : SKTest
 	{
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void InterfaceConstructionWithoutContextDoesNotCrash()
 		{

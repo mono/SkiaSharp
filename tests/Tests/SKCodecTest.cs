@@ -413,6 +413,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(codec);
 		}
 
+		[Trait(PlatformKey, WasmPlatform)]
 		[SkippableFact (Skip = "This keeps breaking CI for some reason.")]
 		public async Task DownloadedStream ()
 		{
