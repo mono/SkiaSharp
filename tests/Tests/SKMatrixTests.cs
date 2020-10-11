@@ -189,6 +189,17 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void IsInvertibleIsTrueForInvertableMatrix()
+		{
+			var matrix = new SKMatrix(
+				1, 2, 3,
+				0, 1, 4,
+				5, 6, 1);
+
+			Assert.True(matrix.IsInvertible);
+		}
+
+		[SkippableFact]
 		public void InverseOfMatrixIsCorrect()
 		{
 			var rowMajor = new float[] {

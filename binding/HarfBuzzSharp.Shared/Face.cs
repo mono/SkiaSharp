@@ -2,7 +2,7 @@
 
 namespace HarfBuzzSharp
 {
-	public class Face : NativeObject
+	public unsafe class Face : NativeObject
 	{
 		private static readonly Lazy<Face> emptyFace = new Lazy<Face> (() => new StaticFace (HarfBuzzApi.hb_face_get_empty ()));
 
@@ -24,7 +24,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentOutOfRangeException (nameof (index), "Index must be non negative.");
 			}
 
-			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
+			Handle = HarfBuzzApi.hb_face_create (blob.Handle, (uint)index);
 		}
 
 		public Face (GetTableDelegate getTable)
@@ -40,7 +40,7 @@ namespace HarfBuzzSharp
 
 			Handle = HarfBuzzApi.hb_face_create_for_tables (
 				DelegateProxies.GetTableDelegateProxy,
-				DelegateProxies.CreateMultiUserData (getTable, destroy, this),
+				(void*)DelegateProxies.CreateMultiUserData (getTable, destroy, this),
 				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
@@ -50,27 +50,27 @@ namespace HarfBuzzSharp
 		}
 
 		public int Index {
-			get => HarfBuzzApi.hb_face_get_index (Handle);
-			set => HarfBuzzApi.hb_face_set_index (Handle, value);
+			get => (int)HarfBuzzApi.hb_face_get_index (Handle);
+			set => HarfBuzzApi.hb_face_set_index (Handle, (uint)value);
 		}
 
 		public int UnitsPerEm {
-			get => HarfBuzzApi.hb_face_get_upem (Handle);
-			set => HarfBuzzApi.hb_face_set_upem (Handle, value);
+			get => (int)HarfBuzzApi.hb_face_get_upem (Handle);
+			set => HarfBuzzApi.hb_face_set_upem (Handle, (uint)value);
 		}
 
 		public int GlyphCount {
-			get => HarfBuzzApi.hb_face_get_glyph_count (Handle);
-			set => HarfBuzzApi.hb_face_set_glyph_count (Handle, value);
+			get => (int)HarfBuzzApi.hb_face_get_glyph_count (Handle);
+			set => HarfBuzzApi.hb_face_set_glyph_count (Handle, (uint)value);
 		}
 
 		public unsafe Tag[] Tables {
 			get {
-				var tableCount = 0;
-				var count = HarfBuzzApi.hb_face_get_table_tags (Handle, 0, ref tableCount, IntPtr.Zero);
+				uint tableCount;
+				var count = HarfBuzzApi.hb_face_get_table_tags (Handle, 0, &tableCount, null);
 				var buffer = new Tag[count];
-				fixed (Tag* ptr = buffer) {
-					HarfBuzzApi.hb_face_get_table_tags (Handle, 0, ref count, (IntPtr)ptr);
+				fixed (void* ptr = buffer) {
+					HarfBuzzApi.hb_face_get_table_tags (Handle, 0, &count, (uint*)ptr);
 				}
 				return buffer;
 			}

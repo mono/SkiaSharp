@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <PropertyGroup>
+        <_HarfBuzzSharpNativeLibraryCurrPath>$([System.IO.Path]::GetDirectoryName('$(MSBuildThisFileDirectory)'))</_HarfBuzzSharpNativeLibraryCurrPath>
+        <_HarfBuzzSharpNativeLibraryDirName>$([System.IO.Path]::GetFileName('$(_HarfBuzzSharpNativeLibraryCurrPath)'))</_HarfBuzzSharpNativeLibraryDirName>
+        <_HarfBuzzSharpNativeLibraryRootDir>$(MSBuildThisFileDirectory)..\..\build\$(_HarfBuzzSharpNativeLibraryDirName)\</_HarfBuzzSharpNativeLibraryRootDir>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <HarfBuzzSharpStaticLibraryPath>$(_HarfBuzzSharpNativeLibraryRootDir)libHarfBuzzSharp.a</HarfBuzzSharpStaticLibraryPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <HarfBuzzSharpStaticLibrary Include="$(HarfBuzzSharpStaticLibraryPath)" />
+    </ItemGroup>
+
+</Project>
