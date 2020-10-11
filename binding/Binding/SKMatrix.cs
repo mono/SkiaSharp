@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace SkiaSharp
 {
@@ -342,7 +343,7 @@ namespace SkiaSharp
 		}
 
 		// Invert
-
+		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		public readonly bool IsInvertible {
 			get {
 				fixed (SKMatrix* t = &this) {
