@@ -16,13 +16,22 @@ namespace SkiaSharpSample
 {
 	public sealed partial class MainPage : Page
 	{
+		private const int TextOverlayPadding = 8;
+
 		private CancellationTokenSource cancellations;
+		private SKPaint textPaint;
 		private IList<SampleBase> samples;
 		private SampleBase sample;
 
 		public MainPage()
 		{
 			InitializeComponent();
+
+			textPaint = new SKPaint
+			{
+				TextSize = 16,
+				IsAntialias = true
+			};
 
 			samples = SamplesManager.GetSamples(SamplePlatforms.UWP)
 				.OrderBy(s => s.Category == SampleCategories.Showcases ? string.Empty : s.Title)
@@ -125,11 +134,47 @@ namespace SkiaSharpSample
 		private void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)
 		{
 			OnPaintSurface(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+
+			var view = sender as SKXamlCanvas;
+			DrawOverlayText(view, e.Surface.Canvas, view.CanvasSize, SampleBackends.Memory);
 		}
 
 		private void OnPaintGL(object sender, SKPaintGLSurfaceEventArgs e)
 		{
 			OnPaintSurface(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
+
+			var view = sender as SKSwapChainPanel;
+			DrawOverlayText(view, e.Surface.Canvas, view.CanvasSize, SampleBackends.OpenGL);
+		}
+
+		private void DrawOverlayText(FrameworkElement view, SKCanvas canvas, SKSize canvasSize, SampleBackends backend)
+		{
+			// make sure no previous transforms still apply
+			canvas.ResetMatrix();
+
+			// get and apply the current scale
+			var scale = canvasSize.Width / (float)view.ActualWidth;
+			canvas.Scale(scale);
+
+			var y = (float)view.ActualHeight - TextOverlayPadding;
+
+			var text = $"Current scaling = {scale:0.0}x";
+			canvas.DrawText(text, TextOverlayPadding, y, textPaint);
+
+			y -= textPaint.TextSize + TextOverlayPadding;
+
+			text = "SkiaSharp: " + SamplesManager.SkiaSharpVersion;
+			canvas.DrawText(text, TextOverlayPadding, y, textPaint);
+
+			y -= textPaint.TextSize + TextOverlayPadding;
+
+			text = "HarfBuzzSharp: " + SamplesManager.HarfBuzzSharpVersion;
+			canvas.DrawText(text, TextOverlayPadding, y, textPaint);
+
+			y -= textPaint.TextSize + TextOverlayPadding;
+
+			text = "Backend: " + backend;
+			canvas.DrawText(text, TextOverlayPadding, y, textPaint);
 		}
 
 		private void SetSample(SampleBase newSample)

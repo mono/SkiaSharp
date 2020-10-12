@@ -9,13 +9,13 @@ bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 string CC = Argument("cc", "emcc");
 string CXX = Argument("cxx", "em++");
 string AR = Argument("ar", "emar");
+string COMPILERS = $"cc='{CC}' cxx='{CXX}' ar='{AR}' ";
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    var compilers = $"cc='{CC}' cxx='{CXX}' ar='{AR}' ";
 
     GnNinja($"wasm", "SkiaSharp",
         $"target_os='linux' " +
@@ -51,7 +51,7 @@ Task("libSkiaSharp")
         $"  '-DSK_DISABLE_READBUFFER', '-DSK_DISABLE_EFFECT_DESERIALIZATION', " +
         $"  '-s', 'WARN_UNALIGNED=1', '-DSKNX_NO_SIMD', '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0' ] " +
         $"extra_cflags_cc=[ '-frtti' ] " +
-        compilers +
+        COMPILERS +
         ADDITIONAL_GN_ARGS);
 
     var a = SKIA_PATH.CombineWithFilePath($"out/wasm/libSkiaSharp.a");
@@ -90,7 +90,19 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    Warning($"Building libHarfBuzzSharp for WASM is not yet supported.");
+    GnNinja($"wasm", "HarfBuzzSharp",
+        $"target_os='linux' " +
+        $"target_cpu='wasm' " +
+        $"is_static_skiasharp=true " +
+        $"visibility_hidden=false " +
+        COMPILERS +
+        ADDITIONAL_GN_ARGS);
+
+    var outDir = OUTPUT_PATH.Combine($"wasm");
+    EnsureDirectoryExists(outDir);
+    var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a");
+    CopyFileToDirectory(so, outDir);
+    CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.a"));
 });
 
 Task("Default")

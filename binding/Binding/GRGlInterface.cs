@@ -29,7 +29,7 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.gr_glinterface_create_native_interface ());
 		}
 
-		private static GRGlInterface CreateAngle ()
+		public static GRGlInterface CreateAngle ()
 		{
 			if (PlatformConfiguration.IsWindows) {
 				return CreateAngle (AngleLoader.GetProc);
