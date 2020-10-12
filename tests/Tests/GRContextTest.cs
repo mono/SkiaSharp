@@ -19,6 +19,19 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void CreateDefaultContextWithOptionsIsValid()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+
+			var options = new GRContextOptions();
+			var grContext = GRContext.CreateGl(options);
+
+			Assert.NotNull(grContext);
+		}
+
 		[Obsolete]
 		[SkippableFact]
 		public void ToGlSizedFormat()
@@ -49,6 +62,23 @@ namespace SkiaSharp.Tests
 
 				Assert.NotNull(grContext);
 			}
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void CreateSpecificContextWithOptionsIsValid()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+
+			var glInterface = GRGlInterface.Create();
+
+			Assert.True(glInterface.Validate());
+
+			var options = new GRContextOptions();
+			var grContext = GRContext.CreateGl(glInterface, options);
+
+			Assert.NotNull(grContext);
 		}
 
 		[Trait(CategoryKey, GpuCategory)]

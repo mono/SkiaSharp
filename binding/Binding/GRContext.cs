@@ -54,19 +54,42 @@ namespace SkiaSharp
 		// CreateGl
 
 		public static GRContext CreateGl () =>
-			CreateGl (null);
+			CreateGl (null, null);
 
 		public static GRContext CreateGl (GRGlInterface backendContext) =>
-			GetObject (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+			CreateGl (backendContext, null);
+
+		public static GRContext CreateGl (GRContextOptions options) =>
+			CreateGl (null, options);
+
+		public static GRContext CreateGl (GRGlInterface backendContext, GRContextOptions options)
+		{
+			var ctx = backendContext == null ? IntPtr.Zero : backendContext.Handle;
+
+			if (options == null) {
+				return GetObject (SkiaApi.gr_context_make_gl (ctx));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_context_make_gl_with_options (ctx, &opts));
+			}
+		}
 
 		// CreateVulkan
 
-		public static GRContext CreateVulkan (GRVkBackendContext backendContext)
+		public static GRContext CreateVulkan (GRVkBackendContext backendContext) =>
+			CreateVulkan (backendContext, null);
+
+		public static GRContext CreateVulkan (GRVkBackendContext backendContext, GRContextOptions options)
 		{
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));
 
-			return GetObject (SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
+			if (options == null) {
+				return GetObject (SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_context_make_vulkan_with_options (backendContext.ToNative (), &opts));
+			}
 		}
 
 		//
