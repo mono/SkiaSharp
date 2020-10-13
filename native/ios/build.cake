@@ -30,8 +30,6 @@ Task("libSkiaSharp")
         GnNinja($"ios/{arch}", "skia",
             $"target_cpu='{skiaArch}' " +
             $"target_os='ios' " +
-            $"is_official_build=true " +
-            $"skia_enable_tools=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +

@@ -287,10 +287,10 @@ namespace SkiaSharp
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete ("Use CountGlyphs(IntPtr, int, SKTextEncoding) instead.")]
 		public int CountGlyphs (IntPtr str, int strLen, SKEncoding encoding) =>
-			GetFont ().CountGlyphs (str, strLen, encoding.ToTextEncoding ());
+			CountGlyphs (str, strLen, encoding.ToTextEncoding ());
 
 		public int CountGlyphs (IntPtr str, int strLen, SKTextEncoding encoding) =>
-			GetFont ().CountGlyphs (str, strLen, encoding);
+			GetFont ().CountGlyphs (str, strLen * encoding.GetCharacterByteSize (), encoding);
 
 		// GetGlyph (int)
 
@@ -386,7 +386,7 @@ namespace SkiaSharp
 		public ushort[] GetGlyphs (IntPtr text, int length, SKTextEncoding encoding)
 		{
 			using var font = ToFont ();
-			return font.GetGlyphs (text, length, encoding);
+			return font.GetGlyphs (text, length * encoding.GetCharacterByteSize (), encoding);
 		}
 
 		// ContainsGlyph
@@ -406,10 +406,10 @@ namespace SkiaSharp
 			GetFont ().ContainsGlyphs (text);
 
 		public bool ContainsGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
-			GetFont ().ContainsGlyphs (text, encoding);
+			ContainsGlyphs (text, encoding);
 
 		public bool ContainsGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
-			GetFont ().ContainsGlyphs (text, length, encoding);
+			GetFont ().ContainsGlyphs (text, length * encoding.GetCharacterByteSize (), encoding);
 
 		// GetFont
 

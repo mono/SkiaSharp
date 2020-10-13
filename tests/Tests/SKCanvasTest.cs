@@ -684,5 +684,23 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 83));
 			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 113));
 		}
+
+		[SkippableTheory]
+		[InlineData(0xFFFF0000, 0xFFFF0000)]
+		[InlineData(0xFFFF0000, 0xFF00FF00)]
+		[InlineData(0xAAFF0000, 0xFF00FF00)]
+		[InlineData(0xFFFF0000, 0xAA00FF00)]
+		[InlineData(0xAAFF0000, 0xAA00FF00)]
+		public void DrawPointReplacesColor(uint initial, uint color)
+		{
+			using var bmp = new SKBitmap(new SKImageInfo(1, 1));
+			using var canvas = new SKCanvas(bmp);
+
+			canvas.Clear(initial);
+			Assert.Equal(initial, bmp.GetPixel(0, 0));
+
+			canvas.DrawPoint(0, 0, color);
+			Assert.Equal(color, bmp.GetPixel(0, 0));
+		}
 	}
 }

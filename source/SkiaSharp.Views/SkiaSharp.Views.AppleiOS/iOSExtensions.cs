@@ -20,10 +20,18 @@ namespace SkiaSharp.Views.iOS
 			return new SKColor((byte)(r * 255), (byte)(g * 255), (byte)(b * 255), (byte)(a * 255));
 		}
 
-		public static UIColor ToUIColor(this SKColor color)
+		public static SKColorF ToSKColorF(this UIColor color)
 		{
-			return UIColor.FromRGBA(color.Red, color.Green, color.Blue, color.Alpha);
+			System.nfloat r, g, b, a;
+			color.GetRGBA(out r, out g, out b, out a);
+			return new SKColorF((float)r, (float)g, (float)b, (float)a);
 		}
+
+		public static UIColor ToUIColor(this SKColor color) =>
+			UIColor.FromRGBA(color.Red, color.Green, color.Blue, color.Alpha);
+
+		public static UIColor ToUIColor(this SKColorF color) =>
+			UIColor.FromRGBA(color.Red, color.Green, color.Blue, color.Alpha);
 
 		// UIImage
 

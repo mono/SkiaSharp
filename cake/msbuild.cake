@@ -7,7 +7,7 @@ void RunMSBuild(
     string platformTarget = null,
     bool restore = true,
     bool restoreOnly = false,
-    string bl = null)
+    bool bl = true)
 {
     var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
 
@@ -18,12 +18,12 @@ void RunMSBuild(
         c.Verbosity = VERBOSITY;
         c.MaxCpuCount = 0;
 
-        if (!string.IsNullOrEmpty(bl)) {
-            c.BinaryLogger = new MSBuildBinaryLogSettings {
-                Enabled = true,
-                FileName = bl,
-            };
-        }
+        var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
+        var blPath = ROOT_PATH.Combine("output/binlogs").CombineWithFilePath(relativeSolution + ".binlog");
+        c.BinaryLogger = new MSBuildBinaryLogSettings {
+            Enabled = true,
+            FileName = blPath.FullPath,
+        };
 
         if (!string.IsNullOrEmpty(MSBUILD_EXE)) {
             c.ToolPath = MSBUILD_EXE;

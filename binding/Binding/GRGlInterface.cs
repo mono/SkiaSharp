@@ -29,7 +29,7 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.gr_glinterface_create_native_interface ());
 		}
 
-		private static GRGlInterface CreateAngle ()
+		public static GRGlInterface CreateAngle ()
 		{
 			if (PlatformConfiguration.IsWindows) {
 				return CreateAngle (AngleLoader.GetProc);
@@ -238,35 +238,61 @@ namespace SkiaSharp
 #if __TIZEN__
 		private class EvasGlLoader
 		{
-			private IntPtr glEvas;
-			private EvasGlApi api;
+			private const string libevas = "libevas.so.1";
 
-			[DllImport ("libevas.so.1")]
+			private static readonly Type IntPtrType;
+			private static readonly Type EvasGlApiType;
+			private static readonly FieldInfo[] apiFields;
+
+			private readonly IntPtr glEvas;
+			private readonly EvasGlApi api;
+
+			[DllImport (libevas)]
 			internal static extern IntPtr evas_gl_api_get (IntPtr evas_gl);
 
-			[DllImport ("libevas.so.1")]
+			[DllImport (libevas)]
+			internal static extern IntPtr evas_gl_context_api_get (IntPtr evas_gl, IntPtr ctx);
+
+			[DllImport (libevas)]
+			internal static extern IntPtr evas_gl_current_context_get (IntPtr evas_gl);
+
+			[DllImport (libevas)]
 			internal static extern IntPtr evas_gl_proc_address_get (IntPtr evas_gl, string name);
+
+			static EvasGlLoader ()
+			{
+				IntPtrType = typeof (IntPtr);
+				EvasGlApiType = typeof (EvasGlApi);
+				apiFields = EvasGlApiType.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+			}
 
 			public EvasGlLoader (IntPtr evas)
 			{
 				glEvas = evas;
+				var glContext = evas_gl_current_context_get (glEvas);
 
-				var unmanagedGlApi = evas_gl_api_get (glEvas);
-				api = Marshal.PtrToStructure<EvasGlApi> (unmanagedGlApi);
+				var apiPtr = glContext != IntPtr.Zero
+					? evas_gl_context_api_get (glEvas, glContext)
+					: evas_gl_api_get (glEvas);
+
+				api = Marshal.PtrToStructure<EvasGlApi> (apiPtr);
 			}
 
-			public IntPtr GetFunctionPointer(string name)
+			public IntPtr GetFunctionPointer (string name)
 			{
-				var ret = evas_gl_proc_address_get (glEvas, name);
+				// try evas_gl_proc_address_get
+				var address = evas_gl_proc_address_get (glEvas, name);
+				if (address != IntPtr.Zero)
+					return address;
 
-				if (ret == IntPtr.Zero) {
-					var field = typeof (EvasGlApi).GetField (name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-					if (field?.FieldType == typeof (IntPtr))
-						ret = (IntPtr) field.GetValue (api);
+				// try the API struct
+				for (var i = 0; i < apiFields.Length; i++) {
+					var field = apiFields[i];
+					if (field.Name == name && field.FieldType == IntPtrType)
+						return (IntPtr)field.GetValue (api);
 				}
 
-				return ret;
+				return IntPtr.Zero;
 			}
 		}
 

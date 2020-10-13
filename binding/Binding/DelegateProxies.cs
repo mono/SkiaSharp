@@ -103,18 +103,18 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback (typeof (GRGlGetProcProxyDelegate))]
-		private static IntPtr GRGlGetProcDelegateProxyImplementation (void* context, string name)
+		private static IntPtr GRGlGetProcDelegateProxyImplementation (void* context, void* name)
 		{
 			var del = Get<GRGlGetProcedureAddressDelegate> ((IntPtr)context, out _);
-			return del.Invoke (name);
+			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name));
 		}
 
 		[MonoPInvokeCallback (typeof (GRVkGetProcProxyDelegate))]
-		private static IntPtr GRVkGetProcDelegateProxyImplementation (void* context, string name, IntPtr instance, IntPtr device)
+		private static IntPtr GRVkGetProcDelegateProxyImplementation (void* context, void* name, IntPtr instance, IntPtr device)
 		{
 			var del = Get<GRVkGetProcedureAddressDelegate> ((IntPtr)context, out _);
 
-			return del.Invoke (name, instance, device);
+			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name), instance, device);
 		}
 
 		[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]

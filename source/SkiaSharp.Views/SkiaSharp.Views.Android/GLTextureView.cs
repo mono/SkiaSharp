@@ -18,9 +18,18 @@ using EGLContext = Javax.Microedition.Khronos.Egl.EGLContext;
 using EGLDisplay = Javax.Microedition.Khronos.Egl.EGLDisplay;
 using EGLSurface = Javax.Microedition.Khronos.Egl.EGLSurface;
 
+#if HAS_UNO
+namespace SkiaSharp.Views.UWP
+#else
 namespace SkiaSharp.Views.Android
+#endif
 {
-	public class GLTextureView : TextureView, TextureView.ISurfaceTextureListener, View.IOnLayoutChangeListener
+#if HAS_UNO
+	internal
+#else
+	public
+#endif
+	partial class GLTextureView : TextureView, TextureView.ISurfaceTextureListener, View.IOnLayoutChangeListener
 	{
 		private const bool EnableLogging = false;
 

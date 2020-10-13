@@ -13,6 +13,9 @@ namespace NativeLibraryMiniTest {
 
         static int Main() {
             Console.WriteLine("Starting test...");
+            Console.WriteLine($"OS = {RuntimeInformation.OSDescription}");
+            Console.WriteLine($"OS Arch = {RuntimeInformation.OSArchitecture}");
+            Console.WriteLine($"Proc Arch = {RuntimeInformation.ProcessArchitecture}");
 
             Console.WriteLine("Version test...");
             Console.WriteLine($"sk_version_get_milestone() = {sk_version_get_milestone()}");
@@ -49,7 +52,6 @@ namespace NativeLibraryMiniTest {
         }
 
         [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-        [return: MarshalAs(UnmanagedType.LPStr)]
         static extern void* sk_version_get_string();
 
         [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

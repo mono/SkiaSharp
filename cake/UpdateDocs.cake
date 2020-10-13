@@ -37,23 +37,20 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
     }
 }
 
-Task ("docs-download-build-artifact")
-    .IsDependentOn ("determine-last-successful-build")
+Task ("docs-download-output")
     .Does (() =>
 {
-    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "nuget");
-
     EnsureDirectoryExists ("./output");
     CleanDirectories ("./output");
+    EnsureDirectoryExists ("./output/temp");
 
-    DownloadFile(url, "./output/nuget.zip");
-});
+    var url = GetDownloadUrl ("_nugets");
+    DownloadFile (url, "./output/temp/nugets.nupkg");
 
-Task ("docs-expand-build-artifact")
-    .Does (() =>
-{
-    Unzip ("./output/nuget.zip", "./output");
-    MoveDirectory ("./output/nuget", OUTPUT_NUGETS_PATH);
+    Unzip ("./output/temp/nugets.nupkg", "./output/temp");
+    MoveDirectory ("./output/temp/tools", OUTPUT_NUGETS_PATH);
+
+    DeleteDirectory("./output/temp", new DeleteDirectorySettings { Recursive = true, Force = true });
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         var version = GetVersion (id);
@@ -62,10 +59,6 @@ Task ("docs-expand-build-artifact")
         Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
     }
 });
-
-Task ("docs-download-output")
-    .IsDependentOn ("docs-download-build-artifact")
-    .IsDependentOn ("docs-expand-build-artifact");
 
 Task ("docs-api-diff")
     .Does (async () =>
@@ -199,6 +192,10 @@ Task ("docs-update-frameworks")
     // generate the temp frameworks.xml
     var xFrameworks = new XElement ("Frameworks");
     foreach (var id in TRACKED_NUGETS.Keys) {
+        // skip doc generation for Uno, this is the same as UWP and it is not needed
+        if (id.StartsWith ("SkiaSharp.Views.Uno"))
+            continue;
+
         // get the versions
         Information ($"Comparing the assemblies in '{id}'...");
         var allVersions = await NuGetVersions.GetAllAsync (id, new NuGetVersions.Filter {

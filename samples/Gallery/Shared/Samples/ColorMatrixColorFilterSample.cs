@@ -60,9 +60,9 @@ namespace SkiaSharpSample.Samples
 					0.0f, 0.0f, 0.0f, 1f, 0f
 				};
 				var highContrast = new float[20] {
-					4.0f, 0.0f, 0.0f, 0.0f, -4.0f * 255f / (4.0f - 1f),
-					0.0f, 4.0f, 0.0f, 0.0f, -4.0f * 255f / (4.0f - 1f),
-					0.0f, 0.0f, 4.0f, 0.0f, -4.0f * 255f / (4.0f - 1f),
+					4.0f, 0.0f, 0.0f, 0.0f, -4.0f / (4.0f - 1f),
+					0.0f, 4.0f, 0.0f, 0.0f, -4.0f / (4.0f - 1f),
+					0.0f, 0.0f, 4.0f, 0.0f, -4.0f / (4.0f - 1f),
 					0.0f, 0.0f, 0.0f, 1.0f, 0.0f
 				};
 				var colorMatrix6 = new float[20] {
@@ -78,9 +78,9 @@ namespace SkiaSharpSample.Samples
 					0.0f,   0.0f,   0.0f,   1.0f, 0.0f
 				};
 				var inverter = new float[20] {
-					-1f,  0f,  0f, 0f, 255f,
-					0f, -1f,  0f, 0f, 255f,
-					0f,  0f, -1f, 0f, 255f,
+					-1f,  0f,  0f, 0f, 1f,
+					0f, -1f,  0f, 0f, 1f,
+					0f,  0f, -1f, 0f, 1f,
 					0f,  0f,  0f, 1f, 0f
 				};
 

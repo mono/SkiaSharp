@@ -315,7 +315,9 @@ namespace SkiaSharp
 			if (!ValidateTextArgs (text, length, encoding))
 				return 0;
 
-			return SkiaApi.sk_font_measure_text (Handle, text, (IntPtr)length, encoding, bounds, paint?.Handle ?? IntPtr.Zero);
+			float measuredWidth;
+			SkiaApi.sk_font_measure_text_no_return (Handle, text, (IntPtr)length, encoding, bounds, paint?.Handle ?? IntPtr.Zero, &measuredWidth);
+			return measuredWidth;
 		}
 
 		// MeasureText (glyphs)
@@ -876,9 +878,10 @@ namespace SkiaSharp
 				if (x1 >= 0 && x0 <= contourLength) {
 					var glyphId = glyphs[index];
 					var glyphPath = glyphPathCache.GetPath (glyphId);
-
-					var transformation = SKMatrix.CreateTranslation (x0, glyphOffset.Y);
-					MorphPath (textPath, glyphPath, pathMeasure, transformation);
+					if (glyphPath != null) {
+						var transformation = SKMatrix.CreateTranslation (x0, glyphOffset.Y);
+						MorphPath (textPath, glyphPath, pathMeasure, transformation);
+					}
 				}
 			}
 
@@ -991,7 +994,7 @@ namespace SkiaSharp
 			public void Dispose ()
 			{
 				foreach (var path in Values) {
-					path.Dispose ();
+					path?.Dispose ();
 				}
 				Clear ();
 			}

@@ -9,5 +9,9 @@ namespace SkiaSharp.Views.Forms
 {
 	public class SKCanvasViewRenderer : SKCanvasViewRendererBase<SKFormsView, SKNativeView>
 	{
+		protected override SKNativeView CreateNativeControl() =>
+			GetType() == typeof(SKCanvasViewRenderer)
+				? new SKNativeView()
+				: base.CreateNativeControl();
 	}
 }

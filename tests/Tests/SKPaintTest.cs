@@ -405,6 +405,17 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void CanMeasureBadUnicodeText()
+		{
+			using var paint = new SKPaint();
+
+			var rect = SKRect.Empty;
+			var width = paint.MeasureText("\ud83c", ref rect);
+
+			Assert.Equal(0, width);
+		}
+
+		[SkippableFact]
 		public void MeasureTextMeasuresTheText()
 		{
 			var paint = new SKPaint();

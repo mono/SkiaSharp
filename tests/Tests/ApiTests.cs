@@ -17,10 +17,23 @@ namespace SkiaSharp.Tests
 			typeof(HarfBuzzSharp.NativeObject).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi")
 		};
 
+		private static IEnumerable<Type> InteropApiDelegatesTypes => new[]
+		{
+			typeof(SkiaSharp.SKNativeObject).Assembly.GetType("SkiaSharp.SkiaApi+Delegates"),
+			typeof(HarfBuzzSharp.NativeObject).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi+Delegates")
+		};
+
 		private static IEnumerable<MethodInfo> InteropMembers =>
 			InteropApiTypes
-			.SelectMany(t => t.GetMethods())
+			.SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance))
 			.Where(a => a.GetCustomAttribute<DllImportAttribute>() != null)
+			.Distinct();
+
+		private static IEnumerable<Type> InteropNestedDelegates =>
+			InteropApiDelegatesTypes
+			.Where(t => t != null) // may not be found in platforms other than net4x
+			.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance))
+			.Where(t => typeof(Delegate).IsAssignableFrom(t))
 			.Distinct();
 
 		private static IEnumerable<Type> InteropDelegates =>
@@ -28,6 +41,7 @@ namespace SkiaSharp.Tests
 				m.GetParameters()
 				.Select(p => p.ParameterType)
 				.Where(t => typeof(Delegate).IsAssignableFrom(t)))
+			.Union(InteropNestedDelegates)
 			.Distinct();
 
 		public static IEnumerable<object[]> InteropMembersData =>
@@ -37,6 +51,13 @@ namespace SkiaSharp.Tests
 
 		public static IEnumerable<object[]> InteropDelegatesData =>
 			InteropDelegates.Select(m => new object[] { m });
+
+		[SkippableFact]
+		public void DelegateTypesAreValid()
+		{
+			var del = InteropDelegatesData;
+			Assert.NotEmpty(del);
+		}
 
 		[SkippableTheory]
 		[MemberData(nameof(InteropDelegatesData))]
@@ -144,7 +165,9 @@ namespace SkiaSharp.Tests
 						var isSkippedType =
 							paramType.FullName != typeof(SKManagedStreamDelegates).FullName &&
 							paramType.FullName != typeof(SKManagedWStreamDelegates).FullName &&
-							paramType.FullName != typeof(SKManagedDrawableDelegates).FullName;
+							paramType.FullName != typeof(SKManagedDrawableDelegates).FullName &&
+							paramType.FullName != typeof(SKManagedTraceMemoryDumpDelegates).FullName &&
+							paramType.FullName != typeof(GRVkBackendContextNative).FullName; // TODO: this type probably needs better checks as it is not 100% delegates
 
 						// make sure our structs have a layout type
 						if (!paramType.GetTypeInfo().IsEnum && isLocalType && isSkippedType)
@@ -172,6 +195,7 @@ namespace SkiaSharp.Tests
 		// older C API
 		[InlineData("68.3", "68.0", "[68.3, 69.0)")]
 		[InlineData("68.3", "68.2", "[68.3, 69.0)")]
+		[InlineData("80.2", "80.0", "[80.2, 81.0)")]
 		// older skia milestone
 		[InlineData("68.0", "60.0", "[68.0, 69.0)")]
 		[InlineData("68.3", "60.0", "[68.3, 69.0)")]
@@ -210,6 +234,12 @@ namespace SkiaSharp.Tests
 		public void TestLibraryVersions()
 		{
 			Assert.True(SkiaSharpVersion.CheckNativeLibraryCompatible());
+		}
+
+		[SkippableFact]
+		public void TestLibraryVersionsDoesNotThrow()
+		{
+			SkiaSharpVersion.CheckNativeLibraryCompatible(true);
 		}
 
 		[SkippableFact]

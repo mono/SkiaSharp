@@ -9,6 +9,8 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
+$HOME_DIR = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
+
 if ($IsMacOS) {
     $platform = "macos-64"
     $ext = "bin"
@@ -22,13 +24,13 @@ if ($IsMacOS) {
 
 $url = "http://download.tizen.org/sdk/Installer/tizen-studio_${Version}/web-cli_Tizen_Studio_${Version}_${platform}.${ext}"
 
-$ts = Join-Path "$HOME" "tizen-studio"
+$ts = Join-Path "$HOME_DIR" "tizen-studio"
 if ($InstallDestination) {
     $ts = $InstallDestination
 }
 Write-Host "Install destination is '$ts'..."
 
-$tsTemp = Join-Path "$HOME" "tizen-temp"
+$tsTemp = Join-Path "$HOME_DIR" "tizen-temp"
 $install = Join-Path "$tsTemp" "tizen-install.$ext"
 $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 
