@@ -36,7 +36,7 @@ namespace SkiaSharp.Tests
 					using (var file = File.Create(dest))
 						stream.CopyTo(file);
 
-					Console.WriteLine($"Saved file to {dest}: {File.ReadAllBytes(dest)?.Length}");
+					Console.WriteLine($"Saved file to {dest}: {new FileInfo(dest).Length}");
 				}
 			}
 
