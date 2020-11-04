@@ -349,7 +349,7 @@ Task ("samples")
     // }
 
     // build solutions locally
-    var solutions = GetFiles ("./output/samples/**/*.sln");
+    var solutions = GetFiles ("./output/samples/Basic/Uno/**/*.sln");
     foreach (var sln in solutions) {
         var name = sln.GetFilenameWithoutExtension ();
         var slnPlatform = name.GetExtension ();
