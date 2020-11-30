@@ -3,22 +3,14 @@
 SkiaSharp for WebAssembly is a SkiaSharp port that runs on top of the [Uno Platform](https://github.com/nventive/uno), using 
 modified [CanvasKit for WebAssembly](https://github.com/nventive/skia).
 
-It is currently in **experimental state** and uses mono-wasm [support Emscripten's for dynamic linking](https://github.com/emscripten-core/emscripten/wiki/Linking#overview-of-dynamic-linking), to 
-load CanvasKit.
-
-To experiment with it, open the `SkiaSharpSource.sln` and build the `SkiaSharpSample.Wasm` project.
+Note that Uno support for SkiaSharp is coming soon in the [official SkiaSharp repository](https://github.com/unoplatform/Uno.SkiaSharp).
 
 This repository provides two packages:
 - `Uno.SkiaSharp.Wasm`, which provides basic SkiaSharp functionality
 - `Uno.SkiaSharp.Views` which provides the `SKXamlCanvas` control which enables software rendering support for iOS, Android and WebAssembly.
 
 ## Requirements
-For the WebAssembly support:
-- The Uno.Wasm.Bootstrap package must be `1.0.0-dev.293` or later.
-- The following property must be added to your Uno WebAssembly head:
-`<MonoWasmRuntimeConfiguration>release-dynamic</MonoWasmRuntimeConfiguration>`
-
-Upcoming updates will provide support for OpenGL based rendering.
+You can use [this sample](https://github.com/unoplatform/Uno.Samples/tree/master/UI/SkiaSharpTest) as a barebones project to experiment with SkiaSharp.
 
 # SkiaSharp
 
