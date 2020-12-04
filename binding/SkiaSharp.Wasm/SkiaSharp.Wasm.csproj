@@ -33,9 +33,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\externals\skia\out\canvaskit_wasm\libSkiaSharp.a" Link="build\libSkia\%(FileName).a">
+    <Content Include="..\..\externals\skia\out\canvaskit_wasm\**\*.a" Link="build\native\%(RecursiveDir)%(Filename)%(Extension)">
       <Pack>true</Pack>
-      <PackagePath>build/libSkia</PackagePath>
+      <PackagePath>build/native</PackagePath>
     </Content>
     <None Remove="tsconfig.json" />
     <Compile Include="JSInterop.cs" />

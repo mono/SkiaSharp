@@ -5,8 +5,22 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
 
-  variables:
-    EMSCRIPTEN_VERSION: 1.39.11
+  strategy:
+    matrix:
+      1_39_11:
+        EMSCRIPTEN_VERSION: 1.39.11
+
+      1_40_0:
+        EMSCRIPTEN_VERSION: 1.40.0
+
+      2_0_5:
+        EMSCRIPTEN_VERSION: 2.0.5
+
+      2_0_6:
+        EMSCRIPTEN_VERSION: 2.0.6
+
+      2_0_9:
+        EMSCRIPTEN_VERSION: 2.0.9
 
   steps:
   - checkout: self
@@ -16,7 +30,7 @@ jobs:
   - bash: |
       cd ~
       echo Installing emscripten $(EMSCRIPTEN_VERSION)
-      git clone https://github.com/emscripten-core/emsdk
+      git clone --branch $(EMSCRIPTEN_VERSION) https://github.com/emscripten-core/emsdk
       cd ~/emsdk
       ./emsdk install $(EMSCRIPTEN_VERSION)
       ./emsdk activate $(EMSCRIPTEN_VERSION)
@@ -44,7 +58,7 @@ jobs:
     inputs:
       SourceFolder: $(build.sourcesdirectory)/externals/skia/out/canvaskit_wasm
       Contents: 'libSkiaSharp.a'
-      TargetFolder: $(build.artifactstagingdirectory)
+      TargetFolder: $(build.artifactstagingdirectory)/libSkiaSharp.a/$(EMSCRIPTEN_VERSION)
       CleanTargetFolder: false
       OverWrite: false
       flattenFolders: false
