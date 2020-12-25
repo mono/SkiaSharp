@@ -98,18 +98,7 @@ stages:
           displayName: Tizen
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
-          installTizenSdk: false
           installWindowsSdk: false
-          preBuildSteps:
-            - pwsh: |
-                echo "Downloading Tizen Studio..."
-                New-Item "$env:USERPROFILE\tizen-download-temp" -Type Directory -Force | Out-Null
-                curl -L -o "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -H "Authorization: $(TIZEN_STUDIO_TOKEN)" "$(TIZEN_STUDIO_URL)"
-                echo "Download complete, extracting..."
-                Expand-Archive -Path "$env:USERPROFILE\tizen-download-temp\tizen-studio.zip" -DestinationPath "$env:USERPROFILE"
-                echo "TIZEN_SDK_INSTALLED_PATH=$env:USERPROFILE\tizen-studio`nTIZEN_SDK_DATA_PATH=$env:USERPROFILE\tizen-studio-data" > "$env:USERPROFILE\tizen-studio\sdk.info"
-                echo "Extraction complete."
-              displayName: Download Tizen Studio Patch
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Win)
         parameters:
           name: native_uwp_angle_x86_windows
@@ -302,7 +291,6 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(TIZEN_LINUX_PACKAGES)
           target: externals-tizen
-          condition: false # TODO: TIZEN INSTALL BUGS
 
   - stage: native_wasm
     displayName: Native WASM
