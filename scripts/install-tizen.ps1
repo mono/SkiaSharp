@@ -3,8 +3,9 @@
 #  - https://developercommunity.visualstudio.com/content/problem/661596/the-updated-path-doesnt-kick-in.html
 
 Param(
-    [string] $Version = "3.7",
-    [string] $InstallDestination = $null
+    [string] $Version = "4.1",
+    [string] $InstallDestination = $null,
+    [boolean] $UpgradeLLVM = $true
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,7 +33,7 @@ Write-Host "Install destination is '$ts'..."
 
 $tsTemp = Join-Path "$HOME_DIR" "tizen-temp"
 $install = Join-Path "$tsTemp" "tizen-install.$ext"
-$packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
+$packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment,MOBILE-6.0,MOBILE-6.0-NativeAppDevelopment"
 
 # download
 Write-Host "Downloading SDK to '$install'..."
@@ -60,6 +61,22 @@ if ($IsMacOS -or $IsLinux) {
     & "bash" "$packMan" install --no-java-check --accept-license "$packages"
 } else {
     & "$packMan" install --no-java-check --accept-license "$packages"
+}
+
+# Upgrade LLVM 4 to LLVM 10 by literally replacing the folder
+if ($UpgradeLLVM) {
+    Write-Host "Upgrading LLVM 4 to LLVM 10 in place..."
+    $tsTools = Join-Path "$ts" "tools"
+    $llvm40 = Join-Path $tsTools "llvm-4.0.0"
+    $llvm40OLD = Join-Path $tsTools "llvm-4.0.0-OLD"
+    $llvm10 = Join-Path $tsTools "llvm-10"
+    if (!(Test-Path $llvm40OLD)) {
+        Copy-Item $llvm40 $llvm40OLD -Recurse -Force
+    }
+    if (Test-Path $llvm40) {
+        Remove-Item $llvm40 -Recurse -Force
+    }
+    Copy-Item $llvm10 $llvm40 -Recurse -Force
 }
 
 # make sure that Tizen Studio is in TIZEN_STUDIO_HOME
