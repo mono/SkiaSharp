@@ -408,6 +408,11 @@ stages:
                 artifactName: nuget
                 pathToPublish: 'output/nugets'
             - task: PublishBuildArtifacts@1
+              displayName: Publish the special nuget artifacts
+              inputs:
+                artifactName: nuget_special
+                pathToPublish: 'output/special-nugets'
+            - task: PublishBuildArtifacts@1
               displayName: Publish the SignList.xml into nuget artifacts
               inputs:
                 artifactName: nuget

@@ -544,6 +544,8 @@ Task ("nuget")
     // special case for all the native assets
     if (PACK_ALL_PLATFORMS)
     {
+        EnsureDirectoryExists ($"{OUTPUT_SPECIAL_NUGETS_PATH}");
+        DeleteFiles ($"{OUTPUT_SPECIAL_NUGETS_PATH}/*.nupkg");
         var specials = new Dictionary<string, string> {
             { "_NativeAssets", "native" },
             { "_NuGets", "nugets" },
@@ -561,15 +563,15 @@ Task ("nuget")
             if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
                 version.Value = "0.0.0-" + PREVIEW_LABEL;
                 xdoc.Save (nuspec);
-                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+                PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
             } else {
                 version.Value = "0.0.0-commit." + GIT_SHA;
                 xdoc.Save (nuspec);
-                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+                PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
 
                 version.Value = "0.0.0-branch." + GIT_BRANCH_NAME.Replace ("/", ".");
                 xdoc.Save (nuspec);
-                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+                PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
             }
 
             DeleteFiles ($"./output/{pair.Value}/*.nuspec");
