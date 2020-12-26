@@ -41,6 +41,7 @@ resources:
       type: github
       name: xamarin/yaml-templates
       endpoint: xamarin
+      ref: refs/heads/main
 
 stages:
   - stage: prepare
@@ -444,9 +445,7 @@ stages:
       dependsOn: package
       condition: eq(variables['System.TeamProject'], 'devdiv')
       jobs:
-        - template: sign-artifacts/jobs/v1.yml@xamarin-templates
-          parameters:
-            additionalConditions: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+        - template: sign-artifacts/jobs/v2.yml@xamarin-templates
 
   - stage: tests
     displayName: Tests
