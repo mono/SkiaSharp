@@ -407,6 +407,11 @@ stages:
               inputs:
                 artifactName: nuget
                 pathToPublish: 'output/nugets'
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the SignList.xml into nuget artifacts
+              inputs:
+                artifactName: nuget
+                pathToPublish: 'SignList.xml'
 
   - stage: api_diff
     displayName: API Diff
