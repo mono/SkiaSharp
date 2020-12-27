@@ -41,6 +41,7 @@ resources:
       type: github
       name: xamarin/yaml-templates
       endpoint: xamarin
+      ref: refs/heads/main
 
 stages:
   - stage: prepare
@@ -406,6 +407,16 @@ stages:
               inputs:
                 artifactName: nuget
                 pathToPublish: 'output/nugets'
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the special nuget artifacts
+              inputs:
+                artifactName: nuget_special
+                pathToPublish: 'output/special-nugets'
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the SignList.xml into nuget artifacts
+              inputs:
+                artifactName: nuget
+                pathToPublish: 'SignList.xml'
 
   - stage: api_diff
     displayName: API Diff
@@ -444,9 +455,7 @@ stages:
       dependsOn: package
       condition: eq(variables['System.TeamProject'], 'devdiv')
       jobs:
-        - template: sign-artifacts/jobs/v1.yml@xamarin-templates
-          parameters:
-            additionalConditions: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+        - template: sign-artifacts/jobs/v2.yml@xamarin-templates
 
   - stage: tests
     displayName: Tests
@@ -649,7 +658,7 @@ stages:
                 provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
             - task: InstallAppleProvisioningProfile@1
               inputs:
-                provProfileSecureFile: 'SkiaSharp Mac Provisioning.mobileprovision'
+                provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
             - task: InstallAppleProvisioningProfile@1
               inputs:
                 provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
