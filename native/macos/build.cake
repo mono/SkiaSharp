@@ -9,7 +9,7 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnMac())
     .Does(() =>
 {
-    Build("x86_64", "x64");
+    Build("x86_64", "x64", "arm64");
 
     RunLipo(OUTPUT_PATH, "libSkiaSharp.dylib", new [] {
        (FilePath) "x86_64/libSkiaSharp.dylib"
@@ -47,7 +47,7 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnMac())
     .Does(() =>
 {
-    Build("x86_64");
+    Build("x86_64", "arm64");
 
     RunLipo(OUTPUT_PATH, "libHarfBuzzSharp.dylib", new [] {
        (FilePath) "x86_64/libHarfBuzzSharp.dylib"
