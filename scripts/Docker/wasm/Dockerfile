@@ -1,7 +1,6 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1.201-bionic
 
-ARG EMSCRIPTEN_VERSION=1.40.0
-
+ARG EMSCRIPTEN_VERSION=2.0.11
 RUN apt-get update \
     && apt-get install -y apt-transport-https curl wget python python3 git make \
     && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
