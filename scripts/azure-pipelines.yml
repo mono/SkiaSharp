@@ -33,7 +33,6 @@ variables:
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
   ENABLE_CODE_COVERAGE: true
-  EMSCRIPTEN_VERSION: 1.40.0
 
 resources:
   repositories:
@@ -296,6 +295,28 @@ stages:
   - stage: native_wasm
     displayName: Native WASM
     dependsOn: prepare
+    strategy:
+        matrix:
+          1_39_11:
+            EMSCRIPTEN_VERSION: 1.39.11
+
+          1_40_0:
+            EMSCRIPTEN_VERSION: 1.40.0
+
+          2_0_5:
+            EMSCRIPTEN_VERSION: 2.0.5
+
+          2_0_6:
+            EMSCRIPTEN_VERSION: 2.0.6
+
+          2_0_9:
+            EMSCRIPTEN_VERSION: 2.0.9
+
+          2_0_11:
+            EMSCRIPTEN_VERSION: 2.0.11
+
+          2_0_12:
+            EMSCRIPTEN_VERSION: 2.0.12
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Native WASM (Linux)
         parameters:
@@ -304,6 +325,7 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           docker: scripts/Docker/wasm
           target: externals-wasm
+          dockerArgs: --build-arg EMSCRIPTEN_VERSION=$(EMSCRIPTEN_VERSION)
 
   - stage: managed
     displayName: Build Managed
