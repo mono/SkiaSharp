@@ -4,6 +4,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 #load "../../cake/native-shared.cake"
 
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
+string EMSCRIPTEN_VERSION = Argument("emscriptenVersion", EnvironmentVariable("EMSCRIPTEN_VERSION") ?? "").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
 string CC = Argument("cc", "emcc");
@@ -81,7 +82,9 @@ Task("libSkiaSharp")
     var oFiles = GetFiles($"{mergeDir}/*.o");
     RunProcess(AR, $"-crs {a} {string.Join(" ", oFiles)}");
 
-    var outDir = OUTPUT_PATH.Combine($"wasm", "libSkiaSharp.a", Environment.GetEnvironmentVariable("EMSCRIPTEN_VERSION"));
+    var outDir = string.IsNullOrEmpty(EMSCRIPTEN_VERSION)
+        ? OUTPUT_PATH.Combine($"wasm")
+        : OUTPUT_PATH.Combine($"wasm", "libSkiaSharp.a", EMSCRIPTEN_VERSION);
     EnsureDirectoryExists(outDir);
     CopyFileToDirectory(a, outDir);
 });
@@ -98,7 +101,9 @@ Task("libHarfBuzzSharp")
         COMPILERS +
         ADDITIONAL_GN_ARGS);
 
-    var outDir = OUTPUT_PATH.Combine($"wasm", "libHarfBuzzSharp.a", Environment.GetEnvironmentVariable("EMSCRIPTEN_VERSION"));
+    var outDir = string.IsNullOrEmpty(EMSCRIPTEN_VERSION)
+        ? OUTPUT_PATH.Combine($"wasm")
+        : OUTPUT_PATH.Combine($"wasm", "libHarfBuzzSharp.a", EMSCRIPTEN_VERSION);
     EnsureDirectoryExists(outDir);
     var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a");
     CopyFileToDirectory(so, outDir);

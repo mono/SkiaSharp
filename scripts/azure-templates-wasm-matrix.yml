@@ -11,6 +11,7 @@ jobs:
         docker: scripts/Docker/wasm
         target: externals-wasm
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version }}
+        additionalArgs: --emscriptenVersion=${{ version }}
         postBuildSteps:
           - task: PublishBuildArtifacts@1
             displayName: Publish the native_wasm_linux artifacts
