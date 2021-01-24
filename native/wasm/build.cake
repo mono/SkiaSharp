@@ -82,9 +82,9 @@ Task("libSkiaSharp")
     var oFiles = GetFiles($"{mergeDir}/*.o");
     RunProcess(AR, $"-crs {a} {string.Join(" ", oFiles)}");
 
-    var outDir = string.IsNullOrEmpty(EMSCRIPTEN_VERSION)
-        ? OUTPUT_PATH.Combine($"wasm")
-        : OUTPUT_PATH.Combine($"wasm", "libSkiaSharp.a", EMSCRIPTEN_VERSION);
+    var outDir = OUTPUT_PATH.Combine($"wasm");
+    if (!string.IsNullOrEmpty(EMSCRIPTEN_VERSION))
+        outDir = outDir.Combine("libSkiaSharp.a").Combine(EMSCRIPTEN_VERSION);
     EnsureDirectoryExists(outDir);
     CopyFileToDirectory(a, outDir);
 });
@@ -101,9 +101,9 @@ Task("libHarfBuzzSharp")
         COMPILERS +
         ADDITIONAL_GN_ARGS);
 
-    var outDir = string.IsNullOrEmpty(EMSCRIPTEN_VERSION)
-        ? OUTPUT_PATH.Combine($"wasm")
-        : OUTPUT_PATH.Combine($"wasm", "libHarfBuzzSharp.a", EMSCRIPTEN_VERSION);
+    var outDir = OUTPUT_PATH.Combine($"wasm");
+    if (!string.IsNullOrEmpty(EMSCRIPTEN_VERSION))
+        outDir = outDir.Combine("libHarfBuzzSharp.a").Combine(EMSCRIPTEN_VERSION);
     EnsureDirectoryExists(outDir);
     var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a");
     CopyFileToDirectory(so, outDir);
