@@ -46,7 +46,6 @@ Task("libSkiaSharp")
         $"skia_use_vulkan=false " +
         $"skia_use_wuffs=true " +
         $"use_PIC=false " +
-        $"werror=true " +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', '-DSK_BUILD_FOR_WASM', '-DSK_EMSCRIPTEN', " + 
         $"  '-s', 'WARN_UNALIGNED=1', '-DSKNX_NO_SIMD', '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0' ] " +
