@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(WasmHead)' == 'True'">
-        <Content Include="$(HarfBuzzSharpStaticLibraryPath)" Visible="false" />
+    <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+        <Content Include="@(HarfBuzzSharpStaticLibrary)" Visible="false" />
     </ItemGroup>
 
 </Project>

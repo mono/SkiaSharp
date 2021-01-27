@@ -1,6 +1,7 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1.201-bionic
 
-ARG EMSCRIPTEN_VERSION=1.40.0
+# default value, but should be provided depending on app
+ARG EMSCRIPTEN_VERSION=2.0.11
 
 RUN apt-get update \
     && apt-get install -y apt-transport-https curl wget python python3 git make \

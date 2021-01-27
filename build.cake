@@ -425,6 +425,11 @@ Task ("nuget")
             if (string.IsNullOrEmpty (file.Attribute ("target")?.Value)) {
                 file.Add (new XAttribute ("target", file.Attribute ("src").Value));
             }
+            // make sure all the paths have the correct slash
+            if (IsRunningOnWindows ()) {
+                file.Attribute ("src").Value = file.Attribute ("src").Value.Replace ("/", "\\");
+                file.Attribute ("target").Value = file.Attribute ("target").Value.Replace ("/", "\\");
+            }
         }
     }
 
