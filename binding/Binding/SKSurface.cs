@@ -203,55 +203,64 @@ namespace SkiaSharp
 		// GPU BACKEND TEXTURE AS RENDER TARGET surface
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc) =>
-			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, null);
+			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType ());
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc) =>
-			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, null);
+			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType ());
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props) =>
-			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
+			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), new SKSurfaceProperties (props));
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props) =>
-			CreateAsRenderTarget (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, new SKSurfaceProperties (props));
+			Create (context, new GRBackendTexture (desc), desc.Origin, desc.SampleCount, desc.Config.ToColorType (), new SKSurfaceProperties (props));
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, SKColorType) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType) =>
-			CreateAsRenderTarget (context, texture, GRSurfaceOrigin.BottomLeft, 0, colorType, null, null);
+			Create (context, texture, colorType);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType) =>
-			CreateAsRenderTarget (context, texture, origin, 0, colorType, null, null);
+			Create (context, texture, origin, colorType);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType) =>
-			CreateAsRenderTarget (context, texture, origin, sampleCount, colorType, null, null);
+			Create (context, texture, origin, sampleCount, colorType);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKColorSpace) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace) =>
-			CreateAsRenderTarget (context, texture, origin, sampleCount, colorType, colorspace, null);
+			Create (context, texture, origin, sampleCount, colorType, colorspace);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, SKColorType, SKSurfaceProperties) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProperties props) =>
-			CreateAsRenderTarget (context, texture, GRSurfaceOrigin.BottomLeft, 0, colorType, null, props);
+			Create (context, texture, colorType, props);
 
-		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props) =>
-			CreateAsRenderTarget (context, texture, origin, 0, colorType, null, props);
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKSurfaceProperties) instead.")]
+		public static SKSurface CreateAsRenderTarget(GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props) =>
+			Create (context, texture, origin, colorType, props);
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProperties props) =>
-			CreateAsRenderTarget (context, texture, origin, sampleCount, colorType, null, props);
+			Create (context, texture, origin, sampleCount, colorType, null, props);
 
-		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props)
-		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
-			if (texture == null)
-				throw new ArgumentNullException (nameof (texture));
-
-			return GetObject (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
-		}
+		[EditorBrowsable (EditorBrowsableState.Never)]
+		[Obsolete("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKColorSpace, SKSurfaceProperties) instead.")]
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props) =>
+			Create (context, texture, origin, sampleCount, colorType, colorspace, props);
 
 		// GPU NEW surface
 
