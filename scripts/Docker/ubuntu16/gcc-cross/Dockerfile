@@ -1,5 +1,19 @@
 FROM amd64/ubuntu:16.04
 
+# https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads
+
+# Arguments:
+#   MONO_VERSION         - the version of mono for the Cake script          [ 6.4.0 | * ]
+#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 9.2-2019.12 | * ]
+#   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu]
+#   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.11.0-6.7+b1 | * ]
+#   FONTCONFIG_ARCH      - the short form architecture of libfontconfig1    [ armhf | arm64 ]
+#
+# To build a arm image:
+#   --build-arg TOOLCHAIN_ARCH=arm-none-linux-gnueabihf --build-arg FONTCONFIG_ARCH=armhf
+# To build a arm64 image:
+#   --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
+
 ARG MONO_VERSION=6.4.0
 ARG TOOLCHAIN_VERSION=9.2-2019.12
 ARG TOOLCHAIN_ARCH=arm-none-linux-gnueabihf
