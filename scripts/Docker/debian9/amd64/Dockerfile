@@ -9,7 +9,7 @@ ARG MONO_VERSION=6.4.0
 ARG CLANG_VERSION=10
 ARG TOOLCHAIN_VERSION=6
 RUN apt-get update \
-    && apt-get install -y apt-transport-https curl wget python git make \
+    && apt-get install -y apt-transport-https curl wget python git make dirmngr gnupg ca-certificates \
     && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
     && echo "deb https://download.mono-project.com/repo/debian stable-stretch/snapshots/${MONO_VERSION} main" | tee /etc/apt/sources.list.d/mono-official-stable.list \
     && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
