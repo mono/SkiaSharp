@@ -15217,7 +15217,7 @@ namespace SkiaSharp
 		// METAL_GR_BACKEND = 2
 		Metal = 2,
 		// DIRECT3D_GR_BACKEND = 3
-		Direct3d = 3,
+		Direct3D = 3,
 		// DAWN_GR_BACKEND = 4
 		Dawn = 4,
 	}
