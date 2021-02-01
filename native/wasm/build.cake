@@ -4,6 +4,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 #load "../../cake/native-shared.cake"
 
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
+string EMSCRIPTEN_VERSION = Argument("emscriptenVersion", EnvironmentVariable("EMSCRIPTEN_VERSION") ?? "").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
 string CC = Argument("cc", "emcc");
@@ -45,10 +46,8 @@ Task("libSkiaSharp")
         $"skia_use_vulkan=false " +
         $"skia_use_wuffs=true " +
         $"use_PIC=false " +
-        $"werror=true " +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', '-DSK_BUILD_FOR_WASM', '-DSK_EMSCRIPTEN', " + 
-        $"  '-DSK_DISABLE_READBUFFER', '-DSK_DISABLE_EFFECT_DESERIALIZATION', " +
         $"  '-s', 'WARN_UNALIGNED=1', '-DSKNX_NO_SIMD', '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0' ] " +
         $"extra_cflags_cc=[ '-frtti' ] " +
         COMPILERS +
@@ -82,6 +81,8 @@ Task("libSkiaSharp")
     RunProcess(AR, $"-crs {a} {string.Join(" ", oFiles)}");
 
     var outDir = OUTPUT_PATH.Combine($"wasm");
+    if (!string.IsNullOrEmpty(EMSCRIPTEN_VERSION))
+        outDir = outDir.Combine("libSkiaSharp.a").Combine(EMSCRIPTEN_VERSION);
     EnsureDirectoryExists(outDir);
     CopyFileToDirectory(a, outDir);
 });
@@ -99,6 +100,8 @@ Task("libHarfBuzzSharp")
         ADDITIONAL_GN_ARGS);
 
     var outDir = OUTPUT_PATH.Combine($"wasm");
+    if (!string.IsNullOrEmpty(EMSCRIPTEN_VERSION))
+        outDir = outDir.Combine("libHarfBuzzSharp.a").Combine(EMSCRIPTEN_VERSION);
     EnsureDirectoryExists(outDir);
     var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a");
     CopyFileToDirectory(so, outDir);
