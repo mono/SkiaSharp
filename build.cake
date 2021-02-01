@@ -425,6 +425,11 @@ Task ("nuget")
             if (string.IsNullOrEmpty (file.Attribute ("target")?.Value)) {
                 file.Add (new XAttribute ("target", file.Attribute ("src").Value));
             }
+            // make sure all the paths have the correct slash
+            if (IsRunningOnWindows ()) {
+                file.Attribute ("src").Value = file.Attribute ("src").Value.Replace ("/", "\\");
+                file.Attribute ("target").Value = file.Attribute ("target").Value.Replace ("/", "\\");
+            }
         }
     }
 
@@ -544,6 +549,8 @@ Task ("nuget")
     // special case for all the native assets
     if (PACK_ALL_PLATFORMS)
     {
+        EnsureDirectoryExists ($"{OUTPUT_SPECIAL_NUGETS_PATH}");
+        DeleteFiles ($"{OUTPUT_SPECIAL_NUGETS_PATH}/*.nupkg");
         var specials = new Dictionary<string, string> {
             { "_NativeAssets", "native" },
             { "_NuGets", "nugets" },
@@ -561,15 +568,15 @@ Task ("nuget")
             if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
                 version.Value = "0.0.0-" + PREVIEW_LABEL;
                 xdoc.Save (nuspec);
-                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+                PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
             } else {
                 version.Value = "0.0.0-commit." + GIT_SHA;
                 xdoc.Save (nuspec);
-                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+                PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
 
                 version.Value = "0.0.0-branch." + GIT_BRANCH_NAME.Replace ("/", ".");
                 xdoc.Save (nuspec);
-                PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, true);
+                PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
             }
 
             DeleteFiles ($"./output/{pair.Value}/*.nuspec");
