@@ -45,7 +45,7 @@ namespace SkiaSharp
 			backend switch
 			{
 				GRBackend.Metal => throw new NotSupportedException (),
-				GRBackend.OpenGL => GetObject (SkiaApi.gr_context_make_gl (backendContext)),
+				GRBackend.OpenGL => GetObject (SkiaApi.gr_direct_context_make_gl (backendContext)),
 				GRBackend.Vulkan => throw new NotSupportedException (),
 				GRBackend.Dawn => throw new NotSupportedException (),
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
@@ -57,7 +57,7 @@ namespace SkiaSharp
 			CreateGl (null);
 
 		public static GRContext CreateGl (GRGlInterface backendContext) =>
-			GetObject (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+			GetObject (SkiaApi.gr_direct_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
 
 		// CreateVulkan
 
@@ -66,7 +66,7 @@ namespace SkiaSharp
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));
 
-			return GetObject (SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
+			return GetObject (SkiaApi.gr_direct_context_make_vulkan (backendContext.ToNative ()));
 		}
 
 #if __IOS__ || __MACOS__
@@ -87,14 +87,14 @@ namespace SkiaSharp
 
 		//
 
-		public GRBackend Backend => SkiaApi.gr_context_get_backend (Handle).FromNative ();
+		public GRBackend Backend => SkiaApi.gr_direct_context_get_backend (Handle).FromNative ();
 
 		public void AbandonContext (bool releaseResources = false)
 		{
 			if (releaseResources)
-				SkiaApi.gr_context_release_resources_and_abandon_context (Handle);
+				SkiaApi.gr_direct_context_release_resources_and_abandon_context (Handle);
 			else
-				SkiaApi.gr_context_abandon_context (Handle);
+				SkiaApi.gr_direct_context_abandon_context (Handle);
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -111,16 +111,16 @@ namespace SkiaSharp
 			SetResourceCacheLimit (maxResourceBytes);
 
 		public long GetResourceCacheLimit () =>
-			(long)SkiaApi.gr_context_get_resource_cache_limit (Handle);
+			(long)SkiaApi.gr_direct_context_get_resource_cache_limit (Handle);
 
 		public void SetResourceCacheLimit (long maxResourceBytes) =>
-			SkiaApi.gr_context_set_resource_cache_limit (Handle, (IntPtr)maxResourceBytes);
+			SkiaApi.gr_direct_context_set_resource_cache_limit (Handle, (IntPtr)maxResourceBytes);
 
 		public void GetResourceCacheUsage (out int maxResources, out long maxResourceBytes)
 		{
 			IntPtr maxResBytes;
 			fixed (int* maxRes = &maxResources) {
-				SkiaApi.gr_context_get_resource_cache_usage (Handle, maxRes, &maxResBytes);
+				SkiaApi.gr_direct_context_get_resource_cache_usage (Handle, maxRes, &maxResBytes);
 			}
 			maxResourceBytes = (long)maxResBytes;
 		}
@@ -132,32 +132,32 @@ namespace SkiaSharp
 			ResetContext ((uint)state);
 
 		public void ResetContext (uint state) =>
-			SkiaApi.gr_context_reset_context (Handle, state);
+			SkiaApi.gr_direct_context_reset_context (Handle, state);
 
 		public void Flush () =>
-			SkiaApi.gr_context_flush (Handle);
+			SkiaApi.gr_direct_context_flush (Handle);
 
 		public int GetMaxSurfaceSampleCount (SKColorType colorType) =>
-			SkiaApi.gr_context_get_max_surface_sample_count_for_color_type (Handle, colorType.ToNative ());
+			SkiaApi.gr_direct_context_get_max_surface_sample_count_for_color_type (Handle, colorType.ToNative ());
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
 
 		public void DumpMemoryStatistics (SKTraceMemoryDump dump) =>
-			SkiaApi.gr_context_dump_memory_statistics (Handle, dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));
+			SkiaApi.gr_direct_context_dump_memory_statistics (Handle, dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));
 
 		public void PurgeResources () =>
-			SkiaApi.gr_context_free_gpu_resources (Handle);
+			SkiaApi.gr_direct_context_free_gpu_resources (Handle);
 
 		public void PurgeUnusedResources (long milliseconds) =>
-			SkiaApi.gr_context_perform_deferred_cleanup (Handle, milliseconds);
+			SkiaApi.gr_direct_context_perform_deferred_cleanup (Handle, milliseconds);
 
 		public void PurgeUnlockedResources (bool scratchResourcesOnly) =>
-			SkiaApi.gr_context_purge_unlocked_resources (Handle, scratchResourcesOnly);
+			SkiaApi.gr_direct_context_purge_unlocked_resources (Handle, scratchResourcesOnly);
 
 		public void PurgeUnlockedResources (long bytesToPurge, bool preferScratchResources) =>
-			SkiaApi.gr_context_purge_unlocked_resources_bytes (Handle, (IntPtr)bytesToPurge, preferScratchResources);
+			SkiaApi.gr_direct_context_purge_unlocked_resources_bytes (Handle, (IntPtr)bytesToPurge, preferScratchResources);
 
 		internal static GRContext GetObject (IntPtr handle) =>
 			handle == IntPtr.Zero ? null : new GRContext (handle, true);
