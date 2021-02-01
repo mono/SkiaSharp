@@ -97,6 +97,13 @@ namespace SkiaSharp.Views.Mac
 		void IMTKViewDelegate.DrawableSizeWillChange(MTKView view, CGSize size)
 		{
 			CanvasSize = size.ToSKSize();
+
+			if (Paused && EnableSetNeedsDisplay)
+#if __IOS__
+				SetNeedsDisplay();
+#elif __MACOS__
+				NeedsDisplay = true;
+#endif
 		}
 
 		void IMTKViewDelegate.Draw(MTKView view)
