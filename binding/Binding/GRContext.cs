@@ -80,7 +80,7 @@ namespace SkiaSharp
 			if (queue == null)
 				throw new ArgumentNullException (nameof (queue));
 
-			return GetObject (SkiaApi.gr_context_make_metal ((void*)device.Handle, (void*)queue.Handle));
+			return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)device.Handle, (void*)queue.Handle));
 		}
 
 #endif
