@@ -325,6 +325,7 @@ namespace SkiaSharp
 				SKColorType.Rgb888x => GRPixelConfig.Rgb888,
 				SKColorType.Bgra8888 => GRPixelConfig.Bgra8888,
 				SKColorType.Rgba1010102 => GRPixelConfig.Rgba1010102,
+				SKColorType.Bgra1010102 => GRPixelConfig.Unknown,
 				SKColorType.AlphaF16 => GRPixelConfig.AlphaHalf,
 				SKColorType.RgbaF16 => GRPixelConfig.RgbaHalf,
 				SKColorType.RgbaF16Clamped => GRPixelConfig.RgbaHalfClamped,
@@ -334,6 +335,7 @@ namespace SkiaSharp
 				SKColorType.RgF16 => GRPixelConfig.RgHalf,
 				SKColorType.Rg88 => GRPixelConfig.Rg88,
 				SKColorType.Rgb101010x => GRPixelConfig.Unknown,
+				SKColorType.Bgr101010x => GRPixelConfig.Unknown,
 				SKColorType.RgbaF32 => GRPixelConfig.Unknown,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
 			};

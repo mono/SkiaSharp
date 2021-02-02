@@ -132,6 +132,8 @@ namespace SkiaSharp
 				SKColorType.AlphaF16 => 2,
 				// 4
 				SKColorType.Bgra8888 => 4,
+				SKColorType.Bgra1010102 => 4,
+				SKColorType.Bgr101010x => 4,
 				SKColorType.Rgba8888 => 4,
 				SKColorType.Rgb888x => 4,
 				SKColorType.Rgba1010102 => 4,
@@ -170,6 +172,7 @@ namespace SkiaSharp
 				case SKColorType.Rgba8888:
 				case SKColorType.Bgra8888:
 				case SKColorType.Rgba1010102:
+				case SKColorType.Bgra1010102:
 				case SKColorType.RgbaF16Clamped:
 				case SKColorType.RgbaF16:
 				case SKColorType.RgbaF32:
@@ -184,6 +187,7 @@ namespace SkiaSharp
 				case SKColorType.Rgb565:
 				case SKColorType.Rgb888x:
 				case SKColorType.Rgb101010x:
+				case SKColorType.Bgr101010x:
 					alphaType = SKAlphaType.Opaque;
 					break;
 
