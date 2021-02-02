@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		340AF2BA24B7CD3600DDD76D /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 340AF2B924B7CD3600DDD76D /* Metal.framework */; };
-		340AF2BC24B7CEB800DDD76D /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 340AF2BB24B7CEB800DDD76D /* MetalKit.framework */; };
 		343CCD2B1E75FF3E000EC0A6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 343CCD2A1E75FF3E000EC0A6 /* CoreText.framework */; };
 		343CCD2D1E75FF47000EC0A6 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 343CCD2C1E75FF47000EC0A6 /* CoreGraphics.framework */; };
 		343CCD2F1E75FF54000EC0A6 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 343CCD2E1E75FF54000EC0A6 /* CoreFoundation.framework */; };
@@ -39,8 +37,6 @@
 
 /* Begin PBXFileReference section */
 		21C951551C03D27A003A1E1D /* libSkiaSharp.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libSkiaSharp.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		340AF2B924B7CD3600DDD76D /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
-		340AF2BB24B7CEB800DDD76D /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		343CCD261E75FD47000EC0A6 /* libskia.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libskia.a; path = ../../../externals/skia/out/macos/x64/libskia.a; sourceTree = "<group>"; };
 		343CCD281E75FF29000EC0A6 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		343CCD2A1E75FF3E000EC0A6 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
@@ -80,8 +76,6 @@
 				343CCD311E75FF71000EC0A6 /* Cocoa.framework in Frameworks */,
 				343CCD2F1E75FF54000EC0A6 /* CoreFoundation.framework in Frameworks */,
 				343CCD2D1E75FF47000EC0A6 /* CoreGraphics.framework in Frameworks */,
-				340AF2BA24B7CD3600DDD76D /* Metal.framework in Frameworks */,
-				340AF2BC24B7CEB800DDD76D /* MetalKit.framework in Frameworks */,
 				343CCD2B1E75FF3E000EC0A6 /* CoreText.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -109,8 +103,6 @@
 		343CCD251E75FD47000EC0A6 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				340AF2BB24B7CEB800DDD76D /* MetalKit.framework */,
-				340AF2B924B7CD3600DDD76D /* Metal.framework */,
 				3477EF0C221654DE00527FC7 /* CoreServices.framework */,
 				343CCD301E75FF71000EC0A6 /* Cocoa.framework */,
 				343CCD2E1E75FF54000EC0A6 /* CoreFoundation.framework */,
@@ -286,7 +278,6 @@
 					SK_CODEC_DECODES_RAW,
 					SK_HAS_WEBP_LIBRARY,
 					SK_XML,
-					SK_METAL,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -344,7 +335,6 @@
 					SK_CODEC_DECODES_RAW,
 					SK_HAS_WEBP_LIBRARY,
 					SK_XML,
-					SK_METAL,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -368,7 +358,7 @@
 				HEADER_SEARCH_PATHS = ../../../externals/skia;
 				INSTALL_PATH = "@rpath";
 				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/macos/$(ARCHS)";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				OTHER_LDFLAGS = "-lskia";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -385,7 +375,7 @@
 				HEADER_SEARCH_PATHS = ../../../externals/skia;
 				INSTALL_PATH = "@rpath";
 				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/macos/$(ARCHS)";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				OTHER_LDFLAGS = "-lskia";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

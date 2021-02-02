@@ -69,22 +69,6 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
 		}
 
-#if __IOS__ || __MACOS__
-
-		// CreateMetal
-
-		public static GRContext CreateMetal (Metal.IMTLDevice device, Metal.IMTLCommandQueue queue)
-		{
-			if (device == null)
-				throw new ArgumentNullException (nameof (device));
-			if (queue == null)
-				throw new ArgumentNullException (nameof (queue));
-
-			return GetObject (SkiaApi.gr_context_make_metal ((void*)device.Handle, (void*)queue.Handle));
-		}
-
-#endif
-
 		//
 
 		public GRBackend Backend => SkiaApi.gr_context_get_backend (Handle).FromNative ();
