@@ -33,40 +33,32 @@ namespace SkiaSharp.Tests
 			return new SKMemoryStream(bytes);
 		}
 
+		protected static void SaveSurface(SKSurface surface, string filename = "output.png")
+		{
+			using var image = surface.Snapshot();
+			SaveImage(image, filename);
+		}
+
 		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
 		{
-			using (var bitmap = new SKBitmap(bmp.Width, bmp.Height))
-			using (var canvas = new SKCanvas(bitmap))
-			{
-				canvas.Clear(SKColors.Transparent);
-				canvas.DrawBitmap(bmp, 0, 0);
-				canvas.Flush();
-
-				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
-				using (var image = SKImage.FromBitmap(bitmap))
-				using (var data = image.Encode())
-				{
-					data.SaveTo(stream);
-				}
-			}
+			using var image = SKImage.FromBitmap(bmp);
+			SaveImage(image, filename);
 		}
 
 		protected static void SaveImage(SKImage img, string filename = "output.png")
 		{
-			using (var bitmap = new SKBitmap(img.Width, img.Height))
-			using (var canvas = new SKCanvas(bitmap))
-			{
-				canvas.Clear(SKColors.Transparent);
-				canvas.DrawImage(img, 0, 0);
-				canvas.Flush();
+			using var bitmap = new SKBitmap(img.Width, img.Height);
+			using var canvas = new SKCanvas(bitmap);
 
-				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
-				using (var image = SKImage.FromBitmap(bitmap))
-				using (var data = image.Encode())
-				{
-					data.SaveTo(stream);
-				}
-			}
+			canvas.Clear(SKColors.Transparent);
+			canvas.DrawImage(img, 0, 0);
+			canvas.Flush();
+
+			using var stream = File.OpenWrite(Path.Combine(PathToImages, filename));
+			using var image = SKImage.FromBitmap(bitmap);
+			using var data = image.Encode();
+
+			data.SaveTo(stream);
 		}
 
 		protected static SKBitmap CreateTestBitmap(byte alpha = 255)
