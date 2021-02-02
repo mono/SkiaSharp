@@ -75,6 +75,8 @@ namespace SkiaSharp
 		Alpha16 = 16,
 		Rg1616 = 17,
 		Rgba16161616 = 18,
+		Bgra1010102 = 19,
+		Bgr101010x = 20,
 	}
 
 	public static partial class SkiaExtensions
