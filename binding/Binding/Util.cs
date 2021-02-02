@@ -39,8 +39,19 @@ namespace SkiaSharp
 			}
 		}
 
-		public static RentedArray<T> RentArray<T> (int length) =>
-			new RentedArray<T> (length);
+		public static RentedArray<T> RentArray<T> (int length, bool nullIfEmpty = false) =>
+			nullIfEmpty && length <= 0
+				? default
+				: new RentedArray<T> (length);
+
+		public static RentedArray<IntPtr> RentHandlesArray (SKObject[] objects, bool nullIfEmpty = false)
+		{
+			var handles = RentArray<IntPtr> (objects?.Length ?? 0, nullIfEmpty);
+			for (var i = 0; i < handles.Length; i++) {
+				handles[i] = objects[i]?.Handle ?? IntPtr.Zero;
+			}
+			return handles;
+		}
 
 		internal readonly ref struct RentedArray<T>
 		{
@@ -56,8 +67,20 @@ namespace SkiaSharp
 
 			public int Length => Span.Length;
 
-			public void Dispose () =>
-				ArrayPool<T>.Shared.Return (Array);
+			public T this[int index] {
+				get => Span[index];
+				set => Span[index] = value;
+			}
+
+			[EditorBrowsable (EditorBrowsableState.Never)]
+			public ref T GetPinnableReference () =>
+				ref Span.GetPinnableReference ();
+
+			public void Dispose ()
+			{
+				if (Array != null)
+					ArrayPool<T>.Shared.Return (Array);
+			}
 
 			public static explicit operator T[] (RentedArray<T> scope) =>
 				scope.Array;
