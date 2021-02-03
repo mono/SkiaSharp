@@ -17,7 +17,7 @@ dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- gener
 Or:
 
 ```pwsh
-dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libHarfBuzzSharp.json --skia externals/harfbuzz --output binding/HarfBuzzSharp.Shared/HarfBuzzApi.generated.cs
+dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libHarfBuzzSharp.json --skia externals/skia/third_party/externals/harfbuzz --output binding/HarfBuzzSharp.Shared/HarfBuzzApi.generated.cs
 ```
 
 * `--config binding/libSkiaSharp.json`  

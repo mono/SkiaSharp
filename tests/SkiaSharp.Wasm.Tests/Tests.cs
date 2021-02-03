@@ -32,6 +32,20 @@ namespace SkiaSharp.Tests
 			Assert.Equal(LTR, dir);
 		}
 
+		[Fact]
+		public void CanSerializeAndDeserializePicture()
+		{
+			using var recorder = new SKPictureRecorder();
+			using var canvas = recorder.BeginRecording(SKRect.Create(0, 0, 40, 40));
+			using var picture = recorder.EndRecording();
+
+			using var data = picture.Serialize();
+
+			using var deserialized = SKPicture.Deserialize(data);
+
+			Assert.NotNull(deserialized);
+		}
+
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr sk_version_get_string();
 
