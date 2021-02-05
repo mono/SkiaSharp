@@ -54,33 +54,64 @@ namespace SkiaSharp
 		// CreateGl
 
 		public static GRContext CreateGl () =>
-			CreateGl (null);
+			CreateGl (null, null);
 
 		public static GRContext CreateGl (GRGlInterface backendContext) =>
-			GetObject (SkiaApi.gr_direct_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+			CreateGl (backendContext, null);
+
+		public static GRContext CreateGl (GRContextOptions options) =>
+			CreateGl (null, options);
+
+		public static GRContext CreateGl (GRGlInterface backendContext, GRContextOptions options)
+		{
+			var ctx = backendContext == null ? IntPtr.Zero : backendContext.Handle;
+
+			if (options == null) {
+				return GetObject (SkiaApi.gr_direct_context_make_gl (ctx));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_direct_context_make_gl_with_options (ctx, &opts));
+			}
+		}
 
 		// CreateVulkan
 
-		public static GRContext CreateVulkan (GRVkBackendContext backendContext)
+		public static GRContext CreateVulkan (GRVkBackendContext backendContext) =>
+			CreateVulkan (backendContext, null);
+
+		public static GRContext CreateVulkan (GRVkBackendContext backendContext, GRContextOptions options)
 		{
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));
 
-			return GetObject (SkiaApi.gr_direct_context_make_vulkan (backendContext.ToNative ()));
+			if (options == null) {
+				return GetObject (SkiaApi.gr_direct_context_make_vulkan (backendContext.ToNative ()));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_direct_context_make_vulkan_with_options (backendContext.ToNative (), &opts));
+			}
 		}
 
 #if __IOS__ || __MACOS__
 
 		// CreateMetal
 
-		public static GRContext CreateMetal (Metal.IMTLDevice device, Metal.IMTLCommandQueue queue)
+		public static GRContext CreateMetal (Metal.IMTLDevice device, Metal.IMTLCommandQueue queue) =>
+			CreateMetal (device, queue, null);
+
+		public static GRContext CreateMetal (Metal.IMTLDevice device, Metal.IMTLCommandQueue queue, GRContextOptions options)
 		{
 			if (device == null)
 				throw new ArgumentNullException (nameof (device));
 			if (queue == null)
 				throw new ArgumentNullException (nameof (queue));
 
-			return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)device.Handle, (void*)queue.Handle));
+			if (options == null) {
+				return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)device.Handle, (void*)queue.Handle));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_direct_context_make_metal_with_options ((void*)device.Handle, (void*)queue.Handle, &opts));
+			}
 		}
 
 #endif

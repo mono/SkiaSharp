@@ -1,11 +1,11 @@
 trigger:
-  - master
+  - main
   - develop
   - patch/*
   - refs/tags/*
 
 pr:
-  - master
+  - main
   - develop
   - patch/*
 
@@ -684,7 +684,7 @@ stages:
           parameters:
             name: native_checks_windows
             displayName: Run Code Checks
-            condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
+            condition: and(always(), eq('refs/heads/main', variables['Build.SourceBranch']))
             vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
             target: git-sync-deps
             installWindowsSdk: false
@@ -731,7 +731,7 @@ stages:
                   tsaVersion: 'TsaV2'
                   codebase: 'NewOrUpdate'
                   tsaEnvironment: 'PROD'
-                  codeBaseName: 'SkiaSharp_master'
+                  codeBaseName: 'SkiaSharp_main'
                   notificationAlias: 'xamacomd@microsoft.com'
                   notifyAlwaysV2: false
                   instanceUrlForTsaV2: 'DEVDIV'

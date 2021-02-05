@@ -250,7 +250,7 @@ string GetDownloadUrl(string id)
     else if (!string.IsNullOrEmpty (GIT_BRANCH_NAME))
         version += "branch." + GIT_BRANCH_NAME.Replace ("/", ".").ToLower ();
     else
-        version += "branch.master";
+        version += "branch.main";
 
     return string.Format (PREVIEW_FEED_URL, id.ToLower(), version);
 }

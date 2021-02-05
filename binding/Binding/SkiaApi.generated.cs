@@ -524,6 +524,20 @@ namespace SkiaSharp
 			(gr_direct_context_make_gl_delegate ??= GetSymbol<Delegates.gr_direct_context_make_gl> ("gr_direct_context_make_gl")).Invoke (glInterface);
 		#endif
 
+		// gr_direct_context_t* gr_direct_context_make_gl_with_options(const gr_glinterface_t* glInterface, const gr_context_options_t* options)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_direct_context_t gr_direct_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_direct_context_t gr_direct_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options);
+		}
+		private static Delegates.gr_direct_context_make_gl_with_options gr_direct_context_make_gl_with_options_delegate;
+		internal static gr_direct_context_t gr_direct_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options) =>
+			(gr_direct_context_make_gl_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_gl_with_options> ("gr_direct_context_make_gl_with_options")).Invoke (glInterface, options);
+		#endif
+
 		// gr_direct_context_t* gr_direct_context_make_metal(void* device, void* queue)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -538,6 +552,20 @@ namespace SkiaSharp
 			(gr_direct_context_make_metal_delegate ??= GetSymbol<Delegates.gr_direct_context_make_metal> ("gr_direct_context_make_metal")).Invoke (device, queue);
 		#endif
 
+		// gr_direct_context_t* gr_direct_context_make_metal_with_options(void* device, void* queue, const gr_context_options_t* options)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_direct_context_t gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_direct_context_t gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
+		}
+		private static Delegates.gr_direct_context_make_metal_with_options gr_direct_context_make_metal_with_options_delegate;
+		internal static gr_direct_context_t gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options) =>
+			(gr_direct_context_make_metal_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_metal_with_options> ("gr_direct_context_make_metal_with_options")).Invoke (device, queue, options);
+		#endif
+
 		// gr_direct_context_t* gr_direct_context_make_vulkan(const gr_vk_backendcontext_t vkBackendContext)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -550,6 +578,20 @@ namespace SkiaSharp
 		private static Delegates.gr_direct_context_make_vulkan gr_direct_context_make_vulkan_delegate;
 		internal static gr_direct_context_t gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext) =>
 			(gr_direct_context_make_vulkan_delegate ??= GetSymbol<Delegates.gr_direct_context_make_vulkan> ("gr_direct_context_make_vulkan")).Invoke (vkBackendContext);
+		#endif
+
+		// gr_direct_context_t* gr_direct_context_make_vulkan_with_options(const gr_vk_backendcontext_t vkBackendContext, const gr_context_options_t* options)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_direct_context_t gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_direct_context_t gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
+		}
+		private static Delegates.gr_direct_context_make_vulkan_with_options gr_direct_context_make_vulkan_with_options_delegate;
+		internal static gr_direct_context_t gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options) =>
+			(gr_direct_context_make_vulkan_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_vulkan_with_options> ("gr_direct_context_make_vulkan_with_options")).Invoke (vkBackendContext, options);
 		#endif
 
 		// void gr_direct_context_perform_deferred_cleanup(gr_direct_context_t* context, long long ms)
@@ -13336,6 +13378,53 @@ namespace SkiaSharp
 	#endregion
 
 	#region Structs
+
+	// gr_context_options_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRContextOptionsNative : IEquatable<GRContextOptionsNative> {
+		// public bool fAvoidStencilBuffers
+		public Byte fAvoidStencilBuffers;
+
+		// public int fRuntimeProgramCacheSize
+		public Int32 fRuntimeProgramCacheSize;
+
+		// public size_t fGlyphCacheTextureMaximumBytes
+		public /* size_t */ IntPtr fGlyphCacheTextureMaximumBytes;
+
+		// public bool fAllowPathMaskCaching
+		public Byte fAllowPathMaskCaching;
+
+		// public bool fDoManualMipmapping
+		public Byte fDoManualMipmapping;
+
+		// public int fBufferMapThreshold
+		public Int32 fBufferMapThreshold;
+
+		public readonly bool Equals (GRContextOptionsNative obj) =>
+			fAvoidStencilBuffers == obj.fAvoidStencilBuffers && fRuntimeProgramCacheSize == obj.fRuntimeProgramCacheSize && fGlyphCacheTextureMaximumBytes == obj.fGlyphCacheTextureMaximumBytes && fAllowPathMaskCaching == obj.fAllowPathMaskCaching && fDoManualMipmapping == obj.fDoManualMipmapping && fBufferMapThreshold == obj.fBufferMapThreshold;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRContextOptionsNative f && Equals (f);
+
+		public static bool operator == (GRContextOptionsNative left, GRContextOptionsNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRContextOptionsNative left, GRContextOptionsNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fAvoidStencilBuffers);
+			hash.Add (fRuntimeProgramCacheSize);
+			hash.Add (fGlyphCacheTextureMaximumBytes);
+			hash.Add (fAllowPathMaskCaching);
+			hash.Add (fDoManualMipmapping);
+			hash.Add (fBufferMapThreshold);
+			return hash.ToHashCode ();
+		}
+
+	}
 
 	// gr_gl_framebufferinfo_t
 	[StructLayout (LayoutKind.Sequential)]
