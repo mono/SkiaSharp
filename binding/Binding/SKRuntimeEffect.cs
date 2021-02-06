@@ -139,7 +139,9 @@ namespace SkiaSharp
 
 			names = effect.Uniforms.ToArray ();
 			uniforms = new Dictionary<string, Variable> ();
-			data = SKData.Create (effect.UniformSize);
+			data = effect.UniformSize is int size && size > 0
+				? SKData.Create (effect.UniformSize)
+				: SKData.Empty;
 
 			for (var i = 0; i < names.Length; i++) {
 				var name = names[i];
@@ -162,8 +164,13 @@ namespace SkiaSharp
 		public int Count =>
 			names.Length;
 
-		public void Reset () =>
+		public void Reset ()
+		{
+			if (data.Size == 0)
+				return;
+
 			data = SKData.Create (data.Size);
+		}
 
 		public bool Contains (string name) =>
 			Array.IndexOf (names, name) != -1;
@@ -195,8 +202,13 @@ namespace SkiaSharp
 			value.WriteTo (slice);
 		}
 
-		public SKData ToData () =>
-			SKData.CreateCopy (data.Data, data.Size);
+		public SKData ToData ()
+		{
+			if (data.Size == 0)
+				return SKData.Empty;
+
+			return SKData.CreateCopy (data.Data, data.Size);
+		}
 
 		IEnumerator IEnumerable.GetEnumerator () =>
 			GetEnumerator ();
