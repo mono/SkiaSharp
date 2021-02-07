@@ -112,30 +112,30 @@ namespace SkiaSharp
 
 #if __IOS__ || __MACOS__
 
-	public unsafe partial struct GRMetalTextureInfo
+	public unsafe partial struct GRMtlTextureInfo
 	{
-		public GRMetalTextureInfo (Metal.IMTLTexture texture)
+		public GRMtlTextureInfo (Metal.IMTLTexture texture)
 		{
 			Texture = texture;
 		}
 
 		public Metal.IMTLTexture Texture { get; set; }
 
-		internal GRMetalTextureInfoNative ToNative () =>
-			new GRMetalTextureInfoNative {
+		internal GRMtlTextureInfoNative ToNative () =>
+			new GRMtlTextureInfoNative {
 				fTexture = (void*)Texture.Handle
 			};
 
-		public readonly bool Equals (GRMetalTextureInfo obj) =>
+		public readonly bool Equals (GRMtlTextureInfo obj) =>
 			Texture == obj.Texture;
 
 		public readonly override bool Equals (object obj) =>
-			obj is GRMetalTextureInfo f && Equals (f);
+			obj is GRMtlTextureInfo f && Equals (f);
 
-		public static bool operator == (GRMetalTextureInfo left, GRMetalTextureInfo right) =>
+		public static bool operator == (GRMtlTextureInfo left, GRMtlTextureInfo right) =>
 			left.Equals (right);
 
-		public static bool operator != (GRMetalTextureInfo left, GRMetalTextureInfo right) =>
+		public static bool operator != (GRMtlTextureInfo left, GRMtlTextureInfo right) =>
 			!left.Equals (right);
 
 		public readonly override int GetHashCode ()

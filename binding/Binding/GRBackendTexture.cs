@@ -49,7 +49,7 @@ namespace SkiaSharp
 
 #if __IOS__ || __MACOS__
 
-		public GRBackendTexture (int width, int height, bool mipmapped, GRMetalTextureInfo mtlInfo)
+		public GRBackendTexture (int width, int height, bool mipmapped, GRMtlTextureInfo mtlInfo)
 			: this (IntPtr.Zero, true)
 		{
 			var info = mtlInfo.ToNative ();
