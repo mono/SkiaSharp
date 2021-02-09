@@ -31,6 +31,6 @@ Changed:
 **PR Checklist**
 
 - [ ] Has tests (if omitted, state reason in description)
-- [ ] Rebased on top of master at time of PR
+- [ ] Rebased on top of main at time of PR
 - [ ] Changes adhere to coding standard
 - [ ] Updated documentation

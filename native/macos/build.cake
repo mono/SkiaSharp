@@ -23,6 +23,7 @@ Task("libSkiaSharp")
             $"target_os='mac' " +
             $"target_cpu='{skiaArch}' " +
             $"skia_use_icu=false " +
+            $"skia_use_metal=true " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +
@@ -30,8 +31,8 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-mmacosx-version-min=10.7', '-stdlib=libc++' ] " +
-            $"extra_ldflags=[ '-Wl,macosx_version_min=10.7', '-stdlib=libc++' ]");
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-mmacosx-version-min=10.8', '-stdlib=libc++' ] " +
+            $"extra_ldflags=[ '-Wl,macosx_version_min=10.8', '-stdlib=libc++' ]");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch);
 

@@ -221,6 +221,20 @@ namespace SkiaSharp
 			(gr_backendrendertarget_new_gl_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_gl> ("gr_backendrendertarget_new_gl")).Invoke (width, height, samples, stencils, glInfo);
 		#endif
 
+		// gr_backendrendertarget_t* gr_backendrendertarget_new_metal(int width, int height, int samples, const gr_mtl_textureinfo_t* mtlInfo)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
+		}
+		private static Delegates.gr_backendrendertarget_new_metal gr_backendrendertarget_new_metal_delegate;
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo) =>
+			(gr_backendrendertarget_new_metal_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_metal> ("gr_backendrendertarget_new_metal")).Invoke (width, height, samples, mtlInfo);
+		#endif
+
 		// gr_backendrendertarget_t* gr_backendrendertarget_new_vulkan(int width, int height, int samples, const gr_vk_imageinfo_t* vkImageInfo)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -351,6 +365,20 @@ namespace SkiaSharp
 		private static Delegates.gr_backendtexture_new_gl gr_backendtexture_new_gl_delegate;
 		internal static gr_backendtexture_t gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo) =>
 			(gr_backendtexture_new_gl_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_gl> ("gr_backendtexture_new_gl")).Invoke (width, height, mipmapped, glInfo);
+		#endif
+
+		// gr_backendtexture_t* gr_backendtexture_new_metal(int width, int height, bool mipmapped, const gr_mtl_textureinfo_t* mtlInfo)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
+		}
+		private static Delegates.gr_backendtexture_new_metal gr_backendtexture_new_metal_delegate;
+		internal static gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo) =>
+			(gr_backendtexture_new_metal_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_metal> ("gr_backendtexture_new_metal")).Invoke (width, height, mipmapped, mtlInfo);
 		#endif
 
 		// gr_backendtexture_t* gr_backendtexture_new_vulkan(int width, int height, const gr_vk_imageinfo_t* vkInfo)
@@ -493,6 +521,48 @@ namespace SkiaSharp
 			(gr_context_make_gl_delegate ??= GetSymbol<Delegates.gr_context_make_gl> ("gr_context_make_gl")).Invoke (glInterface);
 		#endif
 
+		// gr_context_t* gr_context_make_gl_with_options(const gr_glinterface_t* glInterface, const gr_context_options_t* options)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_context_t gr_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_context_t gr_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options);
+		}
+		private static Delegates.gr_context_make_gl_with_options gr_context_make_gl_with_options_delegate;
+		internal static gr_context_t gr_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options) =>
+			(gr_context_make_gl_with_options_delegate ??= GetSymbol<Delegates.gr_context_make_gl_with_options> ("gr_context_make_gl_with_options")).Invoke (glInterface, options);
+		#endif
+
+		// gr_context_t* gr_context_make_metal(void* device, void* queue)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_context_t gr_context_make_metal (void* device, void* queue);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_context_t gr_context_make_metal (void* device, void* queue);
+		}
+		private static Delegates.gr_context_make_metal gr_context_make_metal_delegate;
+		internal static gr_context_t gr_context_make_metal (void* device, void* queue) =>
+			(gr_context_make_metal_delegate ??= GetSymbol<Delegates.gr_context_make_metal> ("gr_context_make_metal")).Invoke (device, queue);
+		#endif
+
+		// gr_context_t* gr_context_make_metal_with_options(void* device, void* queue, const gr_context_options_t* options)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_context_t gr_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_context_t gr_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
+		}
+		private static Delegates.gr_context_make_metal_with_options gr_context_make_metal_with_options_delegate;
+		internal static gr_context_t gr_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options) =>
+			(gr_context_make_metal_with_options_delegate ??= GetSymbol<Delegates.gr_context_make_metal_with_options> ("gr_context_make_metal_with_options")).Invoke (device, queue, options);
+		#endif
+
 		// gr_context_t* gr_context_make_vulkan(const gr_vk_backendcontext_t vkBackendContext)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -505,6 +575,20 @@ namespace SkiaSharp
 		private static Delegates.gr_context_make_vulkan gr_context_make_vulkan_delegate;
 		internal static gr_context_t gr_context_make_vulkan (GRVkBackendContextNative vkBackendContext) =>
 			(gr_context_make_vulkan_delegate ??= GetSymbol<Delegates.gr_context_make_vulkan> ("gr_context_make_vulkan")).Invoke (vkBackendContext);
+		#endif
+
+		// gr_context_t* gr_context_make_vulkan_with_options(const gr_vk_backendcontext_t vkBackendContext, const gr_context_options_t* options)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_context_t gr_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_context_t gr_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
+		}
+		private static Delegates.gr_context_make_vulkan_with_options gr_context_make_vulkan_with_options_delegate;
+		internal static gr_context_t gr_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options) =>
+			(gr_context_make_vulkan_with_options_delegate ??= GetSymbol<Delegates.gr_context_make_vulkan_with_options> ("gr_context_make_vulkan_with_options")).Invoke (vkBackendContext, options);
 		#endif
 
 		// void gr_context_perform_deferred_cleanup(gr_context_t* context, long long ms)
@@ -11429,6 +11513,20 @@ namespace SkiaSharp
 			(sk_surface_draw_delegate ??= GetSymbol<Delegates.sk_surface_draw> ("sk_surface_draw")).Invoke (surface, canvas, x, y, paint);
 		#endif
 
+		// void sk_surface_flush(sk_surface_t* surface)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_surface_flush (sk_surface_t surface);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_surface_flush (sk_surface_t surface);
+		}
+		private static Delegates.sk_surface_flush sk_surface_flush_delegate;
+		internal static void sk_surface_flush (sk_surface_t surface) =>
+			(sk_surface_flush_delegate ??= GetSymbol<Delegates.sk_surface_flush> ("sk_surface_flush")).Invoke (surface);
+		#endif
+
 		// sk_canvas_t* sk_surface_get_canvas(sk_surface_t*)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -11525,6 +11623,20 @@ namespace SkiaSharp
 		private static Delegates.sk_surface_new_image_snapshot_with_crop sk_surface_new_image_snapshot_with_crop_delegate;
 		internal static sk_image_t sk_surface_new_image_snapshot_with_crop (sk_surface_t surface, SKRectI* bounds) =>
 			(sk_surface_new_image_snapshot_with_crop_delegate ??= GetSymbol<Delegates.sk_surface_new_image_snapshot_with_crop> ("sk_surface_new_image_snapshot_with_crop")).Invoke (surface, bounds);
+		#endif
+
+		// sk_surface_t* sk_surface_new_metal_layer(gr_context_t* context, const void* layer, gr_surfaceorigin_t origin, int sampleCount, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props, const void** drawable)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_surface_t sk_surface_new_metal_layer (gr_context_t context, void* layer, GRSurfaceOrigin origin, Int32 sampleCount, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props, void** drawable);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_surface_t sk_surface_new_metal_layer (gr_context_t context, void* layer, GRSurfaceOrigin origin, Int32 sampleCount, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props, void** drawable);
+		}
+		private static Delegates.sk_surface_new_metal_layer sk_surface_new_metal_layer_delegate;
+		internal static sk_surface_t sk_surface_new_metal_layer (gr_context_t context, void* layer, GRSurfaceOrigin origin, Int32 sampleCount, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props, void** drawable) =>
+			(sk_surface_new_metal_layer_delegate ??= GetSymbol<Delegates.sk_surface_new_metal_layer> ("sk_surface_new_metal_layer")).Invoke (context, layer, origin, sampleCount, colorType, colorspace, props, drawable);
 		#endif
 
 		// sk_surface_t* sk_surface_new_null(int width, int height)
@@ -13176,6 +13288,53 @@ namespace SkiaSharp
 
 	#region Structs
 
+	// gr_context_options_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRContextOptionsNative : IEquatable<GRContextOptionsNative> {
+		// public bool fAvoidStencilBuffers
+		public Byte fAvoidStencilBuffers;
+
+		// public int fRuntimeProgramCacheSize
+		public Int32 fRuntimeProgramCacheSize;
+
+		// public size_t fGlyphCacheTextureMaximumBytes
+		public /* size_t */ IntPtr fGlyphCacheTextureMaximumBytes;
+
+		// public bool fAllowPathMaskCaching
+		public Byte fAllowPathMaskCaching;
+
+		// public bool fDoManualMipmapping
+		public Byte fDoManualMipmapping;
+
+		// public int fBufferMapThreshold
+		public Int32 fBufferMapThreshold;
+
+		public readonly bool Equals (GRContextOptionsNative obj) =>
+			fAvoidStencilBuffers == obj.fAvoidStencilBuffers && fRuntimeProgramCacheSize == obj.fRuntimeProgramCacheSize && fGlyphCacheTextureMaximumBytes == obj.fGlyphCacheTextureMaximumBytes && fAllowPathMaskCaching == obj.fAllowPathMaskCaching && fDoManualMipmapping == obj.fDoManualMipmapping && fBufferMapThreshold == obj.fBufferMapThreshold;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRContextOptionsNative f && Equals (f);
+
+		public static bool operator == (GRContextOptionsNative left, GRContextOptionsNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRContextOptionsNative left, GRContextOptionsNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fAvoidStencilBuffers);
+			hash.Add (fRuntimeProgramCacheSize);
+			hash.Add (fGlyphCacheTextureMaximumBytes);
+			hash.Add (fAllowPathMaskCaching);
+			hash.Add (fDoManualMipmapping);
+			hash.Add (fBufferMapThreshold);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// gr_gl_framebufferinfo_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct GRGlFramebufferInfo : IEquatable<GRGlFramebufferInfo> {
@@ -13257,6 +13416,33 @@ namespace SkiaSharp
 			hash.Add (fTarget);
 			hash.Add (fID);
 			hash.Add (fFormat);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_mtl_textureinfo_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRMtlTextureInfoNative : IEquatable<GRMtlTextureInfoNative> {
+		// public const void* fTexture
+		public void* fTexture;
+
+		public readonly bool Equals (GRMtlTextureInfoNative obj) =>
+			fTexture == obj.fTexture;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRMtlTextureInfoNative f && Equals (f);
+
+		public static bool operator == (GRMtlTextureInfoNative left, GRMtlTextureInfoNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRMtlTextureInfoNative left, GRMtlTextureInfoNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fTexture);
 			return hash.ToHashCode ();
 		}
 

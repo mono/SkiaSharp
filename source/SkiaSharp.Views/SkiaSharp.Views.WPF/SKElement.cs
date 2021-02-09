@@ -51,7 +51,7 @@ namespace SkiaSharp.Views.WPF
 			if (designMode)
 				return;
 
-			if (Visibility != Visibility.Visible)
+			if (Visibility != Visibility.Visible || PresentationSource.FromVisual(this) == null)
 				return;
 
 			var size = CreateSize(out var scaleX, out var scaleY);

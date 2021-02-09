@@ -43,6 +43,21 @@ namespace SkiaSharp
 			CreateVulkan (width, height, sampleCount, vkImageInfo);
 		}
 
+#if __IOS__ || __MACOS__
+
+		public GRBackendRenderTarget (int width, int height, int sampleCount, GRMtlTextureInfo mtlInfo)
+			: this (IntPtr.Zero, true)
+		{
+			var info = mtlInfo.ToNative ();
+			Handle = SkiaApi.gr_backendrendertarget_new_metal (width, height, sampleCount, &info);
+
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
+			}
+		}
+
+#endif
+
 		private void CreateGl (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
 		{
 			Handle = SkiaApi.gr_backendrendertarget_new_gl (width, height, sampleCount, stencilBits, &glInfo);

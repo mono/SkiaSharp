@@ -110,6 +110,44 @@ namespace SkiaSharp
 		}
 	}
 
+#if __IOS__ || __MACOS__
+
+	public unsafe partial struct GRMtlTextureInfo
+	{
+		public GRMtlTextureInfo (Metal.IMTLTexture texture)
+		{
+			Texture = texture;
+		}
+
+		public Metal.IMTLTexture Texture { get; set; }
+
+		internal GRMtlTextureInfoNative ToNative () =>
+			new GRMtlTextureInfoNative {
+				fTexture = (void*)Texture.Handle
+			};
+
+		public readonly bool Equals (GRMtlTextureInfo obj) =>
+			Texture == obj.Texture;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRMtlTextureInfo f && Equals (f);
+
+		public static bool operator == (GRMtlTextureInfo left, GRMtlTextureInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRMtlTextureInfo left, GRMtlTextureInfo right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (Texture);
+			return hash.ToHashCode ();
+		}
+	}
+
+#endif
+
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Flags]
 	[Obsolete]

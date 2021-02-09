@@ -1,11 +1,11 @@
 trigger:
-  - master
+  - main
   - develop
   - patch/*
   - refs/tags/*
 
 pr:
-  - master
+  - main
   - develop
   - patch/*
 
@@ -22,8 +22,8 @@ variables:
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build
   MONO_VERSION_MACOS: 'Latest'
   MONO_VERSION_LINUX: ''
-  XCODE_VERSION: 12.2
-  DOTNET_VERSION: 3.1.302
+  XCODE_VERSION: 12.3
+  DOTNET_VERSION: 3.1.405
   CONFIGURATION: 'Release'
   VM_IMAGE_WINDOWS: windows-2019
   VM_IMAGE_WINDOWS_PREVIOUS: vs2017-win2016
@@ -33,7 +33,7 @@ variables:
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
   ENABLE_CODE_COVERAGE: true
-  EMSCRIPTEN_VERSION: 1.40.0
+  EMSCRIPTEN_VERSION: 2.0.12
 
 resources:
   repositories:
@@ -297,13 +297,16 @@ stages:
     displayName: Native WASM
     dependsOn: prepare
     jobs:
-      - template: azure-templates-bootstrapper.yml # Build Native WASM (Linux)
+      - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
         parameters:
-          name: native_wasm_linux
-          displayName: WASM
-          vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/wasm
-          target: externals-wasm
+          emscripten:
+            - 1.39.11
+            - 1.40.0
+            - 2.0.5
+            - 2.0.6
+            - 2.0.9
+            - 2.0.11
+            - 2.0.12
 
   - stage: managed
     displayName: Build Managed
@@ -692,7 +695,7 @@ stages:
           parameters:
             name: native_checks_windows
             displayName: Run Code Checks
-            condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
+            condition: and(always(), eq('refs/heads/main', variables['Build.SourceBranch']))
             vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
             target: git-sync-deps
             installWindowsSdk: false
@@ -739,7 +742,7 @@ stages:
                   tsaVersion: 'TsaV2'
                   codebase: 'NewOrUpdate'
                   tsaEnvironment: 'PROD'
-                  codeBaseName: 'SkiaSharp_master'
+                  codeBaseName: 'SkiaSharp_main'
                   notificationAlias: 'xamacomd@microsoft.com'
                   notifyAlwaysV2: false
                   instanceUrlForTsaV2: 'DEVDIV'

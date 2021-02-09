@@ -12,15 +12,20 @@
   </PropertyGroup>
   <ItemGroup>
     <WasmShellExtraEmccFlags Include="-s ASSERTIONS=1" />
-    <Content Include="..\..\output\native\wasm\libSkiaSharp.a" Visible="false" />
-    <Content Include="..\..\output\native\wasm\libHarfBuzzSharp.a" Visible="false" />
+    <Content Include="..\..\output\native\wasm\libSkiaSharp.a\*\*.a" Visible="false" />
+    <Content Include="..\..\output\native\wasm\libHarfBuzzSharp.a\*\*.a" Visible="false" />
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.52" />
-    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.4.0-dev.52" />
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="2.0.0-dev.148" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="2.0.0-dev.148" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.extensibility.core" Version="2.4.1" />
     <PackageReference Include="xunit.runner.utility" Version="2.4.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
 </Project>
