@@ -119,7 +119,7 @@ internal partial class VersionConstants {
       CoreCompile
     </_SignAssemblyAfterTargets>
   </PropertyGroup>
-  <Target Name="_SignAssembly" AfterTargets="$(_SignAssemblyAfterTargets)" DependsOnTargets="$(_SignAssemblyDependsOn)" Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(TargetsTriggeredByCompilation)' != '' ">
+  <Target Name="_SignAssembly" AfterTargets="$(_SignAssemblyAfterTargets)" DependsOnTargets="$(_SignAssemblyDependsOn)" Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
