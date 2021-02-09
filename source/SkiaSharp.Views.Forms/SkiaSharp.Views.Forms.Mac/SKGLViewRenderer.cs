@@ -66,7 +66,7 @@ namespace SkiaSharp.Views.Forms
 					displayLink.Stop();
 					displayLink.Dispose();
 					displayLink = null;
-					return;
+					return CVReturn.Success;
 				}
 
 				// redraw the view
