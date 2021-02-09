@@ -1,4 +1,5 @@
-﻿using CoreAnimation;
+﻿using System;
+using CoreAnimation;
 using Foundation;
 using Xamarin.Forms;
 
@@ -39,7 +40,7 @@ namespace SkiaSharp.Views.Forms
 				displayLink.Dispose();
 				displayLink = null;
 			}
-			
+
 			base.Dispose(disposing);
 		}
 
@@ -57,7 +58,11 @@ namespace SkiaSharp.Views.Forms
 			if (oneShot)
 			{
 				var nativeView = Control;
-				nativeView?.BeginInvokeOnMainThread(() => nativeView?.Display());
+				nativeView?.BeginInvokeOnMainThread(() =>
+				{
+					if (nativeView.Handle != IntPtr.Zero)
+						nativeView.Display();
+				});
 				return;
 			}
 
@@ -67,16 +72,17 @@ namespace SkiaSharp.Views.Forms
 				var nativeView = Control;
 				var formsView = Element;
 
-				// redraw the view
-				nativeView?.Display();
-
 				// stop the render loop if this was a one-shot, or the views are disposed
-				if (nativeView == null || formsView == null || !formsView.HasRenderLoop)
+				if (nativeView == null || formsView == null || nativeView.Handle == IntPtr.Zero || !formsView.HasRenderLoop)
 				{
 					displayLink.Invalidate();
 					displayLink.Dispose();
 					displayLink = null;
+					return;
 				}
+
+				// redraw the view
+				nativeView.Display();
 			});
 			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoop.NSDefaultRunLoopMode);
 		}

@@ -1,4 +1,5 @@
-﻿using CoreVideo;
+﻿using System;
+using CoreVideo;
 using Xamarin.Forms;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
@@ -46,7 +47,7 @@ namespace SkiaSharp.Views.Forms
 				var nativeView = Control;
 				nativeView?.BeginInvokeOnMainThread(() =>
 				{
-					if (nativeView != null)
+					if (nativeView.Handle != IntPtr.Zero)
 						nativeView.NeedsDisplay = true;
 				});
 				return;
@@ -59,20 +60,21 @@ namespace SkiaSharp.Views.Forms
 				var nativeView = Control;
 				var formsView = Element;
 
+				// stop the render loop if this was a one-shot, or the views are disposed
+				if (nativeView == null || formsView == null || nativeView.Handle == IntPtr.Zero || !formsView.HasRenderLoop)
+				{
+					displayLink.Stop();
+					displayLink.Dispose();
+					displayLink = null;
+					return;
+				}
+
 				// redraw the view
 				nativeView?.BeginInvokeOnMainThread(() =>
 				{
 					if (nativeView != null)
 						nativeView.NeedsDisplay = true;
 				});
-
-				// stop the render loop if this was a one-shot, or the views are disposed
-				if (nativeView == null || formsView == null || !formsView.HasRenderLoop)
-				{
-					displayLink.Stop();
-					displayLink.Dispose();
-					displayLink = null;
-				}
 
 				return CVReturn.Success;
 			});
