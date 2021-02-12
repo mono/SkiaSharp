@@ -124,6 +124,34 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableTheory]
+		[InlineData(1024, 0, 0, 0)]
+		[InlineData(1024, 1, 1, 1)]
+		[InlineData(1024, 10, 10, 10)]
+		[InlineData(1024, 100, 100, 100)]
+		[InlineData(1024, 1000, 1000, 1000)]
+		[InlineData(1024, 10000, 1024, 1024)]
+		public void ReadIsCorrect(int dataSize, int readSize, int finalPos, int expectedReadSize)
+		{
+			var data = new byte[dataSize];
+			for (var i = 0; i < data.Length; i++)
+			{
+				data[i] = (byte)(i % byte.MaxValue);
+			}
+
+			var stream = new MemoryStream(data);
+			var managedStream = new SKManagedStream(stream);
+
+			var buffer = new byte[dataSize * 2];
+
+			var actualReadSize = managedStream.Read(buffer, readSize);
+
+			Assert.Equal(expectedReadSize, actualReadSize);
+			Assert.Equal(finalPos, managedStream.Position);
+			Assert.Equal(data.Take(readSize), buffer.Take(actualReadSize));
+			Assert.All(buffer.Skip(actualReadSize), i => Assert.Equal(0, i));
+		}
+
 		[SkippableFact]
 		public void ManagedStreamReadsChunkCorrectly()
 		{

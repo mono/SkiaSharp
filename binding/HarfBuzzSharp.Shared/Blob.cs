@@ -4,7 +4,7 @@ using System.IO;
 
 namespace HarfBuzzSharp
 {
-	public class Blob : NativeObject
+	public unsafe class Blob : NativeObject
 	{
 		private static readonly Lazy<Blob> emptyBlob = new Lazy<Blob> (() => new StaticBlob (HarfBuzzApi.hb_blob_get_empty ()));
 
@@ -42,9 +42,9 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public int Length => HarfBuzzApi.hb_blob_get_length (Handle);
+		public int Length => (int)HarfBuzzApi.hb_blob_get_length (Handle);
 
-		public int FaceCount => HarfBuzzApi.hb_face_count (Handle);
+		public int FaceCount => (int)HarfBuzzApi.hb_face_count (Handle);
 
 		public bool IsImmutable => HarfBuzzApi.hb_blob_is_immutable (Handle);
 
@@ -52,14 +52,16 @@ namespace HarfBuzzSharp
 
 		public unsafe Stream AsStream ()
 		{
-			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, out var length);
-			return new UnmanagedMemoryStream (dataPtr, length);
+			uint length;
+			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, &length);
+			return new UnmanagedMemoryStream ((byte*)dataPtr, length);
 		}
 
 		public unsafe ReadOnlySpan<byte> AsSpan ()
 		{
-			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, out var length);
-			return new ReadOnlySpan<byte> (dataPtr, length);
+			uint length;
+			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, &length);
+			return new ReadOnlySpan<byte> (dataPtr, (int)length);
 		}
 
 		public static Blob FromFile (string fileName)
@@ -89,7 +91,7 @@ namespace HarfBuzzSharp
 		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseProc)
 		{
 			var proxy = DelegateProxies.Create (releaseProc, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
-			return HarfBuzzApi.hb_blob_create (data, length, mode, ctx, proxy);
+			return HarfBuzzApi.hb_blob_create ((void*)data, (uint)length, mode, (void*)ctx, proxy);
 		}
 
 		private class StaticBlob : Blob

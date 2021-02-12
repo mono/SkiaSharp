@@ -129,10 +129,7 @@ namespace SkiaSharp.Views.UWP
 
 		public void Invalidate()
 		{
-			if (Dispatcher.HasThreadAccess)
-				DoInvalidate();
-			else
-				Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate).AsTask().Wait();
+			Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
 		}
 
 		private void DoInvalidate()

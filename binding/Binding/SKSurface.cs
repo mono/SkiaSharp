@@ -284,6 +284,24 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
 		}
 
+#if __MACOS__ || __IOS__
+
+		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, out CoreAnimation.ICAMetalDrawable drawable) =>
+			Create (context, layer, origin, sampleCount, colorType, null, null, out drawable);
+
+		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, out CoreAnimation.ICAMetalDrawable drawable) =>
+			Create (context, layer, origin, sampleCount, colorType, colorspace, null, out drawable);
+
+		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props, out CoreAnimation.ICAMetalDrawable drawable)
+		{
+			void* drawablePtr;
+			var surface = GetObject (SkiaApi.sk_surface_new_metal_layer (context.Handle, (void*)layer.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero, &drawablePtr));
+			drawable = ObjCRuntime.Runtime.GetINativeObject<CoreAnimation.ICAMetalDrawable> ((IntPtr)drawablePtr, true);
+			return surface;
+		}
+
+#endif
+
 		// NULL surface
 
 		public static SKSurface CreateNull (int width, int height) =>
@@ -353,6 +371,9 @@ namespace SkiaSharp
 			GC.KeepAlive (this);
 			return result;
 		}
+
+		public void Flush () =>
+			SkiaApi.sk_surface_flush (Handle);
 
 		internal static SKSurface GetObject (IntPtr handle) =>
 			handle == IntPtr.Zero ? null : new SKSurface (handle, true);

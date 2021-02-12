@@ -15,7 +15,7 @@ parameters:
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
-  buildExternals: '3966762'                            # the build number to download externals from
+  buildExternals: '4452360'                            # the build number to download externals from
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -59,7 +59,7 @@ jobs:
           condition: ne('${{ parameters.packages }}', '')
 
       # make sure mono/msbuild is the correct version
-      - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
+      - ${{ if and(ne(variables['MONO_VERSION_LINUX'], ''), eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
         - bash: |
             sudo apt remove -y mono-complete msbuild
             sudo apt autoremove -y
@@ -98,13 +98,6 @@ jobs:
 
       # install extra bits for the manged builds
       - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-        - task: UseDotNet@2
-          inputs:
-            packageType: 'sdk'
-            version: $(DOTNET_PREVIEW_VERSION)
-            performMultiLevelLookup: true
-            includePreviewVersions: true
-          displayName: Install the correct preview version of .NET Core
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'

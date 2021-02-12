@@ -399,7 +399,7 @@ namespace SkiaSharp
 
 		public void DrawPoint (float x, float y, SKColor color)
 		{
-			using (var paint = new SKPaint { Color = color }) {
+			using (var paint = new SKPaint { Color = color, BlendMode = SKBlendMode.Src }) {
 				DrawPoint (x, y, paint);
 			}
 		}

@@ -54,20 +54,68 @@ namespace SkiaSharp
 		// CreateGl
 
 		public static GRContext CreateGl () =>
-			CreateGl (null);
+			CreateGl (null, null);
 
 		public static GRContext CreateGl (GRGlInterface backendContext) =>
-			GetObject (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+			CreateGl (backendContext, null);
+
+		public static GRContext CreateGl (GRContextOptions options) =>
+			CreateGl (null, options);
+
+		public static GRContext CreateGl (GRGlInterface backendContext, GRContextOptions options)
+		{
+			var ctx = backendContext == null ? IntPtr.Zero : backendContext.Handle;
+
+			if (options == null) {
+				return GetObject (SkiaApi.gr_context_make_gl (ctx));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_context_make_gl_with_options (ctx, &opts));
+			}
+		}
 
 		// CreateVulkan
 
-		public static GRContext CreateVulkan (GRVkBackendContext backendContext)
+		public static GRContext CreateVulkan (GRVkBackendContext backendContext) =>
+			CreateVulkan (backendContext, null);
+
+		public static GRContext CreateVulkan (GRVkBackendContext backendContext, GRContextOptions options)
 		{
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));
 
-			return GetObject (SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
+			if (options == null) {
+				return GetObject (SkiaApi.gr_context_make_vulkan (backendContext.ToNative ()));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_context_make_vulkan_with_options (backendContext.ToNative (), &opts));
+			}
 		}
+
+#if __IOS__ || __MACOS__
+
+		// CreateMetal
+
+		public static GRContext CreateMetal (GRMtlBackendContext backendContext) =>
+			CreateMetal (backendContext, null);
+
+		public static GRContext CreateMetal (GRMtlBackendContext backendContext, GRContextOptions options)
+		{
+			if (backendContext == null)
+				throw new ArgumentNullException (nameof (backendContext));
+
+			var device = backendContext.Device;
+			var queue = backendContext.Queue;
+
+			if (options == null) {
+				return GetObject (SkiaApi.gr_context_make_metal ((void*)device.Handle, (void*)queue.Handle));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_context_make_metal_with_options ((void*)device.Handle, (void*)queue.Handle, &opts));
+			}
+		}
+
+#endif
 
 		//
 
@@ -127,6 +175,21 @@ namespace SkiaSharp
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
+
+		public void DumpMemoryStatistics (SKTraceMemoryDump dump) =>
+			SkiaApi.gr_context_dump_memory_statistics (Handle, dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));
+
+		public void PurgeResources () =>
+			SkiaApi.gr_context_free_gpu_resources (Handle);
+
+		public void PurgeUnusedResources (long milliseconds) =>
+			SkiaApi.gr_context_perform_deferred_cleanup (Handle, milliseconds);
+
+		public void PurgeUnlockedResources (bool scratchResourcesOnly) =>
+			SkiaApi.gr_context_purge_unlocked_resources (Handle, scratchResourcesOnly);
+
+		public void PurgeUnlockedResources (long bytesToPurge, bool preferScratchResources) =>
+			SkiaApi.gr_context_purge_unlocked_resources_bytes (Handle, (IntPtr)bytesToPurge, preferScratchResources);
 
 		internal static GRContext GetObject (IntPtr handle) =>
 			handle == IntPtr.Zero ? null : new GRContext (handle, true);

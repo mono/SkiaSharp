@@ -33,40 +33,32 @@ namespace SkiaSharp.Tests
 			return new SKMemoryStream(bytes);
 		}
 
+		protected static void SaveSurface(SKSurface surface, string filename = "output.png")
+		{
+			using var image = surface.Snapshot();
+			SaveImage(image, filename);
+		}
+
 		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
 		{
-			using (var bitmap = new SKBitmap(bmp.Width, bmp.Height))
-			using (var canvas = new SKCanvas(bitmap))
-			{
-				canvas.Clear(SKColors.Transparent);
-				canvas.DrawBitmap(bmp, 0, 0);
-				canvas.Flush();
-
-				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
-				using (var image = SKImage.FromBitmap(bitmap))
-				using (var data = image.Encode())
-				{
-					data.SaveTo(stream);
-				}
-			}
+			using var image = SKImage.FromBitmap(bmp);
+			SaveImage(image, filename);
 		}
 
 		protected static void SaveImage(SKImage img, string filename = "output.png")
 		{
-			using (var bitmap = new SKBitmap(img.Width, img.Height))
-			using (var canvas = new SKCanvas(bitmap))
-			{
-				canvas.Clear(SKColors.Transparent);
-				canvas.DrawImage(img, 0, 0);
-				canvas.Flush();
+			using var bitmap = new SKBitmap(img.Width, img.Height);
+			using var canvas = new SKCanvas(bitmap);
 
-				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
-				using (var image = SKImage.FromBitmap(bitmap))
-				using (var data = image.Encode())
-				{
-					data.SaveTo(stream);
-				}
-			}
+			canvas.Clear(SKColors.Transparent);
+			canvas.DrawImage(img, 0, 0);
+			canvas.Flush();
+
+			using var stream = File.OpenWrite(Path.Combine(PathToImages, filename));
+			using var image = SKImage.FromBitmap(bitmap);
+			using var data = image.Encode();
+
+			data.SaveTo(stream);
 		}
 
 		protected static SKBitmap CreateTestBitmap(byte alpha = 255)
@@ -75,26 +67,43 @@ namespace SkiaSharp.Tests
 			bmp.Erase(SKColors.Transparent);
 
 			using (var canvas = new SKCanvas(bmp))
-			using (var paint = new SKPaint())
 			{
-
-				var x = bmp.Width / 2;
-				var y = bmp.Height / 2;
-
-				paint.Color = SKColors.Red.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(0, 0, x, y), paint);
-
-				paint.Color = SKColors.Green.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(x, 0, x, y), paint);
-
-				paint.Color = SKColors.Blue.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(0, y, x, y), paint);
-
-				paint.Color = SKColors.Yellow.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(x, y, x, y), paint);
+				DrawTestBitmap(canvas, 40, 40, alpha);
 			}
 
 			return bmp;
+		}
+
+		protected static SKPicture CreateTestPicture(byte alpha = 255)
+		{
+			using var recorder = new SKPictureRecorder();
+			using var canvas = recorder.BeginRecording(SKRect.Create(0, 0, 40, 40));
+
+			DrawTestBitmap(canvas, 40, 40, alpha);
+
+			return recorder.EndRecording();
+		}
+
+		private static void DrawTestBitmap(SKCanvas canvas, int width, int height, byte alpha = 255)
+		{
+			using var paint = new SKPaint();
+
+			var x = width / 2;
+			var y = height / 2;
+
+			canvas.Clear(SKColors.Transparent);
+
+			paint.Color = SKColors.Red.WithAlpha(alpha);
+			canvas.DrawRect(SKRect.Create(0, 0, x, y), paint);
+
+			paint.Color = SKColors.Green.WithAlpha(alpha);
+			canvas.DrawRect(SKRect.Create(x, 0, x, y), paint);
+
+			paint.Color = SKColors.Blue.WithAlpha(alpha);
+			canvas.DrawRect(SKRect.Create(0, y, x, y), paint);
+
+			paint.Color = SKColors.Yellow.WithAlpha(alpha);
+			canvas.DrawRect(SKRect.Create(x, y, x, y), paint);
 		}
 
 		protected static void ValidateTestBitmap(SKBitmap bmp, byte alpha = 255)
