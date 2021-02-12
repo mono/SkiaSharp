@@ -103,15 +103,16 @@ namespace SkiaSharp
 
 		// CreateMetal
 
-		public static GRContext CreateMetal (Metal.IMTLDevice device, Metal.IMTLCommandQueue queue) =>
-			CreateMetal (device, queue, null);
+		public static GRContext CreateMetal (GRMtlBackendContext backendContext) =>
+			CreateMetal (backendContext, null);
 
-		public static GRContext CreateMetal (Metal.IMTLDevice device, Metal.IMTLCommandQueue queue, GRContextOptions options)
+		public static GRContext CreateMetal (GRMtlBackendContext backendContext, GRContextOptions options)
 		{
-			if (device == null)
-				throw new ArgumentNullException (nameof (device));
-			if (queue == null)
-				throw new ArgumentNullException (nameof (queue));
+			if (backendContext == null)
+				throw new ArgumentNullException (nameof (backendContext));
+
+			var device = backendContext.Device;
+			var queue = backendContext.Queue;
 
 			if (options == null) {
 				return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)device.Handle, (void*)queue.Handle));

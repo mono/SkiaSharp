@@ -45,7 +45,7 @@ namespace SkiaSharp
 
 #if __IOS__ || __MACOS__
 
-		public GRBackendRenderTarget (int width, int height, int sampleCount, GRMetalTextureInfo mtlInfo)
+		public GRBackendRenderTarget (int width, int height, int sampleCount, GRMtlTextureInfo mtlInfo)
 			: this (IntPtr.Zero, true)
 		{
 			var info = mtlInfo.ToNative ();

@@ -30,7 +30,7 @@ namespace SkiaSharp.Views.Mac
 
 		private bool designMode;
 
-		private IMTLCommandQueue commandQueue;
+		private GRMtlBackendContext backendContext;
 		private GRContext context;
 
 		// created in code
@@ -84,9 +84,13 @@ namespace SkiaSharp.Views.Mac
 			DepthStencilPixelFormat = MTLPixelFormat.Depth32Float_Stencil8;
 			SampleCount = 1;
 			Device = device;
-			commandQueue = device.CreateCommandQueue();
+			backendContext = new GRMtlBackendContext
+			{
+				Device = device,
+				Queue = device.CreateCommandQueue(),
+			};
 
-			// hook up the drawing 
+			// hook up the drawing
 			Delegate = this;
 		}
 
@@ -111,7 +115,7 @@ namespace SkiaSharp.Views.Mac
 			if (designMode)
 				return;
 
-			if (Device == null || commandQueue == null || CurrentDrawable?.Texture == null)
+			if (backendContext.Device == null || backendContext.Queue == null || CurrentDrawable?.Texture == null)
 				return;
 
 			CanvasSize = DrawableSize.ToSKSize();
@@ -120,13 +124,13 @@ namespace SkiaSharp.Views.Mac
 				return;
 
 			// create the contexts if not done already
-			context ??= GRContext.CreateMetal(Device, commandQueue);
+			context ??= GRContext.CreateMetal(backendContext);
 
 			const SKColorType colorType = SKColorType.Bgra8888;
 			const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.TopLeft;
 
 			// create the render target
-			var metalInfo = new GRMetalTextureInfo(CurrentDrawable.Texture);
+			var metalInfo = new GRMtlTextureInfo(CurrentDrawable.Texture);
 			using var renderTarget = new GRBackendRenderTarget((int)CanvasSize.Width, (int)CanvasSize.Height, (int)SampleCount, metalInfo);
 
 			// create the surface
@@ -143,7 +147,7 @@ namespace SkiaSharp.Views.Mac
 			context.Flush();
 
 			// present
-			using var commandBuffer = commandQueue.CommandBuffer();
+			using var commandBuffer = backendContext.Queue.CommandBuffer();
 			commandBuffer.PresentDrawable(CurrentDrawable);
 			commandBuffer.Commit();
 		}

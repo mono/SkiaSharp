@@ -227,14 +227,14 @@ namespace SkiaSharp
 		// gr_backendrendertarget_t* gr_backendrendertarget_new_metal(int width, int height, int samples, const gr_mtl_textureinfo_t* mtlInfo)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMetalTextureInfoNative* mtlInfo);
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMetalTextureInfoNative* mtlInfo);
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
 		}
 		private static Delegates.gr_backendrendertarget_new_metal gr_backendrendertarget_new_metal_delegate;
-		internal static gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMetalTextureInfoNative* mtlInfo) =>
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo) =>
 			(gr_backendrendertarget_new_metal_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_metal> ("gr_backendrendertarget_new_metal")).Invoke (width, height, samples, mtlInfo);
 		#endif
 
@@ -373,14 +373,14 @@ namespace SkiaSharp
 		// gr_backendtexture_t* gr_backendtexture_new_metal(int width, int height, bool mipmapped, const gr_mtl_textureinfo_t* mtlInfo)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMetalTextureInfoNative* mtlInfo);
+		internal static extern gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMetalTextureInfoNative* mtlInfo);
+			internal delegate gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
 		}
 		private static Delegates.gr_backendtexture_new_metal gr_backendtexture_new_metal_delegate;
-		internal static gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMetalTextureInfoNative* mtlInfo) =>
+		internal static gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo) =>
 			(gr_backendtexture_new_metal_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_metal> ("gr_backendtexture_new_metal")).Invoke (width, height, mipmapped, mtlInfo);
 		#endif
 
@@ -13514,20 +13514,20 @@ namespace SkiaSharp
 
 	// gr_mtl_textureinfo_t
 	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct GRMetalTextureInfoNative : IEquatable<GRMetalTextureInfoNative> {
+	internal unsafe partial struct GRMtlTextureInfoNative : IEquatable<GRMtlTextureInfoNative> {
 		// public const void* fTexture
 		public void* fTexture;
 
-		public readonly bool Equals (GRMetalTextureInfoNative obj) =>
+		public readonly bool Equals (GRMtlTextureInfoNative obj) =>
 			fTexture == obj.fTexture;
 
 		public readonly override bool Equals (object obj) =>
-			obj is GRMetalTextureInfoNative f && Equals (f);
+			obj is GRMtlTextureInfoNative f && Equals (f);
 
-		public static bool operator == (GRMetalTextureInfoNative left, GRMetalTextureInfoNative right) =>
+		public static bool operator == (GRMtlTextureInfoNative left, GRMtlTextureInfoNative right) =>
 			left.Equals (right);
 
-		public static bool operator != (GRMetalTextureInfoNative left, GRMetalTextureInfoNative right) =>
+		public static bool operator != (GRMtlTextureInfoNative left, GRMtlTextureInfoNative right) =>
 			!left.Equals (right);
 
 		public readonly override int GetHashCode ()
