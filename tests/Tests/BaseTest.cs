@@ -26,12 +26,16 @@ namespace SkiaSharp.Tests
 		static BaseTest()
 		{
 			// the the base paths
+#if __ANDROID__
+			PathToAssembly = Xamarin.Essentials.FileSystem.CacheDirectory;
+#else
 			PathToAssembly = Directory.GetCurrentDirectory();
+#endif
 			PathToFonts = Path.Combine(PathToAssembly, "fonts");
 			PathToImages = Path.Combine(PathToAssembly, "images");
 
 			// some platforms run the tests from a temporary location, so copy the native files
-#if !NET_STANDARD
+#if !NET_STANDARD && !__ANDROID__
 			var skiaRoot = Path.GetDirectoryName(typeof(SkiaSharp.SKImageInfo).Assembly.Location);
 			var harfRoot = Path.GetDirectoryName(typeof(HarfBuzzSharp.Buffer).Assembly.Location);
 

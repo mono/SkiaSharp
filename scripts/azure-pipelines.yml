@@ -468,12 +468,12 @@ stages:
       - native_linux
       - native_wasm
     jobs:
-      - template: azure-templates-bootstrapper.yml # Tests (Windows)
+      - template: azure-templates-bootstrapper.yml # Tests|netfx (Windows)
         parameters:
-          name: tests_windows
-          displayName: Windows
+          name: tests_netfx_windows
+          displayName: Windows (NETFX)
           vmImage: $(VM_IMAGE_WINDOWS)
-          target: tests
+          target: tests-netfx
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           installWindowsSdk: false
           shouldPublish: false
@@ -490,6 +490,26 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Windows .NET Framework Tests'
+            - task: PublishBuildArtifacts@1
+              displayName: 'Publish the code coverage results'
+              inputs:
+                artifactName: coverage_netfx_windows
+                pathToPublish: 'output/coverage'
+      - template: azure-templates-bootstrapper.yml # Tests|netcore (Windows)
+        parameters:
+          name: tests_netcore_windows
+          displayName: Windows (NETCORE)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: tests-netcore
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          installWindowsSdk: false
+          shouldPublish: false
+          requiredArtifacts:
+            - native_win32_x86_windows
+            - native_win32_x64_windows
+          tools:
+            - dotnet-reportgenerator-globaltool
+          postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
@@ -500,14 +520,14 @@ stages:
             - task: PublishBuildArtifacts@1
               displayName: 'Publish the code coverage results'
               inputs:
-                artifactName: coverage_windows
+                artifactName: coverage_netcore_windows
                 pathToPublish: 'output/coverage'
-      - template: azure-templates-bootstrapper.yml # Tests (macOS)
+      - template: azure-templates-bootstrapper.yml # Tests|netfx (macOS)
         parameters:
-          name: tests_macos
-          displayName: macOS
+          name: tests_netfx_macos
+          displayName: macOS (NETFX)
           vmImage: $(VM_IMAGE_MAC)
-          target: tests
+          target: tests-netfx
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           shouldPublish: false
           requiredArtifacts:
@@ -522,6 +542,24 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS Mono Tests'
+            - task: PublishBuildArtifacts@1
+              displayName: 'Publish the code coverage results'
+              inputs:
+                artifactName: coverage_netfx_macos
+                pathToPublish: 'output/coverage'
+      - template: azure-templates-bootstrapper.yml # Tests|netcore (macOS)
+        parameters:
+          name: tests_netcore_macos
+          displayName: macOS (NETCORE)
+          vmImage: $(VM_IMAGE_MAC)
+          target: tests-netcore
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          shouldPublish: false
+          requiredArtifacts:
+            - native_macos_macos
+          tools:
+            - dotnet-reportgenerator-globaltool
+          postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
@@ -534,13 +572,13 @@ stages:
               inputs:
                 artifactName: coverage_macos
                 pathToPublish: 'output/coverage'
-      - template: azure-templates-bootstrapper.yml # Tests (Linux)
+      - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
         parameters:
-          name: tests_linux
-          displayName: Linux
+          name: tests_netfx_linux
+          displayName: Linux (NETFX)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
-          target: tests
+          target: tests-netfx
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           shouldPublish: false
           requiredArtifacts:
@@ -555,6 +593,25 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux Mono Tests'
+            - task: PublishBuildArtifacts@1
+              displayName: 'Publish the code coverage results'
+              inputs:
+                artifactName: coverage_netfx_linux
+                pathToPublish: 'output/coverage'
+      - template: azure-templates-bootstrapper.yml # Tests|netcore (Linux)
+        parameters:
+          name: tests_netcore_linux
+          displayName: Linux (NETCORE)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(MANAGED_LINUX_PACKAGES)
+          target: tests-netcore
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          shouldPublish: false
+          requiredArtifacts:
+            - native_linux_x64_linux
+          tools:
+            - dotnet-reportgenerator-globaltool
+          postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
@@ -565,7 +622,7 @@ stages:
             - task: PublishBuildArtifacts@1
               displayName: 'Publish the code coverage results'
               inputs:
-                artifactName: coverage_linux
+                artifactName: coverage_netcore_linux
                 pathToPublish: 'output/coverage'
       - template: azure-templates-bootstrapper.yml # Tests [WASM] (Linux)
         parameters:
@@ -596,26 +653,44 @@ stages:
         pool:
           vmImage: $(VM_IMAGE_LINUX)
         dependsOn:
-          - tests_windows
-          - tests_macos
-          - tests_linux
+          - tests_netfx_windows
+          - tests_netcore_windows
+          - tests_netfx_macos
+          - tests_netcore_macos
+          - tests_netfx_linux
+          - tests_netcore_linux
         steps:
           - checkout: self
           - template: azure-templates-variables.yml
           - task: DownloadBuildArtifacts@0
-            displayName: Download the coverage_windows artifact
+            displayName: Download the coverage_netfx_windows artifact
             inputs:
-              artifactName: coverage_windows
+              artifactName: coverage_netfx_windows
               downloadPath: output
           - task: DownloadBuildArtifacts@0
-            displayName: Download the coverage_macos artifact
+            displayName: Download the coverage_netcore_windows artifact
             inputs:
-              artifactName: coverage_macos
+              artifactName: coverage_netcore_windows
               downloadPath: output
           - task: DownloadBuildArtifacts@0
-            displayName: Download the coverage_linux artifact
+            displayName: Download the coverage_netfx_macos artifact
             inputs:
-              artifactName: coverage_linux
+              artifactName: coverage_netfx_macos
+              downloadPath: output
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the coverage_netcore_macos artifact
+            inputs:
+              artifactName: coverage_netcore_macos
+              downloadPath: output
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the coverage_netfx_linux artifact
+            inputs:
+              artifactName: coverage_netfx_linux
+              downloadPath: output
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the coverage_netcore_linux artifact
+            inputs:
+              artifactName: coverage_netcore_linux
               downloadPath: output
           - task: PublishCodeCoverageResults@1
             displayName: 'Publish the code coverage results'

@@ -137,6 +137,12 @@ Task ("libs")
 
 Task ("tests")
     .Description ("Run all tests.")
+    .IsDependentOn ("tests-netfx")
+    .IsDependentOn ("tests-netcore")
+    .IsDependentOn ("tests-android");
+
+Task ("tests-netfx")
+    .Description ("Run all Full .NET Framework tests.")
     .IsDependentOn ("externals")
     .Does (() =>
 {
@@ -166,7 +172,6 @@ Task ("tests")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // Full .NET Framework
     if (IsRunningOnWindows ()) {
         RunDesktopTest ("x86");
         RunDesktopTest ("x64");
@@ -176,7 +181,26 @@ Task ("tests")
         RunDesktopTest ("x64");
     }
 
-    // .NET Core
+    if (failedTests > 0) {
+        if (THROW_ON_TEST_FAILURE)
+            throw new Exception ($"There were {failedTests} failed tests.");
+        else
+            Warning ($"There were {failedTests} failed tests.");
+    }
+    if (COVERAGE) {
+        RunCodeCoverage ("./tests/**/Coverage/**/*.xml", "./output/coverage");
+    }
+});
+
+Task ("tests-netcore")
+    .Description ("Run all .NET Core tests.")
+    .IsDependentOn ("externals")
+    .Does (() =>
+{
+    var failedTests = 0;
+
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
     // SkiaSharp.NetCore.Tests.csproj
     RunMSBuild ("./tests/SkiaSharp.NetCore.Tests.sln");
@@ -195,25 +219,51 @@ Task ("tests")
         }
     }
 
-    if (failedTests > 0)
+    if (failedTests > 0) {
         if (THROW_ON_TEST_FAILURE)
             throw new Exception ($"There were {failedTests} failed tests.");
         else
             Warning ($"There were {failedTests} failed tests.");
-
+    }
     if (COVERAGE) {
-        try {
-            RunProcess ("reportgenerator", new ProcessSettings {
-                Arguments = "-reports:./tests/**/Coverage/**/*.xml -targetdir:./output/coverage -reporttypes:HtmlInline_AzurePipelines;Cobertura"
-            });
-        } catch (Exception ex) {
-            Error ("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
-            Error (ex);
-            throw;
-        }
-        var xml = "./output/coverage/Cobertura.xml";
-        var root = FindRegexMatchGroupsInFile (xml, @"<source>(.*)<\/source>", 0)[1].Value;
-        ReplaceTextInFiles (xml, root, "");
+        RunCodeCoverage ("./tests/**/Coverage/**/*.xml", "./output/coverage");
+    }
+});
+
+Task ("tests-android")
+    .Description ("Run all Android tests.")
+    .IsDependentOn ("externals")
+    .Does (() =>
+{
+    var failedTests = 0;
+
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+
+    // SkiaSharp.Android.Tests.csproj
+    try {
+        FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
+        RunMSBuild (csproj, 
+            targets: new [] { "Build", "SignAndroidPackage" }, 
+            platform: "AnyCPU",
+            configuration: "Debug");
+        RunCake ("cake/xharness-android.cake", "Default", new Dictionary<string, string> {
+            { "project", MakeAbsolute(csproj).FullPath },
+            { "configuration", "Debug" },
+            { "exclusive", "true" },
+        });
+    } catch {
+        failedTests++;
+    }
+
+    if (failedTests > 0) {
+        if (THROW_ON_TEST_FAILURE)
+            throw new Exception ($"There were {failedTests} failed tests.");
+        else
+            Warning ($"There were {failedTests} failed tests.");
+    }
+    if (COVERAGE) {
+        RunCodeCoverage ("./tests/**/Coverage/**/*.xml", "./output/coverage");
     }
 });
 

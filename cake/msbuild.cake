@@ -7,15 +7,20 @@ void RunMSBuild(
     string platform = "Any CPU",
     string platformTarget = null,
     bool restore = true,
-    bool restoreOnly = false,
-    bool bl = true)
+    bool bl = true,
+    string[] targets = null,
+    string configuration = null)
 {
-    var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
+    var nugetSources = new [] {
+        OUTPUT_NUGETS_PATH.FullPath,
+        "https://api.nuget.org/v3/index.json",
+        "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json"
+    };
 
     EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
 
     MSBuild(solution, c => {
-        c.Configuration = CONFIGURATION;
+        c.Configuration = configuration ?? CONFIGURATION;
         c.Verbosity = VERBOSITY;
         c.MaxCpuCount = 0;
 
@@ -33,12 +38,11 @@ void RunMSBuild(
         }
 
         c.NoLogo = VERBOSITY == Verbosity.Minimal;
+        c.Restore = restore;
 
-        if (restoreOnly) {
+        if (targets?.Length > 0) {
             c.Targets.Clear();
-            c.Targets.Add("Restore");
-        } else {
-            c.Restore = restore;
+            c.Targets.AddRange(targets);
         }
 
         if (!string.IsNullOrEmpty(platformTarget)) {

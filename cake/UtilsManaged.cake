@@ -101,6 +101,22 @@ void RunNetCorePublish(FilePath testProject, DirectoryPath output)
     DotNetCorePublish(testProject.GetFilename().ToString(), settings);
 }
 
+void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
+{
+    try {
+        RunProcess ("reportgenerator", new ProcessSettings {
+            Arguments = $"-reports:{testResultsGlob} -targetdir:{output} -reporttypes:HtmlInline_AzurePipelines;Cobertura"
+        });
+    } catch (Exception ex) {
+        Error ("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
+        Error (ex);
+        throw;
+    }
+    var xml = $"{output}/Cobertura.xml";
+    var root = FindRegexMatchGroupsInFile (xml, @"<source>(.*)<\/source>", 0)[1].Value;
+    ReplaceTextInFiles (xml, root, "");
+}
+
 IEnumerable<(string Name, string Value)> CreateTraitsDictionary(string args)
 {
     if (!string.IsNullOrEmpty(args)) {
