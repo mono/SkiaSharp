@@ -240,6 +240,7 @@ Task ("tests-android")
     // SkiaSharp.Android.Tests.csproj
     try {
         FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
+        DirectoryPath results = "./output/testlogs/SkiaSharp.Android.Tests";
         RunMSBuild (csproj, 
             targets: new [] { "Build", "SignAndroidPackage" }, 
             platform: "AnyCPU",
@@ -248,6 +249,7 @@ Task ("tests-android")
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
             { "exclusive", "true" },
+            { "results", MakeAbsolute(results).FullPath },
         });
     } catch {
         failedTests++;
