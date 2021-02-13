@@ -490,11 +490,6 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Windows .NET Framework Tests'
-            - task: PublishBuildArtifacts@1
-              displayName: 'Publish the code coverage results'
-              inputs:
-                artifactName: coverage_netfx_windows
-                pathToPublish: 'output/coverage'
       - template: azure-templates-bootstrapper.yml # Tests|netcore (Windows)
         parameters:
           name: tests_netcore_windows
@@ -542,11 +537,6 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS Mono Tests'
-            - task: PublishBuildArtifacts@1
-              displayName: 'Publish the code coverage results'
-              inputs:
-                artifactName: coverage_netfx_macos
-                pathToPublish: 'output/coverage'
       - template: azure-templates-bootstrapper.yml # Tests|netcore (macOS)
         parameters:
           name: tests_netcore_macos
@@ -604,11 +594,6 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.Android.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS Android Tests'
-            - task: PublishBuildArtifacts@1
-              displayName: 'Publish the code coverage results'
-              inputs:
-                artifactName: coverage_android_macos
-                pathToPublish: 'output/coverage'
       - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
         parameters:
           name: tests_netfx_linux
@@ -630,11 +615,6 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux Mono Tests'
-            - task: PublishBuildArtifacts@1
-              displayName: 'Publish the code coverage results'
-              inputs:
-                artifactName: coverage_netfx_linux
-                pathToPublish: 'output/coverage'
       - template: azure-templates-bootstrapper.yml # Tests|netcore (Linux)
         parameters:
           name: tests_netcore_linux
@@ -690,40 +670,21 @@ stages:
         pool:
           vmImage: $(VM_IMAGE_LINUX)
         dependsOn:
-          - tests_netfx_windows
           - tests_netcore_windows
-          - tests_netfx_macos
           - tests_netcore_macos
-          - tests_android_macos
-          - tests_netfx_linux
           - tests_netcore_linux
         steps:
           - checkout: self
           - template: azure-templates-variables.yml
-          - task: DownloadBuildArtifacts@0
-            displayName: Download the coverage_netfx_windows artifact
-            inputs:
-              artifactName: coverage_netfx_windows
-              downloadPath: output
           - task: DownloadBuildArtifacts@0
             displayName: Download the coverage_netcore_windows artifact
             inputs:
               artifactName: coverage_netcore_windows
               downloadPath: output
           - task: DownloadBuildArtifacts@0
-            displayName: Download the coverage_netfx_macos artifact
-            inputs:
-              artifactName: coverage_netfx_macos
-              downloadPath: output
-          - task: DownloadBuildArtifacts@0
             displayName: Download the coverage_netcore_macos artifact
             inputs:
               artifactName: coverage_netcore_macos
-              downloadPath: output
-          - task: DownloadBuildArtifacts@0
-            displayName: Download the coverage_netfx_linux artifact
-            inputs:
-              artifactName: coverage_netfx_linux
               downloadPath: output
           - task: DownloadBuildArtifacts@0
             displayName: Download the coverage_netcore_linux artifact
