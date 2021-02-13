@@ -587,6 +587,12 @@ stages:
             - native_android_arm64_macos
           tools:
             - dotnet-reportgenerator-globaltool
+          preBuildSteps:
+            - pwsh: |
+                dotnet tool install Microsoft.DotNet.XHarness.CLI `
+                  --global `
+                  --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
+                  --version "1.0.0-prerelease*"
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the Android test results
