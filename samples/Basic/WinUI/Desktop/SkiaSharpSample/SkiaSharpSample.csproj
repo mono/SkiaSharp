@@ -2,21 +2,17 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
-    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <TargetFramework>net5.0-windows10.0.18362.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17134.0</TargetPlatformMinVersion>
     <RootNamespace>SkiaSharpSample</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Platforms>AnyCPU;x86;x64</Platforms>
-    <SelfContained>true</SelfContained>
-    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
-    <RuntimeIdentifier>win-$(Platform)</RuntimeIdentifier>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
-    <PackageReference Include="Microsoft.WinUI" Version="3.0.0-preview2.200713.0" />
+    <PackageReference Include="Microsoft.WinUI" Version="3.0.0-preview4.210210.4" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,21 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="App.xaml" />
-    <None Remove="MainWindow.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Update="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Update="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
 
 </Project>

@@ -7,7 +7,11 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using CoreDispatcherPriority = Windows.UI.Core.CoreDispatcherPriority;
+using Windows.UI.Core;
+#if !WINDOWS_UWP
+using CoreDispatcherPriority = Microsoft.System.DispatcherQueuePriority;
+#else
+#endif
 #else
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -41,14 +45,19 @@ namespace SkiaSharp.Views.UWP
 
 		// workaround for https://github.com/mono/SkiaSharp/issues/1118
 		private int loadUnloadCounter = 0;
+		private XamlRoot theRoot;
 
 		public SKXamlCanvas()
 		{
 			if (designMode)
 				return;
 
+#if __WINUI__ && !WINDOWS_UWP
+			OnXamlRootChanged();
+#else
 			var display = DisplayInformation.GetForCurrentView();
 			OnDpiChanged(display);
+#endif
 
 			Loaded += OnLoaded;
 			Unloaded += OnUnloaded;
@@ -92,11 +101,19 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
+#if __WINUI__ && !WINDOWS_UWP
+		private void OnXamlRootChanged(XamlRoot sender = null, XamlRootChangedEventArgs args = null)
+		{
+			Dpi = sender?.RasterizationScale ?? RasterizationScale;
+			Invalidate();
+		}
+#else
 		private void OnDpiChanged(DisplayInformation sender, object args = null)
 		{
 			Dpi = sender.LogicalDpi / 96.0f;
 			Invalidate();
 		}
+#endif
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
@@ -109,11 +126,21 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 1)
 				return;
 
+#if __WINUI__ && !WINDOWS_UWP
+			theRoot = XamlRoot;
+			if (XamlRoot is XamlRoot root)
+			{
+				root.Changed += OnXamlRootChanged;
+				OnXamlRootChanged(root);
+			}
+#else
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged += OnDpiChanged;
 
 			OnDpiChanged(display);
+#endif
 		}
+
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
@@ -121,15 +148,24 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 0)
 				return;
 
+#if __WINUI__ && !WINDOWS_UWP
+			if (XamlRoot is XamlRoot root)
+				root.Changed -= OnXamlRootChanged;
+#else
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged -= OnDpiChanged;
 
 			FreeBitmap();
+#endif
 		}
 
 		public void Invalidate()
 		{
+#if __WINUI__ && !WINDOWS_UWP
+			DispatcherQueue.TryEnqueue(CoreDispatcherPriority.Normal, DoInvalidate);
+#else
 			Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
+#endif
 		}
 
 		private void DoInvalidate()

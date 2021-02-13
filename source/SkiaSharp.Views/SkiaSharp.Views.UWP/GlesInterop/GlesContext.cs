@@ -99,7 +99,7 @@ namespace SkiaSharp.Views.GlesInterop
 			surface = Egl.eglCreateWindowSurface(eglDisplay, eglConfig, surfaceCreationProperties, surfaceAttributes);
 			if (surface == Egl.EGL_NO_SURFACE)
 			{
-				throw new Exception("Failed to create EGL surface");
+				throw new Exception($"Failed to create EGL surface: {Egl.eglGetError():X}");
 			}
 
 			eglSurface = surface;
@@ -129,7 +129,7 @@ namespace SkiaSharp.Views.GlesInterop
 		{
 			if (Egl.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext) == Egl.EGL_FALSE)
 			{
-				throw new Exception("Failed to make EGLSurface current");
+				throw new Exception($"Failed to make EGLSurface current: {Egl.eglGetError():X}");
 			}
 		}
 
@@ -219,7 +219,7 @@ namespace SkiaSharp.Views.GlesInterop
 			eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, defaultDisplayAttributes);
 			if (eglDisplay == Egl.EGL_NO_DISPLAY)
 			{
-				throw new Exception("Failed to get EGL display");
+				throw new Exception($"Failed to get EGL display: {Egl.eglGetError():X}");
 			}
 
 			if (Egl.eglInitialize(eglDisplay, out int major, out int minor) == Egl.EGL_FALSE)
@@ -228,7 +228,7 @@ namespace SkiaSharp.Views.GlesInterop
 				eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, fl9_3DisplayAttributes);
 				if (eglDisplay == Egl.EGL_NO_DISPLAY)
 				{
-					throw new Exception("Failed to get EGL display");
+					throw new Exception($"Failed to get EGL display: {Egl.eglGetError():X}");
 				}
 
 				if (Egl.eglInitialize(eglDisplay, out major, out minor) == Egl.EGL_FALSE)
@@ -237,13 +237,13 @@ namespace SkiaSharp.Views.GlesInterop
 					eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
 					if (eglDisplay == Egl.EGL_NO_DISPLAY)
 					{
-						throw new Exception("Failed to get EGL display");
+						throw new Exception($"Failed to get EGL display: {Egl.eglGetError():X}");
 					}
 
 					if (Egl.eglInitialize(eglDisplay, out major, out minor) == Egl.EGL_FALSE)
 					{
 						// If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred.
-						throw new Exception("Failed to initialize EGL");
+						throw new Exception($"Failed to initialize EGL: {Egl.eglGetError():X}");
 					}
 				}
 			}
@@ -251,14 +251,14 @@ namespace SkiaSharp.Views.GlesInterop
 			EGLDisplay[] configs = new EGLDisplay[1];
 			if ((Egl.eglChooseConfig(eglDisplay, configAttributes, configs, configs.Length, out int numConfigs) == Egl.EGL_FALSE) || (numConfigs == 0))
 			{
-				throw new Exception("Failed to choose first EGLConfig");
+				throw new Exception($"Failed to choose first EGLConfig: {Egl.eglGetError():X}");
 			}
 			eglConfig = configs[0];
 
 			eglContext = Egl.eglCreateContext(eglDisplay, eglConfig, Egl.EGL_NO_CONTEXT, contextAttributes);
 			if (eglContext == Egl.EGL_NO_CONTEXT)
 			{
-				throw new Exception("Failed to create EGL context");
+				throw new Exception($"Failed to create EGL context: {Egl.eglGetError():X}");
 			}
 		}
 

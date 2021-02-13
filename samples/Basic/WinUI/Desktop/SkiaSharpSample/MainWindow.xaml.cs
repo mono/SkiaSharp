@@ -1,5 +1,4 @@
-﻿using Windows.Graphics.Display;
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 
 using SkiaSharp;
 using SkiaSharp.Views.WinUI;
@@ -19,8 +18,7 @@ namespace SkiaSharpSample
 			var canvas = e.Surface.Canvas;
 
 			// get the screen density for scaling
-			var display = DisplayInformation.GetForCurrentView();
-			var scale = display.LogicalDpi / 96.0f;
+			var scale = (float)((SKXamlCanvas)sender).XamlRoot.RasterizationScale;
 			var scaledSize = new SKSize(e.Info.Width / scale, e.Info.Height / scale);
 
 			// handle the device screen density
