@@ -101,9 +101,11 @@ Setup(context =>
 
     // wait for it to finish booting (10 mins)
     var waited = 0;
+    var total = 60 * 10;
     while (AdbShell("getprop sys.boot_completed", adbSettings).FirstOrDefault() != "1") {
         System.Threading.Thread.Sleep(1000);
-        if (waited++ > 60 * 10)
+        Information("Wating {0}/{1} seconds for the emulator to boot up.", waited, total);
+        if (waited++ > total)
             break;
     }
     Information("Waited {0} seconds for the emulator to boot up.", waited);
