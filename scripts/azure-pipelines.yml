@@ -471,7 +471,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Tests|netfx (Windows)
         parameters:
           name: tests_netfx_windows
-          displayName: Windows (NETFX)
+          displayName: Windows (.NET Framework)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests-netfx
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -498,7 +498,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Tests|netcore (Windows)
         parameters:
           name: tests_netcore_windows
-          displayName: Windows (NETCORE)
+          displayName: Windows (.NET Core)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests-netcore
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -525,7 +525,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Tests|netfx (macOS)
         parameters:
           name: tests_netfx_macos
-          displayName: macOS (NETFX)
+          displayName: macOS (.NET Framework)
           vmImage: $(VM_IMAGE_MAC)
           target: tests-netfx
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -550,7 +550,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Tests|netcore (macOS)
         parameters:
           name: tests_netcore_macos
-          displayName: macOS (NETCORE)
+          displayName: macOS (.NET Core)
           vmImage: $(VM_IMAGE_MAC)
           target: tests-netcore
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -570,12 +570,40 @@ stages:
             - task: PublishBuildArtifacts@1
               displayName: 'Publish the code coverage results'
               inputs:
-                artifactName: coverage_macos
+                artifactName: coverage_netcore_macos
+                pathToPublish: 'output/coverage'
+      - template: azure-templates-bootstrapper.yml # Tests|android (macOS)
+        parameters:
+          name: tests_android_macos
+          displayName: macOS (Android)
+          vmImage: $(VM_IMAGE_MAC)
+          target: tests-android
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          shouldPublish: false
+          requiredArtifacts:
+            - native_android_x86_macos
+            - native_android_x64_macos
+            - native_android_arm_macos
+            - native_android_arm64_macos
+          tools:
+            - dotnet-reportgenerator-globaltool
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the Android test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp*.Android.Tests/**/TestResults.xml'
+                testRunTitle: 'macOS Android Tests'
+            - task: PublishBuildArtifacts@1
+              displayName: 'Publish the code coverage results'
+              inputs:
+                artifactName: coverage_android_macos
                 pathToPublish: 'output/coverage'
       - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
         parameters:
           name: tests_netfx_linux
-          displayName: Linux (NETFX)
+          displayName: Linux (.NET Framework)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: tests-netfx
@@ -601,7 +629,7 @@ stages:
       - template: azure-templates-bootstrapper.yml # Tests|netcore (Linux)
         parameters:
           name: tests_netcore_linux
-          displayName: Linux (NETCORE)
+          displayName: Linux (.NET Core)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: tests-netcore
@@ -657,6 +685,7 @@ stages:
           - tests_netcore_windows
           - tests_netfx_macos
           - tests_netcore_macos
+          - tests_android_macos
           - tests_netfx_linux
           - tests_netcore_linux
         steps:
