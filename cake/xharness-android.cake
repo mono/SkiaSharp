@@ -98,6 +98,15 @@ Setup(context =>
     // start the emulator
     Information("Starting Emulator: {0}...", ANDROID_AVD);
     emulatorProcess = AndroidEmulatorStart(ANDROID_AVD, emuSettings);
+
+    // wait for it to finish booting (10 mins)
+    var waited = 0;
+    while (AdbShell("getprop sys.boot_completed", adbSettings).FirstOrDefault() != "1") {
+        System.Threading.Thread.Sleep(1000);
+        if (waited++ > 60 * 10)
+            break;
+    }
+    Information("Waited {0} seconds for the emulator to boot up.", waited);
 });
 
 Teardown(context =>
