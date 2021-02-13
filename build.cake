@@ -187,9 +187,6 @@ Task ("tests-netfx")
         else
             Warning ($"There were {failedTests} failed tests.");
     }
-    if (COVERAGE) {
-        RunCodeCoverage ("./tests/**/Coverage/**/*.xml", "./output/coverage");
-    }
 });
 
 Task ("tests-netcore")
@@ -262,9 +259,6 @@ Task ("tests-android")
         else
             Warning ($"There were {failedTests} failed tests.");
     }
-    if (COVERAGE) {
-        RunCodeCoverage ("./tests/**/Coverage/**/*.xml", "./output/coverage");
-    }
 });
 
 Task ("tests-wasm")
@@ -291,11 +285,12 @@ Task ("tests-wasm")
         serverProc?.Kill();
     }
 
-    if (failedTests > 0)
+    if (failedTests > 0) {
         if (THROW_ON_TEST_FAILURE)
             throw new Exception ($"There were {failedTests} failed tests.");
         else
             Warning ($"There were {failedTests} failed tests.");
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
