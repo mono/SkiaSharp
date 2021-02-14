@@ -172,6 +172,11 @@ Task("Default")
         $"--device-arch=\"{DEVICE_ARCH}\" " +
         $"--output-directory=\"{TEST_RESULTS}\" " +
         $"--verbosity=\"Debug\" ");
+
+    var failed = XmlPeek($"{TEST_RESULTS}/TestResults.xml", "/assemblies/assembly[@failed > 0 or @errors > 0]/@failed");
+    if (!string.IsNullOrEmpty(failed)) {
+        throw new Exception($"At least {failed} test(s) failed.");
+    }
 });
 
 RunTarget(TARGET);

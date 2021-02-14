@@ -249,7 +249,7 @@ Task ("tests-android")
             configuration: "Debug");
         // run the tests
         DirectoryPath results = "./output/testlogs/SkiaSharp.Android.Tests";
-        RunCake ("cake/xharness-android.cake", "Default", new Dictionary<string, string> {
+        RunCake ("./cake/xharness-android.cake", "Default", new Dictionary<string, string> {
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
             { "exclusive", "true" },

@@ -480,8 +480,6 @@ stages:
           requiredArtifacts:
             - native_win32_x86_windows
             - native_win32_x64_windows
-          tools:
-            - dotnet-reportgenerator-globaltool
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the .NET Framework test results
@@ -527,8 +525,6 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - native_macos_macos
-          tools:
-            - dotnet-reportgenerator-globaltool
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the Mono test results
@@ -575,8 +571,6 @@ stages:
             - native_android_x64_macos
             - native_android_arm_macos
             - native_android_arm64_macos
-          tools:
-            - dotnet-reportgenerator-globaltool
           preBuildSteps:
             - pwsh: |
                 dotnet tool install Microsoft.DotNet.XHarness.CLI `
@@ -611,8 +605,6 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - native_linux_x64_linux
-          tools:
-            - dotnet-reportgenerator-globaltool
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the Mono test results
