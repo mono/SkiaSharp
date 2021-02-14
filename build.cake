@@ -239,12 +239,16 @@ Task ("tests-android")
 
     // SkiaSharp.Android.Tests.csproj
     try {
+        // build the solution to copy all the files
+        RunMSBuild ("./tests/SkiaSharp.Mobile.Tests.sln", configuration: "Debug");
+        // package the app
         FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
-        DirectoryPath results = "./output/testlogs/SkiaSharp.Android.Tests";
-        RunMSBuild (csproj, 
-            targets: new [] { "Build", "SignAndroidPackage" }, 
+        RunMSBuild (csproj,
+            targets: new [] { "SignAndroidPackage" }, 
             platform: "AnyCPU",
             configuration: "Debug");
+        // run the tests
+        DirectoryPath results = "./output/testlogs/SkiaSharp.Android.Tests";
         RunCake ("cake/xharness-android.cake", "Default", new Dictionary<string, string> {
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
