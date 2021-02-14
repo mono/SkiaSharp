@@ -7,7 +7,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory(".."));
 
 // required
 FilePath PROJECT = Argument("project", EnvironmentVariable("ANDROID_TEST_PROJECT") ?? "");
-string TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-32_30");
+string TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-32_29");
 
 // optional
 var TEST_APP = Argument("app", EnvironmentVariable("ANDROID_TEST_APP") ?? "");
@@ -18,7 +18,7 @@ var TEST_RESULTS = Argument("results", EnvironmentVariable("ANDROID_TEST_RESULTS
 // other
 string ANDROID_AVD = "DEVICE_TESTS_EMULATOR";
 string DEVICE_NAME = "Nexus 5X";
-string DEVICE_ID = "system-images;android-30;google_apis_playstore;x86";
+string DEVICE_ID = "system-images;android-29;google_apis_playstore;x86";
 string DEVICE_ARCH = "x86";
 
 // set up env
