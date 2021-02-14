@@ -568,7 +568,7 @@ stages:
           displayName: Android (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: tests-android
-          additionalArgs: --device=android-emulator-32_29 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          additionalArgs: --device=android-emulator-32_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           shouldPublish: false
           requiredArtifacts:
             - native_android_x86_macos
@@ -584,7 +584,7 @@ stages:
                   --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
                   --version "1.0.0-prerelease*"
               displayName: Install the xharness .NET Core tool
-            - bash: sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"system-images;android-29;google_apis_playstore;x86\""
+            - bash: sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"system-images;android-30;google_apis_playstore;x86\""
               displayName: Install the Android emulator
           postBuildSteps:
             - task: PublishTestResults@2
