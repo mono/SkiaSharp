@@ -19,9 +19,10 @@ namespace SkiaSharp.Tests
 
 		protected static readonly string[] UnicodeFontFamilies;
 		protected static readonly string DefaultFontFamily;
-		protected static readonly string PathToAssembly;
-		protected static readonly string PathToFonts;
-		protected static readonly string PathToImages;
+
+		public static readonly string PathToAssembly;
+		public static readonly string PathToFonts;
+		public static readonly string PathToImages;
 
 		static BaseTest()
 		{
@@ -60,11 +61,16 @@ namespace SkiaSharp.Tests
 			IsRuntimeMono = Type.GetType("Mono.Runtime") != null;
 
 			// set the test fields
+#if __ANDROID__
+			DefaultFontFamily = "sans-serif";
+			UnicodeFontFamilies = new[] { "Noto Color Emoji" };
+#else
 			DefaultFontFamily = IsLinux ? "DejaVu Sans" : "Arial";
 			UnicodeFontFamilies =
 				IsLinux ? new[] { "Symbola" } :
 				IsMac ? new[] { "Apple Color Emoji" } :
 				new[] { "Segoe UI Emoji", "Segoe UI Symbol" };
+#endif
 		}
 
 		public static void CollectGarbage()

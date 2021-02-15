@@ -501,7 +501,11 @@ namespace SkiaSharp.Tests
 			mask.FreeImage();
 		}
 
+#if __ANDROID__
+		[SkippableTheory(Skip = "Android runs out of memory.")]
+#else
 		[SkippableTheory]
+#endif
 		[InlineData(100, 1000)]
 		public static void ImageScalingMultipleThreadsTest(int numThreads, int numIterationsPerThread)
 		{
