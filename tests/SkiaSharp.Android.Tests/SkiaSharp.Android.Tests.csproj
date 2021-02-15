@@ -92,6 +92,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssetCopier.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="TestInstrumentation.cs" />
   </ItemGroup>
@@ -100,7 +101,7 @@
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="PlatformUtils\LibraryLoader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <!-- <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" /> -->
+    <EmbeddedResource Include="..\Content\**\*" Link="Content\%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\AndroidManifest.xml" />
@@ -115,4 +116,5 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="..\..\output\SkiaSharp\nuget\build\monoandroid1.0\SkiaSharp.targets" Condition="Exists('..\..\output\SkiaSharp\nuget\build\monoandroid1.0\SkiaSharp.targets')" />
+  <Import Project="..\..\output\HarfBuzzSharp\nuget\build\monoandroid1.0\HarfBuzzSharp.targets" Condition="Exists('..\..\output\HarfBuzzSharp\nuget\build\monoandroid1.0\HarfBuzzSharp.targets')" />
 </Project>

@@ -30,6 +30,8 @@ namespace SkiaSharp.Tests
 		{
 			base.OnCreate(arguments);
 
+			AssetCopier.CopyAssets(Context);
+
 			resultsFileName = arguments.GetString("results-file-name", "TestResults.xml");
 
 			Start();
