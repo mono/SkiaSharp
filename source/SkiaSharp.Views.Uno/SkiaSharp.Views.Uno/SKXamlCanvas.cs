@@ -3,11 +3,12 @@ using Windows.ApplicationModel;
 using Windows.Graphics.Display;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 
 namespace SkiaSharp.Views.UWP
 {
-	public partial class SKXamlCanvas : FrameworkElement
+	public partial class SKXamlCanvas : Canvas
 	{
 		private static readonly DependencyProperty ProxyVisibilityProperty =
 			DependencyProperty.Register(
