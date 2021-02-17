@@ -42,7 +42,9 @@ void RunMSBuild(
 
         if (targets?.Length > 0) {
             c.Targets.Clear();
-            c.Targets.AddRange(targets);
+            foreach (var target in targets) {
+                c.Targets.Add(target);
+            }
         }
 
         if (!string.IsNullOrEmpty(platformTarget)) {
