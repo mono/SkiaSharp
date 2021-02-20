@@ -321,6 +321,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+#if !__ANDROID__ && !__IOS__
 		[SkippableFact]
 		public async Task DelayedConstructionDoesNotCreateInvalidState()
 		{
@@ -437,6 +438,7 @@ namespace SkiaSharp.Tests
 			Assert.True(SKObject.GetInstance<DelayedDestructionObject>(handle, out var final));
 			Assert.Same(objSlow, final);
 		}
+#endif
 
 		private class DelayedConstructionObject : SKObject
 		{

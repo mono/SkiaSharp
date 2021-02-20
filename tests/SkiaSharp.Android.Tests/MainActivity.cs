@@ -13,7 +13,7 @@ namespace SkiaSharp.Tests
 		{
 			Xamarin.Essentials.Platform.Init(this, bundle);
 
-			AssetCopier.CopyAssets(this);
+			AssetCopier.CopyAssets();
 
 			AddTestAssembly(Assembly.GetExecutingAssembly());
 			AddExecutionAssembly(Assembly.GetExecutingAssembly());

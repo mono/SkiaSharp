@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 		static BaseTest()
 		{
 			// the the base paths
-#if __ANDROID__
+#if __ANDROID__ || __IOS__
 			PathToAssembly = Xamarin.Essentials.FileSystem.CacheDirectory;
 #else
 			PathToAssembly = Directory.GetCurrentDirectory();
@@ -36,7 +36,7 @@ namespace SkiaSharp.Tests
 			PathToImages = Path.Combine(PathToAssembly, "images");
 
 			// some platforms run the tests from a temporary location, so copy the native files
-#if !NET_STANDARD && !__ANDROID__
+#if !NET_STANDARD && !__ANDROID__ && !__IOS__
 			var skiaRoot = Path.GetDirectoryName(typeof(SkiaSharp.SKImageInfo).Assembly.Location);
 			var harfRoot = Path.GetDirectoryName(typeof(HarfBuzzSharp.Buffer).Assembly.Location);
 
@@ -64,6 +64,9 @@ namespace SkiaSharp.Tests
 #if __ANDROID__
 			DefaultFontFamily = "sans-serif";
 			UnicodeFontFamilies = new[] { "Noto Color Emoji" };
+#elif __IOS__
+			DefaultFontFamily = "Arial";
+			UnicodeFontFamilies = new[] { "Apple Color Emoji" };
 #else
 			DefaultFontFamily = IsLinux ? "DejaVu Sans" : "Arial";
 			UnicodeFontFamilies =
