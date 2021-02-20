@@ -594,6 +594,37 @@ stages:
               inputs:
                 artifactName: testlogs_android
                 pathToPublish: 'output/testlogs'
+      - template: azure-templates-bootstrapper.yml # Tests|ios (macOS)
+        parameters:
+          name: tests_ios_macos
+          displayName: iOS (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: tests-ios
+          additionalArgs: --device=ios-emulator-64 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          shouldPublish: false
+          requiredArtifacts:
+            - native_ios_macos
+          preBuildSteps:
+            - pwsh: |
+                dotnet tool install Microsoft.DotNet.XHarness.CLI `
+                  --global `
+                  --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
+                  --version "1.0.0-prerelease*"
+              displayName: Install the xharness .NET Core tool
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the iOS test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'output/testlogs/SkiaSharp.iOS.Tests/**/TestResults.xml'
+                testRunTitle: 'iOS Tests'
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the test logs
+              condition: always()
+              inputs:
+                artifactName: testlogs_ios
+                pathToPublish: 'output/testlogs'
       - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
         parameters:
           name: tests_netfx_linux
