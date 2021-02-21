@@ -9,7 +9,6 @@
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Tests</AssemblyName>
     <TargetFrameworkVersion>v10.0</TargetFrameworkVersion>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <AndroidApplication>True</AndroidApplication>
     <AndroidUseIntermediateDesignerFile>true</AndroidUseIntermediateDesignerFile>
     <AndroidResgenClass>Resource</AndroidResgenClass>
@@ -23,6 +22,7 @@
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <SkipCopyToOutputDirectory>true</SkipCopyToOutputDirectory>
     <SignAssembly>false</SignAssembly>
+    <AndroidSupportedAbis>armeabi-v7a;x86;x86_64;arm64-v8a</AndroidSupportedAbis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,7 +33,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AndroidLinkMode>None</AndroidLinkMode>
-    <AndroidSupportedAbis>armeabi-v7a;x86;x86_64;arm64-v8a</AndroidSupportedAbis>
     <JavaMaximumHeapSize>1G</JavaMaximumHeapSize>
     <AotAssemblies>false</AotAssemblies>
     <EnableLLVM>false</EnableLLVM>
@@ -52,7 +51,6 @@
     <WarningLevel>4</WarningLevel>
     <AndroidManagedSymbols>true</AndroidManagedSymbols>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-    <AndroidSupportedAbis>armeabi-v7a;x86;x86_64;arm64-v8a</AndroidSupportedAbis>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <JavaMaximumHeapSize>1G</JavaMaximumHeapSize>
     <AndroidLinkMode>None</AndroidLinkMode>
@@ -86,18 +84,21 @@
       <Project>{4c5f53b5-9dfd-4cc6-8fae-98b4f40cb33a}</Project>
       <Name>SkiaSharp.HarfBuzz</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\source\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Android\SkiaSharp.Views.Forms.Android.csproj">
+      <Project>{f962e49d-dc1f-4e93-9f6b-335e2746bcf1}</Project>
+      <Name>SkiaSharp.Views.Forms.Android</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\source\SkiaSharp.Views\SkiaSharp.Views.Android\SkiaSharp.Views.Android.csproj">
       <Project>{16922662-c540-4865-876d-94ed3211521b}</Project>
       <Name>SkiaSharp.Views.Android</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssetCopier.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="TestInstrumentation.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" Exclude="..\Tests\GlContexts\*\*;..\Tests\PlatformUtils\*\*" />
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="PlatformUtils\LibraryLoader.cs" />
   </ItemGroup>
   <ItemGroup>

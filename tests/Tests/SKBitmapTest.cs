@@ -501,8 +501,8 @@ namespace SkiaSharp.Tests
 			mask.FreeImage();
 		}
 
-#if __ANDROID__
-		[SkippableTheory(Skip = "Android runs out of memory.")]
+#if __ANDROID__ || __IOS__
+		[SkippableTheory(Skip = "Mobile devices sometimes run out of memory.")]
 #else
 		[SkippableTheory]
 #endif

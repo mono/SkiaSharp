@@ -9,7 +9,8 @@ void RunMSBuild(
     bool restore = true,
     bool bl = true,
     string[] targets = null,
-    string configuration = null)
+    string configuration = null,
+    Dictionary<string, string> properties = null)
 {
     var nugetSources = new [] {
         OUTPUT_NUGETS_PATH.FullPath,
@@ -61,6 +62,12 @@ void RunMSBuild(
 
         c.Properties ["RestoreNoCache"] = new [] { "true" };
         c.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
+
+        if (properties != null) {
+            foreach (var prop in properties) {
+                c.Properties [prop.Key] = new [] { prop.Value };
+            }
+        }
         // c.Properties ["RestoreSources"] = nugetSources;
         var sep = IsRunningOnWindows() ? ";" : "%3B";
         c.ArgumentCustomization = args => args.Append($"/p:RestoreSources=\"{string.Join(sep, nugetSources)}\"");
