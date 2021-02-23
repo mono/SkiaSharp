@@ -2,6 +2,7 @@
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml.Controls;
+using System.Collections.Generic;
 
 using SkiaSharp.Views.UWP.Interop;
 
@@ -20,6 +21,9 @@ namespace SkiaSharp.Views.GlesInterop
 		private EGLContext eglContext;
 		private EGLSurface eglSurface;
 		private EGLConfig eglConfig;
+
+		private static readonly object displayLock = new object();
+		private static readonly Dictionary<EGLDisplay, int> displayReferenceCounts = new Dictionary<EGLDisplay, int>();
 
 		public GlesContext()
 		{
@@ -210,26 +214,19 @@ namespace SkiaSharp.Views.GlesInterop
 			//    using "warpDisplayAttributes".  This corresponds to D3D11 Feature Level 11_0 on WARP, a D3D11 software rasterizer.
 			//
 
-			// This tries to initialize EGL to D3D11 Feature Level 10_0+. See above comment for details.
-			eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, defaultDisplayAttributes);
-			if (eglDisplay == Egl.EGL_NO_DISPLAY)
+			lock (displayLock)
 			{
-				throw new Exception("Failed to get EGL display");
-			}
-
-			if (Egl.eglInitialize(eglDisplay, out int major, out int minor) == Egl.EGL_FALSE)
-			{
-				// This tries to initialize EGL to D3D11 Feature Level 9_3, if 10_0+ is unavailable (e.g. on some mobile devices).
-				eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, fl9_3DisplayAttributes);
+				// This tries to initialize EGL to D3D11 Feature Level 10_0+. See above comment for details.
+				eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, defaultDisplayAttributes);
 				if (eglDisplay == Egl.EGL_NO_DISPLAY)
 				{
 					throw new Exception("Failed to get EGL display");
 				}
 
-				if (Egl.eglInitialize(eglDisplay, out major, out minor) == Egl.EGL_FALSE)
+				if (Egl.eglInitialize(eglDisplay, out int major, out int minor) == Egl.EGL_FALSE)
 				{
-					// This initializes EGL to D3D11 Feature Level 11_0 on WARP, if 9_3+ is unavailable on the default GPU.
-					eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
+					// This tries to initialize EGL to D3D11 Feature Level 9_3, if 10_0+ is unavailable (e.g. on some mobile devices).
+					eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, fl9_3DisplayAttributes);
 					if (eglDisplay == Egl.EGL_NO_DISPLAY)
 					{
 						throw new Exception("Failed to get EGL display");
@@ -237,10 +234,29 @@ namespace SkiaSharp.Views.GlesInterop
 
 					if (Egl.eglInitialize(eglDisplay, out major, out minor) == Egl.EGL_FALSE)
 					{
-						// If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred.
-						throw new Exception("Failed to initialize EGL");
+						// This initializes EGL to D3D11 Feature Level 11_0 on WARP, if 9_3+ is unavailable on the default GPU.
+						eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
+						if (eglDisplay == Egl.EGL_NO_DISPLAY)
+						{
+							throw new Exception("Failed to get EGL display");
+						}
+
+						if (Egl.eglInitialize(eglDisplay, out major, out minor) == Egl.EGL_FALSE)
+						{
+							
+							// If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred.
+							throw new Exception("Failed to initialize EGL");
+						}
 					}
 				}
+
+				if (eglDisplay != Egl.EGL_NO_DISPLAY)
+                {
+					int refCount = 0;
+					displayReferenceCounts.TryGetValue(eglDisplay, out refCount);
+					refCount += 1;
+					displayReferenceCounts[eglDisplay] = refCount;
+                }
 			}
 
 			EGLDisplay[] configs = new EGLDisplay[1];
@@ -267,8 +283,19 @@ namespace SkiaSharp.Views.GlesInterop
 
 			if (eglDisplay != Egl.EGL_NO_DISPLAY)
 			{
-				Egl.eglTerminate(eglDisplay);
-				eglDisplay = Egl.EGL_NO_DISPLAY;
+				lock (displayReferenceCounts)
+				{
+					int refCount = 0;
+					displayReferenceCounts.TryGetValue(eglDisplay, out refCount);
+					refCount -= 1;
+					displayReferenceCounts[eglDisplay] = refCount;
+
+					if (refCount == 0)
+					{
+						Egl.eglTerminate(eglDisplay);
+						eglDisplay = Egl.EGL_NO_DISPLAY;
+					}
+				}
 			}
 		}
 	}

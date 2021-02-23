@@ -33,8 +33,14 @@ namespace SkiaSharp.Views.UWP
 
 		private bool enableRenderLoop;
 
+		private double lastCompositionScaleX = 0.0;
+		private double lastCompositionScaleY = 0.0;
+
 		public AngleSwapChainPanel()
 		{
+			lastCompositionScaleX = CompositionScaleX;
+			lastCompositionScaleY = CompositionScaleY;
+
 			glesContext = null;
 
 			renderLoopWorker = null;
@@ -148,6 +154,14 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnCompositionChanged(SwapChainPanel sender, object args)
 		{
+			if (lastCompositionScaleX == CompositionScaleX &&
+				lastCompositionScaleY == CompositionScaleY)
+			{
+				return;
+			}
+
+			lastCompositionScaleX = CompositionScaleX;
+			lastCompositionScaleY = CompositionScaleY;
 			ContentsScale = CompositionScaleX;
 
 			DestroyRenderSurface();

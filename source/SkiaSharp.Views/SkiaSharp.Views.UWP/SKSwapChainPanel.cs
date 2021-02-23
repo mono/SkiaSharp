@@ -110,8 +110,10 @@ namespace SkiaSharp.Views.UWP
 
 			glInfo = default;
 
-			context?.AbandonContext(true);
-			context?.Dispose();
+			//this probably isn't valid to yank these lines? but the behavior is correct with these gone.
+			//skiasharp doesn't seem to be calling AbandonContext anywhere else?
+			//context?.AbandonContext(true);
+			//context?.Dispose();
 			context = null;
 
 			glInterface?.Dispose();
