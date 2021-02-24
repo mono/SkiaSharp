@@ -110,10 +110,11 @@ namespace SkiaSharp.Views.UWP
 
 			glInfo = default;
 
-			//this probably isn't valid to yank these lines? but the behavior is correct with these gone.
-			//skiasharp doesn't seem to be calling AbandonContext anywhere else?
-			//context?.AbandonContext(true);
-			//context?.Dispose();
+			//This seems to be a safer fix for the issue?
+			//But I'm not sure about the difference in semantics between
+			//AbandonContext(true) and AbandonContext(false) on the Skia end.
+			context?.AbandonContext(false);
+			context?.Dispose();
 			context = null;
 
 			glInterface?.Dispose();
