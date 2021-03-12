@@ -59,7 +59,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void ToRasterImageFalseReturnsNonLazy()
+		public void ToRasterImageTrueFalseReturnsNonLazy()
 		{
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
 			using var image = SKImage.FromEncodedData(data);
@@ -72,6 +72,22 @@ namespace SkiaSharp.Tests
 			Assert.False(nonLazy.IsLazyGenerated);
 			Assert.NotNull(nonLazy.PeekPixels());
 			Assert.Equal(nonLazy, nonLazy.ToRasterImage());
+		}
+
+		[SkippableFact]
+		public void ToRasterImageTrueTrueReturnsNonLazy()
+		{
+			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			using var image = SKImage.FromEncodedData(data);
+
+			Assert.True(image.IsLazyGenerated);
+			Assert.Null(image.PeekPixels());
+
+			using var nonLazy = image.ToRasterImage(true);
+			Assert.NotEqual(image, nonLazy);
+			Assert.False(nonLazy.IsLazyGenerated);
+			Assert.NotNull(nonLazy.PeekPixels());
+			Assert.Equal(nonLazy, nonLazy.ToRasterImage(true));
 		}
 
 		[SkippableFact]

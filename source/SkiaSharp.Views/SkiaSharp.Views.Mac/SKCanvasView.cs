@@ -23,7 +23,6 @@ namespace SkiaSharp.Views.Mac
 		public SKCanvasView(CGRect frame)
 			: base(frame)
 		{
-
 			Initialize();
 		}
 

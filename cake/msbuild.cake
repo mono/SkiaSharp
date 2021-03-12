@@ -7,15 +7,21 @@ void RunMSBuild(
     string platform = "Any CPU",
     string platformTarget = null,
     bool restore = true,
-    bool restoreOnly = false,
-    bool bl = true)
+    bool bl = true,
+    string[] targets = null,
+    string configuration = null,
+    Dictionary<string, string> properties = null)
 {
-    var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
+    var nugetSources = new [] {
+        OUTPUT_NUGETS_PATH.FullPath,
+        "https://api.nuget.org/v3/index.json",
+        "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json"
+    };
 
     EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
 
     MSBuild(solution, c => {
-        c.Configuration = CONFIGURATION;
+        c.Configuration = configuration ?? CONFIGURATION;
         c.Verbosity = VERBOSITY;
         c.MaxCpuCount = 0;
 
@@ -33,12 +39,13 @@ void RunMSBuild(
         }
 
         c.NoLogo = VERBOSITY == Verbosity.Minimal;
+        c.Restore = restore;
 
-        if (restoreOnly) {
+        if (targets?.Length > 0) {
             c.Targets.Clear();
-            c.Targets.Add("Restore");
-        } else {
-            c.Restore = restore;
+            foreach (var target in targets) {
+                c.Targets.Add(target);
+            }
         }
 
         if (!string.IsNullOrEmpty(platformTarget)) {
@@ -55,6 +62,12 @@ void RunMSBuild(
 
         c.Properties ["RestoreNoCache"] = new [] { "true" };
         c.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
+
+        if (properties != null) {
+            foreach (var prop in properties) {
+                c.Properties [prop.Key] = new [] { prop.Value };
+            }
+        }
         // c.Properties ["RestoreSources"] = nugetSources;
         var sep = IsRunningOnWindows() ? ";" : "%3B";
         c.ArgumentCustomization = args => args.Append($"/p:RestoreSources=\"{string.Join(sep, nugetSources)}\"");
