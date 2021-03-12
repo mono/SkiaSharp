@@ -511,6 +511,9 @@ namespace SkiaSharp
 		public SKData EncodedData =>
 			SKData.GetObject (SkiaApi.sk_image_ref_encoded (Handle));
 
+		public SKImageInfo Info =>
+			new SKImageInfo (Width, Height, ColorType, AlphaType, ColorSpace);
+
 		// ToShader
 
 		public SKShader ToShader () =>

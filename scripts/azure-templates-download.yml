@@ -4,6 +4,7 @@ parameters:
   vmImage: ''                                   # the VM image
   condition: succeeded()                        # whether or not to run this template
   buildExternals: ''                            # the build number to download externals from
+  postBuildSteps: []                            # any additional steps to run after the build
 
 jobs:
   - job: ${{ parameters.name }}
@@ -34,3 +35,4 @@ jobs:
         inputs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
+      - ${{ parameters.postBuildSteps }}
