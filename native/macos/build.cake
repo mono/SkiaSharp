@@ -10,14 +10,20 @@ Task("libSkiaSharp")
     .Does(() =>
 {
     Build("x86_64", "x64");
+    Build("arm64", "arm64");
 
     RunLipo(OUTPUT_PATH, "libSkiaSharp.dylib", new [] {
-       (FilePath) "x86_64/libSkiaSharp.dylib"
+       (FilePath) "x86_64/libSkiaSharp.dylib",
+       (FilePath) "arm64/libSkiaSharp.dylib",
     });
 
     void Build(string arch, string skiaArch)
     {
         if (Skip(arch)) return;
+
+        var minVersion = skiaArch.ToLower() == "arm64"
+            ? "11.0"
+            : "10.8";
 
         GnNinja($"macos/{arch}", "skia",
             $"target_os='mac' " +
@@ -31,8 +37,8 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-mmacosx-version-min=10.8', '-stdlib=libc++' ] " +
-            $"extra_ldflags=[ '-Wl,macosx_version_min=10.8', '-stdlib=libc++' ]");
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-mmacosx-version-min={minVersion}', '-stdlib=libc++' ] " +
+            $"extra_ldflags=[ '-Wl,macosx_version_min={minVersion}', '-stdlib=libc++' ]");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch);
 
@@ -49,9 +55,11 @@ Task("libHarfBuzzSharp")
     .Does(() =>
 {
     Build("x86_64");
+    Build("arm64");
 
     RunLipo(OUTPUT_PATH, "libHarfBuzzSharp.dylib", new [] {
-       (FilePath) "x86_64/libHarfBuzzSharp.dylib"
+       (FilePath) "x86_64/libHarfBuzzSharp.dylib",
+       (FilePath) "arm64/libHarfBuzzSharp.dylib",
     });
 
     void Build(string arch)
