@@ -28,7 +28,7 @@ namespace SkiaSharp
 
 		public static bool Is64Bit { get; }
 
-		public static bool IsMusl => isMuslLazy.Value;
+		public static bool IsMusl => IsLinux && isMuslLazy.Value;
 
 		static PlatformConfiguration ()
 		{
