@@ -417,7 +417,7 @@ namespace SkiaSharp
 			if (shaderB == null)
 				throw new ArgumentNullException (nameof (shaderB));
 
-			return GetObject (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle, null));
+			return GetObject (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle));
 		}
 
 		// CreateLerp
@@ -429,7 +429,7 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 
-			return GetObject (SkiaApi.sk_shader_new_lerp (weight, dst.Handle, src.Handle, null));
+			return GetObject (SkiaApi.sk_shader_new_lerp (weight, dst.Handle, src.Handle));
 		}
 
 		// CreateColorFilter
