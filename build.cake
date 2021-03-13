@@ -36,6 +36,7 @@ var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
+var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
 
 var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
 var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
@@ -325,7 +326,10 @@ Task ("tests-wasm")
             Arguments = "server.py",
             WorkingDirectory = pubDir,
         });
-        DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj", "http://localhost:8000/ -o ./tests/SkiaSharp.Wasm.Tests/TestResults/");
+        DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj",
+            "http://localhost:8000/ " +
+            "-o ./tests/SkiaSharp.Wasm.Tests/TestResults/ " +
+            (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"-d {CHROMEWEBDRIVER}"));
     } catch {
         failedTests++;
     } finally {
