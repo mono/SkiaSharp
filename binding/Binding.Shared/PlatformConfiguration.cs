@@ -14,7 +14,13 @@ namespace SkiaSharp
 {
 	internal static class PlatformConfiguration
 	{
+#if WINDOWS_UWP
 		private static readonly Lazy<bool> isMuslLazy = new Lazy<bool>(IsMuslImplementation);
+
+		public static bool IsMusl => IsLinux && isMuslLazy.Value;
+#else
+		public static bool IsMusl { get; }
+#endif
 
 		public static bool IsUnix { get; }
 
@@ -28,8 +34,6 @@ namespace SkiaSharp
 
 		public static bool Is64Bit { get; }
 
-		public static bool IsMusl => IsLinux && isMuslLazy.Value;
-
 		static PlatformConfiguration ()
 		{
 #if WINDOWS_UWP
@@ -41,7 +45,6 @@ namespace SkiaSharp
 			var arch = Package.Current.Id.Architecture;
 			const ProcessorArchitecture arm64 = (ProcessorArchitecture)12;
 			IsArm = arch == ProcessorArchitecture.Arm || arch == arm64;
-
 #else
 			IsMac = RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
 			IsLinux = RuntimeInformation.IsOSPlatform (OSPlatform.Linux);
@@ -53,10 +56,9 @@ namespace SkiaSharp
 #endif
 
 			Is64Bit = IntPtr.Size == 8;
-
-			isMuslLazy = new Lazy<bool>(IsMuslImplementation);
 		}
 
+#if !WINDOWS_UWP
 		private static bool IsMuslImplementation()
 		{
 			try
@@ -84,5 +86,6 @@ namespace SkiaSharp
 
 		[DllImport("libc.so", EntryPoint = "access")]
 		private static extern unsafe int AccessCheck([MarshalAs (UnmanagedType.LPStr)] string path, int mode);
+#endif
 	}
 }
