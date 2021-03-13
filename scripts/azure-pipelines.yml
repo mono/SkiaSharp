@@ -10,7 +10,7 @@ pr:
   - patch/*
 
 variables:
-  SKIASHARP_VERSION: 2.88.0
+  SKIASHARP_VERSION: 2.80.3
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
@@ -265,17 +265,26 @@ stages:
               gnArgs: skia_use_fontconfig=false
           matrix:
             - arch: x64
-              docker: scripts/Docker/debian9/amd64
+              docker: scripts/Docker/ubuntu16/amd64
             - arch: x64
               variant: alpine
               docker: scripts/Docker/alpine/amd64
             - arch: arm
-              docker: scripts/Docker/debian9/clang-cross
+              docker: scripts/Docker/ubuntu16/clang-cross
               target: externals-linux-clang-cross
             - arch: arm64
-              docker: scripts/Docker/debian9/clang-cross
+              docker: scripts/Docker/ubuntu16/clang-cross
               dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
               target: externals-linux-clang-cross
+            - arch: arm
+              docker: scripts/Docker/ubuntu16/gcc-cross
+              gnArgs: extra_cflags+=[ \'-Wno-psabi\' ]
+              alt: gcc
+            - arch: arm64
+              docker: scripts/Docker/ubuntu16/gcc-cross
+              dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
+              gnArgs: extra_cflags+=[ \'-Wno-psabi\' ]
+              alt: gcc
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
         parameters:
           name: native_tizen_linux
@@ -291,6 +300,8 @@ stages:
       - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
         parameters:
           emscripten:
+            - 1.39.11
+            - 1.40.0
             - 2.0.5
             - 2.0.6
             - 2.0.9

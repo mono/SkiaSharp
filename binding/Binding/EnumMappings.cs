@@ -9,7 +9,6 @@ namespace SkiaSharp
 		OpenGL = 1,
 		Vulkan = 2,
 		Dawn = 3,
-		Direct3D = 4,
 	}
 
 	[EditorBrowsable (EditorBrowsableState.Never)]
@@ -62,7 +61,6 @@ namespace SkiaSharp
 				GRBackend.OpenGL => GRBackendNative.OpenGL,
 				GRBackend.Vulkan => GRBackendNative.Vulkan,
 				GRBackend.Dawn => GRBackendNative.Dawn,
-				GRBackend.Direct3D => GRBackendNative.Direct3D,
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
@@ -73,7 +71,6 @@ namespace SkiaSharp
 				GRBackendNative.OpenGL => GRBackend.OpenGL,
 				GRBackendNative.Vulkan => GRBackend.Vulkan,
 				GRBackendNative.Dawn => GRBackend.Dawn,
-				GRBackendNative.Direct3D => GRBackend.Direct3D,
 				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
 			};
 
@@ -99,8 +96,6 @@ namespace SkiaSharp
 				SKColorType.Alpha16 => SKColorTypeNative.A16Unorm,
 				SKColorType.Rg1616 => SKColorTypeNative.R16g16Unorm,
 				SKColorType.Rgba16161616 => SKColorTypeNative.R16g16b16a16Unorm,
-				SKColorType.Bgra1010102 => SKColorTypeNative.Bgra1010102,
-				SKColorType.Bgr101010x => SKColorTypeNative.Bgr101010x,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
 			};
 
@@ -126,8 +121,6 @@ namespace SkiaSharp
 				SKColorTypeNative.A16Unorm => SKColorType.Alpha16,
 				SKColorTypeNative.R16g16Unorm => SKColorType.Rg1616,
 				SKColorTypeNative.R16g16b16a16Unorm => SKColorType.Rgba16161616,
-				SKColorTypeNative.Bgra1010102 => SKColorType.Bgra1010102,
-				SKColorTypeNative.Bgr101010x => SKColorType.Bgr101010x,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
 			};
 	}

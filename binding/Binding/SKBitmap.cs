@@ -459,10 +459,9 @@ namespace SkiaSharp
 			get { return SkiaApi.sk_bitmap_is_immutable (Handle); }
 		}
 
-		[Obsolete]
 		public bool IsVolatile {
-			get => false;
-			set { }
+			get { return SkiaApi.sk_bitmap_is_volatile (Handle); }
+			set { SkiaApi.sk_bitmap_set_volatile (Handle, value); }
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]

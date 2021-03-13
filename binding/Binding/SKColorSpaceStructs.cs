@@ -288,13 +288,10 @@ namespace SkiaSharp
 			}
 		}
 
-		[Obsolete ("Use DisplayP3 instead.")]
-		public static SKColorSpaceXyz Dcip3 => DisplayP3;
-
-		public static SKColorSpaceXyz DisplayP3 {
+		public static SKColorSpaceXyz Dcip3 {
 			get {
 				SKColorSpaceXyz xyz;
-				SkiaApi.sk_colorspace_xyz_named_display_p3 (&xyz);
+				SkiaApi.sk_colorspace_xyz_named_dcip3 (&xyz);
 				return xyz;
 			}
 		}

@@ -1,35 +1,29 @@
-FROM amd64/debian:9
+FROM amd64/ubuntu:16.04
 
 # Arguments:
 #   MONO_VERSION         - the version of mono for the Cake script          [ 6.4.0 | * ]
-#   CLANG_VERSION        - the version of clang/llvm tools                  [ 10 | * ]
-#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 6 | * ]
+#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 4.8 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu]
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 ]
 #   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.11.0-6.7+b1 | * ]
 #
-# To build a arm image:
-#   --build-arg TOOLCHAIN_ARCH=arm-linux-gnueabihf --build-arg TOOLCHAIN_ARCH_SHORT=armhf
 # To build a arm64 image:
 #   --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
 
 # pre-requisites for building (python, git, mono)
 ARG MONO_VERSION=6.4.0
-ARG CLANG_VERSION=10
 RUN apt-get update \
-    && apt-get install -y apt-transport-https curl wget python git make dirmngr gnupg ca-certificates \
+    && apt-get install -y apt-transport-https curl wget python git make \
     && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
-    && echo "deb https://download.mono-project.com/repo/debian stable-stretch/snapshots/${MONO_VERSION} main" | tee /etc/apt/sources.list.d/mono-official-stable.list \
+    && echo "deb https://download.mono-project.com/repo/ubuntu stable-xenial/snapshots/${MONO_VERSION} main" | tee /etc/apt/sources.list.d/mono-official-stable.list \
     && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
-    && echo "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-${CLANG_VERSION} main" | tee /etc/apt/sources.list.d/llvm.list \
+    && echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main" | tee /etc/apt/sources.list.d/llvm.list \
     && apt-get update \
-    && apt-get install -y mono-devel clang-${CLANG_VERSION} \
+    && apt-get install -y mono-devel clang-10 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update
-
 # toolchain (gcc/g++)
-ARG TOOLCHAIN_VERSION=6
+ARG TOOLCHAIN_VERSION=4.8
 ARG TOOLCHAIN_ARCH=arm-linux-gnueabihf
 ARG TOOLCHAIN_ARCH_SHORT=armhf
 RUN apt-get update \
@@ -63,6 +57,6 @@ RUN (mkdir -p /skia-utils/libfontconfig1 \
     && cp -R usr/lib/*/* /usr/${TOOLCHAIN_ARCH}/lib/ )
 
 # container environment
-ENV CC=clang-${CLANG_VERSION} CXX=clang++-${CLANG_VERSION}
+ENV CC=clang-10 CXX=clang++-10
 
 WORKDIR /work

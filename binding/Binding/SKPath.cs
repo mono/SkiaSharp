@@ -3,13 +3,6 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public enum SKPathConvexity
-	{
-		Unknown = 0,
-		Convex = 1,
-		Concave = 2,
-	}
-
 	public unsafe class SKPath : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKPath (IntPtr handle, bool owns)
@@ -45,14 +38,13 @@ namespace SkiaSharp
 		}
 
 		public SKPathConvexity Convexity {
-			get => IsConvex ? SKPathConvexity.Convex : SKPathConvexity.Concave;
-			[Obsolete]
-			set { }
+			get => SkiaApi.sk_path_get_convexity (Handle);
+			set => SkiaApi.sk_path_set_convexity (Handle, value);
 		}
 
-		public bool IsConvex => SkiaApi.sk_path_is_convex(Handle);
+		public bool IsConvex => Convexity == SKPathConvexity.Convex;
 
-		public bool IsConcave => !IsConvex;
+		public bool IsConcave => Convexity == SKPathConvexity.Concave;
 
 		public bool IsEmpty => VerbCount == 0;
 

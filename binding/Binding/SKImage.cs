@@ -172,7 +172,8 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return FromEncodedData (data)?.Subset (subset);
+			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, &subset);
+			return GetObject (handle);
 		}
 
 		public static SKImage FromEncodedData (SKData data)
@@ -180,7 +181,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle);
+			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, null);
 			return GetObject (handle);
 		}
 
@@ -657,18 +658,7 @@ namespace SkiaSharp
 
 			fixed (SKRectI* os = &outSubset)
 			fixed (SKPointI* oo = &outOffset) {
-				return GetObject (SkiaApi.sk_image_make_with_filter_legacy (Handle, filter.Handle, &subset, &clipBounds, os, oo));
-			}
-		}
-
-		public SKImage ApplyImageFilter (GRContext context, SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset)
-		{
-			if (filter == null)
-				throw new ArgumentNullException (nameof (filter));
-
-			fixed (SKRectI* os = &outSubset)
-			fixed (SKPointI* oo = &outOffset) {
-				return GetObject (SkiaApi.sk_image_make_with_filter (Handle, context?.Handle ?? IntPtr.Zero, filter.Handle, &subset, &clipBounds, os, oo));
+				return GetObject (SkiaApi.sk_image_make_with_filter (Handle, filter.Handle, &subset, &clipBounds, os, oo));
 			}
 		}
 
