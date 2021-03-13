@@ -1,11 +1,10 @@
 ﻿using System.IO;
-using Android.Content;
 
 namespace SkiaSharp.Tests
 {
 	internal static class AssetCopier
 	{
-		public static void CopyAssets(Context context)
+		public static void CopyAssets()
 		{
 			var fontsRoot = BaseTest.PathToFonts;
 			var imagesRoot = BaseTest.PathToImages;
