@@ -19,6 +19,12 @@ steps:
     displayName: Use a special preview label for PRs
     condition: eq(variables['Build.Reason'], 'PullRequest')
   - pwsh: |
+      $nightly = "nightly"
+      Write-Host "Preview label: $nightly"
+      Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$nightly"
+    displayName: Use a special preview label for scheduled
+    condition: eq(variables['Build.Reason'], 'Schedule')
+  - pwsh: |
       $label = ""
       if ($env:BUILD_REASON -ne "PullRequest") {
         $label = "+" + $env:BUILD_SOURCEBRANCHNAME
