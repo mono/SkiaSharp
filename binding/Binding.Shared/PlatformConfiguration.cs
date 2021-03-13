@@ -14,14 +14,6 @@ namespace SkiaSharp
 {
 	internal static class PlatformConfiguration
 	{
-#if WINDOWS_UWP
-		private static readonly Lazy<bool> isMuslLazy = new Lazy<bool>(IsMuslImplementation);
-
-		public static bool IsMusl => IsLinux && isMuslLazy.Value;
-#else
-		public static bool IsMusl { get; }
-#endif
-
 		public static bool IsUnix { get; }
 
 		public static bool IsWindows { get; }
@@ -58,7 +50,13 @@ namespace SkiaSharp
 			Is64Bit = IntPtr.Size == 8;
 		}
 
-#if !WINDOWS_UWP
+#if WINDOWS_UWP
+		public static bool IsMusl { get; }
+#else
+		private static readonly Lazy<bool> isMuslLazy = new Lazy<bool>(IsMuslImplementation);
+
+		public static bool IsMusl => IsLinux && isMuslLazy.Value;
+
 		private static bool IsMuslImplementation()
 		{
 			try
