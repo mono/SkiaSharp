@@ -110,10 +110,7 @@ namespace SkiaSharp.Views.UWP
 
 			glInfo = default;
 
-			//This seems to be a safer fix for the issue?
-			//But I'm not sure about the difference in semantics between
-			//AbandonContext(true) and AbandonContext(false) on the Skia end.
-			context?.AbandonContext(false);
+			context?.AbandonContext(true);
 			context?.Dispose();
 			context = null;
 

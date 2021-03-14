@@ -17,13 +17,10 @@ namespace SkiaSharp.Views.GlesInterop
 	{
 		private bool isDisposed = false;
 
-		private EGLDisplay eglDisplay;
+		private static EGLDisplay eglDisplay = Egl.EGL_NO_DISPLAY;
 		private EGLContext eglContext;
 		private EGLSurface eglSurface;
 		private EGLConfig eglConfig;
-
-		private static readonly object displayLock = new object();
-		private static readonly Dictionary<EGLDisplay, int> displayReferenceCounts = new Dictionary<EGLDisplay, int>();
 
 		public GlesContext()
 		{
@@ -214,7 +211,7 @@ namespace SkiaSharp.Views.GlesInterop
 			//    using "warpDisplayAttributes".  This corresponds to D3D11 Feature Level 11_0 on WARP, a D3D11 software rasterizer.
 			//
 
-			lock (displayLock)
+			if (eglDisplay == Egl.EGL_NO_DISPLAY)
 			{
 				// This tries to initialize EGL to D3D11 Feature Level 10_0+. See above comment for details.
 				eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, defaultDisplayAttributes);
@@ -249,14 +246,6 @@ namespace SkiaSharp.Views.GlesInterop
 						}
 					}
 				}
-
-				if (eglDisplay != Egl.EGL_NO_DISPLAY)
-                {
-					int refCount = 0;
-					displayReferenceCounts.TryGetValue(eglDisplay, out refCount);
-					refCount += 1;
-					displayReferenceCounts[eglDisplay] = refCount;
-                }
 			}
 
 			EGLDisplay[] configs = new EGLDisplay[1];
@@ -279,23 +268,6 @@ namespace SkiaSharp.Views.GlesInterop
 			{
 				Egl.eglDestroyContext(eglDisplay, eglContext);
 				eglContext = Egl.EGL_NO_CONTEXT;
-			}
-
-			if (eglDisplay != Egl.EGL_NO_DISPLAY)
-			{
-				lock (displayReferenceCounts)
-				{
-					int refCount = 0;
-					displayReferenceCounts.TryGetValue(eglDisplay, out refCount);
-					refCount -= 1;
-					displayReferenceCounts[eglDisplay] = refCount;
-
-					if (refCount == 0)
-					{
-						Egl.eglTerminate(eglDisplay);
-						eglDisplay = Egl.EGL_NO_DISPLAY;
-					}
-				}
 			}
 		}
 	}
