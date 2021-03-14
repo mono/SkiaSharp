@@ -17,10 +17,10 @@ namespace SkiaSharp.Views.Android.Tests
 			Assert.Equal(Get(SKColors.Blue), (uint)bmp.GetPixel(10, 30));
 			Assert.Equal(Get(SKColors.Yellow), (uint)bmp.GetPixel(30, 30));
 
-			uint Get(SKColor color) =>
+			SKColor Get(SKColor color) =>
 				alpha == 0
-					? 0
-					: (uint)color.WithAlpha(alpha);
+					? SKColor.Empty
+					: color.WithAlpha(alpha);
 		}
 	}
 }

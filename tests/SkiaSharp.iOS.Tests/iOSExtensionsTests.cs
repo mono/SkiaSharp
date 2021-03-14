@@ -1,75 +1,67 @@
-﻿//using Xunit;
+﻿using Xunit;
 
-//namespace SkiaSharp.Views.iOS.Tests
-//{
-//	public class iOSExtensionsTests : iOSTests
-//	{
-//		[SkippableTheory]
-//		[InlineData(0)]
-//		[InlineData(10)]
-//		[InlineData(100)]
-//		[InlineData(255)]
-//		public void PixelBackedImageToBitmap(byte alpha)
-//		{
-//			using var bitmap = CreateTestBitmap(alpha);
-//			using var image = SKImage.FromBitmap(bitmap);
+namespace SkiaSharp.Views.iOS.Tests
+{
+	public class iOSExtensionsTests : iOSTests
+	{
+		[SkippableTheory]
+		[InlineData(0)]
+		[InlineData(10)]
+		[InlineData(100)]
+		[InlineData(255)]
+		public void PixelBackedImageToUIImage(byte alpha)
+		{
+			using var bitmap = CreateTestBitmap(alpha);
+			using var image = SKImage.FromBitmap(bitmap);
 
-//			using var iosBitmap = image.ToUIImage();
+			using var iosBitmap = image.ToUIImage();
 
-//			ValidateTestBitmap(iosBitmap, alpha);
+			ValidateTestBitmap(iosBitmap, alpha);
+		}
 
-//			androidBitmap.Recycle();
-//		}
+		[SkippableTheory]
+		[InlineData(0)]
+		[InlineData(10)]
+		[InlineData(100)]
+		[InlineData(255)]
+		public void BitmapToUIImage(byte alpha)
+		{
+			using var bitmap = CreateTestBitmap(alpha);
 
-//		[SkippableTheory]
-//		[InlineData(0)]
-//		[InlineData(10)]
-//		[InlineData(100)]
-//		[InlineData(255)]
-//		public void BitmapToBitmap(byte alpha)
-//		{
-//			using var bitmap = CreateTestBitmap(alpha);
+			using var uiImage = bitmap.ToUIImage();
 
-//			using var androidBitmap = bitmap.ToBitmap();
+			ValidateTestBitmap(uiImage, alpha);
+		}
 
-//			ValidateTestBitmap(androidBitmap, alpha);
+		[SkippableTheory]
+		[InlineData(0)]
+		[InlineData(10)]
+		[InlineData(100)]
+		[InlineData(255)]
+		public void PixmapToUIImage(byte alpha)
+		{
+			using var bitmap = CreateTestBitmap(alpha);
+			using var pixmap = bitmap.PeekPixels();
 
-//			androidBitmap.Recycle();
-//		}
+			using var uiImage = pixmap.ToUIImage();
 
-//		[SkippableTheory]
-//		[InlineData(0)]
-//		[InlineData(10)]
-//		[InlineData(100)]
-//		[InlineData(255)]
-//		public void PixmapToBitmap(byte alpha)
-//		{
-//			using var bitmap = CreateTestBitmap(alpha);
-//			using var pixmap = bitmap.PeekPixels();
+			ValidateTestBitmap(uiImage, alpha);
+		}
 
-//			using var androidBitmap = pixmap.ToBitmap();
+		[SkippableTheory]
+		[InlineData(0)]
+		[InlineData(10)]
+		[InlineData(100)]
+		[InlineData(255)]
+		public void EncodedDataBackedImageToUIImage(byte alpha)
+		{
+			using var bitmap = CreateTestBitmap(alpha);
+			using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
+			using var image = SKImage.FromEncodedData(data);
 
-//			ValidateTestBitmap(androidBitmap, alpha);
+			using var uiImage = image.ToUIImage();
 
-//			androidBitmap.Recycle();
-//		}
-
-//		[SkippableTheory]
-//		[InlineData(0)]
-//		[InlineData(10)]
-//		[InlineData(100)]
-//		[InlineData(255)]
-//		public void EncodedDataBackedImageToBitmap(byte alpha)
-//		{
-//			using var bitmap = CreateTestBitmap(alpha);
-//			using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
-//			using var image = SKImage.FromEncodedData(data);
-
-//			using var androidBitmap = image.ToBitmap();
-
-//			ValidateTestBitmap(androidBitmap, alpha);
-
-//			androidBitmap.Recycle();
-//		}
-//	}
-//}
+			ValidateTestBitmap(uiImage, alpha);
+		}
+	}
+}

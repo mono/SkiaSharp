@@ -1,92 +1,84 @@
-﻿//using System.Threading.Tasks;
-//using SkiaSharp.Views.iOS.Tests;
-//using Xunit;
+﻿using System.Threading.Tasks;
+using SkiaSharp.Views.iOS.Tests;
+using Xunit;
 
-//namespace SkiaSharp.Views.Forms.Tests
-//{
-//	public class SKImageSourceHandlerTests : iOSTests
-//	{
-//		private readonly SKImageSourceHandler handler;
+namespace SkiaSharp.Views.Forms.Tests
+{
+	public class SKImageSourceHandlerTests : iOSTests
+	{
+		private readonly SKImageSourceHandler handler;
 
-//		public SKImageSourceHandlerTests()
-//		{
-//			handler = new SKImageSourceHandler();
-//		}
+		public SKImageSourceHandlerTests()
+		{
+			handler = new SKImageSourceHandler();
+		}
 
-//		[SkippableTheory]
-//		[InlineData(0)]
-//		[InlineData(10)]
-//		[InlineData(100)]
-//		[InlineData(255)]
-//		public async Task PixelBackedImageToBitmap(byte alpha)
-//		{
-//			using var bitmap = CreateTestBitmap(alpha);
-//			using var image = SKImage.FromBitmap(bitmap);
+		[SkippableTheory]
+		[InlineData(0)]
+		[InlineData(10)]
+		[InlineData(100)]
+		[InlineData(255)]
+		public async Task PixelBackedImageToBitmap(byte alpha)
+		{
+			using var bitmap = CreateTestBitmap(alpha);
+			using var image = SKImage.FromBitmap(bitmap);
 
-//			var source = (SKImageImageSource)image;
+			var source = (SKImageImageSource)image;
 
-//			using var androidBitmap = await handler.LoadImageAsync(source, Application.Context);
+			using var uiImage = await handler.LoadImageAsync(source);
 
-//			ValidateTestBitmap(androidBitmap, alpha);
+			ValidateTestBitmap(uiImage, alpha);
+		}
 
-//			androidBitmap.Recycle();
-//		}
+		[SkippableTheory]
+		[InlineData(0)]
+		[InlineData(10)]
+		[InlineData(100)]
+		[InlineData(255)]
+		public async Task BitmapToBitmap(byte alpha)
+		{
+			using var bitmap = CreateTestBitmap(alpha);
 
-//		[SkippableTheory]
-//		[InlineData(0)]
-//		[InlineData(10)]
-//		[InlineData(100)]
-//		[InlineData(255)]
-//		public async Task BitmapToBitmap(byte alpha)
-//		{
-//			using var bitmap = CreateTestBitmap(alpha);
+			var source = (SKBitmapImageSource)bitmap;
 
-//			var source = (SKBitmapImageSource)bitmap;
+			using var uiImage = await handler.LoadImageAsync(source);
 
-//			using var androidBitmap = await handler.LoadImageAsync(source, Application.Context);
+			ValidateTestBitmap(uiImage, alpha);
+		}
 
-//			ValidateTestBitmap(androidBitmap, alpha);
+		[SkippableTheory]
+		[InlineData(0)]
+		[InlineData(10)]
+		[InlineData(100)]
+		[InlineData(255)]
+		public async Task PixmapToBitmap(byte alpha)
+		{
+			using var bitmap = CreateTestBitmap(alpha);
+			using var pixmap = bitmap.PeekPixels();
 
-//			androidBitmap.Recycle();
-//		}
+			var source = (SKPixmapImageSource)pixmap;
 
-//		[SkippableTheory]
-//		[InlineData(0)]
-//		[InlineData(10)]
-//		[InlineData(100)]
-//		[InlineData(255)]
-//		public async Task PixmapToBitmap(byte alpha)
-//		{
-//			using var bitmap = CreateTestBitmap(alpha);
-//			using var pixmap = bitmap.PeekPixels();
+			using var uiImage = await handler.LoadImageAsync(source);
 
-//			var source = (SKPixmapImageSource)pixmap;
+			ValidateTestBitmap(uiImage, alpha);
+		}
 
-//			using var androidBitmap = await handler.LoadImageAsync(source, Application.Context);
+		[SkippableTheory]
+		[InlineData(0)]
+		[InlineData(10)]
+		[InlineData(100)]
+		[InlineData(255)]
+		public async Task EncodedDataBackedImageToBitmap(byte alpha)
+		{
+			using var bitmap = CreateTestBitmap(alpha);
+			using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
+			using var image = SKImage.FromEncodedData(data);
 
-//			ValidateTestBitmap(androidBitmap, alpha);
+			var source = (SKImageImageSource)image;
 
-//			androidBitmap.Recycle();
-//		}
+			using var uiImage = await handler.LoadImageAsync(source);
 
-//		[SkippableTheory]
-//		[InlineData(0)]
-//		[InlineData(10)]
-//		[InlineData(100)]
-//		[InlineData(255)]
-//		public async Task EncodedDataBackedImageToBitmap(byte alpha)
-//		{
-//			using var bitmap = CreateTestBitmap(alpha);
-//			using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
-//			using var image = SKImage.FromEncodedData(data);
-
-//			var source = (SKImageImageSource)image;
-
-//			using var androidBitmap = await handler.LoadImageAsync(source, Application.Context);
-
-//			ValidateTestBitmap(androidBitmap, alpha);
-
-//			androidBitmap.Recycle();
-//		}
-//	}
-//}
+			ValidateTestBitmap(uiImage, alpha);
+		}
+	}
+}
