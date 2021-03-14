@@ -139,9 +139,9 @@ namespace SkiaSharp.Views.Android
 			}
 		}
 
-		public static Bitmap ToBitmap(this SKPixmap skiaPixmap)
+		public static Bitmap ToBitmap(this SKImage skiaImage)
 		{
-			var info = skiaPixmap.Info;
+			var info = skiaImage.Info;
 
 			// destination values
 			var config = Bitmap.Config.Argb8888;
@@ -172,7 +172,7 @@ namespace SkiaSharp.Views.Android
 			var ptr = bmp.LockPixels();
 
 			// copy
-			var success = skiaPixmap.ReadPixels(dstInfo, ptr, dstInfo.RowBytes);
+			var success = skiaImage.ReadPixels(dstInfo, ptr, dstInfo.RowBytes);
 
 			// confirm
 			bmp.UnlockPixels();
@@ -183,15 +183,15 @@ namespace SkiaSharp.Views.Android
 				bmp = null;
 			}
 
+			GC.KeepAlive(skiaImage);
 			return bmp;
 		}
 
-		public static Bitmap ToBitmap(this SKImage skiaImage)
+		public static Bitmap ToBitmap(this SKPixmap skiaPixamp)
 		{
-			using (var pixmap = skiaImage.PeekPixels())
+			using (var image = SKImage.FromPixels(skiaPixamp))
 			{
-				var bmp = pixmap.ToBitmap();
-				GC.KeepAlive(skiaImage);
+				var bmp = image.ToBitmap();
 				return bmp;
 			}
 		}
