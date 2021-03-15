@@ -12,6 +12,7 @@ foreach (var cake in GetFiles("native/*/build.cake"))
 
     var task = Task($"externals-{native}")
         .WithCriteria(should)
+        .WithCriteria(!SKIP_BUILD)
         .Does(() => RunCake(localCake, "Default"));
 
     externalsTask.IsDependentOn(task);

@@ -3,7 +3,7 @@
 #addin nuget:?package=Cake.FileHelpers&version=3.2.1
 #addin nuget:?package=Cake.Json&version=4.0.0
 #addin nuget:?package=SharpCompress&version=0.24.0
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.0&loaddependencies=true
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2&loaddependencies=true
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
 #tool nuget:?package=mdoc&version=5.7.4.10
@@ -29,6 +29,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+var SKIP_BUILD = Argument ("skipbuild", false);
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
 var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
@@ -53,6 +54,7 @@ var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? "");
+var GIT_PR_NUMBER = Argument ("gitPR", EnvironmentVariable ("GIT_PR_NUMBER") ?? "");
 
 var PREVIEW_FEED_URL = "https://nugetized.blob.core.windows.net/skiasharp-eap/flatcontainer/{0}/{1}/{0}.{1}.nupkg"; // 0=id, 1=version
 
@@ -108,6 +110,7 @@ Task ("externals")
 
 Task ("libs")
     .Description ("Build all managed assemblies.")
+    .WithCriteria(!SKIP_BUILD)
     .IsDependentOn ("externals")
     .Does (() =>
 {
