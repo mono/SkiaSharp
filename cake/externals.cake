@@ -26,19 +26,12 @@ Task("externals-osx")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task("externals-download")
-    .Does(() =>
+    .Does(async () =>
 {
     EnsureDirectoryExists ("./output");
     CleanDirectories ("./output");
-    EnsureDirectoryExists ("./output/temp");
 
-    var url = GetDownloadUrl ("_nativeassets");
-    DownloadFile (url, "./output/temp/nativeassets.nupkg");
-
-    Unzip ("./output/temp/nativeassets.nupkg", "./output/temp");
-    MoveDirectory ("./output/temp/tools", "./output/native");
-
-    DeleteDirectory("./output/temp", new DeleteDirectorySettings { Recursive = true, Force = true });
+    await DownloadPackageAsync("_nativeassets", "./output/native");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

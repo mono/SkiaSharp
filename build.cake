@@ -54,9 +54,8 @@ var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? "");
-var GIT_PR_NUMBER = Argument ("gitPR", EnvironmentVariable ("GIT_PR_NUMBER") ?? "");
 
-var PREVIEW_FEED_URL = "https://nugetized.blob.core.windows.net/skiasharp-eap/flatcontainer/{0}/{1}/{0}.{1}.nupkg"; // 0=id, 1=version
+var PREVIEW_FEED_URL = "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json";
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                                     new Version (1, 57, 0) },

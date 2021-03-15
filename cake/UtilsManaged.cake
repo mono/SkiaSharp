@@ -18,25 +18,6 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefau
     NuGetPack(nuspecPath, settings);
 }
 
-void RunNuGetRestorePackagesConfig(FilePath sln)
-{
-    var dir = sln.GetDirectory();
-
-    var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
-
-    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
-
-    var settings = new NuGetRestoreSettings {
-        ToolPath = NuGetToolPath,
-        Source = nugetSources,
-        NoCache = true,
-        PackagesDirectory = dir.Combine("packages"),
-    };
-
-    foreach (var config in GetFiles(dir + "/**/packages.config"))
-        NuGetRestore(config, settings);
-}
-
 void RunTests(FilePath testAssembly, bool is32)
 {
     var dir = testAssembly.GetDirectory();
@@ -104,7 +85,7 @@ void RunNetCorePublish(FilePath testProject, DirectoryPath output)
 void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
 {
     try {
-        RunProcess ("reportgenerator", new ProcessSettings {
+        RunProcess("reportgenerator", new ProcessSettings {
             Arguments = 
                 $"-reports:{testResultsGlob} " +
                 $"-targetdir:{output} " +
@@ -112,13 +93,13 @@ void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
                 $"-assemblyfilters:-*.Tests"
         });
     } catch (Exception ex) {
-        Error ("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
-        Error (ex);
+        Error("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
+        Error(ex);
         throw;
     }
     var xml = $"{output}/Cobertura.xml";
-    var root = FindRegexMatchGroupsInFile (xml, @"<source>(.*)<\/source>", 0)[1].Value;
-    ReplaceTextInFiles (xml, root, "");
+    var root = FindRegexMatchGroupsInFile(xml, @"<source>(.*)<\/source>", 0)[1].Value;
+    ReplaceTextInFiles(xml, root, "");
 }
 
 IEnumerable<(string Name, string Value)> CreateTraitsDictionary(string args)
@@ -260,17 +241,59 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     }
 }
 
-string GetDownloadUrl(string id)
+async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
 {
     var version = "0.0.0-";
-    if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr."))
-        version += PREVIEW_LABEL.ToLower ();
-    else if (!string.IsNullOrEmpty (GIT_SHA))
-        version += "commit." + GIT_SHA.ToLower ();
-    else if (!string.IsNullOrEmpty (GIT_BRANCH_NAME))
-        version += "branch." + GIT_BRANCH_NAME.Replace ("/", ".").ToLower ();
+    if (!string.IsNullOrEmpty(PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith("pr."))
+        version += PREVIEW_LABEL.ToLower();
+    else if (!string.IsNullOrEmpty(GIT_SHA))
+        version += "commit." + GIT_SHA.ToLower();
+    else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))
+        version += "branch." + GIT_BRANCH_NAME.Replace("/", ".").ToLower();
     else
         version += "branch.main";
+    version += ".*";
 
-    return string.Format (PREVIEW_FEED_URL, id.ToLower(), version);
+    var filter = new NuGetVersions.Filter {
+        IncludePrerelease = true,
+        SourceUrl = PREVIEW_FEED_URL,
+        VersionRange = VersionRange.Parse(version),
+    };
+
+    var latestVersion = await NuGetVersions.GetLatestAsync(id, filter);
+
+    var comparer = new NuGetDiff(PREVIEW_FEED_URL);
+    comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
+
+    await Download(id, latestVersion);
+
+    async Task Download(string currentId, NuGetVersion currentVersion)
+    {
+        currentId = currentId.ToLower();
+
+        Information($"Downloading: {currentId}...");
+
+        var root = await comparer.ExtractCachedPackageAsync(currentId, currentVersion);
+        var toolsDir = $"{root}/tools/";
+        if (DirectoryExists(toolsDir)) {
+            var allFiles = GetFiles(toolsDir + "**/*");
+            foreach (var file in allFiles) {
+                var relative = MakeAbsolute(Directory(toolsDir)).GetRelativePath(file);
+                var dir = $"{outputDirectory}/{relative.GetDirectory()}";
+                EnsureDirectoryExists(dir);
+                CopyFileToDirectory(file, dir);
+            }
+        }
+
+        var nuspec = $"{root}/{currentId}.nuspec";
+        var xdoc = XDocument.Load(nuspec);
+        var xmlns = xdoc.Root.Name.Namespace;
+        var dependencies = xdoc.Root.Descendants(xmlns + "dependency").ToArray();
+
+        foreach (var dep in dependencies) {
+            var depId = dep.Attribute("id").Value;
+            var depVersion = dep.Attribute("version").Value;
+            await Download(depId, NuGetVersion.Parse(depVersion));
+        }
+    }
 }
