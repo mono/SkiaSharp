@@ -63,8 +63,7 @@ stages:
               $ANDROID_HOME/tools/bin/avdmanager create avd -n DEVICE_TESTS_EMULATOR -k "system-images;android-30;google_apis_playstore;x86" --device "Nexus 5X" --force
               $ANDROID_HOME/emulator/emulator -accel-check
           - bash: |
-              $ANDROID_HOME/tools/emulator -avd DEVICE_TESTS_EMULATOR -no-window -no-boot-anim -accel on
-              # $ANDROID_HOME/platform-tools/adb shell getprop sys.boot_completed
+              $ANDROID_HOME/emulator/emulator -avd DEVICE_TESTS_EMULATOR -no-window -no-boot-anim -accel on
               # nohup $ANDROID_HOME/emulator/emulator -avd xamarin_android_emulator -wipe-data -no-window -skin 1080x1920 -no-snapshot -no-audio -no-boot-anim -accel on > /dev/null 2>&1 &
               $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done; input keyevent 82'
               $ANDROID_HOME/platform-tools/adb devices
