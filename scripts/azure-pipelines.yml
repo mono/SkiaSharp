@@ -57,7 +57,7 @@ stages:
           #   parameters:
           #     updateBuild: true
           - bash: |
-              sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"system-images;android-30;google_apis_playstore;x86\""
+              sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"emulator\" \"system-images;android-30;google_apis_playstore;x86\""
           - bash: |
               $ANDROID_HOME/tools/bin/avdmanager delete avd -n DEVICE_TESTS_EMULATOR
               $ANDROID_HOME/tools/bin/avdmanager create avd -n DEVICE_TESTS_EMULATOR -k "system-images;android-30;google_apis_playstore;x86" --device "Nexus 5X" --force
