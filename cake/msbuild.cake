@@ -15,7 +15,7 @@ void RunNuGetRestorePackagesConfig(FilePath sln)
     EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
 
     var settings = new NuGetRestoreSettings {
-        ToolPath = NuGetToolPath,
+        ToolPath = NUGET_EXE,
         Source = NUGETS_SOURCES,
         NoCache = true,
         PackagesDirectory = dir.Combine("packages"),
