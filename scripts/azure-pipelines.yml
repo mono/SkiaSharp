@@ -50,18 +50,26 @@ stages:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
         pool:
-          vmImage: $(VM_IMAGE_LINUX)
+          vmImage: $(VM_IMAGE_MAC))
         steps:
           - checkout: none
-          - template: azure-templates-variables.yml
-            parameters:
-              updateBuild: true
+          # - template: azure-templates-variables.yml
+          #   parameters:
+          #     updateBuild: true
           - bash: |
               sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"system-images;android-30;google_apis_playstore;x86\""
               $ANDROID_HOME/tools/bin/avdmanager delete avd -n DEVICE_TESTS_EMULATOR
               $ANDROID_HOME/tools/bin/avdmanager create avd -n DEVICE_TESTS_EMULATOR -k "system-images;android-30;google_apis_playstore;x86" --device "Nexus 5X" --force
+              
+              $ANDROID_HOME/emulator/emulator -accel-check
+              
               $ANDROID_HOME/tools/emulator -avd DEVICE_TESTS_EMULATOR -no-window
-              $ANDROID_HOME/platform-tools/adb shell getprop sys.boot_completed
+              # $ANDROID_HOME/platform-tools/adb shell getprop sys.boot_completed
+
+              # nohup $ANDROID_HOME/emulator/emulator -avd xamarin_android_emulator -wipe-data -no-window -skin 1080x1920 -no-snapshot -no-audio -no-boot-anim -accel on > /dev/null 2>&1 &
+              $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done; input keyevent 82'
+              $ANDROID_HOME/platform-tools/adb devices
+
 
   # - stage: native_windows
   #   displayName: Native Windows
