@@ -43,7 +43,6 @@ var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux 
 var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
 var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
-var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 

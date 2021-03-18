@@ -7,6 +7,7 @@ var CONFIGURATION = Argument("c", Argument("configuration", "Release"));
 
 var VS_INSTALL = Argument("vsinstall", EnvironmentVariable("VS_INSTALL"));
 var MSBUILD_EXE = Argument("msbuild", EnvironmentVariable("MSBUILD_EXE"));
+var NUGET_EXE = Argument("nuget", EnvironmentVariable("NUGET_EXE") ?? Context.Tools.Resolve ("nuget.exe"));
 
 var CAKE_ARGUMENTS = (IReadOnlyDictionary<string, string>)Context.Arguments
     .GetType()
