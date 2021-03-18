@@ -53,21 +53,9 @@ stages:
           vmImage: $(VM_IMAGE_MAC)
         steps:
           - checkout: none
-          # - template: azure-templates-variables.yml
-          #   parameters:
-          #     updateBuild: true
-          - bash: |
-              sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"emulator\" \"system-images;android-30;google_apis_playstore;x86\""
-          - bash: |
-              $ANDROID_HOME/tools/bin/avdmanager delete avd -n DEVICE_TESTS_EMULATOR
-              $ANDROID_HOME/tools/bin/avdmanager create avd -n DEVICE_TESTS_EMULATOR -k "system-images;android-30;google_apis_playstore;x86" --device "Nexus 5X" --force
-              $ANDROID_HOME/emulator/emulator -accel-check
-          - bash: |
-              $ANDROID_HOME/emulator/emulator -avd DEVICE_TESTS_EMULATOR -no-window -no-boot-anim -accel on
-              # nohup $ANDROID_HOME/emulator/emulator -avd xamarin_android_emulator -wipe-data -no-window -skin 1080x1920 -no-snapshot -no-audio -no-boot-anim -accel on > /dev/null 2>&1 &
-              $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done; input keyevent 82'
-              $ANDROID_HOME/platform-tools/adb devices
-
+          - template: azure-templates-variables.yml
+            parameters:
+              updateBuild: true
 
   # - stage: native_windows
   #   displayName: Native Windows
@@ -199,38 +187,38 @@ stages:
   #         tools:
   #           - nano-api-scan
 
-  # - stage: native_macos
-  #   displayName: Native macOS
-  #   dependsOn: prepare
-  #   jobs:
-  #     - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
-  #       parameters:
-  #         name: native_android_x86_macos
-  #         displayName: Android x86
-  #         vmImage: $(VM_IMAGE_MAC)
-  #         target: externals-android
-  #         additionalArgs: --buildarch=x86
-  #     - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
-  #       parameters:
-  #         name: native_android_x64_macos
-  #         displayName: Android x64
-  #         vmImage: $(VM_IMAGE_MAC)
-  #         target: externals-android
-  #         additionalArgs: --buildarch=x64
-  #     - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
-  #       parameters:
-  #         name: native_android_arm_macos
-  #         displayName: Android arm
-  #         vmImage: $(VM_IMAGE_MAC)
-  #         target: externals-android
-  #         additionalArgs: --buildarch=arm
-  #     - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
-  #       parameters:
-  #         name: native_android_arm64_macos
-  #         displayName: Android arm64
-  #         vmImage: $(VM_IMAGE_MAC)
-  #         target: externals-android
-  #         additionalArgs: --buildarch=arm64
+  - stage: native_macos
+    displayName: Native macOS
+    dependsOn: prepare
+    jobs:
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
+        parameters:
+          name: native_android_x86_macos
+          displayName: Android x86
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
+        parameters:
+          name: native_android_x64_macos
+          displayName: Android x64
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
+        parameters:
+          name: native_android_arm_macos
+          displayName: Android arm
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
+        parameters:
+          name: native_android_arm64_macos
+          displayName: Android arm64
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=arm64
   #     - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
   #       parameters:
   #         name: native_ios_macos
@@ -472,14 +460,14 @@ stages:
   #     jobs:
   #       - template: sign-artifacts/jobs/v2.yml@xamarin-templates
 
-  # - stage: tests
-  #   displayName: Tests
-  #   dependsOn:
-  #     - native_windows
-  #     - native_macos
-  #     - native_linux
-  #     - native_wasm
-  #   jobs:
+  - stage: tests
+    displayName: Tests
+    dependsOn:
+      - native_windows
+      - native_macos
+      - native_linux
+      - native_wasm
+    jobs:
   #     - template: azure-templates-bootstrapper.yml # Tests|netfx (Windows)
   #       parameters:
   #         name: tests_netfx_windows
@@ -570,42 +558,44 @@ stages:
   #             inputs:
   #               artifactName: coverage_netcore_macos
   #               pathToPublish: 'output/coverage'
-  #     - template: azure-templates-bootstrapper.yml # Tests|android (macOS)
-  #       parameters:
-  #         name: tests_android_macos
-  #         displayName: Android (macOS)
-  #         vmImage: $(VM_IMAGE_MAC)
-  #         target: tests-android
-  #         additionalArgs: --device=android-emulator-32_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-  #         shouldPublish: false
-  #         requiredArtifacts:
-  #           - native_android_x86_macos
-  #           - native_android_x64_macos
-  #           - native_android_arm_macos
-  #           - native_android_arm64_macos
-  #         preBuildSteps:
-  #           - pwsh: |
-  #               dotnet tool install Microsoft.DotNet.XHarness.CLI `
-  #                 --global `
-  #                 --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
-  #                 --version "1.0.0-prerelease*"
-  #             displayName: Install the xharness .NET Core tool
-  #           - bash: sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"system-images;android-30;google_apis_playstore;x86\""
-  #             displayName: Install the Android emulator
-  #         postBuildSteps:
-  #           - task: PublishTestResults@2
-  #             displayName: Publish the Android test results
-  #             condition: always()
-  #             inputs:
-  #               testResultsFormat: xUnit
-  #               testResultsFiles: 'output/testlogs/SkiaSharp.Android.Tests/**/TestResults.xml'
-  #               testRunTitle: 'Android Tests'
-  #           - task: PublishBuildArtifacts@1
-  #             displayName: Publish the test logs
-  #             condition: always()
-  #             inputs:
-  #               artifactName: testlogs_android
-  #               pathToPublish: 'output/testlogs'
+      - template: azure-templates-bootstrapper.yml # Tests|android (macOS)
+        parameters:
+          name: tests_android_macos
+          displayName: Android (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: tests-android
+          additionalArgs: --device=android-emulator-32_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          shouldPublish: false
+          requiredArtifacts:
+            - native_android_x86_macos
+            - native_android_x64_macos
+            - native_android_arm_macos
+            - native_android_arm64_macos
+          preBuildSteps:
+            - pwsh: |
+                dotnet tool install Microsoft.DotNet.XHarness.CLI `
+                  --global `
+                  --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
+                  --version "1.0.0-prerelease*"
+              displayName: Install the xharness .NET Core tool
+            - bash: |
+                sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"emulator\" \"system-images;android-30;google_apis_playstore;x86\""
+                echo '##vso[task.prependpath]$ANDROID_HOME/emulator'
+              displayName: Install the Android emulator
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the Android test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'output/testlogs/SkiaSharp.Android.Tests/**/TestResults.xml'
+                testRunTitle: 'Android Tests'
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the test logs
+              condition: always()
+              inputs:
+                artifactName: testlogs_android
+                pathToPublish: 'output/testlogs'
   #     - template: azure-templates-bootstrapper.yml # Tests|ios (macOS)
   #       parameters:
   #         name: tests_ios_macos
