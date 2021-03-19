@@ -61,29 +61,17 @@ namespace SkiaSharp
 		{
 			try
 			{
-				var cpu = RuntimeInformation.ProcessArchitecture;
-				switch (cpu)
-				{
-					case Architecture.X86:
-						return AccessCheck("/lib/libc.musl-x86.so.1", 0) == 0;
-					case Architecture.X64:
-						return AccessCheck("/lib/libc.musl-x86_64.so.1", 0) == 0;
-					case Architecture.Arm:
-						return AccessCheck("/lib/libc.musl-armv7.so.1", 0) == 0;
-					case Architecture.Arm64:
-						return AccessCheck("/lib/libc.musl-aarch64.so.1", 0) == 0;
-					default:
-						return false;
-				}
-			}
-			catch
-			{
+				gnu_get_libc_version();
 				return false;
+			}
+			catch (TypeLoadException)
+			{
+				return true;
 			}
 		}
 
-		[DllImport("libc.so", EntryPoint = "access")]
-		private static extern unsafe int AccessCheck([MarshalAs (UnmanagedType.LPStr)] string path, int mode);
+		[DllImport("libc", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+		private static extern IntPtr gnu_get_libc_version();
 #endif
 	}
 }
