@@ -21,6 +21,23 @@ namespace SkiaSharp.Tests
 
 		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
+		public void AbandonContextIsAbandoned()
+		{
+			using (var ctx = CreateGlContext()) {
+				ctx.MakeCurrent();
+
+				var grContext = GRContext.CreateGl();
+
+				Assert.False(grContext.IsAbandoned);
+
+				grContext.AbandonContext();
+
+				Assert.True(grContext.IsAbandoned);
+			}
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
 		public void CreateDefaultContextWithOptionsIsValid()
 		{
 			using var ctx = CreateGlContext();

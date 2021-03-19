@@ -128,6 +128,8 @@ namespace SkiaSharp
 
 		public GRBackend Backend => SkiaApi.gr_direct_context_get_backend (Handle).FromNative ();
 
+		public bool IsAbandoned => SkiaApi.gr_direct_context_is_abandoned (Handle);
+
 		public void AbandonContext (bool releaseResources = false)
 		{
 			if (releaseResources)

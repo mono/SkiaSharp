@@ -311,7 +311,7 @@ stages:
           displayName: Managed (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs
-          additionalArgs: --exclusive
+          additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_android_x86_windows
             - native_android_x64_windows
@@ -337,7 +337,7 @@ stages:
           displayName: Managed (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: libs
-          additionalArgs: --exclusive
+          additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_android_x86_macos
             - native_android_x64_macos
@@ -357,7 +357,7 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: libs
-          additionalArgs: --exclusive
+          additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_linux_x64_linux
             - native_linux_arm_linux
@@ -381,7 +381,7 @@ stages:
           displayName: Package NuGets
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget
-          additionalArgs: --packall=true --exclusive
+          additionalArgs: --packall=true --skipbuild=true
           installWindowsSdk: false
           shouldPublish: true
           requiredArtifacts:
@@ -567,7 +567,10 @@ stages:
                   --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
                   --version "1.0.0-prerelease*"
               displayName: Install the xharness .NET Core tool
-            - bash: sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"system-images;android-30;google_apis_playstore;x86\""
+            - bash: |
+                sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"emulator\" \"system-images;android-30;google_apis_playstore;x86\""
+                echo "##vso[task.prependpath]$ANDROID_HOME/tools/bin"
+                echo "##vso[task.prependpath]$ANDROID_HOME/emulator"
               displayName: Install the Android emulator
           postBuildSteps:
             - task: PublishTestResults@2

@@ -3,7 +3,7 @@
 #addin nuget:?package=Cake.FileHelpers&version=3.2.1
 #addin nuget:?package=Cake.Json&version=4.0.0
 #addin nuget:?package=SharpCompress&version=0.24.0
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.0&loaddependencies=true
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2&loaddependencies=true
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
 #tool nuget:?package=mdoc&version=5.7.4.10
@@ -29,6 +29,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+var SKIP_BUILD = Argument ("skipbuild", false);
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
 var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
@@ -42,7 +43,6 @@ var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux 
 var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
 var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
-var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 
@@ -54,7 +54,7 @@ var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? "");
 
-var PREVIEW_FEED_URL = "https://nugetized.blob.core.windows.net/skiasharp-eap/flatcontainer/{0}/{1}/{0}.{1}.nupkg"; // 0=id, 1=version
+var PREVIEW_FEED_URL = "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json";
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                                     new Version (1, 57, 0) },
@@ -108,6 +108,7 @@ Task ("externals")
 
 Task ("libs")
     .Description ("Build all managed assemblies.")
+    .WithCriteria(!SKIP_BUILD)
     .IsDependentOn ("externals")
     .Does (() =>
 {
@@ -485,6 +486,11 @@ Task ("samples")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("nuget")
+    .Description ("Pack all NuGets.")
+    .IsDependentOn ("nuget-normal")
+    .IsDependentOn ("nuget-special");
+
+Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
     .IsDependentOn ("libs")
     .Does (() =>
@@ -641,42 +647,91 @@ Task ("nuget")
             Information ("Metadata validation passed for: {0}", nupkgFile.GetFilename ());
         }
     }
+});
 
-    // special case for all the native assets
-    if (PACK_ALL_PLATFORMS)
-    {
-        EnsureDirectoryExists ($"{OUTPUT_SPECIAL_NUGETS_PATH}");
-        DeleteFiles ($"{OUTPUT_SPECIAL_NUGETS_PATH}/*.nupkg");
-        var specials = new Dictionary<string, string> {
-            { "_NativeAssets", "native" },
-            { "_NuGets", "nugets" },
-        };
-        foreach (var pair in specials) {
-            DeleteFiles ($"./output/{pair.Value}/*.nuspec");
+Task ("nuget-special")
+    .Description ("Pack all special NuGets.")
+    .IsDependentOn ("nuget-normal")
+    .Does (() =>
+{
+    EnsureDirectoryExists ($"{OUTPUT_SPECIAL_NUGETS_PATH}");
+    DeleteFiles ($"{OUTPUT_SPECIAL_NUGETS_PATH}/*.nupkg");
 
-            var nuspec = $"./output/{pair.Value}/{pair.Key}.nuspec";
+    // get a list of all the version number variants
+    var versions = new List<string> ();
+    if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
+        var v = $"0.0.0-{PREVIEW_LABEL}";
+        if (!string.IsNullOrEmpty (BUILD_NUMBER))
+            v += $".{BUILD_NUMBER}";
+        versions.Add (v);
+    } else {
+        if (!string.IsNullOrEmpty (GIT_SHA)) {
+            var v = $"0.0.0-commit.{GIT_SHA}";
+            if (!string.IsNullOrEmpty (BUILD_NUMBER))
+                v += $".{BUILD_NUMBER}";
+            versions.Add (v);
+        }
+        if (!string.IsNullOrEmpty (GIT_BRANCH_NAME)) {
+            var v = $"0.0.0-branch.{GIT_BRANCH_NAME.Replace ("/", ".")}";
+            if (!string.IsNullOrEmpty (BUILD_NUMBER))
+                v += $".{BUILD_NUMBER}";
+            versions.Add (v);
+        }
+    }
 
+    // get a list of all the nuspecs to pack
+    var specials = new Dictionary<string, string> ();
+
+    var nativePlatforms = GetDirectories ("./output/native/*")
+        .Select (d => d.GetDirectoryName ())
+        .ToArray ();
+    if (nativePlatforms.Length > 0) {
+        specials[$"_NativeAssets"] = $"native";
+        foreach (var platform in nativePlatforms) {
+            specials[$"_NativeAssets.{platform}"] = $"native/{platform}";
+        }
+    }
+    if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
+        specials[$"_NuGets"] = $"nugets";
+    }
+
+    foreach (var pair in specials) {
+        var id = pair.Key;
+        var path = pair.Value;
+        var nuspec = $"./output/{path}/{id}.nuspec";
+
+        DeleteFiles ($"./output/{path}/*.nuspec");
+
+        foreach (var packageVersion in versions) {
             // update the version
-            var xdoc = XDocument.Load ($"./nuget/{pair.Key}.nuspec");
+            var fn = id.StartsWith ("_NativeAssets.") ? "_NativeAssets" : id;
+            var xdoc = XDocument.Load ($"./nuget/{fn}.nuspec");
             var metadata = xdoc.Root.Element ("metadata");
-            var version = metadata.Element ("version");
+            metadata.Element ("version").Value = packageVersion;
+            metadata.Element ("id").Value = id;
 
-            if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
-                version.Value = "0.0.0-" + PREVIEW_LABEL;
-                xdoc.Save (nuspec);
-                PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
-            } else {
-                version.Value = "0.0.0-commit." + GIT_SHA;
-                xdoc.Save (nuspec);
-                PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
-
-                version.Value = "0.0.0-branch." + GIT_BRANCH_NAME.Replace ("/", ".");
-                xdoc.Save (nuspec);
-                PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
+            if (id == "_NativeAssets") {
+                // handle the root package
+                var dependencies = metadata.Element ("dependencies");
+                foreach (var platform in nativePlatforms) {
+                    dependencies.Add (new XElement ("dependency",
+                        new XAttribute ("id", $"_NativeAssets.{platform}"),
+                        new XAttribute ("version", packageVersion)));
+                }
+            } else if (id.StartsWith ("_NativeAssets.")) {
+                // handle the dependencies
+                var platform = id.Substring (id.IndexOf (".") + 1);
+                var files = xdoc.Root.Element ("files");
+                files.Add (new XElement ("file",
+                    new XAttribute ("src", $"*/**"),
+                    new XAttribute ("target", $"tools/{platform}")));
             }
 
-            DeleteFiles ($"./output/{pair.Value}/*.nuspec");
+            xdoc.Save (nuspec);
+            PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
         }
+
+        DeleteFiles ($"./output/{path}/*.nuspec");
     }
 });
 
