@@ -109,10 +109,6 @@ Setup(context =>
             break;
     }
     Information("Waited {0} seconds for the emulator to boot up.", waited);
-
-    var result = AdbShell("getprop ro.product.cpu.abi", adbSettings);
-    foreach (var r in result)
-        Information(r);
 });
 
 Teardown(context =>
