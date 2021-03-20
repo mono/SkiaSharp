@@ -251,7 +251,11 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void PlatformConfigurationIsMuslOverrideExists()
 		{
-			Assert.Equal(null, PlatformConfiguration.IsMuslOverride);
+			Assert.Null(PlatformConfiguration.IsMuslOverride);
+
+			PlatformConfiguration.IsMuslOverride = null;
+
+			Assert.Null(PlatformConfiguration.IsMuslOverride);
 		}
 
 		[SkippableFact]
@@ -260,8 +264,14 @@ namespace SkiaSharp.Tests
 			var assembly = typeof(SkiaSharpVersion).Assembly;
 			var config = assembly.GetType("PlatformConfiguration");
 			var overrideProp = config.GetProperty("IsMuslOverride");
+
 			Assert.Equal(typeof(bool?), overrideProp.PropertyType);
-			Assert.Equal(null, overrideProp.GetValue());
+
+			Assert.Null(overrideProp.GetValue(null));
+
+			overrideProp.SetValue(null);
+
+			Assert.Null(overrideProp.GetValue(null));
 		}
 	}
 }
