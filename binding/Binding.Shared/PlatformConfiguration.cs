@@ -12,7 +12,7 @@ namespace HarfBuzzSharp
 namespace SkiaSharp
 #endif
 {
-	internal static class PlatformConfiguration
+	public static class PlatformConfiguration
 	{
 		public static bool IsUnix { get; }
 
@@ -50,18 +50,20 @@ namespace SkiaSharp
 			Is64Bit = IntPtr.Size == 8;
 		}
 
+		public static bool? IsMuslOverride { get; set; }
+
 #if WINDOWS_UWP
 		public static bool IsMusl { get; }
 #else
-		private static readonly Lazy<bool> isMuslLazy = new Lazy<bool>(IsMuslImplementation);
+		private static readonly Lazy<bool> isMuslLazy = new Lazy<bool> (IsMuslImplementation);
 
-		public static bool IsMusl => IsLinux && isMuslLazy.Value;
+		public static bool IsMusl => IsLinux && (IsMuslOverride ?? isMuslLazy.Value);
 
-		private static bool IsMuslImplementation()
+		private static bool IsMuslImplementation ()
 		{
 			try
 			{
-				gnu_get_libc_version();
+				gnu_get_libc_version ();
 				return false;
 			}
 			catch (TypeLoadException)
@@ -70,8 +72,8 @@ namespace SkiaSharp
 			}
 		}
 
-		[DllImport("libc", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
-		private static extern IntPtr gnu_get_libc_version();
+		[DllImport ("c", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+		private static extern IntPtr gnu_get_libc_version ();
 #endif
 	}
 }

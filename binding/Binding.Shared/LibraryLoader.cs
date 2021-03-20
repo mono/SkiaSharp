@@ -191,7 +191,7 @@ namespace SkiaSharp
 
 		private static class Linux
 		{
-			private const string SystemLibrary = "libdl.so";
+			private const string SystemLibrary = "dl";
 
 			private const int RTLD_LAZY = 1;
 			private const int RTLD_NOW = 2;
