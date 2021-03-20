@@ -247,5 +247,21 @@ namespace SkiaSharp.Tests
 		{
 			Assert.Equal(SkiaSharpVersion.Native.ToString(2), SkiaSharpVersion.NativeString);
 		}
+
+		[SkippableFact]
+		public void PlatformConfigurationIsMuslOverrideExists()
+		{
+			Assert.Equal(null, PlatformConfiguration.IsMuslOverride);
+		}
+
+		[SkippableFact]
+		public void PlatformConfigurationIsMuslOverrideCanBeFoundViaReflection()
+		{
+			var assembly = typeof(SkiaSharpVersion).Assembly;
+			var config = assembly.GetType("PlatformConfiguration");
+			var overrideProp = config.GetProperty("IsMuslOverride");
+			Assert.Equal(typeof(bool?), overrideProp.PropertyType);
+			Assert.Equal(null, overrideProp.GetValue());
+		}
 	}
 }

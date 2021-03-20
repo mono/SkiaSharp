@@ -12,7 +12,7 @@ namespace HarfBuzzSharp
 namespace SkiaSharp
 #endif
 {
-	public static class PlatformConfiguration
+	internal static class PlatformConfiguration
 	{
 		public static bool IsUnix { get; }
 
