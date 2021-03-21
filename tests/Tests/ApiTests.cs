@@ -269,7 +269,7 @@ namespace SkiaSharp.Tests
 
 			Assert.Null(overrideProp.GetValue(null));
 
-			overrideProp.SetValue(null);
+			overrideProp.SetValue(null, null);
 
 			Assert.Null(overrideProp.GetValue(null));
 		}
