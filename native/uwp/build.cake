@@ -114,14 +114,16 @@ Task("ANGLE")
     {
         if (Skip(arch)) return;
 
+        var d = CONFIGURATION.ToLower() == "release" ? "" : "debug/";
+
         RunProcess (vcpkg, $"install angle:{arch}-uwp");
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/bin/libEGL.dll"), outDir);
-        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/bin/libEGL.pdb"), outDir);
-        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/bin/libGLESv2.dll"), outDir);
-        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/bin/libGLESv2.pdb"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/{d}bin/libEGL.dll"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/{d}bin/libEGL.pdb"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/{d}bin/libGLESv2.dll"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/{d}bin/libGLESv2.pdb"), outDir);
     }
 });
 
