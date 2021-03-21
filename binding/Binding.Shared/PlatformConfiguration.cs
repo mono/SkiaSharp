@@ -50,25 +50,44 @@ namespace SkiaSharp
 			Is64Bit = IntPtr.Size == 8;
 		}
 
-		public static bool? IsMuslOverride { get; set; }
+		private static string linuxFlavor;
+
+		public static string LinuxFlavor
+		{
+			get
+			{
+				if (!IsLinux)
+					return null;
+
+				if (!string.IsNullOrEmpty (linuxFlavor))
+					return linuxFlavor;
+
+				// we only check for musl/glibc right now
+				if (!IsGlibc)
+					return "musl";
+
+				return null;
+			}
+			set => linuxFlavor = value;
+		}
 
 #if WINDOWS_UWP
-		public static bool IsMusl { get; }
+		public static bool IsGlibc { get; }
 #else
-		private static readonly Lazy<bool> isMuslLazy = new Lazy<bool> (IsMuslImplementation);
+		private static readonly Lazy<bool> isGlibcLazy = new Lazy<bool> (IsGlibcImplementation);
 
-		public static bool IsMusl => IsLinux && (IsMuslOverride ?? isMuslLazy.Value);
+		public static bool IsGlibc => IsLinux && isGlibcLazy.Value;
 
-		private static bool IsMuslImplementation ()
+		private static bool IsGlibcImplementation ()
 		{
 			try
 			{
 				gnu_get_libc_version ();
-				return false;
+				return true;
 			}
 			catch (TypeLoadException)
 			{
-				return true;
+				return false;
 			}
 		}
 

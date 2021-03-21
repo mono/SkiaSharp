@@ -78,8 +78,8 @@ namespace SkiaSharp
 			{
 				if (!string.IsNullOrEmpty (root)) {
 					// a. in specific platform sub dir
-					if (PlatformConfiguration.IsMusl) {
-						var muslLib = Path.Combine (root, "musl-" + arch, libWithExt);
+					if (!string.IsNullOrEmpty (PlatformConfiguration.LinuxFlavor)) {
+						var muslLib = Path.Combine (root, PlatformConfiguration.LinuxFlavor + "-" + arch, libWithExt);
 						if (File.Exists (muslLib)) {
 							foundPath = muslLib;
 							return true;
