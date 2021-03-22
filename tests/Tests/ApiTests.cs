@@ -262,7 +262,7 @@ namespace SkiaSharp.Tests
 		public void PlatformConfigurationIsMuslOverrideCanBeFoundViaReflection()
 		{
 			var assembly = typeof(SkiaSharpVersion).Assembly;
-			var config = assembly.GetType("PlatformConfiguration");
+			var config = assembly.DefinedTypes.FirstOrDefault(t => t.Name == "PlatformConfiguration");
 			var overrideProp = config.GetProperty("LinuxFlavor");
 
 			Assert.Equal(typeof(string), overrideProp.PropertyType);
