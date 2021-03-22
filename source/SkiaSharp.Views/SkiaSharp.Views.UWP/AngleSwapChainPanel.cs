@@ -150,8 +150,8 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnCompositionChanged(SwapChainPanel sender, object args)
 		{
-
 			pendingSizeChange = true;
+
 			ContentsScale = CompositionScaleX;
 
 			DestroyRenderSurface();
@@ -194,6 +194,8 @@ namespace SkiaSharp.Views.UWP
 			if (designMode || !isLoaded || !isVisible || glesContext?.HasSurface != true)
 				return;
 
+			glesContext.MakeCurrent();
+
 			if (pendingSizeChange)
 			{
 				pendingSizeChange = false;
@@ -202,7 +204,6 @@ namespace SkiaSharp.Views.UWP
 					glesContext.SwapBuffers();
 			}
 
-			glesContext.MakeCurrent();
 			glesContext.GetSurfaceDimensions(out var panelWidth, out var panelHeight);
 			glesContext.SetViewportSize(panelWidth, panelHeight);
 
