@@ -2,6 +2,7 @@
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml.Controls;
+using System.Collections.Generic;
 
 using SkiaSharp.Views.UWP.Interop;
 
@@ -14,9 +15,10 @@ namespace SkiaSharp.Views.GlesInterop
 {
 	internal class GlesContext : IDisposable
 	{
+		private static EGLDisplay eglDisplay = Egl.EGL_NO_DISPLAY;
+
 		private bool isDisposed = false;
 
-		private EGLDisplay eglDisplay;
 		private EGLContext eglContext;
 		private EGLSurface eglSurface;
 		private EGLConfig eglConfig;
@@ -24,10 +26,10 @@ namespace SkiaSharp.Views.GlesInterop
 		public GlesContext()
 		{
 			eglConfig = Egl.EGL_NO_CONFIG;
-			eglDisplay = Egl.EGL_NO_DISPLAY;
 			eglContext = Egl.EGL_NO_CONTEXT;
 			eglSurface = Egl.EGL_NO_SURFACE;
 
+			InitializeDisplay();
 			Initialize();
 		}
 
@@ -139,24 +141,10 @@ namespace SkiaSharp.Views.GlesInterop
 			Initialize();
 		}
 
-		private void Initialize()
+		private void InitializeDisplay()
 		{
-			int[] configAttributes = new[]
-			{
-				Egl.EGL_RED_SIZE, 8,
-				Egl.EGL_GREEN_SIZE, 8,
-				Egl.EGL_BLUE_SIZE, 8,
-				Egl.EGL_ALPHA_SIZE, 8,
-				Egl.EGL_DEPTH_SIZE, 8,
-				Egl.EGL_STENCIL_SIZE, 8,
-				Egl.EGL_NONE
-			};
-
-			int[] contextAttributes = new[]
-			{
-				Egl.EGL_CONTEXT_CLIENT_VERSION, 2,
-				Egl.EGL_NONE
-			};
+			if (eglDisplay != Egl.EGL_NO_DISPLAY)
+				return;
 
 			int[] defaultDisplayAttributes = new[]
 			{
@@ -242,6 +230,26 @@ namespace SkiaSharp.Views.GlesInterop
 					}
 				}
 			}
+		}
+
+		public void Initialize()
+		{
+			int[] configAttributes = new[]
+			{
+				Egl.EGL_RED_SIZE, 8,
+				Egl.EGL_GREEN_SIZE, 8,
+				Egl.EGL_BLUE_SIZE, 8,
+				Egl.EGL_ALPHA_SIZE, 8,
+				Egl.EGL_DEPTH_SIZE, 8,
+				Egl.EGL_STENCIL_SIZE, 8,
+				Egl.EGL_NONE
+			};
+
+			int[] contextAttributes = new[]
+			{
+				Egl.EGL_CONTEXT_CLIENT_VERSION, 2,
+				Egl.EGL_NONE
+			};
 
 			EGLDisplay[] configs = new EGLDisplay[1];
 			if ((Egl.eglChooseConfig(eglDisplay, configAttributes, configs, configs.Length, out int numConfigs) == Egl.EGL_FALSE) || (numConfigs == 0))
@@ -263,12 +271,6 @@ namespace SkiaSharp.Views.GlesInterop
 			{
 				Egl.eglDestroyContext(eglDisplay, eglContext);
 				eglContext = Egl.EGL_NO_CONTEXT;
-			}
-
-			if (eglDisplay != Egl.EGL_NO_DISPLAY)
-			{
-				Egl.eglTerminate(eglDisplay);
-				eglDisplay = Egl.EGL_NO_DISPLAY;
 			}
 		}
 	}
