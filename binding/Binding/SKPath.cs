@@ -537,8 +537,16 @@ namespace SkiaSharp
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 
 				fixed (SKPoint* p = points) {
-					return SkiaApi.sk_path_iter_next (Handle, p);
+					return Next(p);
 				}
+			}
+
+			public SKPathVerb Next (SKPoint* points)
+			{
+				if (points == null)
+					throw new ArgumentNullException (nameof (points));
+
+				return SkiaApi.sk_path_iter_next (Handle, points);
 			}
 
 			public float ConicWeight () =>
@@ -576,9 +584,18 @@ namespace SkiaSharp
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
+
 				fixed (SKPoint* p = points) {
-					return SkiaApi.sk_path_rawiter_next (Handle, p);
+					return Next (p);
 				}
+			}
+
+			public SKPathVerb Next (SKPoint* points)
+			{
+				if (points == null)
+					throw new ArgumentNullException (nameof (points));
+
+				return SkiaApi.sk_path_rawiter_next (Handle, points);
 			}
 
 			public float ConicWeight () =>

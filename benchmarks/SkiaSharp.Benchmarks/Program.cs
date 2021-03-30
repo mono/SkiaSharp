@@ -1,4 +1,6 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System;
+using System.Collections.Generic;
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 
@@ -8,7 +10,9 @@ namespace SkiaSharp.Benchmarks
 	[SimpleJob(RuntimeMoniker.Mono)]
 	[SimpleJob(RuntimeMoniker.Net472)]
 	[SimpleJob(RuntimeMoniker.NetCoreApp31)]
-	public class Benchmark
+	[SimpleJob(RuntimeMoniker.NetCoreApp50)]
+	[MemoryDiagnoser]
+	public unsafe class Benchmark
 	{
 		public Benchmark()
 		{
