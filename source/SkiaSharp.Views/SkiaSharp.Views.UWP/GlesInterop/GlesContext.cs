@@ -15,9 +15,10 @@ namespace SkiaSharp.Views.GlesInterop
 {
 	internal class GlesContext : IDisposable
 	{
+		private static EGLDisplay eglDisplay = Egl.EGL_NO_DISPLAY;
+
 		private bool isDisposed = false;
 
-		private static EGLDisplay eglDisplay = Egl.EGL_NO_DISPLAY;
 		private EGLContext eglContext;
 		private EGLSurface eglSurface;
 		private EGLConfig eglConfig;
@@ -25,10 +26,10 @@ namespace SkiaSharp.Views.GlesInterop
 		public GlesContext()
 		{
 			eglConfig = Egl.EGL_NO_CONFIG;
-			eglDisplay = Egl.EGL_NO_DISPLAY;
 			eglContext = Egl.EGL_NO_CONTEXT;
 			eglSurface = Egl.EGL_NO_SURFACE;
 
+			InitializeDisplay();
 			Initialize();
 		}
 
@@ -140,24 +141,10 @@ namespace SkiaSharp.Views.GlesInterop
 			Initialize();
 		}
 
-		private void Initialize()
+		private void InitializeDisplay()
 		{
-			int[] configAttributes = new[]
-			{
-				Egl.EGL_RED_SIZE, 8,
-				Egl.EGL_GREEN_SIZE, 8,
-				Egl.EGL_BLUE_SIZE, 8,
-				Egl.EGL_ALPHA_SIZE, 8,
-				Egl.EGL_DEPTH_SIZE, 8,
-				Egl.EGL_STENCIL_SIZE, 8,
-				Egl.EGL_NONE
-			};
-
-			int[] contextAttributes = new[]
-			{
-				Egl.EGL_CONTEXT_CLIENT_VERSION, 2,
-				Egl.EGL_NONE
-			};
+			if (eglDisplay != Egl.EGL_NO_DISPLAY)
+				return;
 
 			int[] defaultDisplayAttributes = new[]
 			{
@@ -211,19 +198,26 @@ namespace SkiaSharp.Views.GlesInterop
 			//    using "warpDisplayAttributes".  This corresponds to D3D11 Feature Level 11_0 on WARP, a D3D11 software rasterizer.
 			//
 
+			// This tries to initialize EGL to D3D11 Feature Level 10_0+. See above comment for details.
+			eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, defaultDisplayAttributes);
 			if (eglDisplay == Egl.EGL_NO_DISPLAY)
 			{
-				// This tries to initialize EGL to D3D11 Feature Level 10_0+. See above comment for details.
-				eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, defaultDisplayAttributes);
+				throw new Exception("Failed to get EGL display");
+			}
+
+			if (Egl.eglInitialize(eglDisplay, out int major, out int minor) == Egl.EGL_FALSE)
+			{
+				// This tries to initialize EGL to D3D11 Feature Level 9_3, if 10_0+ is unavailable (e.g. on some mobile devices).
+				eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, fl9_3DisplayAttributes);
 				if (eglDisplay == Egl.EGL_NO_DISPLAY)
 				{
 					throw new Exception("Failed to get EGL display");
 				}
 
-				if (Egl.eglInitialize(eglDisplay, out int major, out int minor) == Egl.EGL_FALSE)
+				if (Egl.eglInitialize(eglDisplay, out major, out minor) == Egl.EGL_FALSE)
 				{
-					// This tries to initialize EGL to D3D11 Feature Level 9_3, if 10_0+ is unavailable (e.g. on some mobile devices).
-					eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, fl9_3DisplayAttributes);
+					// This initializes EGL to D3D11 Feature Level 11_0 on WARP, if 9_3+ is unavailable on the default GPU.
+					eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
 					if (eglDisplay == Egl.EGL_NO_DISPLAY)
 					{
 						throw new Exception("Failed to get EGL display");
@@ -231,22 +225,32 @@ namespace SkiaSharp.Views.GlesInterop
 
 					if (Egl.eglInitialize(eglDisplay, out major, out minor) == Egl.EGL_FALSE)
 					{
-						// This initializes EGL to D3D11 Feature Level 11_0 on WARP, if 9_3+ is unavailable on the default GPU.
-						eglDisplay = Egl.eglGetPlatformDisplayEXT(Egl.EGL_PLATFORM_ANGLE_ANGLE, Egl.EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
-						if (eglDisplay == Egl.EGL_NO_DISPLAY)
-						{
-							throw new Exception("Failed to get EGL display");
-						}
 
-						if (Egl.eglInitialize(eglDisplay, out major, out minor) == Egl.EGL_FALSE)
-						{
-							
-							// If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred.
-							throw new Exception("Failed to initialize EGL");
-						}
+						// If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred.
+						throw new Exception("Failed to initialize EGL");
 					}
 				}
 			}
+		}
+
+		public void Initialize()
+		{
+			int[] configAttributes = new[]
+			{
+				Egl.EGL_RED_SIZE, 8,
+				Egl.EGL_GREEN_SIZE, 8,
+				Egl.EGL_BLUE_SIZE, 8,
+				Egl.EGL_ALPHA_SIZE, 8,
+				Egl.EGL_DEPTH_SIZE, 8,
+				Egl.EGL_STENCIL_SIZE, 8,
+				Egl.EGL_NONE
+			};
+
+			int[] contextAttributes = new[]
+			{
+				Egl.EGL_CONTEXT_CLIENT_VERSION, 2,
+				Egl.EGL_NONE
+			};
 
 			EGLDisplay[] configs = new EGLDisplay[1];
 			if ((Egl.eglChooseConfig(eglDisplay, configAttributes, configs, configs.Length, out int numConfigs) == Egl.EGL_FALSE) || (numConfigs == 0))
