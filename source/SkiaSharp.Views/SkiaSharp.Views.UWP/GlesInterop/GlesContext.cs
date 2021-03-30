@@ -225,7 +225,6 @@ namespace SkiaSharp.Views.GlesInterop
 
 					if (Egl.eglInitialize(eglDisplay, out major, out minor) == Egl.EGL_FALSE)
 					{
-
 						// If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred.
 						throw new Exception("Failed to initialize EGL");
 					}
