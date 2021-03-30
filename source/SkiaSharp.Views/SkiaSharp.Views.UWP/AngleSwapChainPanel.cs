@@ -33,6 +33,8 @@ namespace SkiaSharp.Views.UWP
 
 		private bool enableRenderLoop;
 
+		private bool pendingSizeChange = false;
+
 		public AngleSwapChainPanel()
 		{
 			glesContext = null;
@@ -148,6 +150,8 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnCompositionChanged(SwapChainPanel sender, object args)
 		{
+			pendingSizeChange = true;
+
 			ContentsScale = CompositionScaleX;
 
 			DestroyRenderSurface();
@@ -157,6 +161,8 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
+			pendingSizeChange = true;
+
 			EnsureRenderSurface();
 			Invalidate();
 		}
@@ -189,6 +195,15 @@ namespace SkiaSharp.Views.UWP
 				return;
 
 			glesContext.MakeCurrent();
+
+			if (pendingSizeChange)
+			{
+				pendingSizeChange = false;
+
+				if (!EnableRenderLoop)
+					glesContext.SwapBuffers();
+			}
+
 			glesContext.GetSurfaceDimensions(out var panelWidth, out var panelHeight);
 			glesContext.SetViewportSize(panelWidth, panelHeight);
 
