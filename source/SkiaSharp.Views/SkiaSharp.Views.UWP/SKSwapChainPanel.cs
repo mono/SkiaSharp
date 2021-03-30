@@ -110,7 +110,7 @@ namespace SkiaSharp.Views.UWP
 
 			glInfo = default;
 
-			context?.AbandonContext(true);
+			context?.AbandonContext(false);
 			context?.Dispose();
 			context = null;
 
