@@ -11,9 +11,7 @@ Task("libSkiaSharp")
 {
     Build("x86_64", "x64");
 
-    RunLipo(OUTPUT_PATH, "libSkiaSharp.dylib", new [] {
-       (FilePath) "x86_64/libSkiaSharp.dylib"
-    });
+    CreateFatDylib(OUTPUT_PATH.Combine("libSkiaSharp"));
 
     void Build(string arch, string skiaArch)
     {
@@ -31,16 +29,14 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-mmacosx-version-min=10.8', '-stdlib=libc++' ] " +
-            $"extra_ldflags=[ '-Wl,macosx_version_min=10.8', '-stdlib=libc++' ]");
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
+            $"extra_ldflags=[ '-stdlib=libc++' ]");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch);
 
-        var outDir = OUTPUT_PATH.Combine(arch);
-        EnsureDirectoryExists(outDir);
-        CopyDirectory($"libSkiaSharp/bin/{CONFIGURATION}/{arch}/{CONFIGURATION}/", outDir);
-
-        StripSign(outDir.CombineWithFilePath("libSkiaSharp.dylib"));
+        SafeCopy(
+            $"libSkiaSharp/bin/{CONFIGURATION}/macosx/{arch}.xcarchive",
+            OUTPUT_PATH.Combine($"libSkiaSharp/{arch}.xcarchive"));
     }
 });
 
@@ -50,9 +46,7 @@ Task("libHarfBuzzSharp")
 {
     Build("x86_64");
 
-    RunLipo(OUTPUT_PATH, "libHarfBuzzSharp.dylib", new [] {
-       (FilePath) "x86_64/libHarfBuzzSharp.dylib"
-    });
+    CreateFatDylib(OUTPUT_PATH.Combine("libHarfBuzzSharp"));
 
     void Build(string arch)
     {
@@ -60,11 +54,9 @@ Task("libHarfBuzzSharp")
 
         RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", "macosx", arch);
 
-        var outDir = OUTPUT_PATH.Combine(arch);
-        EnsureDirectoryExists(outDir);
-        CopyDirectory($"libHarfBuzzSharp/bin/{CONFIGURATION}/{arch}/{CONFIGURATION}/", outDir);
-
-        StripSign(outDir.CombineWithFilePath("libHarfBuzzSharp.dylib"));
+        SafeCopy(
+            $"libHarfBuzzSharp/bin/{CONFIGURATION}/macosx/{arch}.xcarchive",
+            OUTPUT_PATH.Combine($"libHarfBuzzSharp/{arch}.xcarchive"));
     }
 });
 

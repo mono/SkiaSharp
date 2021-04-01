@@ -1,5 +1,5 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
-DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/ios"));
+DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 #load "../../cake/native-shared.cake"
 #load "../../cake/xcode.cake"
@@ -13,25 +13,22 @@ Task("libSkiaSharp")
     Build("iphonesimulator", "x86_64", "x64");
     Build("iphoneos", "armv7", "arm");
     Build("iphoneos", "arm64", "arm64");
+    Build("macosx", "x86_64", "x64");
 
-    CopyDirectory(OUTPUT_PATH.Combine("armv7/libSkiaSharp.framework"), OUTPUT_PATH.Combine("libSkiaSharp.framework"));
-    DeleteFile(OUTPUT_PATH.CombineWithFilePath("libSkiaSharp.framework/libSkiaSharp"));
-    RunLipo(OUTPUT_PATH, "libSkiaSharp.framework/libSkiaSharp", new [] {
-       (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp",
-       (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp",
-       (FilePath) "armv7/libSkiaSharp.framework/libSkiaSharp",
-       (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
-    });
+    CreateFatFramework(OUTPUT_PATH.Combine("ios/libSkiaSharp"));
+    CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libSkiaSharp"));
 
     void Build(string sdk, string arch, string skiaArch)
     {
         if (Skip(arch)) return;
 
-        GnNinja($"ios/{arch}", "skia",
+        var os = sdk == "macosx" ? "maccatalyst" : "ios";
+
+        GnNinja($"{os}/{arch}", "skia",
             $"target_cpu='{skiaArch}' " +
-            $"target_os='ios' " +
+            $"target_os='{os}' " +
             $"skia_use_icu=false " +
-            $"skia_use_metal=true " +
+            $"skia_use_metal={(sdk == "macosx" ? "false" : "true")} " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +
@@ -39,16 +36,13 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-mios-version-min=8.0' ] " +
-            $"extra_ldflags=[ '-Wl,ios_version_min=8.0' ]");
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] ");
 
-        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch);
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch, platform: os);
 
-        var outDir = OUTPUT_PATH.Combine(arch);
-        EnsureDirectoryExists(outDir);
-        CopyDirectory($"libSkiaSharp/bin/{CONFIGURATION}/{arch}/{CONFIGURATION}-{sdk}", outDir);
-
-        StripSign(outDir.CombineWithFilePath("libSkiaSharp.framework"));
+        SafeCopy(
+            $"libSkiaSharp/bin/{CONFIGURATION}/{sdk}/{arch}.xcarchive",
+            OUTPUT_PATH.Combine($"{os}/libSkiaSharp/{arch}.xcarchive"));
     }
 });
 
@@ -60,25 +54,22 @@ Task("libHarfBuzzSharp")
     Build("iphonesimulator", "x86_64");
     Build("iphoneos", "armv7");
     Build("iphoneos", "arm64");
+    Build("macosx", "x86_64");
 
-    RunLipo(OUTPUT_PATH, "libHarfBuzzSharp.a", new [] {
-       (FilePath) "i386/libHarfBuzzSharp.a",
-       (FilePath) "x86_64/libHarfBuzzSharp.a",
-       (FilePath) "armv7/libHarfBuzzSharp.a",
-       (FilePath) "arm64/libHarfBuzzSharp.a"
-    });
+    CreateFatFramework(OUTPUT_PATH.Combine("ios/libHarfBuzzSharp"));
+    CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libHarfBuzzSharp"));
 
     void Build(string sdk, string arch)
     {
         if (Skip(arch)) return;
 
-        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, arch);
+        var os = sdk == "macosx" ? "maccatalyst" : "ios";
 
-        var outDir = OUTPUT_PATH.Combine(arch);
-        EnsureDirectoryExists(outDir);
-        CopyDirectory($"libHarfBuzzSharp/bin/{CONFIGURATION}/{arch}/{CONFIGURATION}-{sdk}", outDir);
+        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, arch, platform: os);
 
-        StripSign(outDir.CombineWithFilePath("libHarfBuzzSharp.a"));
+        SafeCopy(
+            $"libHarfBuzzSharp/bin/{CONFIGURATION}/{sdk}/{arch}.xcarchive",
+            OUTPUT_PATH.Combine($"{os}/libHarfBuzzSharp/{arch}.xcarchive"));
     }
 });
 

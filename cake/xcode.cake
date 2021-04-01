@@ -1,25 +1,118 @@
 #addin nuget:?package=Cake.XCode&version=4.2.0
 
-void RunXCodeBuild(FilePath project, string target, string sdk, string arch)
+void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, string platform = null)
 {
     var dir = project.GetDirectory();
 
-    if (DirectoryExists(dir.Combine($"bin/{CONFIGURATION}/{arch}"))) {
-        if (DirectoryExists(dir.Combine("build")))
-            DeleteDirectory(dir.Combine("build"), true);
-        MoveDirectory(dir.Combine($"bin/{CONFIGURATION}/{arch}"), dir.Combine("build"));
-    }
-
-    XCodeBuild(new XCodeBuildSettings {
+    var settings = new XCodeBuildSettings {
         Project = project.FullPath,
-        Target = target,
+        Scheme = scheme,
         Sdk = sdk,
         Arch = arch,
+        Archive = true,
         Configuration = CONFIGURATION,
+        DerivedDataPath = dir.Combine($"obj/{CONFIGURATION}/{sdk}/{arch}"),
+        ArchivePath = dir.Combine($"bin/{CONFIGURATION}/{sdk}/{arch}"),
+        BuildSettings = new Dictionary<string, string> {
+            { "SKIP_INSTALL", "NO" },
+            { "BUILD_LIBRARIES_FOR_DISTRIBUTION", "YES" },
+        },
+    };
+    if (platform != null) {
+        settings.BuildSettings["PLATFORM"] = platform;
+    }
+
+    XCodeBuild(settings);
+}
+
+void StripSign(FilePath target)
+{
+    if (!IsRunningOnMac())
+        throw new InvalidOperationException("strip and codesign are only available on macOS.");
+
+    target = MakeAbsolute(target);
+    var archive = target;
+    if (target.FullPath.EndsWith(".framework")) {
+        archive = $"{target}/{target.GetFilenameWithoutExtension()}";
+    }
+
+    // strip anything we can
+    RunProcess("strip", new ProcessSettings {
+        Arguments = $"-x -S {archive}",
     });
 
-    if (DirectoryExists(dir.Combine($"bin/{CONFIGURATION}/{arch}")))
-        DeleteDirectory(dir.Combine($"bin/{CONFIGURATION}/{arch}"), true);
-    EnsureDirectoryExists(dir.Combine($"bin/{CONFIGURATION}"));
-    MoveDirectory(dir.Combine("build"), dir.Combine($"bin/{CONFIGURATION}/{arch}"));
+    // re-sign with empty
+    RunProcess("codesign", new ProcessSettings {
+        Arguments = $"--force --sign - --timestamp=none {target}",
+    });
+}
+
+void RunLipo(DirectoryPath directory, FilePath output, FilePath[] inputs)
+{
+    if (!IsRunningOnMac())
+        throw new InvalidOperationException("lipo is only available on macOS.");
+
+    EnsureDirectoryExists(directory.CombineWithFilePath(output).GetDirectory());
+
+    var inputString = string.Join(" ", inputs.Select(i => string.Format("\"{0}\"", i)));
+    RunProcess("lipo", new ProcessSettings {
+        Arguments = string.Format("-create -output \"{0}\" {1}", output, inputString),
+        WorkingDirectory = directory,
+    });
+}
+
+void RunLipo(FilePath output, FilePath[] inputs)
+{
+    if (!IsRunningOnMac())
+        throw new InvalidOperationException("lipo is only available on macOS.");
+
+    var inputString = string.Join(" ", inputs.Select(i => string.Format("\"{0}\"", i)));
+    RunProcess("lipo", new ProcessSettings {
+        Arguments = string.Format("-create -output \"{0}\" {1}", output, inputString),
+    });
+}
+
+void CreateFatDylib(DirectoryPath archives)
+{
+    var libName = archives.GetDirectoryName();
+
+    var binaries = GetFiles($"{archives}/*.xcarchive/Products/@rpath/{libName}.dylib").ToArray();
+    RunLipo($"{archives}.dylib", binaries);
+
+    StripSign($"{archives}.dylib");
+}
+
+void CreateFatFramework(DirectoryPath archives)
+{
+    var libName = archives.GetDirectoryName();
+
+    var frameworks = GetDirectories($"{archives}/*.xcarchive/Products/Library/Frameworks/{libName}.framework").ToArray();
+    SafeCopy(frameworks[0], $"{archives}.framework");
+    DeleteFile($"{archives}.framework/{libName}");
+
+    var binaries = GetFiles($"{archives}/*.xcarchive/Products/Library/Frameworks/{libName}.framework/{libName}").ToArray();
+    RunLipo($"{archives}.framework/{libName}", binaries);
+
+    StripSign($"{archives}.framework");
+}
+
+void CreateFatVersionedFramework(DirectoryPath archives)
+{
+    var libName = archives.GetDirectoryName();
+
+    var frameworks = GetDirectories($"{archives}/*.xcarchive/Products/Library/Frameworks/{libName}.framework").ToArray();
+    SafeCopy(frameworks[0], $"{archives}.framework");
+    DeleteFile($"{archives}.framework/Versions/A/{libName}");
+
+    var binaries = GetFiles($"{archives}/*.xcarchive/Products/Library/Frameworks/{libName}.framework/Versions/A/{libName}").ToArray();
+    RunLipo($"{archives}.framework/Versions/A/{libName}", binaries);
+
+    StripSign($"{archives}.framework");
+}
+
+void SafeCopy(DirectoryPath src, DirectoryPath dst)
+{
+    EnsureDirectoryExists(dst);
+    DeleteDirectory(dst, new DeleteDirectorySettings { Recursive = true, Force = true });
+    RunProcess("cp", $"-R {src} {dst}");
 }

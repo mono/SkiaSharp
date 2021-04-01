@@ -315,6 +315,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-all_load";
 				SDKROOT = iphoneos;
+				PLATFORM = ios;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -381,8 +382,9 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-all_load";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				PLATFORM = ios;
 				VALIDATE_PRODUCT = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -400,15 +402,17 @@
 				HEADER_SEARCH_PATHS = ../../../externals/skia;
 				INFOPLIST_FILE = libSkiaSharp/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/ios/$(ARCHS)";
+				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/$(PLATFORM)/$(ARCHS)";
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-lskia",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "xamarin.libskia-ios";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.libSkiaSharp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
 			};
 			name = Debug;
 		};
@@ -424,15 +428,17 @@
 				HEADER_SEARCH_PATHS = ../../../externals/skia;
 				INFOPLIST_FILE = libSkiaSharp/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/ios/$(ARCHS)";
+				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/$(PLATFORM)/$(ARCHS)";
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-lskia",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "xamarin.libskia-ios";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.libSkiaSharp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
 			};
 			name = Release;
 		};
