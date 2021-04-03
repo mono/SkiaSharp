@@ -5,11 +5,11 @@ namespace HarfBuzzSharp
 	internal unsafe partial class HarfBuzzApi
 	{
 #if __TVOS__ && __UNIFIED__
-		private const string HARFBUZZ = "__Internal";
+		private const string HARFBUZZ = "@rpath/libHarfBuzzSharp.framework/libHarfBuzzSharp";
 #elif __WATCHOS__ && __UNIFIED__
-		private const string HARFBUZZ = "__Internal";
+		private const string HARFBUZZ = "@rpath/libHarfBuzzSharp.framework/libHarfBuzzSharp";
 #elif __IOS__ && __UNIFIED__
-		private const string HARFBUZZ = "__Internal";
+		private const string HARFBUZZ = "@rpath/libHarfBuzzSharp.framework/libHarfBuzzSharp";
 #elif __ANDROID__
 		private const string HARFBUZZ = "libHarfBuzzSharp.so";
 #elif __MACOS__
