@@ -225,6 +225,12 @@ stages:
           displayName: iOS
           vmImage: $(VM_IMAGE_MAC)
           target: externals-ios
+      - template: azure-templates-bootstrapper.yml # Build Native Mac Catalyst (macOS)
+        parameters:
+          name: native_maccatalyst_macos
+          displayName: Mac Catalyst
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-maccatalyst
       - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
         parameters:
           name: native_macos_macos
@@ -344,6 +350,7 @@ stages:
             - native_android_arm_macos
             - native_android_arm64_macos
             - native_ios_macos
+            - native_maccatalyst_macos
             - native_macos_macos
             # - native_tizen_macos
             - native_tizen_windows
