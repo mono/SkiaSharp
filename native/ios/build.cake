@@ -14,6 +14,7 @@ Task("libSkiaSharp")
     Build("iphoneos", "armv7", "arm");
     Build("iphoneos", "arm64", "arm64");
     Build("macosx", "x86_64", "x64");
+    Build("macosx", "arm64", "arm64");
 
     CreateFatFramework(OUTPUT_PATH.Combine("ios/libSkiaSharp"));
     CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libSkiaSharp"));
@@ -55,6 +56,7 @@ Task("libHarfBuzzSharp")
     Build("iphoneos", "armv7");
     Build("iphoneos", "arm64");
     Build("macosx", "x86_64");
+    Build("macosx", "arm64");
 
     CreateFatFramework(OUTPUT_PATH.Combine("ios/libHarfBuzzSharp"));
     CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libHarfBuzzSharp"));
