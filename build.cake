@@ -723,7 +723,7 @@ Task ("nuget-special")
                 var platform = id.Substring (id.IndexOf (".") + 1);
                 var files = xdoc.Root.Element ("files");
                 files.Add (new XElement ("file",
-                    new XAttribute ("src", $"*/**"),
+                    new XAttribute ("src", $"**"),
                     new XAttribute ("target", $"tools/{platform}")));
             }
 
