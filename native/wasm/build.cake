@@ -49,7 +49,7 @@ Task("libSkiaSharp")
         $"skia_use_wuffs=true " +
         $"use_PIC=false " +
         $"extra_cflags=[ " +
-        $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', '-DSK_BUILD_FOR_WASM', " + 
+        $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
         $"  '-DSKNX_NO_SIMD', '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
         $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
         $"] " +
