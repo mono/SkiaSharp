@@ -128,7 +128,9 @@ namespace SkiaSharp.Views.UWP
 		{
 			if (pixels != null)
 			{
+				pixelsHandle.Free();
 				pixels = null;
+				bitmap = null;
 			}
 		}
 	}

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using Xamarin.Essentials;
-#if __WASM__
+#if __WASM__ || HAS_UNO_SKIA
 using System.Runtime.InteropServices;
 using Windows.ApplicationModel;
 using Windows.Storage;
@@ -47,7 +47,7 @@ namespace SkiaSharpSample
 		{
 			var fontName = "content-font.ttf";
 
-#if WINDOWS_UWP
+#if WINDOWS_UWP || HAS_UNO_SKIA
 			var pkg = Package.Current.InstalledLocation.Path;
 			var path = Path.Combine(pkg, "Assets", "Media", fontName);
 #elif __IOS__ || __TVOS__ || __MACOS__
@@ -86,7 +86,7 @@ namespace SkiaSharpSample
 			var localStorage = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
 #elif __DESKTOP__
 			var localStorage = System.Windows.Forms.Application.LocalUserAppDataPath;
-#elif __WASM__
+#elif __WASM__ || HAS_UNO_SKIA
 			var localStorage = ApplicationData.Current.LocalFolder.Path;
 #endif
 

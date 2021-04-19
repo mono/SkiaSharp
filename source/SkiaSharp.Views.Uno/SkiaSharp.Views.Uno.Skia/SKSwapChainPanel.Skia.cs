@@ -7,14 +7,35 @@ namespace SkiaSharp.Views.UWP
 {
 	public partial class SKSwapChainPanel
 	{
+		public static bool RaiseOnUnsupported { get; set; } = true;
+
 		public SKSwapChainPanel()
-			=> throw new NotSupportedException($"SKSwapChainPanel is not supported for Skia based platforms");
+		{
+			if (RaiseOnUnsupported)
+			{
+				throw new NotSupportedException($"SKSwapChainPanel is not supported for Skia based platforms");
+			}
+		}
 
 		private SKSize GetCanvasSize()
-			=> throw new NotSupportedException($"SKSwapChainPanel is not supported for Skia based platforms");
+		{
+			if (RaiseOnUnsupported)
+			{
+				throw new NotSupportedException($"SKSwapChainPanel is not supported for Skia based platforms");
+			}
+
+			return new SKSize();
+		}
 
 		private GRContext GetGRContext()
-			=> throw new NotSupportedException($"SKSwapChainPanel is not supported for Skia based platforms");
+		{
+			if (RaiseOnUnsupported)
+			{
+				throw new NotSupportedException($"SKSwapChainPanel is not supported for Skia based platforms");
+			}
+
+			return null;
+		}
 
 		private void DoInvalidate() { }
 	}
