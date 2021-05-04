@@ -1,10 +1,19 @@
 ﻿using System;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.UI.Xaml.Controls;
 using System.Collections.Generic;
 
-using SkiaSharp.Views.UWP.Interop;
+#if WINDOWS
+using Microsoft.UI.Xaml.Controls;
+#else
+using Windows.UI.Xaml.Controls;
+#endif
+
+#if WINDOWS
+using SkiaSharp.Views.Windows;
+#else
+using SkiaSharp.Views.UWP;
+#endif
 
 using EGLDisplay = System.IntPtr;
 using EGLContext = System.IntPtr;

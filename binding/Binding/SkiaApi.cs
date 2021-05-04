@@ -4,20 +4,8 @@ namespace SkiaSharp
 {
 	internal partial class SkiaApi
 	{
-#if __TVOS__ && __UNIFIED__
+#if __IOS__ || __TVOS__ || __WATCHOS__
 		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
-#elif __WATCHOS__ && __UNIFIED__
-		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
-#elif __IOS__ && __UNIFIED__
-		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
-#elif __ANDROID__
-		private const string SKIA = "libSkiaSharp.so";
-#elif __MACOS__
-		private const string SKIA = "libSkiaSharp.dylib";
-#elif WINDOWS_UWP
-		private const string SKIA = "libSkiaSharp.dll";
-#elif __TIZEN__
-		private const string SKIA = "libSkiaSharp.so";
 #else
 		private const string SKIA = "libSkiaSharp";
 #endif

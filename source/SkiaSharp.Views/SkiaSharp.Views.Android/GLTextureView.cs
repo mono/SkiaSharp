@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable CS0618
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -31,7 +33,7 @@ namespace SkiaSharp.Views.Android
 #endif
 	partial class GLTextureView : TextureView, TextureView.ISurfaceTextureListener, View.IOnLayoutChangeListener
 	{
-		private const bool EnableLogging = false;
+		internal static bool EnableLogging = false;
 
 		private WeakReference<GLTextureView> thisWeakRef;
 		private GLThread glThread;
@@ -911,10 +913,10 @@ namespace SkiaSharp.Views.Android
 											{
 												eglHelper.Start();
 											}
-											catch (Exception t)
+											catch (Exception)
 											{
 												threadManager.ReleaseEglContextLocked(this);
-												throw t;
+												throw;
 											}
 											haveEglContext = true;
 											createEglContext = true;

@@ -72,6 +72,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.Forms.WPF",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.Forms.GTK",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.Uno",                           new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WinUI",                         new Version (1, 57, 0) },
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (1, 0, 0) },
@@ -386,6 +387,7 @@ Task ("samples")
         { "macos", isMac },
         { "tvos", isMac },
         { "uwp", isWin },
+        { "winui", isWin },
         { "watchos", isMac },
         { "wpf", isWin },
     };
@@ -394,6 +396,7 @@ Task ("samples")
         { "ios", "iPhone" },
         { "tvos", "iPhoneSimulator" },
         { "uwp", "x86" },
+        { "winui", "x64" },
         { "watchos", "iPhoneSimulator" },
         { "xamarin.forms.mac", "iPhone" },
         { "xamarin.forms.windows", "x86" },
