@@ -102,6 +102,12 @@ jobs:
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
+            version: $(DOTNET_VERSION_PREVIOUS)
+            performMultiLevelLookup: true
+          displayName: Install the previous version of .NET Core
+        - task: UseDotNet@2
+          inputs:
+            packageType: 'sdk'
             version: $(DOTNET_VERSION)
             performMultiLevelLookup: true
           displayName: Install the correct version of .NET Core
