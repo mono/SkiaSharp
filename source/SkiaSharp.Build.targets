@@ -14,6 +14,7 @@
     <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\$(KeyFileName)</AssemblyOriginatorKeyFile>
 
+    <GenerateAssemblyVersionInfo Condition=" '$(GenerateAssemblyVersionInfo)' == '' ">true</GenerateAssemblyVersionInfo>
     <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_SHA)</AssemblyVersionGitSha>
     <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_COMMIT)</AssemblyVersionGitSha>
 
@@ -24,10 +25,6 @@
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
 
     <!--
       Ignore this message:
@@ -36,22 +33,23 @@
         assembly was compiled for project '<project name>'. Connect to a Mac Server and try again to build the full
         application.
     -->
-    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);VSX1000</MSBuildWarningsAsMessages>
+    <MSBuildWarningsAsMessages>VSX1000</MSBuildWarningsAsMessages>
     <!--
       Ignore this message:
         Warning MSB9004
         ManifestResourceWithNoCulture item type is deprecated. Emit EmbeddedResource items instead, with metadata
         WithCulture='false', Type='Resx', and optional LogicalName.
     -->
-    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB9004</MSBuildWarningsAsMessages>
+    <MSBuildWarningsAsMessages>MSB9004</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <PropertyGroup>
     <PackagingPlatform Condition=" '$(PackagingPlatform)' == '' ">$(TargetFramework)</PackagingPlatform>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+  <ItemGroup>
     <PackageReference Include="mdoc" Version="5.7.4.10" PrivateAssets="All" />
+    <PackageReference Include="Xamarin.Build.TypeRedirector" Version="0.1.2-preview" PrivateAssets="All" />
   </ItemGroup>
 
   <!--
@@ -113,15 +111,15 @@ internal partial class VersionConstants {
     Sign the assembly using sn.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
+  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
+    <_SignAssemblyDependsOn Condition=" '$(TypeRedirectorSkip)' == 'false'">
+      _RedirectMovedTypes
+    </_SignAssemblyDependsOn>
     <_SignAssemblyAfterTargets>
       CoreCompile
     </_SignAssemblyAfterTargets>
   </PropertyGroup>
-  <Target Name="_SignAssembly"
-          AfterTargets="$(_SignAssemblyAfterTargets)"
-          DependsOnTargets="$(_SignAssemblyDependsOn)"
-          Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
+  <Target Name="_SignAssembly" AfterTargets="$(_SignAssemblyAfterTargets)" DependsOnTargets="$(_SignAssemblyDependsOn)" Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
@@ -132,14 +130,12 @@ internal partial class VersionConstants {
     Verify that the output assembly is signed correctly for release.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
+  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
     <_SignAssemblyVerifyAfterTargets>
       Build
     </_SignAssemblyVerifyAfterTargets>
   </PropertyGroup>
-  <Target Name="_SignAssemblyVerify"
-          AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
-          Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
+  <Target Name="_SignAssemblyVerify" AfterTargets="$(_SignAssemblyVerifyAfterTargets)" Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" />
   </Target>
 
@@ -199,7 +195,7 @@ internal partial class VersionConstants {
     This runs during the build phase.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' ">
+  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' ">
     <MDocGenerateDocsAfterTargets>
       CoreCompile
     </MDocGenerateDocsAfterTargets>
@@ -219,7 +215,7 @@ internal partial class VersionConstants {
       <_MDocInputs Include="$(MDocDocumentationDirectory)\**\*" />
     </ItemGroup>
   </Target>
-  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' "
+  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' "
           AfterTargets="$(MDocGenerateDocsAfterTargets)" DependsOnTargets="_MDocGenerateDocsDep"
           Inputs="@(_MDocInputs)" Outputs="$(MDocOutputPath)">
     <MakeDir Directories="$(MDocIntermediateOutputPath)" />
