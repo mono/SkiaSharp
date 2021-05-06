@@ -106,7 +106,7 @@ namespace SkiaSharp.Views.Tizen
 			return new System.Drawing.Size(size.Width, size.Height);
 		}
 
-#if __DESKTOP__ && !NET_STANDARD
+#if __DESKTOP__
 
 		// System.Drawing.Bitmap
 
