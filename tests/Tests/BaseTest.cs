@@ -36,7 +36,7 @@ namespace SkiaSharp.Tests
 			PathToImages = Path.Combine(PathToAssembly, "images");
 
 			// some platforms run the tests from a temporary location, so copy the native files
-#if !NET_STANDARD && !__ANDROID__ && !__IOS__
+#if !NETCOREAPP && !__ANDROID__ && !__IOS__
 			var skiaRoot = Path.GetDirectoryName(typeof(SkiaSharp.SKImageInfo).Assembly.Location);
 			var harfRoot = Path.GetDirectoryName(typeof(HarfBuzzSharp.Buffer).Assembly.Location);
 
