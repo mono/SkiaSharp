@@ -195,7 +195,7 @@ jobs:
       # publish artifacts
       - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
-        condition: ${{ parameters.shouldPublish }}
+        condition: or(${{ parameters.shouldPublish }}, failed())
         inputs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
