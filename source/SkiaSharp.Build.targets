@@ -50,9 +50,8 @@
     <PackagingPlatform Condition=" '$(PackagingPlatform)' == '' ">$(TargetFramework)</PackagingPlatform>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
     <PackageReference Include="mdoc" Version="5.7.4.10" PrivateAssets="All" />
-    <PackageReference Include="Xamarin.Build.TypeRedirector" Version="0.1.2-preview" PrivateAssets="All" />
   </ItemGroup>
 
   <!--
@@ -114,15 +113,17 @@ internal partial class VersionConstants {
     Sign the assembly using sn.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
-    <_SignAssemblyDependsOn Condition=" '$(TypeRedirectorSkip)' == 'false'">
-      _RedirectMovedTypes
+  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
+    <_SignAssemblyDependsOn>
     </_SignAssemblyDependsOn>
     <_SignAssemblyAfterTargets>
       CoreCompile
     </_SignAssemblyAfterTargets>
   </PropertyGroup>
-  <Target Name="_SignAssembly" AfterTargets="$(_SignAssemblyAfterTargets)" DependsOnTargets="$(_SignAssemblyDependsOn)" Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
+  <Target Name="_SignAssembly"
+          AfterTargets="$(_SignAssemblyAfterTargets)"
+          DependsOnTargets="$(_SignAssemblyDependsOn)"
+          Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
@@ -133,12 +134,14 @@ internal partial class VersionConstants {
     Verify that the output assembly is signed correctly for release.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
     <_SignAssemblyVerifyAfterTargets>
       Build
     </_SignAssemblyVerifyAfterTargets>
   </PropertyGroup>
-  <Target Name="_SignAssemblyVerify" AfterTargets="$(_SignAssemblyVerifyAfterTargets)" Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+  <Target Name="_SignAssemblyVerify"
+          AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
+          Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" />
   </Target>
 
@@ -198,7 +201,7 @@ internal partial class VersionConstants {
     This runs during the build phase.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' ">
+  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' ">
     <MDocGenerateDocsAfterTargets>
       CoreCompile
     </MDocGenerateDocsAfterTargets>
@@ -218,7 +221,7 @@ internal partial class VersionConstants {
       <_MDocInputs Include="$(MDocDocumentationDirectory)\**\*" />
     </ItemGroup>
   </Target>
-  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' "
+  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' "
           AfterTargets="$(MDocGenerateDocsAfterTargets)" DependsOnTargets="_MDocGenerateDocsDep"
           Inputs="@(_MDocInputs)" Outputs="$(MDocOutputPath)">
     <MakeDir Directories="$(MDocIntermediateOutputPath)" />
