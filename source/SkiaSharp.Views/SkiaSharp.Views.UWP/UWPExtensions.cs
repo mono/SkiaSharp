@@ -14,7 +14,11 @@ namespace SkiaSharp.Views.Windows
 namespace SkiaSharp.Views.UWP
 #endif
 {
+#if WINDOWS
+	public static class WindowsExtensions
+#else
 	public static class UWPExtensions
+#endif
 	{
 		// Point
 

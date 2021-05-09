@@ -147,22 +147,26 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
     // there were no cross-platform libraries, so process each platform
     foreach (var dir in platformDirs) {
         var d = dir.GetDirectoryName().ToLower();
-        if (d.StartsWith("monoandroid"))
+        if (d.StartsWith("monoandroid") || (d.StartsWith("net") && d.Contains("-android")))
             yield return (dir, "android");
         else if (d.StartsWith("net4"))
             yield return (dir, "net");
         else if (d.StartsWith("uap"))
             yield return (dir, "uwp");
-        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios"))
+        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios") || (d.StartsWith("net") && d.Contains("-ios")))
             yield return (dir, "ios");
-        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac"))
+        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac") || (d.StartsWith("net") && d.Contains("-macos")))
             yield return (dir, "macos");
-        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos"))
+        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos") || (d.StartsWith("net") && d.Contains("-tvos")))
             yield return (dir, "tvos");
-        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos"))
+        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos") || (d.StartsWith("net") && d.Contains("-watchos")))
             yield return (dir, "watchos");
-        else if (d.StartsWith("tizen"))
+        else if (d.StartsWith("tizen") || (d.StartsWith("net") && d.Contains("-tizen")))
             yield return (dir, "tizen");
+        else if (d.StartsWith("net") && d.Contains("-windows"))
+            yield return (dir, "windows");
+        else if (d.StartsWith("net") && d.Contains("-maccatalyst"))
+            yield return (dir, "maccatalyst");
         else if (d.StartsWith("netcoreapp"))
             ; // skip this one for now
         else
@@ -225,6 +229,9 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Uno.UI", "xamarinios10");
     await AddDep("Uno.UI", "xamarinmac20");
     await AddDep("Uno.UI", "UAP");
+    await AddDep("Microsoft.ProjectReunion.Foundation", "net5.0-windows");
+    await AddDep("Microsoft.ProjectReunion.WinUI", "net5.0-windows10.0.18362.0");
+    await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
 
     await AddDep("OpenTK.GLControl", "NET40", "reference");
     await AddDep("Xamarin.Forms", "Xamarin.iOS10", "reference");
