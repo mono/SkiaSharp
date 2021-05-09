@@ -51,7 +51,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-    <PackageReference Include="mdoc" Version="5.7.4.10" PrivateAssets="All" />
+    <PackageReference Include="mdoc" Version="5.7.4.10" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
   <!-- workaround for https://github.com/microsoft/ProjectReunion/pull/707 -->
@@ -214,10 +214,7 @@ internal partial class VersionConstants {
   </PropertyGroup>
   <Target Name="_MDocGenerateDocsDep">
     <PropertyGroup>
-      <MDocVersion Condition=" '%(Identity)' == 'mdoc' ">@(PackageReference -> '%(Version)')</MDocVersion>
-      <MDocPackagePath Condition=" '%(Name)' == 'mdoc' ">@(PackageDefinitions -> '%(ResolvedPath)')</MDocPackagePath>
-      <MDocPackagePath Condition=" '$(MDocPackagePath)' == '' ">$(NuGetPackageRoot)\mdoc\$(MDocVersion)</MDocPackagePath>
-      <MDocToolPath>$(MDocPackagePath)\tools\mdoc.exe</MDocToolPath>
+      <MDocToolPath>$(Pkgmdoc)\tools\mdoc.exe</MDocToolPath>
       <MDocOutputName>$(TargetName).xml</MDocOutputName>
       <MDocOutputPath>$(TargetDir)$(MDocOutputName)</MDocOutputPath>
       <MDocIntermediateOutputPath>$(IntermediateOutputPath)mdoc\</MDocIntermediateOutputPath>
