@@ -204,7 +204,6 @@ Task ("tests-netcore")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
     // SkiaSharp.NetCore.Tests.csproj
-    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests.sln");
     try {
         RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
     } catch {
