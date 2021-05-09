@@ -52,7 +52,6 @@
 
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
     <PackageReference Include="mdoc" Version="5.7.4.10" PrivateAssets="All" />
-    <PackageReference Include="Xamarin.Build.TypeRedirector" Version="0.1.2-preview" PrivateAssets="All" />
   </ItemGroup>
 
   <!--
@@ -115,16 +114,12 @@ internal partial class VersionConstants {
     ===================================================================================================================
   -->
   <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
-    <_SignAssemblyDependsOn>
-      _RedirectMovedTypes
-    </_SignAssemblyDependsOn>
     <_SignAssemblyAfterTargets>
       CoreCompile
     </_SignAssemblyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssembly"
           AfterTargets="$(_SignAssemblyAfterTargets)"
-          DependsOnTargets="$(_SignAssemblyDependsOn)"
           Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
