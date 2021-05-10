@@ -5494,8 +5494,6 @@ namespace HarfBuzzSharp
 		IdeoEmboxTopOrRight = 1768191088,
 		// HB_OT_LAYOUT_BASELINE_TAG_MATH = 1835103336
 		Math = 1835103336,
-		// _HB_OT_LAYOUT_BASELINE_TAG_MAX_VALUE = 2147483647
-		HbOtLayoutBaselineTagMaxValue = 2147483647,
 	}
 
 	// hb_ot_layout_glyph_class_t
