@@ -278,7 +278,7 @@ async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
     {
         currentId = currentId.ToLower();
 
-        Information($"Downloading: {currentId}...");
+        Information($"Downloading '{currentId}' version '{currentVersion}'...");
 
         var root = await comparer.ExtractCachedPackageAsync(currentId, currentVersion);
         var toolsDir = $"{root}/tools/";
