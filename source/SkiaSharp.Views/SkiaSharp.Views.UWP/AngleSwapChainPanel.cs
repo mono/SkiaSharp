@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if !WINDOWS
+
+using System;
 using SkiaSharp.Views.GlesInterop;
 using Windows.ApplicationModel;
 using Windows.Foundation;
@@ -8,7 +10,11 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 
+#if WINDOWS
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public class AngleSwapChainPanel : SwapChainPanel
 	{
@@ -293,3 +299,5 @@ namespace SkiaSharp.Views.UWP
 		}
 	}
 }
+
+#endif
