@@ -1,26 +1,24 @@
 ﻿using System;
 using Windows.Foundation;
-#if __WINUI__
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media.Imaging;
-using Color = Windows.UI.Color;
-#else
 using Windows.UI;
+
+#if WINDOWS
+using Microsoft.UI.Xaml.Media.Imaging;
+#else
 using Windows.UI.Xaml.Media.Imaging;
 #endif
 
-#if !HAS_UNO
-using SkiaSharp.Views.Interop;
-#endif
-
-#if __WINUI__
-namespace SkiaSharp.Views.WinUI
+#if WINDOWS
+namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
 #endif
 {
+#if WINDOWS
+	public static class WindowsExtensions
+#else
 	public static class UWPExtensions
+#endif
 	{
 		// Point
 

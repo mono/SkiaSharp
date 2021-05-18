@@ -1,17 +1,14 @@
 ﻿using System;
 using Windows.ApplicationModel;
 using Windows.Graphics.Display;
-#if __WINUI__
+
+#if WINDOWS
+using Microsoft.System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Windows.UI.Core;
-#if !WINDOWS_UWP
-using CoreDispatcherPriority = Microsoft.System.DispatcherQueuePriority;
-#else
-#endif
 #else
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -21,8 +18,8 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 #endif
 
-#if __WINUI__
-namespace SkiaSharp.Views.WinUI
+#if WINDOWS
+namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
 #endif
@@ -45,16 +42,13 @@ namespace SkiaSharp.Views.UWP
 
 		// workaround for https://github.com/mono/SkiaSharp/issues/1118
 		private int loadUnloadCounter = 0;
-		private XamlRoot theRoot;
 
 		public SKXamlCanvas()
 		{
 			if (designMode)
 				return;
 
-#if __WINUI__ && !WINDOWS_UWP
-			OnXamlRootChanged();
-#else
+#if !WINDOWS
 			var display = DisplayInformation.GetForCurrentView();
 			OnDpiChanged(display);
 #endif
@@ -101,10 +95,11 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-#if __WINUI__ && !WINDOWS_UWP
-		private void OnXamlRootChanged(XamlRoot sender = null, XamlRootChangedEventArgs args = null)
+#if WINDOWS
+		private void OnXamlRootChanged(XamlRoot xamlRoot = null, XamlRootChangedEventArgs e = null)
 		{
-			Dpi = sender?.RasterizationScale ?? RasterizationScale;
+			var root = xamlRoot ?? XamlRoot;
+			Dpi = root.RasterizationScale;
 			Invalidate();
 		}
 #else
@@ -126,13 +121,9 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 1)
 				return;
 
-#if __WINUI__ && !WINDOWS_UWP
-			theRoot = XamlRoot;
-			if (XamlRoot is XamlRoot root)
-			{
-				root.Changed += OnXamlRootChanged;
-				OnXamlRootChanged(root);
-			}
+#if WINDOWS
+			XamlRoot.Changed += OnXamlRootChanged;
+			OnXamlRootChanged();
 #else
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged += OnDpiChanged;
@@ -141,28 +132,26 @@ namespace SkiaSharp.Views.UWP
 #endif
 		}
 
-
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
 			loadUnloadCounter--;
 			if (loadUnloadCounter != 0)
 				return;
 
-#if __WINUI__ && !WINDOWS_UWP
-			if (XamlRoot is XamlRoot root)
-				root.Changed -= OnXamlRootChanged;
+#if WINDOWS
+			XamlRoot.Changed -= OnXamlRootChanged;
 #else
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged -= OnDpiChanged;
+#endif
 
 			FreeBitmap();
-#endif
 		}
 
 		public void Invalidate()
 		{
-#if __WINUI__ && !WINDOWS_UWP
-			DispatcherQueue.TryEnqueue(CoreDispatcherPriority.Normal, DoInvalidate);
+#if WINDOWS
+			DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, DoInvalidate);
 #else
 			Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
 #endif

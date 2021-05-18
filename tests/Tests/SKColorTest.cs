@@ -180,12 +180,19 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void PremultipliedColorsHaveCorrectBitShift()
 		{
+			var isARGB =
+#if __ANDROID__
+				false;
+#else
+				IsWindows || IsLinux;
+#endif
+
 			var color = (SKColor)0x12345678;
 
 			Assert.Equal(new SKColor(0x34, 0x56, 0x78, 0x12), color);
 
 			SKPMColor pmcolor;
-			if (IsWindows || IsLinux) {
+			if (isARGB) {
 				pmcolor = (SKPMColor)0x12345678;
 			} else {
 				pmcolor = (SKPMColor)0x12785634;
@@ -203,7 +210,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0x78, color.Blue);
 			Assert.Equal(0x78, pmcolor.Blue);
 
-			if (IsWindows || IsLinux) {
+			if (isARGB) {
 				// ARGB
 				Assert.Equal(24, SKImageInfo.PlatformColorAlphaShift);
 				Assert.Equal(16, SKImageInfo.PlatformColorRedShift);

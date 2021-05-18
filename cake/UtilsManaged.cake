@@ -4,7 +4,7 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefau
     var settings = new NuGetPackSettings {
         OutputDirectory = MakeAbsolute(outputPath),
         BasePath = nuspecPath.GetDirectory(),
-        ToolPath = NuGetToolPath,
+        ToolPath = NUGET_EXE,
         Properties = new Dictionary<string, string> {
             // NU5048: The 'PackageIconUrl'/'iconUrl' element is deprecated. Consider using the 'PackageIcon'/'icon' element instead.
             // NU5105: The package version 'xxx' uses SemVer 2.0.0 or components of SemVer 1.0.0 that are not supported on legacy clients.
@@ -16,25 +16,6 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefau
         settings.ArgumentCustomization = args => args.Append("-NoDefaultExcludes");
     }
     NuGetPack(nuspecPath, settings);
-}
-
-void RunNuGetRestorePackagesConfig(FilePath sln)
-{
-    var dir = sln.GetDirectory();
-
-    var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
-
-    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
-
-    var settings = new NuGetRestoreSettings {
-        ToolPath = NuGetToolPath,
-        Source = nugetSources,
-        NoCache = true,
-        PackagesDirectory = dir.Combine("packages"),
-    };
-
-    foreach (var config in GetFiles(dir + "/**/packages.config"))
-        NuGetRestore(config, settings);
 }
 
 void RunTests(FilePath testAssembly, bool is32)
@@ -101,6 +82,26 @@ void RunNetCorePublish(FilePath testProject, DirectoryPath output)
     DotNetCorePublish(testProject.GetFilename().ToString(), settings);
 }
 
+void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
+{
+    try {
+        RunProcess("reportgenerator", new ProcessSettings {
+            Arguments = 
+                $"-reports:{testResultsGlob} " +
+                $"-targetdir:{output} " +
+                $"-reporttypes:HtmlInline_AzurePipelines;Cobertura " +
+                $"-assemblyfilters:-*.Tests"
+        });
+    } catch (Exception ex) {
+        Error("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
+        Error(ex);
+        throw;
+    }
+    var xml = $"{output}/Cobertura.xml";
+    var root = FindRegexMatchGroupsInFile(xml, @"<source>(.*)<\/source>", 0)[1].Value;
+    ReplaceTextInFiles(xml, root, "");
+}
+
 IEnumerable<(string Name, string Value)> CreateTraitsDictionary(string args)
 {
     if (!string.IsNullOrEmpty(args)) {
@@ -146,22 +147,26 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
     // there were no cross-platform libraries, so process each platform
     foreach (var dir in platformDirs) {
         var d = dir.GetDirectoryName().ToLower();
-        if (d.StartsWith("monoandroid"))
+        if (d.StartsWith("monoandroid") || (d.StartsWith("net") && d.Contains("-android")))
             yield return (dir, "android");
         else if (d.StartsWith("net4"))
             yield return (dir, "net");
         else if (d.StartsWith("uap"))
             yield return (dir, "uwp");
-        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios"))
+        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios") || (d.StartsWith("net") && d.Contains("-ios")))
             yield return (dir, "ios");
-        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac"))
+        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac") || (d.StartsWith("net") && d.Contains("-macos")))
             yield return (dir, "macos");
-        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos"))
+        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos") || (d.StartsWith("net") && d.Contains("-tvos")))
             yield return (dir, "tvos");
-        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos"))
+        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos") || (d.StartsWith("net") && d.Contains("-watchos")))
             yield return (dir, "watchos");
-        else if (d.StartsWith("tizen"))
+        else if (d.StartsWith("tizen") || (d.StartsWith("net") && d.Contains("-tizen")))
             yield return (dir, "tizen");
+        else if (d.StartsWith("net") && d.Contains("-windows"))
+            yield return (dir, "windows");
+        else if (d.StartsWith("net") && d.Contains("-maccatalyst"))
+            yield return (dir, "maccatalyst");
         else if (d.StartsWith("netcoreapp"))
             ; // skip this one for now
         else
@@ -224,6 +229,9 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Uno.UI", "xamarinios10");
     await AddDep("Uno.UI", "xamarinmac20");
     await AddDep("Uno.UI", "UAP");
+    await AddDep("Microsoft.ProjectReunion.Foundation", "net5.0-windows");
+    await AddDep("Microsoft.ProjectReunion.WinUI", "net5.0-windows10.0.18362.0");
+    await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
 
     await AddDep("OpenTK.GLControl", "NET40", "reference");
     await AddDep("Xamarin.Forms", "Xamarin.iOS10", "reference");
@@ -240,17 +248,59 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     }
 }
 
-string GetDownloadUrl(string id)
+async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
 {
     var version = "0.0.0-";
-    if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr."))
-        version += PREVIEW_LABEL.ToLower ();
-    else if (!string.IsNullOrEmpty (GIT_SHA))
-        version += "commit." + GIT_SHA.ToLower ();
-    else if (!string.IsNullOrEmpty (GIT_BRANCH_NAME))
-        version += "branch." + GIT_BRANCH_NAME.Replace ("/", ".").ToLower ();
+    if (!string.IsNullOrEmpty(PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith("pr."))
+        version += PREVIEW_LABEL.ToLower();
+    else if (!string.IsNullOrEmpty(GIT_SHA))
+        version += "commit." + GIT_SHA.ToLower();
+    else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))
+        version += "branch." + GIT_BRANCH_NAME.Replace("/", ".").ToLower();
     else
         version += "branch.main";
+    version += ".*";
 
-    return string.Format (PREVIEW_FEED_URL, id.ToLower(), version);
+    var filter = new NuGetVersions.Filter {
+        IncludePrerelease = true,
+        SourceUrl = PREVIEW_FEED_URL,
+        VersionRange = VersionRange.Parse(version),
+    };
+
+    var latestVersion = await NuGetVersions.GetLatestAsync(id, filter);
+
+    var comparer = new NuGetDiff(PREVIEW_FEED_URL);
+    comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
+
+    await Download(id, latestVersion);
+
+    async Task Download(string currentId, NuGetVersion currentVersion)
+    {
+        currentId = currentId.ToLower();
+
+        Information($"Downloading '{currentId}' version '{currentVersion}'...");
+
+        var root = await comparer.ExtractCachedPackageAsync(currentId, currentVersion);
+        var toolsDir = $"{root}/tools/";
+        if (DirectoryExists(toolsDir)) {
+            var allFiles = GetFiles(toolsDir + "**/*");
+            foreach (var file in allFiles) {
+                var relative = MakeAbsolute(Directory(toolsDir)).GetRelativePath(file);
+                var dir = $"{outputDirectory}/{relative.GetDirectory()}";
+                EnsureDirectoryExists(dir);
+                CopyFileToDirectory(file, dir);
+            }
+        }
+
+        var nuspec = $"{root}/{currentId}.nuspec";
+        var xdoc = XDocument.Load(nuspec);
+        var xmlns = xdoc.Root.Name.Namespace;
+        var dependencies = xdoc.Root.Descendants(xmlns + "dependency").ToArray();
+
+        foreach (var dep in dependencies) {
+            var depId = dep.Attribute("id").Value;
+            var depVersion = dep.Attribute("version").Value;
+            await Download(depId, NuGetVersion.Parse(depVersion));
+        }
+    }
 }

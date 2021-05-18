@@ -3,7 +3,7 @@ using SkiaSharp.Views.GlesInterop;
 using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.System.Threading;
-#if __WINUI__
+#if WINDOWS
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
@@ -15,8 +15,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 #endif
 
-#if __WINUI__
-namespace SkiaSharp.Views.WinUI
+#if WINDOWS
+namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
 #endif
@@ -44,8 +44,16 @@ namespace SkiaSharp.Views.UWP
 
 		private bool enableRenderLoop;
 
+		private double lastCompositionScaleX = 0.0;
+		private double lastCompositionScaleY = 0.0;
+
+		private bool pendingSizeChange = false;
+
 		public AngleSwapChainPanel()
 		{
+			lastCompositionScaleX = CompositionScaleX;
+			lastCompositionScaleY = CompositionScaleY;
+
 			glesContext = null;
 
 			renderLoopWorker = null;
@@ -159,6 +167,17 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnCompositionChanged(SwapChainPanel sender, object args)
 		{
+			if (lastCompositionScaleX == CompositionScaleX &&
+				lastCompositionScaleY == CompositionScaleY)
+			{
+				return;
+			}
+
+			lastCompositionScaleX = CompositionScaleX;
+			lastCompositionScaleY = CompositionScaleY;
+
+			pendingSizeChange = true;
+
 			ContentsScale = CompositionScaleX;
 
 			DestroyRenderSurface();
@@ -168,6 +187,8 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
+			pendingSizeChange = true;
+
 			EnsureRenderSurface();
 			Invalidate();
 		}
@@ -200,6 +221,15 @@ namespace SkiaSharp.Views.UWP
 				return;
 
 			glesContext.MakeCurrent();
+
+			if (pendingSizeChange)
+			{
+				pendingSizeChange = false;
+
+				if (!EnableRenderLoop)
+					glesContext.SwapBuffers();
+			}
+
 			glesContext.GetSurfaceDimensions(out var panelWidth, out var panelHeight);
 			glesContext.SetViewportSize(panelWidth, panelHeight);
 

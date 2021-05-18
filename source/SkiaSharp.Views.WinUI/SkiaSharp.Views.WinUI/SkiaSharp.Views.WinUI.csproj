@@ -1,27 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0-windows10.0.18362.0</TargetFramework>
-    <RootNamespace>SkiaSharp.Views.WinUI</RootNamespace>
-    <AssemblyName>SkiaSharp.Views.WinUI</AssemblyName>
+    <TargetFramework>net5.0-windows10.0.18362</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
     <PackagingGroup>SkiaSharp.Views.WinUI</PackagingGroup>
-    <SignAssembly>false</SignAssembly>
-    <TargetPlatformMinVersion>10.0.17134.0</TargetPlatformMinVersion>
-    <DefineConstants>$(DefineConstants);__WINUI__</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.WinUI" Version="3.0.0-preview4.210210.4" />
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.5.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
-  <!--<ItemGroup>
-    <None Include="..\..\..\output\native\uwp\x64\SkiaSharp.Views.Interop.UWP.dll" Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\SkiaSharp.Views.Interop.UWP.dll" />
-    <None Include="..\..\..\output\native\uwp\x86\SkiaSharp.Views.Interop.UWP.dll" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\SkiaSharp.Views.Interop.UWP.dll" />
-    <None Include="..\..\..\output\native\uwp\arm\SkiaSharp.Views.Interop.UWP.dll" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\SkiaSharp.Views.Interop.UWP.dll" />
-    <None Include="..\..\..\output\native\uwp\arm64\SkiaSharp.Views.Interop.UWP.dll" Link="nuget\runtimes\win10-arm64\nativeassets\uap10.0\SkiaSharp.Views.Interop.UWP.dll" />
-  </ItemGroup>-->
   <ItemGroup>
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\**\*.cs" Exclude="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\obj\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" Exclude="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\bin\**;..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\obj\**" />
+    <Compile Remove="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\Interop\IBufferByteAccess.cs" />
   </ItemGroup>
 </Project>

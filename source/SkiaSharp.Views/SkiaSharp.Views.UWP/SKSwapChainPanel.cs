@@ -2,8 +2,8 @@
 using SkiaSharp.Views.GlesInterop;
 using Windows.Foundation;
 
-#if __WINUI__
-namespace SkiaSharp.Views.WinUI
+#if WINDOWS
+namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
 #endif
@@ -114,7 +114,7 @@ namespace SkiaSharp.Views.UWP
 
 			glInfo = default;
 
-			context?.AbandonContext(true);
+			context?.AbandonContext(false);
 			context?.Dispose();
 			context = null;
 

@@ -2,17 +2,19 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows10.0.18362.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17134.0</TargetPlatformMinVersion>
+    <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>SkiaSharpSample</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Platforms>x86;x64;ARM64</Platforms>
+    <Platforms>x86;x64;arm64</Platforms>
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.WinUI" Version="3.0.0-preview4.210210.4" />
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.5.0" />
+    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.5.0" />
+    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.5.0" />
+    <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,14 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\..\output\native\windows\$(Platform)\libSkiaSharp.dll" Condition="Exists('..\..\..\..\..\output\native\windows\$(Platform)\libSkiaSharp.dll')">
-      <Link>libSkiaSharp.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Manifest Include="$(ApplicationManifest)" />
+    <Content Include="..\..\..\..\..\output\native\windows\$(Platform)\libSkiaSharp.dll" Condition="Exists('..\..\..\..\..\output\native\windows\$(Platform)\libSkiaSharp.dll')" />
   </ItemGroup>
 
 </Project>

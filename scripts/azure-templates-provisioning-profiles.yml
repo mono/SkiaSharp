@@ -1,0 +1,16 @@
+steps:
+  - task: InstallAppleCertificate@2
+    inputs:
+      certSecureFile: 'SkiaSharp iOS Certificate.p12'
+  - task: InstallAppleCertificate@2
+    inputs:
+      certSecureFile: 'SkiaSharp Mac Certificate.p12'
+  - task: InstallAppleProvisioningProfile@1
+    inputs:
+      provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
+  - task: InstallAppleProvisioningProfile@1
+    inputs:
+      provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
+  - task: InstallAppleProvisioningProfile@1
+    inputs:
+      provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'

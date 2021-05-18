@@ -1,7 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
-
 using SkiaSharp;
-using SkiaSharp.Views.WinUI;
+using SkiaSharp.Views.Windows;
 
 namespace SkiaSharpSample
 {

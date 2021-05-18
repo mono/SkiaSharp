@@ -1,7 +1,7 @@
 ﻿using System;
 
-#if __WINUI__
-namespace SkiaSharp.Views.WinUI
+#if WINDOWS
+namespace SkiaSharp.Views.Windows
 #elif WINDOWS_UWP || HAS_UNO
 namespace SkiaSharp.Views.UWP
 #elif __ANDROID__
