@@ -13,7 +13,7 @@ namespace SkiaSharp.Views.GlesInterop
 		private const string libGLESv2 = "opengl32.dll";
 #elif __ANDROID__
 		private const string libGLESv2 = "libGLESv2.so";
-#elif WINDOWS_UWP
+#elif WINDOWS_UWP || WINDOWS
 		private const string libGLESv2 = "libGLESv2.dll";
 #elif __TIZEN__
 		private const string libGLESv2 = "libGLESv2.so";
