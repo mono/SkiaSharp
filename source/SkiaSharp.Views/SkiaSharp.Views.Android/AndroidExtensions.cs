@@ -187,9 +187,9 @@ namespace SkiaSharp.Views.Android
 			return bmp;
 		}
 
-		public static Bitmap ToBitmap(this SKPixmap skiaPixamp)
+		public static Bitmap ToBitmap(this SKPixmap skiaPixmap)
 		{
-			using (var image = SKImage.FromPixels(skiaPixamp))
+			using (var image = SKImage.FromPixels(skiaPixmap))
 			{
 				var bmp = image.ToBitmap();
 				return bmp;

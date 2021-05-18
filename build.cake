@@ -6,7 +6,7 @@
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2&loaddependencies=true
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
-#tool nuget:?package=mdoc&version=5.7.4.10
+#tool nuget:?package=mdoc&version=5.8.2
 #tool nuget:?package=xunit.runner.console&version=2.4.1
 #tool nuget:?package=vswhere&version=2.7.1
 
@@ -72,6 +72,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.Forms.WPF",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.Forms.GTK",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.Uno",                           new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WinUI",                         new Version (1, 57, 0) },
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (1, 0, 0) },
@@ -203,7 +204,6 @@ Task ("tests-netcore")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
     // SkiaSharp.NetCore.Tests.csproj
-    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests.sln");
     try {
         RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
     } catch {
@@ -386,6 +386,7 @@ Task ("samples")
         { "macos", isMac },
         { "tvos", isMac },
         { "uwp", isWin },
+        { "winui", isWin },
         { "watchos", isMac },
         { "wpf", isWin },
     };
@@ -394,6 +395,7 @@ Task ("samples")
         { "ios", "iPhone" },
         { "tvos", "iPhoneSimulator" },
         { "uwp", "x86" },
+        { "winui", "x64" },
         { "watchos", "iPhoneSimulator" },
         { "xamarin.forms.mac", "iPhone" },
         { "xamarin.forms.windows", "x86" },
