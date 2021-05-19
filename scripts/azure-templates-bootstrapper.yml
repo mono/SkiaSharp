@@ -105,15 +105,18 @@ jobs:
             version: $(DOTNET_VERSION_PREVIOUS)
             performMultiLevelLookup: true
           displayName: Install the previous version of .NET Core
-        - pwsh: dotnet --list-sdks
-          displayName: Install LLVM
-        - task: UseDotNet@2
-          inputs:
-            packageType: 'sdk'
-            version: $(DOTNET_VERSION)
-            performMultiLevelLookup: true
-            includePreviewVersions: true
-          displayName: Install the correct version of .NET Core
+        - ${{ if endsWith(parameters.name, '_windows') }}:
+          - pwsh: |
+              Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1
+              .\dotnet-install.ps1 -Version $env:DOTNET_VERSION -InstallDir "$env:AGENT_TOOLSDIRECTORY\dotnet" -Verbose
+              dotnet --list-sdks
+            displayName: Install the correct version of .NET Core
+        - ${{ if not(endsWith(parameters.name, '_windows')) }}:
+          - bash: |
+              curl -L https://dot.net/v1/dotnet-install.sh > dotnet-install.sh
+              sh dotnet-install.sh --version $DOTNET_VERSION --install-dir $AGENT_TOOLSDIRECTORY/dotnet --verbose
+              dotnet --list-sdks
+            displayName: Install the correct version of .NET Core
         # - pwsh: dotnet tool update --global redth.net.maui.check
         #   displayName: Install maui-check
         # - pwsh: maui-check --dev --ci --fix --non-interactive --skip androidsdk --skip xcode --skip vswin --skip vsmac
