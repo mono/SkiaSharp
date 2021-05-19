@@ -110,11 +110,12 @@ jobs:
             packageType: 'sdk'
             version: $(DOTNET_VERSION)
             performMultiLevelLookup: true
+            includePreviewVersions: true
           displayName: Install the correct version of .NET Core
-        - pwsh: dotnet tool update --global redth.net.maui.check
-          displayName: Install maui-check
-        - pwsh: maui-check --dev --ci --fix --non-interactive --skip androidsdk --skip xcode --skip vswin --skip vsmac
-          displayName: Install the dev version of .NET
+        # - pwsh: dotnet tool update --global redth.net.maui.check
+        #   displayName: Install maui-check
+        # - pwsh: maui-check --dev --ci --fix --non-interactive --skip androidsdk --skip xcode --skip vswin --skip vsmac
+        #   displayName: Install the dev version of .NET
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
