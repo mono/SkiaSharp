@@ -114,7 +114,7 @@ jobs:
         - ${{ if not(endsWith(parameters.name, '_windows')) }}:
           - bash: |
               curl -L https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
-              sh dotnet-install.sh --version $DOTNET_VERSION --install-dir $AGENT_TOOLSDIRECTORY/dotnet --verbose
+              bash dotnet-install.sh --version $DOTNET_VERSION --install-dir $AGENT_TOOLSDIRECTORY/dotnet --verbose
               dotnet --list-sdks
             displayName: Install the correct version of .NET Core
         # - pwsh: dotnet tool update --global redth.net.maui.check
