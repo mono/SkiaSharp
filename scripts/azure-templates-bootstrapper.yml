@@ -105,6 +105,8 @@ jobs:
             version: $(DOTNET_VERSION_PREVIOUS)
             performMultiLevelLookup: true
           displayName: Install the previous version of .NET Core
+        - pwsh: dotnet --list-sdks
+          displayName: Install LLVM
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
