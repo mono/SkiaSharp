@@ -249,16 +249,6 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void PlatformConfigurationIsMuslOverrideExists()
-		{
-			Assert.Null(PlatformConfiguration.LinuxFlavor);
-
-			PlatformConfiguration.LinuxFlavor = null;
-
-			Assert.Null(PlatformConfiguration.LinuxFlavor);
-		}
-
-		[SkippableFact]
 		public void PlatformConfigurationIsMuslOverrideCanBeFoundViaReflection()
 		{
 			var assembly = typeof(SkiaSharpVersion).Assembly;
@@ -266,12 +256,8 @@ namespace SkiaSharp.Tests
 			var overrideProp = config.GetProperty("LinuxFlavor");
 
 			Assert.Equal(typeof(string), overrideProp.PropertyType);
-
-			Assert.Null(overrideProp.GetValue(null));
-
-			overrideProp.SetValue(null, null);
-
-			Assert.Null(overrideProp.GetValue(null));
+			Assert.True(overrideProp.CanRead);
+			Assert.True(overrideProp.CanWrite);
 		}
 	}
 }
