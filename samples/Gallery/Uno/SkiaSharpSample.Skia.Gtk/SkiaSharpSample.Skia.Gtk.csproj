@@ -27,18 +27,9 @@
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\..\output\SkiaSharp\nuget\runtimes\win-x86\native\libSkiaSharp.dll">
-      <CopyToOutputDirectory>true</CopyToOutputDirectory>
-      <DestinationSubDirectory>runtimes\win-x86\native\</DestinationSubDirectory>
-      <DestinationSubPath>runtimes\win-x86\native\libSkiaSharp.dll</DestinationSubPath>
-    </Content>
-    <Content Include="..\..\..\..\output\SkiaSharp\nuget\runtimes\win-x64\native\libSkiaSharp.dll">
-      <CopyToOutputDirectory>true</CopyToOutputDirectory>
-      <DestinationSubDirectory>runtimes\win-x64\native\</DestinationSubDirectory>
-      <DestinationSubPath>runtimes\win-x64\native\libSkiaSharp.dll</DestinationSubPath>
-    </Content>
+    <Content Include="..\..\..\..\output\native\windows\x64\*.dll" Visible="False" />
+    <Content Include="..\..\..\..\output\native\linux\x64\*.so" Visible="False" />
+    <Content Include="..\..\..\..\output\native\osx\*.dylib" Visible="False" />
   </ItemGroup>
   <Import Project="..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets')" />
-  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\net462\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\net462\SkiaSharp.targets')" />
-  <Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\net462\HarfBuzzSharp.targets" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\net462\HarfBuzzSharp.targets')" />
 </Project>
