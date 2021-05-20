@@ -37,7 +37,6 @@ namespace SkiaSharp
 			var arch = Package.Current.Id.Architecture;
 			const ProcessorArchitecture arm64 = (ProcessorArchitecture)12;
 			IsArm = arch == ProcessorArchitecture.Arm || arch == arm64;
-
 #else
 			IsMac = RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
 			IsLinux = RuntimeInformation.IsOSPlatform (OSPlatform.Linux);
@@ -50,5 +49,50 @@ namespace SkiaSharp
 
 			Is64Bit = IntPtr.Size == 8;
 		}
+
+		private static string linuxFlavor;
+
+		public static string LinuxFlavor
+		{
+			get
+			{
+				if (!IsLinux)
+					return null;
+
+				if (!string.IsNullOrEmpty (linuxFlavor))
+					return linuxFlavor;
+
+				// we only check for musl/glibc right now
+				if (!IsGlibc)
+					return "musl";
+
+				return null;
+			}
+			set => linuxFlavor = value;
+		}
+
+#if WINDOWS_UWP
+		public static bool IsGlibc { get; }
+#else
+		private static readonly Lazy<bool> isGlibcLazy = new Lazy<bool> (IsGlibcImplementation);
+
+		public static bool IsGlibc => IsLinux && isGlibcLazy.Value;
+
+		private static bool IsGlibcImplementation ()
+		{
+			try
+			{
+				gnu_get_libc_version ();
+				return true;
+			}
+			catch (TypeLoadException)
+			{
+				return false;
+			}
+		}
+
+		[DllImport ("c", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+		private static extern IntPtr gnu_get_libc_version ();
+#endif
 	}
 }
