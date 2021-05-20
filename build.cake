@@ -330,7 +330,8 @@ Task ("tests-wasm")
         DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj",
             "http://localhost:8000/ " +
             "-o ./tests/SkiaSharp.Wasm.Tests/TestResults/ " +
-            (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"-d {CHROMEWEBDRIVER}"));
+            (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"-d {CHROMEWEBDRIVER}") +
+            "-v");
     } catch {
         failedTests++;
     } finally {
