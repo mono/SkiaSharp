@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,7 +23,9 @@ namespace SkiaSharpSample.WPF.Host
 		public MainWindow()
 		{
 			InitializeComponent();
-	
+
+			SkiaSharp.Views.UWP.SKSwapChainPanel.RaiseOnUnsupported = false;
+
 			root.Content = new global::Uno.UI.Skia.Platform.WpfHost(Dispatcher, () => new SkiaSharpSample.App());
 		}
 	}
