@@ -1,10 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType Condition="'$(Configuration)'=='Release'">WinExe</OutputType>
     <OutputType Condition="'$(Configuration)'=='Debug'">Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <Nullable></Nullable>
   </PropertyGroup>
   <ItemGroup Condition="exists('..\SkiaSharpSample.UWP')">
     <EmbeddedResource Include="..\SkiaSharpSample.UWP\Package.appxmanifest" LogicalName="Package.appxmanifest" />
@@ -42,5 +40,5 @@
   </ItemGroup>
   <Import Project="..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets')" />
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\net462\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\net462\SkiaSharp.targets')" />
-  <!--<Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\wasm\HarfBuzzSharp.targets" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\wasm\HarfBuzzSharp.targets')" />-->
+  <Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\net462\HarfBuzzSharp.targets" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\net462\HarfBuzzSharp.targets')" />
 </Project>
