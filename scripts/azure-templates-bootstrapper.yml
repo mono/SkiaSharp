@@ -129,10 +129,15 @@ jobs:
               bash dotnet-install.sh --version $DOTNET_VERSION_PREVIEW --install-dir $AGENT_TOOLSDIRECTORY/dotnet --verbose
               dotnet --list-sdks
             displayName: Install the preview version of .NET Core
-        - ${{ if not(endsWith(parameters.name, '_linux')) }}:
-          - pwsh: dotnet tool update --global redth.net.maui.check
-            displayName: Install maui-check
+        - ${{ if endsWith(parameters.name, '_windows') }}:
           - pwsh: |
+              dotnet tool update -g dotnet-vs
+              vs install preview preview --quiet
+              echo "##vso[task.prependpath]$(vs where preview --prop=InstallationPath)\MSBuild\Current\Bin"
+            displayName: Install VS2019 Preview
+        - ${{ if not(endsWith(parameters.name, '_linux')) }}:
+          - pwsh: |
+              dotnet tool update -g redth.net.maui.check
               $env:DOTNET_ROOT="$env:AGENT_TOOLSDIRECTORY/dotnet"
               maui-check --verbose --ci --fix --non-interactive --skip androidsdk --skip xcode --skip vswin --skip vsmac --manifest $(MAUI_CHECK_MANIFEST)
             displayName: Install the dev version of .NET workloads
