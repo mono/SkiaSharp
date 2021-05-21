@@ -7,8 +7,6 @@ namespace SkiaSharp.Views.UWP
 {
 	public partial class SKSwapChainPanel
 	{
-		public static bool RaiseOnUnsupported { get; set; } = true;
-
 		public SKSwapChainPanel()
 		{
 			if (RaiseOnUnsupported)
