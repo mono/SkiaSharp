@@ -133,7 +133,7 @@ jobs:
           - pwsh: dotnet tool update --global redth.net.maui.check
             displayName: Install maui-check
           - pwsh: |
-              $env:DOTNET_ROOT="$env:AGENT_TOOLSDIRECTORY\dotnet"
+              $env:DOTNET_ROOT="$env:AGENT_TOOLSDIRECTORY/dotnet"
               maui-check --ci --fix --non-interactive --skip androidsdk --skip xcode --skip vswin --skip vsmac --manifest $(MAUI_CHECK_MANIFEST)
             displayName: Install the dev version of .NET workloads
 
