@@ -46,7 +46,7 @@ namespace WasmTestRunner
 				extra = p.Parse(args);
 
 				if (extra.Count > 1)
-					throw new OptionException();
+					throw new OptionException("To many extras provided.", "extras");
 
 				Url = extra.FirstOrDefault() ?? DefaultUrl;
 				if (string.IsNullOrEmpty(OutputPath))
@@ -56,11 +56,13 @@ namespace WasmTestRunner
 				if (!string.IsNullOrEmpty(dir))
 					Directory.CreateDirectory(dir);
 			}
-			catch (OptionException e)
+			catch (OptionException ex)
 			{
 				Console.Error.Write("wasm-test: ");
-				Console.Error.WriteLine(e.Message);
+				Console.Error.WriteLine(ex.Message);
 				Console.Error.WriteLine("Try `wasm-test --help' for more information.");
+				if (Verbose)
+					Console.Error.WriteLine(ex);
 
 				return 1;
 			}
