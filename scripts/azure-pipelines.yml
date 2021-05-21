@@ -681,12 +681,13 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES) ninja-build
           target: tests-wasm
-          additionalArgs: --verbosity=diagnostic --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
+          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
           shouldPublish: false
           requiredArtifacts:
             - native_wasm_linux
           installEmsdk: true
           initScript: source ~/emsdk/emsdk_env.sh
+          verbosity: diagnostic
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the WASM test results
