@@ -56,6 +56,16 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
       <group targetFramework="tizen40">
         <dependency id="System.Memory" version="4.5.3" />
       </group>
+      <group targetFramework="net6.0-ios">
+      </group>
+      <group targetFramework="net6.0-maccatalyst">
+      </group>
+      <group targetFramework="net6.0-tvos">
+      </group>
+      <group targetFramework="net6.0-macos">
+      </group>
+      <group targetFramework="net6.0-android">
+      </group>
     </dependencies>
 
   </metadata>
@@ -84,6 +94,16 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file platform="windows" src="lib/uap10.0.16299/HarfBuzzSharp.xml" />
     <file src="lib/tizen40/HarfBuzzSharp.dll" />
     <file src="lib/tizen40/HarfBuzzSharp.xml" />
+    <file platform="macos,windows" src="lib/net6.0-android/HarfBuzzSharp.dll" />
+    <file platform="macos,windows" src="lib/net6.0-android/HarfBuzzSharp.xml" />
+    <file platform="macos" src="lib/net6.0-ios/HarfBuzzSharp.dll" />
+    <file platform="macos" src="lib/net6.0-ios/HarfBuzzSharp.xml" />
+    <file platform="macos" src="lib/net6.0-maccatalyst/HarfBuzzSharp.dll" />
+    <file platform="macos" src="lib/net6.0-maccatalyst/HarfBuzzSharp.xml" />
+    <file platform="macos" src="lib/net6.0-tvos/HarfBuzzSharp.dll" />
+    <file platform="macos" src="lib/net6.0-tvos/HarfBuzzSharp.xml" />
+    <file platform="macos" src="lib/net6.0-macos/HarfBuzzSharp.dll" />
+    <file platform="macos" src="lib/net6.0-macos/HarfBuzzSharp.xml" />
 
     <!-- the build bits -->
     <!-- net4x (win32/macos/linux) -->
@@ -119,17 +139,16 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file src="build/tizen40/arm/libHarfBuzzSharp.so" />
     <file src="build/tizen40/x86/libHarfBuzzSharp.so" />
     <!-- android -->
-    <file platform="macos,windows" src="build/monoandroid1.0/x64/libHarfBuzzSharp.so" />
-    <file platform="macos,windows" src="build/monoandroid1.0/x86/libHarfBuzzSharp.so" />
-    <file platform="macos,windows" src="build/monoandroid1.0/arm/libHarfBuzzSharp.so" />
-    <file platform="macos,windows" src="build/monoandroid1.0/arm64/libHarfBuzzSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-x64/native/libHarfBuzzSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-x86/native/libHarfBuzzSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-arm/native/libHarfBuzzSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-arm64/native/libHarfBuzzSharp.so" />
     <!-- ios -->
-    <file platform="macos" src="build/xamarinios1.0/libHarfBuzzSharp.framework/**/*" target="build/xamarinios1.0/libHarfBuzzSharp.framework" />
+    <file platform="macos" src="build/xamarinios1.0/libHarfBuzzSharp.framework/**/*" target="runtimes/ios/native/libHarfBuzzSharp.framework" />
     <!-- tvos -->
-    <file platform="macos" src="build/xamarintvos1.0/libHarfBuzzSharp.framework/**/*" target="build/xamarintvos1.0/libHarfBuzzSharp.framework" />
+    <file platform="macos" src="build/xamarintvos1.0/libHarfBuzzSharp.framework/**/*" target="runtimes/tvos/native/libHarfBuzzSharp.framework" />
     <!-- watchos -->
-    <file platform="macos" src="build/xamarinwatchos1.0/libHarfBuzzSharp.framework/**/*" target="build/xamarinwatchos1.0/libHarfBuzzSharp.framework" />
-
+    <file platform="macos" src="build/xamarinwatchos1.0/libHarfBuzzSharp.framework/**/*" target="runtimes/watchos/native/libHarfBuzzSharp.framework" />
 
     <!-- legal -->
     <file src="LICENSE.txt" />
