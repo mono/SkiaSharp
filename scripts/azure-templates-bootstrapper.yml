@@ -134,7 +134,7 @@ jobs:
             displayName: Install maui-check
           - pwsh: |
               $env:DOTNET_ROOT="$env:AGENT_TOOLSDIRECTORY/dotnet"
-              maui-check --ci --fix --non-interactive --skip androidsdk --skip xcode --skip vswin --skip vsmac --manifest $(MAUI_CHECK_MANIFEST)
+              maui-check --verbose --ci --fix --non-interactive --skip androidsdk --skip xcode --skip vswin --skip vsmac --manifest $(MAUI_CHECK_MANIFEST)
             displayName: Install the dev version of .NET workloads
 
       # install the mac tools
