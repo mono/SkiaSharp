@@ -2,7 +2,7 @@
 using GLib;
 using Uno.UI.Runtime.Skia;
 
-namespace SkiaSharpSample.Skia.Gtk
+namespace SkiaSharpSample.Gtk
 {
 	class Program
 	{
