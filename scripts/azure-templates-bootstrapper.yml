@@ -111,36 +111,13 @@ jobs:
             version: $(DOTNET_VERSION)
             performMultiLevelLookup: true
           displayName: Install the current version of .NET Core
-        - ${{ if endsWith(parameters.name, '_windows') }}:
-          - pwsh: |
-              Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1
-              .\dotnet-install.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY\dotnet" -Verbose
-              dotnet --list-sdks
-            displayName: Install the preview version of .NET Core
-        - ${{ if endsWith(parameters.name, '_macos') }}:
-          - bash: |
-              curl -L https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
-              sh dotnet-install.sh --version $DOTNET_VERSION_PREVIEW --install-dir $AGENT_TOOLSDIRECTORY/dotnet --verbose
-              dotnet --list-sdks
-            displayName: Install the preview version of .NET Core
-        - ${{ if endsWith(parameters.name, '_linux') }}:
-          - bash: |
-              curl -L https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
-              bash dotnet-install.sh --version $DOTNET_VERSION_PREVIEW --install-dir $AGENT_TOOLSDIRECTORY/dotnet --verbose
-              dotnet --list-sdks
-            displayName: Install the preview version of .NET Core
-        - ${{ if endsWith(parameters.name, '_windows') }}:
-          - pwsh: |
-              dotnet tool update -g dotnet-vs
-              vs install preview preview --quiet
-              echo "##vso[task.prependpath]$(vs where preview --prop=InstallationPath)\MSBuild\Current\Bin"
-            displayName: Install VS2019 Preview
+        - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+          displayName: Install the preview version of .NET Core
+        - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
+          displayName: Install Visual Studio Preview
         - ${{ if not(endsWith(parameters.name, '_linux')) }}:
-          - pwsh: |
-              dotnet tool update -g redth.net.maui.check
-              $env:DOTNET_ROOT="$env:AGENT_TOOLSDIRECTORY/dotnet"
-              maui-check --verbose --ci --fix --non-interactive --skip androidsdk --skip xcode --skip vswin --skip vsmac --manifest $(MAUI_CHECK_MANIFEST)
-            displayName: Install the dev version of .NET workloads
+        - pwsh: .\scripts\install-maui.ps1 -Manifest $env:MAUI_CHECK_MANIFEST -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+          displayName: Install the .NET Core workloads
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
