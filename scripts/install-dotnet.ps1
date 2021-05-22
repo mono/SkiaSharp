@@ -13,7 +13,7 @@ if ($IsMacOS -or $IsLinux) {
 
 Write-Host "Downloading .NET Installer..."
 Invoke-WebRequest `
-  -Uri "$install" `
+  -Uri "$url" `
   -OutFile (Split-Path $url -Leaf)
 
 Write-Host "Installing .NET $Version..."
