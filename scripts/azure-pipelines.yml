@@ -348,6 +348,8 @@ stages:
           displayName: Managed (Windows|.NET 6)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs
+          variables:
+            BuildingForNet6: true
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_android_x86_windows
@@ -368,6 +370,11 @@ stages:
             - native_win32_arm64_windows
             - native_win32_x64_nanoserver_windows
             - native_wasm_linux
+            - native_ios_macos
+            - native_maccatalyst_macos
+            - native_macos_macos
+            - native_tvos_macos
+            - native_watchos_macos
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos

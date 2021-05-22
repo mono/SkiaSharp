@@ -5,6 +5,7 @@ parameters:
   packages: ''                                  # any additional packages
   target: ''                                    # the bootstrapper target
   dependsOn: []                                 # the dependiencies
+  variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
   demands: []                                   # the demands
   preBuildSteps: []                             # any steps to run before the build
@@ -45,6 +46,7 @@ jobs:
       demands: ${{ parameters.demands }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
+    variables: ${{ parameters.variables }}
     steps:
       # prepare
       - checkout: self
