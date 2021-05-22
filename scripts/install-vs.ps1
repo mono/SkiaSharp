@@ -28,7 +28,4 @@ Write-Host "##vso[task.prependpath]$installationPath\MSBuild\Current\Bin"
 Write-Host "Installed Visual Studio Versions:"
 & $vswhere -all -prerelease -property installationPath
 
-Write-Host "Selected MSBuild Version:"
-& msbuild -version -nologo
-
 exit $LASTEXITCODE
