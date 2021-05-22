@@ -342,6 +342,32 @@ stages:
             - native_win32_arm64_windows
             - native_win32_x64_nanoserver_windows
             - native_wasm_linux
+      - template: azure-templates-bootstrapper.yml # Build Managed (Windows|.NET 6)
+        parameters:
+          name: managed_net6_windows
+          displayName: Managed (Windows|.NET 6)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: libs
+          additionalArgs: --skipExternals="all"
+          requiredArtifacts:
+            - native_android_x86_windows
+            - native_android_x64_windows
+            - native_android_arm_windows
+            - native_android_arm64_windows
+            - native_tizen_windows
+            - native_uwp_angle_x86_windows
+            - native_uwp_angle_x64_windows
+            - native_uwp_angle_arm_windows
+            - native_uwp_angle_arm64_windows
+            - native_uwp_x86_windows
+            - native_uwp_x64_windows
+            - native_uwp_arm_windows
+            - native_uwp_arm64_windows
+            - native_win32_x86_windows
+            - native_win32_x64_windows
+            - native_win32_arm64_windows
+            - native_win32_x64_nanoserver_windows
+            - native_wasm_linux
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
@@ -400,6 +426,7 @@ stages:
             - managed_linux
             - managed_macos
             - managed_windows
+            - managed_net6_windows
           postBuildSteps:
             - task: PublishBuildArtifacts@1
               displayName: Publish the native artifacts
