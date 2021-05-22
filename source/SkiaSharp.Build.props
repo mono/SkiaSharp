@@ -9,10 +9,16 @@
   -->
 
   <PropertyGroup>
+    <IsWindows>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))</IsWindows>
+    <IsMacOS>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))</IsMacOS>
+    <IsLinux>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))</IsLinux>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <!-- this is important for mono as it defaults to 'false' -->
     <SignAssembly>true</SignAssembly>
     <SkiaSharpBuildPropsImported>true</SkiaSharpBuildPropsImported>
-    <BuildingForNet6>true</BuildingForNet6>
+    <BuildingForNet6>$(IsWindows)</BuildingForNet6>
     <!-- <BuildingForNet6>false</BuildingForNet6> -->
     <!-- <BuildingForNet6 Condition="$(SolutionFilterName.Contains('-net6')) or $(SolutionFileName.Contains('-net6')) or '$(BuildingInsideVisualStudio)' == 'true'">true</BuildingForNet6> -->
     <MDocDocumentationDirectory>$(MSBuildThisFileDirectory)..\docs\SkiaSharpAPI</MDocDocumentationDirectory>
@@ -36,12 +42,6 @@
   <!-- workaround for conflict between WinUI and net6 https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1307712 -->
   <PropertyGroup Condition="$(MSBuildProjectFile.EndsWith('.wapproj'))">
     <SkipImportNetSdk>true</SkipImportNetSdk>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <IsWindows>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))</IsWindows>
-    <IsMacOS>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))</IsMacOS>
-    <IsLinux>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))</IsLinux>
   </PropertyGroup>
 
   <Target Name="PrintRID"
