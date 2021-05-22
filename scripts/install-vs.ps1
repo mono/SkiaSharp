@@ -24,6 +24,7 @@ $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.e
 Write-Host "Adding MSBuild to PATH..."
 $installationPath = & $vswhere -latest -prerelease -property installationPath
 Write-Host "##vso[task.prependpath]$installationPath\MSBuild\Current\Bin"
+Write-Host "##vso[task.setvariable variable=VS_INSTALL]$installationPath"
 
 Write-Host "Installed Visual Studio Versions:"
 & $vswhere -all -prerelease -property installationPath
