@@ -64,6 +64,10 @@
     <!-- iOS -->
     <None Include="..\..\output\native\ios\libSkiaSharp.framework\**" Link="nuget\runtimes\ios\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
+    <!-- Mac Catalyst -->
+    <None Include="..\..\output\native\maccatalyst\libSkiaSharp.framework\**" Link="nuget\runtimes\maccatalyst\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
     <!-- tvOS -->
     <None Include="..\..\output\native\tvos\libSkiaSharp.framework\**" Link="nuget\runtimes\tvos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />

@@ -65,6 +65,10 @@
     <!-- iOS -->
     <None Include="..\..\output\native\ios\libHarfBuzzSharp.framework\**" Link="nuget\runtimes\ios\native\libHarfBuzzSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
+    <!-- Mac Catalyst -->
+    <None Include="..\..\output\native\maccatalyst\libHarfBuzzSharp.framework\**" Link="nuget\runtimes\maccatalyst\native\libHarfBuzzSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
     <!-- tvOS -->
     <None Include="..\..\output\native\tvos\libHarfBuzzSharp.framework\**" Link="nuget\runtimes\tvos\native\libHarfBuzzSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
