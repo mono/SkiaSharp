@@ -203,9 +203,31 @@ string[] GetReferenceSearchPaths()
     return refs.ToArray();
 }
 
+string[] GetDotNetPacksSearchPaths()
+{
+    var refs = new List<string>();
+
+    RunProcess("dotnet", "--list-sdks", out var sdks);
+
+    var last = sdks.Last();
+    var start = last.IndexOf("[") + 1;
+    var latestSdk = (DirectoryPath)(last.Substring(start, last.Length - start - 1));
+    var dotnetRoot = latestSdk.Combine("..");
+
+    var packs = GetDirectories(dotnetRoot.Combine("packs").FullPath + "/*.Ref");
+
+    foreach(var pack in packs) {
+        var latestPath = GetDirectories(pack.FullPath + "/*").Last();
+        refs.AddRange(GetDirectories(latestPath.FullPath + "/ref/net*").Select(d => d.FullPath));
+    }
+
+    return refs.ToArray();
+}
+
 async Task<NuGetDiff> CreateNuGetDiffAsync()
 {
     var comparer = new NuGetDiff();
+    comparer.SearchPaths.AddRange(GetDotNetPacksSearchPaths());
     comparer.SearchPaths.AddRange(GetReferenceSearchPaths());
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
 
