@@ -9,10 +9,17 @@ namespace SkiaSharp.DotNet.Interactive
 		public Task OnLoadAsync(Kernel kernel)
 		{
 			// colors
-			Formatter.Register<SKColor>((date, writer) => writer.Write(date.RenderColor()), "text/html");
-			Formatter.Register<SKColorF>((date, writer) => writer.Write(date.RenderColor()), "text/html");
+			Formatter.Register<SKColor>((color, writer) => writer.Write(color.Render()), "text/html");
+			Formatter.Register<SKColorF>((color, writer) => writer.Write(color.Render()), "text/html");
 
-			// TODO: bitmap, image, pixmap, picture, surface, canvas, etc...
+			// "images"
+			Formatter.Register<SKBitmap>((bmp, writer) => writer.Write(bmp.Render()), "text/html");
+			Formatter.Register<SKPixmap>((pix, writer) => writer.Write(pix.Render()), "text/html");
+			Formatter.Register<SKPicture>((pic, writer) => writer.Write(pic.Render()), "text/html");
+			Formatter.Register<SKSurface>((surface, writer) => writer.Write(surface.Render()), "text/html");
+			Formatter.Register<SKImage>((img, writer) => writer.Write(img.Render()), "text/html");
+
+			// TODO: colorspaces and other things
 
 			return Task.CompletedTask;
 		}
