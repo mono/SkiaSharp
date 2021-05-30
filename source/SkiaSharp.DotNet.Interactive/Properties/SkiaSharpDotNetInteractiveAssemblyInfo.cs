@@ -2,10 +2,10 @@
 using System.Reflection;
 using System.Resources;
 
-[assembly: AssemblyTitle("SkiaSharp.Workbooks")]
-[assembly: AssemblyDescription("SkiaSharp.Workbooks adds functionality for SkiaSharp to Xamarin.Workbooks.")]
+[assembly: AssemblyTitle("SkiaSharp.DotNet.Interactive")]
+[assembly: AssemblyDescription("SkiaSharp.DotNet.Interactive adds functionality for SkiaSharp to .NET Interactive notebooks.")]
 [assembly: AssemblyCompany("Microsoft Corporation")]
-[assembly: AssemblyProduct("SkiaSharp.Workbooks")]
+[assembly: AssemblyProduct("SkiaSharp.DotNet.Interactive")]
 [assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 [assembly: NeutralResourcesLanguage("en")]
 
