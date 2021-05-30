@@ -6,7 +6,7 @@
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2&loaddependencies=true
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
-#tool nuget:?package=mdoc&version=5.8.2
+#tool nuget:?package=mdoc&version=5.8.3
 #tool nuget:?package=xunit.runner.console&version=2.4.1
 #tool nuget:?package=vswhere&version=2.7.1
 
