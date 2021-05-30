@@ -10,7 +10,7 @@ namespace SkiaSharp.DotNet.Interactive
 		{
 			var colorString = color.Alpha == 255
 				? $"rgb({color.Red},{color.Green},{color.Blue})"
-				: $"rgba({color.Red},{color.Green},{color.Blue},{color.Alpha / 255.0:0.0})";
+				: $"rgba({color.Red},{color.Green},{color.Blue},{color.Alpha / 255.0:0.0##})";
 
 			return GetHtml(colorString);
 		}
