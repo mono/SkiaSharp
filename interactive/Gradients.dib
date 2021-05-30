@@ -1,0 +1,129 @@
+#!markdown
+
+# Gradients
+
+SkiaSharp has may features that allow us to create any image we may want. One such feature is gradients. There are a few gradient types:
+
+- linear
+- radial
+- sweep
+- two-point conical
+
+In this example, are are going to use a linear gradient as a background to a ball created with a two-point conical gradient.
+
+The first thing we need to do is intsall the package:
+
+#!csharp
+
+#i https://aka.ms/skiasharp-eap/index.json
+#r nuget:SkiaSharp,*-*
+
+#!markdown
+
+After installing the `SkiaSharp` NuGet package, we can now add the typical `using` statements:
+
+#!csharp
+
+using SkiaSharp;
+
+#!markdown
+
+Now, we can start coding. Here we create a simple 256x256 canvas and clear off any contents:
+
+#!csharp
+
+var info = new SKImageInfo(256, 256);
+var surface = SKSurface.Create(info);
+
+var canvas = surface.Canvas;
+canvas.Clear();
+
+#!markdown
+
+To make things easier, we are just going to use two colors (black and white) for both the background and the ball:
+
+#!csharp
+
+var lightColor = SKColors.White;
+var darkColor = SKColors.Black;
+
+var colors = new[] { lightColor, darkColor };
+
+colors
+
+#!markdown
+
+The first gradient we are going to make is for the background. This is a linear gradient and has 3 main pieces of information:
+
+- start & end points
+- colors
+- clamp mode
+
+For a linear gradient, the points represent the coordinates of the line that will form the direction of the gradient. Since we want the full image, we can use a line down the side of the canvas. It doesn't really matter where along the x-axis we put the line since it goes on for infinity:
+
+#!csharp
+
+var backgroundShader = SKShader.CreateLinearGradient(
+    start: new SKPoint(0, 0),
+    end: new SKPoint(0, info.Height),
+    colors: colors,
+    mode: SKShaderTileMode.Clamp);
+
+#!markdown
+
+To draw this shader, we create a new `SKPaint` instance and set the `Shader` property to the shadr we just created. And then we draw it:
+
+#!csharp
+
+var backgroundPaint = new SKPaint
+{
+    IsAntialias = true,
+    Shader = backgroundShader,
+};
+
+canvas.DrawPaint(backgroundPaint);
+
+surface
+
+#!markdown
+
+That is looking very nice!
+
+The next thing we need to do is draw the ball. Like the background, we need to use a shader. This shader now has more information:
+
+- start & end points
+- start & end radii
+- colors
+- clamp mode
+
+The gradient we are going to draw is similar to a radial gradient, but instead we want to control the start and end circles as well as those circles being offset a bit. This will allows us to create an image that looks 3D but is not at all:
+
+#!csharp
+
+var ballShader = SKShader.CreateTwoPointConicalGradient(
+    start: new SKPoint(115.2f, 102.4f),
+    startRadius: 20.0f,
+    end: new SKPoint(102.4f, 102.4f),
+    endRadius: 128.0f,
+    colors: new[] { lightColor, darkColor },
+    mode: SKShaderTileMode.Clamp);
+
+#!markdown
+
+Again like the background, we create a paint object and draw that. However, to give the illusion that it is a 3D ball, we are going to draw the shader inside a circle. This will effectively clip the gradient to a circle shape giving the edges to the ball:
+
+#!csharp
+
+var ballPaint = new SKPaint
+{
+    IsAntialias = true,
+    Shader = ballShader,
+};
+
+canvas.DrawOval(new SKRect(51.2f, 51.2f, 204.8f, 204.8f), ballPaint);
+
+surface
+
+#!markdown
+
+All done. The image is rendered and we have a gray ball floating in space.

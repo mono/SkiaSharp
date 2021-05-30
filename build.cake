@@ -355,8 +355,8 @@ Task ("samples-generate")
 {
     EnsureDirectoryExists ("./output/");
 
-    // create the workbooks archive
-    Zip ("./workbooks", "./output/workbooks.zip");
+    // create the interactive archive
+    Zip ("./interactive", "./output/interactive.zip");
 
     // create the samples archive
     CreateSamplesDirectory ("./samples/", "./output/samples/");
