@@ -111,6 +111,8 @@ jobs:
             version: $(DOTNET_VERSION)
             performMultiLevelLookup: true
           displayName: Install the correct version of .NET Core
+        - pwsh: dotnet --info
+          displayName: Display all the .NET information
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
