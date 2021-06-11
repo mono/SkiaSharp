@@ -21,6 +21,9 @@ Write-Host "Installing LLVM..."
 & $install /S
 
 # echo version
+dir "C:\Program Files\"
+dir "C:\Program Files\LLVM\"
+dir "C:\Program Files\LLVM\bin\"
 & "C:\Program Files\LLVM\bin\clang.exe" --version
 
 # make sure that LLVM is in LLVM_HOME
