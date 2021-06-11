@@ -5,6 +5,8 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
+& clang --version
+
 $HOME_DIR = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
 
 $url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-${Version}/LLVM-${Version}-win64.exe"
