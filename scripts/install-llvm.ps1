@@ -1,5 +1,5 @@
 Param(
-    [string] $Version = "10.0.0"
+    [string] $Version = "11.1.0"
 )
 
 $ErrorActionPreference = 'Stop'
@@ -19,6 +19,9 @@ New-Item -ItemType Directory -Force -Path "$llvmTemp" | Out-Null
 # install
 Write-Host "Installing LLVM..."
 & $install /S
+
+# echo version
+& "C:\Program Files\LLVM\bin\clang.exe" --version
 
 # make sure that LLVM is in LLVM_HOME
 Write-Host "##vso[task.setvariable variable=LLVM_HOME;]C:\Program Files\LLVM";

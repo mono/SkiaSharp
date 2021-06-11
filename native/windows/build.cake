@@ -11,6 +11,12 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower ()
 
 string VARIANT = BUILD_VARIANT ?? "windows";
 
+Information("Native Arguments:");
+Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", LLVM_HOME);
+Information($"    {"SUPPORT_VULKAN".PadRight(30)} {{0}}", SUPPORT_VULKAN);
+Information($"    {"VARIANT".PadRight(30)} {{0}}", VARIANT);
+Information($"    {"CONFIGURATION".PadRight(30)} {{0}}", CONFIGURATION);
+
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnWindows())
