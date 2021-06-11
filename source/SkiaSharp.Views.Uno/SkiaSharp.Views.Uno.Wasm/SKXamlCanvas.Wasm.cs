@@ -7,7 +7,7 @@ using Windows.UI.Xaml;
 namespace SkiaSharp.Views.UWP
 {
 	[HtmlElement("canvas")]
-	public partial class SKXamlCanvas : FrameworkElement
+	public partial class SKXamlCanvas
 	{
 		private byte[] pixels;
 		private GCHandle pixelsHandle;
