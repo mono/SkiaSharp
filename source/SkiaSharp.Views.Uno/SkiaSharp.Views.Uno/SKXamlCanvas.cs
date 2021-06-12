@@ -3,11 +3,12 @@ using Windows.ApplicationModel;
 using Windows.Graphics.Display;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 
 namespace SkiaSharp.Views.UWP
 {
-	public partial class SKXamlCanvas : FrameworkElement
+	public partial class SKXamlCanvas : Canvas
 	{
 		private static readonly DependencyProperty ProxyVisibilityProperty =
 			DependencyProperty.Register(
@@ -111,12 +112,12 @@ namespace SkiaSharp.Views.UWP
 			display.DpiChanged -= OnDpiChanged;
 		}
 
-		public void Invalidate()
+		public new async void Invalidate()
 		{
 			if (Dispatcher.HasThreadAccess)
 				DoInvalidate();
 			else
-				Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
+				await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
 		}
 
 		partial void DoLoaded();

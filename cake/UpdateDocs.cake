@@ -299,6 +299,16 @@ Task ("docs-format-docs")
             }
         }
 
+        // remove any assembly attributes for now: https://github.com/mono/api-doc-tools/issues/560
+        if (xdoc.Root.Name == "Overview") {
+            xdoc.Root
+                .Elements ("Assemblies")
+                .Elements ("Assembly")
+                .Elements ("Attributes")
+                .Elements ("Attribute")
+                .Remove ();
+        }
+
         // remove any duplicate AssemblyVersions
         if (xdoc.Root.Name == "Type") {
             foreach (var info in xdoc.Root.Descendants ("AssemblyInfo")) {
