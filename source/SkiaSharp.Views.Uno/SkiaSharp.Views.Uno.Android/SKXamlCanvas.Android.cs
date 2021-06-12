@@ -4,7 +4,7 @@ using Windows.UI.Xaml;
 
 namespace SkiaSharp.Views.UWP
 {
-	public partial class SKXamlCanvas : FrameworkElement
+	public partial class SKXamlCanvas
 	{
 		private SurfaceFactory surfaceFactory;
 

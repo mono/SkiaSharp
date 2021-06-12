@@ -10,6 +10,8 @@ namespace SkiaSharp.Views.UWP
 {
 	public partial class SKSwapChainPanel : FrameworkElement
 	{
+		public static bool RaiseOnUnsupported { get; set; } = true;
+
 		private static readonly DependencyProperty ProxyVisibilityProperty =
 			DependencyProperty.Register(
 				"ProxyVisibility",
