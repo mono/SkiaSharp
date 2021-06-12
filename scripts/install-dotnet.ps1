@@ -18,11 +18,11 @@ Invoke-WebRequest `
 
 Write-Host "Installing .NET $Version..."
 if ($IsMacOS) {
-  & sh dotnet-install.sh --version $DOTNET_VERSION_PREVIEW --install-dir "$InstallDir" --verbose
+  & sh dotnet-install.sh --version $Version --install-dir "$InstallDir" --verbose
 } elseif ($IsLinux) {
-  & bash dotnet-install.sh --version $DOTNET_VERSION_PREVIEW --install-dir "$InstallDir" --verbose
+  & bash dotnet-install.sh --version $Version --install-dir "$InstallDir" --verbose
 } else {
-  .\dotnet-install.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$InstallDir" -Verbose
+  .\dotnet-install.ps1 -Version $env:$Version -InstallDir "$InstallDir" -Verbose
 }
 
 Write-Host "Installed .NET Versions:"
