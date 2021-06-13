@@ -2,19 +2,20 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <!-- temporarily work around https://github.com/xamarin/xamarin-android/issues/5432 -->
-    <Target Name="_SkiaSharpIncludeNativeSystemLibrariesFixes" BeforeTargets="_IncludeNativeSystemLibraries">
+    <Target Name="_IncludeNativeSystemLibrariesFixes" BeforeTargets="_IncludeNativeSystemLibraries">
         <ItemGroup>
             <_FixedResolvedFileToPublish
                 Include="@(ResolvedFileToPublish)"
-                Condition=" 
-                    '%(ResolvedFileToPublish.Extension)' == '.so' and 
-                    '%(ResolvedFileToPublish.NuGetPackageId)' != '' and 
-                    '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' and 
+                Condition="
+                    '%(ResolvedFileToPublish.AssetType)' == 'native' and
+                    '%(ResolvedFileToPublish.Extension)' == '.so' and
+                    '%(ResolvedFileToPublish.NuGetPackageId)' != '' and
+                    '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' and
                     '%(ResolvedFileToPublish.PathInPackage)' != '' " />
-            <ResolvedFileToPublish Remove="@(_FixedResolvedFileToPublish)" />
-            <ResolvedFileToPublish Include="@(_FixedResolvedFileToPublish)">
+            <ResolvedFileToPublish Update="@(_FixedResolvedFileToPublish)">
                 <RuntimeIdentifier>$([System.Text.RegularExpressions.Regex]::Match('%(_FixedResolvedFileToPublish.PathInPackage)', 'runtimes/([^/]+)/native/.*').Groups[1].Value)</RuntimeIdentifier>
             </ResolvedFileToPublish>
+            <_FixedResolvedFileToPublish Remove="@(_FixedResolvedFileToPublish)" />
         </ItemGroup>
     </Target>
 

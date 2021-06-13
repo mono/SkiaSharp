@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
-    <PropertyGroup>
-        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
-    </PropertyGroup>
-
-    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
-        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\ios\native\libSkiaSharp.framework" Kind="Framework" />
-    </ItemGroup>
+    <!-- temporarily work around https://github.com/xamarin/xamarin-macios/issues/11667 -->
+    <Target Name="_ExpandNativeReferencesFixes" BeforeTargets="_ExpandNativeReferences">
+        <ItemGroup>
+            <_PossibleNativeFrameworks
+                Include="@(ResolvedFileToPublish)"
+                Condition="
+                    '%(ResolvedFileToPublish.AssetType)' == 'native' and
+                    '%(ResolvedFileToPublish.Extension)' == '' and
+                    '%(ResolvedFileToPublish.NuGetPackageId)' != '' and
+                    '%(ResolvedFileToPublish.PathInPackage)' != ''">
+                    <FrameworkFilename>$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName(%(ResolvedFileToPublish.PathInPackage)))))</FrameworkFilename>
+                    <DirectoryName>$([System.IO.Path]::GetDirectoryName(%(ResolvedFileToPublish.FullPath)))</DirectoryName>
+                </_PossibleNativeFrameworks>
+            <NativeReference Include="%(_PossibleNativeFrameworks.DirectoryName)" Condition="'%(FrameworkFilename)' == '%(Filename).framework'">
+                <NuGetPackageId>%(NuGetPackageId)</NuGetPackageId>
+                <NuGetPackageVersion>%(NuGetPackageVersion)</NuGetPackageVersion>
+                <AssetType>%(AssetType)</AssetType>
+                <RuntimeIdentifier>$([System.Text.RegularExpressions.Regex]::Match('%(_PossibleNativeFrameworks.PathInPackage)', 'runtimes/([^/]+)/native/.*').Groups[1].Value)</RuntimeIdentifier>
+            </NativeReference>
+            <_PossibleNativeFrameworks Remove="@(_PossibleNativeFrameworks)" />
+        </ItemGroup>
+    </Target>
 
 </Project>
