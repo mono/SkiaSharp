@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!-- if ShouldIncludeNativeHarfBuzzSharp == False then don't include the native libHarfBuzzSharp -->
+    <PropertyGroup>
+        <ShouldIncludeNativeHarfBuzzSharp Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' == '' ">True</ShouldIncludeNativeHarfBuzzSharp>
+    </PropertyGroup>
+
+    <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' ">
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libHarfBuzzSharp.dylib" Kind="Dynamic" />
+    </ItemGroup>
+
+</Project>
