@@ -27,7 +27,7 @@ variables:
   DOTNET_VERSION: 5.0.301
   DOTNET_VERSION_PREVIEW: 6.0.100-preview.5.21302.13
   VS_VERSION_PREVIEW: 16/pre
-  MAUI_CHECK_MANIFEST: https://raw.githubusercontent.com/Redth/dotnet-maui-check/e4603b700f2983d0a734993344b626134d55afe9/manifests/maui-preview.manifest.json
+  MAUI_CHECK_MANIFEST: https://raw.githubusercontent.com/Redth/dotnet-maui-check/165c910079623e73ecb04c50bade01da1f78f6c9/manifests/maui-preview.manifest.json
   CONFIGURATION: 'Release'
   VM_IMAGE_WINDOWS: windows-2019
   VM_IMAGE_WINDOWS_PREVIOUS: vs2017-win2016
@@ -322,6 +322,8 @@ stages:
           displayName: Managed (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs
+          variables:
+            BuildingForNet6: false
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_android_x86_windows
@@ -381,6 +383,8 @@ stages:
           displayName: Managed (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: libs
+          variables:
+            BuildingForNet6: false
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_android_x86_macos
@@ -402,6 +406,8 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: libs
+          variables:
+            BuildingForNet6: false
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_linux_x64_linux

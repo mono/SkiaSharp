@@ -115,7 +115,7 @@ jobs:
           displayName: Install the correct version of .NET Core
 
         # install the bits needed for net6 builds
-        - ${{ if contains(parameters.name, '_net6_') }}:
+        - ${{ if or(contains(parameters.name, '_net6_'), startsWith(parameters.name, 'samples_')) }}:
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
           - ${{ if endsWith(parameters.name, '_windows') }}:
