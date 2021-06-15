@@ -322,8 +322,6 @@ stages:
           displayName: Managed (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs
-          variables:
-            BuildingForNet6: false
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_android_x86_windows
@@ -350,8 +348,6 @@ stages:
           displayName: Managed (Windows|.NET 6)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs
-          variables:
-            BuildingForNet6: true
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_android_x86_windows
@@ -383,8 +379,6 @@ stages:
           displayName: Managed (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: libs
-          variables:
-            BuildingForNet6: false
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_android_x86_macos
@@ -406,8 +400,6 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: libs
-          variables:
-            BuildingForNet6: false
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
             - native_linux_x64_linux

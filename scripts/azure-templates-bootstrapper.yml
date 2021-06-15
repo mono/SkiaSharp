@@ -115,15 +115,14 @@ jobs:
           displayName: Install the correct version of .NET Core
 
         # install the bits needed for net6 builds
-        - ${{ if or(contains(parameters.name, '_net6_'), startsWith(parameters.name, 'samples_')) }}:
-          - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-            displayName: Install the preview version of .NET Core
-          - ${{ if endsWith(parameters.name, '_windows') }}:
-            - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
-              displayName: Install Visual Studio Preview
-          - ${{ if not(endsWith(parameters.name, '_linux')) }}:
-            - pwsh: .\scripts\install-maui.ps1 -Manifest $env:MAUI_CHECK_MANIFEST -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-              displayName: Install the .NET Core workloads
+        - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+          displayName: Install the preview version of .NET Core
+        - ${{ if endsWith(parameters.name, '_windows') }}:
+          - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
+            displayName: Install Visual Studio Preview
+        - ${{ if not(endsWith(parameters.name, '_linux')) }}:
+          - pwsh: .\scripts\install-maui.ps1 -Manifest $env:MAUI_CHECK_MANIFEST -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            displayName: Install the .NET Core workloads
 
         - pwsh: dotnet --info
           displayName: Display all the .NET information
