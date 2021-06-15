@@ -61,11 +61,13 @@
     <None Include="..\..\output\native\android\armeabi-v7a\libHarfBuzzSharp*" Link="nuget\runtimes\android-arm\native\%(Filename)%(Extension)" />
     <None Include="..\..\output\native\android\arm64-v8a\libHarfBuzzSharp*" Link="nuget\runtimes\android-arm64\native\%(Filename)%(Extension)" />
     <None Include="nuget\build\android\HarfBuzzSharp.targets" Link="nuget\build\net6.0-android\HarfBuzzSharp.targets" />
+    <None Include="nuget\build\monoandroid\HarfBuzzSharp.targets" Link="nuget\build\net6.0-android\HarfBuzzSharp.Local.targets" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-ios'))">
     <!-- iOS -->
     <None Include="..\..\output\native\ios\libHarfBuzzSharp.framework\**" Link="nuget\runtimes\ios\native\libHarfBuzzSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="nuget\build\ios\HarfBuzzSharp.targets" Link="nuget\build\net6.0-ios\HarfBuzzSharp.targets" />
+    <None Include="nuget\build\xamarinios\HarfBuzzSharp.targets" Link="nuget\build\net6.0-ios\HarfBuzzSharp.Local.targets" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
     <!-- Mac Catalyst -->
@@ -75,6 +77,7 @@
     <!-- tvOS -->
     <None Include="..\..\output\native\tvos\libHarfBuzzSharp.framework\**" Link="nuget\runtimes\tvos\native\libHarfBuzzSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="nuget\build\tvos\HarfBuzzSharp.targets" Link="nuget\build\net6.0-tvos\HarfBuzzSharp.targets" />
+    <None Include="nuget\build\xamarintvos\HarfBuzzSharp.targets" Link="nuget\build\net6.0-tvos\HarfBuzzSharp.Local.targets" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-watchos'))">
     <!-- watchOS -->
@@ -83,6 +86,7 @@
   <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
     <!-- macOS -->
     <None Include="nuget\build\macos\HarfBuzzSharp.targets" Link="nuget\build\net6.0-macos\HarfBuzzSharp.targets" />
+    <None Include="nuget\build\xamarinmac\HarfBuzzSharp.targets" Link="nuget\build\net6.0-macos\HarfBuzzSharp.Local.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
