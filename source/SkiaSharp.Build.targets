@@ -192,7 +192,7 @@ internal partial class VersionConstants {
       <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\$(PackagingLocation)\$(TargetName).pdb" />
     </ItemGroup>
     <ItemGroup>
-      <_CopyItems Include="@(_NoneWithTargetPath)" Dest="%(_NoneWithTargetPath.TargetPath)" />
+      <_CopyItems Include="@(_NoneWithTargetPath)" Condition=" '%(_NoneWithTargetPath.Extension)' != '.cs' " Dest="%(_NoneWithTargetPath.TargetPath)" />
     </ItemGroup>
   </Target>
   <Target Name="_CopyToOutputDirectory" Condition=" '$(SkipCopyToOutputDirectory)' != 'true' and '$(TargetPath)' != '' "
