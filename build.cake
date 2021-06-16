@@ -450,6 +450,12 @@ Task ("samples")
 
     // build solutions locally
     var solutions = GetFiles ("./output/samples/**/*.sln");
+
+    Information ("Solutions found:");
+    foreach (var sln in solutions) {
+        Information ("    " + sln);
+    }
+
     foreach (var sln in solutions) {
         var name = sln.GetFilenameWithoutExtension ();
         var slnPlatform = name.GetExtension ();
@@ -476,6 +482,9 @@ Task ("samples")
                 // skip this as this is not the correct platform
             }
         }
+
+        // delete the build sample
+        CleanDirectories (sln.GetDirectory ().FullPath);
     }
 
     CleanDirectory ("./output/samples/");
