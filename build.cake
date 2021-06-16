@@ -424,6 +424,9 @@ Task ("samples")
 
             RunNuGetRestorePackagesConfig (sln);
             RunMSBuild (sln, platform: buildPlatform);
+
+            // delete the built sample
+            CleanDirectories (sln.GetDirectory ().FullPath);
         }
     }
 
@@ -482,9 +485,6 @@ Task ("samples")
                 // skip this as this is not the correct platform
             }
         }
-
-        // delete the build sample
-        CleanDirectories (sln.GetDirectory ().FullPath);
     }
 
     CleanDirectory ("./output/samples/");
