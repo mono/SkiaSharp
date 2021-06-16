@@ -395,6 +395,7 @@ stages:
           target: nuget
           additionalArgs: --packall=true --skipbuild=true
           installWindowsSdk: false
+          installDotNet: false
           shouldPublish: true
           requiredArtifacts:
             - managed_linux
@@ -434,6 +435,7 @@ stages:
           target: docs-api-diff
           additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
           installWindowsSdk: false
+          installDotNet: false
           shouldPublish: false
           requiredArtifacts:
             - package_windows
@@ -793,6 +795,7 @@ stages:
             vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
             target: git-sync-deps
             installWindowsSdk: false
+            installDotNet: false
             shouldPublish: false
             postBuildSteps:
               - task: CredScan@2

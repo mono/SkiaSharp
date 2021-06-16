@@ -23,6 +23,7 @@ parameters:
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installTizenSdk: true                         # whether or not to install the Tizen SDK
   installWindowsSdk: true                       # whether or not to install the Windows SDK
+  installDotNet: true                           # whether or not to install the dotnet SDK
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
 
@@ -100,32 +101,32 @@ jobs:
               displayName: Install LLVM
 
       # install extra bits for the manged builds
-      - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-        - task: UseDotNet@2
-          inputs:
-            packageType: 'sdk'
-            version: $(DOTNET_VERSION_PREVIOUS)
-            performMultiLevelLookup: true
-          displayName: Install the previous version of .NET Core
-        - task: UseDotNet@2
-          inputs:
-            packageType: 'sdk'
-            version: $(DOTNET_VERSION)
-            performMultiLevelLookup: true
-          displayName: Install the correct version of .NET Core
-
-        # install the bits needed for net6 builds
-        - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-          displayName: Install the preview version of .NET Core
-        - ${{ if endsWith(parameters.name, '_windows') }}:
-          - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
-            displayName: Install Visual Studio Preview
-        - ${{ if not(endsWith(parameters.name, '_linux')) }}:
-          - pwsh: .\scripts\install-maui.ps1 -Manifest $env:MAUI_CHECK_MANIFEST -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-            displayName: Install the .NET Core workloads
-
-        - pwsh: dotnet --info
-          displayName: Display all the .NET information
+      - ${{ if not(startsWith(parameters.name, 'native_') }}:
+        - ${{ if eq(parameters.installDotNet, 'true')) }}:
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: $(DOTNET_VERSION_PREVIOUS)
+              performMultiLevelLookup: true
+            displayName: Install the previous version of .NET Core
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: $(DOTNET_VERSION)
+              performMultiLevelLookup: true
+            displayName: Install the correct version of .NET Core
+          # install the bits needed for net6 builds
+          - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            displayName: Install the preview version of .NET Core
+          - ${{ if and(endsWith(parameters.name, '_windows'), endsWith(parameters.name, '_windows')) }}:
+            - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
+              displayName: Install Visual Studio Preview
+          - ${{ if not(endsWith(parameters.name, '_linux')) }}:
+            - pwsh: .\scripts\install-maui.ps1 -Manifest $env:MAUI_CHECK_MANIFEST -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+              displayName: Install the .NET Core workloads
+          # display dotnet info
+          - pwsh: dotnet --info
+            displayName: Display all the .NET information
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
