@@ -54,6 +54,10 @@ var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER")
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? "");
 
+var PREVIEW_NUGET_SUFFIX = string.IsNullOrEmpty (BUILD_NUMBER)
+    ? $"{PREVIEW_LABEL}"
+    : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
+
 var PREVIEW_FEED_URL = "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json";
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
@@ -374,10 +378,7 @@ Task ("samples-generate")
     Zip ("./output/samples/", "./output/samples.zip");
 
     // create the preview samples archive
-    var suffix = string.IsNullOrEmpty (BUILD_NUMBER)
-        ? $"{PREVIEW_LABEL}"
-        : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
-    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", suffix);
+    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", PREVIEW_NUGET_SUFFIX);
     Zip ("./output/samples-preview/", "./output/samples-preview.zip");
 });
 
@@ -459,7 +460,10 @@ Task ("samples")
     // }
 
     // build solutions locally
-    var solutions = GetFiles ("./output/samples/**/*.sln");
+    var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
+        ? "samples-preview"
+        : "samples";
+    var solutions = GetFiles ($"./output/{actualSamples}/**/*.sln");
 
     Information ("Solutions found:");
     foreach (var sln in solutions) {
