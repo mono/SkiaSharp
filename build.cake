@@ -73,11 +73,21 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.Forms.GTK",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.Uno",                           new Version (1, 57, 0) },
     { "SkiaSharp.Views.WinUI",                         new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Maui.Core",                     new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (1, 57, 0) },
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 57, 0) },
+};
+
+var PREVIEW_ONLY_NUGETS = new List<string> {
+    "SkiaSharp.Views.WinUI",
+    "SkiaSharp.Views.Maui.Core",
+    "SkiaSharp.Views.Maui.Controls",
+    "SkiaSharp.Views.Maui.Controls.Compatibility",
 };
 
 Information("Arguments:");
@@ -571,6 +581,10 @@ Task ("nuget-normal")
                     if (depId.Value.StartsWith("SkiaSharp") || depId.Value.StartsWith("HarfBuzzSharp"))
                         v += suffix;
                     depVersion.Value = v;
+                } else {
+                    v = GetVersion (depId.Value, "release");
+                    if (!string.IsNullOrEmpty (v))
+                        depVersion.Value = v;
                 }
             }
         }
@@ -603,8 +617,10 @@ Task ("nuget-normal")
         var outDir = $"./output/{dir}/nuget";
         EnsureDirectoryExists (outDir);
 
-        SetVersion (xdoc, "");
-        xdoc.Save ($"{outDir}/{id}.nuspec");
+        if (!PREVIEW_ONLY_NUGETS.Contains (id)) {
+            SetVersion (xdoc, "");
+            xdoc.Save ($"{outDir}/{id}.nuspec");
+        }
 
         SetVersion (xdoc, $"{preview}");
         xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
