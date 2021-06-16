@@ -28,6 +28,8 @@ using WVisibility = Microsoft.UI.Xaml.Visibility;
 
 #else
 
+using Xamarin.Forms;
+
 using SKFormsView = SkiaSharp.Views.Forms.SKCanvasView;
 
 #if __ANDROID__
