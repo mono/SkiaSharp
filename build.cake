@@ -424,9 +424,6 @@ Task ("samples")
 
             RunNuGetRestorePackagesConfig (sln);
             RunMSBuild (sln, platform: buildPlatform);
-
-            // delete the built sample
-            CleanDirectories (sln.GetDirectory ().FullPath);
         }
     }
 
@@ -460,6 +457,10 @@ Task ("samples")
     }
 
     foreach (var sln in solutions) {
+        // might have been deleted due to a platform build and cleanup
+        if (!FileExists (sln))
+            continue;
+
         var name = sln.GetFilenameWithoutExtension ();
         var slnPlatform = name.GetExtension ();
 
@@ -469,6 +470,8 @@ Task ("samples")
             if (!variants.Any ()) {
                 // there is no platform variant
                 BuildSample (sln);
+                // delete the built sample
+                CleanDirectories (sln.GetDirectory ().FullPath);
             } else {
                 // skip as there is a platform variant
             }
@@ -481,6 +484,8 @@ Task ("samples")
                 (isWin && slnPlatform == ".windows");
             if (shouldBuild) {
                 BuildSample (sln);
+                // delete the built sample
+                CleanDirectories (sln.GetDirectory ().FullPath);
             } else {
                 // skip this as this is not the correct platform
             }
