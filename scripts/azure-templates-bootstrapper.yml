@@ -101,8 +101,8 @@ jobs:
               displayName: Install LLVM
 
       # install extra bits for the manged builds
-      - ${{ if not(startsWith(parameters.name, 'native_') }}:
-        - ${{ if eq(parameters.installDotNet, 'true')) }}:
+      - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+        - ${{ if eq(parameters.installDotNet, 'true') }}:
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
