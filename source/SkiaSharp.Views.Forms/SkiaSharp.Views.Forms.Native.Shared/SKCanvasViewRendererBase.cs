@@ -1,6 +1,33 @@
 ﻿using System;
 using System.ComponentModel;
 
+#if __MAUI__
+
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Platform;
+using SkiaSharp.Views.Maui.Platform;
+
+using SKFormsView = SkiaSharp.Views.Maui.Controls.SKCanvasView;
+
+#if __ANDROID__
+using Android.Content;
+using Microsoft.Maui.Controls.Compatibility.Platform.Android;
+using SKNativeView = SkiaSharp.Views.Android.SKCanvasView;
+using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Android.SKPaintSurfaceEventArgs;
+#elif __IOS__
+using Microsoft.Maui.Controls.Compatibility.Platform.iOS;
+using SKNativeView = SkiaSharp.Views.iOS.SKCanvasView;
+using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs;
+#elif WINDOWS
+using Windows.Graphics.Display;
+using Microsoft.Maui.Controls.Compatibility.Platform.UWP;
+using SKNativeView = SkiaSharp.Views.Windows.SKXamlCanvas;
+using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Windows.SKPaintSurfaceEventArgs;
+using WVisibility = Microsoft.UI.Xaml.Visibility;
+#endif
+
+#else
+
 using SKFormsView = SkiaSharp.Views.Forms.SKCanvasView;
 
 #if __ANDROID__
@@ -17,6 +44,7 @@ using Windows.Graphics.Display;
 using Xamarin.Forms.Platform.UWP;
 using SKNativeView = SkiaSharp.Views.UWP.SKXamlCanvas;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.UWP.SKPaintSurfaceEventArgs;
+using WVisibility = Windows.UI.Xaml.Visibility;
 #elif __MACOS__
 using Xamarin.Forms.Platform.MacOS;
 using SKNativeView = SkiaSharp.Views.Mac.SKCanvasView;
@@ -37,7 +65,13 @@ using SKNativeView = SkiaSharp.Views.Gtk.SKWidget;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs;
 #endif
 
+#endif
+
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Controls.Compatibility
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	public abstract class SKCanvasViewRendererBase<TFormsView, TNativeView> : ViewRenderer<TFormsView, TNativeView>
 		where TFormsView : SKFormsView
@@ -51,16 +85,12 @@ namespace SkiaSharp.Views.Forms
 		{
 			Initialize();
 		}
-#endif
-
-#if __ANDROID__
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete("This constructor is obsolete as of version 2.5. Please use SKCanvasViewRendererBase(Context) instead.")]
-#endif
+#else
 		protected SKCanvasViewRendererBase()
 		{
 			Initialize();
 		}
+#endif
 
 		private void Initialize()
 		{
@@ -76,7 +106,11 @@ namespace SkiaSharp.Views.Forms
 		}
 #endif
 
+#if __MAUI__ && __ANDROID__
+		protected override void OnElementChanged(Microsoft.Maui.Controls.Compatibility.Platform.Android.ElementChangedEventArgs<TFormsView> e)
+#else
 		protected override void OnElementChanged(ElementChangedEventArgs<TFormsView> e)
+#endif
 		{
 			if (e.OldElement != null)
 			{
@@ -155,13 +189,13 @@ namespace SkiaSharp.Views.Forms
 			{
 				touchHandler.SetEnabled(Control, Element.EnableTouchEvents);
 			}
-#if WINDOWS_UWP
-			else if (e.PropertyName == Xamarin.Forms.VisualElement.IsVisibleProperty.PropertyName)
+#if WINDOWS_UWP || WINDOWS
+			else if (e.PropertyName == VisualElement.IsVisibleProperty.PropertyName)
 			{
 				// pass the visibility down to the view do disable drawing
 				Control.Visibility = Element.IsVisible
-					? Windows.UI.Xaml.Visibility.Visible
-					: Windows.UI.Xaml.Visibility.Collapsed;
+					? WVisibility.Visible
+					: WVisibility.Collapsed;
 			}
 #endif
 		}
@@ -198,7 +232,7 @@ namespace SkiaSharp.Views.Forms
 #elif __TIZEN__
 				x = Tizen.ScalingInfo.FromPixel(x);
 				y = Tizen.ScalingInfo.FromPixel(y);
-#elif __IOS__ || __MACOS__ || WINDOWS_UWP || __WPF__
+#elif __IOS__ || __MACOS__ || WINDOWS_UWP || __WPF__ || WINDOWS
 				// Tizen and Android are the reverse of the other platforms
 #elif __GTK__
 				// TODO: implement this if it is actually supported
@@ -220,7 +254,7 @@ namespace SkiaSharp.Views.Forms
 #elif __MACOS__
 				x = x * Control.Window.BackingScaleFactor;
 				y = y * Control.Window.BackingScaleFactor;
-#elif WINDOWS_UWP
+#elif WINDOWS_UWP || WINDOWS
 				x = x * Control.Dpi;
 				y = y * Control.Dpi;
 #elif __WPF__

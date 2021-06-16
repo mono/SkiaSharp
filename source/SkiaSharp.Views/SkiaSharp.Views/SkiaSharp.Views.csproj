@@ -1,0 +1,77 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks Condition="$(BuildingForNet6)">$(TargetFrameworks);net6.0-ios;net6.0-maccatalyst;net6.0-tvos;net6.0-macos;net6.0-android</TargetFrameworks>
+    <PackagingGroup>SkiaSharp.Views</PackagingGroup>
+    <!-- https://github.com/NuGet/Home/issues/5226 -->
+    <PackageId>SkiaSharp.Views</PackageId>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
+    <RootNamespace>SkiaSharp.Views.iOS</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.iOS</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-tvos'))">
+    <RootNamespace>SkiaSharp.Views.tvOS</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.tvOS</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-macos'))">
+    <RootNamespace>SkiaSharp.Views.Mac</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Mac</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-android'))">
+    <RootNamespace>SkiaSharp.Views.Android</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- iOS / Mac Catalyst -->
+    <None Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp.Views.iOS\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- tvOS -->
+    <None Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp.Views.tvOS\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- macOS -->
+    <None Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\macOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp.Views.Mac\**\*.cs" Link="Platform\macOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Android -->
+    <None Include="..\SkiaSharp.Views.Android\**\*.cs" Link="Platform\Android\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- local platforms -->
+    <Compile Remove="Platform\**" />
+    <None Include="Platform\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
+    <!-- iOS / Mac Catalyst -->
+    <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.iOS\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="Platform\iOS\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
+    <!-- tvOS -->
+    <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.tvOS\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="Platform\tvOS\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
+    <!-- macOS -->
+    <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\macOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Mac\**\*.cs" Link="Platform\macOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="Platform\macOS\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <!-- Android -->
+    <Compile Include="..\SkiaSharp.Views.Android\**\*.cs" Link="Platform\Android\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="Platform\Android\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="..\*\bin\**;..\*\obj\**" />
+    <None Remove="..\*\bin\**;..\*\obj\**" />
+  </ItemGroup>
+</Project>

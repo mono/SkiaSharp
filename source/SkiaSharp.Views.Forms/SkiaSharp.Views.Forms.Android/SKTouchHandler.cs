@@ -1,12 +1,16 @@
 ﻿using System;
 using Android.Views;
 
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Platform
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	internal class SKTouchHandler
 	{
-		private Action<SKTouchEventArgs> onTouchAction;
-		private Func<double, double, SKPoint> scalePixels;
+		private Action<SKTouchEventArgs>? onTouchAction;
+		private Func<double, double, SKPoint>? scalePixels;
 
 		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
 		{
@@ -36,12 +40,15 @@ namespace SkiaSharp.Views.Forms
 			scalePixels = null;
 		}
 
-		private void OnTouch(object sender, View.TouchEventArgs e)
+		private void OnTouch(object? sender, View.TouchEventArgs e)
 		{
 			if (onTouchAction == null || scalePixels == null)
 				return;
 
 			var evt = e.Event;
+			if (evt == null)
+				return;
+
 			var pointer = evt.ActionIndex;
 
 			var id = evt.GetPointerId(pointer);

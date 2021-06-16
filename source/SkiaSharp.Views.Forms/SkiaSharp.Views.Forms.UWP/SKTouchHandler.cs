@@ -1,15 +1,26 @@
 ﻿using System;
 using Windows.Devices.Input;
 using Windows.UI.Input;
+
+#if WINDOWS
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
+using PointerPoint = Microsoft.UI.Input.Experimental.ExpPointerPoint;
+#else
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Input;
+#endif
 
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Platform
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	internal class SKTouchHandler
 	{
-		private Action<SKTouchEventArgs> onTouchAction;
-		private Func<double, double, SKPoint> scalePixels;
+		private Action<SKTouchEventArgs>? onTouchAction;
+		private Func<double, double, SKPoint>? scalePixels;
 
 		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
 		{
@@ -67,9 +78,11 @@ namespace SkiaSharp.Views.Forms
 
 			if (args.Handled)
 			{
-				var view = sender as FrameworkElement;
-				view.ManipulationMode = ManipulationModes.All;
-				view.CapturePointer(args.Pointer);
+				if (sender is FrameworkElement view)
+				{
+					view.ManipulationMode = ManipulationModes.All;
+					view.CapturePointer(args.Pointer);
+				}
 			}
 		}
 
@@ -82,8 +95,8 @@ namespace SkiaSharp.Views.Forms
 		{
 			args.Handled = CommonHandler(sender, SKTouchAction.Released, args);
 
-			var view = sender as FrameworkElement;
-			view.ManipulationMode = ManipulationModes.System;
+			if (sender is FrameworkElement view)
+				view.ManipulationMode = ManipulationModes.System;
 		}
 
 		private void OnPointerCancelled(object sender, PointerRoutedEventArgs args)

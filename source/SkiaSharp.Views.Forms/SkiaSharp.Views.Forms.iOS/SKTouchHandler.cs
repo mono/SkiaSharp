@@ -3,12 +3,16 @@ using System.Linq;
 using Foundation;
 using UIKit;
 
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Platform
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	internal class SKTouchHandler : UIGestureRecognizer
 	{
-		private Action<SKTouchEventArgs> onTouchAction;
-		private Func<double, double, SKPoint> scalePixels;
+		private Action<SKTouchEventArgs>? onTouchAction;
+		private Func<double, double, SKPoint>? scalePixels;
 
 		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
 		{

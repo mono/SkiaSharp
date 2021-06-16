@@ -1,31 +1,46 @@
-﻿using System.IO;
-using Microsoft.Maui.Controls;
+﻿using Microsoft.Maui.Controls;
 using SkiaSharp;
+using SkiaSharp.Views.Maui;
+using SkiaSharp.Views.Maui.Controls;
 
 namespace SkiaSharpSample
 {
 	public partial class MainPage : ContentPage
 	{
+		private SKPoint? touchLocation;
+
 		public MainPage()
 		{
 			InitializeComponent();
-
-			imageView.Source = ImageSource.FromStream(() => CreateImage());
 		}
 
-		private Stream CreateImage()
+		private void OnTouch(object sender, SKTouchEventArgs e)
 		{
-			// crate a surface
-			var info = new SKImageInfo(256, 256);
-			using var surface = SKSurface.Create(info);
+			if (e.InContact)
+				touchLocation = e.Location;
+			else
+				touchLocation = null;
 
+			skiaView.InvalidateSurface();
+
+			e.Handled = true;
+		}
+
+		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+		{
 			// the the canvas and properties
-			var canvas = surface.Canvas;
+			var canvas = e.Surface.Canvas;
+
+			// get the screen density for scaling
+			var scale = (float)(e.Info.Width / skiaView.Width);
+
+			// handle the device screen density
+			canvas.Scale(scale);
 
 			// make sure the canvas is blank
 			canvas.Clear(SKColors.White);
 
-			// draw some text
+			// decide what the text looks like
 			using var paint = new SKPaint
 			{
 				Color = SKColors.Black,
@@ -34,14 +49,17 @@ namespace SkiaSharpSample
 				TextAlign = SKTextAlign.Center,
 				TextSize = 24
 			};
-			var coord = new SKPoint(info.Width / 2, (info.Height + paint.TextSize) / 2);
+
+			// adjust the location based on the pointer
+			var coord = (touchLocation is SKPoint loc)
+				? new SKPoint(loc.X / scale, loc.Y / scale)
+				: new SKPoint((float)skiaView.Width / 2, ((float)skiaView.Height + paint.TextSize) / 2);
+
+			// draw some text
 			canvas.DrawText("SkiaSharp", coord, paint);
 
-			// encode the file
-			using var image = surface.Snapshot();
-
-			var data = image.Encode(SKEncodedImageFormat.Png, 100);
-			return data.AsStream(true);
+			imageView.Source = new SKImageImageSource { Image = e.Surface.Snapshot() };
+			imageButton.Source = new SKImageImageSource { Image = e.Surface.Snapshot() };
 		}
 	}
 }

@@ -1,8 +1,16 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpSample.MainPage"
              BackgroundColor="White">
+    <Grid RowDefinitions="*,*,*">
 
-    <Image x:Name="imageView" Aspect="Center" />
+        <skia:SKCanvasView x:Name="skiaView" PaintSurface="OnPaintSurface"
+                       EnableTouchEvents="True" Touch="OnTouch" />
 
+        <Image x:Name="imageView" Grid.Row="1" Background="Green"/>
+
+        <ImageButton x:Name="imageButton" Grid.Row="2" Background="Red"/>
+
+    </Grid>
 </ContentPage>
