@@ -57,6 +57,16 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
       <group targetFramework="tizen40">
         <dependency id="System.Memory" version="4.5.3" />
       </group>
+      <group targetFramework="net6.0-ios13.6">
+      </group>
+      <group targetFramework="net6.0-maccatalyst13.5">
+      </group>
+      <group targetFramework="net6.0-tvos13.4">
+      </group>
+      <group targetFramework="net6.0-macos10.15">
+      </group>
+      <group targetFramework="net6.0-android30.0">
+      </group>
     </dependencies>
 
   </metadata>
@@ -85,6 +95,16 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file platform="windows" src="lib/uap10.0.16299/SkiaSharp.xml" />
     <file src="lib/tizen40/SkiaSharp.dll" />
     <file src="lib/tizen40/SkiaSharp.xml" />
+    <file platform="macos,windows" src="lib/net6.0-android/SkiaSharp.dll" target="lib/net6.0-android30.0/SkiaSharp.dll" />
+    <file platform="macos,windows" src="lib/net6.0-android/SkiaSharp.xml" target="lib/net6.0-android30.0/SkiaSharp.xml" />
+    <file platform="macos" src="lib/net6.0-ios/SkiaSharp.dll" target="lib/net6.0-ios13.6/SkiaSharp.dll" />
+    <file platform="macos" src="lib/net6.0-ios/SkiaSharp.xml" target="lib/net6.0-ios13.6/SkiaSharp.xml" />
+    <file platform="macos" src="lib/net6.0-maccatalyst/SkiaSharp.dll" target="lib/net6.0-maccatalyst13.5/SkiaSharp.dll" />
+    <file platform="macos" src="lib/net6.0-maccatalyst/SkiaSharp.xml" target="lib/net6.0-maccatalyst13.5/SkiaSharp.xml" />
+    <file platform="macos" src="lib/net6.0-tvos/SkiaSharp.dll" target="lib/net6.0-tvos13.4/SkiaSharp.dll" />
+    <file platform="macos" src="lib/net6.0-tvos/SkiaSharp.xml" target="lib/net6.0-tvos13.4/SkiaSharp.xml" />
+    <file platform="macos" src="lib/net6.0-macos/SkiaSharp.dll" target="lib/net6.0-macos10.15/SkiaSharp.dll" />
+    <file platform="macos" src="lib/net6.0-macos/SkiaSharp.xml" target="lib/net6.0-macos10.15/SkiaSharp.xml" />
 
     <!-- the build bits -->
     <!-- net4x (win32/macos/linux) -->
@@ -93,14 +113,22 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <!-- others -->
     <file src="build/monoandroid1.0/SkiaSharp.targets" />
     <file src="build/monoandroid1.0/SkiaSharp.targets" target="buildTransitive/monoandroid1.0/SkiaSharp.targets" />
+    <file src="build/net6.0-android/SkiaSharp.targets" target="build/net6.0-android30.0/SkiaSharp.targets" />
+    <file src="build/net6.0-android/SkiaSharp.targets" target="buildTransitive/net6.0-android30.0/SkiaSharp.targets" />
     <file src="build/xamarinios1.0/SkiaSharp.targets" />
     <file src="build/xamarinios1.0/SkiaSharp.targets" target="buildTransitive/xamarinios1.0/SkiaSharp.targets" />
+    <file src="build/net6.0-ios/SkiaSharp.targets" target="build/net6.0-ios13.6/SkiaSharp.targets" />
+    <file src="build/net6.0-ios/SkiaSharp.targets" target="buildTransitive/net6.0-ios13.6/SkiaSharp.targets" />
     <file src="build/xamarintvos1.0/SkiaSharp.targets" />
     <file src="build/xamarintvos1.0/SkiaSharp.targets" target="buildTransitive/xamarintvos1.0/SkiaSharp.targets" />
+    <file src="build/net6.0-tvos/SkiaSharp.targets" target="build/net6.0-tvos13.4/SkiaSharp.targets" />
+    <file src="build/net6.0-tvos/SkiaSharp.targets" target="buildTransitive/net6.0-tvos13.4/SkiaSharp.targets" />
     <file src="build/xamarinwatchos1.0/SkiaSharp.targets" />
     <file src="build/xamarinwatchos1.0/SkiaSharp.targets" target="buildTransitive/xamarinwatchos1.0/SkiaSharp.targets" />
     <file src="build/xamarinmac2.0/SkiaSharp.targets" />
     <file src="build/xamarinmac2.0/SkiaSharp.targets" target="buildTransitive/xamarinmac2.0/SkiaSharp.targets" />
+    <file src="build/net6.0-macos/SkiaSharp.targets" target="build/net6.0-macos10.15/SkiaSharp.targets" />
+    <file src="build/net6.0-macos/SkiaSharp.targets" target="buildTransitive/net6.0-macos10.15/SkiaSharp.targets" />
     <file src="build/tizen40/SkiaSharp.targets" />
     <file src="build/tizen40/SkiaSharp.targets" target="buildTransitive/tizen40/SkiaSharp.targets" />
 
@@ -128,23 +156,25 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file src="build/tizen40/arm/libSkiaSharp.so" />
     <file src="build/tizen40/x86/libSkiaSharp.so" />
     <!-- android -->
-    <file platform="macos,windows" src="build/monoandroid1.0/x64/libSkiaSharp.so" />
-    <file platform="macos,windows" src="build/monoandroid1.0/x86/libSkiaSharp.so" />
-    <file platform="macos,windows" src="build/monoandroid1.0/arm/libSkiaSharp.so" />
-    <file platform="macos,windows" src="build/monoandroid1.0/arm64/libSkiaSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-x64/native/libSkiaSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-x86/native/libSkiaSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-arm/native/libSkiaSharp.so" />
+    <file platform="macos,windows" src="runtimes/android-arm64/native/libSkiaSharp.so" />
     <!-- ios -->
-    <file platform="macos" src="build/xamarinios1.0/libSkiaSharp.framework/**/*" target="build/xamarinios1.0/libSkiaSharp.framework" />
+    <file platform="macos" src="runtimes/ios/native/libSkiaSharp.framework/**/*" target="runtimes/ios/native/libSkiaSharp.framework" />
+    <!-- maccatalyst -->
+    <!-- <file platform="macos" src="runtimes/maccatalyst/native/libSkiaSharp.framework/**/*" target="runtimes/maccatalyst/native/libSkiaSharp.framework" /> -->
     <!-- tvos -->
-    <file platform="macos" src="build/xamarintvos1.0/libSkiaSharp.framework/**/*" target="build/xamarintvos1.0/libSkiaSharp.framework" />
+    <file platform="macos" src="runtimes/tvos/native/libSkiaSharp.framework/**/*" target="runtimes/tvos/native/libSkiaSharp.framework" />
     <!-- watchos -->
-    <file platform="macos" src="build/xamarinwatchos1.0/libSkiaSharp.framework/**/*" target="build/xamarinwatchos1.0/libSkiaSharp.framework" />
+    <file platform="macos" src="runtimes/watchos/native/libSkiaSharp.framework/**/*" target="runtimes/watchos/native/libSkiaSharp.framework" />
 
     <!-- .NET interactive -->
     <file src="interactive-extensions/dotnet/SkiaSharp.DotNet.Interactive.dll" />
 
     <!-- legal -->
     <file src="LICENSE.txt" />
-    <file src="THIRD-PARTY-NOTICES.txt" /> 
+    <file src="THIRD-PARTY-NOTICES.txt" />
 
   </files>
 </package>

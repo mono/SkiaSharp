@@ -328,9 +328,10 @@ Task ("tests-wasm")
             WorkingDirectory = pubDir,
         });
         DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj",
-            "http://localhost:8000/ " +
-            "-o ./tests/SkiaSharp.Wasm.Tests/TestResults/ " +
-            (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"-d {CHROMEWEBDRIVER}"));
+            "--output=\"./tests/SkiaSharp.Wasm.Tests/TestResults/\" " +
+            (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
+            "--verbose " +
+            "\"http://127.0.0.1:8000/\" ");
     } catch {
         failedTests++;
     } finally {
