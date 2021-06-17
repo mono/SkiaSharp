@@ -43,6 +43,12 @@
     <SkipImportNetSdk>true</SkipImportNetSdk>
   </PropertyGroup>
 
+  <!-- HACK: WinUI seems to have issues without this -->
+  <PropertyGroup>
+    <GenerateLibraryLayout>true</GenerateLibraryLayout>
+    <DisableEmbeddedXbf>false</DisableEmbeddedXbf>
+  </PropertyGroup>
+
   <Target Name="PrintRID"
           BeforeTargets="BeforeBuild">
     <Message Text="Operating System: Windows"

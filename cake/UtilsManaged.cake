@@ -254,6 +254,21 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Microsoft.ProjectReunion.Foundation", "net5.0-windows");
     await AddDep("Microsoft.ProjectReunion.WinUI", "net5.0-windows10.0.18362.0");
     await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
+    await AddDep("Microsoft.Maui.Core", "net6.0-android30.0");
+    await AddDep("Microsoft.Maui.Core", "net6.0-ios13.6");
+    await AddDep("Microsoft.Maui.Core", "net6.0-maccatalyst13.5");
+    await AddDep("Microsoft.Maui.Core", "net6.0-windows10.0.18362");
+    await AddDep("Microsoft.Maui.Core", "netstandard2.0");
+    await AddDep("Microsoft.Maui.Controls", "net6.0-android30.0");
+    await AddDep("Microsoft.Maui.Controls", "net6.0-ios13.6");
+    await AddDep("Microsoft.Maui.Controls", "net6.0-maccatalyst13.5");
+    await AddDep("Microsoft.Maui.Controls", "net6.0-windows10.0.18362");
+    await AddDep("Microsoft.Maui.Controls", "netstandard2.0");
+    await AddDep("Microsoft.Maui.Controls.Compatibility", "net6.0-android30.0");
+    await AddDep("Microsoft.Maui.Controls.Compatibility", "net6.0-ios13.6");
+    await AddDep("Microsoft.Maui.Controls.Compatibility", "net6.0-maccatalyst13.5");
+    await AddDep("Microsoft.Maui.Controls.Compatibility", "net6.0-windows10.0.18362");
+    await AddDep("Microsoft.Maui.Controls.Compatibility.Android.FormsViewGroup", "net6.0-android30.0");
 
     await AddDep("OpenTK.GLControl", "NET40", "reference");
     await AddDep("Xamarin.Forms", "Xamarin.iOS10", "reference");

@@ -2,17 +2,27 @@
 using System.Threading.Tasks;
 using Android.Content;
 using Android.Graphics;
-using Xamarin.Forms;
-using Xamarin.Forms.Platform.Android;
 
 using SkiaSharp.Views.Android;
+
+#if __MAUI__
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Compatibility.Platform.Android;
+#else
+using Xamarin.Forms;
+using Xamarin.Forms.Platform.Android;
 
 [assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKImageImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
 [assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKBitmapImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
 [assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKPixmapImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
 [assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKPictureImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
+#endif
 
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Controls.Compatibility
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	public sealed class SKImageSourceHandler : IImageSourceHandler
 	{

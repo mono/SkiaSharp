@@ -54,13 +54,19 @@
     <PackageReference Include="mdoc" Version="5.8.3" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
-  <!-- workaround for https://github.com/microsoft/ProjectReunion/pull/707 -->
-  <Target Name="Net6WinUIWorkaround"
-          BeforeTargets="_GetSdkToolsPathsFromSdk"
-          Condition="$(TargetFramework.Contains('-windows')) == true ">
-    <PropertyGroup>
-      <TargetPlatformIdentifierAdjusted>UAP</TargetPlatformIdentifierAdjusted>
-    </PropertyGroup>
+  <!-- HACK: WinUI overwrite tasks that are not needed when multitargeting -->
+  <Target Name="ValidateWinUIPlatform" />
+  <Target Name="BinPlaceBootstrapDll" />
+
+  <!--
+    Workaround for https://github.com/dotnet/sdk/issues/18148 where an analyzer from a new version of a package
+    is not found in the older version of that same package. So we just remove usage of the analyzer entirely
+    because we don't use it in this repo.
+  -->
+  <Target Name="RemoveLoggingAnalyzer" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)" Condition="%(FileName) == 'Microsoft.Extensions.Logging.Generators'" />
+    </ItemGroup>
   </Target>
 
   <!--
@@ -186,7 +192,7 @@ internal partial class VersionConstants {
       <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\$(PackagingLocation)\$(TargetName).pdb" />
     </ItemGroup>
     <ItemGroup>
-      <_CopyItems Include="@(_NoneWithTargetPath)" Dest="%(_NoneWithTargetPath.TargetPath)" />
+      <_CopyItems Include="@(_NoneWithTargetPath)" Condition=" '%(_NoneWithTargetPath.Extension)' != '.cs' " Dest="%(_NoneWithTargetPath.TargetPath)" />
     </ItemGroup>
   </Target>
   <Target Name="_CopyToOutputDirectory" Condition=" '$(SkipCopyToOutputDirectory)' != 'true' and '$(TargetPath)' != '' "
