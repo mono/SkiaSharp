@@ -57,9 +57,6 @@ namespace SkiaSharpSample
 
 			// draw some text
 			canvas.DrawText("SkiaSharp", coord, paint);
-
-			imageView.Source = new SKImageImageSource { Image = e.Surface.Snapshot() };
-			imageButton.Source = new SKImageImageSource { Image = e.Surface.Snapshot() };
 		}
 	}
 }
