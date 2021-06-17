@@ -70,8 +70,9 @@ Task ("docs-api-diff")
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
-    // some libraries depend in SkiaSharp
+    // some libraries depend on SkiaSharp
     comparer.SearchPaths.Add($"./output/SkiaSharp/nuget/lib/netstandard2.0");
+    comparer.SearchPaths.Add($"./output/SkiaSharp.Views.Maui.Core/nuget/lib/netstandard2.0");
 
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE
