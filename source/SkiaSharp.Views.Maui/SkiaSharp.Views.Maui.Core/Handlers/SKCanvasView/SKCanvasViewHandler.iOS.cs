@@ -1,6 +1,7 @@
 ﻿using Microsoft.Maui.Handlers;
 using SkiaSharp.Views.iOS;
 using SkiaSharp.Views.Maui.Platform;
+using UIKit;
 
 namespace SkiaSharp.Views.Maui.Handlers
 {
@@ -9,7 +10,7 @@ namespace SkiaSharp.Views.Maui.Handlers
 		private SKSizeI lastCanvasSize;
 		private SKTouchHandler? touchHandler;
 
-		protected override SKCanvasView CreateNativeView() => new SKCanvasView();
+		protected override SKCanvasView CreateNativeView() => new SKCanvasView { BackgroundColor = UIColor.Clear };
 
 		protected override void ConnectHandler(SKCanvasView nativeView)
 		{
