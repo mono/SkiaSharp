@@ -138,7 +138,17 @@ Task ("libs")
             platform = ".Linux";
         }
     }
-    RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
+
+    var net6 = $"./source/SkiaSharpSource{platform}-net6.slnf";
+    var netfx = $"./source/SkiaSharpSource{platform}-netfx.slnf";
+    if (FileExists (net6) || FileExists (netfx)) {
+        if (FileExists (net6))
+            RunMSBuild (net6, properties: new Dictionary<string, string> { { "BuildingForNet6", "true" } });
+        if (FileExists (netfx))
+            RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet6", "false" } });
+    } else {
+        RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
+    }
 
     // assemble the mdoc docs
     EnsureDirectoryExists ("./output/docs/mdoc/");
