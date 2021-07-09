@@ -12,7 +12,7 @@ Write-Host "Installing maui-check..."
 
 Write-Host "Installing Maui..."
 & maui-check `
-  --manifest "$Manifest" `
+  --preview `
   --verbose --ci --fix --non-interactive `
   --skip androidsdk `
   --skip xcode `
