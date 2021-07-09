@@ -17,6 +17,7 @@ Write-Host "Installing Maui..."
   --skip androidsdk `
   --skip xcode `
   --skip vswin `
-  --skip vsmac
+  --skip vsmac `
+  --skip edgewebview2
 
 exit $LASTEXITCODE
