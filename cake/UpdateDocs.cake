@@ -43,11 +43,14 @@ Task ("docs-download-output")
     EnsureDirectoryExists ("./output");
     CleanDirectories ("./output");
 
-    await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
+    await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         var version = GetVersion (id);
-        var name = $"{id}.{version}.nupkg";
+        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
+            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
+            : version;
+        var name = $"{id}.{localNugetVersion}.nupkg";
         CleanDirectories ($"./output/{id}");
         Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
     }

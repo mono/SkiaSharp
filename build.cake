@@ -58,7 +58,7 @@ var PREVIEW_NUGET_SUFFIX = string.IsNullOrEmpty (BUILD_NUMBER)
     ? $"{PREVIEW_LABEL}"
     : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
 
-var PREVIEW_FEED_URL = "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json";
+var PREVIEW_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json");
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                                     new Version (1, 57, 0) },
@@ -740,6 +740,7 @@ Task ("nuget-special")
     }
     if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
         specials[$"_NuGets"] = $"nugets";
+        specials[$"_NuGetsPreview"] = $"nugetspreview";
     }
 
     foreach (var pair in specials) {
