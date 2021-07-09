@@ -3,7 +3,7 @@ using Windows.ApplicationModel;
 using Windows.Graphics.Display;
 
 #if WINDOWS
-using Microsoft.System;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
