@@ -3,7 +3,7 @@ using Microsoft.Maui;
 
 namespace SkiaSharpSample
 {
-	[Register("AppDelegate")]
+	[Register(nameof(AppDelegate))]
 	public class AppDelegate : MauiUIApplicationDelegate<Startup>
 	{
 	}
