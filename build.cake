@@ -739,7 +739,7 @@ Task ("nuget-special")
     }
     if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
         specials[$"_NuGets"] = $"nugets";
-        specials[$"_NuGetsPreview"] = $"nugetspreview";
+        specials[$"_NuGetsPreview"] = $"nugets";
     }
 
     foreach (var pair in specials) {
