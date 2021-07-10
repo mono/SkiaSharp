@@ -16,7 +16,7 @@ parameters:
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
-  buildExternals: '4918643'                            # the build number to download externals from
+  buildExternals: ''                            # the build number to download externals from
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -29,17 +29,17 @@ parameters:
   installEmsdk: false                           # whether or not to install the Emscripten SDK
 
 jobs:
-- ${{ if and(ne(parameters.buildExternals, ''), or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'))) }}:
-  - template: azure-templates-download.yml
-    parameters:
-      name: ${{ parameters.name }}
-      displayName: ${{ parameters.displayName }}
-      vmImage: ${{ parameters.vmImage }}
-      condition: ${{ parameters.condition }}
-      postBuildSteps: ${{ parameters.postBuildSteps }}
-      buildExternals: ${{ parameters.buildExternals }}
+# - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
+#   - template: azure-templates-download.yml
+#     parameters:
+#       name: ${{ parameters.name }}
+#       displayName: ${{ parameters.displayName }}
+#       vmImage: ${{ parameters.vmImage }}
+#       condition: ${{ parameters.condition }}
+#       postBuildSteps: ${{ parameters.postBuildSteps }}
+#       buildExternals: ${{ parameters.buildExternals }}
 
-- ${{ if or(eq(parameters.buildExternals, ''), not(or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_')))) }}:
+# - ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
