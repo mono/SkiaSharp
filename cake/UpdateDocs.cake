@@ -43,6 +43,7 @@ Task ("docs-download-output")
     EnsureDirectoryExists ("./output");
     CleanDirectories ("./output");
 
+    await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
     await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
 
     foreach (var id in TRACKED_NUGETS.Keys) {
