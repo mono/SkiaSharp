@@ -1,23 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <!-- temporarily work around https://github.com/xamarin/xamarin-android/issues/5432 -->
-    <Target Name="_HarfBuzzSharpIncludeNativeSystemLibrariesFixes" BeforeTargets="_IncludeNativeSystemLibraries">
-        <ItemGroup>
-            <_FixedResolvedFileToPublish
-                Include="@(ResolvedFileToPublish)"
-                Condition="
-                    '%(ResolvedFileToPublish.AssetType)' == 'native' and
-                    '%(ResolvedFileToPublish.Filename)' == 'libHarfBuzzSharp' and
-                    '%(ResolvedFileToPublish.Extension)' == '.so' and
-                    '%(ResolvedFileToPublish.NuGetPackageId)' != '' and
-                    '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' and
-                    '%(ResolvedFileToPublish.PathInPackage)' != '' " />
-            <ResolvedFileToPublish Update="@(_FixedResolvedFileToPublish)">
-                <RuntimeIdentifier>$([System.Text.RegularExpressions.Regex]::Match('%(_FixedResolvedFileToPublish.PathInPackage)', 'runtimes/([^/]+)/native/.*').Groups[1].Value)</RuntimeIdentifier>
-            </ResolvedFileToPublish>
-            <_FixedResolvedFileToPublish Remove="@(_FixedResolvedFileToPublish)" />
-        </ItemGroup>
-    </Target>
-
 </Project>
