@@ -23,14 +23,16 @@ Task("libSkiaSharp")
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
         $"skia_enable_ccpr=false " +
+        $"skia_enable_fontmgr_custom_directory=false " +
         $"skia_enable_fontmgr_custom_empty=false " +
+        $"skia_enable_fontmgr_custom_embedded=true " +
         $"skia_enable_fontmgr_empty=false " +
         $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
         (SUPPORT_GPU ? "skia_gl_standard='webgl'" : "") +
         $"skia_enable_nvpr=false " +
         $"skia_enable_pdf=true " +
         $"skia_use_dng_sdk=false " +
-        $"skia_use_egl=true " +
+        $"skia_use_webgl=true " +
         $"skia_use_fontconfig=false " +
         $"skia_use_freetype=true " +
         $"skia_use_harfbuzz=false " +
@@ -47,8 +49,10 @@ Task("libSkiaSharp")
         $"skia_use_wuffs=true " +
         $"use_PIC=false " +
         $"extra_cflags=[ " +
-        $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', '-DSK_BUILD_FOR_WASM', '-DSK_EMSCRIPTEN', " + 
-        $"  '-s', 'WARN_UNALIGNED=1', '-DSKNX_NO_SIMD', '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0' ] " +
+        $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
+        $"  '-DSKNX_NO_SIMD', '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
+        $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
+        $"] " +
         $"extra_cflags_cc=[ '-frtti' ] " +
         COMPILERS +
         ADDITIONAL_GN_ARGS);

@@ -54,6 +54,10 @@ var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER")
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? "");
 
+var PREVIEW_NUGET_SUFFIX = string.IsNullOrEmpty (BUILD_NUMBER)
+    ? $"{PREVIEW_LABEL}"
+    : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
+
 var PREVIEW_FEED_URL = "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json";
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
@@ -73,11 +77,21 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.Forms.GTK",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.Uno",                           new Version (1, 57, 0) },
     { "SkiaSharp.Views.WinUI",                         new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Maui.Core",                     new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (1, 57, 0) },
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 57, 0) },
+};
+
+var PREVIEW_ONLY_NUGETS = new List<string> {
+    "SkiaSharp.Views.WinUI",
+    "SkiaSharp.Views.Maui.Core",
+    "SkiaSharp.Views.Maui.Controls",
+    "SkiaSharp.Views.Maui.Controls.Compatibility",
 };
 
 Information("Arguments:");
@@ -328,9 +342,10 @@ Task ("tests-wasm")
             WorkingDirectory = pubDir,
         });
         DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj",
-            "http://localhost:8000/ " +
-            "-o ./tests/SkiaSharp.Wasm.Tests/TestResults/ " +
-            (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"-d {CHROMEWEBDRIVER}"));
+            "--output=\"./tests/SkiaSharp.Wasm.Tests/TestResults/\" " +
+            (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
+            "--verbose " +
+            "\"http://127.0.0.1:8000/\" ");
     } catch {
         failedTests++;
     } finally {
@@ -363,10 +378,7 @@ Task ("samples-generate")
     Zip ("./output/samples/", "./output/samples.zip");
 
     // create the preview samples archive
-    var suffix = string.IsNullOrEmpty (BUILD_NUMBER)
-        ? $"{PREVIEW_LABEL}"
-        : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
-    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", suffix);
+    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", PREVIEW_NUGET_SUFFIX);
     Zip ("./output/samples-preview/", "./output/samples-preview.zip");
 });
 
@@ -448,8 +460,21 @@ Task ("samples")
     // }
 
     // build solutions locally
-    var solutions = GetFiles ("./output/samples/**/*.sln");
+    var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
+        ? "samples-preview"
+        : "samples";
+    var solutions = GetFiles ($"./output/{actualSamples}/**/*.sln");
+
+    Information ("Solutions found:");
     foreach (var sln in solutions) {
+        Information ("    " + sln);
+    }
+
+    foreach (var sln in solutions) {
+        // might have been deleted due to a platform build and cleanup
+        if (!FileExists (sln))
+            continue;
+
         var name = sln.GetFilenameWithoutExtension ();
         var slnPlatform = name.GetExtension ();
 
@@ -459,6 +484,8 @@ Task ("samples")
             if (!variants.Any ()) {
                 // there is no platform variant
                 BuildSample (sln);
+                // delete the built sample
+                CleanDirectories (sln.GetDirectory ().FullPath);
             } else {
                 // skip as there is a platform variant
             }
@@ -471,6 +498,8 @@ Task ("samples")
                 (isWin && slnPlatform == ".windows");
             if (shouldBuild) {
                 BuildSample (sln);
+                // delete the built sample
+                CleanDirectories (sln.GetDirectory ().FullPath);
             } else {
                 // skip this as this is not the correct platform
             }
@@ -570,6 +599,10 @@ Task ("nuget-normal")
                     if (depId.Value.StartsWith("SkiaSharp") || depId.Value.StartsWith("HarfBuzzSharp"))
                         v += suffix;
                     depVersion.Value = v;
+                } else {
+                    v = GetVersion (depId.Value, "release");
+                    if (!string.IsNullOrEmpty (v))
+                        depVersion.Value = v;
                 }
             }
         }
@@ -602,8 +635,10 @@ Task ("nuget-normal")
         var outDir = $"./output/{dir}/nuget";
         EnsureDirectoryExists (outDir);
 
-        SetVersion (xdoc, "");
-        xdoc.Save ($"{outDir}/{id}.nuspec");
+        if (!PREVIEW_ONLY_NUGETS.Contains (id)) {
+            SetVersion (xdoc, "");
+            xdoc.Save ($"{outDir}/{id}.nuspec");
+        }
 
         SetVersion (xdoc, $"{preview}");
         xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");

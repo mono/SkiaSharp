@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0-windows10.0.19041</TargetFrameworks>
+    <OutputType>WinExe</OutputType>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SingleProject>true</SingleProject>
+    <RootNamespace>SkiaSharpSample</RootNamespace>
+
+    <!-- Required - Enable Single Project for WinUI -->
+    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
+    <WindowsPackageType>MSIX</WindowsPackageType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <MauiImage Include="..\SkiaSharpSample\Resources\appicon.png" Link="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
+    <MauiSplashScreen Include="..\SkiaSharpSample\Resources\skiasharplogo.png" BaseSize="256" Link="Resources\skiasharplogo.png" Color="#F8F8F8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SkiaSharpSample\**\*.cs" Exclude="..\SkiaSharpSample\bin\**;..\SkiaSharpSample\obj\**;..\SkiaSharpSample\Android\**;..\SkiaSharpSample\iOS\**;..\SkiaSharpSample\MacCatalyst\**" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <MauiXaml Include="..\SkiaSharpSample\**\*.xaml" Exclude="..\SkiaSharpSample\bin\**;..\SkiaSharpSample\obj\**" Link="%(RecursiveDir)%(FileName)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui" Version="6.0.100-preview.5.794" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls.Compatibility\SkiaSharp.Views.Maui.Controls.Compatibility.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.0-preview" />
+    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.0-preview" />
+    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.0-preview" />
+    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" RuntimeFrameworkVersion="10.0.19041.16" />
+    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" TargetingPackVersion="10.0.19041.16" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\output\native\windows\x64\libSkiaSharp.dll" Condition="Exists('..\..\..\..\output\native\windows\x64\libSkiaSharp.dll')">
+      <Link>libSkiaSharp.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

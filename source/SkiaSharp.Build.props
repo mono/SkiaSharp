@@ -9,9 +9,17 @@
   -->
 
   <PropertyGroup>
+    <IsWindows>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))</IsWindows>
+    <IsMacOS>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))</IsMacOS>
+    <IsLinux>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))</IsLinux>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <!-- this is important for mono as it defaults to 'false' -->
     <SignAssembly>true</SignAssembly>
     <SkiaSharpBuildPropsImported>true</SkiaSharpBuildPropsImported>
+    <BuildingForNet6 Condition="'$(BuildingForNet6)' == '' and $(IsWindows)">true</BuildingForNet6>
+    <BuildingForNet6 Condition="'$(BuildingForNet6)' == ''">false</BuildingForNet6>
     <MDocDocumentationDirectory>$(MSBuildThisFileDirectory)..\docs\SkiaSharpAPI</MDocDocumentationDirectory>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
@@ -35,10 +43,10 @@
     <SkipImportNetSdk>true</SkipImportNetSdk>
   </PropertyGroup>
 
+  <!-- HACK: WinUI seems to have issues without this -->
   <PropertyGroup>
-    <IsWindows>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))</IsWindows>
-    <IsMacOS>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))</IsMacOS>
-    <IsLinux>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))</IsLinux>
+    <GenerateLibraryLayout>true</GenerateLibraryLayout>
+    <DisableEmbeddedXbf>false</DisableEmbeddedXbf>
   </PropertyGroup>
 
   <Target Name="PrintRID"

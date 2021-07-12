@@ -10,7 +10,7 @@ pr:
   - patch/*
 
 variables:
-  SKIASHARP_VERSION: 2.80.3
+  SKIASHARP_VERSION: 2.88.0
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
@@ -25,6 +25,9 @@ variables:
   XCODE_VERSION: 12.4
   DOTNET_VERSION_PREVIOUS: 3.1.410
   DOTNET_VERSION: 5.0.301
+  DOTNET_VERSION_PREVIEW: 6.0.100-preview.5.21302.13
+  VS_VERSION_PREVIEW: 16/pre
+  MAUI_CHECK_MANIFEST: https://raw.githubusercontent.com/Redth/dotnet-maui-check/165c910079623e73ecb04c50bade01da1f78f6c9/manifests/maui-preview.manifest.json
   CONFIGURATION: 'Release'
   VM_IMAGE_WINDOWS: windows-2019
   VM_IMAGE_WINDOWS_PREVIOUS: vs2017-win2016
@@ -35,7 +38,7 @@ variables:
   NUGET_DIFF_PRERELEASE: false
   ENABLE_CODE_COVERAGE: true
   EMSCRIPTEN_VERSION: 2.0.12
-  XHARNESS_VERSION: 1.0.0-prerelease.21180.1
+  XHARNESS_VERSION: 1.0.0-prerelease.21314.1
 
 resources:
   repositories:
@@ -227,6 +230,12 @@ stages:
           displayName: iOS
           vmImage: $(VM_IMAGE_MAC)
           target: externals-ios
+      - template: azure-templates-bootstrapper.yml # Build Native Mac Catalyst (macOS)
+        parameters:
+          name: native_maccatalyst_macos
+          displayName: Mac Catalyst
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-maccatalyst
       - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
         parameters:
           name: native_macos_macos
@@ -267,26 +276,17 @@ stages:
               gnArgs: skia_use_fontconfig=false
           matrix:
             - arch: x64
-              docker: scripts/Docker/ubuntu16/amd64
+              docker: scripts/Docker/debian9/amd64
             - arch: x64
               variant: alpine
               docker: scripts/Docker/alpine/amd64
             - arch: arm
-              docker: scripts/Docker/ubuntu16/clang-cross
+              docker: scripts/Docker/debian9/clang-cross
               target: externals-linux-clang-cross
             - arch: arm64
-              docker: scripts/Docker/ubuntu16/clang-cross
+              docker: scripts/Docker/debian9/clang-cross
               dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
               target: externals-linux-clang-cross
-            - arch: arm
-              docker: scripts/Docker/ubuntu16/gcc-cross
-              gnArgs: extra_cflags+=[ \'-Wno-psabi\' ]
-              alt: gcc
-            - arch: arm64
-              docker: scripts/Docker/ubuntu16/gcc-cross
-              dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-none-linux-gnu --build-arg FONTCONFIG_ARCH=arm64
-              gnArgs: extra_cflags+=[ \'-Wno-psabi\' ]
-              alt: gcc
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
         parameters:
           name: native_tizen_linux
@@ -302,8 +302,6 @@ stages:
       - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
         parameters:
           emscripten:
-            - 1.39.11
-            - 1.40.0
             - 2.0.5
             - 2.0.6
             - 2.0.9
@@ -357,6 +355,7 @@ stages:
             - native_android_arm_macos
             - native_android_arm64_macos
             - native_ios_macos
+            - native_maccatalyst_macos
             - native_macos_macos
             # - native_tizen_macos
             - native_tizen_windows
@@ -396,6 +395,7 @@ stages:
           target: nuget
           additionalArgs: --packall=true --skipbuild=true
           installWindowsSdk: false
+          installDotNet: false
           shouldPublish: true
           requiredArtifacts:
             - managed_linux
@@ -435,6 +435,7 @@ stages:
           target: docs-api-diff
           additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
           installWindowsSdk: false
+          installPreviewVs: false
           shouldPublish: false
           requiredArtifacts:
             - package_windows
@@ -794,6 +795,7 @@ stages:
             vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
             target: git-sync-deps
             installWindowsSdk: false
+            installDotNet: false
             shouldPublish: false
             postBuildSteps:
               - task: CredScan@2

@@ -6,13 +6,12 @@
     <PackagingGroup>SkiaSharp</PackagingGroup>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\tvos\libSkiaSharp.framework\**" Link="nuget\build\$(TargetFramework)\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\tvos\libSkiaSharp.framework\**" Link="nuget\runtimes\tvos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="nuget\build\xamarintvos1.0\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
+    <None Include="..\SkiaSharp\nuget\build\xamarintvos\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

@@ -7,13 +7,12 @@
     <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\watchos\libHarfBuzzSharp.a" Link="nuget\build\$(TargetFramework)\libHarfBuzzSharp.a" />
+    <None Include="..\..\output\native\watchos\libHarfBuzzSharp.framework\**" Link="nuget\runtimes\watchos\native\libHarfBuzzSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
+    <None Include="..\HarfBuzzSharp\nuget\build\xamarinwatchos\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

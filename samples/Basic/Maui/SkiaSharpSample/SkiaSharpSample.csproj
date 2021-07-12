@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0-ios;net6.0-android</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <SingleProject>true</SingleProject>
+    <RootNamespace>SkiaSharpSample</RootNamespace>
+    <ApplicationTitle>SkiaSharpSample</ApplicationTitle>
+    <ApplicationId>com.companyname.SkiaSharpSample</ApplicationId>
+    <ApplicationVersion>1.0</ApplicationVersion>
+    <AndroidVersionCode>1</AndroidVersionCode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <MauiImage Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
+    <MauiSplashScreen Include="Resources\skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui" Version="6.0.100-preview.5.794" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls.Compatibility\SkiaSharp.Views.Maui.Controls.Compatibility.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <InvariantGlobalization Condition="$(TargetFramework.Contains('-maccatalyst'))">true</InvariantGlobalization>
+    <RuntimeIdentifier Condition="$(TargetFramework.Contains('-ios'))">iossimulator-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="$(TargetFramework.Contains('-maccatalyst'))">maccatalyst-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets')" />
+
+</Project>

@@ -1,4 +1,5 @@
-﻿using Xamarin.Forms.Platform.UWP;
+﻿#if !WINDOWS
+using Xamarin.Forms.Platform.UWP;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
 using SKNativeView = SkiaSharp.Views.UWP.SKSwapChainPanel;
@@ -25,3 +26,4 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 }
+#endif

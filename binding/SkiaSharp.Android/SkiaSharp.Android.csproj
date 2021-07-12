@@ -7,13 +7,13 @@
     <PackagingPlatform>monoandroid1.0</PackagingPlatform>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\android\x86\libSkiaSharp.so" Link="nuget\build\$(PackagingPlatform)\x86\libSkiaSharp.so" />
-    <None Include="..\..\output\native\android\x86_64\libSkiaSharp.so" Link="nuget\build\$(PackagingPlatform)\x64\libSkiaSharp.so" />
-    <None Include="..\..\output\native\android\armeabi-v7a\libSkiaSharp.so" Link="nuget\build\$(PackagingPlatform)\arm\libSkiaSharp.so" />
-    <None Include="..\..\output\native\android\arm64-v8a\libSkiaSharp.so" Link="nuget\build\$(PackagingPlatform)\arm64\libSkiaSharp.so" />
+    <None Include="..\..\output\native\android\x86\libSkiaSharp*" Link="nuget\runtimes\android-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\x86_64\libSkiaSharp*" Link="nuget\runtimes\android-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\armeabi-v7a\libSkiaSharp*" Link="nuget\runtimes\android-arm\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\arm64-v8a\libSkiaSharp*" Link="nuget\runtimes\android-arm64\native\%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="nuget\build\monoandroid1.0\SkiaSharp.targets" Link="nuget\build\$(PackagingPlatform)\SkiaSharp.targets" />
+    <None Include="..\SkiaSharp\nuget\build\monoandroid\SkiaSharp.targets" Link="nuget\build\$(PackagingPlatform)\SkiaSharp.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />

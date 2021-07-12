@@ -293,16 +293,21 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"SK_ASSUME_GL_ES=1",
-					SK_GAMMA_APPLY_TO_A8,
 					"SKIA_IMPLEMENTATION=1",
-					SKIA_C_DLL,
+					GR_OP_ALLOCATE_USE_NEW,
+					SK_CODEC_DECODES_JPEG,
+					SK_CODEC_DECODES_PNG,
+					SK_CODEC_DECODES_RAW,
+					SK_CODEC_DECODES_WEBP,
+					SK_ENCODE_JPEG,
+					SK_ENCODE_PNG,
+					SK_ENCODE_WEBP,
+					SK_GAMMA_APPLY_TO_A8,
 					SK_GL,
 					SK_SUPPORT_PDF,
-					SK_HAS_JPEG_LIBRARY,
-					SK_HAS_PNG_LIBRARY,
-					SK_CODEC_DECODES_RAW,
-					SK_HAS_WEBP_LIBRARY,
+					SK_USE_LIBGIFCODEC,
 					SK_XML,
+					SKIA_C_DLL,
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -315,6 +320,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-all_load";
 				SDKROOT = iphoneos;
+				PLATFORM = ios;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -359,16 +365,21 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					NDEBUG,
 					"SK_ASSUME_GL_ES=1",
-					SK_GAMMA_APPLY_TO_A8,
 					"SKIA_IMPLEMENTATION=1",
-					SKIA_C_DLL,
+					GR_OP_ALLOCATE_USE_NEW,
+					SK_CODEC_DECODES_JPEG,
+					SK_CODEC_DECODES_PNG,
+					SK_CODEC_DECODES_RAW,
+					SK_CODEC_DECODES_WEBP,
+					SK_ENCODE_JPEG,
+					SK_ENCODE_PNG,
+					SK_ENCODE_WEBP,
+					SK_GAMMA_APPLY_TO_A8,
 					SK_GL,
 					SK_SUPPORT_PDF,
-					SK_HAS_JPEG_LIBRARY,
-					SK_HAS_PNG_LIBRARY,
-					SK_CODEC_DECODES_RAW,
-					SK_HAS_WEBP_LIBRARY,
+					SK_USE_LIBGIFCODEC,
 					SK_XML,
+					SKIA_C_DLL,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -381,8 +392,9 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "-all_load";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				PLATFORM = ios;
 				VALIDATE_PRODUCT = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -400,15 +412,17 @@
 				HEADER_SEARCH_PATHS = ../../../externals/skia;
 				INFOPLIST_FILE = libSkiaSharp/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/ios/$(ARCHS)";
+				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/$(PLATFORM)/$(ARCHS)";
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-lskia",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "xamarin.libskia-ios";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.libSkiaSharp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
 			};
 			name = Debug;
 		};
@@ -424,15 +438,17 @@
 				HEADER_SEARCH_PATHS = ../../../externals/skia;
 				INFOPLIST_FILE = libSkiaSharp/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/ios/$(ARCHS)";
+				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/$(PLATFORM)/$(ARCHS)";
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-lskia",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "xamarin.libskia-ios";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.libSkiaSharp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
 			};
 			name = Release;
 		};
