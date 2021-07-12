@@ -58,7 +58,7 @@ var PREVIEW_NUGET_SUFFIX = string.IsNullOrEmpty (BUILD_NUMBER)
     ? $"{PREVIEW_LABEL}"
     : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
 
-var PREVIEW_FEED_URL = "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json";
+var PREVIEW_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json");
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                                     new Version (1, 57, 0) },
@@ -88,7 +88,6 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
 };
 
 var PREVIEW_ONLY_NUGETS = new List<string> {
-    "SkiaSharp.Views.WinUI",
     "SkiaSharp.Views.Maui.Core",
     "SkiaSharp.Views.Maui.Controls",
     "SkiaSharp.Views.Maui.Controls.Compatibility",
@@ -138,7 +137,17 @@ Task ("libs")
             platform = ".Linux";
         }
     }
-    RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
+
+    var net6 = $"./source/SkiaSharpSource{platform}-net6.slnf";
+    var netfx = $"./source/SkiaSharpSource{platform}-netfx.slnf";
+    if (FileExists (net6) || FileExists (netfx)) {
+        if (FileExists (net6))
+            RunMSBuild (net6, properties: new Dictionary<string, string> { { "BuildingForNet6", "true" } });
+        if (FileExists (netfx))
+            RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet6", "false" } });
+    } else {
+        RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
+    }
 
     // assemble the mdoc docs
     EnsureDirectoryExists ("./output/docs/mdoc/");
@@ -730,6 +739,7 @@ Task ("nuget-special")
     }
     if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
         specials[$"_NuGets"] = $"nugets";
+        specials[$"_NuGetsPreview"] = $"nugets";
     }
 
     foreach (var pair in specials) {

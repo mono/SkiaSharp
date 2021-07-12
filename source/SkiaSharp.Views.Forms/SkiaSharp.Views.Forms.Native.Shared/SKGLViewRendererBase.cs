@@ -102,11 +102,7 @@ namespace SkiaSharp.Views.Forms
 		}
 #endif
 
-#if __MAUI__ && __ANDROID__
-		protected override void OnElementChanged(Microsoft.Maui.Controls.Compatibility.Platform.Android.ElementChangedEventArgs<TFormsView> e)
-#else
 		protected override void OnElementChanged(ElementChangedEventArgs<TFormsView> e)
-#endif
 		{
 			if (e.OldElement != null)
 			{
