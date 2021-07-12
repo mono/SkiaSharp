@@ -44,10 +44,14 @@ Task ("docs-download-output")
     CleanDirectories ("./output");
 
     await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
+    await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         var version = GetVersion (id);
-        var name = $"{id}.{version}.nupkg";
+        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
+            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
+            : version;
+        var name = $"{id}.{localNugetVersion}.nupkg";
         CleanDirectories ($"./output/{id}");
         Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
     }
@@ -70,9 +74,10 @@ Task ("docs-api-diff")
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
-    // some libraries depend on SkiaSharp
+    // some parts of SkiaSharp depend on other parts
     comparer.SearchPaths.Add($"./output/SkiaSharp/nuget/lib/netstandard2.0");
-    comparer.SearchPaths.Add($"./output/SkiaSharp.Views.Maui.Core/nuget/lib/netstandard2.0");
+    foreach (var dir in GetDirectories($"./output/SkiaSharp.Views.Maui.Core/nuget/lib/*"))
+        comparer.SearchPaths.Add(dir.FullPath);
 
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE
