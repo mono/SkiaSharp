@@ -439,12 +439,7 @@ stages:
           requiredArtifacts:
             - package_windows
           preBuildSteps:
-            - pwsh: |
-                $p = "$env:BUILD_SOURCESDIRECTORY\output\nugets\api-diff"
-                New-Item -ItemType Directory -Force -Path $p | Out-Null
-                $uri = 'https://xamarin.azureedge.net/GTKforWindows/Windows/gtk-sharp-2.12.45.msi'
-                .\scripts\download-file.ps1 -Uri $uri -OutFile gtk-sharp.msi
-                msiexec /i gtk-sharp.msi /norestart /quiet /l* $p\gtk-sharp-install.log
+            - pwsh: .\scripts\install-gtk.ps1
               displayName: Install GTK# 2.12
           postBuildSteps:
             - task: PublishBuildArtifacts@1
