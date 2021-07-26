@@ -11,6 +11,6 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		public static void MapEnableTouchEvents(SKCanvasViewHandler handler, ISKCanvasView canvasView) { }
 
-		public static void OnInvalidateSurface(SKCanvasViewHandler handler, ISKCanvasView canvasView) { }
+		public static void OnInvalidateSurface(SKCanvasViewHandler handler, ISKCanvasView canvasView, object? args) { }
 	}
 }

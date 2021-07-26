@@ -21,7 +21,7 @@
     <BuildingForNet6 Condition="'$(BuildingForNet6)' == '' and $(IsWindows)">true</BuildingForNet6>
     <BuildingForNet6 Condition="'$(BuildingForNet6)' == ''">false</BuildingForNet6>
     <MDocDocumentationDirectory>$(MSBuildThisFileDirectory)..\docs\SkiaSharpAPI</MDocDocumentationDirectory>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -36,6 +36,11 @@
 
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DependsOnNETStandard>true</DependsOnNETStandard>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Workaround: https://github.com/dotnet/sdk/issues/19050 -->
+    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
   </PropertyGroup>
 
   <!-- workaround for conflict between WinUI and net6 https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1307712 -->
