@@ -306,6 +306,11 @@ async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
 
         Information($"Downloading '{currentId}' version '{currentVersion}'...");
 
+        if (currentId == "_nativeassets.maccatalyst") {
+            Warning($"Skipping '{currentId}' because we do not yet have this package working...");
+            return;
+        }
+
         var root = await comparer.ExtractCachedPackageAsync(currentId, currentVersion);
         var toolsDir = $"{root}/tools/";
         if (DirectoryExists(toolsDir)) {
