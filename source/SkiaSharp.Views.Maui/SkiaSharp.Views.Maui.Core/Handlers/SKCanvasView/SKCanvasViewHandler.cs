@@ -10,20 +10,21 @@ namespace SkiaSharp.Views.Maui.Handlers
 			{
 				[nameof(ISKCanvasView.EnableTouchEvents)] = MapEnableTouchEvents,
 				[nameof(ISKCanvasView.IgnorePixelScaling)] = MapIgnorePixelScaling,
+			};
 
-				Actions =
-				{
-					[nameof(ISKCanvasView.InvalidateSurface)] = OnInvalidateSurface,
-				}
+		public static CommandMapper<ISKCanvasView, SKCanvasViewHandler> SKCanvasViewCommandMapper =
+			new CommandMapper<ISKCanvasView, SKCanvasViewHandler>()
+			{
+				[nameof(ISKCanvasView.InvalidateSurface)] = OnInvalidateSurface,
 			};
 
 		public SKCanvasViewHandler()
-			: base(SKCanvasViewMapper)
+			: base(SKCanvasViewMapper, SKCanvasViewCommandMapper)
 		{
 		}
 
-		public SKCanvasViewHandler(PropertyMapper? mapper)
-			: base(mapper ?? SKCanvasViewMapper)
+		public SKCanvasViewHandler(PropertyMapper? mapper, CommandMapper? commands)
+			: base(mapper ?? SKCanvasViewMapper, commands ?? SKCanvasViewCommandMapper)
 		{
 		}
 	}
