@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETSTANDARD
+using System;
 using System.ComponentModel;
 
 #if __MAUI__
@@ -298,3 +299,4 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 }
+#endif

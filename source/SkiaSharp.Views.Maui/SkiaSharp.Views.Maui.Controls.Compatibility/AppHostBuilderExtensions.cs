@@ -10,6 +10,7 @@ namespace SkiaSharp.Views.Maui.Controls.Compatibility
 			builder
 				.ConfigureMauiHandlers(handlers =>
 				{
+#if !NETSTANDARD
 					handlers.AddCompatibilityRenderer(typeof(SKCanvasView), typeof(SKCanvasViewRenderer));
 #if !WINDOWS
 					handlers.AddCompatibilityRenderer(typeof(SKGLView), typeof(SKGLViewRenderer));
@@ -19,6 +20,7 @@ namespace SkiaSharp.Views.Maui.Controls.Compatibility
 					CompatRegistrar.Registered.Register(typeof(SKBitmapImageSource), typeof(SKImageSourceHandler));
 					CompatRegistrar.Registered.Register(typeof(SKPixmapImageSource), typeof(SKImageSourceHandler));
 					CompatRegistrar.Registered.Register(typeof(SKPictureImageSource), typeof(SKImageSourceHandler));
+#endif
 				});
 	}
 }
