@@ -137,7 +137,7 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
     // try find any cross-platform frameworks
     foreach (var dir in platformDirs) {
         var d = dir.GetDirectoryName().ToLower();
-        if (d.StartsWith("netstandard") || d.StartsWith("portable")) {
+        if (d.StartsWith("netstandard") || d.StartsWith("portable") || d.Equals("net6.0")) {
             // we just want this single platform
             yield return (dir, null);
             yield break;
