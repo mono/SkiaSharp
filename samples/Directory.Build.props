@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <!-- Workaround: Use a slightly newer compiler for C# 9 support for the workaround above -->
-  <ItemGroup Condition="'$(MSBuildVersion)' != '' AND '$(MSBuildVersion)' &lt; '16.7.0'  ">
+  <ItemGroup Condition=" '$(MSBuildVersion)' != '' AND '$(MSBuildVersion)' &lt; '16.7.0' AND '$(LangVersion)' != '' AND '$(LangVersion)' &gt; '8.0' ">
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.9.0" PrivateAssets="all" />
   </ItemGroup>
 
