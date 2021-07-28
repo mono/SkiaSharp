@@ -1,4 +1,4 @@
-﻿#if !__GTK__ && !WINDOWS
+﻿#if !__GTK__ && !WINDOWS && !NETSTANDARD
 using System;
 using System.ComponentModel;
 

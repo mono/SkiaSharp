@@ -31,7 +31,7 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		// Mapper actions / properties
 
-		public static void OnInvalidateSurface(SKCanvasViewHandler handler, ISKCanvasView canvasView)
+		public static void OnInvalidateSurface(SKCanvasViewHandler handler, ISKCanvasView canvasView, object? args)
 		{
 			handler.NativeView?.Invalidate();
 		}
