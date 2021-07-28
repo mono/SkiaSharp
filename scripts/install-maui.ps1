@@ -1,6 +1,5 @@
 Param(
-    [string] $InstallDir,
-    [string] $Manifest
+    [string] $InstallDir
 )
 
 $ErrorActionPreference = 'Stop'
@@ -12,7 +11,7 @@ Write-Host "Installing maui-check..."
 
 Write-Host "Installing Maui..."
 & maui-check `
-  $Manifest `
+  --main `
   --verbose --ci --fix --non-interactive `
   --skip androidsdk `
   --skip xcode `
