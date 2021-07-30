@@ -22,7 +22,7 @@ namespace SkiaSharp.Views.Maui.Controls
 
 			void OnSurfaceInvalidated(object? sender, EventArgs e)
 			{
-				Handler?.UpdateValue(nameof(ISKCanvasView.InvalidateSurface));
+				Handler?.Invoke(nameof(ISKCanvasView.InvalidateSurface));
 			}
 		}
 
