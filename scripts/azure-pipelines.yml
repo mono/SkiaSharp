@@ -423,437 +423,437 @@ stages:
                 artifactName: nuget
                 pathToPublish: 'SignList.xml'
 
-  - stage: api_diff
-    displayName: API Diff
-    dependsOn: package
-    jobs:
-      - template: azure-templates-bootstrapper.yml # API Diff
-        parameters:
-          name: api_diff_windows
-          displayName: API Diff
-          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
-          target: docs-api-diff
-          additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
-          installWindowsSdk: false
-          installPreviewVs: false
-          shouldPublish: false
-          requiredArtifacts:
-            - package_windows
-          preBuildSteps:
-            - pwsh: |
-                $p = "$env:BUILD_SOURCESDIRECTORY\output\nugets\api-diff"
-                New-Item -ItemType Directory -Force -Path $p | Out-Null
-                $uri = 'https://xamarin.azureedge.net/GTKforWindows/Windows/gtk-sharp-2.12.45.msi'
-                .\scripts\download-file.ps1 -Uri $uri -OutFile gtk-sharp.msi
-                msiexec /i gtk-sharp.msi /norestart /quiet /l* $p\gtk-sharp-install.log
-              displayName: Install GTK# 2.12
-          postBuildSteps:
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the API diffs
-              condition: always()
-              inputs:
-                artifactName: api-diff
-                pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
+  # - stage: api_diff
+  #   displayName: API Diff
+  #   dependsOn: package
+  #   jobs:
+  #     - template: azure-templates-bootstrapper.yml # API Diff
+  #       parameters:
+  #         name: api_diff_windows
+  #         displayName: API Diff
+  #         vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
+  #         target: docs-api-diff
+  #         additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
+  #         installWindowsSdk: false
+  #         installPreviewVs: false
+  #         shouldPublish: false
+  #         requiredArtifacts:
+  #           - package_windows
+  #         preBuildSteps:
+  #           - pwsh: |
+  #               $p = "$env:BUILD_SOURCESDIRECTORY\output\nugets\api-diff"
+  #               New-Item -ItemType Directory -Force -Path $p | Out-Null
+  #               $uri = 'https://xamarin.azureedge.net/GTKforWindows/Windows/gtk-sharp-2.12.45.msi'
+  #               .\scripts\download-file.ps1 -Uri $uri -OutFile gtk-sharp.msi
+  #               msiexec /i gtk-sharp.msi /norestart /quiet /l* $p\gtk-sharp-install.log
+  #             displayName: Install GTK# 2.12
+  #         postBuildSteps:
+  #           - task: PublishBuildArtifacts@1
+  #             displayName: Publish the API diffs
+  #             condition: always()
+  #             inputs:
+  #               artifactName: api-diff
+  #               pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
 
-  - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-    - stage: signing
-      displayName: Sign NuGets
-      dependsOn: package
-      condition: eq(variables['System.TeamProject'], 'devdiv')
-      jobs:
-        - template: sign-artifacts/jobs/v2.yml@xamarin-templates
+  # - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+  #   - stage: signing
+  #     displayName: Sign NuGets
+  #     dependsOn: package
+  #     condition: eq(variables['System.TeamProject'], 'devdiv')
+  #     jobs:
+  #       - template: sign-artifacts/jobs/v2.yml@xamarin-templates
 
-  - stage: tests
-    displayName: Tests
-    dependsOn:
-      - native_windows
-      - native_macos
-      - native_linux
-      - native_wasm
-    jobs:
-      - template: azure-templates-bootstrapper.yml # Tests|netfx (Windows)
-        parameters:
-          name: tests_netfx_windows
-          displayName: Windows (.NET Framework)
-          vmImage: $(VM_IMAGE_WINDOWS)
-          target: tests-netfx
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-          installWindowsSdk: false
-          shouldPublish: false
-          requiredArtifacts:
-            - native_win32_x86_windows
-            - native_win32_x64_windows
-          postBuildSteps:
-            - task: PublishTestResults@2
-              displayName: Publish the .NET Framework test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
-                testRunTitle: 'Windows .NET Framework Tests'
-      - template: azure-templates-bootstrapper.yml # Tests|netcore (Windows)
-        parameters:
-          name: tests_netcore_windows
-          displayName: Windows (.NET Core)
-          vmImage: $(VM_IMAGE_WINDOWS)
-          target: tests-netcore
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-          installWindowsSdk: false
-          shouldPublish: false
-          requiredArtifacts:
-            - native_win32_x86_windows
-            - native_win32_x64_windows
-          tools:
-            - dotnet-reportgenerator-globaltool
-          postBuildSteps:
-            - task: PublishTestResults@2
-              displayName: Publish the .NET Core test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
-                testRunTitle: 'Windows .NET Core Tests'
-            - task: PublishBuildArtifacts@1
-              displayName: 'Publish the code coverage results'
-              inputs:
-                artifactName: coverage_netcore_windows
-                pathToPublish: 'output/coverage'
-      - template: azure-templates-bootstrapper.yml # Tests|netfx (macOS)
-        parameters:
-          name: tests_netfx_macos
-          displayName: macOS (.NET Framework)
-          vmImage: $(VM_IMAGE_MAC)
-          target: tests-netfx
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-          shouldPublish: false
-          requiredArtifacts:
-            - native_macos_macos
-          postBuildSteps:
-            - task: PublishTestResults@2
-              displayName: Publish the Mono test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
-                testRunTitle: 'macOS Mono Tests'
-      - template: azure-templates-bootstrapper.yml # Tests|netcore (macOS)
-        parameters:
-          name: tests_netcore_macos
-          displayName: macOS (.NET Core)
-          vmImage: $(VM_IMAGE_MAC)
-          target: tests-netcore
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-          shouldPublish: false
-          requiredArtifacts:
-            - native_macos_macos
-          tools:
-            - dotnet-reportgenerator-globaltool
-          postBuildSteps:
-            - task: PublishTestResults@2
-              displayName: Publish the .NET Core test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
-                testRunTitle: 'macOS .NET Core Tests'
-            - task: PublishBuildArtifacts@1
-              displayName: 'Publish the code coverage results'
-              inputs:
-                artifactName: coverage_netcore_macos
-                pathToPublish: 'output/coverage'
-      - template: azure-templates-bootstrapper.yml # Tests|android (macOS)
-        parameters:
-          name: tests_android_macos
-          displayName: Android (macOS)
-          vmImage: $(VM_IMAGE_MAC)
-          target: tests-android
-          additionalArgs: --device=android-emulator-32_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-          shouldPublish: false
-          requiredArtifacts:
-            - native_android_x86_macos
-            - native_android_x64_macos
-            - native_android_arm_macos
-            - native_android_arm64_macos
-          preBuildSteps:
-            - pwsh: |
-                dotnet tool install Microsoft.DotNet.XHarness.CLI `
-                  --global `
-                  --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
-                  --version "$env:XHARNESS_VERSION"
-              displayName: Install the xharness .NET Core tool
-            - bash: |
-                sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"emulator\" \"system-images;android-30;google_apis_playstore;x86\""
-                echo "##vso[task.prependpath]$ANDROID_HOME/tools/bin"
-                echo "##vso[task.prependpath]$ANDROID_HOME/emulator"
-              displayName: Install the Android emulator
-          postBuildSteps:
-            - task: PublishTestResults@2
-              displayName: Publish the Android test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'output/testlogs/SkiaSharp.Android.Tests/**/TestResults.xml'
-                testRunTitle: 'Android Tests'
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the test logs
-              condition: always()
-              inputs:
-                artifactName: testlogs_android
-                pathToPublish: 'output/testlogs'
-      - template: azure-templates-bootstrapper.yml # Tests|ios (macOS)
-        parameters:
-          name: tests_ios_macos
-          displayName: iOS (macOS)
-          vmImage: $(VM_IMAGE_MAC)
-          target: tests-ios
-          additionalArgs: --device=ios-simulator-64 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-          shouldPublish: false
-          requiredArtifacts:
-            - native_ios_macos
-          preBuildSteps:
-            - template: azure-templates-provisioning-profiles.yml
-            - pwsh: |
-                dotnet tool install Microsoft.DotNet.XHarness.CLI `
-                  --global `
-                  --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
-                  --version "$env:XHARNESS_VERSION"
-              displayName: Install the xharness .NET Core tool
-          postBuildSteps:
-            - task: PublishTestResults@2
-              displayName: Publish the iOS test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'output/testlogs/SkiaSharp.iOS.Tests/**/TestResults.xml'
-                testRunTitle: 'iOS Tests'
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the test logs
-              condition: always()
-              inputs:
-                artifactName: testlogs_ios
-                pathToPublish: 'output/testlogs'
-      - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
-        parameters:
-          name: tests_netfx_linux
-          displayName: Linux (.NET Framework)
-          vmImage: $(VM_IMAGE_LINUX)
-          packages: $(MANAGED_LINUX_PACKAGES)
-          target: tests-netfx
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-          shouldPublish: false
-          requiredArtifacts:
-            - native_linux_x64_linux
-          postBuildSteps:
-            - task: PublishTestResults@2
-              displayName: Publish the Mono test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
-                testRunTitle: 'Linux Mono Tests'
-      - template: azure-templates-bootstrapper.yml # Tests|netcore (Linux)
-        parameters:
-          name: tests_netcore_linux
-          displayName: Linux (.NET Core)
-          vmImage: $(VM_IMAGE_LINUX)
-          packages: $(MANAGED_LINUX_PACKAGES)
-          target: tests-netcore
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-          shouldPublish: false
-          requiredArtifacts:
-            - native_linux_x64_linux
-          tools:
-            - dotnet-reportgenerator-globaltool
-          postBuildSteps:
-            - task: PublishTestResults@2
-              displayName: Publish the .NET Core test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
-                testRunTitle: 'Linux .NET Core Tests'
-            - task: PublishBuildArtifacts@1
-              displayName: 'Publish the code coverage results'
-              inputs:
-                artifactName: coverage_netcore_linux
-                pathToPublish: 'output/coverage'
-      - template: azure-templates-bootstrapper.yml # Tests [WASM] (Linux)
-        parameters:
-          name: tests_wasm_linux
-          displayName: WASM (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          packages: $(MANAGED_LINUX_PACKAGES) ninja-build
-          target: tests-wasm
-          additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
-          shouldPublish: false
-          requiredArtifacts:
-            - native_wasm_linux
-          installEmsdk: true
-          initScript: source ~/emsdk/emsdk_env.sh
-          postBuildSteps:
-            - task: PublishTestResults@2
-              displayName: Publish the WASM test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp*.Wasm.Tests/**/TestResults.xml'
-                testRunTitle: 'Linux WASM Tests'
-      # TODO: add tests for linux alpine
-      # TODO: add tests for linux no dependencies
-      # TODO: add tests for windows nano server
-      - job: coverage_reports                      # Coverage Reports
-        displayName: Coverage Reports
-        pool:
-          vmImage: $(VM_IMAGE_LINUX)
-        dependsOn:
-          - tests_netcore_windows
-          - tests_netcore_macos
-          - tests_netcore_linux
-        steps:
-          - checkout: self
-          - template: azure-templates-variables.yml
-          - task: DownloadBuildArtifacts@0
-            displayName: Download the coverage_netcore_windows artifact
-            inputs:
-              artifactName: coverage_netcore_windows
-              downloadPath: output
-          - task: DownloadBuildArtifacts@0
-            displayName: Download the coverage_netcore_macos artifact
-            inputs:
-              artifactName: coverage_netcore_macos
-              downloadPath: output
-          - task: DownloadBuildArtifacts@0
-            displayName: Download the coverage_netcore_linux artifact
-            inputs:
-              artifactName: coverage_netcore_linux
-              downloadPath: output
-          - task: PublishCodeCoverageResults@1
-            displayName: 'Publish the code coverage results'
-            inputs:
-              codeCoverageTool: Cobertura
-              summaryFileLocation: 'output/**/Cobertura.xml'
+  # - stage: tests
+  #   displayName: Tests
+  #   dependsOn:
+  #     - native_windows
+  #     - native_macos
+  #     - native_linux
+  #     - native_wasm
+  #   jobs:
+  #     - template: azure-templates-bootstrapper.yml # Tests|netfx (Windows)
+  #       parameters:
+  #         name: tests_netfx_windows
+  #         displayName: Windows (.NET Framework)
+  #         vmImage: $(VM_IMAGE_WINDOWS)
+  #         target: tests-netfx
+  #         additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+  #         installWindowsSdk: false
+  #         shouldPublish: false
+  #         requiredArtifacts:
+  #           - native_win32_x86_windows
+  #           - native_win32_x64_windows
+  #         postBuildSteps:
+  #           - task: PublishTestResults@2
+  #             displayName: Publish the .NET Framework test results
+  #             condition: always()
+  #             inputs:
+  #               testResultsFormat: xUnit
+  #               testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
+  #               testRunTitle: 'Windows .NET Framework Tests'
+  #     - template: azure-templates-bootstrapper.yml # Tests|netcore (Windows)
+  #       parameters:
+  #         name: tests_netcore_windows
+  #         displayName: Windows (.NET Core)
+  #         vmImage: $(VM_IMAGE_WINDOWS)
+  #         target: tests-netcore
+  #         additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+  #         installWindowsSdk: false
+  #         shouldPublish: false
+  #         requiredArtifacts:
+  #           - native_win32_x86_windows
+  #           - native_win32_x64_windows
+  #         tools:
+  #           - dotnet-reportgenerator-globaltool
+  #         postBuildSteps:
+  #           - task: PublishTestResults@2
+  #             displayName: Publish the .NET Core test results
+  #             condition: always()
+  #             inputs:
+  #               testResultsFormat: xUnit
+  #               testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
+  #               testRunTitle: 'Windows .NET Core Tests'
+  #           - task: PublishBuildArtifacts@1
+  #             displayName: 'Publish the code coverage results'
+  #             inputs:
+  #               artifactName: coverage_netcore_windows
+  #               pathToPublish: 'output/coverage'
+  #     - template: azure-templates-bootstrapper.yml # Tests|netfx (macOS)
+  #       parameters:
+  #         name: tests_netfx_macos
+  #         displayName: macOS (.NET Framework)
+  #         vmImage: $(VM_IMAGE_MAC)
+  #         target: tests-netfx
+  #         additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+  #         shouldPublish: false
+  #         requiredArtifacts:
+  #           - native_macos_macos
+  #         postBuildSteps:
+  #           - task: PublishTestResults@2
+  #             displayName: Publish the Mono test results
+  #             condition: always()
+  #             inputs:
+  #               testResultsFormat: xUnit
+  #               testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
+  #               testRunTitle: 'macOS Mono Tests'
+  #     - template: azure-templates-bootstrapper.yml # Tests|netcore (macOS)
+  #       parameters:
+  #         name: tests_netcore_macos
+  #         displayName: macOS (.NET Core)
+  #         vmImage: $(VM_IMAGE_MAC)
+  #         target: tests-netcore
+  #         additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+  #         shouldPublish: false
+  #         requiredArtifacts:
+  #           - native_macos_macos
+  #         tools:
+  #           - dotnet-reportgenerator-globaltool
+  #         postBuildSteps:
+  #           - task: PublishTestResults@2
+  #             displayName: Publish the .NET Core test results
+  #             condition: always()
+  #             inputs:
+  #               testResultsFormat: xUnit
+  #               testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
+  #               testRunTitle: 'macOS .NET Core Tests'
+  #           - task: PublishBuildArtifacts@1
+  #             displayName: 'Publish the code coverage results'
+  #             inputs:
+  #               artifactName: coverage_netcore_macos
+  #               pathToPublish: 'output/coverage'
+  #     - template: azure-templates-bootstrapper.yml # Tests|android (macOS)
+  #       parameters:
+  #         name: tests_android_macos
+  #         displayName: Android (macOS)
+  #         vmImage: $(VM_IMAGE_MAC)
+  #         target: tests-android
+  #         additionalArgs: --device=android-emulator-32_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+  #         shouldPublish: false
+  #         requiredArtifacts:
+  #           - native_android_x86_macos
+  #           - native_android_x64_macos
+  #           - native_android_arm_macos
+  #           - native_android_arm64_macos
+  #         preBuildSteps:
+  #           - pwsh: |
+  #               dotnet tool install Microsoft.DotNet.XHarness.CLI `
+  #                 --global `
+  #                 --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
+  #                 --version "$env:XHARNESS_VERSION"
+  #             displayName: Install the xharness .NET Core tool
+  #           - bash: |
+  #               sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"emulator\" \"system-images;android-30;google_apis_playstore;x86\""
+  #               echo "##vso[task.prependpath]$ANDROID_HOME/tools/bin"
+  #               echo "##vso[task.prependpath]$ANDROID_HOME/emulator"
+  #             displayName: Install the Android emulator
+  #         postBuildSteps:
+  #           - task: PublishTestResults@2
+  #             displayName: Publish the Android test results
+  #             condition: always()
+  #             inputs:
+  #               testResultsFormat: xUnit
+  #               testResultsFiles: 'output/testlogs/SkiaSharp.Android.Tests/**/TestResults.xml'
+  #               testRunTitle: 'Android Tests'
+  #           - task: PublishBuildArtifacts@1
+  #             displayName: Publish the test logs
+  #             condition: always()
+  #             inputs:
+  #               artifactName: testlogs_android
+  #               pathToPublish: 'output/testlogs'
+  #     - template: azure-templates-bootstrapper.yml # Tests|ios (macOS)
+  #       parameters:
+  #         name: tests_ios_macos
+  #         displayName: iOS (macOS)
+  #         vmImage: $(VM_IMAGE_MAC)
+  #         target: tests-ios
+  #         additionalArgs: --device=ios-simulator-64 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+  #         shouldPublish: false
+  #         requiredArtifacts:
+  #           - native_ios_macos
+  #         preBuildSteps:
+  #           - template: azure-templates-provisioning-profiles.yml
+  #           - pwsh: |
+  #               dotnet tool install Microsoft.DotNet.XHarness.CLI `
+  #                 --global `
+  #                 --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
+  #                 --version "$env:XHARNESS_VERSION"
+  #             displayName: Install the xharness .NET Core tool
+  #         postBuildSteps:
+  #           - task: PublishTestResults@2
+  #             displayName: Publish the iOS test results
+  #             condition: always()
+  #             inputs:
+  #               testResultsFormat: xUnit
+  #               testResultsFiles: 'output/testlogs/SkiaSharp.iOS.Tests/**/TestResults.xml'
+  #               testRunTitle: 'iOS Tests'
+  #           - task: PublishBuildArtifacts@1
+  #             displayName: Publish the test logs
+  #             condition: always()
+  #             inputs:
+  #               artifactName: testlogs_ios
+  #               pathToPublish: 'output/testlogs'
+  #     - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
+  #       parameters:
+  #         name: tests_netfx_linux
+  #         displayName: Linux (.NET Framework)
+  #         vmImage: $(VM_IMAGE_LINUX)
+  #         packages: $(MANAGED_LINUX_PACKAGES)
+  #         target: tests-netfx
+  #         additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+  #         shouldPublish: false
+  #         requiredArtifacts:
+  #           - native_linux_x64_linux
+  #         postBuildSteps:
+  #           - task: PublishTestResults@2
+  #             displayName: Publish the Mono test results
+  #             condition: always()
+  #             inputs:
+  #               testResultsFormat: xUnit
+  #               testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
+  #               testRunTitle: 'Linux Mono Tests'
+  #     - template: azure-templates-bootstrapper.yml # Tests|netcore (Linux)
+  #       parameters:
+  #         name: tests_netcore_linux
+  #         displayName: Linux (.NET Core)
+  #         vmImage: $(VM_IMAGE_LINUX)
+  #         packages: $(MANAGED_LINUX_PACKAGES)
+  #         target: tests-netcore
+  #         additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+  #         shouldPublish: false
+  #         requiredArtifacts:
+  #           - native_linux_x64_linux
+  #         tools:
+  #           - dotnet-reportgenerator-globaltool
+  #         postBuildSteps:
+  #           - task: PublishTestResults@2
+  #             displayName: Publish the .NET Core test results
+  #             condition: always()
+  #             inputs:
+  #               testResultsFormat: xUnit
+  #               testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
+  #               testRunTitle: 'Linux .NET Core Tests'
+  #           - task: PublishBuildArtifacts@1
+  #             displayName: 'Publish the code coverage results'
+  #             inputs:
+  #               artifactName: coverage_netcore_linux
+  #               pathToPublish: 'output/coverage'
+  #     - template: azure-templates-bootstrapper.yml # Tests [WASM] (Linux)
+  #       parameters:
+  #         name: tests_wasm_linux
+  #         displayName: WASM (Linux)
+  #         vmImage: $(VM_IMAGE_LINUX)
+  #         packages: $(MANAGED_LINUX_PACKAGES) ninja-build
+  #         target: tests-wasm
+  #         additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
+  #         shouldPublish: false
+  #         requiredArtifacts:
+  #           - native_wasm_linux
+  #         installEmsdk: true
+  #         initScript: source ~/emsdk/emsdk_env.sh
+  #         postBuildSteps:
+  #           - task: PublishTestResults@2
+  #             displayName: Publish the WASM test results
+  #             condition: always()
+  #             inputs:
+  #               testResultsFormat: xUnit
+  #               testResultsFiles: 'tests/SkiaSharp*.Wasm.Tests/**/TestResults.xml'
+  #               testRunTitle: 'Linux WASM Tests'
+  #     # TODO: add tests for linux alpine
+  #     # TODO: add tests for linux no dependencies
+  #     # TODO: add tests for windows nano server
+  #     - job: coverage_reports                      # Coverage Reports
+  #       displayName: Coverage Reports
+  #       pool:
+  #         vmImage: $(VM_IMAGE_LINUX)
+  #       dependsOn:
+  #         - tests_netcore_windows
+  #         - tests_netcore_macos
+  #         - tests_netcore_linux
+  #       steps:
+  #         - checkout: self
+  #         - template: azure-templates-variables.yml
+  #         - task: DownloadBuildArtifacts@0
+  #           displayName: Download the coverage_netcore_windows artifact
+  #           inputs:
+  #             artifactName: coverage_netcore_windows
+  #             downloadPath: output
+  #         - task: DownloadBuildArtifacts@0
+  #           displayName: Download the coverage_netcore_macos artifact
+  #           inputs:
+  #             artifactName: coverage_netcore_macos
+  #             downloadPath: output
+  #         - task: DownloadBuildArtifacts@0
+  #           displayName: Download the coverage_netcore_linux artifact
+  #           inputs:
+  #             artifactName: coverage_netcore_linux
+  #             downloadPath: output
+  #         - task: PublishCodeCoverageResults@1
+  #           displayName: 'Publish the code coverage results'
+  #           inputs:
+  #             codeCoverageTool: Cobertura
+  #             summaryFileLocation: 'output/**/Cobertura.xml'
 
-  - stage: samples
-    displayName: Samples
-    dependsOn: package
-    jobs:
-      - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
-        parameters:
-          name: samples_windows
-          displayName: Windows
-          vmImage: $(VM_IMAGE_WINDOWS)
-          target: samples
-          installWindowsSdk: false
-          requiredArtifacts:
-            - nuget
-          preBuildSteps:
-            - pwsh: |
-                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
-                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
-              displayName: Copy the *.nupkgs into the correct folder for the samples
-      - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
-        parameters:
-          name: samples_macos
-          displayName: macOS
-          vmImage: $(VM_IMAGE_MAC)
-          target: samples
-          requiredArtifacts:
-            - nuget
-          preBuildSteps:
-            - template: azure-templates-provisioning-profiles.yml
-            - pwsh: |
-                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
-                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
-              displayName: Copy the *.nupkgs into the correct folder for the samples
-      - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
-        parameters:
-          name: samples_linux
-          displayName: Linux
-          vmImage: $(VM_IMAGE_LINUX)
-          packages: $(MANAGED_LINUX_PACKAGES)
-          target: samples
-          requiredArtifacts:
-            - nuget
-          installEmsdk: true
-          initScript: source ~/emsdk/emsdk_env.sh
-          preBuildSteps:
-            - pwsh: |
-                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
-                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
-              displayName: Copy the *.nupkgs into the correct folder for the samples
+  # - stage: samples
+  #   displayName: Samples
+  #   dependsOn: package
+  #   jobs:
+  #     - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
+  #       parameters:
+  #         name: samples_windows
+  #         displayName: Windows
+  #         vmImage: $(VM_IMAGE_WINDOWS)
+  #         target: samples
+  #         installWindowsSdk: false
+  #         requiredArtifacts:
+  #           - nuget
+  #         preBuildSteps:
+  #           - pwsh: |
+  #               New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+  #               Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+  #             displayName: Copy the *.nupkgs into the correct folder for the samples
+  #     - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
+  #       parameters:
+  #         name: samples_macos
+  #         displayName: macOS
+  #         vmImage: $(VM_IMAGE_MAC)
+  #         target: samples
+  #         requiredArtifacts:
+  #           - nuget
+  #         preBuildSteps:
+  #           - template: azure-templates-provisioning-profiles.yml
+  #           - pwsh: |
+  #               New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+  #               Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+  #             displayName: Copy the *.nupkgs into the correct folder for the samples
+  #     - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
+  #       parameters:
+  #         name: samples_linux
+  #         displayName: Linux
+  #         vmImage: $(VM_IMAGE_LINUX)
+  #         packages: $(MANAGED_LINUX_PACKAGES)
+  #         target: samples
+  #         requiredArtifacts:
+  #           - nuget
+  #         installEmsdk: true
+  #         initScript: source ~/emsdk/emsdk_env.sh
+  #         preBuildSteps:
+  #           - pwsh: |
+  #               New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+  #               Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+  #             displayName: Copy the *.nupkgs into the correct folder for the samples
 
-  - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-    - stage: checks
-      displayName: Run Code Checks
-      dependsOn: prepare
-      jobs:
-        - template: azure-templates-bootstrapper.yml # Run Code Checks
-          parameters:
-            name: native_checks_windows
-            displayName: Run Code Checks
-            condition: and(always(), eq('refs/heads/main', variables['Build.SourceBranch']))
-            vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
-            target: git-sync-deps
-            installWindowsSdk: false
-            installDotNet: false
-            shouldPublish: false
-            postBuildSteps:
-              - task: CredScan@2
-                displayName: Analyze source for credentials
-                condition: always()
-                inputs:
-                  toolMajorVersion: 'V2'
-              - task: PoliCheck@1
-                displayName: Run PoliCheck
-                condition: always()
-                inputs:
-                  inputType: 'Basic'
-                  targetType: 'F'
-              - task: SdtReport@1
-                displayName: Create security analysis report
-                condition: always()
-                inputs:
-                  AllTools: false
-                  APIScan: false
-                  BinSkim: false
-                  CodesignValidation: false
-                  CredScan: true
-                  FortifySCA: false
-                  FxCop: false
-                  ModernCop: false
-                  MSRD: false
-                  PoliCheck: true
-                  RoslynAnalyzers: false
-                  SDLNativeRules: false
-                  Semmle: false
-                  TSLint: false
-                  ToolLogsNotFoundAction: 'Standard'
-              - task: PublishSecurityAnalysisLogs@3
-                displayName: Publish security analysis logs
-                condition: always()
-              - task: TSAUpload@1
-                displayName: Publish TSA logs
-                condition: always()
-                continueOnError: true
-                inputs:
-                  tsaVersion: 'TsaV2'
-                  codebase: 'NewOrUpdate'
-                  tsaEnvironment: 'PROD'
-                  codeBaseName: 'SkiaSharp_main'
-                  notificationAlias: 'xamacomd@microsoft.com'
-                  notifyAlwaysV2: false
-                  instanceUrlForTsaV2: 'DEVDIV'
-                  projectNameDEVDIV: 'DevDiv'
-                  areaPath: 'DevDiv\Xamarin SDK\SkiaSharp'
-                  iterationPath: 'DevDiv\OneVS'
-                  uploadAPIScan: false
-                  uploadBinSkim: false
-                  uploadCredScan: true
-                  uploadFortifySCA: false
-                  uploadFxCop: false
-                  uploadModernCop: false
-                  uploadPoliCheck: true
-                  uploadPREfast: false
-                  uploadRoslyn: false
-                  uploadTSLint: false
-                  uploadAsync: true
+  # - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+  #   - stage: checks
+  #     displayName: Run Code Checks
+  #     dependsOn: prepare
+  #     jobs:
+  #       - template: azure-templates-bootstrapper.yml # Run Code Checks
+  #         parameters:
+  #           name: native_checks_windows
+  #           displayName: Run Code Checks
+  #           condition: and(always(), eq('refs/heads/main', variables['Build.SourceBranch']))
+  #           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
+  #           target: git-sync-deps
+  #           installWindowsSdk: false
+  #           installDotNet: false
+  #           shouldPublish: false
+  #           postBuildSteps:
+  #             - task: CredScan@2
+  #               displayName: Analyze source for credentials
+  #               condition: always()
+  #               inputs:
+  #                 toolMajorVersion: 'V2'
+  #             - task: PoliCheck@1
+  #               displayName: Run PoliCheck
+  #               condition: always()
+  #               inputs:
+  #                 inputType: 'Basic'
+  #                 targetType: 'F'
+  #             - task: SdtReport@1
+  #               displayName: Create security analysis report
+  #               condition: always()
+  #               inputs:
+  #                 AllTools: false
+  #                 APIScan: false
+  #                 BinSkim: false
+  #                 CodesignValidation: false
+  #                 CredScan: true
+  #                 FortifySCA: false
+  #                 FxCop: false
+  #                 ModernCop: false
+  #                 MSRD: false
+  #                 PoliCheck: true
+  #                 RoslynAnalyzers: false
+  #                 SDLNativeRules: false
+  #                 Semmle: false
+  #                 TSLint: false
+  #                 ToolLogsNotFoundAction: 'Standard'
+  #             - task: PublishSecurityAnalysisLogs@3
+  #               displayName: Publish security analysis logs
+  #               condition: always()
+  #             - task: TSAUpload@1
+  #               displayName: Publish TSA logs
+  #               condition: always()
+  #               continueOnError: true
+  #               inputs:
+  #                 tsaVersion: 'TsaV2'
+  #                 codebase: 'NewOrUpdate'
+  #                 tsaEnvironment: 'PROD'
+  #                 codeBaseName: 'SkiaSharp_main'
+  #                 notificationAlias: 'xamacomd@microsoft.com'
+  #                 notifyAlwaysV2: false
+  #                 instanceUrlForTsaV2: 'DEVDIV'
+  #                 projectNameDEVDIV: 'DevDiv'
+  #                 areaPath: 'DevDiv\Xamarin SDK\SkiaSharp'
+  #                 iterationPath: 'DevDiv\OneVS'
+  #                 uploadAPIScan: false
+  #                 uploadBinSkim: false
+  #                 uploadCredScan: true
+  #                 uploadFortifySCA: false
+  #                 uploadFxCop: false
+  #                 uploadModernCop: false
+  #                 uploadPoliCheck: true
+  #                 uploadPREfast: false
+  #                 uploadRoslyn: false
+  #                 uploadTSLint: false
+  #                 uploadAsync: true
