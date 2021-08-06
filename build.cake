@@ -66,6 +66,15 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.WebAssembly",            new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.Android",                new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.iOS",                    new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.MacCatalyst",            new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.macOS",                  new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.Tizen",                  new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.tvOS",                   new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.UWP",                    new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.watchOS",                new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.Win32",                  new Version (1, 57, 0) },
     { "SkiaSharp.Views",                               new Version (1, 57, 0) },
     { "SkiaSharp.Views.Desktop.Common",                new Version (1, 57, 0) },
     { "SkiaSharp.Views.Gtk2",                          new Version (1, 57, 0) },
@@ -379,8 +388,8 @@ Task ("samples-generate")
 {
     EnsureDirectoryExists ("./output/");
 
-    // create the workbooks archive
-    Zip ("./workbooks", "./output/workbooks.zip");
+    // create the interactive archive
+    Zip ("./interactive", "./output/interactive.zip");
 
     // create the samples archive
     CreateSamplesDirectory ("./samples/", "./output/samples/");
