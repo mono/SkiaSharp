@@ -108,6 +108,8 @@ void CreateFatVersionedFramework(DirectoryPath archives)
     RunLipo($"{archives}.framework/Versions/A/{libName}", binaries);
 
     StripSign($"{archives}.framework");
+
+    RunZip($"{archives}.framework");
 }
 
 void SafeCopy(DirectoryPath src, DirectoryPath dst)
@@ -115,4 +117,16 @@ void SafeCopy(DirectoryPath src, DirectoryPath dst)
     EnsureDirectoryExists(dst);
     DeleteDirectory(dst, new DeleteDirectorySettings { Recursive = true, Force = true });
     RunProcess("cp", $"-R {src} {dst}");
+}
+
+void RunZip(DirectoryPath src)
+{
+    var dir = src.Combine("..");
+    var dst = (FilePath)(src.FullPath + ".zip");
+    if (FileExists(dst))
+        DeleteFile(dst);
+    RunProcess("zip", new ProcessSettings {
+        Arguments = $"-yr {dst} {src.GetDirectoryName()}",
+        WorkingDirectory = dir.FullPath,
+    });
 }

@@ -60,32 +60,30 @@
     <None Include="..\..\output\native\android\armeabi-v7a\libSkiaSharp*" Link="nuget\runtimes\android-arm\native\%(Filename)%(Extension)" />
     <None Include="..\..\output\native\android\arm64-v8a\libSkiaSharp*" Link="nuget\runtimes\android-arm64\native\%(Filename)%(Extension)" />
     <None Include="nuget\build\android\SkiaSharp.targets" Link="nuget\build\net6.0-android\SkiaSharp.targets" />
-    <None Include="nuget\build\monoandroid\SkiaSharp.targets" Link="nuget\build\net6.0-android\SkiaSharp.Local.targets" />
+    <None Include="nuget\build\android\SkiaSharp.Local.targets" Link="nuget\build\net6.0-android\SkiaSharp.Local.targets" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-ios'))">
     <!-- iOS -->
     <None Include="..\..\output\native\ios\libSkiaSharp.framework\**" Link="nuget\runtimes\ios\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="nuget\build\ios\SkiaSharp.targets" Link="nuget\build\net6.0-ios\SkiaSharp.targets" />
-    <None Include="nuget\build\xamarinios\SkiaSharp.targets" Link="nuget\build\net6.0-ios\SkiaSharp.Local.targets" />
+    <None Include="nuget\build\ios\SkiaSharp.Local.targets" Link="nuget\build\net6.0-ios\SkiaSharp.Local.targets" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
     <!-- Mac Catalyst -->
-    <None Include="..\..\output\native\maccatalyst\libSkiaSharp.framework\**" Link="nuget\runtimes\maccatalyst\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="nuget\build\maccatalyst\SkiaSharp.targets" Link="nuget\build\net6.0-maccatalyst\SkiaSharp.targets" />
+    <None Include="nuget\build\maccatalyst\SkiaSharp.Local.targets" Link="nuget\build\net6.0-maccatalyst\SkiaSharp.Local.targets" />
+    <None Include="..\..\output\native\maccatalyst\libSkiaSharp*.framework.zip" Link="nuget\runtimes\maccatalyst\native\%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
     <!-- tvOS -->
     <None Include="..\..\output\native\tvos\libSkiaSharp.framework\**" Link="nuget\runtimes\tvos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="nuget\build\tvos\SkiaSharp.targets" Link="nuget\build\net6.0-tvos\SkiaSharp.targets" />
-    <None Include="nuget\build\xamarintvos\SkiaSharp.targets" Link="nuget\build\net6.0-tvos\SkiaSharp.Local.targets" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-watchos'))">
-    <!-- watchOS -->
-    <None Include="..\..\output\native\watchos\libSkiaSharp.framework\**" Link="nuget\runtimes\watchos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="nuget\build\tvos\SkiaSharp.Local.targets" Link="nuget\build\net6.0-tvos\SkiaSharp.Local.targets" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
     <!-- macOS -->
     <None Include="nuget\build\macos\SkiaSharp.targets" Link="nuget\build\net6.0-macos\SkiaSharp.targets" />
-    <None Include="nuget\build\xamarinmac\SkiaSharp.targets" Link="nuget\build\net6.0-macos\SkiaSharp.Local.targets" />
+    <None Include="nuget\build\macos\SkiaSharp.Local.targets" Link="nuget\build\net6.0-macos\SkiaSharp.Local.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
