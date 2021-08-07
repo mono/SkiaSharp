@@ -39,6 +39,7 @@ jobs:
       condition: ${{ parameters.condition }}
       postBuildSteps: ${{ parameters.postBuildSteps }}
       buildExternals: ${{ parameters.buildExternals }}
+      artifactName: ${{ parameters.artifactName }}
 
 - ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
