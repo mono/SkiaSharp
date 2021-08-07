@@ -36,10 +36,10 @@ jobs:
         inputs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
-      - task: PublishBuildArtifacts@1
-        displayName: Publish the combined ${{ coalesce(parameters.artifactName, parameters.name) }} artifacts
-        condition: ne(parameters.artifactName, '')
-        inputs:
-          artifactName: ${{ coalesce(parameters.artifactName, parameters.name) }}
-          pathToPublish: 'output'
+      - ${{ if ne(parameters.artifactName, '') }}:
+        - task: PublishBuildArtifacts@1
+          displayName: Publish the combined ${{ parameters.artifactName }} artifacts
+          inputs:
+            artifactName: ${{ parameters.artifactName }}
+            pathToPublish: 'output'
       - ${{ parameters.postBuildSteps }}
