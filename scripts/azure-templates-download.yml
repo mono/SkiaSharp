@@ -5,6 +5,7 @@ parameters:
   condition: succeeded()                        # whether or not to run this template
   buildExternals: ''                            # the build number to download externals from
   postBuildSteps: []                            # any additional steps to run after the build
+  artifactName: ''                              # the name of the artifact to merge this run into
 
 jobs:
   - job: ${{ parameters.name }}
@@ -34,5 +35,11 @@ jobs:
         displayName: Publish the ${{ parameters.name }} artifacts
         inputs:
           artifactName: ${{ parameters.name }}
+          pathToPublish: 'output'
+      - task: PublishBuildArtifacts@1
+        displayName: Publish the combined ${{ coalesce(parameters.artifactName, parameters.name) }} artifacts
+        condition: ne(parameters.artifactName, '')
+        inputs:
+          artifactName: ${{ coalesce(parameters.artifactName, parameters.name) }}
           pathToPublish: 'output'
       - ${{ parameters.postBuildSteps }}

@@ -1,4 +1,5 @@
 parameters:
+  artifactName: ''                              # the name of the artifact to merge this run into
   emscripten: [ ]
 
 jobs:
@@ -12,9 +13,4 @@ jobs:
         target: externals-wasm
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version }}
         additionalArgs: --emscriptenVersion=${{ version }}
-        postBuildSteps:
-          - task: PublishBuildArtifacts@1
-            displayName: Publish the native_wasm_linux artifacts
-            inputs:
-              artifactName: native_wasm_linux
-              pathToPublish: 'output'
+        artifactName: ${{ parameters.artifactName }}
