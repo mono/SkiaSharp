@@ -14,7 +14,7 @@
                     '%(ResolvedFileToPublish.PathInPackage)' != ''">
                     <FrameworkFilename>$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName(%(ResolvedFileToPublish.PathInPackage)))))</FrameworkFilename>
                     <DirectoryName>$([System.IO.Path]::GetDirectoryName(%(ResolvedFileToPublish.FullPath)))</DirectoryName>
-                </_PossibleNativeFramework>
+            </_PossibleNativeFramework>
             <NativeReference Include="%(_PossibleNativeFramework.DirectoryName)" Condition="'%(FrameworkFilename)' == '%(Filename).framework'">
                 <Kind>Framework</Kind>
                 <NuGetPackageId>%(NuGetPackageId)</NuGetPackageId>

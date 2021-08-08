@@ -27,6 +27,7 @@ parameters:
   installDotNet: true                           # whether or not to install the dotnet SDK
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
+  artifactName: ''                              # the name of the artifact to merge this run into
 
 jobs:
 # - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
@@ -38,6 +39,7 @@ jobs:
 #       condition: ${{ parameters.condition }}
 #       postBuildSteps: ${{ parameters.postBuildSteps }}
 #       buildExternals: ${{ parameters.buildExternals }}
+#       artifactName: ${{ parameters.artifactName }}
 
 # - ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
@@ -216,6 +218,12 @@ jobs:
         inputs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
+      - ${{ if ne(parameters.artifactName, '') }}:
+        - task: PublishBuildArtifacts@1
+          displayName: Publish the combined ${{ parameters.artifactName }} artifacts
+          inputs:
+            artifactName: ${{ parameters.artifactName }}
+            pathToPublish: 'output'
       - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
         - task: ComponentGovernanceComponentDetection@0
           displayName: Run component detection

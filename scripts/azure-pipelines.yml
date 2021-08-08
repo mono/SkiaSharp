@@ -73,6 +73,7 @@ stages:
           target: externals-android
           additionalArgs: --buildarch=x86
           installWindowsSdk: false
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Win)
         parameters:
           name: native_android_x64_windows
@@ -81,6 +82,7 @@ stages:
           target: externals-android
           additionalArgs: --buildarch=x64
           installWindowsSdk: false
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Win)
         parameters:
           name: native_android_arm_windows
@@ -89,6 +91,7 @@ stages:
           target: externals-android
           additionalArgs: --buildarch=arm
           installWindowsSdk: false
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Win)
         parameters:
           name: native_android_arm64_windows
@@ -97,6 +100,7 @@ stages:
           target: externals-android
           additionalArgs: --buildarch=arm64
           installWindowsSdk: false
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Win)
         parameters:
           name: native_tizen_windows
@@ -104,6 +108,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
           installWindowsSdk: false
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Win)
         parameters:
           name: native_uwp_angle_x86_windows
@@ -111,6 +116,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Win)
         parameters:
           name: native_uwp_angle_x64_windows
@@ -118,6 +124,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Win)
         parameters:
           name: native_uwp_angle_arm_windows
@@ -125,6 +132,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Win)
         parameters:
           name: native_uwp_angle_arm64_windows
@@ -132,6 +140,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Win)
         parameters:
           name: native_uwp_x86_windows
@@ -139,6 +148,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
           additionalArgs: --buildarch=x86 --skipAngle=true
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Win)
         parameters:
           name: native_uwp_x64_windows
@@ -146,6 +156,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
           additionalArgs: --buildarch=x64 --skipAngle=true
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Win)
         parameters:
           name: native_uwp_arm_windows
@@ -153,6 +164,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
           additionalArgs: --buildarch=arm --skipAngle=true
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Win)
         parameters:
           name: native_uwp_arm64_windows
@@ -160,6 +172,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
           additionalArgs: --buildarch=arm64 --skipAngle=true
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Win)
         parameters:
           name: native_win32_x86_windows
@@ -167,6 +180,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
           additionalArgs: --buildarch=x86
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Win)
         parameters:
           name: native_win32_x64_windows
@@ -174,6 +188,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
           additionalArgs: --buildarch=x64
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Win)
         parameters:
           name: native_win32_arm64_windows
@@ -181,6 +196,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
           additionalArgs: --buildarch=arm64
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Win)
         parameters:
           name: native_win32_x64_nanoserver_windows
@@ -188,6 +204,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
+          artifactName: native
           tools:
             - nano-api-scan
 
@@ -229,30 +246,35 @@ stages:
           displayName: iOS
           vmImage: $(VM_IMAGE_MAC)
           target: externals-ios
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native Mac Catalyst (macOS)
         parameters:
           name: native_maccatalyst_macos
           displayName: Mac Catalyst
           vmImage: $(VM_IMAGE_MAC)
           target: externals-maccatalyst
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
         parameters:
           name: native_macos_macos
           displayName: macOS
           vmImage: $(VM_IMAGE_MAC)
           target: externals-macos
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
         parameters:
           name: native_tvos_macos
           displayName: tvOS
           vmImage: $(VM_IMAGE_MAC)
           target: externals-tvos
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
         parameters:
           name: native_watchos_macos
           displayName: watchOS
           vmImage: $(VM_IMAGE_MAC)
           target: externals-watchos
+          artifactName: native
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
         parameters:
           name: native_tizen_macos
@@ -267,6 +289,7 @@ stages:
     jobs:
       - template: azure-templates-linux-matrix.yml # Build Native Linux (Linux)
         parameters:
+          artifactName: native
           builds:
             - name: ''
             - name: nodeps
@@ -300,6 +323,7 @@ stages:
     jobs:
       - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
         parameters:
+          artifactName: native
           emscripten:
             - 2.0.5
             - 2.0.6
@@ -324,24 +348,8 @@ stages:
           target: libs
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
-            - native_android_x86_windows
-            - native_android_x64_windows
-            - native_android_arm_windows
-            - native_android_arm64_windows
-            - native_tizen_windows
-            - native_uwp_angle_x86_windows
-            - native_uwp_angle_x64_windows
-            - native_uwp_angle_arm_windows
-            - native_uwp_angle_arm64_windows
-            - native_uwp_x86_windows
-            - native_uwp_x64_windows
-            - native_uwp_arm_windows
-            - native_uwp_arm64_windows
-            - native_win32_x86_windows
-            - native_win32_x64_windows
-            - native_win32_arm64_windows
-            - native_win32_x64_nanoserver_windows
-            - native_wasm_linux
+            - native
+          artifactName: managed
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
@@ -350,18 +358,8 @@ stages:
           target: libs
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
-            - native_android_x86_macos
-            - native_android_x64_macos
-            - native_android_arm_macos
-            - native_android_arm64_macos
-            - native_ios_macos
-            - native_maccatalyst_macos
-            - native_macos_macos
-            # - native_tizen_macos
-            - native_tizen_windows
-            - native_tvos_macos
-            - native_watchos_macos
-            - native_wasm_linux
+            - native
+          artifactName: managed
       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
         parameters:
           name: managed_linux
@@ -371,17 +369,8 @@ stages:
           target: libs
           additionalArgs: --skipExternals="all"
           requiredArtifacts:
-            - native_linux_x64_linux
-            - native_linux_arm_linux
-            - native_linux_arm64_linux
-            - native_linux_x64_nodeps_linux
-            - native_linux_arm_nodeps_linux
-            - native_linux_arm64_nodeps_linux
-            - native_linux_x64_alpine_linux
-            - native_linux_x64_alpine_nodeps_linux
-            # - native_tizen_linux
-            - native_tizen_windows
-            - native_wasm_linux
+            - native
+          artifactName: managed
 
   - stage: package
     displayName: Package NuGets
@@ -396,17 +385,9 @@ stages:
           additionalArgs: --packall=true --skipbuild=true
           installWindowsSdk: false
           installDotNet: false
-          shouldPublish: true
           requiredArtifacts:
-            - managed_linux
-            - managed_macos
-            - managed_windows
+            - managed
           postBuildSteps:
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the native artifacts
-              inputs:
-                artifactName: native
-                pathToPublish: 'output/native'
             - task: PublishBuildArtifacts@1
               displayName: Publish the nuget artifacts
               inputs:

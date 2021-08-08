@@ -12,12 +12,14 @@ SkiaSharp provides cross-platform bindings for:
 
  - .NET Standard 1.3
  - .NET Core
+ - .NET 6
  - Tizen
- - Xamarin.Android
- - Xamarin.iOS
- - Xamarin.tvOS
- - Xamarin.watchOS
- - Xamarin.Mac
+ - Android
+ - iOS
+ - tvOS
+ - watchOS
+ - macOS
+ - Mac Catalyst
  - Windows Classic Desktop (Windows.Forms / WPF)
  - Windows UWP (Desktop / Mobile / Xbox / HoloLens)
  - Web Assembly (WASM)
