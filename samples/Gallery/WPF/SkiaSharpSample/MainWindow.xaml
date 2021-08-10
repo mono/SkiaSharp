@@ -3,8 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:views="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
-        xmlns:local="clr-namespace:SkiaSharpSample"
+        xmlns:wpf="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
         mc:Ignorable="d"
         Title="SkiaSharp for WPF" Height="350" Width="525" Icon="icon.ico">
     <DockPanel>
@@ -16,17 +15,9 @@
                 <MenuItem Header="Toggle Samples Slideshow" Click="OnToggleSlideshow" />
                 <Separator />
             </MenuItem>
-            <MenuItem Header="_Tools">
-                <MenuItem Header="Configure Backend">
-                    <MenuItem Header="Memory" Click="OnBackendChanged" Tag="Memory" />
-                    <MenuItem Header="OpenGL" Click="OnBackendChanged" Tag="OpenGL" />
-                    <MenuItem Header="Vulkan" Click="OnBackendChanged" Tag="Vulkan" />
-                </MenuItem>
-            </MenuItem>
         </Menu>
         <Grid>
-            <views:SKElement x:Name="canvas" PaintSurface="OnPaintCanvas" MouseLeftButtonUp="OnSampleClicked" />
-            <WindowsFormsHost x:Name="glhost" Initialized="OnGLControlHost" Visibility="Collapsed" />
+            <wpf:SKElement x:Name="canvas" PaintSurface="OnPaintCanvas" MouseLeftButtonUp="OnSampleClicked" />
         </Grid>
     </DockPanel>
 </Window>
