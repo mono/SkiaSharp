@@ -9,7 +9,7 @@ namespace HarfBuzzSharp.Tests
 	{
 		private const string SimpleText = "1234";
 
-		private const string SerializedSimpleText = "gid25=0+772|gid26=1+772|gid27=2+772|gid28=3+772";
+		private const string SerializedSimpleText = "[gid25=0+772|gid26=1+772|gid27=2+772|gid28=3+772]";
 
 		[SkippableFact]
 		public void ShouldHaveCorrectContentType()
