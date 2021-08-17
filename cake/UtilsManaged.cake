@@ -242,7 +242,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Xamarin.Forms", "Xamarin.Mac");
     await AddDep("Xamarin.Forms", "tizen40");
     await AddDep("Xamarin.Forms", "uap10.0.16299");
-    await AddDep("Xamarin.Forms.Platform.WPF", "net45");
+    await AddDep("Xamarin.Forms.Platform.WPF", "net461");
     await AddDep("Xamarin.Forms.Platform.GTK", "net45");
     await AddDep("GtkSharp", "netstandard2.0");
     await AddDep("GdkSharp", "netstandard2.0");
