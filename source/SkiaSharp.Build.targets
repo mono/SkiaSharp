@@ -128,14 +128,14 @@ internal partial class VersionConstants {
     Sign the assembly using sn.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
+  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
     <_SignAssemblyAfterTargets>
       CoreCompile
     </_SignAssemblyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssembly"
           AfterTargets="$(_SignAssemblyAfterTargets)"
-          Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
+          Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
@@ -146,14 +146,14 @@ internal partial class VersionConstants {
     Verify that the output assembly is signed correctly for release.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
+  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
     <_SignAssemblyVerifyAfterTargets>
       Build
     </_SignAssemblyVerifyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssemblyVerify"
           AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
-          Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and Exists('$(TargetPath)') ">
+          Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" />
   </Target>
 
