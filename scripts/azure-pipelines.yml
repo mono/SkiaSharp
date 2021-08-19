@@ -440,9 +440,13 @@ stages:
     - stage: signing
       displayName: Sign NuGets
       dependsOn: package
-      condition: eq(variables['System.TeamProject'], 'devdiv')
       jobs:
         - template: sign-artifacts/jobs/v2.yml@xamarin-templates
+          parameters:
+            ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/')) }}:
+              signType: 'Real'
+            ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))) }}:
+              signType: 'Test'
 
   - stage: tests
     displayName: Tests
@@ -772,7 +776,7 @@ stages:
           parameters:
             name: native_checks_windows
             displayName: Run Code Checks
-            condition: and(always(), eq('refs/heads/main', variables['Build.SourceBranch']))
+            condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))
             vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
             target: git-sync-deps
             installWindowsSdk: false
