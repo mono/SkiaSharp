@@ -52,7 +52,8 @@ var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABE
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
-var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? "");
+var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? ""). Replace ("refs/heads/", "");
+var GIT_URL = Argument ("gitUrl", EnvironmentVariable ("GIT_URL") ?? "");
 
 var PREVIEW_NUGET_SUFFIX = string.IsNullOrEmpty (BUILD_NUMBER)
     ? $"{PREVIEW_LABEL}"
@@ -106,6 +107,14 @@ Information("Arguments:");
 foreach (var arg in CAKE_ARGUMENTS) {
     Information($"    {arg.Key.PadRight(30)} {{0}}", arg.Value);
 }
+
+Information("Source Control:");
+Information($"    {"PREVIEW_LABEL".PadRight(30)} {{0}}", PREVIEW_LABEL);
+Information($"    {"FEATURE_NAME".PadRight(30)} {{0}}", FEATURE_NAME);
+Information($"    {"BUILD_NUMBER".PadRight(30)} {{0}}", BUILD_NUMBER);
+Information($"    {"GIT_SHA".PadRight(30)} {{0}}", GIT_SHA);
+Information($"    {"GIT_BRANCH_NAME".PadRight(30)} {{0}}", GIT_BRANCH_NAME);
+Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
 
 #load "cake/msbuild.cake"
 #load "cake/UtilsManaged.cake"
@@ -589,6 +598,27 @@ Task ("nuget-normal")
         var metadata = xdoc.Root.Element ("metadata");
         var id = metadata.Element ("id");
         var version = metadata.Element ("version");
+
+        // <version>
+        if (id != null && version != null) {
+            var v = GetVersion (id.Value);
+            if (!string.IsNullOrEmpty (v)) {
+                if (id.Value.StartsWith("SkiaSharp") || id.Value.StartsWith("HarfBuzzSharp"))
+                    v += suffix;
+                version.Value = v;
+            }
+        }
+
+        // <repository>
+        var repository = metadata.Element ("repository");
+        if (repository == null) {
+            repository = new XElement ("repository");
+            metadata.Add (repository);
+        }
+        repository.SetAttributeValue ("type", "git");
+        repository.SetAttributeValue ("url", GIT_URL);
+        repository.SetAttributeValue ("branch", GIT_BRANCH_NAME);
+        repository.SetAttributeValue ("commit", GIT_SHA);
 
         // <version>
         if (id != null && version != null) {

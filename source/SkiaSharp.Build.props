@@ -26,9 +26,12 @@
 
   <PropertyGroup>
     <DebugType>portable</DebugType>
-    <Deterministic>true</Deterministic>
     <DebugSymbols>true</DebugSymbols>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true' or '$(CI)' == 'true' ">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
