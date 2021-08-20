@@ -70,6 +70,13 @@
   </Target>
 
   <!--
+    Workaround for https://github.com/dotnet/sdk/issues/11105
+  -->
+  <ItemGroup>
+    <SourceRoot Include="$(NuGetPackageRoot)" Condition="'$(NuGetPackageRoot)' != ''" />
+  </ItemGroup>
+
+  <!--
     ===================================================================================================================
     _GenerateAssemblyVersionInfo
 
