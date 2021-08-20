@@ -14,7 +14,8 @@ variables:
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
-  GIT_BRANCH_NAME: $(Build.SourceBranchName)
+  GIT_BRANCH_NAME: $(Build.SourceBranch)
+  GIT_URL: $(Build.Repository.Uri)
   FEATURE_NAME: ''
   PREVIEW_LABEL: 'preview'
   BUILD_NUMBER: $[counter(format('_{0}_{1}_{2}__', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch'], variables['PREVIEW_LABEL']), 1)]
