@@ -125,8 +125,7 @@ jobs:
             - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
               displayName: Install Visual Studio Preview
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
-            # - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE"
-            - pwsh: .\scripts\install-maui.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE"
               displayName: Install the .NET Core workloads
           # display dotnet info
           - pwsh: dotnet --info
