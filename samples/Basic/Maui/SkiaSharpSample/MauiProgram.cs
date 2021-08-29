@@ -1,15 +1,16 @@
 ﻿using Microsoft.Maui;
 using Microsoft.Maui.Controls.Hosting;
-using Microsoft.Maui.Hosting;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace SkiaSharpSample
 {
-	public class Startup : IStartup
+	public static class MauiProgram
 	{
-		public void Configure(IAppHostBuilder appBuilder) =>
-			appBuilder
+		public static MauiApp CreateMauiApp() =>
+			MauiApp
+				.CreateBuilder()
 				.UseSkiaSharp(true)
-				.UseMauiApp<App>();
+				.UseMauiApp<App>()
+				.Build();
 	}
 }

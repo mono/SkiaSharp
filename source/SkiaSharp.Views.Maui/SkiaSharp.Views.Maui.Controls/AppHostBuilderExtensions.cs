@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Maui;
 using Microsoft.Maui.Hosting;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using SkiaSharp.Views.Maui.Handlers;
@@ -9,7 +10,7 @@ namespace SkiaSharp.Views.Maui.Controls
 	public static class AppHostBuilderExtensions
 	{
 		[Obsolete("Use SkiaSharp.Views.Maui.Controls.Hosting.UseSkiaSharp() instead.", true)]
-		public static IAppHostBuilder UseSkiaSharpHandlers(this IAppHostBuilder builder) => builder.UseSkiaSharp();
+		public static MauiAppBuilder UseSkiaSharpHandlers(this MauiAppBuilder builder) => builder.UseSkiaSharp();
 	}
 }
 
@@ -17,7 +18,7 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 {
 	public static class AppHostBuilderExtensions
 	{
-		public static IAppHostBuilder UseSkiaSharp(this IAppHostBuilder builder) =>
+		public static MauiAppBuilder UseSkiaSharp(this MauiAppBuilder builder) =>
 			builder
 				.ConfigureMauiHandlers(handlers =>
 				{
