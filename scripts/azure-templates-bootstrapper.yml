@@ -118,18 +118,22 @@ jobs:
               version: $(DOTNET_VERSION)
               performMultiLevelLookup: true
             displayName: Install the correct version of .NET Core
-          # install the bits needed for net6 builds
+          # install the bits needed for .NET 6 builds
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
           - ${{ if and(endsWith(parameters.name, '_windows'), eq(parameters.installPreviewVs, 'true')) }}:
             - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
               displayName: Install Visual Studio Preview
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
-            - pwsh: .\scripts\install-maui.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE"
               displayName: Install the .NET Core workloads
           # display dotnet info
           - pwsh: dotnet --info
             displayName: Display all the .NET information
+
+      # select the correct version of the JDK for .NET 6
+      - pwsh: echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
+        displayName: Select JDK 11
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
