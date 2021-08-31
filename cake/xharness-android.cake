@@ -26,7 +26,9 @@ var ANDROID_SDK_ROOT = Argument("android", EnvironmentVariable("ANDROID_SDK_ROOT
 if (string.IsNullOrEmpty(ANDROID_SDK_ROOT)) {
     throw new Exception("Environment variable 'ANDROID_SDK_ROOT' must be set to the Android SDK root.");
 }
+var versions = GetDirectories($"{ANDROID_SDK_ROOT}/cmdline-tools/*");
 System.Environment.SetEnvironmentVariable("PATH",
+    $"{versions.Last()}/bin" + System.IO.Path.PathSeparator +
     $"{ANDROID_SDK_ROOT}/tools/bin" + System.IO.Path.PathSeparator +
     $"{ANDROID_SDK_ROOT}/platform-tools" + System.IO.Path.PathSeparator +
     $"{ANDROID_SDK_ROOT}/emulator" + System.IO.Path.PathSeparator +
@@ -35,6 +37,7 @@ System.Environment.SetEnvironmentVariable("PATH",
 Information("Android SDK Root: {0}", ANDROID_SDK_ROOT);
 Information("Project File: {0}", PROJECT);
 Information("Build Configuration: {0}", CONFIGURATION);
+Information("PATH: {0}", PATH);
 
 var avdSettings = new AndroidAvdManagerToolSettings { SdkRoot = ANDROID_SDK_ROOT };
 var adbSettings = new AdbToolSettings { SdkRoot = ANDROID_SDK_ROOT };
