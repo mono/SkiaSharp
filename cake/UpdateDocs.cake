@@ -30,7 +30,7 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 
                 dllName += ".breaking";
             }
-            var changelogPath = (FilePath)$"./changelogs/{id}/{version}/{dllName}.md";
+            var changelogPath = (FilePath)$"./logs/changelogs/{id}/{version}/{dllName}.md";
             EnsureDirectoryExists (changelogPath.GetDirectory ());
             CopyFile (file, changelogPath);
         }

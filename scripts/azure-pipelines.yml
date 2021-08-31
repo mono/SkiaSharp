@@ -352,6 +352,9 @@ stages:
           requiredArtifacts:
             - native
           artifactName: managed
+          postBuildSteps:
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+              displayName: Remove the native folder
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
@@ -362,6 +365,9 @@ stages:
           requiredArtifacts:
             - native
           artifactName: managed
+          postBuildSteps:
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+              displayName: Remove the native folder
       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
         parameters:
           name: managed_linux
@@ -373,6 +379,9 @@ stages:
           requiredArtifacts:
             - native
           artifactName: managed
+          postBuildSteps:
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+              displayName: Remove the native folder
 
   - stage: package
     displayName: Package NuGets
@@ -579,14 +588,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/testlogs/SkiaSharp.Android.Tests/**/TestResults.xml'
+                testResultsFiles: 'output/logs/testlogs/SkiaSharp.Android.Tests/**/TestResults.xml'
                 testRunTitle: 'Android Tests'
             - task: PublishBuildArtifacts@1
               displayName: Publish the test logs
               condition: always()
               inputs:
                 artifactName: testlogs_android
-                pathToPublish: 'output/testlogs'
+                pathToPublish: 'output/logs/testlogs'
       - template: azure-templates-bootstrapper.yml # Tests|ios (macOS)
         parameters:
           name: tests_ios_macos
@@ -611,14 +620,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/testlogs/SkiaSharp.iOS.Tests/**/TestResults.xml'
+                testResultsFiles: 'output/logs/testlogs/SkiaSharp.iOS.Tests/**/TestResults.xml'
                 testRunTitle: 'iOS Tests'
             - task: PublishBuildArtifacts@1
               displayName: Publish the test logs
               condition: always()
               inputs:
                 artifactName: testlogs_ios
-                pathToPublish: 'output/testlogs'
+                pathToPublish: 'output/logs/testlogs'
       - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
         parameters:
           name: tests_netfx_linux
