@@ -26,12 +26,11 @@ var ANDROID_SDK_ROOT = Argument("android", EnvironmentVariable("ANDROID_SDK_ROOT
 if (string.IsNullOrEmpty(ANDROID_SDK_ROOT)) {
     throw new Exception("Environment variable 'ANDROID_SDK_ROOT' must be set to the Android SDK root.");
 }
-var versions = GetDirectories($"{ANDROID_SDK_ROOT}/cmdline-tools/*");
 System.Environment.SetEnvironmentVariable("PATH",
-    $"{versions.Last()}/bin" + System.IO.Path.PathSeparator +
-    $"{ANDROID_SDK_ROOT}/tools/bin" + System.IO.Path.PathSeparator +
+    $"{ANDROID_SDK_ROOT}/cmdline-tools/latest/bin" + System.IO.Path.PathSeparator +
     $"{ANDROID_SDK_ROOT}/platform-tools" + System.IO.Path.PathSeparator +
     $"{ANDROID_SDK_ROOT}/emulator" + System.IO.Path.PathSeparator +
+    $"{ANDROID_SDK_ROOT}/tools/bin" + System.IO.Path.PathSeparator +
     EnvironmentVariable("PATH"));
 
 Information("Android SDK Root: {0}", ANDROID_SDK_ROOT);
@@ -39,9 +38,21 @@ Information("Project File: {0}", PROJECT);
 Information("Build Configuration: {0}", CONFIGURATION);
 Information("PATH: {0}", EnvironmentVariable("PATH"));
 
-var avdSettings = new AndroidAvdManagerToolSettings { SdkRoot = ANDROID_SDK_ROOT };
-var adbSettings = new AdbToolSettings { SdkRoot = ANDROID_SDK_ROOT };
-var emuSettings = new AndroidEmulatorToolSettings { SdkRoot = ANDROID_SDK_ROOT, ArgumentCustomization = args => args.Append("-no-window") };
+var bat = IsRunningOnWindows() ? ".bat" : "";
+var exe = IsRunningOnWindows() ? ".exe" : "";
+var avdSettings = new AndroidAvdManagerToolSettings {
+    SdkRoot = ANDROID_SDK_ROOT,
+    ToolPath = $"{ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/avdmanager{bat}"
+};
+var adbSettings = new AdbToolSettings {
+    SdkRoot = ANDROID_SDK_ROOT,
+    ToolPath = $"{ANDROID_SDK_ROOT}/platform-tools/adb{exe}"
+};
+var emuSettings = new AndroidEmulatorToolSettings {
+    SdkRoot = ANDROID_SDK_ROOT,
+    ToolPath = $"{ANDROID_SDK_ROOT}/emulator/emulator{exe}",
+    ArgumentCustomization = args => args.Append("-no-window")
+};
 
 AndroidEmulatorProcess emulatorProcess = null;
 

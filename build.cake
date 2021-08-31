@@ -298,6 +298,7 @@ Task ("tests-android")
             { "configuration", "Debug" },
             { "exclusive", "true" },
             { "results", MakeAbsolute(results).FullPath },
+            { "verbosity", "diagnostic" },
         });
     } catch {
         failedTests++;
