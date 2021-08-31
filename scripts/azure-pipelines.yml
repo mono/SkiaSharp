@@ -398,7 +398,10 @@ stages:
           installDotNet: false
           requiredArtifacts:
             - managed
+            - native
           postBuildSteps:
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+              displayName: Delete the native folder
             - task: PublishBuildArtifacts@1
               displayName: Publish the nuget artifacts
               inputs:
@@ -414,6 +417,10 @@ stages:
               inputs:
                 artifactName: nuget
                 pathToPublish: 'SignList.xml'
+            - pwsh: |
+                Remove-Item ./output/nugets/ -Recurse -Force
+                Remove-Item ./output/special-nugets/ -Recurse -Force
+              displayName: Delete the nugets folder
 
   - stage: api_diff
     displayName: API Diff
