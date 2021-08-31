@@ -438,6 +438,9 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - package_windows
+          requiredArtifactsMap:
+            - src: nuget
+              dst: nugets
           preBuildSteps:
             - pwsh: |
                 $p = "$env:BUILD_SOURCESDIRECTORY\output\nugets\api-diff"
