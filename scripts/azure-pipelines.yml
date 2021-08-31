@@ -577,10 +577,7 @@ stages:
                   --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
                   --version "$env:XHARNESS_VERSION"
               displayName: Install the xharness .NET Core tool
-            - bash: |
-                sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"emulator\" \"system-images;android-30;google_apis_playstore;x86\""
-                echo "##vso[task.prependpath]$ANDROID_HOME/tools/bin"
-                echo "##vso[task.prependpath]$ANDROID_HOME/emulator"
+            - bash: sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"emulator\" \"system-images;android-30;google_apis_playstore;x86\""
               displayName: Install the Android emulator
           postBuildSteps:
             - task: PublishTestResults@2

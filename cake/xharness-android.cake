@@ -37,7 +37,7 @@ System.Environment.SetEnvironmentVariable("PATH",
 Information("Android SDK Root: {0}", ANDROID_SDK_ROOT);
 Information("Project File: {0}", PROJECT);
 Information("Build Configuration: {0}", CONFIGURATION);
-Information("PATH: {0}", PATH);
+Information("PATH: {0}", EnvironmentVariable("PATH"));
 
 var avdSettings = new AndroidAvdManagerToolSettings { SdkRoot = ANDROID_SDK_ROOT };
 var adbSettings = new AdbToolSettings { SdkRoot = ANDROID_SDK_ROOT };
