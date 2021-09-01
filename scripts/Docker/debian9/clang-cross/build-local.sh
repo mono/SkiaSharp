@@ -11,4 +11,7 @@ if [ "$1" == "arm64" ]; then
 fi
 
 (cd $DIR && docker build --tag skiasharp-$ARCH $BUILD_ARGS .)
-(cd $DIR/../../../../ && docker run --rm --name skiasharp-$ARCH --volume $(pwd):/work skiasharp-$ARCH /bin/bash dotnet tool restore && dotnet cake -t externals-linux-clang-cross -c Release --buildarch=$ARCH)
+(cd $DIR/../../../../ && 
+    docker run --rm --name skiasharp-$ARCH --volume $(pwd):/work skiasharp-$ARCH \
+    dotnet tool restore && \
+    dotnet-cake --target=externals-linux-clang-cross --configuration=Release --buildarch=$ARCH)

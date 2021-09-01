@@ -4,4 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 (cd $DIR && docker build --tag skiasharp-linux .)
-(cd $DIR/../../../../ && docker run --rm --name skiasharp-linux --volume $(pwd):/work skiasharp-linux /bin/bash dotnet tool restore && dotnet cake -t externals-linux -c Release --buildarch=x64 )
+(cd $DIR/../../../../ && \
+    docker run --rm --name skiasharp-linux --volume $(pwd):/work skiasharp-linux \
+    dotnet tool restore && \
+    && dotnet-cake --target=externals-linux --configuration=Release --buildarch=x64 )

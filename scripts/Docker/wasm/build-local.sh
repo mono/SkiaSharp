@@ -9,4 +9,7 @@ if [ "$1" ]; then
 fi
 
 (cd $DIR && docker build --tag skiasharp-wasm $VERSION_ARGS .)
-(cd $DIR/../../../ && docker run --rm --name skiasharp-wasm --volume $(pwd):/work skiasharp-wasm /bin/bash dotnet tool restore && dotnet cake -t externals-wasm --emscriptenVersion=$1)
+(cd $DIR/../../../ && \
+    docker run --rm --name skiasharp-wasm --volume $(pwd):/work skiasharp-wasm \
+    dotnet tool restore && \
+    dotnet-cake --target=externals-wasm --emscriptenVersion=$1)

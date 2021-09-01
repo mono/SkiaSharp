@@ -205,7 +205,7 @@ jobs:
               dotnet tool restore
               ${{ parameters.initScript }}
               .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} {
-                dotnet cake -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
               }
             env:
               JavaSdkDirectory: $(JAVA_HOME)
@@ -218,7 +218,7 @@ jobs:
               dotnet tool restore
               ${{ parameters.initScript }}
               ./scripts/retry-command.sh ${{ parameters.retryCount }} \
-                dotnet cake -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
             env:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
@@ -227,10 +227,10 @@ jobs:
           workingDirectory: ${{ parameters.docker }}
           displayName: Build the Docker image for ${{ parameters.docker }}
         - bash: |
-            docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
+            docker run --rm --name skiasharp --volume $(pwd):/work skiasharp \
               dotnet tool restore && \
-              scripts/retry-command.sh ${{ parameters.retryCount }} \
-                dotnet cake -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+              /bin/bash scripts/retry-command.sh ${{ parameters.retryCount }} \
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
 
       # post-build steps
