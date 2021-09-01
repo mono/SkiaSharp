@@ -227,10 +227,11 @@ jobs:
           workingDirectory: ${{ parameters.docker }}
           displayName: Build the Docker image for ${{ parameters.docker }}
         - bash: |
-            docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash -c "\
-              dotnet tool restore && \
+            echo dotnet tool restore > cmd.sh
+            echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
+            docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
               scripts/retry-command.sh ${{ parameters.retryCount }} \
-                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}"
+                cmd.sh
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
 
       # post-build steps
