@@ -26,14 +26,14 @@ void RunCake(FilePath cake, string target = null, Dictionary<string, string> arg
     foreach (var arg in CAKE_ARGUMENTS) {
         if (arg.Key == "target")
             continue;
-        cmd += $" --{arg.Key}={arg.Value}";
+        cmd += $@" --{arg.Key}=""{arg.Value}""";
     }
 
-    cmd += $" --target={target}";
+    cmd += $@" --target=""{target}""";
 
     if (arguments != null) {
         foreach (var arg in arguments) {
-            cmd += $" --{arg.Key}={arg.Value}";
+            cmd += $@" --{arg.Key}=""{arg.Value}""";
         }
     }
 
