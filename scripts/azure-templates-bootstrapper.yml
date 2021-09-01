@@ -202,6 +202,7 @@ jobs:
       - ${{ if eq(parameters.docker, '') }}:
         - ${{ if endsWith(parameters.name, '_windows') }}:
           - pwsh: |
+              dotnet tool restore
               ${{ parameters.initScript }}
               .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} {
                 dotnet cake -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
@@ -214,6 +215,7 @@ jobs:
             displayName: Run the bootstrapper for ${{ parameters.target }}
         - ${{ if not(endsWith(parameters.name, '_windows')) }}:
           - bash: |
+              dotnet tool restore
               ${{ parameters.initScript }}
               ./scripts/retry-command.sh ${{ parameters.retryCount }} \
                 dotnet cake -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
@@ -226,6 +228,7 @@ jobs:
           displayName: Build the Docker image for ${{ parameters.docker }}
         - bash: |
             docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
+              dotnet tool restore && \
               scripts/retry-command.sh ${{ parameters.retryCount }} \
                 dotnet cake -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
