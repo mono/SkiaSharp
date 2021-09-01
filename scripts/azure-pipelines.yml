@@ -748,7 +748,8 @@ stages:
           target: samples
           installWindowsSdk: false
           requiredArtifactsMap:
-            - nuget: nugets
+            - src: nuget
+              dst: nugets
       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
         parameters:
           name: samples_macos
@@ -756,7 +757,8 @@ stages:
           vmImage: $(VM_IMAGE_MAC)
           target: samples
           requiredArtifactsMap:
-            - nuget: nugets
+            - src: nuget
+              dst: nugets
           preBuildSteps:
             - template: azure-templates-provisioning-profiles.yml
       - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
@@ -767,7 +769,8 @@ stages:
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
           requiredArtifactsMap:
-            - nuget: nugets
+            - src: nuget
+              dst: nugets
           installEmsdk: true
           initScript: source ~/emsdk/emsdk_env.sh
 
