@@ -20,25 +20,24 @@ DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVa
 
 void RunCake(FilePath cake, string target = null, Dictionary<string, string> arguments = null)
 {
-    var args = new Dictionary<string, string>();
+    cake = MakeAbsolute(cake);
+    var cmd = $"cake {cake}";
 
     foreach (var arg in CAKE_ARGUMENTS) {
-        args[arg.Key] = arg.Value;
+        if (arg.Key == "target")
+            continue;
+        cmd += $" --{arg.Key}={arg.Value}";
     }
 
-    args.Remove("t");
-    args["target"] = target;
+    cmd += $" --target={target}";
 
     if (arguments != null) {
         foreach (var arg in arguments) {
-            args[arg.Key] = arg.Value;
+            cmd += $" --{arg.Key}={arg.Value}";
         }
     }
 
-    CakeExecuteScript(cake, new CakeSettings {
-        WorkingDirectory = cake.GetDirectory(),
-        Arguments = args,
-    });
+    DotNetCoreTool(cmd);
 }
 
 void RunProcess(FilePath process, string args = "")
