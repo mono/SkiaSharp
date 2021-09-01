@@ -292,12 +292,13 @@ Task ("tests-android")
             platform: "AnyCPU",
             configuration: "Debug");
         // run the tests
-        DirectoryPath results = "./output/testlogs/SkiaSharp.Android.Tests";
+        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Android.Tests";
         RunCake ("./cake/xharness-android.cake", "Default", new Dictionary<string, string> {
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
             { "exclusive", "true" },
             { "results", MakeAbsolute(results).FullPath },
+            { "verbosity", "diagnostic" },
         });
     } catch {
         failedTests++;
@@ -332,7 +333,7 @@ Task ("tests-ios")
             platform: "iPhoneSimulator",
             configuration: "Debug");
         // run the tests
-        DirectoryPath results = "./output/testlogs/SkiaSharp.iOS.Tests";
+        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.iOS.Tests";
         RunCake ("./cake/xharness-ios.cake", "Default", new Dictionary<string, string> {
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
