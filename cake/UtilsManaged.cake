@@ -15,6 +15,11 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefau
     if (allowDefaultExcludes) {
         settings.ArgumentCustomization = args => args.Append("-NoDefaultExcludes");
     }
+    // Create .snupkg files for native Windows files for VS
+    if (nuspecPath.FullPath.Contains("SkiaSharp.NativeAssets.Win32.nuspec") || nuspecPath.FullPath.Contains("HarfbuzzSharp.nuspec")) {
+        settings.Symbols = true;
+        settings.SymbolPackageFormat = "snupkg";
+    }
     NuGetPack(nuspecPath, settings);
 }
 
