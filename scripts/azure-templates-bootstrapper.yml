@@ -204,7 +204,7 @@ jobs:
           - pwsh: |
               ${{ parameters.initScript }}
               .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} {
-                .\bootstrapper.ps1 -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet cake -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
               }
             env:
               JavaSdkDirectory: $(JAVA_HOME)
@@ -216,7 +216,7 @@ jobs:
           - bash: |
               ${{ parameters.initScript }}
               ./scripts/retry-command.sh ${{ parameters.retryCount }} \
-                ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet cake -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
             env:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
@@ -227,7 +227,7 @@ jobs:
         - bash: |
             docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
               scripts/retry-command.sh ${{ parameters.retryCount }} \
-                ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet cake -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
 
       # post-build steps

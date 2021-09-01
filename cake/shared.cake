@@ -7,12 +7,8 @@ var CONFIGURATION = Argument("c", Argument("configuration", "Release"));
 
 var VS_INSTALL = Argument("vsinstall", EnvironmentVariable("VS_INSTALL"));
 var MSBUILD_EXE = Argument("msbuild", EnvironmentVariable("MSBUILD_EXE"));
-var NUGET_EXE = Argument("nuget", EnvironmentVariable("NUGET_EXE") ?? Context.Tools.Resolve ("nuget.exe"));
 
-var CAKE_ARGUMENTS = (IReadOnlyDictionary<string, string>)Context.Arguments
-    .GetType()
-    .GetProperty("Arguments")
-    .GetValue(Context.Arguments);
+var CAKE_ARGUMENTS = Arguments().ToDictionary(a => a.Key, a => a.Value.Single());
 
 var BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -80,16 +76,6 @@ IProcess RunAndReturnProcess(FilePath process, ProcessSettings settings)
     return proc;
 }
 
-bool IsRunningOnMac()
-{
-    return System.Environment.OSVersion.Platform == PlatformID.MacOSX || MacPlatformDetector.IsMac.Value;
-}
-
-bool IsRunningOnLinux()
-{
-    return IsRunningOnUnix() && !IsRunningOnMac();
-}
-
 string GetVersion(string lib, string type = "nuget")
 {
     return GetRegexValue($@"^{lib}\s*{type}\s*(.*)$", ROOT_PATH.CombineWithFilePath("VERSIONS.txt"));
@@ -103,32 +89,5 @@ string GetRegexValue(string regex, FilePath file)
         return match.Groups[1].Value.Trim();
     } catch {
         return "";
-    }
-}
-
-internal static class MacPlatformDetector
-{
-    internal static readonly Lazy<bool> IsMac = new Lazy<bool>(IsRunningOnMac);
-
-    [DllImport("libc")]
-    static extern int uname(IntPtr buf);
-
-    static bool IsRunningOnMac()
-    {
-        IntPtr buf = IntPtr.Zero;
-        try {
-            buf = Marshal.AllocHGlobal(8192);
-            // This is a hacktastic way of getting sysname from uname()
-            if (uname(buf) == 0) {
-                string os = Marshal.PtrToStringAnsi(buf);
-                if (os == "Darwin")
-                    return true;
-            }
-        } catch {
-        } finally {
-            if (buf != IntPtr.Zero)
-                Marshal.FreeHGlobal(buf);
-        }
-        return false;
     }
 }

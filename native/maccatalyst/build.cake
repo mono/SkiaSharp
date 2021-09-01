@@ -4,7 +4,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 #load "../../cake/shared.cake"
 
 Task("libSkiaSharp")
-    .WithCriteria(IsRunningOnMac())
+    .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
     RunCake("../ios/build.cake", "libSkiaSharp", new Dictionary<string, string> {
@@ -13,7 +13,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMac())
+    .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
     RunCake("../ios/build.cake", "libHarfBuzzSharp", new Dictionary<string, string> {

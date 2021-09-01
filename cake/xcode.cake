@@ -27,7 +27,7 @@ void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, str
 
 void StripSign(FilePath target)
 {
-    if (!IsRunningOnMac())
+    if (!IsRunningOnMacOs())
         throw new InvalidOperationException("strip and codesign are only available on macOS.");
 
     target = MakeAbsolute(target);
@@ -49,7 +49,7 @@ void StripSign(FilePath target)
 
 void RunLipo(DirectoryPath directory, FilePath output, FilePath[] inputs)
 {
-    if (!IsRunningOnMac())
+    if (!IsRunningOnMacOs())
         throw new InvalidOperationException("lipo is only available on macOS.");
 
     EnsureDirectoryExists(directory.CombineWithFilePath(output).GetDirectory());
@@ -63,7 +63,7 @@ void RunLipo(DirectoryPath directory, FilePath output, FilePath[] inputs)
 
 void RunLipo(FilePath output, FilePath[] inputs)
 {
-    if (!IsRunningOnMac())
+    if (!IsRunningOnMacOs())
         throw new InvalidOperationException("lipo is only available on macOS.");
 
     var inputString = string.Join(" ", inputs.Select(i => string.Format("\"{0}\"", i)));
