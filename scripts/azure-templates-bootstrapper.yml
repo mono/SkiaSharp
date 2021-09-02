@@ -229,7 +229,7 @@ jobs:
         - bash: |
             echo dotnet tool restore > cmd.sh
             echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
-            cat cmd.sh
+            sed -i 's/--gnArgs=\" \"//' cmd.sh
             docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
               scripts/retry-command.sh ${{ parameters.retryCount }} \
                 /bin/bash /work/cmd.sh
