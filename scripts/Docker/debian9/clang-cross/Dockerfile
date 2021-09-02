@@ -1,7 +1,7 @@
 FROM amd64/debian:9
 
 # Arguments:
-#   MONO_VERSION         - the version of mono for the Cake script          [ 6.4.0 | * ]
+#   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 3.1.412 | * ]
 #   CLANG_VERSION        - the version of clang/llvm tools                  [ 10 | * ]
 #   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 6 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu]
@@ -13,20 +13,27 @@ FROM amd64/debian:9
 # To build a arm64 image:
 #   --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
 
-# pre-requisites for building (python, git, mono)
-ARG MONO_VERSION=6.4.0
+# pre-requisites for building (python, git)
 ARG CLANG_VERSION=10
 RUN apt-get update \
-    && apt-get install -y apt-transport-https curl wget python git make dirmngr gnupg ca-certificates \
-    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
-    && echo "deb https://download.mono-project.com/repo/debian stable-stretch/snapshots/${MONO_VERSION} main" | tee /etc/apt/sources.list.d/mono-official-stable.list \
+    && apt-get install -y apt-transport-https curl wget python git make dirmngr gnupg \
     && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
     && echo "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-${CLANG_VERSION} main" | tee /etc/apt/sources.list.d/llvm.list \
     && apt-get update \
-    && apt-get install -y mono-devel clang-${CLANG_VERSION} \
+    && apt-get install -y clang-${CLANG_VERSION} \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update
+ARG DOTNET_SDK_VERSION=3.1.412
+
+RUN wget -O dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/$DOTNET_SDK_VERSION/dotnet-sdk-$DOTNET_SDK_VERSION-linux-x64.tar.gz \
+    && dotnet_sha512='1ed0c1ab48723cef834906a55fb1889b29dd810cd2bc66cbd345a0baf8a2796045b5b7f4beef3c48bd56bef3ffed690b6fae4a5f017ad8687817b25a76fbd9be' \
+    && echo "$dotnet_sha512  dotnet.tar.gz" | sha512sum -c - \
+    && mkdir -p /usr/share/dotnet \
+    && tar -C /usr/share/dotnet -xzf dotnet.tar.gz \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+    && rm dotnet.tar.gz
+
+RUN dotnet help
 
 # toolchain (gcc/g++)
 ARG TOOLCHAIN_VERSION=6
