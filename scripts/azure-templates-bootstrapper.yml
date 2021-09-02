@@ -231,7 +231,7 @@ jobs:
             echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
             docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
               scripts/retry-command.sh ${{ parameters.retryCount }} \
-                $(pwd)/cmd.sh
+                /work/cmd.sh
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
 
       # post-build steps
