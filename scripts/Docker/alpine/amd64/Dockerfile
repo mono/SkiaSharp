@@ -3,7 +3,7 @@ FROM amd64/alpine:3.9
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 3.1.412 | * ]
 
-RUN apk add --no-cache bash curl wget python git build-base ninja fontconfig-dev libintl icu
+RUN apk add --no-cache bash curl wget python git build-base ninja fontconfig-dev libintl
 RUN apk add --no-cache samurai --repository http://dl-cdn.alpinelinux.org/alpine/edge/main
 RUN apk add --no-cache clang gn --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
@@ -16,6 +16,8 @@ RUN wget -O dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/$DOTNET_SDK
     && tar -C /usr/share/dotnet -xzf dotnet.tar.gz \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm dotnet.tar.gz
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 1
 
 RUN dotnet help
 

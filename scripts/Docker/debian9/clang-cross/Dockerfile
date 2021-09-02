@@ -33,6 +33,8 @@ RUN wget -O dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/$DOTNET_SDK
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm dotnet.tar.gz
 
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 1
+
 RUN dotnet help
 
 # toolchain (gcc/g++)
