@@ -11,5 +11,5 @@ fi
 (cd $DIR && docker build --tag skiasharp-wasm $VERSION_ARGS .)
 (cd $DIR/../../../ && \
     docker run --rm --name skiasharp-wasm --volume $(pwd):/work skiasharp-wasm /bin/bash -c "\
-    dotnet tool restore && \
-    dotnet-cake --target=externals-wasm --emscriptenVersion=$1")
+        dotnet tool restore && \
+        dotnet-cake --target=externals-wasm --emscriptenVersion=$1")
