@@ -1,4 +1,4 @@
-#addin nuget:?package=Cake.XCode&version=4.2.0
+#addin nuget:?package=Cake.XCode&version=5.0.0
 
 void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, string platform = null)
 {
