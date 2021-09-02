@@ -7,7 +7,7 @@ FROM mcr.microsoft.com/dotnet/core/sdk:3.1.412-bionic
 ARG EMSCRIPTEN_VERSION=2.0.23
 
 RUN apt-get update \
-    && apt-get install -y apt-transport-https curl wget python python3 git make \
+    && apt-get install -y apt-transport-https curl wget python python3 git make xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone --branch ${EMSCRIPTEN_VERSION} https://github.com/emscripten-core/emsdk ~/emsdk && \
