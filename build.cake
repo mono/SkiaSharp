@@ -2,8 +2,9 @@
 #addin nuget:?package=Cake.XCode&version=5.0.0
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 #addin nuget:?package=Cake.Json&version=6.0.1
+#addin nuget:?package=NuGet.Packaging.Core&version=5.11.0
 #addin nuget:?package=SharpCompress&version=0.28.3
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2&loaddependencies=true
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
 #tool nuget:?package=mdoc&version=5.8.3
