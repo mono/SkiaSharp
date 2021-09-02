@@ -14,4 +14,4 @@ fi
 (cd $DIR/../../../../ && 
     docker run --rm --name skiasharp-$ARCH --volume $(pwd):/work skiasharp-$ARCH /bin/bash -c "\
         dotnet tool restore && \
-        dotnet-cake --target=externals-linux-clang-cross --configuration=Release --buildarch=$ARCH")
+        dotnet cake --target=externals-linux-clang-cross --configuration=Release --buildarch=$ARCH")
