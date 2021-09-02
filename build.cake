@@ -102,11 +102,6 @@ var PREVIEW_ONLY_NUGETS = new List<string> {
     "SkiaSharp.Views.Maui.Controls.Compatibility",
 };
 
-Information("Arguments:");
-foreach (var arg in CAKE_ARGUMENTS) {
-    Information($"    {arg.Key.PadRight(30)} {{0}}", arg.Value);
-}
-
 Information("Source Control:");
 Information($"    {"PREVIEW_LABEL".PadRight(30)} {{0}}", PREVIEW_LABEL);
 Information($"    {"FEATURE_NAME".PadRight(30)} {{0}}", FEATURE_NAME);

@@ -8,8 +8,6 @@ var CONFIGURATION = Argument("c", Argument("configuration", "Release"));
 var VS_INSTALL = Argument("vsinstall", EnvironmentVariable("VS_INSTALL"));
 var MSBUILD_EXE = Argument("msbuild", EnvironmentVariable("MSBUILD_EXE"));
 
-var CAKE_ARGUMENTS = Arguments().ToDictionary(a => a.Key, a => a.Value.Single());
-
 var BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -18,23 +16,30 @@ var ADDITIONAL_GN_ARGS = Argument("gnArgs", Argument("gnargs", EnvironmentVariab
 
 DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME");
 
+Information("Arguments:");
+foreach (var arg in Arguments()) {
+    foreach (var val in arg.Value) {
+        Information($"    {arg.Key.PadRight(30)} {{0}}", val);
+    }
+}
+
 void RunCake(FilePath cake, string target = null, Dictionary<string, string> arguments = null)
 {
-    cake = MakeAbsolute(cake);
-    var cmd = $"cake {cake}";
+    var args = Arguments().ToDictionary(a => a.Key, a => a.Value.LastOrDefault());
 
-    foreach (var arg in CAKE_ARGUMENTS) {
-        if (arg.Key == "target")
-            continue;
-        cmd += $@" --{arg.Key}=""{arg.Value}""";
-    }
-
-    cmd += $@" --target=""{target}""";
+    args["target"] = target;
 
     if (arguments != null) {
         foreach (var arg in arguments) {
-            cmd += $@" --{arg.Key}=""{arg.Value}""";
+            args[arg.Key] = arg.Value;
         }
+    }
+
+    cake = MakeAbsolute(cake);
+    var cmd = $"cake {cake}";
+
+    foreach (var arg in args) {
+        cmd += $@" --{arg.Key}=""{arg.Value}""";
     }
 
     DotNetCoreTool(cmd);
