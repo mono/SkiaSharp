@@ -202,9 +202,10 @@ jobs:
       - ${{ if eq(parameters.docker, '') }}:
         - ${{ if endsWith(parameters.name, '_windows') }}:
           - pwsh: |
+              dotnet tool restore
               ${{ parameters.initScript }}
               .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} {
-                .\bootstrapper.ps1 -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
               }
             env:
               JavaSdkDirectory: $(JAVA_HOME)
@@ -214,9 +215,10 @@ jobs:
             displayName: Run the bootstrapper for ${{ parameters.target }}
         - ${{ if not(endsWith(parameters.name, '_windows')) }}:
           - bash: |
+              dotnet tool restore
               ${{ parameters.initScript }}
               ./scripts/retry-command.sh ${{ parameters.retryCount }} \
-                ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
             env:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
@@ -225,9 +227,12 @@ jobs:
           workingDirectory: ${{ parameters.docker }}
           displayName: Build the Docker image for ${{ parameters.docker }}
         - bash: |
+            echo dotnet tool restore > cmd.sh
+            echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
+            sed -i 's/--gnArgs=\" \"//' cmd.sh
             docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
               scripts/retry-command.sh ${{ parameters.retryCount }} \
-                ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                /bin/bash /work/cmd.sh
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
 
       # post-build steps

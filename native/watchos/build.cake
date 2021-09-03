@@ -6,7 +6,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/watcho
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
-    .WithCriteria(IsRunningOnMac())
+    .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
     Build("watchsimulator", "i386", "x86");
@@ -43,7 +43,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMac())
+    .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
     Build("watchsimulator", "i386");

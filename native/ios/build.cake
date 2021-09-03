@@ -8,7 +8,7 @@ string VARIANT = BUILD_VARIANT ?? "ios";
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
-    .WithCriteria(IsRunningOnMac())
+    .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
     if (VARIANT.ToLower() == "ios") {
@@ -52,7 +52,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMac())
+    .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
     if (VARIANT.ToLower() == "ios") {

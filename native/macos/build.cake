@@ -6,7 +6,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/osx"))
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
-    .WithCriteria(IsRunningOnMac())
+    .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
     Build("x86_64", "x64");
@@ -47,7 +47,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMac())
+    .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
     Build("x86_64");
