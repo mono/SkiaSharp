@@ -194,6 +194,7 @@ string[] GetReferenceSearchPaths()
         refs.Add($"{pf}/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0");
         refs.Add($"{pf}/Windows Kits/10/References/Windows.Foundation.FoundationContract/1.0.0.0");
         refs.Add($"{pf}/GtkSharp/2.12/lib");
+        refs.Add($"{pf}/GtkSharp/2.12/lib/gtk-sharp-2.0");
         refs.Add($"{vs}/Common7/IDE/PublicAssemblies");
     } else {
         // TODO
