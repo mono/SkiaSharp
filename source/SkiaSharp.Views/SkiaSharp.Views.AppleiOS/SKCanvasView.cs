@@ -105,6 +105,20 @@ namespace SkiaSharp.Views.iOS
 			}
 		}
 
+		public override void WillMoveToWindow(UIWindow window)
+		{
+			if (drawable != null)
+			{
+				// release the memory if we are leaving the window
+				if (window == null)
+					drawable?.Dispose();
+				else
+					SetNeedsDisplay();
+			}
+
+			base.WillMoveToWindow(window);
+		}
+
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)

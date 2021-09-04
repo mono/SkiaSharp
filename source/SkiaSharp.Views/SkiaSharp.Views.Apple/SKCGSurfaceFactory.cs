@@ -49,8 +49,10 @@ namespace SkiaSharp.Views.Mac
 				bitmapData = NSMutableData.FromLength(info.BytesSize);
 
 				// in case allocation has failed
-				if (bitmapData == null) {
-					info.Width = info.Height = 0;
+				if (bitmapData == null)
+				{
+					Dispose();
+					info = Info;
 					return null;
 				}
 
