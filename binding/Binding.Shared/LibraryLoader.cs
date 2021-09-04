@@ -47,57 +47,24 @@ namespace SkiaSharp
 				var path = typeof (T).Assembly.Location;
 				if (!string.IsNullOrEmpty (path)) {
 					path = Path.GetDirectoryName (path);
-					// 1.1 in platform sub dir
-					var lib = Path.Combine (path, arch, libWithExt);
-					if (File.Exists (lib))
-						return lib;
-					// 1.2 in root
-					lib = Path.Combine (path, libWithExt);
-					if (File.Exists (lib))
-						return lib;
+					if (CheckLibraryPath (path, arch, libWithExt, out var localLib))
+						return localLib;
 				}
 
 				// 2. try current directory
-				path = Directory.GetCurrentDirectory ();
-				if (!string.IsNullOrEmpty (path)) {
-					// 2.1 in platform sub dir
-					var lib = Path.Combine (path, arch, libWithExt);
-					if (File.Exists (lib))
-						return lib;
-					// 2.2 in root
-					lib = Path.Combine (lib, libWithExt);
-					if (File.Exists (lib))
-						return lib;
-				}
+				if (CheckLibraryPath (Directory.GetCurrentDirectory (), arch, libWithExt, out var lib))
+					return lib;
 
 				// 3. try app domain
 				try {
 					if (AppDomain.CurrentDomain is AppDomain domain) {
 						// 3.1 RelativeSearchPath
-						path = domain.RelativeSearchPath;
-						if (!string.IsNullOrEmpty (path)) {
-							// 3.1.1 in platform sub dir
-							var lib = Path.Combine (path, arch, libWithExt);
-							if (File.Exists (lib))
-								return lib;
-							// 3.1.2 in root
-							lib = Path.Combine (lib, libWithExt);
-							if (File.Exists (lib))
-								return lib;
-						}
+						if (CheckLibraryPath (domain.RelativeSearchPath, arch, libWithExt, out lib))
+							return lib;
 
 						// 3.2 BaseDirectory
-						path = domain.BaseDirectory;
-						if (!string.IsNullOrEmpty (path)) {
-							// 3.2.1 in platform sub dir
-							var lib = Path.Combine (path, arch, libWithExt);
-							if (File.Exists (lib))
-								return lib;
-							// 3.2.2 in root
-							lib = Path.Combine (lib, libWithExt);
-							if (File.Exists (lib))
-								return lib;
-						}
+						if (CheckLibraryPath (domain.BaseDirectory, arch, libWithExt, out lib))
+							return lib;
 					}
 				} catch {
 					// no-op as there may not be any domain or path
@@ -105,6 +72,38 @@ namespace SkiaSharp
 
 				// 4. use PATH or default loading mechanism
 				return libWithExt;
+			}
+
+			static bool CheckLibraryPath(string root, string arch, string libWithExt, out string foundPath)
+			{
+				if (!string.IsNullOrEmpty (root)) {
+					// a. in specific platform sub dir
+					if (!string.IsNullOrEmpty (PlatformConfiguration.LinuxFlavor)) {
+						var muslLib = Path.Combine (root, PlatformConfiguration.LinuxFlavor + "-" + arch, libWithExt);
+						if (File.Exists (muslLib)) {
+							foundPath = muslLib;
+							return true;
+						}
+					}
+
+					// b. in generic platform sub dir
+					var searchLib = Path.Combine (root, arch, libWithExt);
+					if (File.Exists (searchLib)) {
+						foundPath = searchLib;
+						return true;
+					}
+
+					// c. in root
+					searchLib = Path.Combine (root, libWithExt);
+					if (File.Exists (searchLib)) {
+						foundPath = searchLib;
+						return true;
+					}
+				}
+
+				// d. nothing
+				foundPath = null;
+				return false;
 			}
 		}
 
@@ -192,7 +191,7 @@ namespace SkiaSharp
 
 		private static class Linux
 		{
-			private const string SystemLibrary = "libdl.so";
+			private const string SystemLibrary = "dl";
 
 			private const int RTLD_LAZY = 1;
 			private const int RTLD_NOW = 2;

@@ -1,8 +1,14 @@
-﻿using System;
+﻿#if !WINDOWS
+
+using System;
 using SkiaSharp.Views.GlesInterop;
 using Windows.Foundation;
 
+#if WINDOWS
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public class SKSwapChainPanel : AngleSwapChainPanel
 	{
@@ -110,7 +116,7 @@ namespace SkiaSharp.Views.UWP
 
 			glInfo = default;
 
-			context?.AbandonContext(true);
+			context?.AbandonContext(false);
 			context?.Dispose();
 			context = null;
 
@@ -119,3 +125,5 @@ namespace SkiaSharp.Views.UWP
 		}
 	}
 }
+
+#endif

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace HarfBuzzSharp
 {
-	public class Buffer : NativeObject
+	public unsafe class Buffer : NativeObject
 	{
 		public const int DefaultReplacementCodepoint = '\uFFFD';
 
@@ -60,8 +60,8 @@ namespace HarfBuzzSharp
 		}
 
 		public int Length {
-			get => HarfBuzzApi.hb_buffer_get_length (Handle);
-			set => HarfBuzzApi.hb_buffer_set_length (Handle, value);
+			get => (int)HarfBuzzApi.hb_buffer_get_length (Handle);
+			set => HarfBuzzApi.hb_buffer_set_length (Handle, (uint)value);
 		}
 
 		public UnicodeFunctions UnicodeFunctions {
@@ -121,7 +121,7 @@ namespace HarfBuzzSharp
 			if (ContentType == ContentType.Glyphs)
 				throw new InvalidOperationException ("ContentType must not be Glyphs");
 
-			HarfBuzzApi.hb_buffer_add_utf8 (Handle, text, textLength, itemOffset, itemLength);
+			HarfBuzzApi.hb_buffer_add_utf8 (Handle, (void*)text, textLength, (uint)itemOffset, itemLength);
 		}
 
 		public void AddUtf16 (string text) => AddUtf16 (text, 0, -1);
@@ -161,7 +161,7 @@ namespace HarfBuzzSharp
 			if (ContentType == ContentType.Glyphs)
 				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
 
-			HarfBuzzApi.hb_buffer_add_utf16 (Handle, text, textLength, itemOffset, itemLength);
+			HarfBuzzApi.hb_buffer_add_utf16 (Handle, (ushort*)text, textLength, (uint)itemOffset, itemLength);
 		}
 
 		public void AddUtf32 (string text) => AddUtf32 (Encoding.UTF32.GetBytes (text));
@@ -203,7 +203,7 @@ namespace HarfBuzzSharp
 			if (ContentType == ContentType.Glyphs)
 				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
 
-			HarfBuzzApi.hb_buffer_add_utf32 (Handle, text, textLength, itemOffset, itemLength);
+			HarfBuzzApi.hb_buffer_add_utf32 (Handle, (uint*)text, textLength, (uint)itemOffset, itemLength);
 		}
 
 		public void AddCodepoints (ReadOnlySpan<uint> text) => AddCodepoints (text, 0, -1);
@@ -235,19 +235,21 @@ namespace HarfBuzzSharp
 			if (ContentType == ContentType.Glyphs)
 				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
 
-			HarfBuzzApi.hb_buffer_add_codepoints (Handle, text, textLength, itemOffset, itemLength);
+			HarfBuzzApi.hb_buffer_add_codepoints (Handle, (uint*)text, textLength, (uint)itemOffset, itemLength);
 		}
 
 		public unsafe ReadOnlySpan<GlyphInfo> GetGlyphInfoSpan ()
 		{
-			var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos (Handle, out var length);
-			return new ReadOnlySpan<GlyphInfo> (infoPtrs, length);
+			uint length;
+			var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos (Handle, &length);
+			return new ReadOnlySpan<GlyphInfo> (infoPtrs, (int)length);
 		}
 
 		public unsafe ReadOnlySpan<GlyphPosition> GetGlyphPositionSpan ()
 		{
-			var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions (Handle, out var length);
-			return new ReadOnlySpan<GlyphPosition> (infoPtrs, length);
+			uint length;
+			var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions (Handle, &length);
+			return new ReadOnlySpan<GlyphPosition> (infoPtrs, (int)length);
 		}
 
 		public void GuessSegmentProperties ()
@@ -271,7 +273,7 @@ namespace HarfBuzzSharp
 			if (buffer.ContentType != ContentType)
 				throw new InvalidOperationException ("ContentType must be of same type.");
 
-			HarfBuzzApi.hb_buffer_append (Handle, buffer.Handle, start, end == -1 ? buffer.Length : end);
+			HarfBuzzApi.hb_buffer_append (Handle, buffer.Handle, (uint)start, (uint)(end == -1 ? buffer.Length : end));
 		}
 
 		public void NormalizeGlyphs ()
@@ -287,7 +289,7 @@ namespace HarfBuzzSharp
 		public void Reverse () => HarfBuzzApi.hb_buffer_reverse (Handle);
 
 		public void ReverseRange (int start, int end) =>
-			HarfBuzzApi.hb_buffer_reverse_range (Handle, start, end == -1 ? Length : end);
+			HarfBuzzApi.hb_buffer_reverse_range (Handle, (uint)start, (uint)(end == -1 ? Length : end));
 
 		public void ReverseClusters () => HarfBuzzApi.hb_buffer_reverse_clusters (Handle);
 
@@ -316,22 +318,23 @@ namespace HarfBuzzSharp
 			using (var buffer = MemoryPool<byte>.Shared.Rent ())
 			using (var pinned = buffer.Memory.Pin ()) {
 				var bufferSize = buffer.Memory.Length;
-				var currentPosition = start;
+				var currentPosition = (uint)start;
 				var builder = new StringBuilder (bufferSize);
 
 				while (currentPosition < end) {
+					uint consumed;
 					currentPosition += HarfBuzzApi.hb_buffer_serialize_glyphs (
 						Handle,
-						currentPosition,
-						end,
-						(IntPtr)pinned.Pointer,
-						bufferSize,
-						out var consumed,
+						(uint)currentPosition,
+						(uint)end,
+						pinned.Pointer,
+						(uint)bufferSize,
+						&consumed,
 						font?.Handle ?? IntPtr.Zero,
 						format,
 						flags);
 
-					builder.Append (Marshal.PtrToStringAnsi ((IntPtr)pinned.Pointer, consumed));
+					builder.Append (Marshal.PtrToStringAnsi ((IntPtr)pinned.Pointer, (int)consumed));
 				}
 
 				return builder.ToString ();
@@ -351,7 +354,7 @@ namespace HarfBuzzSharp
 			if (ContentType == ContentType.Glyphs)
 				throw new InvalidOperationException ("ContentType must not be Glyphs.");
 
-			HarfBuzzApi.hb_buffer_deserialize_glyphs (Handle, data, -1, out _, font?.Handle ?? IntPtr.Zero, format);
+			HarfBuzzApi.hb_buffer_deserialize_glyphs (Handle, data, -1, null, font?.Handle ?? IntPtr.Zero, format);
 		}
 
 		protected override void Dispose (bool disposing) =>

@@ -306,6 +306,8 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+			if (stream is SKFileStream filestream && !filestream.IsValid)
+				throw new ArgumentException ("File stream was not valid.", nameof(stream));
 
 			fixed (SKCodecResult* r = &result) {
 				var codec = GetObject (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));

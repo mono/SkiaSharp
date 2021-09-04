@@ -16,11 +16,13 @@ namespace SkiaSharpGenerator
 
 		private readonly string branchUrl;
 		private readonly string assemblyPath;
+		private readonly string type;
 		private CSharpSyntaxTree? compilation;
 
-		public CookieDetector(string assembly, string branchName)
+		public CookieDetector(string assembly, string interopType, string branchName)
 		{
 			assemblyPath = assembly;
+			type = interopType;
 			branchUrl = string.Format(SourceUrl, branchName);
 		}
 
@@ -61,9 +63,9 @@ namespace SkiaSharpGenerator
 
 			Log?.LogVerbose($"Found {cookies.Length} cookies.");
 
-			Log?.LogVerbose("Loading SkiaSharp.dll assembly...");
+			Log?.LogVerbose("Loading .NET assembly...");
 
-			var signatures = ParseAssembly("SkiaSharp.SkiaApi");
+			var signatures = ParseAssembly(type);
 
 			Log?.LogVerbose($"Found {signatures.Length} signatures.");
 
@@ -110,25 +112,29 @@ namespace SkiaSharpGenerator
 
 			var methods = type.Methods.Select(m =>
 			{
-				var returnSig = GetTypeSignature(m, m.ReturnType.Resolve());
-				var paramsSig = string.Concat(m.Parameters.Select(p => GetParameterSignature(m, p)));
+				var returnSig = GetSignature(m, m.ReturnType);
+				var paramsSig = string.Concat(m.Parameters.Select(p => GetSignature(m, p.ParameterType)));
 				return (Method: m.Name, Signature: returnSig + paramsSig);
 			});
 
 			return methods.OrderBy(s => s.Signature).ToArray();
-		}
 
-		private static string GetParameterSignature(MethodDefinition method, ParameterDefinition param)
-		{
-			if (param.ParameterType.IsByReference || param.ParameterType.IsArray || param.ParameterType.IsPointer)
-				return "I";
+			static string GetSignature(MethodDefinition method, TypeReference ret)
+			{
+				if (ret.IsByReference || ret.IsArray || ret.IsPointer)
+					return "I";
 
-			return GetTypeSignature(method, param.ParameterType.Resolve());
+				return GetTypeSignature(method, ret.Resolve());
+			}
 		}
 
 		private static string GetTypeSignature(MethodDefinition method, TypeDefinition type)
 		{
 			if (type.IsEnum || type.IsPointer || type.IsArray)
+				return "I";
+
+			// special delegates
+			if ((type.FullName.StartsWith("SkiaSharp.") || type.FullName.StartsWith("HarfBuzzSharp.")) && type.FullName.EndsWith("ProxyDelegate"))
 				return "I";
 
 			switch (type.FullName)
@@ -142,14 +148,6 @@ namespace SkiaSharpGenerator
 				case "System.Byte":
 				case "System.Boolean":
 				case "System.Void*":
-				case "SkiaSharp.GRGlGetProcProxyDelegate":
-				case "SkiaSharp.GRVkGetProcProxyDelegate":
-				case "SkiaSharp.SKBitmapReleaseProxyDelegate":
-				case "SkiaSharp.SKDataReleaseProxyDelegate":
-				case "SkiaSharp.SKGlyphPathProxyDelegate":
-				case "SkiaSharp.SKImageTextureReleaseProxyDelegate":
-				case "SkiaSharp.SKImageRasterReleaseProxyDelegate":
-				case "SkiaSharp.SKSurfaceRasterReleaseProxyDelegate":
 				case "SkiaSharp.SKManagedDrawableDelegates":
 				case "SkiaSharp.SKManagedStreamDelegates":
 				case "SkiaSharp.SKManagedWStreamDelegates":

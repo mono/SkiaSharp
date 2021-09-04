@@ -38,19 +38,12 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 }
 
 Task ("docs-download-output")
-    .Does (() =>
+    .Does (async () =>
 {
     EnsureDirectoryExists ("./output");
     CleanDirectories ("./output");
-    EnsureDirectoryExists ("./output/temp");
 
-    var url = GetDownloadUrl ("_nugets");
-    DownloadFile (url, "./output/temp/nugets.nupkg");
-
-    Unzip ("./output/temp/nugets.nupkg", "./output/temp");
-    MoveDirectory ("./output/temp/tools", OUTPUT_NUGETS_PATH);
-
-    DeleteDirectory("./output/temp", new DeleteDirectorySettings { Recursive = true, Force = true });
+    await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         var version = GetVersion (id);
@@ -304,6 +297,16 @@ Task ("docs-format-docs")
                     .Skip (1)
                     .Remove ();
             }
+        }
+
+        // remove any assembly attributes for now: https://github.com/mono/api-doc-tools/issues/560
+        if (xdoc.Root.Name == "Overview") {
+            xdoc.Root
+                .Elements ("Assemblies")
+                .Elements ("Assembly")
+                .Elements ("Attributes")
+                .Elements ("Attribute")
+                .Remove ();
         }
 
         // remove any duplicate AssemblyVersions

@@ -17,7 +17,7 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PackageCertificateKeyFile>..\..\..\AppStoreCertificates\SkiaSharpSample_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <PackageCertificateThumbprint>D3578B78019FED6AEE572B23C1723D44951E0BF9</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>5FC604ABEDFB78C8B4E57214FEB937949F44ABE4</PackageCertificateThumbprint>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
@@ -119,12 +119,20 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.9" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
-    <PackageReference Include="Uno.Core" Version="2.0.0" />
+    <PackageReference Include="Uno.Core" Version="2.3.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.UWP\HarfBuzzSharp.UWP.csproj">
+      <Project>{6d1e1f39-ef70-4211-a518-bbbaf02d6fff}</Project>
+      <Name>HarfBuzzSharp.UWP</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp.UWP\SkiaSharp.UWP.csproj">
       <Project>{bab615aa-956e-4079-b260-dd7b1f52ec7d}</Project>
       <Name>SkiaSharp.UWP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj">
+      <Project>{233220cc-f0f3-4c44-9736-ed2cfc363fd3}</Project>
+      <Name>SkiaSharp.HarfBuzz</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.UWP\SkiaSharp.Views.UWP.csproj">
       <Project>{8bb20362-91a2-4206-944d-634070eac6f3}</Project>
@@ -133,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\..\..\output\native\uwp\$(Platform)\libSkiaSharp.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\libSkiaSharp.dll')" Visible="false" />
+    <Content Include="..\..\..\..\output\native\uwp\$(Platform)\libHarfBuzzSharp.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\libHarfBuzzSharp.dll')" Visible="false" />
     <Content Include="..\..\..\..\output\native\uwp\$(Platform)\libEGL.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\libEGL.dll')" Visible="false" />
     <Content Include="..\..\..\..\output\native\uwp\$(Platform)\libGLESv2.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\libGLESv2.dll')" Visible="false" />
     <Content Include="..\..\..\..\output\native\uwp\$(Platform)\SkiaSharp.Views.Interop.UWP.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\SkiaSharp.Views.Interop.UWP.dll')" Visible="false" />

@@ -6,9 +6,11 @@
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Uno</PackagingGroup>
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
+    <PackagingLocation>uno-runtime\webassembly</PackagingLocation>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Uno.UI" Version="2.4.4" />
+    <PackageReference Include="Uno.UI" Version="3.7.6" />
+    <PackageReference Include="Uno.UI.Runtime.WebAssembly" Version="3.7.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
@@ -23,6 +25,12 @@
     <Compile Include="..\SkiaSharp.Views.Uno\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="WasmScripts\*.js" />
     <EmbeddedResource Include="WasmScripts\*.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="LinkerDefinition.Wasm.xml">
+      <LogicalName>$(AssemblyName).xml</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

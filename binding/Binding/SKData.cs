@@ -43,6 +43,12 @@ namespace SkiaSharp
 
 		// CreateCopy
 
+		public static SKData CreateCopy (IntPtr bytes, int length) =>
+			CreateCopy (bytes, (ulong)length);
+
+		public static SKData CreateCopy (IntPtr bytes, long length) =>
+			CreateCopy (bytes, (ulong)length);
+
 		public static SKData CreateCopy (IntPtr bytes, ulong length)
 		{
 			if (!PlatformConfiguration.Is64Bit && length > UInt32.MaxValue)
@@ -73,6 +79,9 @@ namespace SkiaSharp
 		{
 			return GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
 		}
+
+		public static SKData Create (long size) =>
+			GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr)size));
 
 		public static SKData Create (ulong size)
 		{
@@ -221,6 +230,8 @@ namespace SkiaSharp
 		public long Size => (long)SkiaApi.sk_data_get_size (Handle);
 
 		public IntPtr Data => (IntPtr)SkiaApi.sk_data_get_data (Handle);
+
+		public Span<byte> Span => new Span<byte> ((void*)Data, (int)Size);
 
 		// AsStream
 

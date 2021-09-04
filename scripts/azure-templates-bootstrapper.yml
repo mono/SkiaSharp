@@ -33,6 +33,7 @@ jobs:
 #       displayName: ${{ parameters.displayName }}
 #       vmImage: ${{ parameters.vmImage }}
 #       condition: ${{ parameters.condition }}
+#       postBuildSteps: ${{ parameters.postBuildSteps }}
 #       buildExternals: ${{ parameters.buildExternals }}
 
 # - ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
@@ -101,9 +102,17 @@ jobs:
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
+            version: $(DOTNET_VERSION_PREVIOUS)
+            performMultiLevelLookup: true
+          displayName: Install the previous version of .NET Core
+        - task: UseDotNet@2
+          inputs:
+            packageType: 'sdk'
             version: $(DOTNET_VERSION)
             performMultiLevelLookup: true
           displayName: Install the correct version of .NET Core
+        - pwsh: dotnet --info
+          displayName: Display all the .NET information
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
@@ -188,7 +197,7 @@ jobs:
       # publish artifacts
       - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
-        condition: ${{ parameters.shouldPublish }}
+        condition: or(${{ parameters.shouldPublish }}, failed())
         inputs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'

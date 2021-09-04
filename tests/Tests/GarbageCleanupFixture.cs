@@ -20,11 +20,6 @@ namespace SkiaSharp.Tests
 
 		public GarbageCleanupFixture()
 		{
-			var aliveObjects = HandleDictionary.instances.Values
-				.Select(o => o.Target)
-				.Where(o => IsExpectedToBeDead(o, null))
-				.ToList();
-			Assert.Empty(aliveObjects);
 		}
 
 		public void Dispose()
@@ -34,7 +29,7 @@ namespace SkiaSharp.Tests
 
 			var staticObjects = HandleDictionary.instances.Values
 				.Select(o => o.Target)
-				.Where(o => !IsExpectedToBeDead(o, null))
+				.Where(o => !IsExpectedToBeDead(o))
 				.Cast<SKObject>()
 				.ToList();
 			var staticChildren = staticObjects
@@ -44,7 +39,7 @@ namespace SkiaSharp.Tests
 			// make sure nothing is alive
 			var aliveObjects = HandleDictionary.instances.Values
 				.Select(o => o.Target)
-				.Where(o => IsExpectedToBeDead(o, staticChildren))
+				.Where(o => IsExpectedToBeDead(o))
 				.Cast<SKObject>()
 				.ToList();
 			foreach (var o in staticChildren)
@@ -65,7 +60,7 @@ namespace SkiaSharp.Tests
 #endif
 		}
 
-		private bool IsExpectedToBeDead(object instance, IEnumerable<SKObject> exceptions)
+		private bool IsExpectedToBeDead(object instance)
 		{
 			if (instance == null)
 				return false;

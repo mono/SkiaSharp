@@ -101,15 +101,23 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Essentials" Version="1.5.1" />
-    <PackageReference Include="Uno.UI" Version="2.4.4" />
-    <PackageReference Include="Uno.UI.RemoteControl" Version="2.4.4" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI" Version="3.7.6" />
+    <PackageReference Include="Uno.UI.RemoteControl" Version="3.7.6" Condition="'$(Configuration)'=='Debug'" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.iOS\HarfBuzzSharp.iOS.csproj">
+      <Project>{33c80641-94c5-4d6a-b9fa-5a7deef7efe6}</Project>
+      <Name>HarfBuzzSharp.iOS</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp.iOS\SkiaSharp.iOS.csproj">
       <Project>{6A678CFB-21A7-4E81-8909-FD72ABBFD408}</Project>
       <Name>SkiaSharp.iOS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj">
+      <Project>{731bccc9-4e61-4410-aaf2-897d7e1e88ad}</Project>
+      <Name>SkiaSharp.HarfBuzz</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.iOS\SkiaSharp.Views.Uno.iOS.csproj">
       <Project>{9b0eb9f0-6114-4adf-8a4b-562daeb29c48}</Project>
@@ -119,4 +127,5 @@
   <Import Project="..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" Condition="Exists('..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\xamarinios1.0\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\xamarinios1.0\SkiaSharp.targets')" />
+  <Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\xamarinios1.0\HarfBuzzSharp.targets" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\xamarinios1.0\HarfBuzzSharp.targets')" />
 </Project>

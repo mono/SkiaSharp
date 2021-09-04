@@ -1,14 +1,28 @@
 ﻿using System;
 using Windows.ApplicationModel;
 using Windows.Graphics.Display;
+
+#if WINDOWS
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+#else
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+#endif
 
+#if WINDOWS
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public partial class SKXamlCanvas : Canvas
 	{
@@ -34,8 +48,10 @@ namespace SkiaSharp.Views.UWP
 			if (designMode)
 				return;
 
+#if !WINDOWS
 			var display = DisplayInformation.GetForCurrentView();
 			OnDpiChanged(display);
+#endif
 
 			Loaded += OnLoaded;
 			Unloaded += OnUnloaded;
@@ -79,11 +95,20 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
+#if WINDOWS
+		private void OnXamlRootChanged(XamlRoot xamlRoot = null, XamlRootChangedEventArgs e = null)
+		{
+			var root = xamlRoot ?? XamlRoot;
+			Dpi = root.RasterizationScale;
+			Invalidate();
+		}
+#else
 		private void OnDpiChanged(DisplayInformation sender, object args = null)
 		{
 			Dpi = sender.LogicalDpi / 96.0f;
 			Invalidate();
 		}
+#endif
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
@@ -96,10 +121,15 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 1)
 				return;
 
+#if WINDOWS
+			XamlRoot.Changed += OnXamlRootChanged;
+			OnXamlRootChanged();
+#else
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged += OnDpiChanged;
 
 			OnDpiChanged(display);
+#endif
 		}
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
@@ -108,15 +138,23 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 0)
 				return;
 
+#if WINDOWS
+			XamlRoot.Changed -= OnXamlRootChanged;
+#else
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged -= OnDpiChanged;
+#endif
 
 			FreeBitmap();
 		}
 
 		public void Invalidate()
 		{
+#if WINDOWS
+			DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, DoInvalidate);
+#else
 			Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
+#endif
 		}
 
 		private void DoInvalidate()
