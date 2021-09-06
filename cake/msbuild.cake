@@ -18,7 +18,6 @@ void RunNuGetRestorePackagesConfig(FilePath sln)
     EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
 
     var settings = new NuGetRestoreSettings {
-        ToolPath = NUGET_EXE,
         Source = NUGETS_SOURCES,
         NoCache = true,
         PackagesDirectory = dir.Combine("packages"),
@@ -46,7 +45,7 @@ void RunMSBuild(
         c.MaxCpuCount = 0;
 
         var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
-        var blPath = ROOT_PATH.Combine("output/binlogs").CombineWithFilePath(relativeSolution + ".binlog");
+        var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + ".binlog");
         c.BinaryLogger = new MSBuildBinaryLogSettings {
             Enabled = true,
             FileName = blPath.FullPath,

@@ -4,7 +4,6 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefau
     var settings = new NuGetPackSettings {
         OutputDirectory = MakeAbsolute(outputPath),
         BasePath = nuspecPath.GetDirectory(),
-        ToolPath = NUGET_EXE,
         Properties = new Dictionary<string, string> {
             // NU5048: The 'PackageIconUrl'/'iconUrl' element is deprecated. Consider using the 'PackageIcon'/'icon' element instead.
             // NU5105: The package version 'xxx' uses SemVer 2.0.0 or components of SemVer 1.0.0 that are not supported on legacy clients.
@@ -55,7 +54,7 @@ void RunNetCoreTests(FilePath testAssembly)
         Configuration = CONFIGURATION,
         NoBuild = true,
         TestAdapterPath = ".",
-        Logger = "xunit",
+        Loggers = new [] { "xunit" },
         WorkingDirectory = dir,
         Verbosity = DotNetCoreVerbosity.Normal,
         ArgumentCustomization = args => {
@@ -173,7 +172,7 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
         else if (d.StartsWith("net") && d.Contains("-maccatalyst"))
             yield return (dir, "maccatalyst");
         else if (d.StartsWith("netcoreapp"))
-            ; // skip this one for now
+            continue; // skip this one for now
         else
             throw new Exception($"Unknown platform '{d}' found at '{dir}'.");
     }
@@ -200,6 +199,7 @@ string[] GetReferenceSearchPaths()
         refs.Add($"{pf}/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0");
         refs.Add($"{pf}/Windows Kits/10/References/Windows.Foundation.FoundationContract/1.0.0.0");
         refs.Add($"{pf}/GtkSharp/2.12/lib");
+        refs.Add($"{pf}/GtkSharp/2.12/lib/gtk-sharp-2.0");
         refs.Add($"{vs}/Common7/IDE/PublicAssemblies");
     } else {
         // TODO

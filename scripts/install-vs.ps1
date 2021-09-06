@@ -31,7 +31,7 @@ $exitCode = & "$env:TEMP\dd_vs_community.exe" --quiet --norestart --wait `
 
 Write-Host "Exit code: $exitCode"
 
-$vsLogs = 'output\vs-logs'
+$vsLogs = 'output\logs\vs-logs'
 New-Item -ItemType Directory -Force -Path "$vsLogs" | Out-Null
 Get-ChildItem "$env:TEMP\dd_*" |
   Where-Object { $_.CreationTime -gt $startTime } |

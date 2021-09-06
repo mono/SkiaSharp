@@ -1,14 +1,17 @@
-#addin nuget:?package=Cake.Xamarin&version=3.0.2
-#addin nuget:?package=Cake.XCode&version=4.2.0
-#addin nuget:?package=Cake.FileHelpers&version=3.2.1
-#addin nuget:?package=Cake.Json&version=4.0.0
-#addin nuget:?package=SharpCompress&version=0.24.0
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2&loaddependencies=true
+#addin nuget:?package=Cake.Xamarin&version=3.1.0
+#addin nuget:?package=Cake.XCode&version=5.0.0
+#addin nuget:?package=Cake.FileHelpers&version=4.0.1
+#addin nuget:?package=Cake.Json&version=6.0.1
+#addin nuget:?package=NuGet.Packaging.Core&version=5.11.0
+#addin nuget:?package=SharpCompress&version=0.28.3
+#addin nuget:?package=Mono.Cecil&version=0.10.0
+#addin nuget:?package=Mono.ApiTools&version=5.14.0.2
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
 #tool nuget:?package=mdoc&version=5.8.3
 #tool nuget:?package=xunit.runner.console&version=2.4.1
-#tool nuget:?package=vswhere&version=2.7.1
+#tool nuget:?package=vswhere&version=2.8.4
 
 using System.Linq;
 using System.Net.Http;
@@ -43,7 +46,6 @@ var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux 
 var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
 var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
-var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
@@ -103,11 +105,6 @@ var PREVIEW_ONLY_NUGETS = new List<string> {
     "SkiaSharp.Views.Maui.Controls.Compatibility",
 };
 
-Information("Arguments:");
-foreach (var arg in CAKE_ARGUMENTS) {
-    Information($"    {arg.Key.PadRight(30)} {{0}}", arg.Value);
-}
-
 Information("Source Control:");
 Information($"    {"PREVIEW_LABEL".PadRight(30)} {{0}}", PREVIEW_LABEL);
 Information($"    {"FEATURE_NAME".PadRight(30)} {{0}}", FEATURE_NAME);
@@ -149,7 +146,7 @@ Task ("libs")
     if (!BUILD_ALL_PLATFORMS) {
         if (IsRunningOnWindows ()) {
             platform = ".Windows";
-        } else if (IsRunningOnMac ()) {
+        } else if (IsRunningOnMacOs ()) {
             platform = ".Mac";
         } else if (IsRunningOnLinux ()) {
             platform = ".Linux";
@@ -220,7 +217,7 @@ Task ("tests-netfx")
     if (IsRunningOnWindows ()) {
         RunDesktopTest ("x86");
         RunDesktopTest ("x64");
-    } else if (IsRunningOnMac ()) {
+    } else if (IsRunningOnMacOs ()) {
         RunDesktopTest ("AnyCPU");
     } else if (IsRunningOnLinux ()) {
         RunDesktopTest ("x64");
@@ -292,12 +289,13 @@ Task ("tests-android")
             platform: "AnyCPU",
             configuration: "Debug");
         // run the tests
-        DirectoryPath results = "./output/testlogs/SkiaSharp.Android.Tests";
+        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Android.Tests";
         RunCake ("./cake/xharness-android.cake", "Default", new Dictionary<string, string> {
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
             { "exclusive", "true" },
             { "results", MakeAbsolute(results).FullPath },
+            { "verbosity", "diagnostic" },
         });
     } catch {
         failedTests++;
@@ -332,7 +330,7 @@ Task ("tests-ios")
             platform: "iPhoneSimulator",
             configuration: "Debug");
         // run the tests
-        DirectoryPath results = "./output/testlogs/SkiaSharp.iOS.Tests";
+        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.iOS.Tests";
         RunCake ("./cake/xharness-ios.cake", "Default", new Dictionary<string, string> {
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
@@ -415,7 +413,7 @@ Task ("samples")
     .Does(() =>
 {
     var isLinux = IsRunningOnLinux ();
-    var isMac = IsRunningOnMac ();
+    var isMac = IsRunningOnMacOs ();
     var isWin = IsRunningOnWindows ();
 
     var buildMatrix = new Dictionary<string, bool> {
@@ -534,9 +532,9 @@ Task ("samples")
     }
 
     CleanDirectory ("./output/samples/");
-    DeleteDirectory ("./output/samples/");
+    DeleteDirectory ("./output/samples/", new DeleteDirectorySettings { Recursive = true, Force = true });
     CleanDirectory ("./output/samples-preview/");
-    DeleteDirectory ("./output/samples-preview/");
+    DeleteDirectory ("./output/samples-preview/", new DeleteDirectorySettings { Recursive = true, Force = true });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -557,7 +555,7 @@ Task ("nuget-normal")
     if (!PACK_ALL_PLATFORMS) {
         if (IsRunningOnWindows ()) {
             platform = "windows";
-        } else if (IsRunningOnMac ()) {
+        } else if (IsRunningOnMacOs ()) {
             platform = "macos";
         } else if (IsRunningOnLinux ()) {
             platform = "linux";
@@ -871,7 +869,7 @@ Task ("clean-managed")
     DeleteFiles ("./nuget/*.prerelease.nuspec");
 
     if (DirectoryExists ("./output"))
-        DeleteDirectory ("./output", true);
+        DeleteDirectory ("./output", new DeleteDirectorySettings { Recursive = true, Force = true });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

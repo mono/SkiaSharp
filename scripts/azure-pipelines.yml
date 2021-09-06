@@ -38,7 +38,7 @@ variables:
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
   ENABLE_CODE_COVERAGE: true
-  EMSCRIPTEN_VERSION: 2.0.12
+  EMSCRIPTEN_VERSION: 2.0.23
   XHARNESS_VERSION: 1.0.0-prerelease.21404.1
 
 resources:
@@ -352,6 +352,9 @@ stages:
           requiredArtifacts:
             - native
           artifactName: managed
+          postBuildSteps:
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+              displayName: Delete the native folder
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
@@ -362,6 +365,9 @@ stages:
           requiredArtifacts:
             - native
           artifactName: managed
+          postBuildSteps:
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+              displayName: Delete the native folder
       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
         parameters:
           name: managed_linux
@@ -373,6 +379,9 @@ stages:
           requiredArtifacts:
             - native
           artifactName: managed
+          postBuildSteps:
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+              displayName: Delete the native folder
 
   - stage: package
     displayName: Package NuGets
@@ -389,7 +398,10 @@ stages:
           installDotNet: false
           requiredArtifacts:
             - managed
+            - native
           postBuildSteps:
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+              displayName: Delete the native folder
             - task: PublishBuildArtifacts@1
               displayName: Publish the nuget artifacts
               inputs:
@@ -405,6 +417,10 @@ stages:
               inputs:
                 artifactName: nuget
                 pathToPublish: 'SignList.xml'
+            - pwsh: |
+                Remove-Item ./output/nugets/ -Recurse -Force
+                Remove-Item ./output/special-nugets/ -Recurse -Force
+              displayName: Delete the nugets folder
 
   - stage: api_diff
     displayName: API Diff
@@ -422,13 +438,11 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - package_windows
+          requiredArtifactsMap:
+            - src: nuget
+              dst: nugets
           preBuildSteps:
-            - pwsh: |
-                $p = "$env:BUILD_SOURCESDIRECTORY\output\nugets\api-diff"
-                New-Item -ItemType Directory -Force -Path $p | Out-Null
-                $uri = 'https://xamarin.azureedge.net/GTKforWindows/Windows/gtk-sharp-2.12.45.msi'
-                .\scripts\download-file.ps1 -Uri $uri -OutFile gtk-sharp.msi
-                msiexec /i gtk-sharp.msi /norestart /quiet /l* $p\gtk-sharp-install.log
+            - pwsh: .\scripts\install-gtk.ps1
               displayName: Install GTK# 2.12
           postBuildSteps:
             - task: PublishBuildArtifacts@1
@@ -568,10 +582,7 @@ stages:
                   --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
                   --version "$env:XHARNESS_VERSION"
               displayName: Install the xharness .NET Core tool
-            - bash: |
-                sh -c "echo \"y\" | $ANDROID_HOME/tools/bin/sdkmanager \"emulator\" \"system-images;android-30;google_apis_playstore;x86\""
-                echo "##vso[task.prependpath]$ANDROID_HOME/tools/bin"
-                echo "##vso[task.prependpath]$ANDROID_HOME/emulator"
+            - bash: sh -c "echo \"y\" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \"emulator\" \"system-images;android-30;google_apis_playstore;x86\""
               displayName: Install the Android emulator
           postBuildSteps:
             - task: PublishTestResults@2
@@ -579,14 +590,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/testlogs/SkiaSharp.Android.Tests/**/TestResults.xml'
+                testResultsFiles: 'output/logs/testlogs/SkiaSharp.Android.Tests/**/TestResults.xml'
                 testRunTitle: 'Android Tests'
             - task: PublishBuildArtifacts@1
               displayName: Publish the test logs
               condition: always()
               inputs:
                 artifactName: testlogs_android
-                pathToPublish: 'output/testlogs'
+                pathToPublish: 'output/logs/testlogs'
       - template: azure-templates-bootstrapper.yml # Tests|ios (macOS)
         parameters:
           name: tests_ios_macos
@@ -611,14 +622,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/testlogs/SkiaSharp.iOS.Tests/**/TestResults.xml'
+                testResultsFiles: 'output/logs/testlogs/SkiaSharp.iOS.Tests/**/TestResults.xml'
                 testRunTitle: 'iOS Tests'
             - task: PublishBuildArtifacts@1
               displayName: Publish the test logs
               condition: always()
               inputs:
                 artifactName: testlogs_ios
-                pathToPublish: 'output/testlogs'
+                pathToPublish: 'output/logs/testlogs'
       - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
         parameters:
           name: tests_netfx_linux
@@ -731,27 +742,20 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
           installWindowsSdk: false
-          requiredArtifacts:
-            - nuget
-          preBuildSteps:
-            - pwsh: |
-                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
-                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
-              displayName: Copy the *.nupkgs into the correct folder for the samples
+          requiredArtifactsMap:
+            - src: nuget
+              dst: nugets
       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
         parameters:
           name: samples_macos
           displayName: macOS
           vmImage: $(VM_IMAGE_MAC)
           target: samples
-          requiredArtifacts:
-            - nuget
+          requiredArtifactsMap:
+            - src: nuget
+              dst: nugets
           preBuildSteps:
             - template: azure-templates-provisioning-profiles.yml
-            - pwsh: |
-                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
-                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
-              displayName: Copy the *.nupkgs into the correct folder for the samples
       - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
         parameters:
           name: samples_linux
@@ -759,15 +763,11 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
-          requiredArtifacts:
-            - nuget
+          requiredArtifactsMap:
+            - src: nuget
+              dst: nugets
           installEmsdk: true
           initScript: source ~/emsdk/emsdk_env.sh
-          preBuildSteps:
-            - pwsh: |
-                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
-                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
-              displayName: Copy the *.nupkgs into the correct folder for the samples
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: checks
