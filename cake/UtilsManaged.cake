@@ -254,8 +254,8 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Uno.UI", "xamarinios10");
     await AddDep("Uno.UI", "xamarinmac20");
     await AddDep("Uno.UI", "UAP");
-    await AddDep("Microsoft.ProjectReunion.Foundation", "net5.0-windows");
-    await AddDep("Microsoft.ProjectReunion.WinUI", "net5.0-windows10.0.18362.0");
+    await AddDep("Microsoft.WindowsAppSDK.Foundation", "net5.0-windows");
+    await AddDep("Microsoft.WindowsAppSDK.WinUI", "net5.0-windows10.0.18362.0");
     await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
     await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
 
