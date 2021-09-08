@@ -256,6 +256,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Uno.UI", "UAP");
     await AddDep("Microsoft.WindowsAppSDK.Foundation", "net5.0-windows");
     await AddDep("Microsoft.WindowsAppSDK.WinUI", "net5.0-windows10.0.18362.0");
+    await AddDep("Microsoft.WindowsAppSDK.InteractiveExperiences", "net5.0-windows10.0.17763.0");
     await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
     await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
 
