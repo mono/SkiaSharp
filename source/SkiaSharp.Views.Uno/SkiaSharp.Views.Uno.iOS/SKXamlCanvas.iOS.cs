@@ -46,5 +46,19 @@ namespace SkiaSharp.Views.UWP
 			// draw the surface to the context
 			drawable.DrawSurface(ctx, Bounds, info, surface);
 		}
+
+		public override void WillMoveToWindow(UIWindow window)
+		{
+			if (drawable != null)
+			{
+				// release the memory if we are leaving the window
+				if (window == null)
+					drawable?.Dispose();
+				else
+					SetNeedsDisplay();
+			}
+
+			base.WillMoveToWindow(window);
+		}
 	}
 }
