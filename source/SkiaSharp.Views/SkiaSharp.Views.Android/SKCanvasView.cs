@@ -13,6 +13,7 @@ namespace SkiaSharp.Views.Android
 		private bool ignorePixelScaling;
 		private bool designMode;
 		private SurfaceFactory surfaceFactory;
+		private float density;
 
 		public SKCanvasView(Context context)
 			: base(context)
@@ -23,13 +24,13 @@ namespace SkiaSharp.Views.Android
 		public SKCanvasView(Context context, IAttributeSet attrs)
 			: base(context, attrs)
 		{
-			Initialize();
+			Initialize(attrs);
 		}
 
 		public SKCanvasView(Context context, IAttributeSet attrs, int defStyleAttr)
 			: base(context, attrs, defStyleAttr)
 		{
-			Initialize();
+			Initialize(attrs);
 		}
 
 		protected SKCanvasView(IntPtr javaReference, JniHandleOwnership transfer)
@@ -38,21 +39,37 @@ namespace SkiaSharp.Views.Android
 			Initialize();
 		}
 
-		private void Initialize()
+		private void Initialize(IAttributeSet attrs = null)
 		{
 			designMode = !Extensions.IsValidEnvironment;
 			surfaceFactory = new SurfaceFactory();
+			density = Resources.DisplayMetrics.Density;
+
+			if (attrs != null)
+			{
+				using var a = Context.ObtainStyledAttributes(attrs, Resource.Styleable.SKCanvasView);
+
+				var N = a.IndexCount;
+				for (var i = 0; i < N; ++i)
+				{
+					var attr = a.GetIndex(i);
+					if (attr == Resource.Styleable.SKCanvasView_ignorePixelScaling)
+						IgnorePixelScaling = a.GetBoolean(attr, false);
+				}
+
+				a.Recycle();
+			}
 		}
 
-		public SKSize CanvasSize => surfaceFactory.Info.Size;
+		public SKSize CanvasSize { get; private set; }
 
 		public bool IgnorePixelScaling
 		{
-			get { return ignorePixelScaling; }
+			get => ignorePixelScaling;
 			set
 			{
 				ignorePixelScaling = value;
-				UpdateCanvasSize(Width, Height);
+				surfaceFactory.UpdateCanvasSize(Width, Height);
 				Invalidate();
 			}
 		}
@@ -74,10 +91,26 @@ namespace SkiaSharp.Views.Android
 			// create a skia surface
 			var surface = surfaceFactory.CreateSurface(out var info);
 			if (surface == null)
+			{
+				CanvasSize = SKSize.Empty;
 				return;
+			}
+
+			var userVisibleSize = IgnorePixelScaling
+				? new SKSizeI((int)(info.Width / density), (int)(info.Height / density))
+				: info.Size;
+
+			CanvasSize = userVisibleSize;
+
+			if (IgnorePixelScaling)
+			{
+				var skiaCanvas = surface.Canvas;
+				skiaCanvas.Scale(density);
+				skiaCanvas.Save();
+			}
 
 			// draw using SkiaSharp
-			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 #pragma warning disable CS0618 // Type or member is obsolete
 			OnDraw(surface, info);
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -91,7 +124,7 @@ namespace SkiaSharp.Views.Android
 			base.OnSizeChanged(w, h, oldw, oldh);
 
 			// update the info with the new sizes
-			UpdateCanvasSize(w, h);
+			surfaceFactory.UpdateCanvasSize(w, h);
 		}
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
@@ -118,7 +151,7 @@ namespace SkiaSharp.Views.Android
 		{
 			base.OnAttachedToWindow();
 
-			UpdateCanvasSize(Width, Height);
+			surfaceFactory.UpdateCanvasSize(Width, Height);
 			Invalidate();
 		}
 
@@ -128,8 +161,5 @@ namespace SkiaSharp.Views.Android
 
 			base.Dispose(disposing);
 		}
-
-		private void UpdateCanvasSize(int w, int h) =>
-			surfaceFactory.UpdateCanvasSize(w, h, IgnorePixelScaling ? Resources.DisplayMetrics.Density : 1);
 	}
 }
