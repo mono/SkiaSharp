@@ -29,7 +29,7 @@ namespace SkiaSharpSample
 				TextAlign = SKTextAlign.Center,
 				TextSize = 24
 			};
-			var coord = new SKPoint((float)e.Info.Width / 2, ((float)e.Info.Height + paint.TextSize) / 2);
+			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + paint.TextSize) / 2);
 			canvas.DrawText("SkiaSharp", coord, paint);
 		}
 	}
