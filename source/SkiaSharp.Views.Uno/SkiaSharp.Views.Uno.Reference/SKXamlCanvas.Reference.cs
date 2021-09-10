@@ -13,8 +13,6 @@ namespace SkiaSharp.Views.UWP
 
 		partial void DoUnloaded() => throw new NotImplementedException();
 
-		private SKSize GetCanvasSize() => throw new NotImplementedException();
-
 		private void DoInvalidate() => throw new NotImplementedException();
 	}
 }
