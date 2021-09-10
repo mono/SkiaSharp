@@ -70,6 +70,8 @@ namespace SkiaSharp.Views.UWP
 				pixelWidth = info.Width;
 				pixelHeight = info.Height;
 			}
+
+			return info;
 		}
 
 		private void FreeBitmap()
