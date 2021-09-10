@@ -41,6 +41,7 @@
     <None Include="..\SkiaSharp.Views.Mac\**\*.cs" Link="Platform\macOS\%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- Android -->
     <None Include="..\SkiaSharp.Views.Android\**\*.cs" Link="Platform\Android\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp.Views.Android\Resources\*\*" Link="Platform\Android\Resources\%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- local platforms -->
     <Compile Remove="Platform\**" />
     <None Include="Platform\**\*.cs" />
@@ -68,8 +69,8 @@
   <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
     <!-- Android -->
     <Compile Include="..\SkiaSharp.Views.Android\**\*.cs" Link="Platform\Android\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\SkiaSharp.Views.Android\Resources\*\*" Link="Platform\Android\Resources\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="Platform\Android\**\*.cs" />
+    <AndroidResource Include="..\SkiaSharp.Views.Android\Resources\*\*" Link="Platform\Android\Resources\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="..\*\bin\**;..\*\obj\**" />

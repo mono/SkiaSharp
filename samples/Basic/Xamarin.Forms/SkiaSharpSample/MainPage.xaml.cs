@@ -7,9 +7,23 @@ namespace SkiaSharpSample
 {
 	public partial class MainPage : ContentPage
 	{
+		private SKPoint? touchLocation;
+
 		public MainPage()
 		{
 			InitializeComponent();
+		}
+
+		private void OnTouch(object sender, SKTouchEventArgs e)
+		{
+			if (e.InContact)
+				touchLocation = e.Location;
+			else
+				touchLocation = null;
+
+			skiaView.InvalidateSurface();
+
+			e.Handled = true;
 		}
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -17,17 +31,11 @@ namespace SkiaSharpSample
 			// the the canvas and properties
 			var canvas = e.Surface.Canvas;
 
-			// get the screen density for scaling
-			var scale = (float)(e.Info.Width / skiaView.Width);
-
-			// handle the device screen density
-			canvas.Scale(scale);
-
 			// make sure the canvas is blank
 			canvas.Clear(SKColors.White);
 
-			// draw some text
-			var paint = new SKPaint
+			// decide what the text looks like
+			using var paint = new SKPaint
 			{
 				Color = SKColors.Black,
 				IsAntialias = true,
@@ -35,7 +43,13 @@ namespace SkiaSharpSample
 				TextAlign = SKTextAlign.Center,
 				TextSize = 24
 			};
-			var coord = new SKPoint((float)skiaView.Width / 2, ((float)skiaView.Height + paint.TextSize) / 2);
+
+			// adjust the location based on the pointer
+			var coord = (touchLocation is SKPoint loc)
+				? new SKPoint(loc.X, loc.Y)
+				: new SKPoint(e.Info.Width / 2, (e.Info.Height + paint.TextSize) / 2);
+
+			// draw some text
 			canvas.DrawText("SkiaSharp", coord, paint);
 		}
 	}
