@@ -66,11 +66,11 @@ namespace SkiaSharp.Views.iOS
 			drawable = new SKCGSurfaceFactory();
 		}
 
-		public SKSize CanvasSize => drawable?.Info.Size ?? SKSize.Empty;
+		public SKSize CanvasSize { get; private set; }
 
 		public bool IgnorePixelScaling
 		{
-			get { return ignorePixelScaling; }
+			get => ignorePixelScaling;
 			set
 			{
 				ignorePixelScaling = value;
@@ -86,15 +86,31 @@ namespace SkiaSharp.Views.iOS
 				return;
 
 			// create the skia context
-			using (var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentScaleFactor, out var info))
+			using (var surface = drawable.CreateSurface(Bounds, ContentScaleFactor, out var info))
 			{
 				if (info.Width == 0 || info.Height == 0)
+				{
+					CanvasSize = SKSize.Empty;
 					return;
+				}
+
+				var userVisibleSize = IgnorePixelScaling
+					? new SKSizeI((int)Bounds.Width, (int)Bounds.Height)
+					: info.Size;
+
+				CanvasSize = userVisibleSize;
+
+				if (IgnorePixelScaling)
+				{
+					var skiaCanvas = surface.Canvas;
+					skiaCanvas.Scale((float)ContentScaleFactor);
+					skiaCanvas.Save();
+				}
 
 				using (var ctx = UIGraphics.GetCurrentContext())
 				{
 					// draw on the image using SKiaSharp
-					OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+					OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 #pragma warning disable CS0618 // Type or member is obsolete
 					DrawInSurface(surface, info);
 #pragma warning restore CS0618 // Type or member is obsolete
