@@ -8,6 +8,7 @@ namespace SkiaSharp.Views.Tizen
 	{
 		private bool ignorePixelScaling;
 		private SKImageInfo info;
+		private SKSizeI canvasSize;
 
 		public SKCanvasView(EvasObject parent)
 			: base(parent)
@@ -30,7 +31,9 @@ namespace SkiaSharp.Views.Tizen
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
-		protected override SKSizeI GetSurfaceSize() => info.Size;
+		protected override SKSizeI GetSurfaceSize() => canvasSize;
+
+		protected override SKSizeI GetRawSurfaceSize() => info.Size;
 
 		protected virtual void OnDrawFrame(SKPaintSurfaceEventArgs e)
 		{
@@ -45,8 +48,15 @@ namespace SkiaSharp.Views.Tizen
 			// draw directly into the EFL image data
 			using (var surface = SKSurface.Create(info, Evas.evas_object_image_data_get(evasImage, true), info.RowBytes))
 			{
+				if (IgnorePixelScaling)
+				{
+					var skiaCanvas = surface.Canvas;
+					skiaCanvas.Scale((float)ScalingInfo.ScalingFactor);
+					skiaCanvas.Save();
+				}
+
 				// draw using SkiaSharp
-				OnDrawFrame(new SKPaintSurfaceEventArgs(surface, info));
+				OnDrawFrame(new SKPaintSurfaceEventArgs(surface, info.WithSize(canvasSize), info));
 				surface.Canvas.Flush();
 			}
 		}
@@ -56,15 +66,18 @@ namespace SkiaSharp.Views.Tizen
 			var w = info.Width;
 			var h = info.Height;
 
+			info.Width = geometry.Width;
+			info.Height = geometry.Height;
+
 			if (IgnorePixelScaling)
 			{
-				info.Width = (int)ScalingInfo.FromPixel(geometry.Width);
-				info.Height = (int)ScalingInfo.FromPixel(geometry.Height);
+				canvasSize.Width = (int)ScalingInfo.FromPixel(geometry.Width);
+				canvasSize.Height = (int)ScalingInfo.FromPixel(geometry.Height);
 			}
 			else
 			{
-				info.Width = geometry.Width;
-				info.Height = geometry.Height;
+				canvasSize.Width = geometry.Width;
+				canvasSize.Height = geometry.Height;
 			}
 
 			return (w != info.Width || h != info.Height);
