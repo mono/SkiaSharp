@@ -22,9 +22,6 @@ namespace SkiaSharp.Views.UWP
 		partial void DoUnloaded() =>
 			FreeBitmap();
 
-		private SKSize GetCanvasSize() =>
-			new SKSize(pixelWidth, pixelHeight);
-
 		private void DoInvalidate()
 		{
 			if (designMode)
@@ -34,33 +31,36 @@ namespace SkiaSharp.Views.UWP
 				return;
 
 			if (ActualWidth <= 0 || ActualHeight <= 0)
+			{
+				CanvasSize = SKSize.Empty;
 				return;
-
-			int width, height;
-			if (IgnorePixelScaling)
-			{
-				width = (int)ActualWidth;
-				height = (int)ActualHeight;
-			}
-			else
-			{
-				width = (int)(ActualWidth * Dpi);
-				height = (int)(ActualHeight * Dpi);
 			}
 
-			var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Opaque);
-			CreateBitmap(info);
+			var info = CreateBitmap(out var unscaledSize, out var dpi);
 
 			using (var surface = SKSurface.Create(info, pixelsHandle.AddrOfPinnedObject(), info.RowBytes))
 			{
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+				var userVisibleSize = IgnorePixelScaling ? unscaledSize : info.Size;
+				CanvasSize = userVisibleSize;
+
+				if (IgnorePixelScaling)
+				{
+					var canvas = surface.Canvas;
+					canvas.Scale(dpi);
+					canvas.Save();
+				}
+
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
 			WebAssemblyRuntime.InvokeJS($"SkiaSharp.Views.UWP.SKXamlCanvas.invalidateCanvas({pixelsHandle.AddrOfPinnedObject()}, \"{this.GetHtmlId()}\", {info.Width}, {pixelHeight});");
 		}
 
-		private unsafe void CreateBitmap(SKImageInfo info)
+		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)
 		{
+			var size = CreateSize(out unscaledSize, out dpi);
+			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Opaque);
+
 			if (pixels == null || pixelWidth != info.Width || pixelHeight != info.Height)
 			{
 				FreeBitmap();
@@ -70,6 +70,8 @@ namespace SkiaSharp.Views.UWP
 				pixelWidth = info.Width;
 				pixelHeight = info.Height;
 			}
+
+			return info;
 		}
 
 		private void FreeBitmap()

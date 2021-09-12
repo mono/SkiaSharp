@@ -49,16 +49,8 @@ namespace SkiaSharp.Views.Desktop
 			ResizeRedraw = true;
 		}
 
-		[Bindable(false)]
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public SKSize CanvasSize => lastSize;
 
-		[Bindable(false)]
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public GRContext GRContext => grContext;
 
 		[Category("Appearance")]
