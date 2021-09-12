@@ -18,13 +18,14 @@ namespace SkiaSharp.Views.Tizen
 
 		public bool IgnorePixelScaling
 		{
-			get { return ignorePixelScaling; }
+			get => ignorePixelScaling;
 			set
 			{
 				if (ignorePixelScaling != value)
 				{
 					ignorePixelScaling = value;
 					OnResized();
+					Invalidate();
 				}
 			}
 		}
