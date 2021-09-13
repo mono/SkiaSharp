@@ -37,7 +37,8 @@ Dummy output/native/uwp @('arm', 'x86', 'x64') @(
     'libHarfBuzzSharp.dll',
     'SkiaSharp.Views.Interop.UWP.dll',
     'libEGL.dll',
-    'libGLESv2.dll')
+    'libGLESv2.dll',
+    'zlib1.dll')
 
 Dummy output/native/watchos @('.') @(
     'libHarfBuzzSharp.a',

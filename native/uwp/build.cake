@@ -115,6 +115,7 @@ Task("ANGLE")
         if (Skip(arch)) return;
 
         var d = CONFIGURATION.ToLower() == "release" ? "" : "debug/";
+        var zd = CONFIGURATION.ToLower() == "release" ? "" : "d";
 
         RunProcess (vcpkg, $"install angle:{arch}-uwp");
 
@@ -124,6 +125,8 @@ Task("ANGLE")
         CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/{d}bin/libEGL.pdb"), outDir);
         CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/{d}bin/libGLESv2.dll"), outDir);
         CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/{d}bin/libGLESv2.pdb"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/{d}bin/zlib{zd}1.dll"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{arch}-uwp/{d}bin/zlib{zd}.pdb"), outDir);
     }
 });
 
