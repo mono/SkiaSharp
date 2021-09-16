@@ -4,13 +4,14 @@
     <TargetFrameworks>net6.0-ios;net6.0-maccatalyst;net6.0-android</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) and '$(MSBuildRuntimeType)' == 'Full'">$(TargetFrameworks);net6.0-windows10.0.19041</TargetFrameworks>
     <OutputType>Exe</OutputType>
+    <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
+    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
     <RootNamespace>SkiaSharpSample</RootNamespace>
     <ApplicationTitle>SkiaSharpSample</ApplicationTitle>
     <ApplicationId>com.companyname.SkiaSharpSample</ApplicationId>
     <ApplicationVersion>1.0</ApplicationVersion>
     <AndroidVersionCode>1</AndroidVersionCode>
-    <UseMaui>true</UseMaui>
     <LangVersion>9.0</LangVersion>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
   </PropertyGroup>
@@ -27,9 +28,9 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
-    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.1" />
-    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.1" />
-    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.1" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0-experimental1" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Foundation" Version="1.0.0-experimental1" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="1.0.0-experimental1" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
@@ -39,10 +40,9 @@
     </None>
   </ItemGroup>
 
-  <PropertyGroup>
-    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
-    <AppxPackageRecipe>bin\$(Configuration)\net6.0-windows10.0.19041\win-x64\SkiaSharpSample.build.appxrecipe</AppxPackageRecipe>
-    <RuntimeIdentifier Condition="$(TargetFramework.Contains('-windows'))">win-x64</RuntimeIdentifier>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <OutputType>WinExe</OutputType>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets')" />

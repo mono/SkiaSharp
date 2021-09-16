@@ -433,6 +433,8 @@ Task ("samples")
         { "tvos", isMac },
         { "uwp", isWin },
         { "winui", isWin },
+        { "wapproj", isWin },
+        { "msix", isWin },
         { "watchos", isMac },
         { "wpf", isWin },
     };
@@ -442,6 +444,7 @@ Task ("samples")
         { "tvos", "iPhoneSimulator" },
         { "uwp", "x86" },
         { "winui", "x64" },
+        { "wapproj", "x64" },
         { "watchos", "iPhoneSimulator" },
         { "xamarin.forms.mac", "iPhone" },
         { "xamarin.forms.windows", "x86" },
@@ -467,8 +470,12 @@ Task ("samples")
                 buildPlatform = platformMatrix [platform];
             }
 
+            Information ($"Building {sln} ({platform})...");
+
             RunNuGetRestorePackagesConfig (sln);
             RunMSBuild (sln, platform: buildPlatform);
+        } else {
+            Information ($"Skipping {sln} ({platform})...");
         }
     }
 

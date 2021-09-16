@@ -34,7 +34,7 @@ Task("libSkiaSharp")
            $"skia_use_system_libpng=false " +
            $"skia_use_system_libwebp=false " +
            $"skia_use_system_zlib=true " +
-           $"extra_cflags=[ '-DSKIA_C_DLL', '-DXML_DEV_URANDOM' ] " +
+           $"extra_cflags=[ '-DSKIA_C_DLL', '-DXML_DEV_URANDOM', '-DSK_NO_MAKE_SHARED_PTR' ] " +
            $"ncli='{TIZEN_STUDIO_HOME}' " +
            $"ncli_version='4.0'");
 

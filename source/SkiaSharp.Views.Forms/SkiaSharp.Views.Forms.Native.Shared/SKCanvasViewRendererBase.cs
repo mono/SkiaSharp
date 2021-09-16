@@ -273,7 +273,7 @@ namespace SkiaSharp.Views.Forms
 			var controller = Element as ISKCanvasViewController;
 
 			// the control is being repainted, let the user know
-			controller?.OnPaintSurface(new SKPaintSurfaceEventArgs(e.Surface, e.Info));
+			controller?.OnPaintSurface(new SKPaintSurfaceEventArgs(e.Surface, e.Info, e.RawInfo));
 		}
 
 		private void OnSurfaceInvalidated(object sender, EventArgs eventArgs)

@@ -83,10 +83,10 @@ function Swap-Tool {
 if ($UpgradeLLVM) {
     Write-Host "Upgrading LLVM and GCC in place..."
     Swap-Tool "llvm-4.0.0" "llvm-10"
-    Swap-Tool "aarch64-linux-gnu-gcc-6.2" "aarch64-linux-gnu-gcc-9.2"
-    Swap-Tool "arm-linux-gnueabi-gcc-6.2" "arm-linux-gnueabi-gcc-9.2"
-    Swap-Tool "i586-linux-gnueabi-gcc-6.2" "i586-linux-gnueabi-gcc-9.2"
-    Swap-Tool "x86_64-linux-gnu-gcc-6.2" "x86_64-linux-gnu-gcc-9.2"
+    # Swap-Tool "aarch64-linux-gnu-gcc-6.2" "aarch64-linux-gnu-gcc-9.2"
+    # Swap-Tool "arm-linux-gnueabi-gcc-6.2" "arm-linux-gnueabi-gcc-9.2"
+    # Swap-Tool "i586-linux-gnueabi-gcc-6.2" "i586-linux-gnueabi-gcc-9.2"
+    # Swap-Tool "x86_64-linux-gnu-gcc-6.2" "x86_64-linux-gnu-gcc-9.2"
 }
 
 # make sure that Tizen Studio is in TIZEN_STUDIO_HOME

@@ -554,5 +554,92 @@ namespace SkiaSharp.Tests
 
 			Assert.NotNull(paint.GetTextPath("", 0, 0));
 		}
+
+		[SkippableTheory]
+		[InlineData(true, true, SKFontEdging.SubpixelAntialias)]
+		[InlineData(false, true, SKFontEdging.Alias)]
+		[InlineData(true, false, SKFontEdging.Antialias)]
+		[InlineData(false, false, SKFontEdging.Alias)]
+		public void UpdatingPropertiesIsAntialiasLcdRenderText(bool isAntialias, bool lcd, SKFontEdging newEdging)
+		{
+			var paint = new SKPaint();
+
+			paint.IsAntialias = isAntialias;
+			paint.LcdRenderText = lcd;
+
+			Assert.Equal(newEdging, paint.GetFont().Edging);
+		}
+
+		[SkippableTheory]
+		[InlineData(true, true, SKFontEdging.SubpixelAntialias)]
+		[InlineData(false, true, SKFontEdging.Alias)]
+		[InlineData(true, false, SKFontEdging.Antialias)]
+		[InlineData(false, false, SKFontEdging.Alias)]
+		public void UpdatingPropertiesLcdRenderTextIsAntialias(bool isAntialias, bool lcd, SKFontEdging newEdging)
+		{
+			var paint = new SKPaint();
+
+			paint.LcdRenderText = lcd;
+			paint.IsAntialias = isAntialias;
+
+			Assert.Equal(newEdging, paint.GetFont().Edging);
+		}
+
+		[SkippableFact]
+		public void PaintWithSubpixelEdgingIsPreserved()
+		{
+			var font = new SKFont();
+			font.Edging = SKFontEdging.SubpixelAntialias;
+
+			var paint = new SKPaint(font);
+
+			Assert.True(paint.LcdRenderText);
+			Assert.False(paint.IsAntialias);
+			Assert.Equal(SKFontEdging.Alias, paint.GetFont().Edging);
+
+			paint.IsAntialias = true;
+
+			Assert.True(paint.LcdRenderText);
+			Assert.True(paint.IsAntialias);
+			Assert.Equal(SKFontEdging.SubpixelAntialias, paint.GetFont().Edging);
+		}
+
+		[SkippableFact]
+		public void PaintWithAntialiasEdgingIsPreserved()
+		{
+			var font = new SKFont();
+			font.Edging = SKFontEdging.Antialias;
+
+			var paint = new SKPaint(font);
+
+			Assert.False(paint.LcdRenderText);
+			Assert.False(paint.IsAntialias);
+			Assert.Equal(SKFontEdging.Alias, paint.GetFont().Edging);
+
+			paint.IsAntialias = true;
+
+			Assert.False(paint.LcdRenderText);
+			Assert.True(paint.IsAntialias);
+			Assert.Equal(SKFontEdging.Antialias, paint.GetFont().Edging);
+		}
+
+		[SkippableFact]
+		public void PaintWithAliasEdgingIsPreserved()
+		{
+			var font = new SKFont();
+			font.Edging = SKFontEdging.Alias;
+
+			var paint = new SKPaint(font);
+
+			Assert.False(paint.LcdRenderText);
+			Assert.False(paint.IsAntialias);
+			Assert.Equal(SKFontEdging.Alias, paint.GetFont().Edging);
+
+			paint.IsAntialias = true;
+
+			Assert.False(paint.LcdRenderText);
+			Assert.True(paint.IsAntialias);
+			Assert.Equal(SKFontEdging.Antialias, paint.GetFont().Edging);
+		}
 	}
 }

@@ -9,6 +9,8 @@ namespace SkiaSharp
 	{
 		private const int PatchCornerCount = 4;
 		private const int PatchCubicsCount = 12;
+		private const double RadiansCircle = 2.0 * Math.PI;
+		private const double DegreesCircle = 360.0;
 
 		internal SKCanvas (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -117,11 +119,17 @@ namespace SkiaSharp
 
 		public void Translate (float dx, float dy)
 		{
+			if (dx == 0 && dy == 0)
+				return;
+
 			SkiaApi.sk_canvas_translate (Handle, dx, dy);
 		}
 
 		public void Translate (SKPoint point)
 		{
+			if (point.IsEmpty)
+				return;
+
 			SkiaApi.sk_canvas_translate (Handle, point.X, point.Y);
 		}
 
@@ -129,21 +137,33 @@ namespace SkiaSharp
 
 		public void Scale (float s)
 		{
+			if (s == 1)
+				return;
+
 			SkiaApi.sk_canvas_scale (Handle, s, s);
 		}
 
 		public void Scale (float sx, float sy)
 		{
+			if (sx == 1 && sy == 1)
+				return;
+
 			SkiaApi.sk_canvas_scale (Handle, sx, sy);
 		}
 
 		public void Scale (SKPoint size)
 		{
+			if (size.IsEmpty)
+				return;
+
 			SkiaApi.sk_canvas_scale (Handle, size.X, size.Y);
 		}
 
 		public void Scale (float sx, float sy, float px, float py)
 		{
+			if (sx == 1 && sy == 1)
+				return;
+
 			Translate (px, py);
 			Scale (sx, sy);
 			Translate (-px, -py);
@@ -153,16 +173,25 @@ namespace SkiaSharp
 
 		public void RotateDegrees (float degrees)
 		{
+			if (degrees % DegreesCircle == 0)
+				return;
+
 			SkiaApi.sk_canvas_rotate_degrees (Handle, degrees);
 		}
 
 		public void RotateRadians (float radians)
 		{
+			if (radians % RadiansCircle == 0)
+				return;
+
 			SkiaApi.sk_canvas_rotate_radians (Handle, radians);
 		}
 
 		public void RotateDegrees (float degrees, float px, float py)
 		{
+			if (degrees % DegreesCircle == 0)
+				return;
+
 			Translate (px, py);
 			RotateDegrees (degrees);
 			Translate (-px, -py);
@@ -170,6 +199,9 @@ namespace SkiaSharp
 
 		public void RotateRadians (float radians, float px, float py)
 		{
+			if (radians % RadiansCircle == 0)
+				return;
+
 			Translate (px, py);
 			RotateRadians (radians);
 			Translate (-px, -py);
@@ -179,11 +211,17 @@ namespace SkiaSharp
 
 		public void Skew (float sx, float sy)
 		{
+			if (sx == 0 && sy == 0)
+				return;
+
 			SkiaApi.sk_canvas_skew (Handle, sx, sy);
 		}
 
 		public void Skew (SKPoint skew)
 		{
+			if (skew.IsEmpty)
+				return;
+
 			SkiaApi.sk_canvas_skew (Handle, skew.X, skew.Y);
 		}
 

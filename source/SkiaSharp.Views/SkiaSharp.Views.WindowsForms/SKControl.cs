@@ -22,10 +22,6 @@ namespace SkiaSharp.Views.Desktop
 			designMode = DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime;
 		}
 
-		[Bindable(false)]
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.Width, bitmap.Height);
 
 		[Category("Appearance")]
