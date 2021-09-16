@@ -14,11 +14,11 @@ void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefau
     if (allowDefaultExcludes) {
         settings.ArgumentCustomization = args => args.Append("-NoDefaultExcludes");
     }
-    // *.NativeAssets.* are special as they contain just native code
-    if (nuspecPath.FullPath.Contains(".NativeAssets.")) {
-        settings.Symbols = true;
-        settings.SymbolPackageFormat = "symbols.nupkg";
-    }
+    // // *.NativeAssets.* are special as they contain just native code
+    // if (nuspecPath.FullPath.Contains(".NativeAssets.")) {
+    //     settings.Symbols = true;
+    //     settings.SymbolPackageFormat = "symbols.nupkg";
+    // }
     NuGetPack(nuspecPath, settings);
 }
 
