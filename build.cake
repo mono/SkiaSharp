@@ -715,8 +715,18 @@ Task ("nuget-normal")
 
     DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
     foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
-        PackageNuGet (nuspec, OUTPUT_NUGETS_PATH);
+
+        string symbolsFormat = null;
+        // *.NativeAssets.* are special as they contain just native code
+        if (nuspec.FullPath.Contains(".NativeAssets."))
+            symbolsFormat = "symbols.nupkg";
+
+        PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, symbolsFormat: symbolsFormat);
     }
+
+    // copy & move symbols to a special location to avoid signing
+    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
+    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
 
     // setup validation options
     var options = new Xamarin.Nuget.Validator.NugetValidatorOptions {
@@ -793,8 +803,8 @@ Task ("nuget-special")
     if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
         specials[$"_NuGets"] = $"nugets";
         specials[$"_NuGetsPreview"] = $"nugets";
-        // specials[$"_Symbols"] = $"nugets";
-        // specials[$"_SymbolsPreview"] = $"nugets";
+        specials[$"_Symbols"] = $"nugets";
+        specials[$"_SymbolsPreview"] = $"nugets";
     }
 
     foreach (var pair in specials) {

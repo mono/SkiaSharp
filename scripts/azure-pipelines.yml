@@ -400,8 +400,6 @@ stages:
             - managed
             - native
           postBuildSteps:
-            - pwsh: Remove-Item ./output/native/ -Recurse -Force
-              displayName: Delete the native folder
             - task: PublishBuildArtifacts@1
               displayName: Publish the nuget artifacts
               inputs:
@@ -411,16 +409,23 @@ stages:
               displayName: Publish the special nuget artifacts
               inputs:
                 artifactName: nuget_special
-                pathToPublish: 'output/special-nugets'
+                pathToPublish: 'output/nugets-special'
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the special nuget artifacts
+              inputs:
+                artifactName: nuget_special
+                pathToPublish: 'output/nugets-symbols'
             - task: PublishBuildArtifacts@1
               displayName: Publish the SignList.xml into nuget artifacts
               inputs:
                 artifactName: nuget
                 pathToPublish: 'SignList.xml'
             - pwsh: |
+                Remove-Item ./output/native/ -Recurse -Force
                 Remove-Item ./output/nugets/ -Recurse -Force
-                Remove-Item ./output/special-nugets/ -Recurse -Force
-              displayName: Delete the nugets folder
+                Remove-Item ./output/nugets-special/ -Recurse -Force
+                Remove-Item ./output/nugets-symbols/ -Recurse -Force
+              displayName: Delete the pre-published folders
 
   - stage: api_diff
     displayName: API Diff
