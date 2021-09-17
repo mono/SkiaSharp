@@ -93,8 +93,17 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 57, 0) },
     { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (1, 57, 0) },
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.Android",            new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.iOS",                new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.MacCatalyst",        new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.macOS",              new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.Tizen",              new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.tvOS",               new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.UWP",                new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.watchOS",            new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.Win32",              new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 57, 0) },
 };
@@ -704,10 +713,23 @@ Task ("nuget-normal")
         CopyFile ("./External-Dependency-Info.txt", $"{outDir}/THIRD-PARTY-NOTICES.txt");
     }
 
+    EnsureDirectoryExists ($"{OUTPUT_NUGETS_PATH}");
     DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
     foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
-        PackageNuGet (nuspec, OUTPUT_NUGETS_PATH);
+
+        string symbolsFormat = null;
+        // *.NativeAssets.* are special as they contain just native code
+        if (nuspec.FullPath.Contains(".NativeAssets."))
+            symbolsFormat = "symbols.nupkg";
+
+        PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, symbolsFormat: symbolsFormat);
     }
+
+    // copy & move symbols to a special location to avoid signing
+    EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
+    DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
+    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
+    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
 
     // setup validation options
     var options = new Xamarin.Nuget.Validator.NugetValidatorOptions {
@@ -784,6 +806,8 @@ Task ("nuget-special")
     if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
         specials[$"_NuGets"] = $"nugets";
         specials[$"_NuGetsPreview"] = $"nugets";
+        specials[$"_Symbols"] = $"nugets-symbols";
+        specials[$"_SymbolsPreview"] = $"nugets-symbols";
     }
 
     foreach (var pair in specials) {
