@@ -713,6 +713,7 @@ Task ("nuget-normal")
         CopyFile ("./External-Dependency-Info.txt", $"{outDir}/THIRD-PARTY-NOTICES.txt");
     }
 
+    EnsureDirectoryExists ($"{OUTPUT_NUGETS_PATH}");
     DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
     foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
 
@@ -725,6 +726,8 @@ Task ("nuget-normal")
     }
 
     // copy & move symbols to a special location to avoid signing
+    EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
+    DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
 
