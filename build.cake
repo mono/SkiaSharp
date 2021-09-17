@@ -806,8 +806,8 @@ Task ("nuget-special")
     if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
         specials[$"_NuGets"] = $"nugets";
         specials[$"_NuGetsPreview"] = $"nugets";
-        specials[$"_Symbols"] = $"nugets";
-        specials[$"_SymbolsPreview"] = $"nugets";
+        specials[$"_Symbols"] = $"nugets-symbols";
+        specials[$"_SymbolsPreview"] = $"nugets-symbols";
     }
 
     foreach (var pair in specials) {
