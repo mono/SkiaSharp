@@ -18,10 +18,13 @@ namespace SkiaSharp.Views.Mac
 namespace SkiaSharp.Views.Tizen
 #elif WINDOWS
 namespace SkiaSharp.Views.Windows
+#elif __BLAZOR__
+namespace SkiaSharp.Views.Blazor
 #endif
 {
 	public class SKPaintGLSurfaceEventArgs : EventArgs
 	{
+#if !__BLAZOR__
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		[Obsolete]
 		private GRBackendRenderTargetDesc? rtDesc;
@@ -36,6 +39,7 @@ namespace SkiaSharp.Views.Windows
 			ColorType = renderTarget.Config.ToColorType();
 			Origin = renderTarget.Origin;
 		}
+#endif
 
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget)
 			: this(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888)
@@ -50,6 +54,7 @@ namespace SkiaSharp.Views.Windows
 			Origin = origin;
 		}
 
+#if !__BLAZOR__
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, GRGlFramebufferInfo glInfo)
 		{
 			Surface = surface;
@@ -60,9 +65,11 @@ namespace SkiaSharp.Views.Windows
 			rtDesc = CreateDesc(glInfo);
 #pragma warning restore CS0612 // Type or member is obsolete
 		}
+#endif
 
 		public SKSurface Surface { get; private set; }
 
+#if !__BLAZOR__
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		[Obsolete("Use BackendRenderTarget instead.")]
 		public GRBackendRenderTargetDesc RenderTarget => rtDesc ??= CreateDesc(BackendRenderTarget.GetGlFramebufferInfo());
@@ -79,6 +86,7 @@ namespace SkiaSharp.Views.Windows
 				Config = ColorType.ToPixelConfig(),
 				Origin = Origin,
 			};
+#endif
 
 		public GRBackendRenderTarget BackendRenderTarget { get; private set; }
 
