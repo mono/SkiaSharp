@@ -27,7 +27,7 @@ export class SizeWatcher {
 		SizeWatcher.elements[elementId] = element;
 		SizeWatcher.observer.observe(element);
 
-		SizeWatcher.invokeAsync(element);
+		SizeWatcher.invoke(element);
 	}
 
 	public static unobserve(elementId: string) {
@@ -51,18 +51,18 @@ export class SizeWatcher {
 		SizeWatcher.elements = new Map<string, HTMLElement>();
 		SizeWatcher.observer = new ResizeObserver((entries) => {
 			for (let entry of entries) {
-				SizeWatcher.invokeAsync(entry.target);
+				SizeWatcher.invoke(entry.target);
 			}
 		});
 	}
 
-	static invokeAsync(element: Element): Promise<unknown> {
+	static invoke(element: Element) {
 		const watcherElement = element as SizeWatcherElement;
 		const instance = watcherElement.SizeWatcher;
 
 		if (!instance || !instance.callback)
 			return;
 
-		return instance.callback.invokeMethodAsync('Invoke', element.clientWidth, element.clientHeight);
+		return instance.callback.invokeMethod('Invoke', element.clientWidth, element.clientHeight);
 	}
 }
