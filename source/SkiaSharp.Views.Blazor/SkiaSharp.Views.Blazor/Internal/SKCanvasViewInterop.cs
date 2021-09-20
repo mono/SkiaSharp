@@ -5,37 +5,20 @@ using System.Threading.Tasks;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
-	internal class SKCanvasViewInterop : IAsyncDisposable
+	internal class SKCanvasViewInterop : JSModuleInterop
 	{
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/SKCanvasView.js";
-		private const string InvalidateSymbol = "SKCanvasView.invalidateCanvas";
+		private const string InvalidateSymbol = "SKCanvasView.invalidate";
 
-		private readonly Lazy<Task<IJSObjectReference>> moduleTask;
+		private readonly ElementReference htmlCanvas;
 
-		public SKCanvasViewInterop(IJSRuntime js)
+		public SKCanvasViewInterop(IJSRuntime js, ElementReference element)
+			: base(js, JsFilename)
 		{
-			moduleTask = new(() => js.InvokeAsync<IJSObjectReference>("import", JsFilename).AsTask());
+			htmlCanvas = element;
 		}
 
-		public async ValueTask DisposeAsync()
-		{
-			if (!moduleTask.IsValueCreated)
-				return;
-
-			var module = await moduleTask.Value;
-
-			await module.DisposeAsync();
-		}
-
-		public async Task<bool> InvalidateCanvasAsync(ElementReference htmlCanvas, IntPtr intPtr, SKSizeI rawSize)
-		{
-			var module = await moduleTask.Value;
-
-			return await module.InvokeAsync<bool>(
-				InvalidateSymbol,
-				htmlCanvas,
-				intPtr.ToInt64(),
-				rawSize.Width, rawSize.Height);
-		}
+		public Task<bool> InvalidateCanvasAsync(IntPtr intPtr, SKSizeI rawSize) =>
+			InvokeAsync<bool>(InvalidateSymbol, htmlCanvas, intPtr.ToInt64(), rawSize.Width, rawSize.Height);
 	}
 }

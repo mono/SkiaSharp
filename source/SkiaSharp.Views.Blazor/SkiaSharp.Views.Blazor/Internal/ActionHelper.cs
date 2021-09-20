@@ -7,7 +7,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class ActionHelper
 	{
-		private Action action;
+		private readonly Action action;
 
 		public ActionHelper(Action action)
 		{

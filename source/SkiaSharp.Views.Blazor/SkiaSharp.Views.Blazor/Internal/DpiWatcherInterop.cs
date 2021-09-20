@@ -1,72 +1,78 @@
 using Microsoft.JSInterop;
 using System;
-using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
-	public static class DpiWatcherInterop
+	internal class DpiWatcherInterop : JSModuleInterop
 	{
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/DpiWatcher.js";
 		private const string StartSymbol = "DpiWatcher.start";
 		private const string StopSymbol = "DpiWatcher.stop";
 		private const string GetDpiSymbol = "DpiWatcher.getDpi";
 
-		private static Lazy<Task<IJSObjectReference>> moduleTask = null!;
-		private static event Action<double>? DpiChangedInternal;
+		private static DpiWatcherInterop? instance;
 
-		public static event Action<double> DpiChanged
+		private event Action<double>? callbacksEvent;
+		private readonly FloatFloatActionHelper callbackHelper;
+
+		private DotNetObjectReference<FloatFloatActionHelper>? callbackReference;
+
+		public static DpiWatcherInterop Get(IJSRuntime js) =>
+			instance ??= new DpiWatcherInterop(js);
+
+		private DpiWatcherInterop(IJSRuntime js)
+			: base(js, JsFilename)
 		{
-			add
-			{
-				if (DpiChangedInternal == null)
-					Start();
-
-				DpiChangedInternal += value;
-			}
-			remove
-			{
-				DpiChangedInternal -= value;
-
-				if (DpiChangedInternal == null)
-					Stop();
-			}
+			callbackHelper = new FloatFloatActionHelper((o, n) => callbacksEvent?.Invoke(n));
 		}
 
-		[JSInvokable]
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public static void UpdateDpi(double oldDpi, double newDpi)
+		protected override Task OnDisposingModuleAsync() =>
+			StopAsync();
+
+		public async Task SubscribeAsync(Action<double> callback)
 		{
-			DpiChangedInternal?.Invoke(newDpi);
+			var shouldStart = callbacksEvent == null;
+
+			callbacksEvent += callback;
+
+			var dpi = shouldStart
+				? await StartAsync()
+				: await GetDpiAsync();
+
+			callback(dpi);
 		}
 
-		internal static void Init(IJSRuntime js)
+		public async Task UnsubscribeAsync(Action<double> callback)
 		{
-			if (moduleTask != null)
+			callbacksEvent -= callback;
+
+			if (callbacksEvent == null)
+				await StopAsync();
+		}
+
+		private async Task<double> StartAsync()
+		{
+			if (callbackReference != null)
+				return await GetDpiAsync();
+
+			callbackReference = DotNetObjectReference.Create(callbackHelper);
+
+			return await InvokeAsync<double>(StartSymbol, callbackReference);
+		}
+
+		private async Task StopAsync()
+		{
+			if (callbackReference == null)
 				return;
 
-			moduleTask = new(() => js.InvokeAsync<IJSObjectReference>("import", JsFilename).AsTask());
+			await InvokeAsync(StopSymbol);
+
+			callbackReference?.Dispose();
+			callbackReference = null;
 		}
 
-		private static async void Start()
-		{
-			var module = await moduleTask.Value;
-
-			await module.InvokeVoidAsync(StartSymbol);
-		}
-
-		private static async void Stop()
-		{
-			var module = await moduleTask.Value;
-
-			await module.InvokeVoidAsync(StopSymbol);
-		}
-
-		public static async Task<double> GetDpiAsync()
-		{
-			var module = await moduleTask.Value;
-
-			return await module.InvokeAsync<double>(GetDpiSymbol);
-		}
+		public Task<double> GetDpiAsync() =>
+			InvokeAsync<double>(GetDpiSymbol);
 	}
 }

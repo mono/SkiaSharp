@@ -5,48 +5,53 @@ using System.Threading.Tasks;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
-	internal class SKGLViewInterop : IAsyncDisposable
+	internal class SKGLViewInterop : JSModuleInterop
 	{
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/SKGLView.js";
 		private const string InitSymbol = "SKGLView.init";
+		private const string DeinitSymbol = "SKGLView.deinit";
 		private const string RequestAnimationFrameSymbol = "SKGLView.requestAnimationFrame";
 
-		private readonly Lazy<Task<IJSObjectReference>> moduleTask;
-		private readonly ActionHelper actionHelper;
-		private readonly DotNetObjectReference<ActionHelper> callbackReference;
+		private readonly ElementReference htmlCanvas;
+		private readonly string htmlElementId;
+		private readonly ActionHelper callbackHelper;
 
-		public SKGLViewInterop(IJSRuntime js, Action renderFrameCallback)
+		private DotNetObjectReference<ActionHelper>? callbackReference;
+
+		public SKGLViewInterop(IJSRuntime js, ElementReference element, Action renderFrameCallback)
+			: base(js, JsFilename)
 		{
-			moduleTask = new(() => js.InvokeAsync<IJSObjectReference>("import", JsFilename).AsTask());
-			actionHelper = new ActionHelper(renderFrameCallback);
-			callbackReference = DotNetObjectReference.Create(actionHelper);
+			htmlCanvas = element;
+			htmlElementId = element.Id;
+
+			callbackHelper = new ActionHelper(renderFrameCallback);
 		}
 
-		public async ValueTask DisposeAsync()
-		{
-			callbackReference.Dispose();
+		protected override Task OnDisposingModuleAsync() =>
+			DeinitAsync();
 
-			if (!moduleTask.IsValueCreated)
+		public Task<Info> InitAsync()
+		{
+			if (callbackReference != null)
+				throw new InvalidOperationException("Unable to initialize the same canvas more than once.");
+
+			callbackReference = DotNetObjectReference.Create(callbackHelper);
+
+			return InvokeAsync<Info>(InitSymbol, htmlCanvas, htmlElementId, callbackReference);
+		}
+
+		public async Task DeinitAsync()
+		{
+			if (callbackReference == null)
 				return;
 
-			var module = await moduleTask.Value;
+			await InvokeAsync(DeinitSymbol, htmlElementId);
 
-			await module.DisposeAsync();
+			callbackReference?.Dispose();
 		}
 
-		public async Task<Info> InitAsync(ElementReference htmlCanvas)
-		{
-			var module = await moduleTask.Value;
-
-			return await module.InvokeAsync<Info>(InitSymbol, htmlCanvas, callbackReference);
-		}
-
-		public async Task RequestAnimationFrameAsync(ElementReference htmlCanvas, bool enableRenderLoop, int rawWidth, int rawHeight)
-		{
-			var module = await moduleTask.Value;
-
-			await module.InvokeVoidAsync(RequestAnimationFrameSymbol, htmlCanvas, enableRenderLoop, rawWidth, rawHeight);
-		}
+		public Task RequestAnimationFrameAsync(bool enableRenderLoop, int rawWidth, int rawHeight) =>
+			InvokeAsync(RequestAnimationFrameSymbol, htmlCanvas, enableRenderLoop, rawWidth, rawHeight);
 
 		public record Info(int ContextId, uint FboId, int Stencils, int Samples, int Depth);
 	}

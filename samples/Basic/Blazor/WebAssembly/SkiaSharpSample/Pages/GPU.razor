@@ -1,0 +1,99 @@
+﻿@page "/gpu"
+
+<h1>GPU (WebGL) Canvas</h1>
+
+<p>The canvas below is using WebGL. See the great FPS!</p>
+
+<div class="container">
+    <div class="row">
+        <div class="col border rounded p-2 canvas-container">
+
+            <SKGLView OnPaintSurface="OnPaintSurface" EnableRenderLoop="true" />
+
+        </div>
+    </div>
+</div>
+
+@code {
+    int tickIndex = 0;
+    int tickSum = 0;
+    int[] tickList = new int[100];
+    int lastTick = Math.Abs(Environment.TickCount);
+
+    void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
+    {
+        // the the canvas and properties
+        var canvas = e.Surface.Canvas;
+
+        // make sure the canvas is blank
+        canvas.Clear(SKColors.White);
+
+        using var paint = new SKPaint
+        {
+            IsAntialias = true,
+            StrokeWidth = 10f,
+            StrokeCap = SKStrokeCap.Round,
+            TextAlign = SKTextAlign.Center,
+            TextSize = 24,
+        };
+
+        var surfaceSize = e.BackendRenderTarget.Size;
+        var clockSize = Math.Min(surfaceSize.Width, surfaceSize.Height) * 0.4f;
+        var center = new SKPoint(surfaceSize.Width / 2f, surfaceSize.Height / 2f);
+        var now = DateTime.Now;
+        var fps = CalcAverageTick();
+
+        // draw the fps counter
+        canvas.DrawText($"{fps:0.00}fps", surfaceSize.Width / 2, surfaceSize.Height - 10f, paint);
+
+        // draw the clock
+        canvas.RotateDegrees(-90f, center.X, center.Y);
+
+        // hours
+        paint.StrokeWidth = 9f;
+        canvas.Save();
+        canvas.Translate(center);
+        canvas.RotateDegrees(360f * (now.Hour / 12f));
+        canvas.DrawLine(0, 0, clockSize * 0.4f, 0, paint);
+        canvas.Restore();
+
+        // minutes
+        paint.StrokeWidth = 6f;
+        canvas.Save();
+        canvas.Translate(center);
+        canvas.RotateDegrees(360f * (now.Minute / 60f));
+        canvas.DrawLine(0, 0, clockSize * 0.6f, 0, paint);
+        canvas.Restore();
+
+        // seconds
+        paint.StrokeWidth = 3f;
+        canvas.Save();
+        canvas.Translate(center);
+        canvas.RotateDegrees(360f * ((now.Second * 1000f + now.Millisecond) / 1000f / 60f));
+        canvas.DrawLine(0, 0, clockSize * 0.8f, 0, paint);
+        canvas.Restore();
+
+        // center
+        canvas.DrawCircle(center, 20f, paint);
+
+        // border
+        paint.Style = SKPaintStyle.Stroke;
+        canvas.DrawCircle(center, clockSize * 0.9f, paint);
+    }
+
+    double CalcAverageTick()
+    {
+        var newTick = Math.Abs(Environment.TickCount);
+        var delta = Math.Max(newTick, lastTick) - Math.Min(newTick, lastTick);
+        lastTick = newTick;
+
+        tickSum -= tickList[tickIndex];
+        tickSum += delta;
+        tickList[tickIndex] = delta;
+
+        if (++tickIndex == tickList.Length)
+            tickIndex = 0;
+
+        return ((double)tickSum / tickList.Length);
+    }
+}

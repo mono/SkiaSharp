@@ -17,7 +17,7 @@ parameters:
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
-  buildExternals: ''                            # the build number to download externals from
+  buildExternals: '5223089'                            # the build number to download externals from
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -31,18 +31,18 @@ parameters:
   artifactName: ''                              # the name of the artifact to merge this run into
 
 jobs:
-# - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
-#   - template: azure-templates-download.yml
-#     parameters:
-#       name: ${{ parameters.name }}
-#       displayName: ${{ parameters.displayName }}
-#       vmImage: ${{ parameters.vmImage }}
-#       condition: ${{ parameters.condition }}
-#       postBuildSteps: ${{ parameters.postBuildSteps }}
-#       buildExternals: ${{ parameters.buildExternals }}
-#       artifactName: ${{ parameters.artifactName }}
+- ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
+  - template: azure-templates-download.yml
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      vmImage: ${{ parameters.vmImage }}
+      condition: ${{ parameters.condition }}
+      postBuildSteps: ${{ parameters.postBuildSteps }}
+      buildExternals: ${{ parameters.buildExternals }}
+      artifactName: ${{ parameters.artifactName }}
 
-# - ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
+- ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
