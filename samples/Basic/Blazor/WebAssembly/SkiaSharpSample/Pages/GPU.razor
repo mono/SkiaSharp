@@ -41,7 +41,7 @@
         var clockSize = Math.Min(surfaceSize.Width, surfaceSize.Height) * 0.4f;
         var center = new SKPoint(surfaceSize.Width / 2f, surfaceSize.Height / 2f);
         var now = DateTime.Now;
-        var fps = CalcAverageTick();
+        var fps = GetCurrentFPS();
 
         // draw the fps counter
         canvas.DrawText($"{fps:0.00}fps", surfaceSize.Width / 2, surfaceSize.Height - 10f, paint);
@@ -81,7 +81,7 @@
         canvas.DrawCircle(center, clockSize * 0.9f, paint);
     }
 
-    double CalcAverageTick()
+    double GetCurrentFPS()
     {
         var newTick = Math.Abs(Environment.TickCount);
         var delta = Math.Max(newTick, lastTick) - Math.Min(newTick, lastTick);
@@ -94,6 +94,6 @@
         if (++tickIndex == tickList.Length)
             tickIndex = 0;
 
-        return ((double)tickSum / tickList.Length);
+        return 1000.0 / ((double)tickSum / tickList.Length);
     }
 }
