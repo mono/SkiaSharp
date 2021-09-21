@@ -16,9 +16,9 @@
 
 @code {
     int tickIndex = 0;
-    int tickSum = 0;
-    int[] tickList = new int[100];
-    int lastTick = Math.Abs(Environment.TickCount);
+    long tickSum = 0;
+    long[] tickList = new long[100];
+    long lastTick = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
     void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
     {
@@ -83,8 +83,8 @@
 
     double GetCurrentFPS()
     {
-        var newTick = Math.Abs(Environment.TickCount);
-        var delta = Math.Max(newTick, lastTick) - Math.Min(newTick, lastTick);
+        var newTick = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var delta = newTick - lastTick;
         lastTick = newTick;
 
         tickSum -= tickList[tickIndex];

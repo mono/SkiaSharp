@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
@@ -18,6 +18,14 @@ namespace SkiaSharp.Views.Blazor.Internal
 
 		private DotNetObjectReference<ActionHelper>? callbackReference;
 
+		public static async Task<(SKGLViewInterop, Info)> ImportAsync(IJSRuntime js, ElementReference element, Action callback)
+		{
+			var interop = new SKGLViewInterop(js, element, callback);
+			await interop.ImportAsync();
+			var info = interop.Init();
+			return (interop, info);
+		}
+
 		public SKGLViewInterop(IJSRuntime js, ElementReference element, Action renderFrameCallback)
 			: base(js, JsFilename)
 		{
@@ -27,31 +35,31 @@ namespace SkiaSharp.Views.Blazor.Internal
 			callbackHelper = new ActionHelper(renderFrameCallback);
 		}
 
-		protected override Task OnDisposingModuleAsync() =>
-			DeinitAsync();
+		protected override void OnDisposingModule() =>
+			Deinit();
 
-		public Task<Info> InitAsync()
+		public Info Init()
 		{
 			if (callbackReference != null)
 				throw new InvalidOperationException("Unable to initialize the same canvas more than once.");
 
 			callbackReference = DotNetObjectReference.Create(callbackHelper);
 
-			return InvokeAsync<Info>(InitSymbol, htmlCanvas, htmlElementId, callbackReference);
+			return Invoke<Info>(InitSymbol, htmlCanvas, htmlElementId, callbackReference);
 		}
 
-		public async Task DeinitAsync()
+		public void Deinit()
 		{
 			if (callbackReference == null)
 				return;
 
-			await InvokeAsync(DeinitSymbol, htmlElementId);
+			Invoke(DeinitSymbol, htmlElementId);
 
 			callbackReference?.Dispose();
 		}
 
-		public Task RequestAnimationFrameAsync(bool enableRenderLoop, int rawWidth, int rawHeight) =>
-			InvokeAsync(RequestAnimationFrameSymbol, htmlCanvas, enableRenderLoop, rawWidth, rawHeight);
+		public void RequestAnimationFrame(bool enableRenderLoop, int rawWidth, int rawHeight) =>
+			Invoke(RequestAnimationFrameSymbol, htmlCanvas, enableRenderLoop, rawWidth, rawHeight);
 
 		public record Info(int ContextId, uint FboId, int Stencils, int Samples, int Depth);
 	}

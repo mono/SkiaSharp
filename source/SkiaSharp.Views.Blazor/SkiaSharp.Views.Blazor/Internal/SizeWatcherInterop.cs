@@ -1,7 +1,7 @@
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System;
-using System.Threading.Tasks;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
@@ -17,6 +17,14 @@ namespace SkiaSharp.Views.Blazor.Internal
 
 		private DotNetObjectReference<FloatFloatActionHelper>? callbackReference;
 
+		public static async Task<SizeWatcherInterop> ImportAsync(IJSRuntime js, ElementReference element, Action<SKSize> callback)
+		{
+			var interop = new SizeWatcherInterop(js, element, callback);
+			await interop.ImportAsync();
+			interop.Start();
+			return interop;
+		}
+
 		public SizeWatcherInterop(IJSRuntime js, ElementReference element, Action<SKSize> callback)
 			: base(js, JsFilename)
 		{
@@ -25,25 +33,25 @@ namespace SkiaSharp.Views.Blazor.Internal
 			callbackHelper = new FloatFloatActionHelper((x, y) => callback(new SKSize(x, y)));
 		}
 
-		protected override Task OnDisposingModuleAsync() =>
-			StopAsync();
+		protected override void OnDisposingModule() =>
+			Stop();
 
-		public async Task StartAsync()
+		public void Start()
 		{
 			if (callbackReference != null)
 				return;
 
 			callbackReference = DotNetObjectReference.Create(callbackHelper);
 
-			await InvokeAsync(ObserveSymbol, htmlElement, htmlElementId, callbackReference);
+			Invoke(ObserveSymbol, htmlElement, htmlElementId, callbackReference);
 		}
 
-		public async Task StopAsync()
+		public void Stop()
 		{
 			if (callbackReference == null)
 				return;
 
-			await InvokeAsync(UnobserveSymbol, htmlElementId);
+			Invoke(UnobserveSymbol, htmlElementId);
 
 			callbackReference?.Dispose();
 			callbackReference = null;

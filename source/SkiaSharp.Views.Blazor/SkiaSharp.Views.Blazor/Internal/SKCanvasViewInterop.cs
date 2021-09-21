@@ -1,7 +1,7 @@
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System;
-using System.Threading.Tasks;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
@@ -12,13 +12,20 @@ namespace SkiaSharp.Views.Blazor.Internal
 
 		private readonly ElementReference htmlCanvas;
 
+		public static async Task<SKCanvasViewInterop> ImportAsync(IJSRuntime js, ElementReference element)
+		{
+			var interop = new SKCanvasViewInterop(js, element);
+			await interop.ImportAsync();
+			return interop;
+		}
+
 		public SKCanvasViewInterop(IJSRuntime js, ElementReference element)
 			: base(js, JsFilename)
 		{
 			htmlCanvas = element;
 		}
 
-		public Task<bool> InvalidateCanvasAsync(IntPtr intPtr, SKSizeI rawSize) =>
-			InvokeAsync<bool>(InvalidateSymbol, htmlCanvas, intPtr.ToInt64(), rawSize.Width, rawSize.Height);
+		public bool Invalidate(IntPtr intPtr, SKSizeI rawSize) =>
+			Invoke<bool>(InvalidateSymbol, htmlCanvas, intPtr.ToInt64(), rawSize.Width, rawSize.Height);
 	}
 }

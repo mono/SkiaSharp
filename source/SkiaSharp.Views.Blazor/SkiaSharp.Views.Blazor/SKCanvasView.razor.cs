@@ -1,14 +1,14 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
-using SkiaSharp.Views.Blazor.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using SkiaSharp.Views.Blazor.Internal;
 
 namespace SkiaSharp.Views.Blazor
 {
-	public partial class SKCanvasView : IAsyncDisposable
+	public partial class SKCanvasView : IDisposable
 	{
 		private SKCanvasViewInterop interop = null!;
 		private SizeWatcherInterop sizeWatcher = null!;
@@ -21,6 +21,10 @@ namespace SkiaSharp.Views.Blazor
 		private bool ignorePixelScaling;
 		private double dpi;
 		private SKSize canvasSize;
+
+#if DEBUG
+		public TimeSpan LastFrameDuration;
+#endif
 
 		[Inject]
 		IJSRuntime JS { get; set; } = null!;
@@ -40,7 +44,7 @@ namespace SkiaSharp.Views.Blazor
 		}
 
 		[Parameter]
-		public EventCallback<SKPaintSurfaceEventArgs> OnPaintSurface { get; set; }
+		public Action<SKPaintSurfaceEventArgs>? OnPaintSurface { get; set; }
 
 		[Parameter(CaptureUnmatchedValues = true)]
 		public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
@@ -49,22 +53,13 @@ namespace SkiaSharp.Views.Blazor
 		{
 			if (firstRender)
 			{
-				interop = new SKCanvasViewInterop(JS, htmlCanvas);
-
-				sizeWatcher = new SizeWatcherInterop(JS, htmlCanvas, OnSizeChanged);
-				await sizeWatcher.StartAsync();
-
-				dpiWatcher = DpiWatcherInterop.Get(JS);
-				await dpiWatcher.SubscribeAsync(OnDpiChanged);
+				interop = await SKCanvasViewInterop.ImportAsync(JS, htmlCanvas);
+				sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
+				dpiWatcher = await DpiWatcherInterop.ImportAsync(JS, OnDpiChanged);
 			}
 		}
 
-		public async void Invalidate()
-		{
-			await InvalidateAsync();
-		}
-
-		public async Task InvalidateAsync()
+		public void Invalidate()
 		{
 			if (canvasSize.Width <= 0 || canvasSize.Height <= 0 || dpi <= 0)
 				return;
@@ -81,10 +76,10 @@ namespace SkiaSharp.Views.Blazor
 					canvas.Save();
 				}
 
-				await OnPaintSurface.InvokeAsync(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
+				OnPaintSurface?.Invoke(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
-			await interop.InvalidateCanvasAsync(pixelsHandle.AddrOfPinnedObject(), info.Size);
+			interop.Invalidate(pixelsHandle.AddrOfPinnedObject(), info.Size);
 		}
 
 		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize)
@@ -146,11 +141,11 @@ namespace SkiaSharp.Views.Blazor
 			Invalidate();
 		}
 
-		public async ValueTask DisposeAsync()
+		public void Dispose()
 		{
-			await dpiWatcher.UnsubscribeAsync(OnDpiChanged);
-			await sizeWatcher.DisposeAsync();
-			await interop.DisposeAsync();
+			dpiWatcher.Unsubscribe(OnDpiChanged);
+			sizeWatcher.Dispose();
+			interop.Dispose();
 
 			FreeBitmap();
 		}

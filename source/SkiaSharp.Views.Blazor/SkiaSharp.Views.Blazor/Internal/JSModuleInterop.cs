@@ -1,49 +1,42 @@
-﻿using Microsoft.JSInterop;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Microsoft.JSInterop;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
-	internal class JSModuleInterop : IAsyncDisposable
+	internal class JSModuleInterop : IDisposable
 	{
-		private readonly Lazy<Task<IJSObjectReference>> moduleTask;
+		private readonly Task<IJSUnmarshalledObjectReference> moduleTask;
+		private IJSUnmarshalledObjectReference? module;
 
 		public JSModuleInterop(IJSRuntime js, string filename)
 		{
-			moduleTask = new(() => js.InvokeAsync<IJSObjectReference>("import", filename).AsTask());
+			if (js is not IJSInProcessRuntime)
+				throw new NotSupportedException("SkiaSharp currently only works on Web Assembly.");
+
+			moduleTask = js.InvokeAsync<IJSUnmarshalledObjectReference>("import", filename).AsTask();
 		}
 
-		public async ValueTask DisposeAsync()
+		public async Task ImportAsync()
 		{
-			if (!ModuleImported)
-				return;
-
-			await OnDisposingModuleAsync();
-
-			var module = await GetModuleAsync();
-
-			await module.DisposeAsync();
+			module = await moduleTask;
 		}
 
-		public bool ModuleImported =>
-			moduleTask.IsValueCreated;
-
-		protected Task<IJSObjectReference> GetModuleAsync() =>
-			moduleTask.Value;
-
-		protected async Task InvokeAsync(string identifier, params object?[]? args)
+		public void Dispose()
 		{
-			var module = await GetModuleAsync();
-			await module.InvokeVoidAsync(identifier, args);
+			OnDisposingModule();
+			Module.Dispose();
 		}
 
-		protected async Task<TValue> InvokeAsync<TValue>(string identifier, params object?[]? args)
-		{
-			var module = await GetModuleAsync();
-			return await module.InvokeAsync<TValue>(identifier, args);
-		}
+		protected IJSUnmarshalledObjectReference Module =>
+			module ?? throw new InvalidOperationException("Make sure to run ImportAsync() first.");
 
-		protected virtual Task OnDisposingModuleAsync() =>
-			Task.CompletedTask;
+		protected void Invoke(string identifier, params object?[]? args) =>
+			Module.InvokeVoid(identifier, args);
+
+		protected TValue Invoke<TValue>(string identifier, params object?[]? args) =>
+			Module.Invoke<TValue>(identifier, args);
+
+		protected virtual void OnDisposingModule() { }
 	}
 }

@@ -1,6 +1,6 @@
-using Microsoft.JSInterop;
 using System;
 using System.Threading.Tasks;
+using Microsoft.JSInterop;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
@@ -18,6 +18,15 @@ namespace SkiaSharp.Views.Blazor.Internal
 
 		private DotNetObjectReference<FloatFloatActionHelper>? callbackReference;
 
+		public static async Task<DpiWatcherInterop> ImportAsync(IJSRuntime js, Action<double>? callback = null)
+		{
+			var interop = Get(js);
+			await interop.ImportAsync();
+			if (callback != null)
+				interop.Subscribe(callback);
+			return interop;
+		}
+
 		public static DpiWatcherInterop Get(IJSRuntime js) =>
 			instance ??= new DpiWatcherInterop(js);
 
@@ -27,52 +36,52 @@ namespace SkiaSharp.Views.Blazor.Internal
 			callbackHelper = new FloatFloatActionHelper((o, n) => callbacksEvent?.Invoke(n));
 		}
 
-		protected override Task OnDisposingModuleAsync() =>
-			StopAsync();
+		protected override void OnDisposingModule() =>
+			Stop();
 
-		public async Task SubscribeAsync(Action<double> callback)
+		public void Subscribe(Action<double> callback)
 		{
 			var shouldStart = callbacksEvent == null;
 
 			callbacksEvent += callback;
 
 			var dpi = shouldStart
-				? await StartAsync()
-				: await GetDpiAsync();
+				? Start()
+				: GetDpi();
 
 			callback(dpi);
 		}
 
-		public async Task UnsubscribeAsync(Action<double> callback)
+		public void Unsubscribe(Action<double> callback)
 		{
 			callbacksEvent -= callback;
 
 			if (callbacksEvent == null)
-				await StopAsync();
+				Stop();
 		}
 
-		private async Task<double> StartAsync()
+		private double Start()
 		{
 			if (callbackReference != null)
-				return await GetDpiAsync();
+				return GetDpi();
 
 			callbackReference = DotNetObjectReference.Create(callbackHelper);
 
-			return await InvokeAsync<double>(StartSymbol, callbackReference);
+			return Invoke<double>(StartSymbol, callbackReference);
 		}
 
-		private async Task StopAsync()
+		private void Stop()
 		{
 			if (callbackReference == null)
 				return;
 
-			await InvokeAsync(StopSymbol);
+			Invoke(StopSymbol);
 
 			callbackReference?.Dispose();
 			callbackReference = null;
 		}
 
-		public Task<double> GetDpiAsync() =>
-			InvokeAsync<double>(GetDpiSymbol);
+		public double GetDpi() =>
+			Invoke<double>(GetDpiSymbol);
 	}
 }

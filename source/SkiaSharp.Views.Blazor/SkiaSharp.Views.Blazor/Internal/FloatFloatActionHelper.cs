@@ -1,6 +1,6 @@
-﻿using Microsoft.JSInterop;
-using System;
+﻿using System;
 using System.ComponentModel;
+using Microsoft.JSInterop;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
