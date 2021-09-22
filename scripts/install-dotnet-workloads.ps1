@@ -12,12 +12,7 @@ Write-Host "Checking current workloads..."
 & dotnet workload search
 
 Write-Host "Installing workloads..."
-& dotnet workload install android-aot --source "$SourceUrl"
-& dotnet workload install ios --source "$SourceUrl"
-& dotnet workload install tvos --source "$SourceUrl"
-& dotnet workload install macos --source "$SourceUrl"
-& dotnet workload install maccatalyst --source "$SourceUrl"
-& dotnet workload install wasm-tools --source "$SourceUrl"
-& dotnet workload install maui --source "$SourceUrl"
+& dotnet workload update --from-rollback-file $SourceUrl --source https://aka.ms/dotnet6/nuget/index.json
+& dotnet workload install maui --skip-manifest-update --source https://aka.ms/dotnet6/nuget/index.json
 
 exit $LASTEXITCODE
