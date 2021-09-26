@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Runtime.InteropServices;
 #if THROW_OBJECT_EXCEPTIONS
 using System.Collections.Concurrent;
 #endif
@@ -16,7 +17,7 @@ namespace SkiaSharp
 #endif
 		internal static readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference> ();
 
-		internal static readonly ReaderWriterLockSlim instancesLock = new ReaderWriterLockSlim ();
+		internal static readonly IPlatformLock instancesLock = PlatformLock.Create ();
 
 		/// <summary>
 		/// Retrieve the living instance if there is one, or null if not.
@@ -212,4 +213,115 @@ namespace SkiaSharp
 			}
 		}
 	}
+
+
+	/*
+	 * This is a (hopefully) temporary fix for issue #1383.
+	 * 
+	 *    https://github.com/mono/SkiaSharp/issues/1383
+	 * 
+	 * On Windows, .NET locks are alertable when using the STA threading model and can 
+	 * cause the Windows message loop to be dispatched (typically on WM_PAINT messages. 
+	 * This can lead to re-entrancy and a deadlock on the HandleDictionary lock. 
+	 * 
+	 * This fix replaces the ReaderWriteLockSlim instance on Windows with a native Win32 
+	 * CRITICAL_SECTION.
+	 */
+
+	/// <summary>
+	/// Abstracts a platform dependant lock implementation
+	/// </summary>
+	interface IPlatformLock
+	{
+		void EnterReadLock ();
+		void ExitReadLock ();
+		void EnterWriteLock ();
+		void ExitWriteLock ();
+		void EnterUpgradeableReadLock ();
+		void ExitUpgradeableReadLock ();
+	}
+
+	/// <summary>
+	/// Helper class to create a IPlatformLock instance depending on the platform
+	/// </summary>
+	static class PlatformLock
+	{
+		public static IPlatformLock Create ()
+		{
+			if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows))
+				return new NonAlertableWin32Lock ();
+			else
+				return new ReadWriteLock ();
+		}
+	}
+
+	/// <summary>
+	/// Non-Windows platform lock uses ReaderWriteLockSlim
+	/// </summary>
+	class ReadWriteLock : IPlatformLock
+	{
+		public void EnterReadLock () => _lock.EnterReadLock ();
+		public void ExitReadLock () => _lock.ExitReadLock ();
+		public void EnterWriteLock () => _lock.EnterWriteLock ();
+		public void ExitWriteLock () => _lock.ExitWriteLock ();
+		public void EnterUpgradeableReadLock () => _lock.EnterUpgradeableReadLock ();
+		public void ExitUpgradeableReadLock () => _lock.ExitUpgradeableReadLock ();
+
+		ReaderWriterLockSlim _lock = new ReaderWriterLockSlim ();
+	}
+
+	/// <summary>
+	/// Windows platform lock uses Win32 CRITICAL_SECTION
+	/// </summary>
+	class NonAlertableWin32Lock : IPlatformLock
+	{
+		public NonAlertableWin32Lock ()
+		{
+			_cs = Marshal.AllocHGlobal (Marshal.SizeOf<CRITICAL_SECTION> ());
+			InitializeCriticalSectionEx (_cs, 4000, 0);
+		}
+
+		~NonAlertableWin32Lock ()
+		{
+			Marshal.FreeHGlobal (_cs);
+		}
+
+		IntPtr _cs;
+
+		void Enter ()
+		{
+			EnterCriticalSection (_cs);
+		}
+
+		void Leave ()
+		{
+			LeaveCriticalSection (_cs);
+		}
+
+		public void EnterReadLock () { Enter (); }
+		public void ExitReadLock () { Leave (); }
+		public void EnterWriteLock () { Enter (); }
+		public void ExitWriteLock () { Leave (); }
+		public void EnterUpgradeableReadLock () { Enter (); }
+		public void ExitUpgradeableReadLock () { Leave (); }
+
+		[StructLayout (LayoutKind.Sequential)]
+		public struct CRITICAL_SECTION
+		{
+			public IntPtr DebugInfo;
+			public int LockCount;
+			public int RecursionCount;
+			public IntPtr OwningThread;
+			public IntPtr LockSemaphore;
+			public UIntPtr SpinCount;
+		}
+
+		[DllImport ("Kernel32.dll")]
+		static extern bool InitializeCriticalSectionEx (IntPtr lpCriticalSection, uint dwSpinCount, uint Flags);
+		[DllImport ("Kernel32.dll")]
+		static extern bool EnterCriticalSection (IntPtr lpCriticalSection);
+		[DllImport ("Kernel32.dll")]
+		static extern bool LeaveCriticalSection (IntPtr lpCriticalSection);
+	}
+
 }
