@@ -278,6 +278,9 @@ namespace SkiaSharp
 		public NonAlertableWin32Lock ()
 		{
 			_cs = Marshal.AllocHGlobal (Marshal.SizeOf<CRITICAL_SECTION> ());
+			if (_cs == IntPtr.Zero)
+				throw new OutOfMemoryException ("Failed to allocate memory for critical section");
+
 			InitializeCriticalSectionEx (_cs, 4000, 0);
 		}
 
@@ -319,7 +322,7 @@ namespace SkiaSharp
 			public UIntPtr SpinCount;
 		}
 
-		[DllImport ("Kernel32.dll")]
+		[DllImport ("Kernel32.dll", SetLastError = true)]
 		[return: MarshalAs (UnmanagedType.Bool)]
 		static extern bool InitializeCriticalSectionEx (IntPtr lpCriticalSection, uint dwSpinCount, uint Flags);
 		[DllImport ("Kernel32.dll")]
