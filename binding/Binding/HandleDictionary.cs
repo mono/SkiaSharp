@@ -283,7 +283,10 @@ namespace SkiaSharp
 
 		~NonAlertableWin32Lock ()
 		{
-			Marshal.FreeHGlobal (_cs);
+			if (_cs != IntPtr.Zero) {
+				DeleteCriticalSection (_cs);
+				Marshal.FreeHGlobal (_cs);
+			}
 		}
 
 		IntPtr _cs;
@@ -317,11 +320,14 @@ namespace SkiaSharp
 		}
 
 		[DllImport ("Kernel32.dll")]
+		[return: MarshalAs (UnmanagedType.Bool)]
 		static extern bool InitializeCriticalSectionEx (IntPtr lpCriticalSection, uint dwSpinCount, uint Flags);
 		[DllImport ("Kernel32.dll")]
-		static extern bool EnterCriticalSection (IntPtr lpCriticalSection);
+		static extern void DeleteCriticalSection (IntPtr lpCriticalSection);
 		[DllImport ("Kernel32.dll")]
-		static extern bool LeaveCriticalSection (IntPtr lpCriticalSection);
+		static extern void EnterCriticalSection (IntPtr lpCriticalSection);
+		[DllImport ("Kernel32.dll")]
+		static extern void LeaveCriticalSection (IntPtr lpCriticalSection);
 	}
 
 }
