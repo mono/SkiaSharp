@@ -154,11 +154,10 @@ jobs:
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install the older Windows SDKs
           - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
-            - pwsh: |
-                $uri = 'https://go.microsoft.com/fwlink/p/?LinkId=619296'
-                .\scripts\download-file.ps1 -Uri $uri -OutFile sdksetup.exe
-                .\sdksetup.exe /norestart /quiet | Out-Null
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296
               displayName: Install the Windows 10 SDK 10.0.10240
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2083338
+              displayName: Install the Windows 10 SDK 10.0.18362
 
       # install any .NET Core global tools
       - ${{ each tool in parameters.tools }}:
