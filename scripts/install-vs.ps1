@@ -44,6 +44,11 @@ $installationPath = & $vswhere -latest -prerelease -property installationPath
 Write-Host "##vso[task.prependpath]$installationPath\MSBuild\Current\Bin"
 Write-Host "##vso[task.setvariable variable=VS_INSTALL]$installationPath"
 
+Write-Host "Patching MSBuild..."
+$mypath = $MyInvocation.MyCommand.Path
+$mypath = Split-Path $mypath -Parent
+& "$mypath\patch-msbuild.ps1" -MSBuild "$installationPath\MSBuild\Current\Bin\MSBuild.exe"
+
 Write-Host "Installed Visual Studio Versions:"
 & $vswhere -all -prerelease -property installationPath
 
