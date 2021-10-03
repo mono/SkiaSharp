@@ -31,7 +31,7 @@ parameters:
   artifactName: ''                              # the name of the artifact to merge this run into
 
 jobs:
-- ${{ if or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'), startsWith(parameters.name, 'package_')) }}:
+- ${{ if or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_')) }}:
   - template: azure-templates-download.yml
     parameters:
       name: ${{ parameters.name }}
@@ -42,7 +42,7 @@ jobs:
       buildExternals: ${{ parameters.buildExternals }}
       artifactName: ${{ parameters.artifactName }}
 
-- ${{ if not(or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'), startsWith(parameters.name, 'package_'))) }}:
+- ${{ if not(or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
