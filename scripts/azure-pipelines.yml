@@ -353,7 +353,7 @@ stages:
             - native
           artifactName: managed
           postBuildSteps:
-            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
               displayName: Delete the native folder
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
@@ -366,7 +366,7 @@ stages:
             - native
           artifactName: managed
           postBuildSteps:
-            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
               displayName: Delete the native folder
       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
         parameters:
@@ -380,7 +380,7 @@ stages:
             - native
           artifactName: managed
           postBuildSteps:
-            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
               displayName: Delete the native folder
 
   - stage: package
