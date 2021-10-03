@@ -438,6 +438,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: docs-api-diff
           additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
+          installWindowsSdk: false
           installPreviewVs: false
           shouldPublish: false
           requiredArtifacts:
@@ -448,6 +449,8 @@ stages:
           preBuildSteps:
             - pwsh: .\scripts\install-gtk.ps1
               displayName: Install GTK# 2.12
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296
+              displayName: Install the Windows 10 SDK 10.0.10240
             - pwsh: |
                 dir "${env:ProgramFiles(x86)}\Windows Kits\10"
                 dir "${env:ProgramFiles(x86)}\Windows Kits\10\Lib"
