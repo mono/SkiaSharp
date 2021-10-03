@@ -449,7 +449,12 @@ stages:
           preBuildSteps:
             - pwsh: .\scripts\install-gtk.ps1
               displayName: Install GTK# 2.12
-            - pwsh: Get-ChildItem -Name "${env:ProgramFiles(x86)}\Windows Kits\10\Lib"
+            - pwsh: |
+                dir "${env:ProgramFiles(x86)}\Windows Kits\10"
+                dir "${env:ProgramFiles(x86)}\Windows Kits\10\Lib"
+                dir "${env:ProgramFiles(x86)}\Windows Kits\10\References"
+                dir "${env:ProgramFiles(x86)}\Windows Kits\10\References\Windows.Foundation.UniversalApiContract"
+                dir "${env:ProgramFiles(x86)}\Windows Kits\10\References\Windows.Foundation.UniversalApiContract\1.0.0.0"
           postBuildSteps:
             - task: PublishBuildArtifacts@1
               displayName: Publish the API diffs
