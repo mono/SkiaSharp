@@ -176,7 +176,7 @@ internal partial class VersionConstants {
       Build
     </_CopyToOutputDirectoryAfterTargets>
   </PropertyGroup>
-  <Target Name="_CopyToOutputDirectoryDep">
+  <Target Name="_CopyToOutputDirectoryDep" DependsOnTargets="$(_CopyToOutputDirectoryDependsOn)">
     <ItemGroup Condition=" '$(PackagingLocation)' == '' ">
       <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(PackagingPlatform)\$(TargetFileName)" />
       <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />

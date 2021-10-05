@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <Import Project="..\..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props" Condition="Exists('..\..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props')" />
-  <Import Project="..\..\..\..\..\output\SkiaSharp.Views.Blazor\nuget\build\net6.0\SkiaSharp.Views.Blazor.props" Condition="Exists('..\..\..\..\..\output\SkiaSharp.Views.Blazor\nuget\build\net6.0\SkiaSharp.Views.Blazor.props')" />
+  <!--<Import Project="..\..\..\..\..\output\SkiaSharp.Views.Blazor\nuget\build\net6.0\SkiaSharp.Views.Blazor.props" Condition="Exists('..\..\..\..\..\output\SkiaSharp.Views.Blazor\nuget\build\net6.0\SkiaSharp.Views.Blazor.props')" />-->
+  <Import Project="..\..\..\..\..\output\SkiaSharp.Views.Blazor\nuget\build\net6.0\SkiaSharp.Views.Blazor.Local.props" Condition="Exists('..\..\..\..\..\output\SkiaSharp.Views.Blazor\nuget\build\net6.0\SkiaSharp.Views.Blazor.Local.props')" />
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -22,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\..\..\..\source\SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor.csproj" />
+    <!--<Reference Include="..\..\..\..\..\source\SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor\bin\$(Configuration)\net6.0\SkiaSharp.Views.Blazor.dll" />-->
   </ItemGroup>
 
 </Project>
