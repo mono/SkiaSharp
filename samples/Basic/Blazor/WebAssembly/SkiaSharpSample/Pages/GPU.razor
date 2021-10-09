@@ -8,7 +8,7 @@
     <div class="row">
         <div class="col border rounded p-2 canvas-container">
 
-            <SKGLView OnPaintSurface="OnPaintSurface" EnableRenderLoop="true" />
+            <SKGLView OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true" EnableRenderLoop="true" />
 
         </div>
     </div>
@@ -31,13 +31,13 @@
         using var paint = new SKPaint
         {
             IsAntialias = true,
-            StrokeWidth = 10f,
+            StrokeWidth = 5f,
             StrokeCap = SKStrokeCap.Round,
             TextAlign = SKTextAlign.Center,
             TextSize = 24,
         };
 
-        var surfaceSize = e.BackendRenderTarget.Size;
+        var surfaceSize = e.Info.Size;
         var clockSize = Math.Min(surfaceSize.Width, surfaceSize.Height) * 0.4f;
         var center = new SKPoint(surfaceSize.Width / 2f, surfaceSize.Height / 2f);
         var now = DateTime.Now;
@@ -50,7 +50,7 @@
         canvas.RotateDegrees(-90f, center.X, center.Y);
 
         // hours
-        paint.StrokeWidth = 9f;
+        paint.StrokeWidth = 3f;
         canvas.Save();
         canvas.Translate(center);
         canvas.RotateDegrees(360f * (now.Hour / 12f));
@@ -58,7 +58,7 @@
         canvas.Restore();
 
         // minutes
-        paint.StrokeWidth = 6f;
+        paint.StrokeWidth = 2f;
         canvas.Save();
         canvas.Translate(center);
         canvas.RotateDegrees(360f * (now.Minute / 60f));
@@ -66,7 +66,7 @@
         canvas.Restore();
 
         // seconds
-        paint.StrokeWidth = 3f;
+        paint.StrokeWidth = 1f;
         canvas.Save();
         canvas.Translate(center);
         canvas.RotateDegrees(360f * ((now.Second * 1000f + now.Millisecond) / 1000f / 60f));
@@ -74,7 +74,7 @@
         canvas.Restore();
 
         // center
-        canvas.DrawCircle(center, 20f, paint);
+        canvas.DrawCircle(center, 10f, paint);
 
         // border
         paint.Style = SKPaintStyle.Stroke;

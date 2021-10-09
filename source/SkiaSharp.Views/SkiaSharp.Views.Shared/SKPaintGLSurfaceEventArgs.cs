@@ -1,6 +1,5 @@
 ﻿#if !__WATCHOS__
 using System;
-using System.ComponentModel;
 
 #if WINDOWS_UWP || HAS_UNO
 namespace SkiaSharp.Views.UWP
@@ -38,6 +37,8 @@ namespace SkiaSharp.Views.Blazor
 			BackendRenderTarget = new GRBackendRenderTarget(GRBackend.OpenGL, renderTarget);
 			ColorType = renderTarget.Config.ToColorType();
 			Origin = renderTarget.Origin;
+			Info = new SKImageInfo(renderTarget.Width, renderTarget.Height, ColorType);
+			RawInfo = Info;
 		}
 #endif
 
@@ -52,18 +53,36 @@ namespace SkiaSharp.Views.Blazor
 			BackendRenderTarget = renderTarget;
 			ColorType = colorType;
 			Origin = origin;
+			Info = new SKImageInfo(renderTarget.Width, renderTarget.Height, ColorType);
+			RawInfo = Info;
+		}
+
+		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info)
+			: this(surface, renderTarget, origin, info, info)
+		{
+		}
+
+		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info, SKImageInfo rawInfo)
+		{
+			Surface = surface;
+			BackendRenderTarget = renderTarget;
+			ColorType = info.ColorType;
+			Origin = origin;
+			Info = info;
+			RawInfo = rawInfo;
 		}
 
 #if !__BLAZOR__
+		[Obsolete]
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, GRGlFramebufferInfo glInfo)
 		{
 			Surface = surface;
 			BackendRenderTarget = renderTarget;
 			ColorType = colorType;
 			Origin = origin;
-#pragma warning disable CS0612 // Type or member is obsolete
 			rtDesc = CreateDesc(glInfo);
-#pragma warning restore CS0612 // Type or member is obsolete
+			Info = new SKImageInfo(renderTarget.Width, renderTarget.Height, colorType);
+			RawInfo = Info;
 		}
 #endif
 
@@ -93,6 +112,10 @@ namespace SkiaSharp.Views.Blazor
 		public SKColorType ColorType { get; private set; }
 
 		public GRSurfaceOrigin Origin { get; private set; }
+
+		public SKImageInfo Info { get; private set; }
+
+		public SKImageInfo RawInfo { get; private set; }
 	}
 }
 #endif

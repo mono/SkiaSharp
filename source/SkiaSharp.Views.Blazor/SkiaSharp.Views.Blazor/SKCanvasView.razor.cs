@@ -10,7 +10,7 @@ namespace SkiaSharp.Views.Blazor
 {
 	public partial class SKCanvasView : IDisposable
 	{
-		private SKCanvasViewInterop interop = null!;
+		private SKHtmlCanvasInterop interop = null!;
 		private SizeWatcherInterop sizeWatcher = null!;
 		private DpiWatcherInterop dpiWatcher = null!;
 		private ElementReference htmlCanvas;
@@ -21,13 +21,27 @@ namespace SkiaSharp.Views.Blazor
 		private bool ignorePixelScaling;
 		private double dpi;
 		private SKSize canvasSize;
-
-#if DEBUG
-		public TimeSpan LastFrameDuration;
-#endif
+		private bool enableRenderLoop;
 
 		[Inject]
 		IJSRuntime JS { get; set; } = null!;
+
+		[Parameter]
+		public Action<SKPaintSurfaceEventArgs>? OnPaintSurface { get; set; }
+
+		[Parameter]
+		public bool EnableRenderLoop
+		{
+			get => enableRenderLoop;
+			set
+			{
+				if (enableRenderLoop != value)
+				{
+					enableRenderLoop = value;
+					Invalidate();
+				}
+			}
+		}
 
 		[Parameter]
 		public bool IgnorePixelScaling
@@ -43,9 +57,6 @@ namespace SkiaSharp.Views.Blazor
 			}
 		}
 
-		[Parameter]
-		public Action<SKPaintSurfaceEventArgs>? OnPaintSurface { get; set; }
-
 		[Parameter(CaptureUnmatchedValues = true)]
 		public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
@@ -53,13 +64,23 @@ namespace SkiaSharp.Views.Blazor
 		{
 			if (firstRender)
 			{
-				interop = await SKCanvasViewInterop.ImportAsync(JS, htmlCanvas);
+				interop = await SKHtmlCanvasInterop.ImportAsync(JS, htmlCanvas, OnRenderFrame);
+				interop.InitRaster();
+
 				sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
 				dpiWatcher = await DpiWatcherInterop.ImportAsync(JS, OnDpiChanged);
 			}
 		}
 
 		public void Invalidate()
+		{
+			if (canvasSize.Width <= 0 || canvasSize.Height <= 0 || dpi <= 0)
+				return;
+
+			interop.RequestAnimationFrame(EnableRenderLoop, (int)(canvasSize.Width * dpi), (int)(canvasSize.Height * dpi));
+		}
+
+		private void OnRenderFrame()
 		{
 			if (canvasSize.Width <= 0 || canvasSize.Height <= 0 || dpi <= 0)
 				return;
@@ -79,7 +100,7 @@ namespace SkiaSharp.Views.Blazor
 				OnPaintSurface?.Invoke(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
-			interop.Invalidate(pixelsHandle.AddrOfPinnedObject(), info.Size);
+			interop.PutImageData(pixelsHandle.AddrOfPinnedObject(), info.Size);
 		}
 
 		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize)

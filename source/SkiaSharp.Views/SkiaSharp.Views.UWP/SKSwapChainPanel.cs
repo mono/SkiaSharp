@@ -91,7 +91,9 @@ namespace SkiaSharp.Views.UWP
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
+#pragma warning disable CS0612 // Type or member is obsolete
 				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo));
+#pragma warning restore CS0612 // Type or member is obsolete
 			}
 
 			// update the control

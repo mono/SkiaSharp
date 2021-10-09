@@ -15,7 +15,7 @@ export class SizeWatcher {
 		if (!element || !callback)
 			return;
 
-		console.info(`Adding size watcher observation with callback ${callback._id}...`);
+		//console.info(`Adding size watcher observation with callback ${callback._id}...`);
 
 		SizeWatcher.init();
 
@@ -34,7 +34,7 @@ export class SizeWatcher {
 		if (!elementId || !SizeWatcher.observer)
 			return;
 
-		console.info('Removing size watcher observation...');
+		//console.info('Removing size watcher observation...');
 
 		const element = SizeWatcher.elements[elementId];
 
@@ -46,7 +46,7 @@ export class SizeWatcher {
 		if (SizeWatcher.observer)
 			return;
 
-		console.info('Starting size watcher...');
+		//console.info('Starting size watcher...');
 
 		SizeWatcher.elements = new Map<string, HTMLElement>();
 		SizeWatcher.observer = new ResizeObserver((entries) => {

@@ -9,7 +9,7 @@ export class DpiWatcher {
 	}
 
 	public static start(callback: DotNet.DotNetObjectReference): number {
-		console.info(`Starting DPI watcher with callback ${callback._id}...`);
+		//console.info(`Starting DPI watcher with callback ${callback._id}...`);
 
 		DpiWatcher.lastDpi = window.devicePixelRatio;
 		DpiWatcher.timerId = window.setInterval(DpiWatcher.update, 1000);
@@ -19,7 +19,7 @@ export class DpiWatcher {
 	}
 
 	public static stop() {
-		console.info(`Stopping DPI watcher with callback ${DpiWatcher.callback._id}...`);
+		//console.info(`Stopping DPI watcher with callback ${DpiWatcher.callback._id}...`);
 
 		window.clearInterval(DpiWatcher.timerId);
 
