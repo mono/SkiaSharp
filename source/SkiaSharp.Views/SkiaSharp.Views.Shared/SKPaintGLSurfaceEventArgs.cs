@@ -1,5 +1,6 @@
 ﻿#if !__WATCHOS__
 using System;
+using System.ComponentModel;
 
 #if WINDOWS_UWP || HAS_UNO
 namespace SkiaSharp.Views.UWP
