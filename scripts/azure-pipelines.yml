@@ -71,7 +71,7 @@ stages:
         parameters:
           name: native_android_x86_windows
           displayName: Android x86
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=x86
           installWindowsSdk: false
@@ -80,7 +80,7 @@ stages:
         parameters:
           name: native_android_x64_windows
           displayName: Android x64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=x64
           installWindowsSdk: false
@@ -89,7 +89,7 @@ stages:
         parameters:
           name: native_android_arm_windows
           displayName: Android arm
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=arm
           installWindowsSdk: false
@@ -98,7 +98,7 @@ stages:
         parameters:
           name: native_android_arm64_windows
           displayName: Android arm64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=arm64
           installWindowsSdk: false
@@ -107,7 +107,7 @@ stages:
         parameters:
           name: native_tizen_windows
           displayName: Tizen
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-tizen
           installWindowsSdk: false
           artifactName: native
@@ -115,7 +115,7 @@ stages:
         parameters:
           name: native_uwp_angle_x86_windows
           displayName: ANGLE x86
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
           artifactName: native
@@ -123,7 +123,7 @@ stages:
         parameters:
           name: native_uwp_angle_x64_windows
           displayName: ANGLE x64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
           artifactName: native
@@ -131,7 +131,7 @@ stages:
         parameters:
           name: native_uwp_angle_arm_windows
           displayName: ANGLE arm
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
           artifactName: native
@@ -139,7 +139,7 @@ stages:
         parameters:
           name: native_uwp_angle_arm64_windows
           displayName: ANGLE arm64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
           artifactName: native
@@ -147,7 +147,7 @@ stages:
         parameters:
           name: native_uwp_x86_windows
           displayName: UWP x86
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=x86 --skipAngle=true
           artifactName: native
@@ -155,7 +155,7 @@ stages:
         parameters:
           name: native_uwp_x64_windows
           displayName: UWP x64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=x64 --skipAngle=true
           artifactName: native
@@ -163,7 +163,7 @@ stages:
         parameters:
           name: native_uwp_arm_windows
           displayName: UWP arm
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=arm --skipAngle=true
           artifactName: native
@@ -171,7 +171,7 @@ stages:
         parameters:
           name: native_uwp_arm64_windows
           displayName: UWP arm64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=arm64 --skipAngle=true
           artifactName: native
@@ -179,7 +179,7 @@ stages:
         parameters:
           name: native_win32_x86_windows
           displayName: Win32 x86
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-windows
           additionalArgs: --buildarch=x86
           artifactName: native
@@ -187,7 +187,7 @@ stages:
         parameters:
           name: native_win32_x64_windows
           displayName: Win32 x64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-windows
           additionalArgs: --buildarch=x64
           artifactName: native
@@ -195,7 +195,7 @@ stages:
         parameters:
           name: native_win32_arm64_windows
           displayName: Win32 arm64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-windows
           additionalArgs: --buildarch=arm64
           artifactName: native
@@ -203,7 +203,7 @@ stages:
         parameters:
           name: native_win32_x64_nanoserver_windows
           displayName: Nano Server x64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
           artifactName: native
