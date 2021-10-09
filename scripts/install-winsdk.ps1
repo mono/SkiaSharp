@@ -17,5 +17,3 @@ Write-Host "Installing Windows SDK..."
 
 Write-Host "Installed Windows SDKs:"
 Get-ChildItem -Name "${env:ProgramFiles(x86)}\Windows Kits\10\Lib"
-
-exit $LASTEXITCODE
