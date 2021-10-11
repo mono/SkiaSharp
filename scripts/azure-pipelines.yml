@@ -782,7 +782,7 @@ stages:
             name: native_checks_windows
             displayName: Run Code Checks
             condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))
-            vmImage: $(VM_IMAGE_WINDOWS)
+            vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
             target: git-sync-deps
             installWindowsSdk: false
             installDotNet: false
