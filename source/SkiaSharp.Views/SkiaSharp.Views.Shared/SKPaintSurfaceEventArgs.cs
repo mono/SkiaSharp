@@ -18,6 +18,8 @@ namespace SkiaSharp.Views.Mac
 namespace SkiaSharp.Views.Tizen
 #elif WINDOWS
 namespace SkiaSharp.Views.Windows
+#elif __BLAZOR__
+namespace SkiaSharp.Views.Blazor
 #endif
 {
 	public class SKPaintSurfaceEventArgs : EventArgs

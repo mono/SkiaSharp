@@ -21,7 +21,7 @@
     <BuildingForNet6 Condition="'$(BuildingForNet6)' == '' and $(IsWindows)">true</BuildingForNet6>
     <BuildingForNet6 Condition="'$(BuildingForNet6)' == ''">false</BuildingForNet6>
     <MDocDocumentationDirectory>$(MSBuildThisFileDirectory)..\docs\SkiaSharpAPI</MDocDocumentationDirectory>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -46,20 +46,10 @@
     <DependsOnNETStandard>true</DependsOnNETStandard>
   </PropertyGroup>
 
-  <!-- Workaround: https://github.com/dotnet/sdk/issues/19050 -->
-  <PropertyGroup>
-    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
-  </PropertyGroup>
-
   <!-- Workaround: Use a slightly newer compiler for C# 9 support for the workaround above -->
   <ItemGroup Condition="'$(MSBuildVersion)' != '' AND '$(MSBuildVersion)' &lt; '16.7.0'  ">
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.9.0" PrivateAssets="all" />
   </ItemGroup>
-
-  <!-- workaround for conflict between WinUI and net6 https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1307712 -->
-  <PropertyGroup Condition="$(MSBuildProjectFile.EndsWith('.wapproj'))">
-    <SkipImportNetSdk>true</SkipImportNetSdk>
-  </PropertyGroup>
 
   <!-- HACK: WinUI seems to have issues without this -->
   <PropertyGroup>

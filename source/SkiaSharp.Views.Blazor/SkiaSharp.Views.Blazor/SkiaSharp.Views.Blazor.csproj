@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>SkiaSharp.Views.Blazor</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Blazor</AssemblyName>
+    <PackagingGroup>SkiaSharp.Views.Blazor</PackagingGroup>
+    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);__BLAZOR__</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.0-rc.1.21452.15" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.4.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\SKPaintSurfaceEventArgs.cs" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\SKPaintGLSurfaceEventArgs.cs" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_CopyToOutputDirectoryDependsOn>
+      $(_CopyToOutputDirectoryDependsOn);
+      _AddJavascriptToCopy;
+    </_CopyToOutputDirectoryDependsOn>
+  </PropertyGroup>
+  <Target Name="_AddJavascriptToCopy">
+    <ItemGroup>
+      <_TempNoneWithTargetPath Include="wwwroot\*.js" />
+      <_NoneWithTargetPath Include="@(_TempNoneWithTargetPath)" TargetPath="nuget\staticwebassets\%(Filename)%(Extension)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
