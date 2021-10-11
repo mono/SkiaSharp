@@ -17,6 +17,14 @@
     <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_SHA)</AssemblyVersionGitSha>
     <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_COMMIT)</AssemblyVersionGitSha>
 
+    <!-- Set the minimum versions of the platforms -->
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">10.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tvos'))">10.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-macos'))">10.14</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">10.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.18362.0</SupportedOSPlatformVersion>
+
     <!--
       Suppress version attribute generation in Microsoft.NET.Sdk projects to avoid build failures
       when two sets of attributes are emitted.
@@ -53,6 +61,9 @@
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
     <PackageReference Include="mdoc" Version="5.8.3" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
+
+  <!-- HACK: WinUI overwrite tasks that are not needed when multitargeting -->
+  <Target Name="BinPlaceBootstrapDll" />
 
   <!--
     Workaround for https://github.com/dotnet/sdk/issues/11105

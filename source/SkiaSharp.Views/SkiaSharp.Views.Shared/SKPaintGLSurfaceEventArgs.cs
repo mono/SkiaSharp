@@ -75,7 +75,7 @@ namespace SkiaSharp.Views.Blazor
 
 #if !__BLAZOR__
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		[Obsolete]
+		[Obsolete("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, GRGlFramebufferInfo glInfo)
 		{
 			Surface = surface;
