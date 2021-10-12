@@ -2,7 +2,6 @@ trigger:
   - main
   - develop
   - patch/*
-  - refs/tags/*
 
 pr:
   - main
@@ -748,12 +747,16 @@ stages:
           requiredArtifactsMap:
             - src: nuget
               dst: nugets
+          postBuildSteps:
+            - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
+              displayName: Delete the nugets folder
       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
         parameters:
           name: samples_macos
           displayName: macOS
           vmImage: $(VM_IMAGE_MAC)
           target: samples
+          shouldPublish: false
           requiredArtifactsMap:
             - src: nuget
               dst: nugets
@@ -766,6 +769,7 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
+          shouldPublish: false
           requiredArtifactsMap:
             - src: nuget
               dst: nugets
