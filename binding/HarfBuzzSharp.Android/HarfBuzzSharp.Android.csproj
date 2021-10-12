@@ -8,13 +8,13 @@
     <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\android\x86\libHarfBuzzSharp.so" Link="nuget\build\$(PackagingPlatform)\x86\libHarfBuzzSharp.so" />
-    <None Include="..\..\output\native\android\x86_64\libHarfBuzzSharp.so" Link="nuget\build\$(PackagingPlatform)\x64\libHarfBuzzSharp.so" />
-    <None Include="..\..\output\native\android\armeabi-v7a\libHarfBuzzSharp.so" Link="nuget\build\$(PackagingPlatform)\arm\libHarfBuzzSharp.so" />
-    <None Include="..\..\output\native\android\arm64-v8a\libHarfBuzzSharp.so" Link="nuget\build\$(PackagingPlatform)\arm64\libHarfBuzzSharp.so" />
+    <None Include="..\..\output\native\android\x86\libHarfBuzzSharp*" Link="nuget\runtimes\android-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\x86_64\libHarfBuzzSharp*" Link="nuget\runtimes\android-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\armeabi-v7a\libHarfBuzzSharp*" Link="nuget\runtimes\android-arm\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\arm64-v8a\libHarfBuzzSharp*" Link="nuget\runtimes\android-arm64\native\%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="nuget\build\monoandroid1.0\HarfBuzzSharp.targets" Link="nuget\build\$(PackagingPlatform)\HarfBuzzSharp.targets" />
+    <None Include="..\HarfBuzzSharp\nuget\build\monoandroid\HarfBuzzSharp.targets" Link="nuget\build\$(PackagingPlatform)\HarfBuzzSharp.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />

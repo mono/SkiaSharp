@@ -4,7 +4,7 @@ using Windows.UI.Xaml;
 
 namespace SkiaSharp.Views.UWP
 {
-	public partial class SKXamlCanvas : FrameworkElement
+	public partial class SKXamlCanvas
 	{
 		public SKXamlCanvas()
 		{
@@ -12,8 +12,6 @@ namespace SkiaSharp.Views.UWP
 		}
 
 		partial void DoUnloaded() => throw new NotImplementedException();
-
-		private SKSize GetCanvasSize() => throw new NotImplementedException();
 
 		private void DoInvalidate() => throw new NotImplementedException();
 	}

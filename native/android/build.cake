@@ -10,7 +10,7 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower ()
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
-    .WithCriteria(IsRunningOnMac() || IsRunningOnWindows())
+    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows())
     .Does(() =>
 {
     Build("x86", "x86");
@@ -46,7 +46,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMac() || IsRunningOnWindows())
+    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows())
     .Does(() =>
 {
     var cmd = IsRunningOnWindows() ? ".cmd" : "";

@@ -128,6 +128,8 @@ namespace SkiaSharp
 
 		public new GRBackend Backend => base.Backend;
 
+		public bool IsAbandoned => SkiaApi.gr_direct_context_is_abandoned (Handle);
+
 		public void AbandonContext (bool releaseResources = false)
 		{
 			if (releaseResources)
@@ -187,7 +189,7 @@ namespace SkiaSharp
 			SkiaApi.gr_direct_context_submit (Handle, synchronous);
 
 		public new int GetMaxSurfaceSampleCount (SKColorType colorType) =>
-			GetMaxSurfaceSampleCount (colorType);
+			base.GetMaxSurfaceSampleCount (colorType);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]

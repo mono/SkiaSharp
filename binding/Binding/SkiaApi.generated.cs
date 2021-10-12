@@ -496,6 +496,22 @@ namespace SkiaSharp
 			(gr_direct_context_get_resource_cache_usage_delegate ??= GetSymbol<Delegates.gr_direct_context_get_resource_cache_usage> ("gr_direct_context_get_resource_cache_usage")).Invoke (context, maxResources, maxResourceBytes);
 		#endif
 
+		// bool gr_direct_context_is_abandoned(gr_direct_context_t* context)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool gr_direct_context_is_abandoned (gr_direct_context_t context);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool gr_direct_context_is_abandoned (gr_direct_context_t context);
+		}
+		private static Delegates.gr_direct_context_is_abandoned gr_direct_context_is_abandoned_delegate;
+		internal static bool gr_direct_context_is_abandoned (gr_direct_context_t context) =>
+			(gr_direct_context_is_abandoned_delegate ??= GetSymbol<Delegates.gr_direct_context_is_abandoned> ("gr_direct_context_is_abandoned")).Invoke (context);
+		#endif
+
 		// gr_direct_context_t* gr_direct_context_make_gl(const gr_glinterface_t* glInterface)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

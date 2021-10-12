@@ -5,7 +5,7 @@ using Windows.UI.Xaml;
 
 namespace SkiaSharp.Views.UWP
 {
-	public partial class SKXamlCanvas : FrameworkElement
+	public partial class SKXamlCanvas
 	{
 		private SKCGSurfaceFactory drawable;
 
@@ -20,9 +20,6 @@ namespace SkiaSharp.Views.UWP
 		partial void DoUnloaded() =>
 			drawable?.Dispose();
 
-		private SKSize GetCanvasSize() =>
-			drawable?.Info.Size ?? SKSize.Empty;
-
 		private void DoInvalidate() =>
 			NeedsDisplay = true;
 
@@ -34,14 +31,30 @@ namespace SkiaSharp.Views.UWP
 				return;
 
 			// create the skia context
-			using var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : Window.BackingScaleFactor, out var info);
+			using var surface = drawable.CreateSurface(Bounds, Window.BackingScaleFactor, out var info);
 			if (info.Width == 0 || info.Height == 0)
+			{
+				CanvasSize = SKSize.Empty;
 				return;
+			}
+
+			var userVisibleSize = IgnorePixelScaling
+				? new SKSizeI((int)Bounds.Width, (int)Bounds.Height)
+				: info.Size;
+
+			CanvasSize = userVisibleSize;
+
+			if (IgnorePixelScaling)
+			{
+				var skiaCanvas = surface.Canvas;
+				skiaCanvas.Scale((float)Window.BackingScaleFactor);
+				skiaCanvas.Save();
+			}
 
 			using var ctx = NSGraphicsContext.CurrentContext.CGContext;
 
 			// draw on the image using SKiaSharp
-			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 
 			// draw the surface to the context
 			drawable.DrawSurface(ctx, Bounds, info, surface);

@@ -12,6 +12,7 @@ foreach (var cake in GetFiles("native/*/build.cake"))
 
     var task = Task($"externals-{native}")
         .WithCriteria(should)
+        .WithCriteria(!SKIP_BUILD)
         .Does(() => RunCake(localCake, "Default"));
 
     externalsTask.IsDependentOn(task);
@@ -20,24 +21,20 @@ foreach (var cake in GetFiles("native/*/build.cake"))
 Task("externals-osx")
     .IsDependentOn("externals-macos");
 
+Task("externals-catalyst")
+    .IsDependentOn("externals-maccatalyst");
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS DOWNLOAD - download any externals that are needed
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task("externals-download")
-    .Does(() =>
+    .Does(async () =>
 {
     EnsureDirectoryExists ("./output");
     CleanDirectories ("./output");
-    EnsureDirectoryExists ("./output/temp");
 
-    var url = GetDownloadUrl ("_nativeassets");
-    DownloadFile (url, "./output/temp/nativeassets.nupkg");
-
-    Unzip ("./output/temp/nativeassets.nupkg", "./output/temp");
-    MoveDirectory ("./output/temp/tools", "./output/native");
-
-    DeleteDirectory("./output/temp", new DeleteDirectorySettings { Recursive = true, Force = true });
+    await DownloadPackageAsync("_nativeassets", "./output/native");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,8 +70,11 @@ bool ShouldBuildExternal(string platform)
 
     switch (platform) {
         case "mac":
-        case "macos":
-            platform = "osx";
+        case "osx":
+            platform = "macos";
+            break;
+        case "catalyst":
+            platform = "maccatalyst";
             break;
         case "win":
             platform = "windows";

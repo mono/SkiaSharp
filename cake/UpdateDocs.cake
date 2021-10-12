@@ -30,7 +30,7 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 
                 dllName += ".breaking";
             }
-            var changelogPath = (FilePath)$"./changelogs/{id}/{version}/{dllName}.md";
+            var changelogPath = (FilePath)$"./logs/changelogs/{id}/{version}/{dllName}.md";
             EnsureDirectoryExists (changelogPath.GetDirectory ());
             CopyFile (file, changelogPath);
         }
@@ -38,23 +38,20 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 }
 
 Task ("docs-download-output")
-    .Does (() =>
+    .Does (async () =>
 {
     EnsureDirectoryExists ("./output");
     CleanDirectories ("./output");
-    EnsureDirectoryExists ("./output/temp");
 
-    var url = GetDownloadUrl ("_nugets");
-    DownloadFile (url, "./output/temp/nugets.nupkg");
-
-    Unzip ("./output/temp/nugets.nupkg", "./output/temp");
-    MoveDirectory ("./output/temp/tools", OUTPUT_NUGETS_PATH);
-
-    DeleteDirectory("./output/temp", new DeleteDirectorySettings { Recursive = true, Force = true });
+    await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
+    await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         var version = GetVersion (id);
-        var name = $"{id}.{version}.nupkg";
+        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
+            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
+            : version;
+        var name = $"{id}.{localNugetVersion}.nupkg";
         CleanDirectories ($"./output/{id}");
         Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
     }
@@ -77,8 +74,10 @@ Task ("docs-api-diff")
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
-    // some libraries depend in SkiaSharp
+    // some parts of SkiaSharp depend on other parts
     comparer.SearchPaths.Add($"./output/SkiaSharp/nuget/lib/netstandard2.0");
+    foreach (var dir in GetDirectories($"./output/SkiaSharp.Views.Maui.Core/nuget/lib/*"))
+        comparer.SearchPaths.Add(dir.FullPath);
 
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE
@@ -88,6 +87,10 @@ Task ("docs-api-diff")
         Information ($"Comparing the assemblies in '{id}'...");
 
         var version = GetVersion (id);
+        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
+            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
+            : version;
+
         var latestVersion = (await NuGetVersions.GetLatestAsync (id, filter))?.ToNormalizedString ();
         Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");
 
@@ -98,9 +101,9 @@ Task ("docs-api-diff")
         }
 
         // generate the diff and copy to the changelogs
-        Debug ($"Running a diff on '{latestVersion}' vs '{version}' of '{id}'...");
+        Debug ($"Running a diff on '{latestVersion}' vs '{localNugetVersion}' of '{id}'...");
         var diffRoot = $"{baseDir}/{id}";
-        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id.ToLower ()}.{version}.nupkg")) {
+        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id.ToLower ()}.{localNugetVersion}.nupkg")) {
             // run the diff with just the breaking changes
             comparer.MarkdownDiffFileExtension = ".breaking.md";
             comparer.IgnoreNonBreakingChanges = true;
@@ -304,6 +307,16 @@ Task ("docs-format-docs")
                     .Skip (1)
                     .Remove ();
             }
+        }
+
+        // remove any assembly attributes for now: https://github.com/mono/api-doc-tools/issues/560
+        if (xdoc.Root.Name == "Overview") {
+            xdoc.Root
+                .Elements ("Assemblies")
+                .Elements ("Assembly")
+                .Elements ("Attributes")
+                .Elements ("Attribute")
+                .Remove ();
         }
 
         // remove any duplicate AssemblyVersions

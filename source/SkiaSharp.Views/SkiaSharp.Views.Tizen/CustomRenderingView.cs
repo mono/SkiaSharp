@@ -61,6 +61,8 @@ namespace SkiaSharp.Views.Tizen
 
 		protected abstract SKSizeI GetSurfaceSize();
 
+		protected virtual SKSizeI GetRawSurfaceSize() => GetSurfaceSize();
+
 		protected virtual void CreateDrawingSurface()
 		{
 			// empty on purpose
@@ -113,7 +115,7 @@ namespace SkiaSharp.Views.Tizen
 				// recreate the drawing surface to match the new size
 				DestroyDrawingSurface();
 
-				var size = GetSurfaceSize();
+				var size = GetRawSurfaceSize();
 				Evas.evas_object_image_size_set(evasImage, size.Width, size.Height);
 
 				CreateDrawingSurface();

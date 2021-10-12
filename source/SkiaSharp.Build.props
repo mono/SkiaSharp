@@ -9,12 +9,19 @@
   -->
 
   <PropertyGroup>
+    <IsWindows>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))</IsWindows>
+    <IsMacOS>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))</IsMacOS>
+    <IsLinux>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))</IsLinux>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <!-- this is important for mono as it defaults to 'false' -->
     <SignAssembly>true</SignAssembly>
     <SkiaSharpBuildPropsImported>true</SkiaSharpBuildPropsImported>
+    <BuildingForNet6 Condition="'$(BuildingForNet6)' == '' and $(IsWindows)">true</BuildingForNet6>
+    <BuildingForNet6 Condition="'$(BuildingForNet6)' == ''">false</BuildingForNet6>
     <MDocDocumentationDirectory>$(MSBuildThisFileDirectory)..\docs\SkiaSharpAPI</MDocDocumentationDirectory>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -23,18 +30,31 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true' or '$(CI)' == 'true' ">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>$(DefineConstants);THROW_OBJECT_EXCEPTIONS</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DependsOnNETStandard>true</DependsOnNETStandard>
   </PropertyGroup>
 
+  <!-- Workaround: Use a slightly newer compiler for C# 9 support for the workaround above -->
+  <ItemGroup Condition="'$(MSBuildVersion)' != '' AND '$(MSBuildVersion)' &lt; '16.7.0'  ">
+    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.9.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- HACK: WinUI seems to have issues without this -->
   <PropertyGroup>
-    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
-    <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsMacOS>
-    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+    <GenerateLibraryLayout>true</GenerateLibraryLayout>
+    <DisableEmbeddedXbf>false</DisableEmbeddedXbf>
   </PropertyGroup>
 
   <Target Name="PrintRID"
@@ -47,7 +67,7 @@
              Condition=" '$(IsLinux)' == 'true' " />
 
     <Error Text="There appears to be a problem selecting the operating system. IsWindows='$(IsWindows)',  IsMacOS='$(IsMacOS)',  IsLinux='$(IsLinux)'"
-           Condition=" '$(IsWindows)$(IsMacOS)$(IsLinux)' != 'true' " />
+           Condition=" !$(IsWindows) and !$(IsMacOS) and !$(IsLinux) " />
   </Target>
 
 </Project>

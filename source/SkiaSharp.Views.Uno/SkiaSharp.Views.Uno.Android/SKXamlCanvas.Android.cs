@@ -4,7 +4,7 @@ using Windows.UI.Xaml;
 
 namespace SkiaSharp.Views.UWP
 {
-	public partial class SKXamlCanvas : FrameworkElement
+	public partial class SKXamlCanvas
 	{
 		private SurfaceFactory surfaceFactory;
 
@@ -18,31 +18,10 @@ namespace SkiaSharp.Views.UWP
 		partial void DoUnloaded() =>
 			surfaceFactory.Dispose();
 
-		private SKSize GetCanvasSize() =>
-			surfaceFactory.Info.Size;
-
 		private void DoInvalidate()
 		{
-			UpdateCanvasSize((int)ActualWidth, (int)ActualHeight);
+			surfaceFactory.UpdateCanvasSize((int)(ActualWidth * Dpi), (int)(ActualHeight * Dpi));
 			base.Invalidate();
-		}
-
-		private void UpdateCanvasSize(int w, int h)
-		{
-			if (designMode)
-				return;
-
-			if (!IgnorePixelScaling)
-			{
-				var display = DisplayInformation.GetForCurrentView();
-				var scale = display.LogicalDpi / 96.0f;
-
-				surfaceFactory.UpdateCanvasSize((int)(w * scale), (int)(h * scale));
-			}
-			else
-			{
-				surfaceFactory.UpdateCanvasSize(w, h);
-			}
 		}
 
 		protected override void OnDraw(Canvas canvas)
@@ -62,10 +41,25 @@ namespace SkiaSharp.Views.UWP
 			// create a skia surface
 			var surface = surfaceFactory.CreateSurface(out var info);
 			if (surface == null)
+			{
+				CanvasSize = SKSize.Empty;
 				return;
+			}
+
+			var userVisibleSize = IgnorePixelScaling
+				? new SKSizeI((int)ActualWidth, (int)ActualHeight)
+				: info.Size;
+			CanvasSize = userVisibleSize;
+
+			if (IgnorePixelScaling)
+			{
+				var skiaCanvas = surface.Canvas;
+				skiaCanvas.Scale((float)Dpi);
+				skiaCanvas.Save();
+			}
 
 			// draw using SkiaSharp
-			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 
 			// draw the surface to the view
 			surfaceFactory.DrawSurface(surface, canvas);

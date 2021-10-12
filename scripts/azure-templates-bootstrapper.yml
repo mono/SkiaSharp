@@ -5,7 +5,9 @@ parameters:
   packages: ''                                  # any additional packages
   target: ''                                    # the bootstrapper target
   dependsOn: []                                 # the dependiencies
+  variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
+  requiredArtifactsMap: []                      # the artifacts that this build needs to download
   demands: []                                   # the demands
   preBuildSteps: []                             # any steps to run before the build
   postBuildSteps: []                            # any additional steps to run after the build
@@ -22,11 +24,14 @@ parameters:
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installTizenSdk: true                         # whether or not to install the Tizen SDK
   installWindowsSdk: true                       # whether or not to install the Windows SDK
+  installPreviewVs: true                        # whether or not to install the preview VS
+  installDotNet: true                           # whether or not to install the dotnet SDK
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
+  artifactName: ''                              # the name of the artifact to merge this run into
 
 jobs:
-# - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
+# - ${{ if startsWith(parameters.name, 'native_') }}:
 #   - template: azure-templates-download.yml
 #     parameters:
 #       name: ${{ parameters.name }}
@@ -35,8 +40,9 @@ jobs:
 #       condition: ${{ parameters.condition }}
 #       postBuildSteps: ${{ parameters.postBuildSteps }}
 #       buildExternals: ${{ parameters.buildExternals }}
+#       artifactName: ${{ parameters.artifactName }}
 
-# - ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
+# - ${{ if not(startsWith(parameters.name, 'native_')) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
@@ -45,6 +51,7 @@ jobs:
       demands: ${{ parameters.demands }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
+    variables: ${{ parameters.variables }}
     steps:
       # prepare
       - checkout: self
@@ -99,12 +106,35 @@ jobs:
 
       # install extra bits for the manged builds
       - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-        - task: UseDotNet@2
-          inputs:
-            packageType: 'sdk'
-            version: $(DOTNET_VERSION)
-            performMultiLevelLookup: true
-          displayName: Install the correct version of .NET Core
+        - ${{ if eq(parameters.installDotNet, 'true') }}:
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: $(DOTNET_VERSION_PREVIOUS)
+              performMultiLevelLookup: true
+            displayName: Install the previous version of .NET Core
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: $(DOTNET_VERSION)
+              performMultiLevelLookup: true
+            displayName: Install the correct version of .NET Core
+          # install the bits needed for .NET 6 builds
+          - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            displayName: Install the preview version of .NET Core
+          - ${{ if and(endsWith(parameters.name, '_windows'), eq(parameters.installPreviewVs, 'true')) }}:
+            - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
+              displayName: Install Visual Studio Preview
+          - ${{ if not(endsWith(parameters.name, '_linux')) }}:
+            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE"
+              displayName: Install the .NET Core workloads
+          # display dotnet info
+          - pwsh: dotnet --info
+            displayName: Display all the .NET information
+
+      # select the correct version of the JDK for .NET 6
+      - pwsh: echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
+        displayName: Select JDK 11
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
@@ -124,11 +154,15 @@ jobs:
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install the older Windows SDKs
           - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
-            - pwsh: |
-                $uri = 'https://go.microsoft.com/fwlink/p/?LinkId=619296'
-                .\scripts\download-file.ps1 -Uri $uri -OutFile sdksetup.exe
-                .\sdksetup.exe /norestart /quiet | Out-Null
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296
               displayName: Install the Windows 10 SDK 10.0.10240
+            - ${{ if and(not(startsWith(parameters.name, 'native_')), not(startsWith(parameters.name, 'api_diff_'))) }}:
+              - pwsh: .\scripts\install-winsdk.ps1 -LinkId 864422
+                displayName: Install the Windows 10 SDK 10.0.16299
+              - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2083338
+                displayName: Install the Windows 10 SDK 10.0.18362
+              # - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2120843
+              #   displayName: Install the Windows 10 SDK 10.0.19041
 
       # install any .NET Core global tools
       - ${{ each tool in parameters.tools }}:
@@ -137,16 +171,33 @@ jobs:
 
       # download artifacts
       - ${{ each dep in parameters.requiredArtifacts }}:
-        - task: DownloadBuildArtifacts@0
-          displayName: Download the ${{ dep }} artifacts
-          inputs:
-            artifactName: ${{ dep }}
-            downloadPath: 'download-temp'
-        - pwsh: |
-            New-Item '.\output\' -Type Directory -Force | Out-Null
-            Get-ChildItem '.\download-temp\${{ dep }}\' | Copy-Item -Destination '.\output\' -Recurse -Force
-            Remove-Item '.\download-temp\${{ dep }}\' -Recurse -Force
-          displayName: Move the ${{ dep }} artifacts to the output directory
+        - ${{ if ne(dep, '') }}:
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the ${{ dep }} artifacts
+            inputs:
+              artifactName: ${{ dep }}
+              downloadPath: 'download-temp'
+          - pwsh: |
+              New-Item '.\output\' -Type Directory -Force | Out-Null
+              Get-ChildItem '.\download-temp\${{ dep }}\' | Copy-Item -Destination '.\output\' -Recurse -Force
+              Remove-Item '.\download-temp\${{ dep }}\' -Recurse -Force
+            displayName: Move the ${{ dep }} artifacts to the output directory
+          - pwsh: Remove-Item ./output/logs/ -Recurse -Force -ErrorAction Ignore
+            displayName: Delete old logs
+      - ${{ each dep in parameters.requiredArtifactsMap }}:
+        - ${{ if and(ne(dep.src, ''), ne(dep.dst, '')) }}:
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the ${{ dep.src }} artifacts
+            inputs:
+              artifactName: ${{ dep.src }}
+              downloadPath: 'download-temp'
+          - pwsh: |
+              New-Item '.\output\${{ dep.dst }}\' -Type Directory -Force | Out-Null
+              Get-ChildItem '.\download-temp\${{ dep.src }}\' | Copy-Item -Destination '.\output\${{ dep.dst }}\' -Recurse -Force
+              Remove-Item '.\download-temp\${{ dep.src }}\' -Recurse -Force
+            displayName: Move the ${{ dep.src }} artifacts to the output directory
+          - pwsh: Remove-Item ./output/logs/ -Recurse -Force -ErrorAction Ignore
+            displayName: Delete old logs
 
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
@@ -155,9 +206,10 @@ jobs:
       - ${{ if eq(parameters.docker, '') }}:
         - ${{ if endsWith(parameters.name, '_windows') }}:
           - pwsh: |
+              dotnet tool restore
               ${{ parameters.initScript }}
               .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} {
-                .\bootstrapper.ps1 -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
               }
             env:
               JavaSdkDirectory: $(JAVA_HOME)
@@ -167,9 +219,10 @@ jobs:
             displayName: Run the bootstrapper for ${{ parameters.target }}
         - ${{ if not(endsWith(parameters.name, '_windows')) }}:
           - bash: |
+              dotnet tool restore
               ${{ parameters.initScript }}
               ./scripts/retry-command.sh ${{ parameters.retryCount }} \
-                ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
             env:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
@@ -178,9 +231,12 @@ jobs:
           workingDirectory: ${{ parameters.docker }}
           displayName: Build the Docker image for ${{ parameters.docker }}
         - bash: |
+            echo dotnet tool restore > cmd.sh
+            echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
+            sed -i 's/--gnArgs=\" \"//' cmd.sh
             docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
               scripts/retry-command.sh ${{ parameters.retryCount }} \
-                ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                /bin/bash /work/cmd.sh
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
 
       # post-build steps
@@ -189,10 +245,16 @@ jobs:
       # publish artifacts
       - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
-        condition: ${{ parameters.shouldPublish }}
+        condition: or(${{ parameters.shouldPublish }}, failed())
         inputs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
+      - ${{ if ne(parameters.artifactName, '') }}:
+        - task: PublishBuildArtifacts@1
+          displayName: Publish the combined ${{ parameters.artifactName }} artifacts
+          inputs:
+            artifactName: ${{ parameters.artifactName }}
+            pathToPublish: 'output'
       - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
         - task: ComponentGovernanceComponentDetection@0
           displayName: Run component detection

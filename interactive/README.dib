@@ -1,0 +1,71 @@
+#!markdown
+
+# SkiaSharp
+
+Welcome to SkiaSharp, the most awesome, cross-platform 2D-graphics engine. It is powered by the same engine that powers Android and Chrome.
+
+The first thing we need to do is intsall the package:
+
+#!csharp
+
+#i https://aka.ms/skiasharp-eap/index.json
+#r nuget:SkiaSharp,2.80.*-*
+
+#!markdown
+
+After installing the `SkiaSharp` NuGet package, we can now add the typical `using` statements:
+
+#!csharp
+
+using SkiaSharp;
+
+#!markdown
+
+Now, we can start coding. Here we create a simple 256x256 canvas:
+
+#!csharp
+
+// create the bitmap that will hold the pixels
+var bitmap = new SKBitmap(256, 256);
+
+// create the canvas so that we can draw on that bitmap
+var canvas = new SKCanvas(bitmap);
+
+// clear the canvas, so that it is fresh
+canvas.Clear(SKColors.Transparent);
+
+#!markdown
+
+Before we can draw anything, we need to create the object that will be used to describe how the thing we are drawing will look. To do this, we need a `SKPaint` object:
+
+#!csharp
+
+var paint = new SKPaint {
+    IsAntialias = true,                               // smooth text
+    TextSize = 50,                                    // 50px high text
+    TextAlign = SKTextAlign.Center,                   // center the text
+    Color = 0xFF3498DB,                               // Xamarin light blue text
+    Style = SKPaintStyle.Fill,                        // solid text
+    Typeface = SKTypeface.FromFamilyName("Trebuchet") // use the Trebuchet typeface
+};
+
+#!markdown
+
+Now that our canvas is all ready, we can start drawing. Here we are writing the word “SkiaSharp” in the middle:
+
+#!csharp
+
+// clear the canvas, just in case we are running this a second time
+canvas.Clear(SKColors.Transparent);
+
+// draw the text using the paint
+canvas.DrawText("SkiaSharp", 128, 128 + (paint.TextSize / 2), paint);
+
+// appear in VS Code
+bitmap
+
+#!markdown
+
+That’s it! So simple! And, best of all, this code can be used ANYWHERE!
+
+Check out the code on GitHub: [https://github.com/mono/SkiaSharp](https://github.com/mono/SkiaSharp "mono/SkiaSharp").

@@ -18,14 +18,6 @@ namespace SkiaSharpSample
 			// the the canvas and properties
 			var canvas = e.Surface.Canvas;
 
-			// get the screen density for scaling
-			var display = DisplayInformation.GetForCurrentView();
-			var scale = display.LogicalDpi / 96.0f;
-			var scaledSize = new SKSize(e.Info.Width / scale, e.Info.Height / scale);
-
-			// handle the device screen density
-			canvas.Scale(scale);
-
 			// make sure the canvas is blank
 			canvas.Clear(SKColors.White);
 
@@ -38,7 +30,7 @@ namespace SkiaSharpSample
 				TextAlign = SKTextAlign.Center,
 				TextSize = 24
 			};
-			var coord = new SKPoint(scaledSize.Width / 2, (scaledSize.Height + paint.TextSize) / 2);
+			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + paint.TextSize) / 2);
 			canvas.DrawText("SkiaSharp", coord, paint);
 		}
 	}

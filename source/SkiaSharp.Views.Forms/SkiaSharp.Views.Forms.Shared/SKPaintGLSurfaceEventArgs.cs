@@ -1,10 +1,21 @@
 ﻿using System;
 using System.ComponentModel;
 
+#if __MAUI__
+using Microsoft.Maui;
+#else
+using Xamarin.Forms;
+#endif
+
+#if __MAUI__
+namespace SkiaSharp.Views.Maui
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	public class SKPaintGLSurfaceEventArgs : EventArgs
 	{
+#if !__MAUI__
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		private GRBackendRenderTargetDesc? rtDesc;
@@ -19,6 +30,7 @@ namespace SkiaSharp.Views.Forms
 			ColorType = renderTarget.Config.ToColorType();
 			Origin = renderTarget.Origin;
 		}
+#endif
 
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget)
 			: this(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888)
@@ -35,6 +47,7 @@ namespace SkiaSharp.Views.Forms
 
 		public SKSurface Surface { get; private set; }
 
+#if !__MAUI__
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete("Use BackendRenderTarget instead.")]
 		public GRBackendRenderTargetDesc RenderTarget
@@ -64,6 +77,7 @@ namespace SkiaSharp.Views.Forms
 				return rtDesc.Value;
 			}
 		}
+#endif
 
 		public GRBackendRenderTarget BackendRenderTarget { get; private set; }
 

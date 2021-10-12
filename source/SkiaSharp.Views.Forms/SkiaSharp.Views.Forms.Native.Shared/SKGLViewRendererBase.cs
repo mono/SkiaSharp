@@ -1,6 +1,27 @@
-﻿#if !__GTK__
+﻿#if !__GTK__ && !WINDOWS && !NETSTANDARD
 using System;
 using System.ComponentModel;
+
+#if __MAUI__
+
+using Microsoft.Maui.Controls.Platform;
+using SkiaSharp.Views.Maui.Platform;
+
+using SKFormsView = SkiaSharp.Views.Maui.Controls.SKGLView;
+
+#if __ANDROID__
+using Android.Content;
+using Microsoft.Maui.Controls.Compatibility.Platform.Android;
+using SKNativeView = SkiaSharp.Views.Android.SKGLTextureView;
+using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs;
+#elif __IOS__
+using Microsoft.Maui.Controls.Compatibility.Platform.iOS;
+using SKNativeView = SkiaSharp.Views.iOS.SKGLView;
+using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs;
+#endif
+
+#else
+
 using Xamarin.Forms;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
@@ -38,7 +59,13 @@ using SKNativeView = SkiaSharp.Views.Forms.SKGLWidget;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs;
 #endif
 
+#endif
+
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Controls.Compatibility
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	public abstract class SKGLViewRendererBase<TFormsView, TNativeView> : ViewRenderer<TFormsView, TNativeView>
 		where TFormsView : SKFormsView
@@ -52,16 +79,12 @@ namespace SkiaSharp.Views.Forms
 		{
 			Initialize();
 		}
-#endif
-
-#if __ANDROID__
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete("This constructor is obsolete as of version 2.5. Please use SKGLViewRendererBase(Context) instead.")]
-#endif
+#else
 		protected SKGLViewRendererBase()
 		{
 			Initialize();
 		}
+#endif
 
 		private void Initialize()
 		{

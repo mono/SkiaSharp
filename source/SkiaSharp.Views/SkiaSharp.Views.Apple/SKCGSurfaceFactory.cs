@@ -47,6 +47,15 @@ namespace SkiaSharp.Views.Mac
 			if (bitmapData == null)
 			{
 				bitmapData = NSMutableData.FromLength(info.BytesSize);
+
+				// in case allocation has failed
+				if (bitmapData == null)
+				{
+					Dispose();
+					info = Info;
+					return null;
+				}
+
 				dataProvider = new CGDataProvider(bitmapData.MutableBytes, info.BytesSize, Dummy);
 
 				void Dummy(IntPtr data)

@@ -36,3 +36,14 @@ using System.Runtime.CompilerServices;
 	"3fbe2ff9c979ce998475e506e8ce82dd5b0f350dc10e93bf2eeecf874b24770c5081dbea7447fd" +
 	"dafa277b22de47d6ffea449674a4f9fccf84d15069089380284dbdd35f46cdff12a1bd78e4ef00" +
 	"65d016df")]
+
+[assembly: AssemblyMetadata("IsTrimmable", "True")]
+
+#if __IOS__ || __TVOS__ || __WATCHOS__ || __MACOS__
+// This attribute allows you to mark your assemblies as “safe to link”.
+// When the attribute is present, the linker—if enabled—will process the assembly
+// even if you’re using the “Link SDK assemblies only” option, which is the default for device builds.
+#pragma warning disable CS0618 // Type or member is obsolete
+[assembly: Foundation.LinkerSafe]
+#pragma warning restore CS0618 // Type or member is obsolete
+#endif
