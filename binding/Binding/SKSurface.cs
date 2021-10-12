@@ -415,7 +415,7 @@ namespace SkiaSharp
 			OwnedBy (SKSurfaceProperties.GetObject (SkiaApi.sk_surface_get_props (Handle), false), this);
 
 		public GRRecordingContext Context =>
-			GRRecordingContext.GetObject (SkiaApi.sk_surface_get_recording_context (Handle));
+			GRRecordingContext.GetObject (SkiaApi.sk_surface_get_recording_context (Handle), false, unrefExisting: false);
 
 		public SKImage Snapshot () =>
 			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot (Handle));
