@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class GRContext : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
+	public unsafe class GRContext : GRRecordingContext
 	{
 		internal GRContext (IntPtr h, bool owns)
 			: base (h, owns)
@@ -126,7 +126,7 @@ namespace SkiaSharp
 
 		//
 
-		public GRBackend Backend => SkiaApi.gr_direct_context_get_backend (Handle).FromNative ();
+		public new GRBackend Backend => base.Backend;
 
 		public bool IsAbandoned => SkiaApi.gr_direct_context_is_abandoned (Handle);
 
@@ -175,11 +175,21 @@ namespace SkiaSharp
 		public void ResetContext (uint state) =>
 			SkiaApi.gr_direct_context_reset_context (Handle, state);
 
-		public void Flush () =>
-			SkiaApi.gr_direct_context_flush (Handle);
+		public void Flush () => Flush (true);
 
-		public int GetMaxSurfaceSampleCount (SKColorType colorType) =>
-			SkiaApi.gr_direct_context_get_max_surface_sample_count_for_color_type (Handle, colorType.ToNative ());
+		public void Flush (bool submit, bool synchronous = false)
+		{
+			if (submit)
+				SkiaApi.gr_direct_context_flush_and_submit (Handle, synchronous);
+			else
+				SkiaApi.gr_direct_context_flush (Handle);
+		}
+
+		public void Submit (bool synchronous = false) =>
+			SkiaApi.gr_direct_context_submit (Handle, synchronous);
+
+		public new int GetMaxSurfaceSampleCount (SKColorType colorType) =>
+			base.GetMaxSurfaceSampleCount (colorType);
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
@@ -200,7 +210,7 @@ namespace SkiaSharp
 		public void PurgeUnlockedResources (long bytesToPurge, bool preferScratchResources) =>
 			SkiaApi.gr_direct_context_purge_unlocked_resources_bytes (Handle, (IntPtr)bytesToPurge, preferScratchResources);
 
-		internal static GRContext GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new GRContext (handle, true);
+		internal static new GRContext GetObject (IntPtr handle, bool owns = true) =>
+			GetOrAddObject (handle, owns, (h, o) => new GRContext (h, o));
 	}
 }

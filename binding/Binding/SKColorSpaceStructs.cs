@@ -453,7 +453,7 @@ namespace SkiaSharp
 			: this (SkiaApi.sk_colorspace_icc_profile_new (), true)
 		{
 			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SK3dView instance.");
+				throw new InvalidOperationException ("Unable to create a new SKColorSpaceIccProfile instance.");
 		}
 
 		protected override void DisposeNative () =>
