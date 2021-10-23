@@ -4,17 +4,19 @@ using Microsoft.JSInterop;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
-	internal class JSModuleInterop : IDisposable
+	internal class JSModuleInterop : IAsyncDisposable
 	{
-		private readonly Task<IJSUnmarshalledObjectReference> moduleTask;
-		private IJSUnmarshalledObjectReference? module;
+		private readonly Task<IJSObjectReference> moduleTask;
+		private IJSObjectReference? module;
 
 		public JSModuleInterop(IJSRuntime js, string filename)
 		{
 			if (js is not IJSInProcessRuntime)
-				throw new NotSupportedException("SkiaSharp currently only works on Web Assembly.");
+			{
+				RequiresAsync = true;
+			}
 
-			moduleTask = js.InvokeAsync<IJSUnmarshalledObjectReference>("import", filename).AsTask();
+			moduleTask = js.InvokeAsync<IJSObjectReference>("import", filename).AsTask();
 		}
 
 		public async Task ImportAsync()
@@ -22,21 +24,24 @@ namespace SkiaSharp.Views.Blazor.Internal
 			module = await moduleTask;
 		}
 
-		public void Dispose()
+		public async ValueTask DisposeAsync()
 		{
-			OnDisposingModule();
-			Module.Dispose();
+			await OnDisposingModuleAsync();
+			await Module.DisposeAsync();
 		}
 
-		protected IJSUnmarshalledObjectReference Module =>
+		protected IJSObjectReference Module =>
 			module ?? throw new InvalidOperationException("Make sure to run ImportAsync() first.");
 
-		protected void Invoke(string identifier, params object?[]? args) =>
-			Module.InvokeVoid(identifier, args);
+		public bool RequiresAsync { get; }
 
-		protected TValue Invoke<TValue>(string identifier, params object?[]? args) =>
-			Module.Invoke<TValue>(identifier, args);
+		protected ValueTask InvokeAsync(string identifier, params object?[]? args) =>
+			Module.InvokeVoidAsync(identifier, args);
 
-		protected virtual void OnDisposingModule() { }
+		protected ValueTask<TValue> InvokeAsync<TValue>(string identifier, params object?[]? args) =>
+			Module.InvokeAsync<TValue>(identifier, args);
+
+		protected virtual Task OnDisposingModuleAsync() =>
+			Task.CompletedTask;
 	}
 }

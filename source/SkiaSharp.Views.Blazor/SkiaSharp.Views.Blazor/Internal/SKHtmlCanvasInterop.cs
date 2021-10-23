@@ -36,44 +36,44 @@ namespace SkiaSharp.Views.Blazor.Internal
 			callbackHelper = new ActionHelper(renderFrameCallback);
 		}
 
-		protected override void OnDisposingModule() =>
-			Deinit();
+		protected override async Task OnDisposingModuleAsync() =>
+			await DeinitAsync();
 
-		public GLInfo InitGL()
+		public async Task<GLInfo> InitGLAsync()
 		{
 			if (callbackReference != null)
 				throw new InvalidOperationException("Unable to initialize the same canvas more than once.");
 
 			callbackReference = DotNetObjectReference.Create(callbackHelper);
 
-			return Invoke<GLInfo>(InitGLSymbol, htmlCanvas, htmlElementId, callbackReference);
+			return await InvokeAsync<GLInfo>(InitGLSymbol, htmlCanvas, htmlElementId, callbackReference);
 		}
 
-		public bool InitRaster()
+		public async Task<bool> InitRasterAsync()
 		{
 			if (callbackReference != null)
 				throw new InvalidOperationException("Unable to initialize the same canvas more than once.");
 
 			callbackReference = DotNetObjectReference.Create(callbackHelper);
 
-			return Invoke<bool>(InitRasterSymbol, htmlCanvas, htmlElementId, callbackReference);
+			return await InvokeAsync<bool>(InitRasterSymbol, htmlCanvas, htmlElementId, callbackReference);
 		}
 
-		public void Deinit()
+		public async Task DeinitAsync()
 		{
 			if (callbackReference == null)
 				return;
 
-			Invoke(DeinitSymbol, htmlElementId);
+			await InvokeAsync(DeinitSymbol, htmlElementId);
 
 			callbackReference?.Dispose();
 		}
 
-		public void RequestAnimationFrame(bool enableRenderLoop, int rawWidth, int rawHeight) =>
-			Invoke(RequestAnimationFrameSymbol, htmlCanvas, enableRenderLoop, rawWidth, rawHeight);
+		public async Task RequestAnimationFrame(bool enableRenderLoop, int rawWidth, int rawHeight) =>
+			await InvokeAsync(RequestAnimationFrameSymbol, htmlCanvas, enableRenderLoop, rawWidth, rawHeight);
 
-		public void PutImageData(IntPtr intPtr, SKSizeI rawSize) =>
-			Invoke(PutImageDataSymbol, htmlCanvas, intPtr.ToInt64(), rawSize.Width, rawSize.Height);
+		public async Task PutImageData(IntPtr intPtr, SKSizeI rawSize) =>
+			await InvokeAsync(PutImageDataSymbol, htmlCanvas, intPtr.ToInt64(), rawSize.Width, rawSize.Height);
 
 		public record GLInfo(int ContextId, uint FboId, int Stencils, int Samples, int Depth);
 	}

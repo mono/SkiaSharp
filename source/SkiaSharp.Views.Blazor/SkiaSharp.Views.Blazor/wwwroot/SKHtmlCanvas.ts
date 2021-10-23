@@ -151,12 +151,13 @@ export class SKHtmlCanvas {
 				GL.makeContextCurrent(this.glInfo.context);
 			}
 
-			this.renderFrameCallback.invokeMethod('Invoke');
-			this.renderLoopRequest = 0;
+			this.renderFrameCallback.invokeMethodAsync('Invoke').then(() => {
+				this.renderLoopRequest = 0;
 
-			// we may want to draw the next frame
-			if (this.renderLoopEnabled)
-				this.requestAnimationFrame();
+				// we may want to draw the next frame
+				if (this.renderLoopEnabled)
+					this.requestAnimationFrame();
+			});
 		});
 	}
 

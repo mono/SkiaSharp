@@ -21,7 +21,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 		{
 			var interop = new SizeWatcherInterop(js, element, callback);
 			await interop.ImportAsync();
-			interop.Start();
+			await interop.StartAsync();
 			return interop;
 		}
 
@@ -33,25 +33,25 @@ namespace SkiaSharp.Views.Blazor.Internal
 			callbackHelper = new FloatFloatActionHelper((x, y) => callback(new SKSize(x, y)));
 		}
 
-		protected override void OnDisposingModule() =>
-			Stop();
+		protected override async Task OnDisposingModuleAsync() =>
+			await StopAsync();
 
-		public void Start()
+		public async Task StartAsync()
 		{
 			if (callbackReference != null)
 				return;
 
 			callbackReference = DotNetObjectReference.Create(callbackHelper);
 
-			Invoke(ObserveSymbol, htmlElement, htmlElementId, callbackReference);
+			await InvokeAsync(ObserveSymbol, htmlElement, htmlElementId, callbackReference);
 		}
 
-		public void Stop()
+		public async Task StopAsync()
 		{
 			if (callbackReference == null)
 				return;
 
-			Invoke(UnobserveSymbol, htmlElementId);
+			await InvokeAsync(UnobserveSymbol, htmlElementId);
 
 			callbackReference?.Dispose();
 			callbackReference = null;

@@ -8,7 +8,7 @@ using SkiaSharp.Views.Blazor.Internal;
 
 namespace SkiaSharp.Views.Blazor
 {
-	public partial class SKCanvasView : IDisposable
+	public partial class SKCanvasView : IAsyncDisposable
 	{
 		private SKHtmlCanvasInterop interop = null!;
 		private SizeWatcherInterop sizeWatcher = null!;
@@ -65,7 +65,7 @@ namespace SkiaSharp.Views.Blazor
 			if (firstRender)
 			{
 				interop = await SKHtmlCanvasInterop.ImportAsync(JS, htmlCanvas, OnRenderFrame);
-				interop.InitRaster();
+				await interop.InitRasterAsync();
 
 				sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
 				dpiWatcher = await DpiWatcherInterop.ImportAsync(JS, OnDpiChanged);
@@ -77,7 +77,8 @@ namespace SkiaSharp.Views.Blazor
 			if (canvasSize.Width <= 0 || canvasSize.Height <= 0 || dpi <= 0)
 				return;
 
-			interop.RequestAnimationFrame(EnableRenderLoop, (int)(canvasSize.Width * dpi), (int)(canvasSize.Height * dpi));
+			// TODO: fire and forget for now
+			_ = interop.RequestAnimationFrame(EnableRenderLoop, (int)(canvasSize.Width * dpi), (int)(canvasSize.Height * dpi));
 		}
 
 		private void OnRenderFrame()
@@ -100,7 +101,8 @@ namespace SkiaSharp.Views.Blazor
 				OnPaintSurface?.Invoke(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
-			interop.PutImageData(pixelsHandle.AddrOfPinnedObject(), info.Size);
+			// TODO: fire and forget for now
+			_ = interop.PutImageData(pixelsHandle.AddrOfPinnedObject(), info.Size);
 		}
 
 		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize)
@@ -162,11 +164,11 @@ namespace SkiaSharp.Views.Blazor
 			Invalidate();
 		}
 
-		public void Dispose()
+		public async ValueTask DisposeAsync()
 		{
-			dpiWatcher.Unsubscribe(OnDpiChanged);
-			sizeWatcher.Dispose();
-			interop.Dispose();
+			await dpiWatcher.UnsubscribeAsync(OnDpiChanged);
+			await sizeWatcher.DisposeAsync();
+			await interop.DisposeAsync();
 
 			FreeBitmap();
 		}

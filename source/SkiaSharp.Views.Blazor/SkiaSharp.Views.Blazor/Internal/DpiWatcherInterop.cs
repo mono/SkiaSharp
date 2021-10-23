@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
 
@@ -22,8 +22,10 @@ namespace SkiaSharp.Views.Blazor.Internal
 		{
 			var interop = Get(js);
 			await interop.ImportAsync();
+
 			if (callback != null)
-				interop.Subscribe(callback);
+				await interop.SubscribeAsync(callback);
+
 			return interop;
 		}
 
@@ -36,52 +38,52 @@ namespace SkiaSharp.Views.Blazor.Internal
 			callbackHelper = new FloatFloatActionHelper((o, n) => callbacksEvent?.Invoke(n));
 		}
 
-		protected override void OnDisposingModule() =>
-			Stop();
+		protected override async Task OnDisposingModuleAsync() =>
+			await StopAsync();
 
-		public void Subscribe(Action<double> callback)
+		public async Task SubscribeAsync(Action<double> callback)
 		{
 			var shouldStart = callbacksEvent == null;
 
 			callbacksEvent += callback;
 
 			var dpi = shouldStart
-				? Start()
-				: GetDpi();
+				? await StartAsync()
+				: await GetDpiAsync();
 
 			callback(dpi);
 		}
 
-		public void Unsubscribe(Action<double> callback)
+		public async Task UnsubscribeAsync(Action<double> callback)
 		{
 			callbacksEvent -= callback;
 
 			if (callbacksEvent == null)
-				Stop();
+				await StopAsync();
 		}
 
-		private double Start()
+		private async Task<double> StartAsync()
 		{
 			if (callbackReference != null)
-				return GetDpi();
+				return await GetDpiAsync();
 
 			callbackReference = DotNetObjectReference.Create(callbackHelper);
 
-			return Invoke<double>(StartSymbol, callbackReference);
+			return await InvokeAsync<double>(StartSymbol, callbackReference);
 		}
 
-		private void Stop()
+		private async Task StopAsync()
 		{
 			if (callbackReference == null)
 				return;
 
-			Invoke(StopSymbol);
+			await InvokeAsync(StopSymbol);
 
 			callbackReference?.Dispose();
 			callbackReference = null;
 		}
 
-		public double GetDpi() =>
-			Invoke<double>(GetDpiSymbol);
+		public async Task<double> GetDpiAsync() =>
+			await InvokeAsync<double>(GetDpiSymbol);
 	}
 }

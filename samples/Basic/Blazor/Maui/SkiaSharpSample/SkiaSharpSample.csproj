@@ -57,9 +57,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <!--<ProjectReference Include="..\..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />-->
+    <Reference Include="..\..\..\..\..\binding\SkiaSharp\bin\$(Configuration)\netstandard2.0\SkiaSharp.dll" />
     <ProjectReference Include="..\..\..\..\..\source\SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor.csproj" />
     <!--<Reference Include="..\..\..\..\..\source\SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor\bin\$(Configuration)\net6.0\SkiaSharp.Views.Blazor.dll" />-->
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <None Include="..\..\..\..\..\output\native\windows\x64\libSkiaSharp.dll" Condition="Exists('..\..\..\..\..\output\native\windows\x64\libSkiaSharp.dll')">
+      <Link>libSkiaSharp.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
@@ -70,5 +78,7 @@
   <ItemGroup>
     <Content Remove="Properties\launchSettings.json" />
   </ItemGroup>
+
+  <Import Project="..\..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets" Condition="Exists('..\..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets')" />
 
 </Project>

@@ -63,6 +63,6 @@ export class SizeWatcher {
 		if (!instance || !instance.callback)
 			return;
 
-		return instance.callback.invokeMethod('Invoke', element.clientWidth, element.clientHeight);
+		instance.callback.invokeMethodAsync('Invoke', element.clientWidth, element.clientHeight);
 	}
 }
