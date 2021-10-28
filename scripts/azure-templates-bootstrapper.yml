@@ -131,6 +131,15 @@ jobs:
           # display dotnet info
           - pwsh: dotnet --info
             displayName: Display all the .NET information
+          # install updated Android packages
+          - pwsh: dotnet tool install --global boots
+            displayName: Install boots
+          - ${{ if endsWith(parameters.name, '_windows') }}:
+            - pwsh: boots $(XAMARIN_ANDROID_WINDOWS_URL)
+              displayName: Install the upcoming Xamarin.Android
+          - ${{ if endsWith(parameters.name, '_macos') }}:
+            - pwsh: boots $(XAMARIN_ANDROID_MACOS_URL)
+              displayName: Install the upcoming Xamarin.Android
 
       # select the correct version of the JDK for .NET 6
       - pwsh: echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
