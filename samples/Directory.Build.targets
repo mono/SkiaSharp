@@ -1,6 +1,10 @@
 <Project>
 
-  <!-- Required - Overwrite tasks that are not needed when multitargeting -->
-  <Target Name="BinPlaceBootstrapDll" />
+  <!-- HACK: Do not copy the native bootstrap files -->
+  <Target Name="_RemoveWasdkBootstrapDll" BeforeTargets="ResolveReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)%(Extension)' == 'Microsoft.WindowsAppRuntime.Bootstrap.dll'" />
+    </ItemGroup>
+  </Target>
 
 </Project>
