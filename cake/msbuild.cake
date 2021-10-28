@@ -9,7 +9,11 @@ var NUGETS_SOURCES = new [] {
     "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json",
     "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
     "https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json",
-    "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json"
+    "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json",
+    "https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-aspnetcore-7c57ecbd-3/nuget/v3/index.json",
+    "https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-4822e3c3-5/nuget/v3/index.json",
+    "https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-windowsdesktop-59fea7da-4/nuget/v3/index.json",
+    "https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-emsdk-1ec2e17f-4/nuget/v3/index.json"
 };
 
 void RunNuGetRestorePackagesConfig(FilePath sln)
