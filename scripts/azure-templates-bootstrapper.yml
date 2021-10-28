@@ -134,10 +134,10 @@ jobs:
           # install updated Android packages
           - pwsh: dotnet tool install --global boots
             displayName: Install boots
-          - ${{ if endsWith(parameters.name, '_windows') }}:
+          - ${{ if and(endsWith(parameters.name, '_windows'), ne(variables.XAMARIN_ANDROID_WINDOWS_URL, '')) }}:
             - pwsh: boots $(XAMARIN_ANDROID_WINDOWS_URL)
               displayName: Install the upcoming Xamarin.Android
-          - ${{ if endsWith(parameters.name, '_macos') }}:
+          - ${{ if and(endsWith(parameters.name, '_macos'), ne(variables.XAMARIN_ANDROID_MACOS_URL, '')) }}:
             - pwsh: boots $(XAMARIN_ANDROID_MACOS_URL)
               displayName: Install the upcoming Xamarin.Android
 
