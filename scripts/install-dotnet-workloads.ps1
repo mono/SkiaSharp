@@ -12,10 +12,18 @@ Write-Host "Checking current workloads..."
 & dotnet workload search
 
 Write-Host "Installing workloads..."
-& dotnet workload install `
-  android ios tvos macos maccatalyst wasm-tools maui `
-  --from-rollback-file $SourceUrl `
+Invoke-WebRequest -Uri $SourceUrl -OutFile rollback.json
+& dotnet workload update `
+  --from-rollback-file rollback.json `
   --source https://aka.ms/dotnet6/nuget/index.json `
   --source https://api.nuget.org/v3/index.json
+
+& dotnet workload install android        --skip-manifest-update --source https://aka.ms/dotnet6/nuget/index.json --source https://api.nuget.org/v3/index.json
+& dotnet workload install ios            --skip-manifest-update --source https://aka.ms/dotnet6/nuget/index.json --source https://api.nuget.org/v3/index.json
+& dotnet workload install tvos           --skip-manifest-update --source https://aka.ms/dotnet6/nuget/index.json --source https://api.nuget.org/v3/index.json
+& dotnet workload install macos          --skip-manifest-update --source https://aka.ms/dotnet6/nuget/index.json --source https://api.nuget.org/v3/index.json
+& dotnet workload install maccatalyst    --skip-manifest-update --source https://aka.ms/dotnet6/nuget/index.json --source https://api.nuget.org/v3/index.json
+& dotnet workload install wasm-tools     --skip-manifest-update --source https://aka.ms/dotnet6/nuget/index.json --source https://api.nuget.org/v3/index.json
+& dotnet workload install maui           --skip-manifest-update --source https://aka.ms/dotnet6/nuget/index.json --source https://api.nuget.org/v3/index.json
 
 exit $LASTEXITCODE
