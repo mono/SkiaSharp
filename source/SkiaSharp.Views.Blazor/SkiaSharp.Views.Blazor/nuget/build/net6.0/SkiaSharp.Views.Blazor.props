@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+
+  <PropertyGroup>
+    <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
+    <_SkiaSharpViewsBlazorStaticAssetsRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\staticwebassets'))\</_SkiaSharpViewsBlazorStaticAssetsRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\2.0.23\*.a" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_TempStaticWebAsset Include="$(_SkiaSharpViewsBlazorStaticAssetsRoot)*.js" />
+    <StaticWebAsset Include="@(_TempStaticWebAsset)">
+      <SourceType>Package</SourceType>
+      <SourceId>SkiaSharp.Views.Blazor</SourceId>
+      <ContentRoot>$(_SkiaSharpViewsBlazorStaticAssetsRoot)</ContentRoot>
+      <BasePath>_content/SkiaSharp.Views.Blazor</BasePath>
+      <RelativePath>%(Filename)%(Extension)</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>%(Identity)</OriginalItemSpec>
+    </StaticWebAsset>
+  </ItemGroup>
+
+</Project>

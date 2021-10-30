@@ -31,7 +31,7 @@ parameters:
   artifactName: ''                              # the name of the artifact to merge this run into
 
 jobs:
-# - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
+# - ${{ if startsWith(parameters.name, 'native_') }}:
 #   - template: azure-templates-download.yml
 #     parameters:
 #       name: ${{ parameters.name }}
@@ -42,7 +42,7 @@ jobs:
 #       buildExternals: ${{ parameters.buildExternals }}
 #       artifactName: ${{ parameters.artifactName }}
 
-# - ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
+# - ${{ if not(startsWith(parameters.name, 'native_')) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
@@ -131,6 +131,15 @@ jobs:
           # display dotnet info
           - pwsh: dotnet --info
             displayName: Display all the .NET information
+          # install updated Android packages
+          - pwsh: dotnet tool install --global boots
+            displayName: Install boots
+          - ${{ if endsWith(parameters.name, '_windows') }}:
+            - pwsh: boots $(XAMARIN_ANDROID_WINDOWS_URL)
+              displayName: Install the upcoming Xamarin.Android
+          - ${{ if endsWith(parameters.name, '_macos') }}:
+            - pwsh: boots $(XAMARIN_ANDROID_MACOS_URL)
+              displayName: Install the upcoming Xamarin.Android
 
       # select the correct version of the JDK for .NET 6
       - pwsh: echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
@@ -154,11 +163,15 @@ jobs:
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install the older Windows SDKs
           - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
-            - pwsh: |
-                $uri = 'https://go.microsoft.com/fwlink/p/?LinkId=619296'
-                .\scripts\download-file.ps1 -Uri $uri -OutFile sdksetup.exe
-                .\sdksetup.exe /norestart /quiet | Out-Null
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296
               displayName: Install the Windows 10 SDK 10.0.10240
+            - ${{ if and(not(startsWith(parameters.name, 'native_')), not(startsWith(parameters.name, 'api_diff_'))) }}:
+              - pwsh: .\scripts\install-winsdk.ps1 -LinkId 864422
+                displayName: Install the Windows 10 SDK 10.0.16299
+              - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2083338
+                displayName: Install the Windows 10 SDK 10.0.18362
+              # - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2120843
+              #   displayName: Install the Windows 10 SDK 10.0.19041
 
       # install any .NET Core global tools
       - ${{ each tool in parameters.tools }}:

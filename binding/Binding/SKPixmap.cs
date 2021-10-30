@@ -393,21 +393,20 @@ namespace SkiaSharp
 
 		// Erase
 
-		public bool Erase (SKColor color)
-		{
-			return Erase (color, Rect);
-		}
-
-		public bool Erase (SKColor color, SKRectI subset)
-		{
-			return SkiaApi.sk_pixmap_erase_color (Handle, (uint)color, &subset);
-		}
-
-		public bool Erase (SKColorF color) =>
+		public bool Erase (SKColor color) =>
 			Erase (color, Rect);
 
+		public bool Erase (SKColor color, SKRectI subset) =>
+			SkiaApi.sk_pixmap_erase_color (Handle, (uint)color, &subset);
+
+		public bool Erase (SKColorF color) =>
+			Erase (color, null, Rect);
+
 		public bool Erase (SKColorF color, SKRectI subset) =>
-			SkiaApi.sk_pixmap_erase_color4f (Handle, &color, &subset);
+			Erase (color, null, subset);
+
+		public bool Erase (SKColorF color, SKColorSpace colorspace, SKRectI subset) =>
+			SkiaApi.sk_pixmap_erase_color4f (Handle, &color, colorspace?.Handle ?? IntPtr.Zero, &subset);
 
 		// With*
 

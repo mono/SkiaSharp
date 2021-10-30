@@ -72,10 +72,11 @@ namespace SkiaSharp
 
 		// DrawColor
 
-		public void DrawColor (SKColor color, SKBlendMode mode = SKBlendMode.Src)
-		{
+		public void DrawColor (SKColor color, SKBlendMode mode = SKBlendMode.Src) =>
 			SkiaApi.sk_canvas_draw_color (Handle, (uint)color, mode);
-		}
+
+		public void DrawColor (SKColorF color, SKBlendMode mode = SKBlendMode.Src) =>
+			SkiaApi.sk_canvas_draw_color4f (Handle, color, mode);
 
 		// DrawLine
 
@@ -93,15 +94,14 @@ namespace SkiaSharp
 
 		// Clear
 
-		public void Clear ()
-		{
-			DrawColor (SKColors.Empty, SKBlendMode.Src);
-		}
+		public void Clear () =>
+			Clear (SKColors.Empty);
 
-		public void Clear (SKColor color)
-		{
-			DrawColor (color, SKBlendMode.Src);
-		}
+		public void Clear (SKColor color) =>
+			SkiaApi.sk_canvas_clear (Handle, (uint)color);
+
+		public void Clear (SKColorF color) =>
+			SkiaApi.sk_canvas_clear_color4f (Handle, color);
 
 		// Restore*
 

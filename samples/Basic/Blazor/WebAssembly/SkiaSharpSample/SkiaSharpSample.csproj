@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <Import Project="..\..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props" Condition="Exists('..\..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.props')" />
+  <!--<Import Project="..\..\..\..\..\output\SkiaSharp.Views.Blazor\nuget\build\net6.0\SkiaSharp.Views.Blazor.props" Condition="Exists('..\..\..\..\..\output\SkiaSharp.Views.Blazor\nuget\build\net6.0\SkiaSharp.Views.Blazor.props')" />-->
+  <Import Project="..\..\..\..\..\output\SkiaSharp.Views.Blazor\nuget\build\net6.0\SkiaSharp.Views.Blazor.Local.props" Condition="Exists('..\..\..\..\..\output\SkiaSharp.Views.Blazor\nuget\build\net6.0\SkiaSharp.Views.Blazor.Local.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- In debug, make builds faster by reducing optimizations -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <WasmNativeStrip>false</WasmNativeStrip>
+    <EmccCompileOptimizationFlag>-O1</EmccCompileOptimizationFlag>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\..\..\source\SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor.csproj" />
+    <!--<Reference Include="..\..\..\..\..\source\SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor\bin\$(Configuration)\net6.0\SkiaSharp.Views.Blazor.dll" />-->
+  </ItemGroup>
+
+</Project>
