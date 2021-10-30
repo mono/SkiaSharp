@@ -1,0 +1,21 @@
+{
+	"name": "SkiaSharp",
+	"runArgs": ["--init"],
+	"build": {
+		"dockerfile": "Dockerfile",
+	},
+
+	"extensions": [
+		"ms-azuretools.vscode-docker",
+		"ms-dotnettools.csharp",
+		"ms-dotnettools.dotnet-interactive-vscode",
+		"ms-vscode.cpptools",
+		"ms-vscode.powershell",
+		"cake-build.cake-vscode",
+		"jeff-hykin.better-cpp-syntax"
+	],
+
+	"postCreateCommand": "bash .devcontainer/setup-container.sh",
+
+	"remoteUser": "vscode"
+}
