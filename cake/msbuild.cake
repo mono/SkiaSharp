@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 
+FilePath NUGET_CONFIG_PATH = MakeAbsolute(ROOT_PATH.CombineWithFilePath("nuget.config"));
 DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 DirectoryPath OUTPUT_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
 DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-special"));
@@ -12,7 +13,7 @@ var NUGETS_SOURCES = new [] {
 string[] GetNuGetSources()
 {
     // load all the sources from nuget.config
-    var xdoc = XDocument.Load("nuget.config");
+    var xdoc = XDocument.Load(NUGET_CONFIG_PATH.FullPath);
     var xmlns = xdoc.Root.Name.Namespace;
     var adds = xdoc.Elements(xmlns + "configuration")
         .Elements(xmlns + "packageSources")
