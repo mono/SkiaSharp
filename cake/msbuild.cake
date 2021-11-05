@@ -15,7 +15,7 @@ string[] GetNuGetSources()
     var adds = xdoc.Elements(xmlns + "configuration")
         .Elements(xmlns + "packageSources")
         .Elements(xmlns + "add")
-        .Select(x => x.Attribute("value"))
+        .Select(x => x.Attribute("value").Value)
         .ToList();
 
     // add the NUGETS_SOURCES because it may contain local folders
