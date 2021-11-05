@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.ComponentModel;
 using System.Buffers;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {

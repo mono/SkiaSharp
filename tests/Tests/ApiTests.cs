@@ -247,17 +247,5 @@ namespace SkiaSharp.Tests
 		{
 			Assert.Equal(SkiaSharpVersion.Native.ToString(2), SkiaSharpVersion.NativeString);
 		}
-
-		[SkippableFact]
-		public void PlatformConfigurationIsMuslOverrideCanBeFoundViaReflection()
-		{
-			var assembly = typeof(SkiaSharpVersion).Assembly;
-			var config = assembly.DefinedTypes.FirstOrDefault(t => t.Name == "PlatformConfiguration");
-			var overrideProp = config.GetProperty("LinuxFlavor");
-
-			Assert.Equal(typeof(string), overrideProp.PropertyType);
-			Assert.True(overrideProp.CanRead);
-			Assert.True(overrideProp.CanWrite);
-		}
 	}
 }
