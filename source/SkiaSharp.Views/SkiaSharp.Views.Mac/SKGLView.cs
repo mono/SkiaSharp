@@ -158,8 +158,28 @@ namespace SkiaSharp.Views.Mac
 
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
+		private nfloat lastBackingScaleFactor = 0;
+
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
+			// Track if the scale of the display has changed and if so force the SKGLView to reshape itself.
+			// If this is not done, the output will scale correctly when the window is dragged from a non-retina to a retina display.
+			if (lastBackingScaleFactor != Window.BackingScaleFactor)
+			{
+				bool isFirstPaint = lastBackingScaleFactor == 0;
+				lastBackingScaleFactor = Window.BackingScaleFactor;
+				if (!isFirstPaint)
+				{
+					Reshape();
+					// A redraw will also be necessary. Invoke later or the request will be ignored
+					Invoke(() => {
+						NeedsDisplay = true;
+					}, 0);
+					// do not call proceed at the wrong scale
+					return;
+				}
+			}
+
 			PaintSurface?.Invoke(this, e);
 		}
 
