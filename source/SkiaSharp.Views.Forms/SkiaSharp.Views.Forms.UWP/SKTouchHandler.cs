@@ -7,7 +7,9 @@ using Windows.UI.Input;
 #if WINDOWS
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
-using PointerPoint = Microsoft.UI.Input.Experimental.ExpPointerPoint;
+using PointerPoint = Microsoft.UI.Input.PointerPoint;
+using PointerDeviceType = Microsoft.UI.Input.PointerDeviceType;
+using PointerUpdateKind = Microsoft.UI.Input.PointerUpdateKind;
 #else
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Input;

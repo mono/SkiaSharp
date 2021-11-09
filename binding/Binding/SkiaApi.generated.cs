@@ -440,6 +440,20 @@ namespace SkiaSharp
 			(gr_direct_context_flush_delegate ??= GetSymbol<Delegates.gr_direct_context_flush> ("gr_direct_context_flush")).Invoke (context);
 		#endif
 
+		// void gr_direct_context_flush_and_submit(gr_direct_context_t* context, bool syncCpu)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_direct_context_flush_and_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_direct_context_flush_and_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		}
+		private static Delegates.gr_direct_context_flush_and_submit gr_direct_context_flush_and_submit_delegate;
+		internal static void gr_direct_context_flush_and_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu) =>
+			(gr_direct_context_flush_and_submit_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_and_submit> ("gr_direct_context_flush_and_submit")).Invoke (context, syncCpu);
+		#endif
+
 		// void gr_direct_context_free_gpu_resources(gr_direct_context_t* context)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -452,34 +466,6 @@ namespace SkiaSharp
 		private static Delegates.gr_direct_context_free_gpu_resources gr_direct_context_free_gpu_resources_delegate;
 		internal static void gr_direct_context_free_gpu_resources (gr_direct_context_t context) =>
 			(gr_direct_context_free_gpu_resources_delegate ??= GetSymbol<Delegates.gr_direct_context_free_gpu_resources> ("gr_direct_context_free_gpu_resources")).Invoke (context);
-		#endif
-
-		// gr_backend_t gr_direct_context_get_backend(gr_direct_context_t* context)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern GRBackendNative gr_direct_context_get_backend (gr_direct_context_t context);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate GRBackendNative gr_direct_context_get_backend (gr_direct_context_t context);
-		}
-		private static Delegates.gr_direct_context_get_backend gr_direct_context_get_backend_delegate;
-		internal static GRBackendNative gr_direct_context_get_backend (gr_direct_context_t context) =>
-			(gr_direct_context_get_backend_delegate ??= GetSymbol<Delegates.gr_direct_context_get_backend> ("gr_direct_context_get_backend")).Invoke (context);
-		#endif
-
-		// int gr_direct_context_get_max_surface_sample_count_for_color_type(gr_direct_context_t* context, sk_colortype_t colorType)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 gr_direct_context_get_max_surface_sample_count_for_color_type (gr_direct_context_t context, SKColorTypeNative colorType);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 gr_direct_context_get_max_surface_sample_count_for_color_type (gr_direct_context_t context, SKColorTypeNative colorType);
-		}
-		private static Delegates.gr_direct_context_get_max_surface_sample_count_for_color_type gr_direct_context_get_max_surface_sample_count_for_color_type_delegate;
-		internal static Int32 gr_direct_context_get_max_surface_sample_count_for_color_type (gr_direct_context_t context, SKColorTypeNative colorType) =>
-			(gr_direct_context_get_max_surface_sample_count_for_color_type_delegate ??= GetSymbol<Delegates.gr_direct_context_get_max_surface_sample_count_for_color_type> ("gr_direct_context_get_max_surface_sample_count_for_color_type")).Invoke (context, colorType);
 		#endif
 
 		// size_t gr_direct_context_get_resource_cache_limit(gr_direct_context_t* context)
@@ -694,18 +680,20 @@ namespace SkiaSharp
 			(gr_direct_context_set_resource_cache_limit_delegate ??= GetSymbol<Delegates.gr_direct_context_set_resource_cache_limit> ("gr_direct_context_set_resource_cache_limit")).Invoke (context, maxResourceBytes);
 		#endif
 
-		// void gr_direct_context_unref(gr_direct_context_t* context)
+		// bool gr_direct_context_submit(gr_direct_context_t* context, bool syncCpu)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_direct_context_unref (gr_direct_context_t context);
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool gr_direct_context_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_direct_context_unref (gr_direct_context_t context);
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool gr_direct_context_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
 		}
-		private static Delegates.gr_direct_context_unref gr_direct_context_unref_delegate;
-		internal static void gr_direct_context_unref (gr_direct_context_t context) =>
-			(gr_direct_context_unref_delegate ??= GetSymbol<Delegates.gr_direct_context_unref> ("gr_direct_context_unref")).Invoke (context);
+		private static Delegates.gr_direct_context_submit gr_direct_context_submit_delegate;
+		internal static bool gr_direct_context_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu) =>
+			(gr_direct_context_submit_delegate ??= GetSymbol<Delegates.gr_direct_context_submit> ("gr_direct_context_submit")).Invoke (context, syncCpu);
 		#endif
 
 		// const gr_glinterface_t* gr_glinterface_assemble_gl_interface(void* ctx, gr_gl_get_proc get)
@@ -822,6 +810,48 @@ namespace SkiaSharp
 		private static Delegates.gr_glinterface_validate gr_glinterface_validate_delegate;
 		internal static bool gr_glinterface_validate (gr_glinterface_t glInterface) =>
 			(gr_glinterface_validate_delegate ??= GetSymbol<Delegates.gr_glinterface_validate> ("gr_glinterface_validate")).Invoke (glInterface);
+		#endif
+
+		// gr_backend_t gr_recording_context_get_backend(gr_recording_context_t* context)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern GRBackendNative gr_recording_context_get_backend (gr_recording_context_t context);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate GRBackendNative gr_recording_context_get_backend (gr_recording_context_t context);
+		}
+		private static Delegates.gr_recording_context_get_backend gr_recording_context_get_backend_delegate;
+		internal static GRBackendNative gr_recording_context_get_backend (gr_recording_context_t context) =>
+			(gr_recording_context_get_backend_delegate ??= GetSymbol<Delegates.gr_recording_context_get_backend> ("gr_recording_context_get_backend")).Invoke (context);
+		#endif
+
+		// int gr_recording_context_get_max_surface_sample_count_for_color_type(gr_recording_context_t* context, sk_colortype_t colorType)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (gr_recording_context_t context, SKColorTypeNative colorType);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (gr_recording_context_t context, SKColorTypeNative colorType);
+		}
+		private static Delegates.gr_recording_context_get_max_surface_sample_count_for_color_type gr_recording_context_get_max_surface_sample_count_for_color_type_delegate;
+		internal static Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (gr_recording_context_t context, SKColorTypeNative colorType) =>
+			(gr_recording_context_get_max_surface_sample_count_for_color_type_delegate ??= GetSymbol<Delegates.gr_recording_context_get_max_surface_sample_count_for_color_type> ("gr_recording_context_get_max_surface_sample_count_for_color_type")).Invoke (context, colorType);
+		#endif
+
+		// void gr_recording_context_unref(gr_recording_context_t* context)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_recording_context_unref (gr_recording_context_t context);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_recording_context_unref (gr_recording_context_t context);
+		}
+		private static Delegates.gr_recording_context_unref gr_recording_context_unref_delegate;
+		internal static void gr_recording_context_unref (gr_recording_context_t context) =>
+			(gr_recording_context_unref_delegate ??= GetSymbol<Delegates.gr_recording_context_unref> ("gr_recording_context_unref")).Invoke (context);
 		#endif
 
 		// void gr_vk_extensions_delete(gr_vk_extensions_t* extensions)
@@ -1360,6 +1390,20 @@ namespace SkiaSharp
 			(sk_canvas_clear_delegate ??= GetSymbol<Delegates.sk_canvas_clear> ("sk_canvas_clear")).Invoke (param0, param1);
 		#endif
 
+		// void sk_canvas_clear_color4f(sk_canvas_t*, sk_color4f_t)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_clear_color4f (sk_canvas_t param0, SKColorF param1);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_canvas_clear_color4f (sk_canvas_t param0, SKColorF param1);
+		}
+		private static Delegates.sk_canvas_clear_color4f sk_canvas_clear_color4f_delegate;
+		internal static void sk_canvas_clear_color4f (sk_canvas_t param0, SKColorF param1) =>
+			(sk_canvas_clear_color4f_delegate ??= GetSymbol<Delegates.sk_canvas_clear_color4f> ("sk_canvas_clear_color4f")).Invoke (param0, param1);
+		#endif
+
 		// void sk_canvas_clip_path_with_operation(sk_canvas_t* t, const sk_path_t* crect, sk_clipop_t op, bool doAA)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1526,6 +1570,20 @@ namespace SkiaSharp
 		private static Delegates.sk_canvas_draw_color sk_canvas_draw_color_delegate;
 		internal static void sk_canvas_draw_color (sk_canvas_t ccanvas, UInt32 color, SKBlendMode mode) =>
 			(sk_canvas_draw_color_delegate ??= GetSymbol<Delegates.sk_canvas_draw_color> ("sk_canvas_draw_color")).Invoke (ccanvas, color, mode);
+		#endif
+
+		// void sk_canvas_draw_color4f(sk_canvas_t* ccanvas, sk_color4f_t color, sk_blendmode_t mode)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_draw_color4f (sk_canvas_t ccanvas, SKColorF color, SKBlendMode mode);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_canvas_draw_color4f (sk_canvas_t ccanvas, SKColorF color, SKBlendMode mode);
+		}
+		private static Delegates.sk_canvas_draw_color4f sk_canvas_draw_color4f_delegate;
+		internal static void sk_canvas_draw_color4f (sk_canvas_t ccanvas, SKColorF color, SKBlendMode mode) =>
+			(sk_canvas_draw_color4f_delegate ??= GetSymbol<Delegates.sk_canvas_draw_color4f> ("sk_canvas_draw_color4f")).Invoke (ccanvas, color, mode);
 		#endif
 
 		// void sk_canvas_draw_drawable(sk_canvas_t*, sk_drawable_t*, const sk_matrix_t*)
@@ -5400,17 +5458,17 @@ namespace SkiaSharp
 			(sk_imagefilter_new_compose_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_compose> ("sk_imagefilter_new_compose")).Invoke (outer, inner);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_dilate(int radiusX, int radiusY, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
+		// sk_imagefilter_t* sk_imagefilter_new_dilate(float radiusX, float radiusY, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_imagefilter_t sk_imagefilter_new_dilate (Int32 radiusX, Int32 radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_dilate (Single radiusX, Single radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_imagefilter_t sk_imagefilter_new_dilate (Int32 radiusX, Int32 radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_dilate (Single radiusX, Single radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_dilate sk_imagefilter_new_dilate_delegate;
-		internal static sk_imagefilter_t sk_imagefilter_new_dilate (Int32 radiusX, Int32 radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_dilate (Single radiusX, Single radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
 			(sk_imagefilter_new_dilate_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_dilate> ("sk_imagefilter_new_dilate")).Invoke (radiusX, radiusY, input, cropRect);
 		#endif
 
@@ -5484,17 +5542,17 @@ namespace SkiaSharp
 			(sk_imagefilter_new_drop_shadow_only_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow_only> ("sk_imagefilter_new_drop_shadow_only")).Invoke (dx, dy, sigmaX, sigmaY, color, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_erode(int radiusX, int radiusY, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
+		// sk_imagefilter_t* sk_imagefilter_new_erode(float radiusX, float radiusY, sk_imagefilter_t* input, const sk_imagefilter_croprect_t* cropRect)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_imagefilter_t sk_imagefilter_new_erode (Int32 radiusX, Int32 radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+		internal static extern sk_imagefilter_t sk_imagefilter_new_erode (Single radiusX, Single radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_imagefilter_t sk_imagefilter_new_erode (Int32 radiusX, Int32 radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
+			internal delegate sk_imagefilter_t sk_imagefilter_new_erode (Single radiusX, Single radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect);
 		}
 		private static Delegates.sk_imagefilter_new_erode sk_imagefilter_new_erode_delegate;
-		internal static sk_imagefilter_t sk_imagefilter_new_erode (Int32 radiusX, Int32 radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
+		internal static sk_imagefilter_t sk_imagefilter_new_erode (Single radiusX, Single radiusY, sk_imagefilter_t input, sk_imagefilter_croprect_t cropRect) =>
 			(sk_imagefilter_new_erode_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_erode> ("sk_imagefilter_new_erode")).Invoke (radiusX, radiusY, input, cropRect);
 		#endif
 
@@ -9074,20 +9132,20 @@ namespace SkiaSharp
 			(sk_pixmap_erase_color_delegate ??= GetSymbol<Delegates.sk_pixmap_erase_color> ("sk_pixmap_erase_color")).Invoke (cpixmap, color, subset);
 		#endif
 
-		// bool sk_pixmap_erase_color4f(const sk_pixmap_t* cpixmap, const sk_color4f_t* color, const sk_irect_t* subset)
+		// bool sk_pixmap_erase_color4f(const sk_pixmap_t* cpixmap, const sk_color4f_t* color, sk_colorspace_t* colorspace, const sk_irect_t* subset)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_pixmap_erase_color4f (sk_pixmap_t cpixmap, SKColorF* color, SKRectI* subset);
+		internal static extern bool sk_pixmap_erase_color4f (sk_pixmap_t cpixmap, SKColorF* color, sk_colorspace_t colorspace, SKRectI* subset);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_pixmap_erase_color4f (sk_pixmap_t cpixmap, SKColorF* color, SKRectI* subset);
+			internal delegate bool sk_pixmap_erase_color4f (sk_pixmap_t cpixmap, SKColorF* color, sk_colorspace_t colorspace, SKRectI* subset);
 		}
 		private static Delegates.sk_pixmap_erase_color4f sk_pixmap_erase_color4f_delegate;
-		internal static bool sk_pixmap_erase_color4f (sk_pixmap_t cpixmap, SKColorF* color, SKRectI* subset) =>
-			(sk_pixmap_erase_color4f_delegate ??= GetSymbol<Delegates.sk_pixmap_erase_color4f> ("sk_pixmap_erase_color4f")).Invoke (cpixmap, color, subset);
+		internal static bool sk_pixmap_erase_color4f (sk_pixmap_t cpixmap, SKColorF* color, sk_colorspace_t colorspace, SKRectI* subset) =>
+			(sk_pixmap_erase_color4f_delegate ??= GetSymbol<Delegates.sk_pixmap_erase_color4f> ("sk_pixmap_erase_color4f")).Invoke (cpixmap, color, colorspace, subset);
 		#endif
 
 		// bool sk_pixmap_extract_subset(const sk_pixmap_t* cpixmap, sk_pixmap_t* result, const sk_irect_t* subset)
@@ -11634,6 +11692,20 @@ namespace SkiaSharp
 			(sk_surface_flush_delegate ??= GetSymbol<Delegates.sk_surface_flush> ("sk_surface_flush")).Invoke (surface);
 		#endif
 
+		// void sk_surface_flush_and_submit(sk_surface_t* surface, bool syncCpu)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_surface_flush_and_submit (sk_surface_t surface, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_surface_flush_and_submit (sk_surface_t surface, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		}
+		private static Delegates.sk_surface_flush_and_submit sk_surface_flush_and_submit_delegate;
+		internal static void sk_surface_flush_and_submit (sk_surface_t surface, [MarshalAs (UnmanagedType.I1)] bool syncCpu) =>
+			(sk_surface_flush_and_submit_delegate ??= GetSymbol<Delegates.sk_surface_flush_and_submit> ("sk_surface_flush_and_submit")).Invoke (surface, syncCpu);
+		#endif
+
 		// sk_canvas_t* sk_surface_get_canvas(sk_surface_t*)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -11660,6 +11732,20 @@ namespace SkiaSharp
 		private static Delegates.sk_surface_get_props sk_surface_get_props_delegate;
 		internal static sk_surfaceprops_t sk_surface_get_props (sk_surface_t surface) =>
 			(sk_surface_get_props_delegate ??= GetSymbol<Delegates.sk_surface_get_props> ("sk_surface_get_props")).Invoke (surface);
+		#endif
+
+		// gr_recording_context_t* sk_surface_get_recording_context(sk_surface_t* surface)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_recording_context_t sk_surface_get_recording_context (sk_surface_t surface);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_recording_context_t sk_surface_get_recording_context (sk_surface_t surface);
+		}
+		private static Delegates.sk_surface_get_recording_context sk_surface_get_recording_context_delegate;
+		internal static gr_recording_context_t sk_surface_get_recording_context (sk_surface_t surface) =>
+			(sk_surface_get_recording_context_delegate ??= GetSymbol<Delegates.sk_surface_get_recording_context> ("sk_surface_get_recording_context")).Invoke (surface);
 		#endif
 
 		// sk_surface_t* sk_surface_new_backend_render_target(gr_recording_context_t* context, const gr_backendrendertarget_t* target, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)

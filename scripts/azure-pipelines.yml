@@ -2,7 +2,6 @@ trigger:
   - main
   - develop
   - patch/*
-  - refs/tags/*
 
 pr:
   - main
@@ -24,14 +23,14 @@ variables:
   MONO_VERSION_MACOS: '6_12_7'
   MONO_VERSION_LINUX: ''
   XCODE_VERSION: 12.4
-  DOTNET_VERSION_PREVIOUS: 3.1.412
-  DOTNET_VERSION: 5.0.400
-  DOTNET_VERSION_PREVIEW: 6.0.100-rc.1.21426.23
-  DOTNET_WORKLOAD_SOURCE: 'https://aka.ms/dotnet/maui/rc1/index.json'
-  VS_VERSION_PREVIEW: 16/pre
+  DOTNET_VERSION_PREVIOUS: 3.1.413
+  DOTNET_VERSION: 5.0.401
+  DOTNET_VERSION_PREVIEW: 6.0.100-rtm.21525.3
+  DOTNET_WORKLOAD_SOURCE: 'https://aka.ms/dotnet/maui/6.0.101/preview.10.json'
+  VS_VERSION_PREVIEW: 17/pre
   CONFIGURATION: 'Release'
-  VM_IMAGE_WINDOWS: windows-2019
-  VM_IMAGE_WINDOWS_PREVIOUS: vs2017-win2016
+  VM_IMAGE_WINDOWS: windows-2022
+  VM_IMAGE_WINDOWS_PREVIOUS: windows-2019
   VM_IMAGE_MAC: macOS-10.15
   VM_IMAGE_LINUX: ubuntu-18.04
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
@@ -40,6 +39,8 @@ variables:
   ENABLE_CODE_COVERAGE: true
   EMSCRIPTEN_VERSION: 2.0.23
   XHARNESS_VERSION: 1.0.0-prerelease.21404.1
+  XAMARIN_ANDROID_WINDOWS_URL: https://dl.internalx.com/vsts-devdiv/Xamarin.Android/public/5343278/d17-0/6b0e6b265390832dcfb499e9e1e893c462548a30/signed/Xamarin.Android.Sdk-12.1.0.5.vsix
+  XAMARIN_ANDROID_MACOS_URL: https://dl.internalx.com/vsts-devdiv/Xamarin.Android/public/5343278/d17-0/6b0e6b265390832dcfb499e9e1e893c462548a30/xamarin.android-12.1.0.5.pkg
 
 resources:
   repositories:
@@ -71,7 +72,7 @@ stages:
         parameters:
           name: native_android_x86_windows
           displayName: Android x86
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=x86
           installWindowsSdk: false
@@ -80,7 +81,7 @@ stages:
         parameters:
           name: native_android_x64_windows
           displayName: Android x64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=x64
           installWindowsSdk: false
@@ -89,7 +90,7 @@ stages:
         parameters:
           name: native_android_arm_windows
           displayName: Android arm
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=arm
           installWindowsSdk: false
@@ -98,7 +99,7 @@ stages:
         parameters:
           name: native_android_arm64_windows
           displayName: Android arm64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=arm64
           installWindowsSdk: false
@@ -107,7 +108,7 @@ stages:
         parameters:
           name: native_tizen_windows
           displayName: Tizen
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-tizen
           installWindowsSdk: false
           artifactName: native
@@ -115,7 +116,7 @@ stages:
         parameters:
           name: native_uwp_angle_x86_windows
           displayName: ANGLE x86
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
           artifactName: native
@@ -123,7 +124,7 @@ stages:
         parameters:
           name: native_uwp_angle_x64_windows
           displayName: ANGLE x64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
           artifactName: native
@@ -131,7 +132,7 @@ stages:
         parameters:
           name: native_uwp_angle_arm_windows
           displayName: ANGLE arm
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
           artifactName: native
@@ -139,7 +140,7 @@ stages:
         parameters:
           name: native_uwp_angle_arm64_windows
           displayName: ANGLE arm64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
           artifactName: native
@@ -147,7 +148,7 @@ stages:
         parameters:
           name: native_uwp_x86_windows
           displayName: UWP x86
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=x86 --skipAngle=true
           artifactName: native
@@ -155,7 +156,7 @@ stages:
         parameters:
           name: native_uwp_x64_windows
           displayName: UWP x64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=x64 --skipAngle=true
           artifactName: native
@@ -163,7 +164,7 @@ stages:
         parameters:
           name: native_uwp_arm_windows
           displayName: UWP arm
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=arm --skipAngle=true
           artifactName: native
@@ -171,7 +172,7 @@ stages:
         parameters:
           name: native_uwp_arm64_windows
           displayName: UWP arm64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=arm64 --skipAngle=true
           artifactName: native
@@ -179,7 +180,7 @@ stages:
         parameters:
           name: native_win32_x86_windows
           displayName: Win32 x86
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-windows
           additionalArgs: --buildarch=x86
           artifactName: native
@@ -187,7 +188,7 @@ stages:
         parameters:
           name: native_win32_x64_windows
           displayName: Win32 x64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-windows
           additionalArgs: --buildarch=x64
           artifactName: native
@@ -195,7 +196,7 @@ stages:
         parameters:
           name: native_win32_arm64_windows
           displayName: Win32 arm64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-windows
           additionalArgs: --buildarch=arm64
           artifactName: native
@@ -203,7 +204,7 @@ stages:
         parameters:
           name: native_win32_x64_nanoserver_windows
           displayName: Nano Server x64
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
           artifactName: native
@@ -353,7 +354,7 @@ stages:
             - native
           artifactName: managed
           postBuildSteps:
-            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
               displayName: Delete the native folder
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
@@ -366,7 +367,7 @@ stages:
             - native
           artifactName: managed
           postBuildSteps:
-            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
               displayName: Delete the native folder
       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
         parameters:
@@ -380,7 +381,7 @@ stages:
             - native
           artifactName: managed
           postBuildSteps:
-            - pwsh: Remove-Item ./output/native/ -Recurse -Force
+            - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
               displayName: Delete the native folder
 
   - stage: package
@@ -438,7 +439,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: docs-api-diff
           additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
-          installWindowsSdk: false
           installPreviewVs: false
           shouldPublish: false
           requiredArtifacts:
@@ -746,16 +746,19 @@ stages:
           displayName: Windows
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
-          installWindowsSdk: false
           requiredArtifactsMap:
             - src: nuget
               dst: nugets
+          postBuildSteps:
+            - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
+              displayName: Delete the nugets folder
       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
         parameters:
           name: samples_macos
           displayName: macOS
           vmImage: $(VM_IMAGE_MAC)
           target: samples
+          shouldPublish: false
           requiredArtifactsMap:
             - src: nuget
               dst: nugets
@@ -768,6 +771,7 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
+          shouldPublish: false
           requiredArtifactsMap:
             - src: nuget
               dst: nugets
