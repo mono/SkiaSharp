@@ -8,6 +8,17 @@ parameters:
   artifactName: ''                              # the name of the artifact to merge this run into
 
 jobs:
+  - job: logger2
+    displayName: Prepare Build
+    pool:
+      vmImage: $(VM_IMAGE_LINUX)
+    steps:
+      - checkout: none
+      - pwsh: |
+          echo "parameters.buildExternals = ${{ parameters.buildExternals }}"
+          echo "BUILD_EXTERNALS = $(BUILD_EXTERNALS)"
+        displayName: ${{ parameters.buildExternals }}
+
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     pool:
