@@ -65,7 +65,7 @@ namespace SkiaSharp.Internals
 		/// <returns>A reference to a new platform lock implementation</returns>
 		public static IPlatformLock DefaultFactory ()
 		{
-			if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows))
+			if (PlatformConfiguration.IsWindows)
 				return new NonAlertableWin32Lock ();
 			else
 				return new ReadWriteLock ();
