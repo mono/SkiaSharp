@@ -17,7 +17,7 @@ parameters:
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
-  buildExternals: '$(BUILD_EXTERNALS)'          # the build number to download externals from
+  buildExternals: ''                            # the build number to download externals from
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -31,19 +31,7 @@ parameters:
   artifactName: ''                              # the name of the artifact to merge this run into
 
 jobs:
-- job: logger_${{ parameters.name }}
-  displayName: Prepare Build
-  pool:
-    vmImage: $(VM_IMAGE_LINUX)
-  steps:
-    - checkout: none
-    - pwsh: |
-        echo "parameters.buildExternals = ${{ parameters.buildExternals }}"
-        echo "BUILD_EXTERNALS = $(BUILD_EXTERNALS)"
-        echo "length = ${{ length(parameters.buildExternals) }}"
-      displayName: length '${{ parameters.buildExternals }}' == '${{ length(parameters.buildExternals) }}'
-
-- ${{ if and(ne(parameters.buildExternals, ''), ne(parameters.buildExternals, 'undefined'), startsWith(parameters.name, 'native_')) }}:
+- ${{ if and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_')) }}:
   - template: azure-templates-download.yml
     parameters:
       name: ${{ parameters.name }}
@@ -77,7 +65,7 @@ jobs:
       installEmsdk: ${{ parameters.installEmsdk }}
       artifactName: ${{ parameters.artifactName }}
 
-- ${{ if not(and(ne(parameters.buildExternals, ''), ne(parameters.buildExternals, 'undefined'), startsWith(parameters.name, 'native_'))) }}:
+- ${{ if not(and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_'))) }}:
   - template: azure-templates-build.yml
     parameters:
       name: ${{ parameters.name }}
@@ -98,7 +86,6 @@ jobs:
       condition: ${{ parameters.condition }}
       shouldPublish: ${{ parameters.shouldPublish }}
       configuration: ${{ parameters.configuration }}
-      buildExternals: ${{ parameters.buildExternals }}
       verbosity: ${{ parameters.verbosity }}
       docker: ${{ parameters.docker }}
       dockerArgs: ${{ parameters.dockerArgs }}
