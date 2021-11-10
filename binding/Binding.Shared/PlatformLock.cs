@@ -57,17 +57,13 @@ namespace SkiaSharp.Internals
 		/// to be created (currently only used by SkiaSharps internal
 		/// HandleDictionary).
 		/// </remarks>
-		public static Func<IPlatformLock> Factory
-		{
-			get;
-			set;
-		} = DefaultFactory;
+		public static Func<IPlatformLock> Factory { get; set; } = DefaultFactory;
 
 		/// <summary>
 		/// Default platform lock factory
 		/// </summary>
 		/// <returns>A reference to a new platform lock implementation</returns>
-		public static IPlatformLock DefaultFactory()
+		public static IPlatformLock DefaultFactory ()
 		{
 			if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows))
 				return new NonAlertableWin32Lock ();
