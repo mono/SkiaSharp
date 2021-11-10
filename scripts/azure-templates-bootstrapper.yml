@@ -31,29 +31,17 @@ parameters:
   artifactName: ''                              # the name of the artifact to merge this run into
 
 jobs:
-- ${{ if eq(parameters.buildExternals, '') }}:
-  - job: logger_${{ parameters.name }}_blank
-    displayName: Prepare Build BLANK
-    pool:
-      vmImage: $(VM_IMAGE_LINUX)
-    steps:
-      - checkout: none
-      - pwsh: |
-          echo "parameters.buildExternals = ${{ parameters.buildExternals }}"
-          echo "BUILD_EXTERNALS = $(BUILD_EXTERNALS)"
-        displayName: ${{ parameters.buildExternals }}
-
-- ${{ if eq(parameters.buildExternals, 'undefined') }}:
-  - job: logger_${{ parameters.name }}_undefined
-    displayName: Prepare Build undefined
-    pool:
-      vmImage: $(VM_IMAGE_LINUX)
-    steps:
-      - checkout: none
-      - pwsh: |
-          echo "parameters.buildExternals = ${{ parameters.buildExternals }}"
-          echo "BUILD_EXTERNALS = $(BUILD_EXTERNALS)"
-        displayName: ${{ parameters.buildExternals }}
+- job: logger_${{ parameters.name }}
+  displayName: Prepare Build
+  pool:
+    vmImage: $(VM_IMAGE_LINUX)
+  steps:
+    - checkout: none
+    - pwsh: |
+        echo "parameters.buildExternals = ${{ parameters.buildExternals }}"
+        echo "BUILD_EXTERNALS = $(BUILD_EXTERNALS)"
+        echo "length = ${{ length(parameters.buildExternals) }}"
+      displayName: length '${{ parameters.buildExternals }}' == '${{ length(parameters.buildExternals) }}'
 
 - ${{ if and(ne(parameters.buildExternals, ''), ne(parameters.buildExternals, 'undefined'), startsWith(parameters.name, 'native_')) }}:
   - template: azure-templates-download.yml
