@@ -33,8 +33,68 @@ parameters:
 jobs:
 - ${{ if and(ne(parameters.buildExternals, ''), ne(parameters.buildExternals, 'undefined'), startsWith(parameters.name, 'native_')) }}:
   - template: azure-templates-download.yml
-    parameters: ${{ parameters }}
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      vmImage: ${{ parameters.vmImage }}
+      packages: ${{ parameters.packages }}
+      target: ${{ parameters.target }}
+      dependsOn: ${{ parameters.dependsOn }}
+      variables: ${{ parameters.variables }}
+      requiredArtifacts: ${{ parameters.requiredArtifacts }}
+      requiredArtifactsMap: ${{ parameters.requiredArtifactsMap }}
+      demands: ${{ parameters.demands }}
+      preBuildSteps: ${{ parameters.preBuildSteps }}
+      postBuildSteps: ${{ parameters.postBuildSteps }}
+      initScript: ${{ parameters.initScript }}
+      additionalArgs: ${{ parameters.additionalArgs }}
+      retryCount: ${{ parameters.retryCount }}
+      condition: ${{ parameters.condition }}
+      shouldPublish: ${{ parameters.shouldPublish }}
+      configuration: ${{ parameters.configuration }}
+      buildExternals: ${{ parameters.buildExternals }}
+      verbosity: ${{ parameters.verbosity }}
+      docker: ${{ parameters.docker }}
+      dockerArgs: ${{ parameters.dockerArgs }}
+      installAndroidNdk: ${{ parameters.installAndroidNdk }}
+      installTizenSdk: ${{ parameters.installTizenSdk }}
+      installWindowsSdk: ${{ parameters.installWindowsSdk }}
+      installPreviewVs: ${{ parameters.installPreviewVs }}
+      installDotNet: ${{ parameters.installDotNet }}
+      installLlvm: ${{ parameters.installLlvm }}
+      installEmsdk: ${{ parameters.installEmsdk }}
+      artifactName: ${{ parameters.artifactName }}
 
 - ${{ if not(and(ne(parameters.buildExternals, ''), ne(parameters.buildExternals, 'undefined'), startsWith(parameters.name, 'native_'))) }}:
   - template: azure-templates-build.yml
-    parameters: ${{ parameters }}
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      vmImage: ${{ parameters.vmImage }}
+      packages: ${{ parameters.packages }}
+      target: ${{ parameters.target }}
+      dependsOn: ${{ parameters.dependsOn }}
+      variables: ${{ parameters.variables }}
+      requiredArtifacts: ${{ parameters.requiredArtifacts }}
+      requiredArtifactsMap: ${{ parameters.requiredArtifactsMap }}
+      demands: ${{ parameters.demands }}
+      preBuildSteps: ${{ parameters.preBuildSteps }}
+      postBuildSteps: ${{ parameters.postBuildSteps }}
+      initScript: ${{ parameters.initScript }}
+      additionalArgs: ${{ parameters.additionalArgs }}
+      retryCount: ${{ parameters.retryCount }}
+      condition: ${{ parameters.condition }}
+      shouldPublish: ${{ parameters.shouldPublish }}
+      configuration: ${{ parameters.configuration }}
+      buildExternals: ${{ parameters.buildExternals }}
+      verbosity: ${{ parameters.verbosity }}
+      docker: ${{ parameters.docker }}
+      dockerArgs: ${{ parameters.dockerArgs }}
+      installAndroidNdk: ${{ parameters.installAndroidNdk }}
+      installTizenSdk: ${{ parameters.installTizenSdk }}
+      installWindowsSdk: ${{ parameters.installWindowsSdk }}
+      installPreviewVs: ${{ parameters.installPreviewVs }}
+      installDotNet: ${{ parameters.installDotNet }}
+      installLlvm: ${{ parameters.installLlvm }}
+      installEmsdk: ${{ parameters.installEmsdk }}
+      artifactName: ${{ parameters.artifactName }}
