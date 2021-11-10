@@ -31,10 +31,10 @@ parameters:
   artifactName: ''                              # the name of the artifact to merge this run into
 
 jobs:
-- ${{ if and(and(ne(parameters.buildExternals, ''), ne(parameters.buildExternals, 'undefined')), startsWith(parameters.name, 'native_')) }}:
+- ${{ if and(ne(parameters.buildExternals, ''), ne(parameters.buildExternals, 'undefined'), startsWith(parameters.name, 'native_')) }}:
   - template: azure-templates-download.yml
     parameters: ${{ parameters }}
 
-- ${{ if not(and(and(ne(parameters.buildExternals, ''), ne(parameters.buildExternals, 'undefined')), startsWith(parameters.name, 'native_'))) }}:
+- ${{ if not(and(ne(parameters.buildExternals, ''), ne(parameters.buildExternals, 'undefined'), startsWith(parameters.name, 'native_'))) }}:
   - template: azure-templates-build.yml
     parameters: ${{ parameters }}
