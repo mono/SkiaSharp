@@ -29,6 +29,7 @@ parameters:
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   artifactName: ''                              # the name of the artifact to merge this run into
+  tools: ''                                     # any additional .net global tools
 
 jobs:
 - ${{ if and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_')) }}:
@@ -64,6 +65,7 @@ jobs:
       installLlvm: ${{ parameters.installLlvm }}
       installEmsdk: ${{ parameters.installEmsdk }}
       artifactName: ${{ parameters.artifactName }}
+      tools: ${{ parameters.tools }}
 
 - ${{ if not(and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_'))) }}:
   - template: azure-templates-build.yml
@@ -97,3 +99,4 @@ jobs:
       installLlvm: ${{ parameters.installLlvm }}
       installEmsdk: ${{ parameters.installEmsdk }}
       artifactName: ${{ parameters.artifactName }}
+      tools: ${{ parameters.tools }}
