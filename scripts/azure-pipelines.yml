@@ -8,6 +8,12 @@ pr:
   - develop
   - patch/*
 
+parameters:
+  - name: buildExternals
+    displayName: 'The specific native artifacts to use for this build.'
+    type: number
+    default: 0
+
 variables:
   SKIASHARP_VERSION: 2.88.0
   FEATURE_NAME_PREFIX: 'feature/'
@@ -27,7 +33,7 @@ variables:
   DOTNET_VERSION: 5.0.401
   DOTNET_VERSION_PREVIEW: 6.0.100
   DOTNET_WORKLOAD_SOURCE: 'https://aka.ms/dotnet/maui/6.0.101/preview.10.json'
-  VS_VERSION_PREVIEW: 17/pre
+  VS_VERSION_PREVIEW: 17/release
   CONFIGURATION: 'Release'
   VM_IMAGE_WINDOWS: windows-2022
   VM_IMAGE_WINDOWS_PREVIOUS: windows-2019
@@ -39,8 +45,6 @@ variables:
   ENABLE_CODE_COVERAGE: true
   EMSCRIPTEN_VERSION: 2.0.23
   XHARNESS_VERSION: 1.0.0-prerelease.21404.1
-  XAMARIN_ANDROID_WINDOWS_URL: https://dl.internalx.com/vsts-devdiv/Xamarin.Android/public/5343278/d17-0/6b0e6b265390832dcfb499e9e1e893c462548a30/signed/Xamarin.Android.Sdk-12.1.0.5.vsix
-  XAMARIN_ANDROID_MACOS_URL: https://dl.internalx.com/vsts-devdiv/Xamarin.Android/public/5343278/d17-0/6b0e6b265390832dcfb499e9e1e893c462548a30/xamarin.android-12.1.0.5.pkg
 
 resources:
   repositories:
@@ -72,6 +76,7 @@ stages:
         parameters:
           name: native_android_x86_windows
           displayName: Android x86
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=x86
@@ -81,6 +86,7 @@ stages:
         parameters:
           name: native_android_x64_windows
           displayName: Android x64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=x64
@@ -90,6 +96,7 @@ stages:
         parameters:
           name: native_android_arm_windows
           displayName: Android arm
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=arm
@@ -99,6 +106,7 @@ stages:
         parameters:
           name: native_android_arm64_windows
           displayName: Android arm64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-android
           additionalArgs: --buildarch=arm64
@@ -108,6 +116,7 @@ stages:
         parameters:
           name: native_tizen_windows
           displayName: Tizen
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-tizen
           installWindowsSdk: false
@@ -116,6 +125,7 @@ stages:
         parameters:
           name: native_uwp_angle_x86_windows
           displayName: ANGLE x86
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
@@ -124,6 +134,7 @@ stages:
         parameters:
           name: native_uwp_angle_x64_windows
           displayName: ANGLE x64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
@@ -132,6 +143,7 @@ stages:
         parameters:
           name: native_uwp_angle_arm_windows
           displayName: ANGLE arm
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
@@ -140,6 +152,7 @@ stages:
         parameters:
           name: native_uwp_angle_arm64_windows
           displayName: ANGLE arm64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
@@ -148,6 +161,7 @@ stages:
         parameters:
           name: native_uwp_x86_windows
           displayName: UWP x86
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=x86 --skipAngle=true
@@ -156,6 +170,7 @@ stages:
         parameters:
           name: native_uwp_x64_windows
           displayName: UWP x64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=x64 --skipAngle=true
@@ -164,6 +179,7 @@ stages:
         parameters:
           name: native_uwp_arm_windows
           displayName: UWP arm
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=arm --skipAngle=true
@@ -172,6 +188,7 @@ stages:
         parameters:
           name: native_uwp_arm64_windows
           displayName: UWP arm64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-uwp
           additionalArgs: --buildarch=arm64 --skipAngle=true
@@ -180,6 +197,7 @@ stages:
         parameters:
           name: native_win32_x86_windows
           displayName: Win32 x86
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-windows
           additionalArgs: --buildarch=x86
@@ -188,6 +206,7 @@ stages:
         parameters:
           name: native_win32_x64_windows
           displayName: Win32 x64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-windows
           additionalArgs: --buildarch=x64
@@ -196,6 +215,7 @@ stages:
         parameters:
           name: native_win32_arm64_windows
           displayName: Win32 arm64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-windows
           additionalArgs: --buildarch=arm64
@@ -204,6 +224,7 @@ stages:
         parameters:
           name: native_win32_x64_nanoserver_windows
           displayName: Nano Server x64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
@@ -219,6 +240,7 @@ stages:
         parameters:
           name: native_android_x86_macos
           displayName: Android x86
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_MAC)
           target: externals-android
           additionalArgs: --buildarch=x86
@@ -226,6 +248,7 @@ stages:
         parameters:
           name: native_android_x64_macos
           displayName: Android x64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_MAC)
           target: externals-android
           additionalArgs: --buildarch=x64
@@ -233,6 +256,7 @@ stages:
         parameters:
           name: native_android_arm_macos
           displayName: Android arm
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_MAC)
           target: externals-android
           additionalArgs: --buildarch=arm
@@ -240,6 +264,7 @@ stages:
         parameters:
           name: native_android_arm64_macos
           displayName: Android arm64
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_MAC)
           target: externals-android
           additionalArgs: --buildarch=arm64
@@ -247,6 +272,7 @@ stages:
         parameters:
           name: native_ios_macos
           displayName: iOS
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_MAC)
           target: externals-ios
           artifactName: native
@@ -254,6 +280,7 @@ stages:
         parameters:
           name: native_maccatalyst_macos
           displayName: Mac Catalyst
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_MAC)
           target: externals-maccatalyst
           artifactName: native
@@ -261,6 +288,7 @@ stages:
         parameters:
           name: native_macos_macos
           displayName: macOS
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_MAC)
           target: externals-macos
           artifactName: native
@@ -268,6 +296,7 @@ stages:
         parameters:
           name: native_tvos_macos
           displayName: tvOS
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_MAC)
           target: externals-tvos
           artifactName: native
@@ -275,6 +304,7 @@ stages:
         parameters:
           name: native_watchos_macos
           displayName: watchOS
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_MAC)
           target: externals-watchos
           artifactName: native
@@ -282,6 +312,7 @@ stages:
         parameters:
           name: native_tizen_macos
           displayName: Tizen
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_MAC)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
@@ -293,6 +324,7 @@ stages:
       - template: azure-templates-linux-matrix.yml # Build Native Linux (Linux)
         parameters:
           artifactName: native
+          buildExternals: ${{ parameters.buildExternals }}
           builds:
             - name: ''
             - name: nodeps
@@ -316,6 +348,7 @@ stages:
         parameters:
           name: native_tizen_linux
           displayName: Tizen
+          buildExternals: ${{ parameters.buildExternals }}
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(TIZEN_LINUX_PACKAGES)
           target: externals-tizen
@@ -326,6 +359,7 @@ stages:
     jobs:
       - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
         parameters:
+          buildExternals: ${{ parameters.buildExternals }}
           artifactName: native
           emscripten:
             - 2.0.5
