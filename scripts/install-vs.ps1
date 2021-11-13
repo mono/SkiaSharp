@@ -37,15 +37,4 @@ Get-ChildItem "$env:TEMP\dd_*" |
   Where-Object { $_.CreationTime -gt $startTime } |
   Copy-Item -Destination "$vsLogs"
 
-$vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-
-Write-Host "Setting Environment Variables..."
-$installationPath = & $vswhere -latest -prerelease -property installationPath
-Write-Host "##vso[task.prependpath]$installationPath\MSBuild\Current\Bin"
-Write-Host "##vso[task.setvariable variable=VS_INSTALL]$installationPath"
-Write-Host "##vso[task.setvariable variable=VSINSTALLDIR]$installationPath"
-
-Write-Host "Installed Visual Studio Versions:"
-& $vswhere -all -prerelease -property installationPath
-
 exit $LASTEXITCODE
