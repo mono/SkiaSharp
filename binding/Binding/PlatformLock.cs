@@ -106,6 +106,7 @@ namespace SkiaSharp.Internals
 				if (_cs != IntPtr.Zero) {
 					DeleteCriticalSection (_cs);
 					Marshal.FreeHGlobal (_cs);
+					_cs = IntPtr.Zero;
 				}
 			}
 

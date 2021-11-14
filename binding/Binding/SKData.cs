@@ -301,10 +301,11 @@ namespace SkiaSharp
 		private sealed class SKDataStatic : SKData
 		{
 			internal SKDataStatic (IntPtr x)
-				: base (x, true)
+				: base (x, false)
 			{
-				IgnorePublicDispose = true;
 			}
+
+			protected override void Dispose (bool disposing) { }
 		}
 	}
 }
