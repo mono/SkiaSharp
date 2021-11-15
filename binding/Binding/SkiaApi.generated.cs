@@ -1474,6 +1474,20 @@ namespace SkiaSharp
 			(sk_canvas_concat_delegate ??= GetSymbol<Delegates.sk_canvas_concat> ("sk_canvas_concat")).Invoke (param0, param1);
 		#endif
 
+		// void sk_canvas_concat_m44(sk_canvas_t*, const sk_m44_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_concat_m44 (sk_canvas_t param0, SKMatrix4x4* param1);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_canvas_concat_m44 (sk_canvas_t param0, SKMatrix4x4* param1);
+		}
+		private static Delegates.sk_canvas_concat_m44 sk_canvas_concat_m44_delegate;
+		internal static void sk_canvas_concat_m44 (sk_canvas_t param0, SKMatrix4x4* param1) =>
+			(sk_canvas_concat_m44_delegate ??= GetSymbol<Delegates.sk_canvas_concat_m44> ("sk_canvas_concat_m44")).Invoke (param0, param1);
+		#endif
+
 		// void sk_canvas_destroy(sk_canvas_t*)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1994,6 +2008,20 @@ namespace SkiaSharp
 		private static Delegates.sk_canvas_get_total_matrix sk_canvas_get_total_matrix_delegate;
 		internal static void sk_canvas_get_total_matrix (sk_canvas_t ccanvas, SKMatrix* matrix) =>
 			(sk_canvas_get_total_matrix_delegate ??= GetSymbol<Delegates.sk_canvas_get_total_matrix> ("sk_canvas_get_total_matrix")).Invoke (ccanvas, matrix);
+		#endif
+
+		// void sk_canvas_get_total_matrix_m44(sk_canvas_t* ccanvas, sk_m44_t* matrix)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_get_total_matrix_m44 (sk_canvas_t ccanvas, SKMatrix4x4* matrix);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_canvas_get_total_matrix_m44 (sk_canvas_t ccanvas, SKMatrix4x4* matrix);
+		}
+		private static Delegates.sk_canvas_get_total_matrix_m44 sk_canvas_get_total_matrix_m44_delegate;
+		internal static void sk_canvas_get_total_matrix_m44 (sk_canvas_t ccanvas, SKMatrix4x4* matrix) =>
+			(sk_canvas_get_total_matrix_m44_delegate ??= GetSymbol<Delegates.sk_canvas_get_total_matrix_m44> ("sk_canvas_get_total_matrix_m44")).Invoke (ccanvas, matrix);
 		#endif
 
 		// bool sk_canvas_is_clip_empty(sk_canvas_t* ccanvas)
@@ -14857,6 +14885,157 @@ namespace SkiaSharp
 			hash.Add (fYCount);
 			hash.Add (fBounds);
 			hash.Add (fColors);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_m44_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKMatrix4x4 : IEquatable<SKMatrix4x4> {
+		// public float m11
+		private Single m11;
+		public Single M11 {
+			readonly get => m11;
+			set => m11 = value;
+		}
+
+		// public float m12
+		private Single m12;
+		public Single M12 {
+			readonly get => m12;
+			set => m12 = value;
+		}
+
+		// public float m13
+		private Single m13;
+		public Single M13 {
+			readonly get => m13;
+			set => m13 = value;
+		}
+
+		// public float m14
+		private Single m14;
+		public Single M14 {
+			readonly get => m14;
+			set => m14 = value;
+		}
+
+		// public float m21
+		private Single m21;
+		public Single M21 {
+			readonly get => m21;
+			set => m21 = value;
+		}
+
+		// public float m22
+		private Single m22;
+		public Single M22 {
+			readonly get => m22;
+			set => m22 = value;
+		}
+
+		// public float m23
+		private Single m23;
+		public Single M23 {
+			readonly get => m23;
+			set => m23 = value;
+		}
+
+		// public float m24
+		private Single m24;
+		public Single M24 {
+			readonly get => m24;
+			set => m24 = value;
+		}
+
+		// public float m31
+		private Single m31;
+		public Single M31 {
+			readonly get => m31;
+			set => m31 = value;
+		}
+
+		// public float m32
+		private Single m32;
+		public Single M32 {
+			readonly get => m32;
+			set => m32 = value;
+		}
+
+		// public float m33
+		private Single m33;
+		public Single M33 {
+			readonly get => m33;
+			set => m33 = value;
+		}
+
+		// public float m34
+		private Single m34;
+		public Single M34 {
+			readonly get => m34;
+			set => m34 = value;
+		}
+
+		// public float m41
+		private Single m41;
+		public Single M41 {
+			readonly get => m41;
+			set => m41 = value;
+		}
+
+		// public float m42
+		private Single m42;
+		public Single M42 {
+			readonly get => m42;
+			set => m42 = value;
+		}
+
+		// public float m43
+		private Single m43;
+		public Single M43 {
+			readonly get => m43;
+			set => m43 = value;
+		}
+
+		// public float m44
+		private Single m44;
+		public Single M44 {
+			readonly get => m44;
+			set => m44 = value;
+		}
+
+		public readonly bool Equals (SKMatrix4x4 obj) =>
+			m11 == obj.m11 && m12 == obj.m12 && m13 == obj.m13 && m14 == obj.m14 && m21 == obj.m21 && m22 == obj.m22 && m23 == obj.m23 && m24 == obj.m24 && m31 == obj.m31 && m32 == obj.m32 && m33 == obj.m33 && m34 == obj.m34 && m41 == obj.m41 && m42 == obj.m42 && m43 == obj.m43 && m44 == obj.m44;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKMatrix4x4 f && Equals (f);
+
+		public static bool operator == (SKMatrix4x4 left, SKMatrix4x4 right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKMatrix4x4 left, SKMatrix4x4 right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (m11);
+			hash.Add (m12);
+			hash.Add (m13);
+			hash.Add (m14);
+			hash.Add (m21);
+			hash.Add (m22);
+			hash.Add (m23);
+			hash.Add (m24);
+			hash.Add (m31);
+			hash.Add (m32);
+			hash.Add (m33);
+			hash.Add (m34);
+			hash.Add (m41);
+			hash.Add (m42);
+			hash.Add (m43);
+			hash.Add (m44);
 			return hash.ToHashCode ();
 		}
 

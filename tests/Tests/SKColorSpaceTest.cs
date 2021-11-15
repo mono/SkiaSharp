@@ -364,15 +364,5 @@ namespace SkiaSharp.Tests
 			Assert.False(colorspace1.IsDisposed);
 			Assert.Equal(2, colorspace1.GetReferenceCount());
 		}
-
-		private static void AssertMatrix(float[] expected, SKMatrix44 actual)
-		{
-			var actualArray = actual
-				.ToRowMajor()
-				.Select(x => (float)Math.Round(x, 5))
-				.ToArray();
-
-			Assert.Equal(expected, actualArray);
-		}
 	}
 }

@@ -3,6 +3,8 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	[Obsolete ("Use SKMatrix4x4 instead.")]
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public unsafe class SKMatrix44 : SKObject
 	{
 		internal SKMatrix44 (IntPtr x, bool owns)
@@ -117,14 +119,20 @@ namespace SkiaSharp
 
 		// From
 
-		public static SKMatrix44 FromRowMajor (float[] src)
+		public static SKMatrix44 FromRowMajor (float[] src) =>
+			FromRowMajor (src.AsSpan());
+
+		private static SKMatrix44 FromRowMajor (ReadOnlySpan<float> src)
 		{
 			var matrix = new SKMatrix44 ();
 			matrix.SetRowMajor (src);
 			return matrix;
 		}
 
-		public static SKMatrix44 FromColumnMajor (float[] src)
+		public static SKMatrix44 FromColumnMajor (float[] src) =>
+			FromColumnMajor (src.AsSpan ());
+
+		private static SKMatrix44 FromColumnMajor (ReadOnlySpan<float> src)
 		{
 			var matrix = new SKMatrix44 ();
 			matrix.SetColumnMajor (src);
@@ -140,7 +148,10 @@ namespace SkiaSharp
 			return dst;
 		}
 
-		public void ToColumnMajor (float[] dst)
+		public void ToColumnMajor (float[] dst) =>
+			ToColumnMajor (dst.AsSpan());
+
+		private void ToColumnMajor (Span<float> dst)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
@@ -159,7 +170,10 @@ namespace SkiaSharp
 			return dst;
 		}
 
-		public void ToRowMajor (float[] dst)
+		public void ToRowMajor (float[] dst) =>
+			ToRowMajor (dst.AsSpan ());
+
+		private void ToRowMajor (Span<float> dst)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
@@ -188,7 +202,10 @@ namespace SkiaSharp
 		public void SetIdentity () =>
 			SkiaApi.sk_matrix44_set_identity (Handle);
 
-		public void SetColumnMajor (float[] src)
+		public void SetColumnMajor (float[] src) =>
+			SetColumnMajor (src.AsSpan ());
+
+		private void SetColumnMajor (ReadOnlySpan<float> src)
 		{
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
@@ -200,7 +217,10 @@ namespace SkiaSharp
 			}
 		}
 
-		public void SetRowMajor (float[] src)
+		public void SetRowMajor (float[] src) =>
+			SetRowMajor (src.AsSpan ());
+
+		private void SetRowMajor (ReadOnlySpan<float> src)
 		{
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
@@ -424,8 +444,15 @@ namespace SkiaSharp
 
 		// operators
 
-		public static implicit operator SKMatrix44 (SKMatrix matrix) =>
+		public static explicit operator SKMatrix44 (SKMatrix matrix) =>
 			new SKMatrix44 (matrix);
+
+		public static explicit operator SKMatrix44 (SKMatrix4x4 matrix)
+		{
+			Span<float> mat = stackalloc float[16];
+			matrix.ToColumnMajor (mat);
+			return FromColumnMajor (mat);
+		}
 
 		internal static SKMatrix44 GetObject (IntPtr handle, bool owns = true) =>
 			GetOrAddObject (handle, owns, (h, o) => new SKMatrix44 (h, o));

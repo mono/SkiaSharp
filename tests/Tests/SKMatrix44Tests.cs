@@ -3,6 +3,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
+	[Obsolete]
 	public class SKMatrix44Test : SKTest
 	{
 		[SkippableFact]

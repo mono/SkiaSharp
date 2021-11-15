@@ -1,7 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	[Obsolete ("Use SKMatrix4x4 instead.")]
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public unsafe class SK3dView : SKObject, ISKSkipObjectRegistration
 	{
 		internal SK3dView (IntPtr x, bool owns)

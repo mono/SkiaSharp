@@ -1,14 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public abstract class SKTest : BaseTest
 	{
-		protected const float EPSILON = 0.0001f;
-		protected const int PRECISION = 4;
+		protected const float EPSILON = 0.00001f;
+		protected const int PRECISION = 5;
 
 		private static readonly Random random = new Random();
 
@@ -139,6 +140,57 @@ namespace SkiaSharp.Tests
 				.Select(v => (int)(v * precision) / precision);
 
 			Assert.Equal(eTrimmed, aTrimmed);
+		}
+
+		protected static void AssertMatrix(SKMatrix4x4 expected, SKMatrix4x4 actual, int precision = PRECISION)
+		{
+			var expectedArray = new[]
+			{
+				expected.M11, expected.M12, expected.M13, expected.M14,
+				expected.M21, expected.M22, expected.M23, expected.M24,
+				expected.M31, expected.M32, expected.M33, expected.M34,
+				expected.M41, expected.M42, expected.M43, expected.M44,
+			};
+
+			var actualArray = new[]
+			{
+				actual.M11, actual.M12, actual.M13, actual.M14,
+				actual.M21, actual.M22, actual.M23, actual.M24,
+				actual.M31, actual.M32, actual.M33, actual.M34,
+				actual.M41, actual.M42, actual.M43, actual.M44,
+			};
+
+			AssertSimilar(expectedArray, actualArray, precision);
+		}
+
+		protected static void AssertMatrix(Matrix4x4 expected, SKMatrix4x4 actual, int precision = PRECISION)
+		{
+			var expectedArray = new[]
+			{
+				expected.M11, expected.M12, expected.M13, expected.M14,
+				expected.M21, expected.M22, expected.M23, expected.M24,
+				expected.M31, expected.M32, expected.M33, expected.M34,
+				expected.M41, expected.M42, expected.M43, expected.M44,
+			};
+
+			var actualArray = new[]
+			{
+				actual.M11, actual.M12, actual.M13, actual.M14,
+				actual.M21, actual.M22, actual.M23, actual.M24,
+				actual.M31, actual.M32, actual.M33, actual.M34,
+				actual.M41, actual.M42, actual.M43, actual.M44,
+			};
+
+			AssertSimilar(expectedArray, actualArray, precision);
+		}
+
+		[Obsolete]
+		protected static void AssertMatrix(float[] expected, SKMatrix44 actual, int precision = PRECISION)
+		{
+			var actualArray = actual
+				.ToRowMajor();
+
+			AssertSimilar(expected, actualArray, precision);
 		}
 
 		protected GlContext CreateGlContext()

@@ -234,6 +234,13 @@ namespace SkiaSharp
 			}
 		}
 
+		public void Concat (in SKMatrix4x4 m)
+		{
+			fixed (SKMatrix4x4* ptr = &m) {
+				SkiaApi.sk_canvas_concat_m44 (Handle, ptr);
+			}
+		}
+
 		// Clip*
 
 		public void ClipRect (SKRect rect, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
@@ -956,6 +963,14 @@ namespace SkiaSharp
 			get {
 				SKMatrix matrix;
 				SkiaApi.sk_canvas_get_total_matrix (Handle, &matrix);
+				return matrix;
+			}
+		}
+
+		public SKMatrix4x4 TotalMatrix4x4 {
+			get {
+				SKMatrix4x4 matrix;
+				SkiaApi.sk_canvas_get_total_matrix_m44 (Handle, &matrix);
 				return matrix;
 			}
 		}

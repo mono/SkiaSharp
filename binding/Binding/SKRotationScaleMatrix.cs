@@ -19,6 +19,9 @@ namespace SkiaSharp
 		public readonly SKMatrix ToMatrix () =>
 			new SKMatrix (fSCos, -fSSin, fTX, fSSin, fSCos, fTY, 0, 0, 1);
 
+		public readonly SKMatrix4x4 ToMatrix4x4 () =>
+			ToMatrix ();
+
 		public static SKRotationScaleMatrix CreateDegrees (float scale, float degrees, float tx, float ty, float anchorX, float anchorY) =>
 			Create (scale, degrees * SKMatrix.DegreesToRadians, tx, ty, anchorX, anchorY);
 
