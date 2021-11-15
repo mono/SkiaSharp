@@ -6,7 +6,8 @@
         <_SkiaSharpExpandNativeReferencesPath>obj\$(Configuration)\$(TargetFramework)\skiasharpextract\</_SkiaSharpExpandNativeReferencesPath>
     </PropertyGroup>
 
-    <Target Name="_SkiaSharpExpandNativeReferencesFixes" BeforeTargets="_ExpandNativeReferences" Condition=" '$(OS)' == 'Unix' and !Exists('$(_SkiaSharpExpandNativeReferencesStamp)') ">
+    <Target Name="_SkiaSharpExpandNativeReferencesFixes" BeforeTargets="_ExpandNativeReferences" Condition=" '$(OS)' == 'Unix' "
+            Inputs="$(MSBuildThisFileFullPath)" Outputs="$(_SkiaSharpExpandNativeReferencesStamp)">
 
         <RemoveDir Directories="$(_SkiaSharpExpandNativeReferencesPath)" />
         <MakeDir Directories="$(_SkiaSharpExpandNativeReferencesPath)" />

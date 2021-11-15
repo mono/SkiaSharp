@@ -6,7 +6,8 @@
         <_HarfBuzzSharpExpandNativeReferencesPath>obj\$(Configuration)\$(TargetFramework)\harfbuzzsharpextract\</_HarfBuzzSharpExpandNativeReferencesPath>
     </PropertyGroup>
 
-    <Target Name="_HarfBuzzSharpExpandNativeReferencesFixes" BeforeTargets="_ExpandNativeReferences" Condition=" '$(OS)' == 'Unix' and !Exists('$(_HarfBuzzSharpExpandNativeReferencesStamp)') ">
+    <Target Name="_HarfBuzzSharpExpandNativeReferencesFixes" BeforeTargets="_ExpandNativeReferences" Condition=" '$(OS)' == 'Unix' "
+            Inputs="$(MSBuildThisFileFullPath)" Outputs="$(_HarfBuzzSharpExpandNativeReferencesStamp)">
 
         <RemoveDir Directories="$(_HarfBuzzSharpExpandNativeReferencesPath)" />
         <MakeDir Directories="$(_HarfBuzzSharpExpandNativeReferencesPath)" />
