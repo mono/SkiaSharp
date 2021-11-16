@@ -56,13 +56,13 @@ namespace SkiaSharp
 
 		// properties
 
-		public SKMatrix Matrix =>
+		public readonly SKMatrix Matrix =>
 			new (m11, m21, m41,
 				 m12, m22, m42,
 				 m14, m24, m44);
 
 		public float this[int index] {
-			get => index switch {
+			readonly get => index switch {
 				0 => m11,
 				1 => m12,
 				2 => m13,
@@ -107,7 +107,7 @@ namespace SkiaSharp
 		}
 
 		public float this[int row, int column] {
-			get {
+			readonly get {
 				if (row < 0 || row > 3)
 					throw new ArgumentOutOfRangeException (nameof (row));
 				if (column < 0 || column > 3)
@@ -175,14 +175,14 @@ namespace SkiaSharp
 
 		// To*
 
-		public float[] ToColumnMajor ()
+		public readonly float[] ToColumnMajor ()
 		{
 			var dst = new float[16];
 			ToColumnMajor (dst);
 			return dst;
 		}
 
-		public void ToColumnMajor (Span<float> dst)
+		public readonly void ToColumnMajor (Span<float> dst)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
@@ -210,14 +210,14 @@ namespace SkiaSharp
 			dst[15] = m44;
 		}
 
-		public float[] ToRowMajor ()
+		public readonly float[] ToRowMajor ()
 		{
 			var dst = new float[16];
 			ToRowMajor (dst);
 			return dst;
 		}
 
-		public void ToRowMajor (Span<float> dst)
+		public readonly void ToRowMajor (Span<float> dst)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
@@ -467,7 +467,7 @@ namespace SkiaSharp
 
 		// Invert
 
-		public bool Invert (out SKMatrix4x4 inverse)
+		public readonly bool Invert (out SKMatrix4x4 inverse)
 		{
 			float a = m11, b = m12, c = m13, d = m14;
 			float e = m21, f = m22, g = m23, h = m24;
@@ -543,7 +543,7 @@ namespace SkiaSharp
 
 		// MapVector4
 
-		public float[] MapVector4 (float x, float y, float z, float w)
+		public readonly float[] MapVector4 (float x, float y, float z, float w)
 		{
 			Span<float> srcVector4 = stackalloc float[4] { x, y, z, w };
 			var dstVector4 = new float[4];
@@ -551,7 +551,7 @@ namespace SkiaSharp
 			return dstVector4;
 		}
 
-		public void MapVector4 (ReadOnlySpan<float> srcVector4, Span<float> dstVector4)
+		public readonly void MapVector4 (ReadOnlySpan<float> srcVector4, Span<float> dstVector4)
 		{
 			if (srcVector4.Length % 4 != 0)
 				throw new ArgumentException ("The source vector array must be multiples of 4.", nameof (srcVector4));
@@ -580,7 +580,7 @@ namespace SkiaSharp
 
 		// MapPoints
 
-		public SKPoint MapPoint (in SKPoint src)
+		public readonly SKPoint MapPoint (in SKPoint src)
 		{
 			Span<SKPoint> s = stackalloc[] { src };
 			Span<SKPoint> d = stackalloc SKPoint[1];
@@ -590,7 +590,7 @@ namespace SkiaSharp
 			return d[0];
 		}
 
-		public void MapPoints (ReadOnlySpan<SKPoint> src, Span<SKPoint> dst)
+		public readonly void MapPoints (ReadOnlySpan<SKPoint> src, Span<SKPoint> dst)
 		{
 			if (src.Length != dst.Length)
 				throw new ArgumentException ("The destination array must have the same number of entries as the source array.", nameof (dst));
@@ -605,7 +605,7 @@ namespace SkiaSharp
 
 		// MapVector2
 
-		public float[] MapVector2 (float x, float y)
+		public readonly float[] MapVector2 (float x, float y)
 		{
 			Span<float> src2 = stackalloc float[2] { x, y };
 			var dst4 = new float[4];
@@ -613,7 +613,7 @@ namespace SkiaSharp
 			return dst4;
 		}
 
-		public void MapVector2 (ReadOnlySpan<float> src2, Span<float> dst4)
+		public readonly void MapVector2 (ReadOnlySpan<float> src2, Span<float> dst4)
 		{
 			if (src2.Length % 2 != 0)
 				throw new ArgumentException ("The source vector array must be a set of pairs.", nameof (src2));
@@ -642,7 +642,7 @@ namespace SkiaSharp
 
 		// GetDeterminant
 
-		public double GetDeterminant ()
+		public readonly double GetDeterminant ()
 		{
 			float a = m11, b = m12, c = m13, d = m14;
 			float e = m21, f = m22, g = m23, h = m24;

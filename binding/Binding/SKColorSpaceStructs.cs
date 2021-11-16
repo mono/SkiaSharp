@@ -45,8 +45,7 @@ namespace SkiaSharp
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public static SKColorSpaceTransferFn ToColorSpaceTransferFn (this SKColorSpaceRenderTargetGamma gamma) =>
-			gamma switch
-			{
+			gamma switch {
 				SKColorSpaceRenderTargetGamma.Linear => SKColorSpaceTransferFn.Linear,
 				SKColorSpaceRenderTargetGamma.Srgb => SKColorSpaceTransferFn.Srgb,
 				_ => throw new ArgumentOutOfRangeException (nameof (gamma)),
@@ -55,8 +54,7 @@ namespace SkiaSharp
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public static SKColorSpaceTransferFn ToColorSpaceTransferFn (this SKNamedGamma gamma) =>
-			gamma switch
-			{
+			gamma switch {
 				SKNamedGamma.Linear => SKColorSpaceTransferFn.Linear,
 				SKNamedGamma.Srgb => SKColorSpaceTransferFn.Srgb,
 				SKNamedGamma.TwoDotTwoCurve => SKColorSpaceTransferFn.TwoDotTwo,
@@ -67,8 +65,7 @@ namespace SkiaSharp
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		[Obsolete]
 		public static SKColorSpaceXyz ToColorSpaceXyz (this SKColorSpaceGamut gamut) =>
-			gamut switch
-			{
+			gamut switch {
 				SKColorSpaceGamut.AdobeRgb => SKColorSpaceXyz.AdobeRgb,
 				SKColorSpaceGamut.Dcip3D65 => SKColorSpaceXyz.Dcip3,
 				SKColorSpaceGamut.Rec2020 => SKColorSpaceXyz.Rec2020,
@@ -145,9 +142,11 @@ namespace SkiaSharp
 			return xyz != null;
 		}
 
+		[Obsolete]
 		internal readonly SKMatrix44 ToMatrix44 () =>
 			ToMatrix44 (out var toXYZ) ? toXYZ : null;
 
+		[Obsolete]
 		internal readonly bool ToMatrix44 (out SKMatrix44 toXyzD50)
 		{
 			if (!ToColorSpaceXyz (out var xyz)) {
@@ -319,17 +318,17 @@ namespace SkiaSharp
 
 		public SKColorSpaceXyz (float value)
 		{
-			fM00 = value;
-			fM01 = value;
-			fM02 = value;
+			m11 = value;
+			m12 = value;
+			m13 = value;
 
-			fM10 = value;
-			fM11 = value;
-			fM12 = value;
+			m21 = value;
+			m22 = value;
+			m23 = value;
 
-			fM20 = value;
-			fM21 = value;
-			fM22 = value;
+			m31 = value;
+			m32 = value;
+			m33 = value;
 		}
 
 		public SKColorSpaceXyz (float[] values)
@@ -339,58 +338,58 @@ namespace SkiaSharp
 			if (values.Length != 9)
 				throw new ArgumentException ("The matrix array must have a length of 9.", nameof (values));
 
-			fM00 = values[0];
-			fM01 = values[1];
-			fM02 = values[2];
+			m11 = values[0];
+			m12 = values[1];
+			m13 = values[2];
 
-			fM10 = values[3];
-			fM11 = values[4];
-			fM12 = values[5];
+			m21 = values[3];
+			m22 = values[4];
+			m23 = values[5];
 
-			fM20 = values[6];
-			fM21 = values[7];
-			fM22 = values[8];
+			m31 = values[6];
+			m32 = values[7];
+			m33 = values[8];
 		}
 
 		public SKColorSpaceXyz (
-			float m00, float m01, float m02,
-			float m10, float m11, float m12,
-			float m20, float m21, float m22)
+			float m11, float m12, float m13,
+			float m21, float m22, float m23,
+			float m31, float m32, float m33)
 		{
-			fM00 = m00;
-			fM01 = m01;
-			fM02 = m02;
+			this.m11 = m11;
+			this.m12 = m12;
+			this.m13 = m13;
 
-			fM10 = m10;
-			fM11 = m11;
-			fM12 = m12;
+			this.m21 = m21;
+			this.m22 = m22;
+			this.m23 = m23;
 
-			fM20 = m20;
-			fM21 = m21;
-			fM22 = m22;
+			this.m31 = m31;
+			this.m32 = m32;
+			this.m33 = m33;
 		}
 
 		public float[] Values {
 			readonly get => new float[9] {
-				fM00, fM01, fM02,
-				fM10, fM11, fM12,
-				fM20, fM21, fM22,
+				m11, m12, m13,
+				m21, m22, m23,
+				m31, m32, m33,
 			};
 			set {
 				if (value.Length != 9)
 					throw new ArgumentException ("The matrix array must have a length of 9.", nameof (value));
 
-				fM00 = value[0];
-				fM01 = value[1];
-				fM02 = value[2];
+				m11 = value[0];
+				m12 = value[1];
+				m13 = value[2];
 
-				fM10 = value[3];
-				fM11 = value[4];
-				fM12 = value[5];
+				m21 = value[3];
+				m22 = value[4];
+				m23 = value[5];
 
-				fM20 = value[6];
-				fM21 = value[7];
-				fM22 = value[8];
+				m31 = value[6];
+				m32 = value[7];
+				m33 = value[8];
 			}
 		}
 
@@ -402,17 +401,16 @@ namespace SkiaSharp
 					throw new ArgumentOutOfRangeException (nameof (y));
 
 				var idx = x + (y * 3);
-				return idx switch
-				{
-					0 => fM00,
-					1 => fM01,
-					2 => fM02,
-					3 => fM10,
-					4 => fM11,
-					5 => fM12,
-					6 => fM20,
-					7 => fM21,
-					8 => fM22,
+				return idx switch {
+					0 => m11,
+					1 => m12,
+					2 => m13,
+					3 => m21,
+					4 => m22,
+					5 => m23,
+					6 => m31,
+					7 => m32,
+					8 => m33,
 					_ => throw new ArgumentOutOfRangeException ("index")
 				};
 			}
@@ -434,12 +432,24 @@ namespace SkiaSharp
 			return result;
 		}
 
+		public static SKColorSpaceXyz CreateIdentity() =>
+			new (1, 0, 0,
+				 0, 1, 0,
+				 0, 0, 1);
+
+		[Obsolete]
 		internal readonly SKMatrix44 ToMatrix44 ()
 		{
 			var matrix = new SKMatrix44 ();
 			matrix.Set3x3RowMajor (Values);
 			return matrix;
 		}
+
+		internal readonly SKMatrix4x4 ToMatrix4x4 () =>
+			new (m11, m12, m13, 0,
+				 m21, m22, m23, 0,
+				 m31, m32, m33, 0,
+				 0, 0, 0, 1);
 	}
 
 	public unsafe class SKColorSpaceIccProfile : SKObject

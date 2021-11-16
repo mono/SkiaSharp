@@ -14359,35 +14359,35 @@ namespace SkiaSharp
 	// sk_colorspace_xyz_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKColorSpaceXyz : IEquatable<SKColorSpaceXyz> {
-		// public float fM00
-		private Single fM00;
+		// public float m11
+		private Single m11;
 
-		// public float fM01
-		private Single fM01;
+		// public float m12
+		private Single m12;
 
-		// public float fM02
-		private Single fM02;
+		// public float m13
+		private Single m13;
 
-		// public float fM10
-		private Single fM10;
+		// public float m21
+		private Single m21;
 
-		// public float fM11
-		private Single fM11;
+		// public float m22
+		private Single m22;
 
-		// public float fM12
-		private Single fM12;
+		// public float m23
+		private Single m23;
 
-		// public float fM20
-		private Single fM20;
+		// public float m31
+		private Single m31;
 
-		// public float fM21
-		private Single fM21;
+		// public float m32
+		private Single m32;
 
-		// public float fM22
-		private Single fM22;
+		// public float m33
+		private Single m33;
 
 		public readonly bool Equals (SKColorSpaceXyz obj) =>
-			fM00 == obj.fM00 && fM01 == obj.fM01 && fM02 == obj.fM02 && fM10 == obj.fM10 && fM11 == obj.fM11 && fM12 == obj.fM12 && fM20 == obj.fM20 && fM21 == obj.fM21 && fM22 == obj.fM22;
+			m11 == obj.m11 && m12 == obj.m12 && m13 == obj.m13 && m21 == obj.m21 && m22 == obj.m22 && m23 == obj.m23 && m31 == obj.m31 && m32 == obj.m32 && m33 == obj.m33;
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKColorSpaceXyz f && Equals (f);
@@ -14401,15 +14401,15 @@ namespace SkiaSharp
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
-			hash.Add (fM00);
-			hash.Add (fM01);
-			hash.Add (fM02);
-			hash.Add (fM10);
-			hash.Add (fM11);
-			hash.Add (fM12);
-			hash.Add (fM20);
-			hash.Add (fM21);
-			hash.Add (fM22);
+			hash.Add (m11);
+			hash.Add (m12);
+			hash.Add (m13);
+			hash.Add (m21);
+			hash.Add (m22);
+			hash.Add (m23);
+			hash.Add (m31);
+			hash.Add (m32);
+			hash.Add (m33);
 			return hash.ToHashCode ();
 		}
 

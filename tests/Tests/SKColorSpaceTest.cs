@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -86,7 +85,7 @@ namespace SkiaSharp.Tests
 			{
 				var colorspace = SKColorSpace.CreateRgb(
 					new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
-					SKMatrix44.CreateIdentity());
+					SKColorSpaceXyz.CreateIdentity());
 
 				Assert.NotNull(colorspace);
 
@@ -108,7 +107,7 @@ namespace SkiaSharp.Tests
 		{
 			var colorspace = SKColorSpace.CreateRgb(
 				new SKColorSpaceTransferFn { A = 0.1f, B = 0.2f, C = 0.3f, D = 0.4f, E = 0.5f, F = 0.6f },
-				SKMatrix44.CreateIdentity());
+				SKColorSpaceXyz.CreateIdentity());
 			var handle = colorspace.Handle;
 			Assert.Equal(1, handle.GetReferenceCount(false));
 
@@ -180,7 +179,7 @@ namespace SkiaSharp.Tests
 			{
 				var colorspace = SKColorSpace.CreateRgb(
 					new SKColorSpaceTransferFn { A = 0.1f, B = 0.2f, C = 0.3f, D = 0.4f, E = 0.5f, F = 0.6f },
-					SKMatrix44.CreateIdentity());
+					SKColorSpaceXyz.CreateIdentity());
 
 				Assert.NotNull(colorspace);
 
@@ -201,6 +200,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void SrgbColorsSpaceIsNamedSrgb()
 		{
@@ -210,8 +210,9 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorSpaceType.Rgb, colorspace.Type);
 		}
 
+		[Obsolete]
 		[SkippableFact]
-		public void AdobeRGB1998IsRGB()
+		public void AdobeRGB1998IsRGBObsolete()
 		{
 			var icc = Path.Combine(PathToImages, "AdobeRGB1998.icc");
 
@@ -251,6 +252,39 @@ namespace SkiaSharp.Tests
 			AssertMatrix(fromXYZ, colorspace.FromXyzD50());
 		}
 
+		[SkippableFact]
+		public void AdobeRGB1998IsRGB()
+		{
+			var icc = Path.Combine(PathToImages, "AdobeRGB1998.icc");
+
+			var colorspace = SKColorSpace.CreateIcc(File.ReadAllBytes(icc));
+
+			Assert.Equal(SKColorSpaceXyz.AdobeRgb, colorspace.ToColorSpaceXyz());
+
+			var fnValues = new[] { 2.2f, 1f, 0f, 0f, 0f, 0f, 0f };
+			Assert.True(colorspace.GetNumericalTransferFunction(out var fn));
+			Assert.Equal(fnValues, fn.Values);
+
+			var toXYZ = new SKMatrix4x4(
+				0.60974f, 0.20528f, 0.14919f, 0f,
+				0.31111f, 0.62567f, 0.06322f, 0f,
+				0.01947f, 0.06087f, 0.74457f, 0f,
+				0f, 0f, 0f, 1f);
+			AssertMatrix(toXYZ, colorspace.ToColorSpaceXyz().ToMatrix4x4());
+
+			Assert.True(colorspace.ToColorSpaceXyz(out var xyz));
+			AssertMatrix(toXYZ, xyz.ToMatrix4x4());
+
+			var fromXYZ = new SKMatrix4x4(
+				1.96253f, -0.61068f, -0.34137f, 0f,
+				-0.97876f, 1.91615f, 0.03342f, 0f,
+				0.02869f, -0.14067f, 1.34926f, 0f,
+				0f, 0f, 0f, 1f);
+			Assert.True(xyz.ToMatrix4x4().Invert(out var inverted));
+			AssertMatrix(fromXYZ, inverted);
+		}
+
+		[Obsolete]
 		[SkippableFact(Skip = "CMYK is not supported.")]
 		public void USWebCoatedSWOPIsCMYK()
 		{
@@ -341,7 +375,9 @@ namespace SkiaSharp.Tests
 			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace1.GetType().FullName);
 			Assert.Equal(2, colorspace1.GetReferenceCount());
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			var colorspace2 = SKColorSpace.CreateRgb(SKNamedGamma.Linear, SKColorSpaceGamut.Srgb);
+#pragma warning restore CS0618 // Type or member is obsolete
 			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace2.GetType().FullName);
 			Assert.Equal(2, colorspace2.GetReferenceCount());
 
@@ -349,7 +385,7 @@ namespace SkiaSharp.Tests
 
 			var colorspace3 = SKColorSpace.CreateRgb(
 				new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
-				SKMatrix44.CreateIdentity());
+				SKColorSpaceXyz.CreateIdentity());
 			Assert.NotSame(colorspace1, colorspace3);
 
 			colorspace3.Dispose();
