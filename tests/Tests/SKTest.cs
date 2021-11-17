@@ -142,6 +142,15 @@ namespace SkiaSharp.Tests
 			Assert.Equal(eTrimmed, aTrimmed);
 		}
 
+		protected static void AssertMatrix(SKMatrix expected, SKMatrix actual, int precision = PRECISION)
+		{
+			var expectedArray = expected.Values;
+
+			var actualArray = actual.Values;
+
+			AssertSimilar(expectedArray, actualArray, precision);
+		}
+
 		protected static void AssertMatrix(SKMatrix4x4 expected, SKMatrix4x4 actual, int precision = PRECISION)
 		{
 			var expectedArray = new[]

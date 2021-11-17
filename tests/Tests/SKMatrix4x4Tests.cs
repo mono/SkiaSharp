@@ -134,6 +134,72 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ConvertFromTranslationMatrix3x3ToMatrix4x4()
+		{
+			var matrix3x3 = SKMatrix.CreateTranslation(10, 10);
+			var matrix4x4 = SKMatrix4x4.CreateTranslation(10, 10, 0);
+
+			var converted = (SKMatrix4x4)matrix3x3;
+
+			AssertMatrix(matrix4x4, converted);
+		}
+
+		[SkippableFact]
+		public void ConvertFromScaleMatrix3x3ToMatrix4x4()
+		{
+			var matrix3x3 = SKMatrix.CreateScale(2, 3);
+			var matrix4x4 = SKMatrix4x4.CreateScale(2, 3, 1);
+
+			var converted = (SKMatrix4x4)matrix3x3;
+
+			AssertMatrix(matrix4x4, converted);
+		}
+
+		[SkippableFact]
+		public void ConvertFromRotationMatrix3x3ToMatrix4x4()
+		{
+			var matrix3x3 = SKMatrix.CreateRotationDegrees(35);
+			var matrix4x4 = SKMatrix4x4.CreateRotationDegrees(0, 0, 1, 35);
+
+			var converted = (SKMatrix4x4)matrix3x3;
+
+			AssertMatrix(matrix4x4, converted);
+		}
+
+		[SkippableFact]
+		public void ConvertFromTranslationMatrix4x4ToMatrix3x3()
+		{
+			var matrix3x3 = SKMatrix.CreateTranslation(10, 10);
+			var matrix4x4 = SKMatrix4x4.CreateTranslation(10, 10, 0);
+
+			var converted = (SKMatrix)matrix4x4;
+
+			AssertMatrix(matrix3x3, converted);
+		}
+
+		[SkippableFact]
+		public void ConvertFromScaleMatrix4x4ToMatrix3x3()
+		{
+			var matrix3x3 = SKMatrix.CreateScale(2, 3);
+			var matrix4x4 = SKMatrix4x4.CreateScale(2, 3, 1);
+
+			var converted = (SKMatrix)matrix4x4;
+
+			AssertMatrix(matrix3x3, converted);
+		}
+
+		[SkippableFact]
+		public void ConvertFromRotationMatrix4x4ToMatrix3x3()
+		{
+			var matrix3x3 = SKMatrix.CreateRotationDegrees(35);
+			var matrix4x4 = SKMatrix4x4.CreateRotationDegrees(0, 0, 1, 35);
+
+			var converted = (SKMatrix)matrix4x4;
+
+			AssertMatrix(matrix3x3, converted);
+		}
+
+		[SkippableFact]
 		public void RowMajorColumnMajorTransposes()
 		{
 			var rowMajor = new float[] {
@@ -379,35 +445,35 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rowMajor, toColMajor);
 		}
 
-		//[SkippableFact]
-		//public void Matrix4x4Inverts()
-		//{
-		//	var rowMajor = new float[] {
-		//		1, 2, 3, 0,
-		//		0, 1, 4, 0,
-		//		5, 6, 1, 0,
-		//		0, 0, 0, 1,
-		//	};
-		//	var expectedRowMajor = new float[] {
-		//		-11.5f, 8, 2.5f, 0,
-		//		10, -7, -2, 0,
-		//		-2.5f, 2, 0.5f, 0,
-		//		0, 0, 0, 1,
-		//	};
-		//	var determinant = 2f;
+		[SkippableFact]
+		public void Matrix4x4Inverts()
+		{
+			var rowMajor = new float[] {
+				1, 2, 3, 0,
+				0, 1, 4, 0,
+				5, 6, 1, 0,
+				0, 0, 0, 1,
+			};
+			var expectedRowMajor = new float[] {
+				-11.5f, 8, 2.5f, 0,
+				10, -7, -2, 0,
+				-2.5f, 2, 0.5f, 0,
+				0, 0, 0, 1,
+			};
+			var determinant = 2f;
 
-		//	var matrix = SKMatrix4x4.FromRowMajor(rowMajor);
+			var matrix = SKMatrix4x4.FromRowMajor(rowMajor);
 
-		//	Assert.Equal(rowMajor, matrix.ToRowMajor());
-		//	Assert.Equal(determinant, matrix.GetDeterminant());
+			Assert.Equal(rowMajor, matrix.ToRowMajor());
+			Assert.Equal(determinant, matrix.GetDeterminant());
 
-		//	var inverted = matrix.Invert();
+			Assert.True(matrix.Invert(out var inverted));
 
-		//	Assert.Equal(1f / determinant, inverted.GetDeterminant());
+			Assert.Equal(1f / determinant, inverted.GetDeterminant());
 
-		//	var actualRowMajor = inverted.ToRowMajor();
-		//	Assert.Equal(expectedRowMajor, actualRowMajor);
-		//}
+			var actualRowMajor = inverted.ToRowMajor();
+			Assert.Equal(expectedRowMajor, actualRowMajor);
+		}
 
 		[SkippableFact]
 		public void CorrectDeterminant()
@@ -442,7 +508,7 @@ namespace SkiaSharp.Tests
 			};
 
 			var matrix4x4 = SKMatrix4x4.FromRowMajor(rowMajor44);
-			var matrix3x3 = matrix4x4.Matrix;
+			var matrix3x3 = (SKMatrix)matrix4x4;
 
 			Assert.Equal(rowMajor, matrix3x3.Values);
 		}
@@ -452,9 +518,9 @@ namespace SkiaSharp.Tests
 		{
 			var matrix4x4 = SKMatrix4x4.CreateRotationDegrees(0, 0, 1, 45);
 			var matrix = SKMatrix.CreateRotationDegrees(45);
-			var matrix3x3 = matrix4x4.Matrix;
+			var matrix3x3 = (SKMatrix)matrix4x4;
 
-			Assert.Equal(matrix.Values, matrix3x3.Values);
+			AssertMatrix(matrix, matrix3x3);
 		}
 
 		[SkippableFact]
@@ -463,9 +529,9 @@ namespace SkiaSharp.Tests
 			var matrix3x3 = SKMatrix.CreateRotationDegrees(45);
 
 			var toMatrix4x4 = (SKMatrix4x4)matrix3x3;
-			var toMatrix3x3 = toMatrix4x4.Matrix;
+			var toMatrix3x3 = (SKMatrix)toMatrix4x4;
 
-			Assert.Equal(matrix3x3.Values, toMatrix3x3.Values);
+			AssertMatrix(matrix3x3, toMatrix3x3);
 		}
 
 		[SkippableFact]
@@ -475,9 +541,9 @@ namespace SkiaSharp.Tests
 			var matrix3x3 = SKMatrix.CreateRotationDegrees(45);
 
 			var toMatrix4x4 = (SKMatrix4x4)rs.ToMatrix();
-			var toMatrix3x3 = toMatrix4x4.Matrix;
+			var toMatrix3x3 = (SKMatrix)toMatrix4x4;
 
-			Assert.Equal(matrix3x3.Values, toMatrix3x3.Values);
+			AssertMatrix(matrix3x3, toMatrix3x3);
 		}
 
 		[SkippableFact]
@@ -488,7 +554,7 @@ namespace SkiaSharp.Tests
 
 			var toMatrix4x4 = rs.ToMatrix4x4();
 
-			Assert.Equal(matrix4x4, toMatrix4x4);
+			AssertMatrix(matrix4x4, toMatrix4x4);
 		}
 
 		[SkippableFact]

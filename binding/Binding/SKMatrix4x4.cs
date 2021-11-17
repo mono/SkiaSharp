@@ -37,32 +37,27 @@ namespace SkiaSharp
 		public SKMatrix4x4 (SKMatrix src)
 		{
 			m11 = src.ScaleX;
-			m21 = src.SkewX;
-			m31 = 0;
-			m41 = src.TransX;
-
-			m12 = src.ScaleY;
-			m22 = src.SkewY;
-			m32 = 0;
-			m42 = src.TransY;
-
+			m12 = src.SkewX;
 			m13 = 0;
-			m23 = 0;
-			m33 = 1;
-			m43 = 0;
-
 			m14 = src.Persp0;
+
+			m21 = src.SkewY;
+			m22 = src.ScaleY;
+			m23 = 0;
 			m24 = src.Persp1;
+
+			m31 = 0;
+			m32 = 0;
+			m33 = 1;
 			m34 = 0;
+
+			m41 = src.TransX;
+			m42 = src.TransY;
+			m43 = 0;
 			m44 = src.Persp2;
 		}
 
 		// properties
-
-		public readonly SKMatrix Matrix =>
-			new (m11, m21, m41,
-				 m12, m22, m42,
-				 m14, m24, m44);
 
 		public float this[int index] {
 			readonly get => index switch {
@@ -513,23 +508,23 @@ namespace SkiaSharp
 
 			inverse = new SKMatrix4x4 (
 				a11 * invDet,
-				a12 * invDet,
-				a13 * invDet,
-				a14 * invDet,
-
 				-(b * kp_lo - c * jp_ln + d * jo_kn) * invDet,
-				+(a * kp_lo - c * ip_lm + d * io_km) * invDet,
-				-(a * jp_ln - b * ip_lm + d * in_jm) * invDet,
-				+(a * jo_kn - b * io_km + c * in_jm) * invDet,
-
 				+(b * gp_ho - c * fp_hn + d * fo_gn) * invDet,
-				-(a * gp_ho - c * ep_hm + d * eo_gm) * invDet,
-				+(a * fp_hn - b * ep_hm + d * en_fm) * invDet,
-				-(a * fo_gn - b * eo_gm + c * en_fm) * invDet,
-
 				-(b * gl_hk - c * fl_hj + d * fk_gj) * invDet,
+
+				a12 * invDet,
+				+(a * kp_lo - c * ip_lm + d * io_km) * invDet,
+				-(a * gp_ho - c * ep_hm + d * eo_gm) * invDet,
 				+(a * gl_hk - c * el_hi + d * ek_gi) * invDet,
+
+				a13 * invDet,
+				-(a * jp_ln - b * ip_lm + d * in_jm) * invDet,
+				+(a * fp_hn - b * ep_hm + d * en_fm) * invDet,
 				-(a * fl_hj - b * el_hi + d * ej_fi) * invDet,
+
+				a14 * invDet,
+				+(a * jo_kn - b * io_km + c * in_jm) * invDet,
+				-(a * fo_gn - b * eo_gm + c * en_fm) * invDet,
 				+(a * fk_gj - b * ek_gi + c * ej_fi) * invDet);
 			return true;
 		}
@@ -712,5 +707,10 @@ namespace SkiaSharp
 
 		public static implicit operator SKMatrix4x4 (SKMatrix matrix) =>
 			new SKMatrix4x4 (matrix);
+
+		public static explicit operator SKMatrix (SKMatrix4x4 matrix) =>
+			new (matrix.m11, matrix.m21, matrix.m41,
+				 matrix.m12, matrix.m22, matrix.m42,
+				 matrix.m14, matrix.m24, matrix.m44);
 	}
 }
