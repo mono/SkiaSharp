@@ -684,23 +684,37 @@ namespace SkiaSharp
 
 		// CreatePerspective*
 
-		public static SKMatrix4x4 CreatePerspective (float near, float far, float angleRadians)
+		public static SKMatrix4x4 CreatePerspectiveFieldOfView (float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance)
 		{
-			var denomInv = 1f / (far - near);
-			var halfAngle = angleRadians * 0.5f;
-			var cot = (float)MathF.Cos (halfAngle) / (float)MathF.Sin (halfAngle);
+			if (fieldOfView <= 0.0f || fieldOfView >= MathF.PI)
+				throw new ArgumentOutOfRangeException (nameof (fieldOfView));
 
-			var m11 = cot;
-			var m22 = cot;
-			var m33 = (far + near) * denomInv;
-			var m34 = 2 * far * near * denomInv;
-			var m43 = -1f;
+			if (nearPlaneDistance <= 0.0f)
+				throw new ArgumentOutOfRangeException (nameof (nearPlaneDistance));
+
+			if (farPlaneDistance <= 0.0f)
+				throw new ArgumentOutOfRangeException (nameof (farPlaneDistance));
+
+			if (nearPlaneDistance >= farPlaneDistance)
+				throw new ArgumentOutOfRangeException (nameof (nearPlaneDistance));
+
+			var yScale = 1.0f / (float)MathF.Tan (fieldOfView * 0.5f);
+			var xScale = yScale / aspectRatio;
+			var negFarRange = float.IsPositiveInfinity (farPlaneDistance)
+				? -1.0f
+				: farPlaneDistance / (nearPlaneDistance - farPlaneDistance);
+
+			var m11 = xScale;
+			var m22 = yScale;
+			var m33 = negFarRange;
+			var m34 = -1.0f;
+			var m43 = nearPlaneDistance * negFarRange;
 
 			return new (
 				m11, 0, 0, 0,
 				0, m22, 0, 0,
 				0, 0, m33, m34,
-				0, 0, m43, 1);
+				0, 0, m43, 0);
 		}
 
 		// operators

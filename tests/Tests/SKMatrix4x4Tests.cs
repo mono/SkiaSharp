@@ -134,6 +134,16 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void Matrix4x4CreatesPerspectiveFieldOfView()
+		{
+			var sysMatrix = Matrix4x4.CreatePerspectiveFieldOfView((float)Math.PI / 4, 1, 0.1f, 10f);
+
+			var matrix = SKMatrix4x4.CreatePerspectiveFieldOfView((float)Math.PI / 4, 1, 0.1f, 10f);
+
+			AssertMatrix(sysMatrix, matrix);
+		}
+
+		[SkippableFact]
 		public void ConvertFromTranslationMatrix3x3ToMatrix4x4()
 		{
 			var matrix3x3 = SKMatrix.CreateTranslation(10, 10);

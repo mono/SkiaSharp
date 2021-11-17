@@ -8,8 +8,9 @@ namespace SkiaSharpSample.Samples
 	[Preserve(AllMembers = true)]
 	public class ThreeDSamplePerspective : AnimatedSampleBase
 	{
-		private SK3dView rotationView;
-		
+		private SKMatrix4x4 rotationMatrix;
+		private SKMatrix4x4 rotationStep;
+
 		[Preserve]
 		public ThreeDSamplePerspective()
 		{
@@ -20,8 +21,11 @@ namespace SkiaSharpSample.Samples
 		protected override async Task OnInit()
 		{
 			// create the base and step 3D rotation matrices (around the y-axis)
-			rotationView = new SK3dView();
-			rotationView.RotateYDegrees(30);
+			rotationMatrix = SKMatrix4x4.CreateIdentity();
+			rotationMatrix.PostConcat(SKMatrix4x4.CreatePerspectiveFieldOfView((float)Math.PI / 4, 1, 0.0001f, 1000f));
+			rotationMatrix.PostConcat(SKMatrix4x4.CreateTranslation(0, 0, -567));
+			rotationMatrix.PostConcat(SKMatrix4x4.CreateRotationDegrees(0, 1, 0, 30));
+			rotationStep = SKMatrix4x4.CreateRotationDegrees(0, 1, 0, 5);
 
 			await base.OnInit();
 		}
@@ -31,14 +35,11 @@ namespace SkiaSharpSample.Samples
 			await Task.Delay(25, token);
 
 			// step the rotation matrix
-			rotationView.RotateYDegrees(5);
+			rotationMatrix.PostConcat(rotationStep);
 		}
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{
-			// get the 2D equivalent of the 3D matrix
-			var rotationMatrix = rotationView.Matrix;
-
 			// get the properties of the rectangle
 			var length = Math.Min(width / 6, height / 6);
 			var rect = new SKRect(-length, -length, length, length);
@@ -50,7 +51,7 @@ namespace SkiaSharpSample.Samples
 			canvas.Translate(width / 2, height / 2);
 
 			// then apply the 3D rotation
-			canvas.Concat(ref rotationMatrix);
+			canvas.Concat(rotationMatrix);
 
 			var paint = new SKPaint
 			{
