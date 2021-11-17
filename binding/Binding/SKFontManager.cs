@@ -202,10 +202,11 @@ namespace SkiaSharp
 		private sealed class SKFontManagerStatic : SKFontManager
 		{
 			internal SKFontManagerStatic (IntPtr x)
-				: base (x, true)
+				: base (x, false)
 			{
-				IgnorePublicDispose = true;
 			}
+
+			protected override void Dispose (bool disposing) { }
 		}
 	}
 }

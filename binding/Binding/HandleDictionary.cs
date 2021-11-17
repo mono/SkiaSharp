@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Runtime.InteropServices;
 #if THROW_OBJECT_EXCEPTIONS
 using System.Collections.Concurrent;
 #endif
+using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {
@@ -16,7 +18,7 @@ namespace SkiaSharp
 #endif
 		internal static readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference> ();
 
-		internal static readonly ReaderWriterLockSlim instancesLock = new ReaderWriterLockSlim ();
+		internal static readonly IPlatformLock instancesLock = PlatformLock.Create ();
 
 		/// <summary>
 		/// Retrieve the living instance if there is one, or null if not.
@@ -212,4 +214,7 @@ namespace SkiaSharp
 			}
 		}
 	}
+
+
+
 }
