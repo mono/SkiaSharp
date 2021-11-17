@@ -1,4 +1,7 @@
 ﻿using System;
+#if !NETSTANDARD2_1_OR_GREATER && !NET5_0_OR_GREATER
+using MathF = System.Math;
+#endif
 
 namespace SkiaSharp
 {
@@ -14,7 +17,7 @@ namespace SkiaSharp
 
 		public readonly bool IsEmpty => this == Empty;
 
-		public readonly float Length => (float)Math.Sqrt (x * x + y * y);
+		public readonly float Length => (float)MathF.Sqrt (x * x + y * y);
 
 		public readonly float LengthSquared => x * x + y * y;
 
@@ -32,34 +35,28 @@ namespace SkiaSharp
 
 		public readonly override string ToString () => $"{{X={x}, Y={y}}}";
 
-		public static SKPoint Normalize (SKPoint point)
-		{
-			var ls = point.x * point.x + point.y * point.y;
-			var invNorm = 1.0 / Math.Sqrt (ls);
-			return new SKPoint ((float)(point.x * invNorm), (float)(point.y * invNorm));
-		}
+		public static SKPoint Normalize (SKPoint point) =>
+			point / point.Length;
 
-		public static float Distance (SKPoint point, SKPoint other)
-		{
-			var dx = point.x - other.x;
-			var dy = point.y - other.y;
-			var ls = dx * dx + dy * dy;
-			return (float)Math.Sqrt (ls);
-		}
+		public static float Distance (SKPoint point, SKPoint other) =>
+			(float)MathF.Sqrt (DistanceSquared (point, other));
 
 		public static float DistanceSquared (SKPoint point, SKPoint other)
 		{
-			var dx = point.x - other.x;
-			var dy = point.y - other.y;
-			return dx * dx + dy * dy;
+			var difference = point - other;
+			return Dot (difference, difference);
 		}
+
+		public static float Dot (SKPoint point, SKPoint other) =>
+			point.x * other.x + point.y * other.y;
+
+		public static float Cross (SKPoint point, SKPoint other) =>
+			point.x * other.y - point.y * other.x;
 
 		public static SKPoint Reflect (SKPoint point, SKPoint normal)
 		{
-			var dot = point.x * point.x + point.y * point.y;
-			return new SKPoint (
-				point.x - 2.0f * dot * normal.x,
-				point.y - 2.0f * dot * normal.y);
+			var dot = Dot (point, normal);
+			return point - 2 * dot * normal;
 		}
 
 		public static SKPoint Add (SKPoint pt, SKSizeI sz) => pt + sz;
@@ -71,6 +68,11 @@ namespace SkiaSharp
 		public static SKPoint Subtract (SKPoint pt, SKSize sz) => pt - sz;
 		public static SKPoint Subtract (SKPoint pt, SKPointI sz) => pt - sz;
 		public static SKPoint Subtract (SKPoint pt, SKPoint sz) => pt - sz;
+
+		public static SKPoint Multiply (SKPoint pt, SKPoint sz) => pt * sz;
+		public static SKPoint Multiply (SKPoint pt, float sz) => pt * sz;
+
+		public static SKPoint Divide (SKPoint pt, SKPoint sz) => pt / sz;
 
 		public static SKPoint operator + (SKPoint pt, SKSizeI sz) =>
 			new SKPoint (pt.x + sz.Width, pt.y + sz.Height);
@@ -89,6 +91,18 @@ namespace SkiaSharp
 			new SKPoint (pt.X - sz.X, pt.Y - sz.Y);
 		public static SKPoint operator - (SKPoint pt, SKPoint sz) =>
 			new SKPoint (pt.X - sz.X, pt.Y - sz.Y);
+
+		public static SKPoint operator * (SKPoint pt, SKPoint sz) =>
+			new SKPoint (pt.X * sz.X, pt.Y * sz.Y);
+		public static SKPoint operator * (SKPoint pt, float sz) =>
+			pt * new SKPoint (sz, sz);
+		public static SKPoint operator * (float sz, SKPoint pt) =>
+			new SKPoint (sz, sz) + pt;
+
+		public static SKPoint operator / (SKPoint pt, SKPoint sz) =>
+			new SKPoint (pt.X / sz.X, pt.Y / sz.Y);
+		public static SKPoint operator / (SKPoint pt, float sz) =>
+			pt / new SKPoint (sz, sz);
 	}
 
 	public partial struct SKPointI
@@ -109,7 +123,7 @@ namespace SkiaSharp
 
 		public readonly bool IsEmpty => this == Empty;
 
-		public readonly int Length => (int)Math.Sqrt (x * x + y * y);
+		public readonly int Length => (int)MathF.Sqrt (x * x + y * y);
 
 		public readonly int LengthSquared => x * x + y * y;
 
@@ -130,7 +144,7 @@ namespace SkiaSharp
 		public static SKPointI Normalize (SKPointI point)
 		{
 			var ls = point.x * point.x + point.y * point.y;
-			var invNorm = 1.0 / Math.Sqrt (ls);
+			var invNorm = 1.0 / MathF.Sqrt (ls);
 			return new SKPointI ((int)(point.x * invNorm), (int)(point.y * invNorm));
 		}
 
@@ -139,7 +153,7 @@ namespace SkiaSharp
 			var dx = point.x - other.x;
 			var dy = point.y - other.y;
 			var ls = dx * dx + dy * dy;
-			return (float)Math.Sqrt (ls);
+			return (float)MathF.Sqrt (ls);
 		}
 
 		public static float DistanceSquared (SKPointI point, SKPointI other)
@@ -161,8 +175,8 @@ namespace SkiaSharp
 		{
 			int x, y;
 			checked {
-				x = (int)Math.Ceiling (value.X);
-				y = (int)Math.Ceiling (value.Y);
+				x = (int)MathF.Ceiling (value.X);
+				y = (int)MathF.Ceiling (value.Y);
 			}
 
 			return new SKPointI (x, y);
@@ -172,8 +186,8 @@ namespace SkiaSharp
 		{
 			int x, y;
 			checked {
-				x = (int)Math.Round (value.X);
-				y = (int)Math.Round (value.Y);
+				x = (int)MathF.Round (value.X);
+				y = (int)MathF.Round (value.Y);
 			}
 
 			return new SKPointI (x, y);
@@ -225,17 +239,64 @@ namespace SkiaSharp
 
 		public readonly bool IsEmpty => this == Empty;
 
+		public readonly float Length => (float)MathF.Sqrt (LengthSquared);
+
+		public readonly float LengthSquared => Dot (this, this);
+
 		public readonly override string ToString () => $"{{X={x}, Y={y}, Z={z}}}";
+
+		public static SKPoint3 Normalize (SKPoint3 point) =>
+			point / point.Length;
+
+		public static float Distance (SKPoint3 point, SKPoint3 other) =>
+			(float)MathF.Sqrt (DistanceSquared (point, other));
+
+		public static float DistanceSquared (SKPoint3 point, SKPoint3 other)
+		{
+			var difference = point - other;
+			return Dot (difference, difference);
+		}
+
+		public static float Dot (SKPoint3 point, SKPoint3 other) =>
+			point.x * other.x + point.y * other.y + point.z * other.z;
+
+		public static SKPoint3 Cross (SKPoint3 point, SKPoint3 other) =>
+			new (point.Y * other.Z - point.Z * other.Y,
+				 point.Z * other.X - point.X * other.Z,
+				 point.X * other.Y - point.Y * other.X);
+
+		public static SKPoint3 Reflect (SKPoint3 point, SKPoint3 normal)
+		{
+			var dot = Dot (point, normal);
+			return point - 2 * dot * normal;
+		}
 
 		public static SKPoint3 Add (SKPoint3 pt, SKPoint3 sz) => pt + sz;
 
 		public static SKPoint3 Subtract (SKPoint3 pt, SKPoint3 sz) => pt - sz;
+
+		public static SKPoint3 Multiply (SKPoint3 pt, SKPoint3 sz) => pt * sz;
+		public static SKPoint3 Multiply (SKPoint3 pt, float sz) => pt * sz;
+
+		public static SKPoint3 Divide (SKPoint3 pt, SKPoint3 sz) => pt / sz;
 
 		public static SKPoint3 operator + (SKPoint3 pt, SKPoint3 sz) =>
 			new SKPoint3 (pt.X + sz.X, pt.Y + sz.Y, pt.Z + sz.Z);
 
 		public static SKPoint3 operator - (SKPoint3 pt, SKPoint3 sz) =>
 			new SKPoint3 (pt.X - sz.X, pt.Y - sz.Y, pt.Z - sz.Z);
+
+		public static SKPoint3 operator * (SKPoint3 pt, SKPoint3 sz) =>
+			new SKPoint3 (pt.X * sz.X, pt.Y * sz.Y, pt.Z * sz.Z);
+		public static SKPoint3 operator * (SKPoint3 pt, float sz) =>
+			pt * new SKPoint3 (sz, sz, sz);
+		public static SKPoint3 operator * (float sz, SKPoint3 pt) =>
+			new SKPoint3 (sz, sz, sz) * pt;
+
+		public static SKPoint3 operator / (SKPoint3 pt, SKPoint3 sz) =>
+			new SKPoint3 (pt.X / sz.X, pt.Y / sz.Y, pt.Z / sz.Z);
+		public static SKPoint3 operator / (SKPoint3 pt, float sz) =>
+			pt / new SKPoint3 (sz, sz, sz);
 	}
 
 	public partial struct SKSize
@@ -431,10 +492,10 @@ namespace SkiaSharp
 				return Empty;
 			}
 			return new SKRect (
-				Math.Max (a.left, b.left),
-				Math.Max (a.top, b.top),
-				Math.Min (a.right, b.right),
-				Math.Min (a.bottom, b.bottom));
+				MathF.Max (a.left, b.left),
+				MathF.Max (a.top, b.top),
+				MathF.Min (a.right, b.right),
+				MathF.Min (a.bottom, b.bottom));
 		}
 
 		public void Intersect (SKRect rect) =>
@@ -442,10 +503,10 @@ namespace SkiaSharp
 
 		public static SKRect Union (SKRect a, SKRect b) =>
 			new SKRect (
-				Math.Min (a.left, b.left),
-				Math.Min (a.top, b.top),
-				Math.Max (a.right, b.right),
-				Math.Max (a.bottom, b.bottom));
+				MathF.Min (a.left, b.left),
+				MathF.Min (a.top, b.top),
+				MathF.Max (a.right, b.right),
+				MathF.Max (a.bottom, b.bottom));
 
 		public void Union (SKRect rect) =>
 			this = Union (this, rect);
@@ -561,10 +622,10 @@ namespace SkiaSharp
 		{
 			int x, y, r, b;
 			checked {
-				x = (int)(outwards && value.Width > 0 ? Math.Floor (value.Left) : Math.Ceiling (value.Left));
-				y = (int)(outwards && value.Height > 0 ? Math.Floor (value.Top) : Math.Ceiling (value.Top));
-				r = (int)(outwards && value.Width < 0 ? Math.Floor (value.Right) : Math.Ceiling (value.Right));
-				b = (int)(outwards && value.Height < 0 ? Math.Floor (value.Bottom) : Math.Ceiling (value.Bottom));
+				x = (int)(outwards && value.Width > 0 ? MathF.Floor (value.Left) : MathF.Ceiling (value.Left));
+				y = (int)(outwards && value.Height > 0 ? MathF.Floor (value.Top) : MathF.Ceiling (value.Top));
+				r = (int)(outwards && value.Width < 0 ? MathF.Floor (value.Right) : MathF.Ceiling (value.Right));
+				b = (int)(outwards && value.Height < 0 ? MathF.Floor (value.Bottom) : MathF.Ceiling (value.Bottom));
 			}
 
 			return new SKRectI (x, y, r, b);
@@ -607,10 +668,10 @@ namespace SkiaSharp
 		{
 			int x, y, r, b;
 			checked {
-				x = (int)Math.Round (value.Left);
-				y = (int)Math.Round (value.Top);
-				r = (int)Math.Round (value.Right);
-				b = (int)Math.Round (value.Bottom);
+				x = (int)MathF.Round (value.Left);
+				y = (int)MathF.Round (value.Top);
+				r = (int)MathF.Round (value.Right);
+				b = (int)MathF.Round (value.Bottom);
 			}
 
 			return new SKRectI (x, y, r, b);
@@ -622,10 +683,10 @@ namespace SkiaSharp
 		{
 			int x, y, r, b;
 			checked {
-				x = (int)(inwards && value.Width > 0 ? Math.Ceiling (value.Left) : Math.Floor (value.Left));
-				y = (int)(inwards && value.Height > 0 ? Math.Ceiling (value.Top) : Math.Floor (value.Top));
-				r = (int)(inwards && value.Width < 0 ? Math.Ceiling (value.Right) : Math.Floor (value.Right));
-				b = (int)(inwards && value.Height < 0 ? Math.Ceiling (value.Bottom) : Math.Floor (value.Bottom));
+				x = (int)(inwards && value.Width > 0 ? MathF.Ceiling (value.Left) : MathF.Floor (value.Left));
+				y = (int)(inwards && value.Height > 0 ? MathF.Ceiling (value.Top) : MathF.Floor (value.Top));
+				r = (int)(inwards && value.Width < 0 ? MathF.Ceiling (value.Right) : MathF.Floor (value.Right));
+				b = (int)(inwards && value.Height < 0 ? MathF.Ceiling (value.Bottom) : MathF.Floor (value.Bottom));
 			}
 
 			return new SKRectI (x, y, r, b);

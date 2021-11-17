@@ -1,4 +1,7 @@
 ﻿using System;
+#if !NETSTANDARD2_1_OR_GREATER && !NET5_0_OR_GREATER
+using MathF = System.Math;
+#endif
 
 namespace SkiaSharp
 {
@@ -31,7 +34,7 @@ namespace SkiaSharp
 			this.m44 = m44;
 		}
 
-		public SKMatrix4x4 (in SKMatrix src)
+		public SKMatrix4x4 (SKMatrix src)
 		{
 			m11 = src.ScaleX;
 			m21 = src.SkewX;
@@ -381,7 +384,7 @@ namespace SkiaSharp
 			}
 
 			if (length != 1) {
-				var scale = 1 / (float)Math.Sqrt (length);
+				var scale = 1 / (float)MathF.Sqrt (length);
 				x *= scale;
 				y *= scale;
 				z *= scale;
@@ -392,8 +395,8 @@ namespace SkiaSharp
 
 		public void SetRotationAboutUnit (float x, float y, float z, float radians)
 		{
-			var sa = (float)Math.Sin (radians);
-			var ca = (float)Math.Cos (radians);
+			var sa = (float)MathF.Sin (radians);
+			var ca = (float)MathF.Cos (radians);
 			var xx = x * x;
 			var yy = y * y;
 			var zz = z * z;
@@ -422,7 +425,7 @@ namespace SkiaSharp
 			m44 = 1;
 		}
 
-		public void SetConcat (in SKMatrix4x4 a, in SKMatrix4x4 b) =>
+		public void SetConcat (SKMatrix4x4 a, SKMatrix4x4 b) =>
 			this = new (
 				a.m11 * b.m11 + a.m12 * b.m21 + a.m13 * b.m31 + a.m14 * b.m41,
 				a.m11 * b.m12 + a.m12 * b.m22 + a.m13 * b.m32 + a.m14 * b.m42,
@@ -458,10 +461,10 @@ namespace SkiaSharp
 		public void PostScale (float sx, float sy, float sz) =>
 			PostConcat (CreateScale (sx, sy, sz));
 
-		public void PreConcat (in SKMatrix4x4 m) =>
+		public void PreConcat (SKMatrix4x4 m) =>
 			SetConcat (this, m);
 
-		public void PostConcat (in SKMatrix4x4 m) =>
+		public void PostConcat (SKMatrix4x4 m) =>
 			SetConcat (m, this);
 
 		// Invert
@@ -487,7 +490,7 @@ namespace SkiaSharp
 
 			var det = a * a11 + b * a12 + c * a13 + d * a14;
 
-			if (Math.Abs (det) < float.Epsilon) {
+			if (MathF.Abs (det) < float.Epsilon) {
 				inverse = CreateIdentity ();
 				return false;
 			}
@@ -579,7 +582,7 @@ namespace SkiaSharp
 
 		// MapPoints
 
-		public readonly SKPoint MapPoint (in SKPoint src)
+		public readonly SKPoint MapPoint (SKPoint src)
 		{
 			Span<SKPoint> s = stackalloc[] { src };
 			Span<SKPoint> d = stackalloc SKPoint[1];
@@ -665,9 +668,49 @@ namespace SkiaSharp
 			return det;
 		}
 
+		// CreateLookAt
+
+		public static SKMatrix4x4 CreateLookAt (SKPoint3 cameraPosition, SKPoint3 cameraTarget, SKPoint3 cameraUpVector)
+		{
+			var zaxis = SKPoint3.Normalize (cameraPosition - cameraTarget);
+			var xaxis = SKPoint3.Normalize (SKPoint3.Cross (cameraUpVector, zaxis));
+			var yaxis = SKPoint3.Cross (zaxis, xaxis);
+
+			var m411 = -SKPoint3.Dot (xaxis, cameraPosition);
+			var m421 = -SKPoint3.Dot (yaxis, cameraPosition);
+			var m431 = -SKPoint3.Dot (zaxis, cameraPosition);
+
+			return new (
+				xaxis.X, yaxis.X, zaxis.X, 0,
+				xaxis.Y, yaxis.Y, zaxis.Y, 0,
+				xaxis.Z, yaxis.Z, zaxis.Z, 0,
+				m411, m421, m431, 1);
+		}
+
+		// CreatePerspective*
+
+		public static SKMatrix4x4 CreatePerspective (float near, float far, float angleRadians)
+		{
+			var denomInv = 1f / (far - near);
+			var halfAngle = angleRadians * 0.5f;
+			var cot = (float)MathF.Cos (halfAngle) / (float)MathF.Sin (halfAngle);
+
+			var m11 = cot;
+			var m22 = cot;
+			var m33 = (far + near) * denomInv;
+			var m34 = 2 * far * near * denomInv;
+			var m43 = -1f;
+
+			return new (
+				m11, 0, 0, 0,
+				0, m22, 0, 0,
+				0, 0, m33, m34,
+				0, 0, m43, 1);
+		}
+
 		// operators
 
-		public static implicit operator SKMatrix4x4 (in SKMatrix matrix) =>
+		public static implicit operator SKMatrix4x4 (SKMatrix matrix) =>
 			new SKMatrix4x4 (matrix);
 	}
 }

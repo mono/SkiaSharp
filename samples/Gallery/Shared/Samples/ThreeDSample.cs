@@ -8,9 +8,9 @@ namespace SkiaSharpSample.Samples
 	[Preserve(AllMembers = true)]
 	public class ThreeDSample : AnimatedSampleBase
 	{
-		private SKMatrix44 rotationMatrix;
-		private SKMatrix44 rotationStep;
-		
+		private SKMatrix4x4 rotationMatrix;
+		private SKMatrix4x4 rotationStep;
+
 		[Preserve]
 		public ThreeDSample()
 		{
@@ -21,8 +21,8 @@ namespace SkiaSharpSample.Samples
 		protected override async Task OnInit()
 		{
 			// create the base and step 3D rotation matrices (around the y-axis)
-			rotationMatrix = SKMatrix44.CreateIdentity();
-			rotationStep = SKMatrix44.CreateRotationDegrees(0, 1, 0, 5);
+			rotationMatrix = SKMatrix4x4.CreateIdentity();
+			rotationStep = SKMatrix4x4.CreateRotationDegrees(0, 1, 0, 5);
 
 			await base.OnInit();
 		}
@@ -47,8 +47,7 @@ namespace SkiaSharpSample.Samples
 			canvas.Translate(width / 2, height / 2);
 
 			// then apply the 3D rotation
-			var matrix = rotationMatrix.Matrix;
-			canvas.Concat(ref matrix);
+			canvas.Concat(rotationMatrix);
 
 			var paint = new SKPaint
 			{
