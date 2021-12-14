@@ -6,6 +6,7 @@ using System.ComponentModel;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Platform;
+using Microsoft.Maui.Platform;
 using SkiaSharp.Views.Maui.Platform;
 
 using SKFormsView = SkiaSharp.Views.Maui.Controls.SKCanvasView;
