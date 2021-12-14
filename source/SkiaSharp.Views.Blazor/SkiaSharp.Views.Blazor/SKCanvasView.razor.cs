@@ -157,7 +157,7 @@ namespace SkiaSharp.Views.Blazor
 
 		private void OnSizeChanged(SKSize newSize)
 		{
-			if (Math.Round(canvasSize.Width * dpi) == newSize.Width && Math.Round(canvasSize.Height * dpi) == newSize.Height)
+			if ((int)(canvasSize.Width * dpi) == newSize.Width && (int)(canvasSize.Height * dpi) == newSize.Height)
 				return;
 			canvasSize = newSize;
 
