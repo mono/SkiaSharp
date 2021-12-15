@@ -60,7 +60,7 @@ namespace SkiaSharp.Views.Blazor
 		[Parameter(CaptureUnmatchedValues = true)]
 		public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
-		public double DPI => dpi;
+		public double Dpi => dpi;
 
 		protected override async Task OnAfterRenderAsync(bool firstRender)
 		{
