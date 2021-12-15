@@ -26,14 +26,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--<Reference Include="..\..\..\..\binding\SkiaSharp\bin\Debug\netstandard2.0\SkiaSharp.dll" />
+    <Reference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls.Compatibility\bin\Debug\net6.0-windows10.0.19041\SkiaSharp.Views.Maui.Controls.Compatibility.dll" />
+    <Reference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\bin\Debug\net6.0-windows10.0.19041\SkiaSharp.Views.Maui.Controls.dll" />
+    <Reference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Core\bin\Debug\net6.0-windows10.0.19041\SkiaSharp.Views.Maui.Core.dll" />
+    <Reference Include="..\..\..\..\source\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI\bin\Debug\net5.0-windows10.0.18362\SkiaSharp.Views.Windows.dll" />-->
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls.Compatibility\SkiaSharp.Views.Maui.Controls.Compatibility.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0-preview3" />
-    <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.0.0.29-preview3" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.0.0.30" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
@@ -45,7 +50,7 @@
 
   <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
     <OutputType>WinExe</OutputType>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets')" />

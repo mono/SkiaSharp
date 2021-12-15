@@ -1,5 +1,7 @@
-﻿using AppKit;
+﻿using System;
+using AppKit;
 using CoreGraphics;
+using ObjCRuntime;
 
 namespace SkiaSharp.Views.Mac
 {
@@ -9,14 +11,14 @@ namespace SkiaSharp.Views.Mac
 
 		public static SKColor ToSKColor(this NSColor color)
 		{
-			System.nfloat r, g, b, a;
+			nfloat r, g, b, a;
 			color.GetRgba(out r, out g, out b, out a);
 			return new SKColor((byte)(r * 255), (byte)(g * 255), (byte)(b * 255), (byte)(a * 255));
 		}
 
 		public static SKColorF ToSKColorF(this NSColor color)
 		{
-			System.nfloat r, g, b, a;
+			nfloat r, g, b, a;
 			color.GetRgba(out r, out g, out b, out a);
 			return new SKColorF((float)r, (float)g, (float)b, (float)a);
 		}

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Maui;
 using Microsoft.Maui.Handlers;
+using Microsoft.Maui.Platform;
 using SkiaSharp.Views.Android;
 using SkiaSharp.Views.Maui.Platform;
 
