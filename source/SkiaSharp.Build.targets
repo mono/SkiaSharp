@@ -62,8 +62,12 @@
     <PackageReference Include="mdoc" Version="5.8.3" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
-  <!-- HACK: WinUI overwrite tasks that are not needed when multitargeting -->
-  <Target Name="BinPlaceBootstrapDll" />
+  <!-- HACK: Do not copy the native bootstrap files -->
+  <Target Name="_RemoveWasdkBootstrapDll" BeforeTargets="ResolveReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)%(Extension)' == 'Microsoft.WindowsAppRuntime.Bootstrap.dll'" />
+    </ItemGroup>
+  </Target>
 
   <!--
     Workaround for https://github.com/dotnet/sdk/issues/11105

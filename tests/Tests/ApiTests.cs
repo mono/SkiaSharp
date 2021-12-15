@@ -52,6 +52,7 @@ namespace SkiaSharp.Tests
 		public static IEnumerable<object[]> InteropDelegatesData =>
 			InteropDelegates.Select(m => new object[] { m });
 
+		[Trait(CategoryKey, ApiCategory)]
 		[SkippableFact]
 		public void DelegateTypesAreValid()
 		{
@@ -59,6 +60,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(del);
 		}
 
+		[Trait(CategoryKey, ApiCategory)]
 		[SkippableTheory]
 		[MemberData(nameof(InteropDelegatesData))]
 		public void DelegateTypesHaveAttributes(Type delegateType)
@@ -66,6 +68,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(delegateType.GetCustomAttribute<UnmanagedFunctionPointerAttribute>());
 		}
 
+		[Trait(CategoryKey, ApiCategory)]
 		[SkippableTheory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiTypesAreNotInvalid(MethodInfo method, string delegateName)
@@ -89,6 +92,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(CategoryKey, ApiCategory)]
 		[SkippableTheory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiReturnTypesArePrimitives(MethodInfo method, string delegateName)
@@ -115,6 +119,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(CategoryKey, ApiCategory)]
 		[SkippableTheory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiTypesAreMarshalledCorrectly(MethodInfo method, string delegateName)
@@ -187,6 +192,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(CategoryKey, ApiCategory)]
 		[SkippableTheory]
 		// too old
 		[InlineData("80.0", "0.0", "[80.0, 81.0)")]
@@ -230,24 +236,28 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(CategoryKey, ApiCategory)]
 		[SkippableFact]
 		public void TestLibraryVersions()
 		{
 			Assert.True(SkiaSharpVersion.CheckNativeLibraryCompatible());
 		}
 
+		[Trait(CategoryKey, ApiCategory)]
 		[SkippableFact]
 		public void TestLibraryVersionsDoesNotThrow()
 		{
 			SkiaSharpVersion.CheckNativeLibraryCompatible(true);
 		}
 
+		[Trait(CategoryKey, ApiCategory)]
 		[SkippableFact]
 		public void TestVersionsString()
 		{
 			Assert.Equal(SkiaSharpVersion.Native.ToString(2), SkiaSharpVersion.NativeString);
 		}
 
+		[Trait(CategoryKey, ApiCategory)]
 		[SkippableFact]
 		public void PlatformConfigurationIsMuslOverrideCanBeFoundViaReflection()
 		{

@@ -1,5 +1,5 @@
 Param(
-    [string] $Version = "16/pre"
+    [string] $Version = "17/pre"
 )
 
 $ErrorActionPreference = 'Stop'
@@ -36,20 +36,5 @@ New-Item -ItemType Directory -Force -Path "$vsLogs" | Out-Null
 Get-ChildItem "$env:TEMP\dd_*" |
   Where-Object { $_.CreationTime -gt $startTime } |
   Copy-Item -Destination "$vsLogs"
-
-$vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-
-Write-Host "Setting Environment Variables..."
-$installationPath = & $vswhere -latest -prerelease -property installationPath
-Write-Host "##vso[task.prependpath]$installationPath\MSBuild\Current\Bin"
-Write-Host "##vso[task.setvariable variable=VS_INSTALL]$installationPath"
-
-Write-Host "Patching MSBuild..."
-$mypath = $MyInvocation.MyCommand.Path
-$mypath = Split-Path $mypath -Parent
-& "$mypath\patch-msbuild.ps1" -MSBuild "$installationPath\MSBuild\Current\Bin\MSBuild.exe"
-
-Write-Host "Installed Visual Studio Versions:"
-& $vswhere -all -prerelease -property installationPath
 
 exit $LASTEXITCODE

@@ -204,6 +204,8 @@ Task ("tests-netfx")
 
     void RunDesktopTest (string arch)
     {
+        if (Skip(arch)) return;
+
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
 
         // SkiaSharp.Tests.dll

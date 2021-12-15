@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using CoreGraphics;
 using Foundation;
+using ObjCRuntime;
 
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS

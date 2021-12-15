@@ -458,10 +458,11 @@ namespace SkiaSharp
 		private sealed class SKTypefaceStatic : SKTypeface
 		{
 			internal SKTypefaceStatic (IntPtr x)
-				: base (x, true)
+				: base (x, false)
 			{
-				IgnorePublicDispose = true;
 			}
+
+			protected override void Dispose (bool disposing) { }
 		}
 	}
 }

@@ -24,17 +24,17 @@ namespace HarfBuzzSharp
 		public static readonly UnicodeDecomposeProxyDelegate DecomposeProxy = DecomposeProxyImplementation;
 
 		[MonoPInvokeCallback (typeof (UnicodeCombiningClassProxyDelegate))]
-		private static UnicodeCombiningClass CombiningClassProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
+		private static int CombiningClassProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
 		{
 			GetMultiUserData<CombiningClassDelegate, UnicodeFunctions> ((IntPtr)context, out var del, out var functions, out _);
-			return del.Invoke (functions, unicode);
+			return (int)del.Invoke (functions, unicode);
 		}
 
 		[MonoPInvokeCallback (typeof (UnicodeGeneralCategoryProxyDelegate))]
-		private static UnicodeGeneralCategory GeneralCategoryProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
+		private static int GeneralCategoryProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
 		{
 			GetMultiUserData<GeneralCategoryDelegate, UnicodeFunctions> ((IntPtr)context, out var del, out var functions, out _);
-			return del.Invoke (functions, unicode);
+			return (int)del.Invoke (functions, unicode);
 		}
 
 		[MonoPInvokeCallback (typeof (UnicodeMirroringProxyDelegate))]
