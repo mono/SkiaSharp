@@ -141,6 +141,10 @@ namespace SkiaSharpSample
 #else
 				.AddConsole(LogLevel.Information);
 #endif
+
+#if !WINDOWS_UWP
+				global::Uno.UI.Adapter.Microsoft.Extensions.Logging.LoggingAdapter.Initialize();
+#endif
 		}
 	}
 }
