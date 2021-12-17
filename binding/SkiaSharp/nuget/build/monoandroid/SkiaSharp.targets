@@ -3,7 +3,8 @@
 
     <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
     <PropertyGroup>
-        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
+        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' and '$(AndroidApplication)' == 'True' ">True</ShouldIncludeNativeSkiaSharp>
+        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">False</ShouldIncludeNativeSkiaSharp>
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
