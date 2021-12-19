@@ -147,12 +147,12 @@ namespace SkiaSharp.Views.Blazor
 					canvas.Save();
 				}
 
-			// start drawing
-			OnPaintSurface?.Invoke(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, info.WithSize(userVisibleSize), info));
-		}
+				// start drawing
+				OnPaintSurface?.Invoke(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, info.WithSize(userVisibleSize), info));
+			}
 
-		// update the control
-		canvas?.Flush();
+			// update the control
+			canvas?.Flush();
 			context.Flush();
 		}
 
