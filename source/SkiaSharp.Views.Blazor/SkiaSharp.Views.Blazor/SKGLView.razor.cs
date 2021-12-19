@@ -33,6 +33,12 @@ namespace SkiaSharp.Views.Blazor
 		[Inject]
 		IJSRuntime JS { get; set; } = null!;
 
+		/// <summary>
+		/// If true (default), the canvas will be automatically resized to fit the client width and height. 
+		/// </summary>
+		[Parameter]
+		public bool AutoResize { get; set; } = true;
+
 		[Parameter]
 		public Action<SKPaintGLSurfaceEventArgs>? OnPaintSurface { get; set; }
 
@@ -74,7 +80,7 @@ namespace SkiaSharp.Views.Blazor
 				interop = await SKHtmlCanvasInterop.ImportAsync(JS, htmlCanvas, OnRenderFrame);
 				jsGLInfo = interop.InitGL();
 
-				sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
+				if (AutoResize) sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
 				dpiWatcher = await DpiWatcherInterop.ImportAsync(JS, OnDpiChanged);
 			}
 		}
@@ -141,12 +147,12 @@ namespace SkiaSharp.Views.Blazor
 					canvas.Save();
 				}
 
-				// start drawing
-				OnPaintSurface?.Invoke(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, info.WithSize(userVisibleSize), info));
-			}
+			// start drawing
+			OnPaintSurface?.Invoke(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, info.WithSize(userVisibleSize), info));
+		}
 
-			// update the control
-			canvas?.Flush();
+		// update the control
+		canvas?.Flush();
 			context.Flush();
 		}
 
@@ -186,7 +192,7 @@ namespace SkiaSharp.Views.Blazor
 		public void Dispose()
 		{
 			dpiWatcher.Unsubscribe(OnDpiChanged);
-			sizeWatcher.Dispose();
+			sizeWatcher?.Dispose();
 			interop.Dispose();
 		}
 	}
