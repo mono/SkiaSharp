@@ -19,6 +19,7 @@ namespace SkiaSharp.Views.Blazor
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
 
+		private bool autoResize;
 		private GRContext? context;
 		private GRGlInterface? glInterface;
 		private GRBackendRenderTarget? renderTarget;
@@ -37,7 +38,21 @@ namespace SkiaSharp.Views.Blazor
 		/// If true (default), the canvas will be automatically resized to fit the client width and height. 
 		/// </summary>
 		[Parameter]
-		public bool AutoResize { get; set; } = true;
+		public bool AutoResize
+		{
+			get => autoResize;
+			set
+			{
+				if (autoResize != value)
+				{
+					if (!autoResize && value) sizeWatcher.Start();
+					if (autoResize && !value) sizeWatcher.Stop();
+
+					autoResize = value;
+					Invalidate();
+				}
+			}
+		} = true;
 
 		[Parameter]
 		public Action<SKPaintGLSurfaceEventArgs>? OnPaintSurface { get; set; }
@@ -80,7 +95,7 @@ namespace SkiaSharp.Views.Blazor
 				interop = await SKHtmlCanvasInterop.ImportAsync(JS, htmlCanvas, OnRenderFrame);
 				jsGLInfo = interop.InitGL();
 
-				if (AutoResize) sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
+				sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
 				dpiWatcher = await DpiWatcherInterop.ImportAsync(JS, OnDpiChanged);
 			}
 		}
