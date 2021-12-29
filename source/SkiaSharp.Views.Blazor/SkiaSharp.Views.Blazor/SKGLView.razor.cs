@@ -30,6 +30,8 @@ namespace SkiaSharp.Views.Blazor
 		private double dpi;
 		private SKSize canvasSize;
 
+		public SKSize CanvasSize => canvasSize;
+
 		[Inject]
 		IJSRuntime JS { get; set; } = null!;
 

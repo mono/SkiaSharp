@@ -23,6 +23,8 @@ namespace SkiaSharp.Views.Blazor
 		private SKSize canvasSize;
 		private bool enableRenderLoop;
 
+		public SKSize CanvasSize => canvasSize;
+
 		[Inject]
 		IJSRuntime JS { get; set; } = null!;
 
