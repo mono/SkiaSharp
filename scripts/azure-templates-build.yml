@@ -107,14 +107,14 @@ jobs:
               performMultiLevelLookup: true
             displayName: Install the correct version of .NET Core
           # install the bits needed for .NET 6 builds
-          - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-            displayName: Install the preview version of .NET Core
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
                 displayName: Install Visual Studio
             - pwsh: .\scripts\select-vs.ps1
               displayName: Select Visual Studio
+          - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            displayName: Install the preview version of .NET Core
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE"
               displayName: Install the .NET Core workloads
