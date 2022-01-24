@@ -384,6 +384,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs
           additionalArgs: --skipExternals="all"
+          installPreviewVs: true
           requiredArtifacts:
             - native
           artifactName: managed
@@ -473,7 +474,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: docs-api-diff
           additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
-          installPreviewVs: false
           shouldPublish: false
           requiredArtifacts:
             - package_windows
@@ -518,6 +518,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests-netfx
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          installPreviewVs: true
           installWindowsSdk: false
           shouldPublish: false
           requiredArtifacts:
