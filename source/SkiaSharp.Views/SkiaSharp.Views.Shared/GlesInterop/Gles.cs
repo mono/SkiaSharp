@@ -1,4 +1,4 @@
-﻿#if !__WATCHOS__ && !__WASM__ && !UNO_REFERENCE_API
+﻿#if !__WATCHOS__ && !__WASM__ && !UNO_REFERENCE_API && !__MACCATALYST__
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Views.GlesInterop
