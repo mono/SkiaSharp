@@ -103,7 +103,7 @@ namespace SkiaSharp.Views.Forms
 			if (onTouchAction == null || scalePixels == null)
 				return false;
 
-			var id = touch.Handle.ToInt64();
+			var id = ((IntPtr)touch.Handle).ToInt64();
 
 			var cgPoint = touch.LocationInView(View);
 			var point = scalePixels(cgPoint.X, cgPoint.Y);
