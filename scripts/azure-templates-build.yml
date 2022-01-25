@@ -233,6 +233,9 @@ jobs:
       - ${{ parameters.postBuildSteps }}
 
       # publish artifacts
+      - bash: |
+          cp $HOME/.config/NuGet/NuGet.Config ./logs/
+        condition: failed()
       - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
         condition: or(${{ parameters.shouldPublish }}, failed())
