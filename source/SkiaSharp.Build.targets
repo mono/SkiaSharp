@@ -255,4 +255,11 @@ internal partial class VersionConstants {
     </ItemGroup>
   </Target>
 
+  <!-- try work around a potential bug -->
+  <Target Name="After_InjectAdditionalFiles" AfterTargets="_InjectAdditionalFiles">
+    <ItemGroup>
+      <AdditionalFiles Remove="@(Analyzer)" />
+    </ItemGroup>
+  </Target>
+
 </Project>
