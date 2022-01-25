@@ -23,6 +23,7 @@ Invoke-WebRequest -UseBasicParsing `
 
 Write-Host "Installing Visual Studio..."
 $exitCode = & "$env:TEMP\dd_vs_community.exe" --quiet --norestart --wait `
+  --includeRecommended `
   --add Microsoft.VisualStudio.Workload.NetCrossPlat `
   --add Microsoft.VisualStudio.Workload.NetCoreTools `
   --add Microsoft.VisualStudio.Workload.ManagedDesktop `
@@ -36,10 +37,5 @@ New-Item -ItemType Directory -Force -Path "$vsLogs" | Out-Null
 Get-ChildItem "$env:TEMP\dd_*" |
   Where-Object { $_.CreationTime -gt $startTime } |
   Copy-Item -Destination "$vsLogs"
-
-dir 'C:\Program Files\Microsoft Visual Studio\2022\'
-dir 'C:\Program Files\Microsoft Visual Studio\2022\Preview\MSBuild\'
-dir 'C:\Program Files\Microsoft Visual Studio\2022\Preview\MSBuild\Xamarin\'
-dir 'C:\Program Files\Microsoft Visual Studio\2022\Preview\MSBuild\Xamarin\Android\'
 
 exit $LASTEXITCODE
