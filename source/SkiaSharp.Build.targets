@@ -255,7 +255,7 @@ internal partial class VersionConstants {
     </ItemGroup>
   </Target>
 
-  <!-- try work around a potential bug -->
+  <!-- HACK: the new IDE seems to not like Analyzers in AdditionalFiles -->
   <Target Name="After_InjectAdditionalFiles" AfterTargets="_InjectAdditionalFiles">
     <ItemGroup>
       <AdditionalFiles Remove="@(Analyzer)" />
