@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !__MACCATALYST__
+using System;
 using CoreAnimation;
 using Foundation;
 
@@ -98,3 +99,4 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 }
+#endif

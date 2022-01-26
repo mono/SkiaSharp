@@ -1,4 +1,4 @@
-﻿#if !__GTK__ && !WINDOWS && !NETSTANDARD
+﻿#if !__GTK__ && !WINDOWS && !__MACCATALYST__ && !NETSTANDARD
 using System;
 using System.ComponentModel;
 

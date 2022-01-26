@@ -31,9 +31,9 @@ variables:
   XCODE_VERSION: 12.4
   DOTNET_VERSION_PREVIOUS: 3.1.413
   DOTNET_VERSION: 5.0.401
-  DOTNET_VERSION_PREVIEW: 6.0.100
-  DOTNET_WORKLOAD_SOURCE: 'https://aka.ms/dotnet/maui/6.0.101/preview.11.json'
-  VS_VERSION_PREVIEW: 17/release
+  DOTNET_VERSION_PREVIEW: 6.0.200-preview.22055.15
+  DOTNET_WORKLOAD_SOURCE: 'https://aka.ms/dotnet/maui/6.0.200/preview.12.json'
+  VS_VERSION_PREVIEW: 17/pre
   CONFIGURATION: 'Release'
   VM_IMAGE_WINDOWS: windows-2022
   VM_IMAGE_WINDOWS_PREVIOUS: windows-2019
@@ -384,6 +384,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs
           additionalArgs: --skipExternals="all"
+          installPreviewVs: true
           requiredArtifacts:
             - native
           artifactName: managed
@@ -473,7 +474,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS_PREVIOUS)
           target: docs-api-diff
           additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
-          installPreviewVs: false
           shouldPublish: false
           requiredArtifacts:
             - package_windows
@@ -518,6 +518,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests-netfx
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          installPreviewVs: true
           installWindowsSdk: false
           shouldPublish: false
           requiredArtifacts:
@@ -780,6 +781,7 @@ stages:
           displayName: Windows
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
+          installPreviewVs: true
           requiredArtifactsMap:
             - src: nuget
               dst: nugets

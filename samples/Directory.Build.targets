@@ -1,3 +1,10 @@
 <Project>
 
+  <!-- HACK: the new IDE seems to not like Analyzers in AdditionalFiles -->
+  <Target Name="After_InjectAdditionalFiles" AfterTargets="_InjectAdditionalFiles">
+    <ItemGroup>
+      <AdditionalFiles Remove="@(AdditionalFiles)" Condition="'%(Extension)' == '.dll'" />
+    </ItemGroup>
+  </Target>
+
 </Project>
