@@ -384,7 +384,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs
           additionalArgs: --skipExternals="all"
-          installPreviewVs: true
           requiredArtifacts:
             - native
           artifactName: managed
@@ -518,7 +517,6 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: tests-netfx
           additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-          installPreviewVs: true
           installWindowsSdk: false
           shouldPublish: false
           requiredArtifacts:
@@ -781,7 +779,6 @@ stages:
           displayName: Windows
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
-          installPreviewVs: true
           requiredArtifactsMap:
             - src: nuget
               dst: nugets
