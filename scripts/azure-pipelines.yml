@@ -38,6 +38,7 @@ variables:
   VM_IMAGE_WINDOWS: 'Azure Pipelines windows-2022'
   VM_IMAGE_MAC: 'Azure Pipelines macOS-10.15'
   VM_IMAGE_LINUX: 'Azure Pipelines ubuntu-18.04'
+  VM_IMAGE_AZURE_PREFIX: 'Azure Pipelines '
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
@@ -60,9 +61,9 @@ stages:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
         pool:
-          ${{ if startsWith(variables.VM_IMAGE_LINUX, 'Azure Pipelines') }}:
-            vmImage: ${{ replace(variables.VM_IMAGE_LINUX, 'Azure Pipelines', '') }}
-          ${{ if not(startsWith(variables.VM_IMAGE_LINUX, 'Azure Pipelines')) }}:
+          ${{ if startsWith(variables.VM_IMAGE_LINUX, variables.VM_IMAGE_AZURE_PREFIX) }}:
+            vmImage: ${{ replace(variables.VM_IMAGE_LINUX, variables.VM_IMAGE_AZURE_PREFIX, '') }}
+          ${{ if not(startsWith(variables.VM_IMAGE_LINUX, variables.VM_IMAGE_AZURE_PREFIX)) }}:
             name: ${{ variables.VM_IMAGE_LINUX }}
         steps:
           - checkout: none
