@@ -36,7 +36,7 @@ jobs:
     pool:
       demands: ${{ parameters.demands }}
       ${{ if startsWith(parameters.vmImage, 'Azure-Pipelines-') }}:
-        vmImage: ${{ trim(replace(parameters.vmImage, 'Azure-Pipelines-', '')) }}
+        vmImage: ${{ replace(parameters.vmImage, 'Azure-Pipelines-', '') }}
       ${{ if not(startsWith(parameters.vmImage, 'Azure-Pipelines-')) }}:
         name: ${{ parameters.vmImage }}
     dependsOn: ${{ parameters.dependsOn }}
