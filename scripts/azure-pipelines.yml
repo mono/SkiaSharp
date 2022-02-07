@@ -13,6 +13,15 @@ parameters:
     displayName: 'The specific native artifacts to use for this build.'
     type: number
     default: 0
+  - name: VM_IMAGE_WINDOWS
+    type: string
+    default: 'Azure-Pipelines-windows-2022'
+  - name: VM_IMAGE_MAC
+    type: string
+    default: 'Azure-Pipelines-macOS-10.15'
+  - name: VM_IMAGE_LINUX
+    type: string
+    default: 'Azure-Pipelines-ubuntu-18.04'
 
 variables:
   SKIASHARP_VERSION: 2.88.0
@@ -35,9 +44,6 @@ variables:
   DOTNET_WORKLOAD_SOURCE: 'https://aka.ms/dotnet/maui/6.0.200/preview.13.json'
   VS_VERSION_PREVIEW: 17/pre
   CONFIGURATION: 'Release'
-  VM_IMAGE_WINDOWS: 'Azure-Pipelines-windows-2022'
-  VM_IMAGE_MAC: 'Azure-Pipelines-macOS-10.15'
-  VM_IMAGE_LINUX: 'Azure-Pipelines-ubuntu-18.04'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   THROW_ON_TEST_FAILURE: true
   NUGET_DIFF_PRERELEASE: false
@@ -60,10 +66,10 @@ stages:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
         pool:
-          ${{ if startsWith(variables.VM_IMAGE_LINUX, 'Azure-Pipelines-') }}:
-            vmImage: ${{ replace(variables.VM_IMAGE_LINUX, 'Azure-Pipelines-', '') }}
-          ${{ if not(startsWith(variables.VM_IMAGE_LINUX, 'Azure-Pipelines-')) }}:
-            name: ${{ variables.VM_IMAGE_LINUX }}
+          ${{ if startsWith(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-') }}:
+            vmImage: ${{ replace(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-', '') }}
+          ${{ if not(startsWith(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-')) }}:
+            name: ${{ parameters.VM_IMAGE_LINUX }}
         steps:
           - checkout: none
           - template: azure-templates-variables.yml
@@ -744,10 +750,10 @@ stages:
       - job: coverage_reports                      # Coverage Reports
         displayName: Coverage Reports
         pool:
-          ${{ if startsWith(variables.VM_IMAGE_LINUX, 'Azure-Pipelines-') }}:
-            vmImage: ${{ replace(variables.VM_IMAGE_LINUX, 'Azure-Pipelines-', '') }}
-          ${{ if not(startsWith(variables.VM_IMAGE_LINUX, 'Azure-Pipelines-')) }}:
-            name: ${{ variables.VM_IMAGE_LINUX }}
+          ${{ if startsWith(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-') }}:
+            vmImage: ${{ replace(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-', '') }}
+          ${{ if not(startsWith(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-')) }}:
+            name: ${{ parameters.VM_IMAGE_LINUX }}
         dependsOn:
           - tests_netcore_windows
           - tests_netcore_macos
