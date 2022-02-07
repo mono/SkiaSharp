@@ -10,7 +10,7 @@ jobs:
         name: native_wasm_${{ replace(version, '.', '_') }}_linux
         displayName: WASM (${{ version }})
         buildExternals: ${{ parameters.buildExternals }}
-        vmImage: $(VM_IMAGE_LINUX)
+        vmImage: ${{ parameters.VM_IMAGE_LINUX }}
         docker: scripts/Docker/wasm
         target: externals-wasm
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version }}
