@@ -36,9 +36,9 @@ jobs:
     pool:
       demands: ${{ parameters.demands }}
       ${{ if startsWith(parameters.vmImage, variables.VM_IMAGE_AZURE_PREFIX) }}:
-        vmImage: ${{ replace(parameters.vmImage, variables.VM_IMAGE_AZURE_PREFIX, '') }} SW startsWith(parameters.vmImage, variables.VM_IMAGE_AZURE_PREFIX)
+        vmImage: ${{ replace(parameters.vmImage, variables.VM_IMAGE_AZURE_PREFIX, '') }}
       ${{ if not(startsWith(parameters.vmImage, variables.VM_IMAGE_AZURE_PREFIX)) }}:
-        name: ${{ parameters.vmImage }} NSW not(startsWith(parameters.vmImage, variables.VM_IMAGE_AZURE_PREFIX))
+        name: ${{ parameters.vmImage }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     variables: ${{ parameters.variables }}
