@@ -34,8 +34,11 @@ jobs:
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 180
     pool:
-      name: ${{ parameters.vmImage }}
       demands: ${{ parameters.demands }}
+      ${{ if startsWith(parameters.vmImage, 'Azure Pipelines') }}:
+        vmImage: ${{ replace(parameters.vmImage, 'Azure Pipelines', '') }} SW startsWith(parameters.vmImage, 'Azure Pipelines')
+      ${{ if not(startsWith(parameters.vmImage, 'Azure Pipelines')) }}:
+        name: ${{ parameters.vmImage }} NSW not(startsWith(parameters.vmImage, 'Azure Pipelines'))
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     variables: ${{ parameters.variables }}
