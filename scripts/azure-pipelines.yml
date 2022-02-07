@@ -333,6 +333,7 @@ stages:
         parameters:
           artifactName: native
           buildExternals: ${{ parameters.buildExternals }}
+          vmImage: ${{ parameters.VM_IMAGE_LINUX }}
           builds:
             - name: ''
             - name: nodeps
@@ -368,6 +369,7 @@ stages:
       - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
         parameters:
           buildExternals: ${{ parameters.buildExternals }}
+          vmImage: ${{ parameters.VM_IMAGE_LINUX }}
           artifactName: native
           emscripten:
             - 2.0.5
