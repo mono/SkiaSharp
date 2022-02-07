@@ -74,11 +74,11 @@ jobs:
 
       # install extra bits for the native builds
       - ${{ if startsWith(parameters.name, 'native_') }}:
-        # switch to Python 3.x
+        # switch to the correct Python version
         - task: UsePythonVersion@0
-          displayName: Switch to Python to 3.x
+          displayName: Switch to Python to 2.7
           inputs:
-            versionSpec: '3.x'
+            versionSpec: '2.7'
             architecture: 'x64'
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
