@@ -220,9 +220,13 @@ jobs:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
       - ${{ if ne(parameters.docker, '') }}:
-        - bash: docker build --tag skiasharp ${{ parameters.dockerArgs }} .
-          workingDirectory: ${{ parameters.docker }}
+        - task: Docker@2
           displayName: Build the Docker image for ${{ parameters.docker }}
+          inputs:
+            command: build
+            arguments: ${{ parameters.dockerArgs }}
+            tags: skiasharp
+            dockerfile: ${{ parameters.docker }}/Dockerfile
         - bash: |
             echo dotnet tool restore > cmd.sh
             echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
