@@ -36,9 +36,9 @@ jobs:
     pool:
       demands: ${{ parameters.demands }}
       ${{ if startsWith(parameters.vmImage, 'Azure Pipelines ') }}:
-        vmImage: '${{ parameters.vmImage }}'  ${{startsWith(parameters.vmImage, 'Azure Pipelines ')}}  ${{ replace(parameters.vmImage, 'Azure Pipelines ', '') }}
+        vmImage: '${{ parameters.vmImage }}' ${{ replace(parameters.vmImage, 'Azure Pipelines ', '') }}
       ${{ if not(startsWith(parameters.vmImage, 'Azure Pipelines ')) }}:
-        name: '${{ parameters.vmImage }}' ${{startsWith(parameters.vmImage, 'Azure Pipelines ')}} ${{ parameters.vmImage }}
+        name: '${{ parameters.vmImage }}' ${{ parameters.vmImage }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     variables: ${{ parameters.variables }}
@@ -227,6 +227,7 @@ jobs:
             arguments: ${{ parameters.dockerArgs }}
             tags: skiasharp
             dockerfile: ${{ parameters.docker }}/Dockerfile
+            buildContext: ${{ parameters.docker }}
         - bash: |
             echo dotnet tool restore > cmd.sh
             echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
