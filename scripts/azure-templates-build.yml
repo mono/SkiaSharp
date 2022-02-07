@@ -224,10 +224,9 @@ jobs:
           displayName: Build the Docker image for ${{ parameters.docker }}
           inputs:
             command: build
-            arguments: ${{ parameters.dockerArgs }}
-            tags: skiasharp
-            dockerfile: ${{ parameters.docker }}/Dockerfile
             buildContext: ${{ parameters.docker }}
+            dockerfile: ${{ parameters.docker }}/Dockerfile
+            arguments: --tag skiasharp ${{ parameters.dockerArgs }}
         - bash: |
             echo dotnet tool restore > cmd.sh
             echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
