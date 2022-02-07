@@ -744,7 +744,10 @@ stages:
       - job: coverage_reports                      # Coverage Reports
         displayName: Coverage Reports
         pool:
-          vmImage: $(VM_IMAGE_LINUX)
+          ${{ if startsWith(variables.VM_IMAGE_LINUX, 'Azure Pipelines ') }}:
+            vmImage: ${{ replace(variables.VM_IMAGE_LINUX, 'Azure Pipelines ', '') }}
+          ${{ if not(startsWith(variables.VM_IMAGE_LINUX, 'Azure Pipelines ')) }}:
+            name: ${{ variables.VM_IMAGE_LINUX }}
         dependsOn:
           - tests_netcore_windows
           - tests_netcore_macos
