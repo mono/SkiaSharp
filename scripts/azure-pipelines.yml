@@ -60,7 +60,10 @@ stages:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
         pool:
-          vmImage: $(VM_IMAGE_LINUX)
+          ${{ if startsWith(variables.VM_IMAGE_LINUX, 'Azure Pipelines') }}:
+            vmImage: ${{ replace(variables.VM_IMAGE_LINUX, 'Azure Pipelines', '') }}
+          ${{ if not(startsWith(variables.VM_IMAGE_LINUX, 'Azure Pipelines')) }}:
+            name: ${{ variables.VM_IMAGE_LINUX }}
         steps:
           - checkout: none
           - template: azure-templates-variables.yml
