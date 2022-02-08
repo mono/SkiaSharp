@@ -11,7 +11,10 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     pool:
-      vmImage: ${{ parameters.vmImage }}
+      ${{ if startsWith(parameters.vmImage, 'Azure-Pipelines-') }}:
+        vmImage: ${{ replace(parameters.vmImage, 'Azure-Pipelines-', '') }}
+      ${{ if not(startsWith(parameters.vmImage, 'Azure-Pipelines-')) }}:
+        name: ${{ parameters.vmImage }}
     condition: ${{ parameters.condition }}
     steps:
       - checkout: none

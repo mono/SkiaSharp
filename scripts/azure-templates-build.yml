@@ -34,8 +34,11 @@ jobs:
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 180
     pool:
-      vmImage: ${{ parameters.vmImage }}
       demands: ${{ parameters.demands }}
+      ${{ if startsWith(parameters.vmImage, 'Azure-Pipelines-') }}:
+        vmImage: ${{ replace(parameters.vmImage, 'Azure-Pipelines-', '') }}
+      ${{ if not(startsWith(parameters.vmImage, 'Azure-Pipelines-')) }}:
+        name: ${{ parameters.vmImage }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     variables: ${{ parameters.variables }}
@@ -71,11 +74,14 @@ jobs:
 
       # install extra bits for the native builds
       - ${{ if startsWith(parameters.name, 'native_') }}:
-        # switch to Python 2.7
+        # switch to the correct Python version
         - task: UsePythonVersion@0
-          displayName: Switch to Python to 2.7
+          displayName: Switch to the correct Python version
           inputs:
-            versionSpec: '2.7'
+            ${{ if endsWith(parameters.name, '_windows') }}:
+              versionSpec: '3.x'
+            ${{ if not(endsWith(parameters.name, '_windows')) }}:
+              versionSpec: '2.7'
             architecture: 'x64'
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
@@ -217,9 +223,13 @@ jobs:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
       - ${{ if ne(parameters.docker, '') }}:
-        - bash: docker build --tag skiasharp ${{ parameters.dockerArgs }} .
-          workingDirectory: ${{ parameters.docker }}
+        - task: Docker@2
           displayName: Build the Docker image for ${{ parameters.docker }}
+          inputs:
+            command: build
+            buildContext: ${{ parameters.docker }}
+            dockerfile: ${{ parameters.docker }}/Dockerfile
+            arguments: --tag skiasharp ${{ parameters.dockerArgs }}
         - bash: |
             echo dotnet tool restore > cmd.sh
             echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
