@@ -516,6 +516,16 @@ stages:
             ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))) }}:
               signType: 'Test'
 
+    - stage: sbom
+      displayName: 'Software Bill of Materials'
+      dependsOn: signing
+      jobs:
+      - template: compliance/sbom/job.v1.yml@xamarin-templates        # # Software Bill of Materials (SBOM): https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
+        parameters:
+          artifactNames: ['nuget']
+          packageName: 'SkiaSharp'
+          packageFilter: '*.nupkg'
+
   - stage: tests
     displayName: Tests
     dependsOn:
