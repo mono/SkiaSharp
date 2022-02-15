@@ -106,15 +106,15 @@ jobs:
               version: $(DOTNET_VERSION_PREVIOUS)
               performMultiLevelLookup: true
             displayName: Install the previous version of .NET Core
-          # - task: UseDotNet@2
-          #   inputs:
-          #     packageType: 'sdk'
-          #     version: $(DOTNET_VERSION)
-          #     performMultiLevelLookup: true
-          #   displayName: Install the correct version of .NET Core
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: $(DOTNET_VERSION)
+              performMultiLevelLookup: true
+            displayName: Install the correct version of .NET Core
           # install the bits needed for .NET 6 builds
-          - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-            displayName: Install the preview version of .NET Core
+          # - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+          #   displayName: Install the preview version of .NET Core
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
