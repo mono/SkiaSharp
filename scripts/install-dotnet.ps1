@@ -1,6 +1,7 @@
 Param(
     [string] $Version,
-    [string] $InstallDir
+    [string] $InstallDir,
+    [string] $FeedUrl = "https://dotnetbuilds.blob.core.windows.net/public"
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,11 +19,11 @@ Invoke-WebRequest `
 
 Write-Host "Installing .NET $Version..."
 if ($IsMacOS) {
-  & sh dotnet-install.sh --version "$Version" --install-dir "$InstallDir" --verbose
+  & sh dotnet-install.sh --version "$Version" --install-dir "$InstallDir" --azure-feed "$FeedUrl" --verbose
 } elseif ($IsLinux) {
-  & bash dotnet-install.sh --version "$Version" --install-dir "$InstallDir" --verbose
+  & bash dotnet-install.sh --version "$Version" --install-dir "$InstallDir" --azure-feed "$FeedUrl" --verbose
 } else {
-  .\dotnet-install.ps1 -Version "$Version" -InstallDir "$InstallDir" -Verbose
+  .\dotnet-install.ps1 -Version "$Version" -InstallDir "$InstallDir" -AzureFeed "$FeedUrl" -Verbose
 }
 
 Write-Host "Installed .NET Versions:"
