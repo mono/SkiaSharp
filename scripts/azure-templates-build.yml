@@ -115,6 +115,7 @@ jobs:
           # install the bits needed for .NET 6 builds
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
+            condition: ne(variables.DOTNET_VERSION_PREVIEW, '')
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
