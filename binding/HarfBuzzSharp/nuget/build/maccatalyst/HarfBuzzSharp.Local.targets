@@ -26,14 +26,4 @@
 
     </Target>
 
-    <!-- temporarily work around https://github.com/xamarin/xamarin-macios/issues/12369 -->
-    <Target Name="_HarfBuzzSharpCollectFrameworksFixes" AfterTargets="_CollectFrameworks" Condition=" '$(OS)' == 'Unix' ">
-        <PropertyGroup>
-            <_HarfBuzzSharpNativeAssetPath>$(_FrameworksDirectory)\libHarfBuzzSharp.framework\libHarfBuzzSharp</_HarfBuzzSharpNativeAssetPath>
-            <_HarfBuzzSharpIsSymlink Condition="$([MSBuild]::BitwiseAnd(1024, $([System.IO.File]::GetAttributes('$(_HarfBuzzSharpNativeAssetPath)')))) == '1024'">true</_HarfBuzzSharpIsSymlink>
-        </PropertyGroup>
-        <RemoveDir Directories="$(_FrameworksDirectory)\libHarfBuzzSharp.framework" Condition="'$(_HarfBuzzSharpIsSymlink)' != 'true'" />
-        <Exec Command="cp -R $(_HarfBuzzSharpExpandNativeReferencesPath)libHarfBuzzSharp.framework $(_FrameworksDirectory)/libHarfBuzzSharp.framework" Condition="'$(_HarfBuzzSharpIsSymlink)' != 'true'" />
-    </Target>
-
 </Project>
