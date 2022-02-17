@@ -26,14 +26,4 @@
 
     </Target>
 
-    <!-- temporarily work around https://github.com/xamarin/xamarin-macios/issues/12369 -->
-    <Target Name="_SkiaSharpCollectFrameworksFixes" AfterTargets="_CollectFrameworks" Condition=" '$(OS)' == 'Unix' ">
-        <PropertyGroup>
-            <_SkiaSharpNativeAssetPath>$(_FrameworksDirectory)\libSkiaSharp.framework\libSkiaSharp</_SkiaSharpNativeAssetPath>
-            <_SkiaSharpIsSymlink Condition="$([MSBuild]::BitwiseAnd(1024, $([System.IO.File]::GetAttributes('$(_SkiaSharpNativeAssetPath)')))) == '1024'">true</_SkiaSharpIsSymlink>
-        </PropertyGroup>
-        <RemoveDir Directories="$(_FrameworksDirectory)\libSkiaSharp.framework" Condition="'$(_SkiaSharpIsSymlink)' != 'true'" />
-        <Exec Command="cp -R $(_SkiaSharpExpandNativeReferencesPath)libSkiaSharp.framework $(_FrameworksDirectory)/libSkiaSharp.framework" Condition="'$(_SkiaSharpIsSymlink)' != 'true'" />
-    </Target>
-
 </Project>
