@@ -123,7 +123,11 @@ jobs:
             - pwsh: .\scripts\select-vs.ps1
               displayName: Select Visual Studio
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
-            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE"
+            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
+              condition: ne(variables.DOTNET_VERSION_PREVIEW, '')
+              displayName: Install the preview .NET Core workloads
+            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $false
+              condition: eq(variables.DOTNET_VERSION_PREVIEW, '')
               displayName: Install the .NET Core workloads
           # display dotnet info
           - pwsh: dotnet --info
