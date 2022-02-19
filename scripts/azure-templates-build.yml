@@ -78,10 +78,7 @@ jobs:
         - task: UsePythonVersion@0
           displayName: Switch to the correct Python version
           inputs:
-            ${{ if endsWith(parameters.name, '_windows') }}:
-              versionSpec: '3.x'
-            ${{ if not(endsWith(parameters.name, '_windows')) }}:
-              versionSpec: '2.7'
+            versionSpec: '3.x'
             architecture: 'x64'
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
