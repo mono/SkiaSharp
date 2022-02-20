@@ -2,7 +2,11 @@
 using System.Runtime.InteropServices;
 using Uno.Foundation;
 using Uno.UI.Runtime.WebAssembly;
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
 using Windows.UI.Xaml;
+#endif
 
 namespace SkiaSharp.Views.UWP
 {

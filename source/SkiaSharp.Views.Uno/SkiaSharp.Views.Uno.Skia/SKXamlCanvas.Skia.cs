@@ -1,10 +1,16 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+
+#if WINUI
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+#else
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
-
+#endif
 namespace SkiaSharp.Views.UWP
 {
 	public partial class SKXamlCanvas : Canvas

@@ -1,7 +1,11 @@
 ﻿using AppKit;
 using CoreGraphics;
 using SkiaSharp.Views.Mac;
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
 using Windows.UI.Xaml;
+#endif
 
 namespace SkiaSharp.Views.UWP
 {
