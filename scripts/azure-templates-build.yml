@@ -136,13 +136,15 @@ jobs:
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
+        - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
+          displayName: Switch to the latest Xcode
         - bash: |
+            xcrun --sdk iphonesimulator --show-sdk-path
+            echo "---"
             ls -l /Applications/Xcode*
             ls -l /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer/Platforms/
             ls -l /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/
             ls -l /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator*
-        - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
-          displayName: Switch to the latest Xcode
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
