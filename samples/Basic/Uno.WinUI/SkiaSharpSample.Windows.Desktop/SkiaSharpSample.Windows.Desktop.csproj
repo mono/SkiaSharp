@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+		<RootNamespace>SkiaSharpSample</RootNamespace>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<Platforms>x86;x64;arm64</Platforms>
+		<RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+		<UseWinUI>true</UseWinUI>
+	</PropertyGroup>
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);WINUI</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Manifest Include="$(ApplicationManifest)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Uno.WinUI" Version="4.0.13" />
+		<PackageReference Include="Uno.Core" Version="4.0.1" />
+		<PackageReference Include="Uno.SourceGenerationTasks" Version="4.0.0" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22000.196" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
+		<PackageReference Include="Uno.Core.Extensions.Logging.Singleton" Version="4.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+	  <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Skia\SkiaSharp.Views.Uno.WinUI.Skia.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" RuntimeFrameworkVersion="10.0.18362.22" />
+		<FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" TargetingPackVersion="10.0.18362.22" />
+	</ItemGroup>
+
+	<Import Project="..\..\Uno\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" />
+</Project>

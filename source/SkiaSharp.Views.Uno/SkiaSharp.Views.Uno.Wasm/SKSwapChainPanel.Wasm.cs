@@ -3,7 +3,11 @@ using System.Threading;
 using Uno.Foundation;
 using Uno.Foundation.Interop;
 using Uno.UI.Runtime.WebAssembly;
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
 using Windows.UI.Xaml;
+#endif
 
 namespace SkiaSharp.Views.UWP
 {

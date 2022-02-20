@@ -1,8 +1,11 @@
 ﻿using UIKit;
 using CoreGraphics;
 using SkiaSharp.Views.iOS;
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
 using Windows.UI.Xaml;
-
+#endif
 namespace SkiaSharp.Views.UWP
 {
 	public partial class SKXamlCanvas

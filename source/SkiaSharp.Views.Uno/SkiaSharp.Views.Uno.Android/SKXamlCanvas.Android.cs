@@ -1,7 +1,10 @@
 ﻿using Android.Graphics;
 using Windows.Graphics.Display;
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
 using Windows.UI.Xaml;
-
+#endif
 namespace SkiaSharp.Views.UWP
 {
 	public partial class SKXamlCanvas
