@@ -136,7 +136,11 @@ jobs:
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: ls -l /Applications/Xcode*
+        - bash: |
+            ls -l /Applications/Xcode*
+            ls -l /Applications/Xcode_12.4.app/Contents/Developer/Platforms/
+            ls -l /Applications/Xcode_12.4.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/
+            ls -l /Applications/Xcode_12.4.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator14.4.sdk
         - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
           displayName: Switch to the latest Xcode
 
