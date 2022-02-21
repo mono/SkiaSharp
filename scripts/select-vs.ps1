@@ -11,6 +11,8 @@ $installationPath = & $vswhere -latest -prerelease -property installationPath
 Write-Host "##vso[task.prependpath]$installationPath\MSBuild\Current\Bin"
 Write-Host "##vso[task.setvariable variable=VS_INSTALL]$installationPath"
 Write-Host "##vso[task.setvariable variable=VSINSTALLDIR]$installationPath"
+$env:VS_INSTALL = $installationPath
+$env:VSINSTALLDIR = $installationPath
 
 Write-Host "Installed Visual Studio Versions:"
 & $vswhere -all -prerelease -property installationPath

@@ -90,7 +90,7 @@ jobs:
             - pwsh: .\scripts\install-llvm.ps1
               displayName: Install LLVM
 
-      # install extra bits for the manged builds
+      # install extra bits for the managed builds
       - ${{ if not(startsWith(parameters.name, 'native_')) }}:
         - ${{ if eq(parameters.installDotNet, 'true') }}:
           - task: UseDotNet@2
@@ -113,8 +113,6 @@ jobs:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
                 displayName: Install Visual Studio
-            - pwsh: .\scripts\select-vs.ps1
-              displayName: Select Visual Studio
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
               condition: ne(variables.DOTNET_VERSION_PREVIEW, '')
@@ -125,6 +123,11 @@ jobs:
           # display dotnet info
           - pwsh: dotnet --info
             displayName: Display all the .NET information
+
+      # select the correct/latest version of Visual Studio
+      - ${{ if endsWith(parameters.name, '_windows') }}:
+        - pwsh: .\scripts\select-vs.ps1
+          displayName: Select Visual Studio
 
       # select the correct version of the JDK for .NET 6
       - pwsh: |
