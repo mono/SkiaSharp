@@ -58,15 +58,7 @@ jobs:
 
       # make sure mono/msbuild is the correct version
       - ${{ if and(ne(variables['MONO_VERSION_LINUX'], ''), eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
-        - bash: |
-            sudo apt remove -y mono-complete msbuild
-            sudo apt autoremove -y
-            sudo rm /etc/mono/config
-            sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-            echo "deb https://download.mono-project.com/repo/ubuntu $(MONO_VERSION_LINUX) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
-            sudo apt update
-            sudo apt install -y mono-complete msbuild
-            mono --version
+        - bash: ./scripts/install-mono.sh $(MONO_VERSION_LINUX)
           displayName: Install Mono and MSBuild
       - ${{ if endsWith(parameters.name, '_macos') }}:
         - bash: sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION_MACOS)
@@ -150,10 +142,7 @@ jobs:
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
-        - bash: |
-            git clone --branch $(EMSCRIPTEN_VERSION) https://github.com/emscripten-core/emsdk ~/emsdk
-            ~/emsdk/emsdk install $(EMSCRIPTEN_VERSION)
-            ~/emsdk/emsdk activate $(EMSCRIPTEN_VERSION)
+        - bash: ./scripts/install-emsdk.sh $(EMSCRIPTEN_VERSION)
           displayName: Install the Emscripten SDK
 
       # install the Windows tools
