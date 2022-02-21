@@ -134,9 +134,12 @@ jobs:
 
       # select the correct version of the JDK for .NET 6
       - pwsh: |
-          dir env:
-          echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
-        displayName: Select JDK 11
+          if ("$(JAVA_HOME_11_X64)") {
+            echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
+          } else {
+            echo "Using existing JAVA_HOME instead."
+          }
+        displayName: Select JDK 11 if explicitly available
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
