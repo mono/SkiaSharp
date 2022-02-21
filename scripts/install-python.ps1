@@ -41,21 +41,29 @@ $downloadUrl = (($pythonManifest
 # download
 $tempDir = Join-Path "$HOME_DIR" "python-temp"
 $archive = Join-Path "$tempDir" (Split-Path $downloadUrl -Leaf)
+New-Item -ItemType Directory -Force -Path "$tempDir" | Out-Null
 
 Write-Host "Downloading Python package '$downloadUrl' to '$archive'..."
-New-Item -ItemType Directory -Force -Path "$tempDir" | Out-Null
 (New-Object System.Net.WebClient).DownloadFile("$downloadUrl", "$archive")
 
-# install
-Write-Host "Extracting Python to '$destDir'..."
-New-Item -ItemType Directory -Force -Path "$destDir" | Out-Null
+# extract
+Write-Host "Extracting Python to '$tempDir'..."
 if ($IsMacOS -or $IsLinux) {
-    tar -vxzf "$archive" -C "$destDir"
+    tar -vxzf "$archive" -C "$tempDir"
 } else {
-    [System.IO.Compression.ZipFile]::ExtractToDirectory("$archive", "$destDir")
+    [System.IO.Compression.ZipFile]::ExtractToDirectory("$archive", "$tempDir")
 }
-
 Write-Host "Extraction complete."
-New-Item -ItemType File -Force -Path "$completeFile" | Out-Null
+
+# install
+Write-Host "Installing Python..."
+try {
+    Push-Location "$tempDir"
+    .\setup.ps1
+    Write-Host "Install complete."
+} finally {
+    Pop-Location
+    Write-Host "Install failed."
+}
 
 exit $LASTEXITCODE
