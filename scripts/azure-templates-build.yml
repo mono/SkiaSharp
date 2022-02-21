@@ -150,15 +150,14 @@ jobs:
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install the older Windows SDKs
           - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
-            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296  -Version 10.0.10240.0
               displayName: Install the Windows 10 SDK 10.0.10240
-            - ${{ if and(not(startsWith(parameters.name, 'native_')), not(startsWith(parameters.name, 'api_diff_'))) }}:
-              - pwsh: .\scripts\install-winsdk.ps1 -LinkId 864422
-                displayName: Install the Windows 10 SDK 10.0.16299
-              - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2083338
-                displayName: Install the Windows 10 SDK 10.0.18362
-              # - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2120843
-              #   displayName: Install the Windows 10 SDK 10.0.19041
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 864422  -Version 10.0.16299.0
+              displayName: Install the Windows 10 SDK 10.0.16299
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2083338 -Version 10.0.18362.0
+              displayName: Install the Windows 10 SDK 10.0.18362
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
+              displayName: Install the Windows 10 SDK 10.0.19041
 
       # install any .NET Core global tools
       - ${{ each tool in parameters.tools }}:
