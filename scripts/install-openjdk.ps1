@@ -44,15 +44,21 @@ if ($IsMacOS -or $IsLinux) {
 }
 
 # set the JAVA_HOME
+$VersionParts = $Version.Split(".")
+$FolderVersion = "$($VersionParts[0]).$($VersionParts[1]).$($VersionParts[2])+$($VersionParts[3])"
 if ($IsMacOS) {
-    $java_home = Join-Path "$jdk" "jdk-$version.jdk/Contents/Home"
+    $java_home = Join-Path "$jdk" "jdk-$FolderVersion.jdk/Contents/Home"
 } else {
-    $java_home = Join-Path "$jdk" "jdk-$version"
+    $java_home = Join-Path "$jdk" "jdk-$FolderVersion"
 }
 Write-Host "##vso[task.setvariable variable=JAVA_HOME;]$java_home"
+$env:JAVA_HOME = "$java_home"
 
 # make sure that JAVA_HOME/bin is in the PATH
 $javaBin = Join-Path "$java_home" "bin"
 Write-Host "##vso[task.setvariable variable=PATH;]$javaBin;$env:PATH";
+$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+
+java --version
 
 exit $LASTEXITCODE
