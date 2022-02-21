@@ -1,5 +1,5 @@
 Param(
-    [string] $Version = "11.1.0",
+    [string] $Version = "12.0.0",
     [string] $InstallDestination = "C:\Program Files\LLVM"
 )
 
