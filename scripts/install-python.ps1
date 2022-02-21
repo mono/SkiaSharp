@@ -15,6 +15,8 @@ $completeFile = "$destDir.complete"
 if (Test-Path $completeFile) {
     Write-Host "Python $Version ($Arch) already installed."
     exit 0;
+} else {
+    Write-Host "No matching Python found."
 }
 
 Write-Host "Downloading manifest..."
@@ -52,5 +54,8 @@ if ($IsMacOS -or $IsLinux) {
 } else {
     [System.IO.Compression.ZipFile]::ExtractToDirectory("$archive", "$destDir")
 }
+
+Write-Host "Extraction complete."
+New-Item -ItemType File -Force -Path "$completeFile" | Out-Null
 
 exit $LASTEXITCODE
