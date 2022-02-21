@@ -93,8 +93,7 @@ void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
             $"  -reports:{testResultsGlob}" +
             $"  -targetdir:{output}" +
             $"  -reporttypes:HtmlInline_AzurePipelines;Cobertura" +
-            $"  -assemblyfilters:-*.Tests"
-        });
+            $"  -assemblyfilters:-*.Tests");
     } catch (Exception ex) {
         Error("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
         Error(ex);
