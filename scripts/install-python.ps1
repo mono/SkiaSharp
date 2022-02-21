@@ -60,10 +60,8 @@ Write-Host "Installing Python..."
 try {
     Push-Location "$tempDir"
     .\setup.ps1
-    Write-Host "Install complete."
 } finally {
     Pop-Location
-    Write-Host "Install failed."
 }
 
 exit $LASTEXITCODE
