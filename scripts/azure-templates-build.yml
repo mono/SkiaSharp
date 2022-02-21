@@ -129,14 +129,9 @@ jobs:
         - pwsh: .\scripts\select-vs.ps1
           displayName: Select Visual Studio
 
-      # select the correct version of the JDK for .NET 6
-      - pwsh: |
-          if ("$env:JAVA_HOME_11_X64") {
-            echo "##vso[task.setvariable variable=JAVA_HOME]$env:JAVA_HOME_11_X64"
-          } else {
-            echo "Using existing JAVA_HOME instead."
-          }
-        displayName: Select JDK 11 if explicitly available
+      # install the correct version of the JDK for .NET 6
+      - pwsh: .\scripts\install-openjdk.ps1
+        displayName: Install OpenJDK
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:

@@ -1,4 +1,5 @@
 Param(
+    [string] $Version = '11.0.14.9.1',
     [string] $InstallDestination = $null
 )
 
@@ -8,16 +9,15 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $HOME_DIR = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
 
-$version = "13.0.2"
 if ($IsMacOS) {
     $ext = "tar.gz"
-    $url = "https://download.java.net/java/GA/jdk13.0.2/d4173c853231432d94f001e99d882ca7/8/GPL/openjdk-13.0.2_osx-x64_bin.tar.gz"
+    $url = "https://aka.ms/download-jdk/microsoft-jdk-$Version-macOS-x64.tar.gz"
 } elseif ($IsLinux) {
     $ext = "tar.gz"
-    $url = "https://download.java.net/java/GA/jdk13.0.2/d4173c853231432d94f001e99d882ca7/8/GPL/openjdk-13.0.2_linux-x64_bin.tar.gz"
+    $url = "https://aka.ms/download-jdk/microsoft-jdk-$Version-linux-x64.tar.gz"
 } else {
     $ext = "zip"
-    $url = "https://download.java.net/java/GA/jdk13.0.2/d4173c853231432d94f001e99d882ca7/8/GPL/openjdk-13.0.2_windows-x64_bin.zip"
+    $url = "https://aka.ms/download-jdk/microsoft-jdk-$Version-windows-x64.zip"
 }
 
 $jdk = Join-Path "$HOME_DIR" "openjdk"
