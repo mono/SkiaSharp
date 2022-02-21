@@ -1,5 +1,5 @@
 Param(
-    [string] $Version,
+    [string] $Version = '3.10.2',
     [string] $Arch = 'x64'
 )
 

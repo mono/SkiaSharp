@@ -75,7 +75,7 @@ jobs:
       # install extra bits for the native builds
       - ${{ if startsWith(parameters.name, 'native_') }}:
         # switch to the correct Python version
-        - pwsh: .\scripts\install-python.ps1 -Version $(PYTHON_VERSION) -Arch 'x64'
+        - pwsh: .\scripts\install-python.ps1
           displayName: Install Python
         - task: UsePythonVersion@0
           displayName: Switch to the correct Python version
@@ -93,6 +93,8 @@ jobs:
               displayName: Install the Tizen SDK
           # install llvm
           - ${{ if and(eq(parameters.installLlvm, 'true'), contains(parameters.name, '_win32_')) }}:
+            - pwsh: .\scripts\install-7zip.ps1
+              displayName: Install 7-zip
             - pwsh: .\scripts\install-llvm.ps1
               displayName: Install LLVM
 
