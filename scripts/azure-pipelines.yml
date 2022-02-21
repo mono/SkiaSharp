@@ -240,8 +240,6 @@ stages:
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
           artifactName: native
-          tools:
-            - nano-api-scan
 
   - stage: native_macos
     displayName: Native macOS
@@ -557,8 +555,6 @@ stages:
           requiredArtifacts:
             - native_win32_x86_windows
             - native_win32_x64_windows
-          tools:
-            - dotnet-reportgenerator-globaltool
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
@@ -600,8 +596,6 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - native_macos_macos
-          tools:
-            - dotnet-reportgenerator-globaltool
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
@@ -713,8 +707,6 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - native_linux_x64_linux
-          tools:
-            - dotnet-reportgenerator-globaltool
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
