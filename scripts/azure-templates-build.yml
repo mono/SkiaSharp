@@ -134,8 +134,8 @@ jobs:
 
       # select the correct version of the JDK for .NET 6
       - pwsh: |
-          if ("$(JAVA_HOME_11_X64)") {
-            echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
+          if ("$env:JAVA_HOME_11_X64") {
+            echo "##vso[task.setvariable variable=JAVA_HOME]$env:JAVA_HOME_11_X64"
           } else {
             echo "Using existing JAVA_HOME instead."
           }
