@@ -48,6 +48,9 @@ jobs:
         submodules: recursive
       - template: azure-templates-variables.yml
 
+      - pwsh: |
+          dir env:
+
       # install any packages on linux
       - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
         - bash: |
