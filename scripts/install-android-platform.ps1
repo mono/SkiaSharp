@@ -24,6 +24,7 @@ if (-not $IsMacOS -and -not $IsLinux) {
 }
 $sdkmanager = Join-Path "$latest" "bin" "sdkmanager$ext"
 
-cmd /c "echo 'y' | `"$sdkmanager`" `"platforms;android-$API`""
+Set-Content -Value "y`r`ny`r`n" -Path yes.txt
+cmd /c "`"$sdkmanager`" `"platforms;android-$API`" < yes.txt"
 
 exit $LASTEXITCODE
