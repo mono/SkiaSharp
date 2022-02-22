@@ -18,6 +18,15 @@ if (-not $IsMacOS -and -not $IsLinux) {
 }
 $sdkmanager = Join-Path "$latest" "bin" "sdkmanager$ext"
 
-cmd /c "echo 'y' | `"$sdkmanager`" `"$Package`""
+if ($IsMacOS -or $IsLinux) {
+    Write-Host "y" | & $sdkmanager "$Package"
+} else {
+    Set-Content -Value "y" -Path "yes.txt"
+    try {
+        cmd /c "`"$sdkmanager`" `"$Package`" < yes.txt"
+    } finally {
+        Remove-Item "yes.txt"
+    }
+}
 
 exit $LASTEXITCODE
