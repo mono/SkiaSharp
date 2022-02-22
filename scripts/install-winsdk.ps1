@@ -5,15 +5,21 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-$sdkDir = "${env:ProgramFiles(x86)}\Windows Kits\10\UnionMetadata"
+$sdkLibDir = "${env:ProgramFiles(x86)}\Windows Kits\10\Lib"
+$sdkWinmdDir = "${env:ProgramFiles(x86)}\Windows Kits\10\UnionMetadata"
 
-Write-Host "Installed Windows SDKs:"
-if (Test-Path (Join-Path "$sdkDir" "Windows.winmd")) {
-    Write-Host "10.0.10240.0"
+$installedLibs = @()
+$installedWinmds = @()
+$installedSdks = @()
+
+$installedLibs += (Get-ChildItem -Name "$sdkLibDir")
+if (Test-Path (Join-Path "$sdkWinmdDir" "Windows.winmd")) {
+    $installedWinmds += @("10.0.10240.0")
 }
-Get-ChildItem -Name "$sdkDir\10.0.*"
+$installedWinmds += (Get-ChildItem -Name "$sdkWinmdDir\10.0.*")
+$installedSdks = $installedLibs | Where-Object { $installedWinmds -contains $_ }
 
-if ($Version -and ((Test-Path (Join-Path "$sdkDir" "$Version")) -or (Test-Path (Join-Path "$sdkDir" "Windows.winmd")))) {
+if ($Version -and ($installedSdks -contains $Version)) {
     Write-Host "Windows SDK $Version already installed."
     exit 0
 }
@@ -30,11 +36,5 @@ Write-Host "Downloading Windows SDK Installer: $uri..."
 
 Write-Host "Installing Windows SDK..."
 & $installer /norestart /quiet | Out-Null
-
-Write-Host "Installed Windows SDKs:"
-if (Test-Path (Join-Path "$sdkDir" "Windows.winmd")) {
-    Write-Host "10.0.10240.0"
-}
-Get-ChildItem -Name "$sdkDir\10.0.*"
 
 exit $LASTEXITCODE
