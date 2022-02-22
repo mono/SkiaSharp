@@ -22,6 +22,7 @@ parameters:
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
   installAndroidNdk: true                       # whether or not to install the Android NDK
+  installAndroidSdk: true                       # whether or not to install the Android SDK
   installTizenSdk: true                         # whether or not to install the Tizen SDK
   installWindowsSdk: true                       # whether or not to install the Windows SDK
   installPreviewVs: false                       # whether or not to install the preview VS
@@ -58,6 +59,7 @@ jobs:
       docker: ${{ parameters.docker }}
       dockerArgs: ${{ parameters.dockerArgs }}
       installAndroidNdk: ${{ parameters.installAndroidNdk }}
+      installAndroidSdk: ${{ parameters.installAndroidSdk }}
       installTizenSdk: ${{ parameters.installTizenSdk }}
       installWindowsSdk: ${{ parameters.installWindowsSdk }}
       installPreviewVs: ${{ parameters.installPreviewVs }}

@@ -441,6 +441,7 @@ stages:
           target: nuget
           additionalArgs: --packall=true --skipbuild=true
           installWindowsSdk: false
+          installAndroidSdk: false
           installDotNet: false
           requiredArtifacts:
             - managed
@@ -837,6 +838,7 @@ stages:
             target: git-sync-deps
             installWindowsSdk: false
             installDotNet: false
+            installAndroidSdk: false
             shouldPublish: false
             postBuildSteps:
               - task: CredScan@2

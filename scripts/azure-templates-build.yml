@@ -21,6 +21,7 @@ parameters:
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
   installAndroidNdk: true                       # whether or not to install the Android NDK
+  installAndroidSdk: true                       # whether or not to install the Android SDK
   installTizenSdk: true                         # whether or not to install the Tizen SDK
   installWindowsSdk: true                       # whether or not to install the Windows SDK
   installPreviewVs: false                       # whether or not to install the preview VS
@@ -91,9 +92,9 @@ jobs:
               displayName: Install LLVM
 
       # install extra bits for the managed builds
-      - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+      - ${{ if and(not(startsWith(parameters.name, 'native_')), not(endsWith(parameters.name, '_linux'))) }}:
         # install the bits needed for Android
-        - ${{ if not(endsWith(parameters.name, '_linux')) }}:
+        - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
           # install the correct version of the JDK for .NET 6
           - pwsh: |
               if ("$env:JAVA_HOME_11_X64") {
@@ -178,6 +179,10 @@ jobs:
       - ${{ each tool in parameters.tools }}:
         - pwsh: dotnet tool install -g ${{ tool }}
           displayName: Install ${{ tool }}
+
+      # install nuget
+      - pwsh: .\scripts\install-nuget.ps1
+        displayName: Install NuGet
 
       # download artifacts
       - ${{ each dep in parameters.requiredArtifacts }}:
