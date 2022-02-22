@@ -24,6 +24,6 @@ if (-not $IsMacOS -and -not $IsLinux) {
 }
 $sdkmanager = Join-Path "$latest" "bin" "sdkmanager$ext"
 
-Write-Host "y" | & $sdkmanager "platforms;android-$API"
+Write-Host "y`r`ny" | & $sdkmanager "platforms;android-$API"
 
 exit $LASTEXITCODE

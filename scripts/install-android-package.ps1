@@ -18,6 +18,6 @@ if (-not $IsMacOS -and -not $IsLinux) {
 }
 $sdkmanager = Join-Path "$latest" "bin" "sdkmanager$ext"
 
-Write-Host "y" | & $sdkmanager "$Package"
+Write-Host "y`r`ny" | & $sdkmanager "$Package"
 
 exit $LASTEXITCODE
