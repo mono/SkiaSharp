@@ -27,7 +27,7 @@ $sdkmanager = Join-Path "$latest" "bin" "sdkmanager$ext"
 Set-Content -Value "y" -Path "yes.txt"
 try {
     if ($IsMacOS -or $IsLinux) {
-        sh -c "`"$sdkmanager`" `"platforms;android-$API`" < yes.txt"
+        sh -c "`"$sdkmanager`" `"platforms\;android-$API`" < yes.txt"
     } else {
         cmd /c "`"$sdkmanager`" `"platforms;android-$API`" < yes.txt"
     }
