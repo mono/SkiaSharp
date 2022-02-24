@@ -51,7 +51,6 @@ variables:
   NUGET_DIFF_PRERELEASE: false
   ENABLE_CODE_COVERAGE: true
   EMSCRIPTEN_VERSION: 2.0.23
-  XHARNESS_VERSION: 1.0.0-prerelease.21404.1
 
 resources:
   repositories:
@@ -615,7 +614,7 @@ stages:
           displayName: Android (macOS)
           vmImage: ${{ parameters.VM_IMAGE_MAC }}
           target: tests-android
-          additionalArgs: --device=android-emulator-32_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+          additionalArgs: --device=android-emulator-64_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
           shouldPublish: false
           requiredArtifacts:
             - native_android_x86_macos
@@ -623,15 +622,9 @@ stages:
             - native_android_arm_macos
             - native_android_arm64_macos
           preBuildSteps:
-            - pwsh: |
-                dotnet tool install Microsoft.DotNet.XHarness.CLI `
-                  --global `
-                  --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
-                  --version "$env:XHARNESS_VERSION"
-              displayName: Install the xharness .NET Core tool
             - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
               displayName: Install the Android emulator
-            - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-30;google_apis_playstore;x86"
+            - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-30;google_apis_playstore;x86_64"
               displayName: Install the Android API 30 emulator image
           postBuildSteps:
             - task: PublishTestResults@2
@@ -659,12 +652,6 @@ stages:
             - native_ios_macos
           preBuildSteps:
             - template: azure-templates-provisioning-profiles.yml
-            - pwsh: |
-                dotnet tool install Microsoft.DotNet.XHarness.CLI `
-                  --global `
-                  --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json `
-                  --version "$env:XHARNESS_VERSION"
-              displayName: Install the xharness .NET Core tool
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the iOS test results
