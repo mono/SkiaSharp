@@ -24,15 +24,15 @@ if (-not $IsMacOS -and -not $IsLinux) {
 }
 $sdkmanager = Join-Path "$latest" "bin" "sdkmanager$ext"
 
-if ($IsMacOS -or $IsLinux) {
-    Write-Host "y" | & $sdkmanager "platforms;android-$API"
-} else {
-    Set-Content -Value "y`r`ny`r`ny" -Path "yes.txt"
-    try {
+Set-Content -Value "y" -Path "yes.txt"
+try {
+    if ($IsMacOS -or $IsLinux) {
+        sh -c "`"$sdkmanager`" `"platforms;android-$API`" < yes.txt"
+    } else {
         cmd /c "`"$sdkmanager`" `"platforms;android-$API`" < yes.txt"
-    } finally {
-        Remove-Item "yes.txt"
     }
+} finally {
+    Remove-Item "yes.txt"
 }
 
 exit $LASTEXITCODE
