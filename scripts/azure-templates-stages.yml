@@ -19,10 +19,11 @@ stages:
             name: ${{ parameters.VM_IMAGE_LINUX }}
         steps:
           - checkout: none
-          - pwsh: 'dir env:'
-          - template: azure-templates-variables.yml
-            parameters:
-              updateBuild: true
+          - pwsh: |
+              dir env:
+          # - template: azure-templates-variables.yml
+          #   parameters:
+          #     updateBuild: true
 
   # - stage: native_windows
   #   displayName: Native Windows
