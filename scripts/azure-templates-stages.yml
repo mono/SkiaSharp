@@ -455,34 +455,35 @@ stages:
                 Remove-Item ./output/nugets-symbols/ -Recurse -Force
               displayName: Delete the pre-published folders
 
-  - stage: api_diff
-    displayName: API Diff
-    dependsOn: package
-    jobs:
-      - template: azure-templates-bootstrapper.yml # API Diff
-        parameters:
-          name: api_diff_windows
-          displayName: API Diff
-          isBuildPipeline: true
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
-          target: docs-api-diff
-          additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
-          shouldPublish: false
-          requiredArtifacts:
-            - package_windows
-          requiredArtifactsMap:
-            - src: nuget
-              dst: nugets
-          preBuildSteps:
-            - pwsh: .\scripts\install-gtk.ps1
-              displayName: Install GTK# 2.12
-          postBuildSteps:
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the API diffs
-              condition: always()
-              inputs:
-                artifactName: api-diff
-                pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
+  - ${{ if parameters.isBuildPipeline }}:
+    - stage: api_diff
+      displayName: API Diff
+      dependsOn: package
+      jobs:
+        - template: azure-templates-bootstrapper.yml # API Diff
+          parameters:
+            name: api_diff_windows
+            displayName: API Diff
+            isBuildPipeline: true
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            target: docs-api-diff
+            additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
+            shouldPublish: false
+            requiredArtifacts:
+              - package_windows
+            requiredArtifactsMap:
+              - src: nuget
+                dst: nugets
+            preBuildSteps:
+              - pwsh: .\scripts\install-gtk.ps1
+                displayName: Install GTK# 2.12
+            postBuildSteps:
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the API diffs
+                condition: always()
+                inputs:
+                  artifactName: api-diff
+                  pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
 
   - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), parameters.isBuildPipeline) }}:
     - stage: signing
