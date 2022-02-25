@@ -1,5 +1,5 @@
 parameters:
-  isBuildPipeline: ''
+  isBuildPipeline: true
   buildExternals: 0
   VM_IMAGE_WINDOWS: ''
   VM_IMAGE_WINDOWS_NATIVE: ''
@@ -24,7 +24,7 @@ stages:
           - template: azure-templates-variables.yml
             parameters:
               updateBuild: true
-      - ${{ if parameters.isBuildPipeline }}:
+      - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
         - job: prepare2
           displayName: isBuildPipeline
           pool:
@@ -465,7 +465,7 @@ stages:
   #               Remove-Item ./output/nugets-symbols/ -Recurse -Force
   #             displayName: Delete the pre-published folders
 
-  # - ${{ if not(parameters.isBuildPipeline) }}:
+  # - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
   #   - stage: api_diff
   #     displayName: API Diff
   #     dependsOn: package
@@ -495,7 +495,7 @@ stages:
   #                 artifactName: api-diff
   #                 pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
 
-  # - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), parameters.isBuildPipeline) }}:
+  # - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), eq(parameters.isBuildPipeline, 'true')) }}:
   #   - stage: signing
   #     displayName: Sign NuGets
   #     dependsOn: package
@@ -517,7 +517,7 @@ stages:
   #         packageName: 'SkiaSharp'
   #         packageFilter: '*.nupkg'
 
-  # - ${{ if not(parameters.isBuildPipeline) }}:
+  # - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
   #   - stage: tests
   #     displayName: Tests
   #     dependsOn:
@@ -789,7 +789,7 @@ stages:
   #               codeCoverageTool: Cobertura
   #               summaryFileLocation: 'output/**/Cobertura.xml'
 
-  # - ${{ if not(parameters.isBuildPipeline) }}:
+  # - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
   #   - stage: samples
   #     displayName: Samples
   #     dependsOn: package
@@ -833,7 +833,7 @@ stages:
   #           installEmsdk: true
   #           initScript: source ~/emsdk/emsdk_env.sh
 
-  # - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), parameters.isBuildPipeline) }}:
+  # - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), eq(parameters.isBuildPipeline, 'true')) }}:
   #   - stage: checks
   #     displayName: Run Code Checks
   #     dependsOn: prepare
