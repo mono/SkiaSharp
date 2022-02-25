@@ -455,7 +455,7 @@ stages:
                 Remove-Item ./output/nugets-symbols/ -Recurse -Force
               displayName: Delete the pre-published folders
 
-  - ${{ if parameters.isBuildPipeline }}:
+  - ${{ if not(parameters.isBuildPipeline) }}:
     - stage: api_diff
       displayName: API Diff
       dependsOn: package
