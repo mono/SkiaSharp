@@ -26,10 +26,14 @@ steps:
     condition: eq(variables['Build.Reason'], 'Schedule')
   - pwsh: |
       $label = ""
-      if ($env:BUILD_REASON -ne "PullRequest") {
-        $label = "+" + $env:BUILD_SOURCEBRANCHNAME
+      if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
+        $label = $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME
+      } else {
+        if ($env:BUILD_REASON -ne "PullRequest") {
+          $label = "+" + $env:BUILD_SOURCEBRANCHNAME
+        }
+        $label = "$env:SKIASHARP_VERSION-$env:PREVIEW_LABEL.$env:BUILD_NUMBER$label"
       }
-      $label = "$env:SKIASHARP_VERSION-$env:PREVIEW_LABEL.$env:BUILD_NUMBER$label"
       Write-Host "Build label: $label"
       Write-Host "##vso[build.updatebuildnumber]$label"
     displayName: Update the build number with a more readable one
