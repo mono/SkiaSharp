@@ -15,16 +15,16 @@ parameters:
     default: 0
   - name: VM_IMAGE_WINDOWS
     type: string
-    default: 'Azure-Pipelines-windows-2022'
+    default: '$(BuildAgent.Pool.Windows)'
   - name: VM_IMAGE_WINDOWS_NATIVE
     type: string
-    default: 'Azure-Pipelines-windows-2019'
+    default: '$(BuildAgent.Pool.Windows.Native)'
   - name: VM_IMAGE_MAC
     type: string
-    default: 'Azure-Pipelines-macOS-10.15'
+    default: '$(BuildAgent.Pool.macOS)'
   - name: VM_IMAGE_LINUX
     type: string
-    default: 'Azure-Pipelines-ubuntu-18.04'
+    default: '$(BuildAgent.Pool.Linux)'
 
 variables:
   SKIASHARP_VERSION: 2.88.0
