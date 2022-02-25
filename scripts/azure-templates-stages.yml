@@ -19,6 +19,7 @@ stages:
             name: ${{ parameters.VM_IMAGE_LINUX }}
         steps:
           - checkout: none
+          - pwsh: 'dir env:'
           - template: azure-templates-variables.yml
             parameters:
               updateBuild: true
