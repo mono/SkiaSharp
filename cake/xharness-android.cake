@@ -113,9 +113,6 @@ Setup(context =>
     Information("Starting Emulator: {0}...", ANDROID_AVD);
     emulatorProcess = AndroidEmulatorStart(ANDROID_AVD, emuSettings);
 
-    // restart adb - just in case
-    AdbKillServer(adbSettings);
-
     // wait for it to finish booting (10 mins)
     var waited = 0;
     var total = 60 * 10;
