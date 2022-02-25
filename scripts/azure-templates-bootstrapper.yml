@@ -33,7 +33,7 @@ parameters:
   tools: []                                     # any additional .net global tools
 
 jobs:
-- ${{ if or(not(parameters.isBuildPipeline), and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_'))) }}:
+- ${{ if or(not(parameters.isBuildPipeline), and(gt(parameters.buildExternals, 0), or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'), startsWith(parameters.name, 'package_')))) }}:
   - template: azure-templates-download.yml
     parameters:
       name: ${{ parameters.name }}
@@ -68,7 +68,7 @@ jobs:
       artifactName: ${{ parameters.artifactName }}
       tools: ${{ parameters.tools }}
 
-- ${{ if not(or(not(parameters.isBuildPipeline), and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_')))) }}:
+- ${{ if not(or(not(parameters.isBuildPipeline), and(gt(parameters.buildExternals, 0), or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'), startsWith(parameters.name, 'package_'))))) }}:
   - template: azure-templates-build.yml
     parameters:
       name: ${{ parameters.name }}
