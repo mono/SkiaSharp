@@ -6,8 +6,6 @@ parameters:
   VM_IMAGE_MAC: ''
   VM_IMAGE_LINUX: ''
 
-# RESOURCES_PIPELINE_SKIASHARP_RUNID
-
 stages:
   - stage: prepare
     displayName: Prepare Build
@@ -24,16 +22,6 @@ stages:
           - template: azure-templates-variables.yml
             parameters:
               updateBuild: true
-      - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
-        - job: prepare2
-          displayName: isBuildPipeline
-          pool:
-            ${{ if startsWith(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-') }}:
-              vmImage: ${{ replace(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-', '') }}
-            ${{ if not(startsWith(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-')) }}:
-              name: ${{ parameters.VM_IMAGE_LINUX }}
-          steps:
-            - checkout: none
 
   - stage: native_windows
     displayName: Native Windows
