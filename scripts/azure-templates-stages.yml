@@ -21,9 +21,9 @@ stages:
           - checkout: none
           - pwsh: |
               gci env: | Format-Table -AutoSize
-          # - template: azure-templates-variables.yml
-          #   parameters:
-          #     updateBuild: true
+          - template: azure-templates-variables.yml
+            parameters:
+              updateBuild: true
 
   # - stage: native_windows
   #   displayName: Native Windows
