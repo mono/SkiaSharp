@@ -15,16 +15,21 @@ parameters:
     default: 5780287
   - name: VM_IMAGE_WINDOWS
     type: string
-    default: 'MAUI-DevDiv'
-  - name: VM_IMAGE_WINDOWS_NATIVE
-    type: string
-    default: 'MAUI-DevDiv'
+    default:
+      name: AzurePipelines-EO
+      demands:
+        - ImageOverride -equals 'AzurePipelinesWindows2022compliant'
   - name: VM_IMAGE_MAC
     type: string
-    default: 'Azure-Pipelines-internal-macos-11'
+    default:
+      name: AzurePipelines
+      vmImage: internal-macos-11
   - name: VM_IMAGE_LINUX
     type: string
-    default: 'Azure-Pipelines-ubuntu-18.04'
+    default:
+      name: AzurePipelines-EO
+      demands:
+        - ImageOverride -equals 'AzurePipelinesUbuntu18.04compliant'
 
 variables:
   SKIASHARP_VERSION: 2.88.0
@@ -66,11 +71,7 @@ stages:
     jobs:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
-        pool:
-          ${{ if startsWith(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-') }}:
-            vmImage: ${{ replace(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-', '') }}
-          ${{ if not(startsWith(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-')) }}:
-            name: ${{ parameters.VM_IMAGE_LINUX }}
+        pool: ${{ parameters.VM_IMAGE_LINUX }}
         steps:
           - checkout: none
           - template: azure-templates-variables.yml
@@ -86,7 +87,7 @@ stages:
           name: native_android_x86_windows
           displayName: Android x86
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-android
           additionalArgs: --buildarch=x86
           installWindowsSdk: false
@@ -96,7 +97,7 @@ stages:
           name: native_android_x64_windows
           displayName: Android x64
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-android
           additionalArgs: --buildarch=x64
           installWindowsSdk: false
@@ -106,7 +107,7 @@ stages:
           name: native_android_arm_windows
           displayName: Android arm
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-android
           additionalArgs: --buildarch=arm
           installWindowsSdk: false
@@ -116,7 +117,7 @@ stages:
           name: native_android_arm64_windows
           displayName: Android arm64
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-android
           additionalArgs: --buildarch=arm64
           installWindowsSdk: false
@@ -126,7 +127,7 @@ stages:
           name: native_tizen_windows
           displayName: Tizen
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-tizen
           installWindowsSdk: false
           artifactName: native
@@ -135,7 +136,7 @@ stages:
           name: native_uwp_angle_x86_windows
           displayName: ANGLE x86
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
           artifactName: native
@@ -144,7 +145,7 @@ stages:
           name: native_uwp_angle_x64_windows
           displayName: ANGLE x64
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
           artifactName: native
@@ -153,7 +154,7 @@ stages:
           name: native_uwp_angle_arm_windows
           displayName: ANGLE arm
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
           artifactName: native
@@ -162,7 +163,7 @@ stages:
           name: native_uwp_angle_arm64_windows
           displayName: ANGLE arm64
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: ANGLE
           additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
           artifactName: native
@@ -171,7 +172,7 @@ stages:
           name: native_uwp_x86_windows
           displayName: UWP x86
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-uwp
           additionalArgs: --buildarch=x86 --skipAngle=true
           artifactName: native
@@ -180,7 +181,7 @@ stages:
           name: native_uwp_x64_windows
           displayName: UWP x64
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-uwp
           additionalArgs: --buildarch=x64 --skipAngle=true
           artifactName: native
@@ -189,7 +190,7 @@ stages:
           name: native_uwp_arm_windows
           displayName: UWP arm
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-uwp
           additionalArgs: --buildarch=arm --skipAngle=true
           artifactName: native
@@ -198,7 +199,7 @@ stages:
           name: native_uwp_arm64_windows
           displayName: UWP arm64
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-uwp
           additionalArgs: --buildarch=arm64 --skipAngle=true
           artifactName: native
@@ -207,7 +208,7 @@ stages:
           name: native_win32_x86_windows
           displayName: Win32 x86
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-windows
           additionalArgs: --buildarch=x86
           artifactName: native
@@ -216,7 +217,7 @@ stages:
           name: native_win32_x64_windows
           displayName: Win32 x64
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-windows
           additionalArgs: --buildarch=x64
           artifactName: native
@@ -225,7 +226,7 @@ stages:
           name: native_win32_arm64_windows
           displayName: Win32 arm64
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-windows
           additionalArgs: --buildarch=arm64
           artifactName: native
@@ -234,7 +235,7 @@ stages:
           name: native_win32_x64_nanoserver_windows
           displayName: Nano Server x64
           buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
           artifactName: native
@@ -735,11 +736,7 @@ stages:
       # TODO: add tests for windows nano server
       - job: coverage_reports                      # Coverage Reports
         displayName: Coverage Reports
-        pool:
-          ${{ if startsWith(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-') }}:
-            vmImage: ${{ replace(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-', '') }}
-          ${{ if not(startsWith(parameters.VM_IMAGE_LINUX, 'Azure-Pipelines-')) }}:
-            name: ${{ parameters.VM_IMAGE_LINUX }}
+        pool: ${{ parameters.VM_IMAGE_LINUX }}
         dependsOn:
           - tests_netcore_windows
           - tests_netcore_macos

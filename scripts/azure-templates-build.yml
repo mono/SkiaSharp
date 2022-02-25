@@ -8,7 +8,6 @@ parameters:
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
   requiredArtifactsMap: []                      # the artifacts that this build needs to download
-  demands: []                                   # the demands
   preBuildSteps: []                             # any steps to run before the build
   postBuildSteps: []                            # any additional steps to run after the build
   initScript: ''                                # any scripts to run before starting the bootstrapper
@@ -34,12 +33,7 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 180
-    pool:
-      demands: ${{ parameters.demands }}
-      ${{ if startsWith(parameters.vmImage, 'Azure-Pipelines-') }}:
-        vmImage: ${{ replace(parameters.vmImage, 'Azure-Pipelines-', '') }}
-      ${{ if not(startsWith(parameters.vmImage, 'Azure-Pipelines-')) }}:
-        name: ${{ parameters.vmImage }}
+    pool: ${{ parameters.vmImage }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     variables: ${{ parameters.variables }}
