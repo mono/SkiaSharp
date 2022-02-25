@@ -14,18 +14,18 @@ parameters:
     type: number
     default: 5780287
   - name: VM_IMAGE_WINDOWS
-    type: string
+    type: object
     default:
       name: AzurePipelines-EO
       demands:
         - ImageOverride -equals 'AzurePipelinesWindows2022compliant'
   - name: VM_IMAGE_MAC
-    type: string
+    type: object
     default:
       name: AzurePipelines
       vmImage: internal-macos-11
   - name: VM_IMAGE_LINUX
-    type: string
+    type: object
     default:
       name: AzurePipelines-EO
       demands:
