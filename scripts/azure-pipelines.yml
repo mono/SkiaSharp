@@ -16,20 +16,18 @@ parameters:
   - name: VM_IMAGE_WINDOWS
     type: object
     default:
-      name: AzurePipelines-EO
-      demands:
-        - ImageOverride -equals AzurePipelinesWindows2022compliant
+      name: Azure Pipelines
+      vmImage: windows-2022
   - name: VM_IMAGE_MAC
     type: object
     default:
       name: Azure Pipelines
-      vmImage: internal-macos-11
+      vmImage: macOS-10.15
   - name: VM_IMAGE_LINUX
     type: object
     default:
-      name: AzurePipelines-EO
-      demands:
-        - ImageOverride -equals AzurePipelinesUbuntu18.04compliant
+      name: Azure Pipelines
+      vmImage: ubuntu-18.04
 
 variables:
   SKIASHARP_VERSION: 2.88.0
