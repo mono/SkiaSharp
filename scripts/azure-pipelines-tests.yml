@@ -1,13 +1,3 @@
-trigger:
-  - main
-  - develop
-  - patch/*
-
-pr:
-  - main
-  - develop
-  - patch/*
-
 parameters:
   - name: buildExternals
     displayName: 'The specific native artifacts to use for this build.'
@@ -36,11 +26,15 @@ resources:
       name: xamarin/yaml-templates
       endpoint: xamarin
       ref: refs/heads/main
+  pipelines:
+    - pipeline: SkiaSharp
+      source: SkiaSharp
+      trigger: true
 
 stages:
   - template: azure-templates-stages.yml
     parameters:
-      testsOnly: false
+      testsOnly: true
       buildExternals: ${{ parameters.buildExternals }}
       VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
