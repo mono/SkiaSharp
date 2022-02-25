@@ -18,6 +18,7 @@ parameters:
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
   buildExternals: ''                            # the build number to download externals from
+  isBuildPipeline: true
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -32,7 +33,7 @@ parameters:
   tools: []                                     # any additional .net global tools
 
 jobs:
-- ${{ if and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_')) }}:
+- ${{ if or(not(parameters.isBuildPipeline), and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_'))) }}:
   - template: azure-templates-download.yml
     parameters:
       name: ${{ parameters.name }}
@@ -67,7 +68,7 @@ jobs:
       artifactName: ${{ parameters.artifactName }}
       tools: ${{ parameters.tools }}
 
-- ${{ if not(and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_'))) }}:
+- ${{ if not(or(not(parameters.isBuildPipeline), and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_')))) }}:
   - template: azure-templates-build.yml
     parameters:
       name: ${{ parameters.name }}
