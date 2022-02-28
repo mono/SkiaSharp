@@ -23,440 +23,447 @@ stages:
             parameters:
               updateBuild: true
 
-  - stage: native_windows
-    displayName: Native Windows
-    dependsOn: prepare
-    jobs:
-      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Win)
-        parameters:
-          name: native_android_x86_windows
-          displayName: Android x86
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-android
-          additionalArgs: --buildarch=x86
-          installWindowsSdk: false
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Win)
-        parameters:
-          name: native_android_x64_windows
-          displayName: Android x64
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-android
-          additionalArgs: --buildarch=x64
-          installWindowsSdk: false
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Win)
-        parameters:
-          name: native_android_arm_windows
-          displayName: Android arm
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-android
-          additionalArgs: --buildarch=arm
-          installWindowsSdk: false
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Win)
-        parameters:
-          name: native_android_arm64_windows
-          displayName: Android arm64
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-android
-          additionalArgs: --buildarch=arm64
-          installWindowsSdk: false
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native Tizen (Win)
-        parameters:
-          name: native_tizen_windows
-          displayName: Tizen
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-tizen
-          installWindowsSdk: false
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Win)
-        parameters:
-          name: native_uwp_angle_x86_windows
-          displayName: ANGLE x86
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: ANGLE
-          additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Win)
-        parameters:
-          name: native_uwp_angle_x64_windows
-          displayName: ANGLE x64
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: ANGLE
-          additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Win)
-        parameters:
-          name: native_uwp_angle_arm_windows
-          displayName: ANGLE arm
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: ANGLE
-          additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Win)
-        parameters:
-          name: native_uwp_angle_arm64_windows
-          displayName: ANGLE arm64
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: ANGLE
-          additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Win)
-        parameters:
-          name: native_uwp_x86_windows
-          displayName: UWP x86
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-uwp
-          additionalArgs: --buildarch=x86 --skipAngle=true
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Win)
-        parameters:
-          name: native_uwp_x64_windows
-          displayName: UWP x64
-          buildExternals: ${{ parameters.buildExternals }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-uwp
-          additionalArgs: --buildarch=x64 --skipAngle=true
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Win)
-        parameters:
-          name: native_uwp_arm_windows
-          displayName: UWP arm
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-uwp
-          additionalArgs: --buildarch=arm --skipAngle=true
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Win)
-        parameters:
-          name: native_uwp_arm64_windows
-          displayName: UWP arm64
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-uwp
-          additionalArgs: --buildarch=arm64 --skipAngle=true
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Win)
-        parameters:
-          name: native_win32_x86_windows
-          displayName: Win32 x86
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-windows
-          additionalArgs: --buildarch=x86
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Win)
-        parameters:
-          name: native_win32_x64_windows
-          displayName: Win32 x64
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-windows
-          additionalArgs: --buildarch=x64
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Win)
-        parameters:
-          name: native_win32_arm64_windows
-          displayName: Win32 arm64
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-windows
-          additionalArgs: --buildarch=arm64
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Win)
-        parameters:
-          name: native_win32_x64_nanoserver_windows
-          displayName: Nano Server x64
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
-          target: externals-nanoserver
-          additionalArgs: --buildarch=x64
-          artifactName: native
-          tools:
-            - nano-api-scan
+  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+    - stage: native_windows
+      displayName: Native Windows
+      dependsOn: prepare
+      jobs:
+        - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Win)
+          parameters:
+            name: native_android_x86_windows
+            displayName: Android x86
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-android
+            additionalArgs: --buildarch=x86
+            installWindowsSdk: false
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Win)
+          parameters:
+            name: native_android_x64_windows
+            displayName: Android x64
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-android
+            additionalArgs: --buildarch=x64
+            installWindowsSdk: false
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Win)
+          parameters:
+            name: native_android_arm_windows
+            displayName: Android arm
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-android
+            additionalArgs: --buildarch=arm
+            installWindowsSdk: false
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Win)
+          parameters:
+            name: native_android_arm64_windows
+            displayName: Android arm64
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-android
+            additionalArgs: --buildarch=arm64
+            installWindowsSdk: false
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native Tizen (Win)
+          parameters:
+            name: native_tizen_windows
+            displayName: Tizen
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-tizen
+            installWindowsSdk: false
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Win)
+          parameters:
+            name: native_uwp_angle_x86_windows
+            displayName: ANGLE x86
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: ANGLE
+            additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Win)
+          parameters:
+            name: native_uwp_angle_x64_windows
+            displayName: ANGLE x64
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: ANGLE
+            additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Win)
+          parameters:
+            name: native_uwp_angle_arm_windows
+            displayName: ANGLE arm
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: ANGLE
+            additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Win)
+          parameters:
+            name: native_uwp_angle_arm64_windows
+            displayName: ANGLE arm64
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: ANGLE
+            additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Win)
+          parameters:
+            name: native_uwp_x86_windows
+            displayName: UWP x86
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-uwp
+            additionalArgs: --buildarch=x86 --skipAngle=true
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Win)
+          parameters:
+            name: native_uwp_x64_windows
+            displayName: UWP x64
+            buildExternals: ${{ parameters.buildExternals }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-uwp
+            additionalArgs: --buildarch=x64 --skipAngle=true
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Win)
+          parameters:
+            name: native_uwp_arm_windows
+            displayName: UWP arm
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-uwp
+            additionalArgs: --buildarch=arm --skipAngle=true
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Win)
+          parameters:
+            name: native_uwp_arm64_windows
+            displayName: UWP arm64
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-uwp
+            additionalArgs: --buildarch=arm64 --skipAngle=true
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Win)
+          parameters:
+            name: native_win32_x86_windows
+            displayName: Win32 x86
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-windows
+            additionalArgs: --buildarch=x86
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Win)
+          parameters:
+            name: native_win32_x64_windows
+            displayName: Win32 x64
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-windows
+            additionalArgs: --buildarch=x64
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Win)
+          parameters:
+            name: native_win32_arm64_windows
+            displayName: Win32 arm64
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-windows
+            additionalArgs: --buildarch=arm64
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Win)
+          parameters:
+            name: native_win32_x64_nanoserver_windows
+            displayName: Nano Server x64
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE}}
+            target: externals-nanoserver
+            additionalArgs: --buildarch=x64
+            artifactName: native
+            tools:
+              - nano-api-scan
 
-  - stage: native_macos
-    displayName: Native macOS
-    dependsOn: prepare
-    jobs:
-      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
-        parameters:
-          name: native_android_x86_macos
-          displayName: Android x86
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: externals-android
-          additionalArgs: --buildarch=x86
-      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
-        parameters:
-          name: native_android_x64_macos
-          displayName: Android x64
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: externals-android
-          additionalArgs: --buildarch=x64
-      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
-        parameters:
-          name: native_android_arm_macos
-          displayName: Android arm
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: externals-android
-          additionalArgs: --buildarch=arm
-      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
-        parameters:
-          name: native_android_arm64_macos
-          displayName: Android arm64
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: externals-android
-          additionalArgs: --buildarch=arm64
-      - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
-        parameters:
-          name: native_ios_macos
-          displayName: iOS
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: externals-ios
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native Mac Catalyst (macOS)
-        parameters:
-          name: native_maccatalyst_macos
-          displayName: Mac Catalyst
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: externals-maccatalyst
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
-        parameters:
-          name: native_macos_macos
-          displayName: macOS
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: externals-macos
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
-        parameters:
-          name: native_tvos_macos
-          displayName: tvOS
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: externals-tvos
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
-        parameters:
-          name: native_watchos_macos
-          displayName: watchOS
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: externals-watchos
-          artifactName: native
-      - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
-        parameters:
-          name: native_tizen_macos
-          displayName: Tizen
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: externals-tizen
-          condition: false # TODO: TIZEN INSTALL BUGS
+  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+    - stage: native_macos
+      displayName: Native macOS
+      dependsOn: prepare
+      jobs:
+        - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
+          parameters:
+            name: native_android_x86_macos
+            displayName: Android x86
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: externals-android
+            additionalArgs: --buildarch=x86
+        - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
+          parameters:
+            name: native_android_x64_macos
+            displayName: Android x64
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: externals-android
+            additionalArgs: --buildarch=x64
+        - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
+          parameters:
+            name: native_android_arm_macos
+            displayName: Android arm
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: externals-android
+            additionalArgs: --buildarch=arm
+        - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
+          parameters:
+            name: native_android_arm64_macos
+            displayName: Android arm64
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: externals-android
+            additionalArgs: --buildarch=arm64
+        - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
+          parameters:
+            name: native_ios_macos
+            displayName: iOS
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: externals-ios
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native Mac Catalyst (macOS)
+          parameters:
+            name: native_maccatalyst_macos
+            displayName: Mac Catalyst
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: externals-maccatalyst
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
+          parameters:
+            name: native_macos_macos
+            displayName: macOS
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: externals-macos
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
+          parameters:
+            name: native_tvos_macos
+            displayName: tvOS
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: externals-tvos
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
+          parameters:
+            name: native_watchos_macos
+            displayName: watchOS
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: externals-watchos
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
+          parameters:
+            name: native_tizen_macos
+            displayName: Tizen
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: externals-tizen
+            condition: false # TODO: TIZEN INSTALL BUGS
 
-  - stage: native_linux
-    displayName: Native Linux
-    dependsOn: prepare
-    jobs:
-      - template: azure-templates-linux-matrix.yml # Build Native Linux (Linux)
-        parameters:
-          artifactName: native
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_LINUX }}
-          builds:
-            - name: ''
-            - name: nodeps
-              desc: 'No Deps'
-              additionalArgs: --verifyExcluded=fontconfig
-              gnArgs: skia_use_fontconfig=false
-          matrix:
-            - arch: x64
-              docker: scripts/Docker/debian9/amd64
-            - arch: x64
-              variant: alpine
-              docker: scripts/Docker/alpine/amd64
-            - arch: arm
-              docker: scripts/Docker/debian9/clang-cross
-              target: externals-linux-clang-cross
-            - arch: arm64
-              docker: scripts/Docker/debian9/clang-cross
-              dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
-              target: externals-linux-clang-cross
-      - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
-        parameters:
-          name: native_tizen_linux
-          displayName: Tizen
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_LINUX }}
-          packages: $(TIZEN_LINUX_PACKAGES)
-          target: externals-tizen
+  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+    - stage: native_linux
+      displayName: Native Linux
+      dependsOn: prepare
+      jobs:
+        - template: azure-templates-linux-matrix.yml # Build Native Linux (Linux)
+          parameters:
+            artifactName: native
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            builds:
+              - name: ''
+              - name: nodeps
+                desc: 'No Deps'
+                additionalArgs: --verifyExcluded=fontconfig
+                gnArgs: skia_use_fontconfig=false
+            matrix:
+              - arch: x64
+                docker: scripts/Docker/debian9/amd64
+              - arch: x64
+                variant: alpine
+                docker: scripts/Docker/alpine/amd64
+              - arch: arm
+                docker: scripts/Docker/debian9/clang-cross
+                target: externals-linux-clang-cross
+              - arch: arm64
+                docker: scripts/Docker/debian9/clang-cross
+                dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
+                target: externals-linux-clang-cross
+        - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
+          parameters:
+            name: native_tizen_linux
+            displayName: Tizen
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            packages: $(TIZEN_LINUX_PACKAGES)
+            target: externals-tizen
 
-  - stage: native_wasm
-    displayName: Native WASM
-    dependsOn: prepare
-    jobs:
-      - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
-        parameters:
-          buildExternals: ${{ parameters.buildExternals }}
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_LINUX }}
-          artifactName: native
-          emscripten:
-            - 2.0.5
-            - 2.0.6
-            - 2.0.9
-            - 2.0.11
-            - 2.0.12
-            - 2.0.23
+  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+    - stage: native_wasm
+      displayName: Native WASM
+      dependsOn: prepare
+      jobs:
+        - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
+          parameters:
+            buildExternals: ${{ parameters.buildExternals }}
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            artifactName: native
+            emscripten:
+              - 2.0.5
+              - 2.0.6
+              - 2.0.9
+              - 2.0.11
+              - 2.0.12
+              - 2.0.23
 
-  - stage: managed
-    displayName: Build Managed
-    dependsOn:
-      - native_windows
-      - native_macos
-      - native_linux
-      - native_wasm
-    jobs:
-      - template: azure-templates-bootstrapper.yml # Build Managed (Windows)
-        parameters:
-          name: managed_windows
-          displayName: Managed (Windows)
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
-          target: libs
-          additionalArgs: --skipExternals="all"
-          installPreviewVs: true
-          requiredArtifacts:
-            - native
-          artifactName: managed
-          postBuildSteps:
-            - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
-              displayName: Delete the native folder
-      - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
-        parameters:
-          name: managed_macos
-          displayName: Managed (macOS)
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_MAC }}
-          target: libs
-          additionalArgs: --skipExternals="all"
-          requiredArtifacts:
-            - native
-          artifactName: managed
-          postBuildSteps:
-            - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
-              displayName: Delete the native folder
-      - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
-        parameters:
-          name: managed_linux
-          displayName: Managed (Linux)
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_LINUX }}
-          packages: $(MANAGED_LINUX_PACKAGES)
-          target: libs
-          additionalArgs: --skipExternals="all"
-          requiredArtifacts:
-            - native
-          artifactName: managed
-          postBuildSteps:
-            - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
-              displayName: Delete the native folder
+  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+    - stage: managed
+      displayName: Build Managed
+      dependsOn:
+        - native_windows
+        - native_macos
+        - native_linux
+        - native_wasm
+      jobs:
+        - template: azure-templates-bootstrapper.yml # Build Managed (Windows)
+          parameters:
+            name: managed_windows
+            displayName: Managed (Windows)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            target: libs
+            additionalArgs: --skipExternals="all"
+            installPreviewVs: true
+            requiredArtifacts:
+              - native
+            artifactName: managed
+            postBuildSteps:
+              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the native folder
+        - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
+          parameters:
+            name: managed_macos
+            displayName: Managed (macOS)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: libs
+            additionalArgs: --skipExternals="all"
+            requiredArtifacts:
+              - native
+            artifactName: managed
+            postBuildSteps:
+              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the native folder
+        - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
+          parameters:
+            name: managed_linux
+            displayName: Managed (Linux)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            packages: $(MANAGED_LINUX_PACKAGES)
+            target: libs
+            additionalArgs: --skipExternals="all"
+            requiredArtifacts:
+              - native
+            artifactName: managed
+            postBuildSteps:
+              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the native folder
 
-  - stage: package
-    displayName: Package NuGets
-    dependsOn: managed
-    jobs:
-      - template: azure-templates-bootstrapper.yml # Package NuGets
-        parameters:
-          name: package_windows
-          displayName: Package NuGets
-          isBuildPipeline: ${{ parameters.isBuildPipeline }}
-          vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
-          target: nuget
-          additionalArgs: --packall=true --skipbuild=true
-          installWindowsSdk: false
-          installDotNet: false
-          requiredArtifacts:
-            - managed
-            - native
-          postBuildSteps:
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the nuget artifacts
-              inputs:
-                artifactName: nuget
-                pathToPublish: 'output/nugets'
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the special nuget artifacts
-              inputs:
-                artifactName: nuget_special
-                pathToPublish: 'output/nugets-special'
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the special nuget artifacts
-              inputs:
-                artifactName: nuget_symbols
-                pathToPublish: 'output/nugets-symbols'
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the SignList.xml into nuget artifacts
-              inputs:
-                artifactName: nuget
-                pathToPublish: 'SignList.xml'
-            - pwsh: |
-                Remove-Item ./output/native/ -Recurse -Force
-                Remove-Item ./output/nugets/ -Recurse -Force
-                Remove-Item ./output/nugets-special/ -Recurse -Force
-                Remove-Item ./output/nugets-symbols/ -Recurse -Force
-              displayName: Delete the pre-published folders
+  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+    - stage: package
+      displayName: Package NuGets
+      dependsOn: managed
+      jobs:
+        - template: azure-templates-bootstrapper.yml # Package NuGets
+          parameters:
+            name: package_windows
+            displayName: Package NuGets
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            target: nuget
+            additionalArgs: --packall=true --skipbuild=true
+            installWindowsSdk: false
+            installDotNet: false
+            requiredArtifacts:
+              - managed
+              - native
+            postBuildSteps:
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the nuget artifacts
+                inputs:
+                  artifactName: nuget
+                  pathToPublish: 'output/nugets'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the special nuget artifacts
+                inputs:
+                  artifactName: nuget_special
+                  pathToPublish: 'output/nugets-special'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the special nuget artifacts
+                inputs:
+                  artifactName: nuget_symbols
+                  pathToPublish: 'output/nugets-symbols'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the SignList.xml into nuget artifacts
+                inputs:
+                  artifactName: nuget
+                  pathToPublish: 'SignList.xml'
+              - pwsh: |
+                  Remove-Item ./output/native/ -Recurse -Force
+                  Remove-Item ./output/nugets/ -Recurse -Force
+                  Remove-Item ./output/nugets-special/ -Recurse -Force
+                  Remove-Item ./output/nugets-symbols/ -Recurse -Force
+                displayName: Delete the pre-published folders
 
   - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
     - stage: api_diff
       displayName: API Diff
-      dependsOn: package
+      ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+        dependsOn: package
       jobs:
         - template: azure-templates-bootstrapper.yml # API Diff
           parameters:
@@ -495,6 +502,7 @@ stages:
             ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))) }}:
               signType: 'Test'
 
+  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), eq(parameters.isBuildPipeline, 'true')) }}:
     - stage: sbom
       displayName: 'Software Bill of Materials'
       dependsOn: signing
@@ -780,7 +788,8 @@ stages:
   - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
     - stage: samples
       displayName: Samples
-      dependsOn: package
+      ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+        dependsOn: package
       jobs:
         - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
           parameters:
