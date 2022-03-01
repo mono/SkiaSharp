@@ -378,7 +378,7 @@ stages:
             additionalArgs: --skipExternals="all"
             installPreviewVs: true
             requiredArtifacts:
-              - native
+              - name: native
             artifactName: managed
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
@@ -392,7 +392,7 @@ stages:
             target: libs
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
-              - native
+              - name: native
             artifactName: managed
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
@@ -407,7 +407,7 @@ stages:
             target: libs
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
-              - native
+              - name: native
             artifactName: managed
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
@@ -429,8 +429,8 @@ stages:
             installWindowsSdk: false
             installDotNet: false
             requiredArtifacts:
-              - managed
-              - native
+              - name: managed
+              - name: native
             postBuildSteps:
               - task: PublishBuildArtifacts@1
                 displayName: Publish the nuget artifacts
@@ -474,10 +474,9 @@ stages:
             additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
             shouldPublish: false
             requiredArtifacts:
-              - package_windows
-            requiredArtifactsMap:
-              - src: nuget
-                dst: nugets
+              - name: package_windows
+              - name: nuget
+                dir: nugets
             preBuildSteps:
               - pwsh: .\scripts\install-gtk.ps1
                 displayName: Install GTK# 2.12
@@ -528,8 +527,8 @@ stages:
             installWindowsSdk: false
             shouldPublish: false
             requiredArtifacts:
-              - native_win32_x86_windows
-              - native_win32_x64_windows
+              - name: native_win32_x86_windows
+              - name: native_win32_x64_windows
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the .NET Framework test results
@@ -548,8 +547,8 @@ stages:
             installWindowsSdk: false
             shouldPublish: false
             requiredArtifacts:
-              - native_win32_x86_windows
-              - native_win32_x64_windows
+              - name: native_win32_x86_windows
+              - name: native_win32_x64_windows
             tools:
               - dotnet-reportgenerator-globaltool
             postBuildSteps:
@@ -574,7 +573,7 @@ stages:
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
-              - native_macos_macos
+              - name: native_macos_macos
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the Mono test results
@@ -592,7 +591,7 @@ stages:
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
-              - native_macos_macos
+              - name: native_macos_macos
             tools:
               - dotnet-reportgenerator-globaltool
             postBuildSteps:
@@ -617,10 +616,10 @@ stages:
             additionalArgs: --device=android-emulator-32_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
-              - native_android_x86_macos
-              - native_android_x64_macos
-              - native_android_arm_macos
-              - native_android_arm64_macos
+              - name: native_android_x86_macos
+              - name: native_android_x64_macos
+              - name: native_android_arm_macos
+              - name: native_android_arm64_macos
             preBuildSteps:
               - pwsh: |
                   dotnet tool install Microsoft.DotNet.XHarness.CLI `
@@ -653,7 +652,7 @@ stages:
             additionalArgs: --device=ios-simulator-64 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
-              - native_ios_macos
+              - name: native_ios_macos
             preBuildSteps:
               - template: azure-templates-provisioning-profiles.yml
               - pwsh: |
@@ -686,7 +685,7 @@ stages:
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
-              - native_linux_x64_linux
+              - name: native_linux_x64_linux
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the Mono test results
@@ -705,7 +704,7 @@ stages:
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
-              - native_linux_x64_linux
+              - name: native_linux_x64_linux
             tools:
               - dotnet-reportgenerator-globaltool
             postBuildSteps:
@@ -731,7 +730,7 @@ stages:
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
             shouldPublish: false
             requiredArtifacts:
-              - native_wasm_linux
+              - name: native_wasm_linux
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
             postBuildSteps:
@@ -792,9 +791,9 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: samples
             installPreviewVs: true
-            requiredArtifactsMap:
-              - src: nuget
-                dst: nugets
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
             postBuildSteps:
               - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the nugets folder
@@ -805,9 +804,9 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: samples
             shouldPublish: false
-            requiredArtifactsMap:
-              - src: nuget
-                dst: nugets
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
             preBuildSteps:
               - template: azure-templates-provisioning-profiles.yml
         - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
@@ -818,9 +817,9 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES)
             target: samples
             shouldPublish: false
-            requiredArtifactsMap:
-              - src: nuget
-                dst: nugets
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
 

@@ -7,7 +7,6 @@ parameters:
   dependsOn: []                                 # the dependiencies
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
-  requiredArtifactsMap: []                      # the artifacts that this build needs to download
   demands: []                                   # the demands
   preBuildSteps: []                             # any steps to run before the build
   postBuildSteps: []                            # any additional steps to run after the build
@@ -44,7 +43,6 @@ jobs:
       dependsOn: ${{ parameters.dependsOn }}
       variables: ${{ parameters.variables }}
       requiredArtifacts: ${{ parameters.requiredArtifacts }}
-      requiredArtifactsMap: ${{ parameters.requiredArtifactsMap }}
       demands: ${{ parameters.demands }}
       preBuildSteps: ${{ parameters.preBuildSteps }}
       postBuildSteps: ${{ parameters.postBuildSteps }}
@@ -79,7 +77,6 @@ jobs:
       dependsOn: ${{ parameters.dependsOn }}
       variables: ${{ parameters.variables }}
       requiredArtifacts: ${{ parameters.requiredArtifacts }}
-      requiredArtifactsMap: ${{ parameters.requiredArtifactsMap }}
       demands: ${{ parameters.demands }}
       preBuildSteps: ${{ parameters.preBuildSteps }}
       postBuildSteps: ${{ parameters.postBuildSteps }}

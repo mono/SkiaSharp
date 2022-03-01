@@ -7,7 +7,6 @@ parameters:
   dependsOn: []                                 # the dependiencies
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
-  requiredArtifactsMap: []                      # the artifacts that this build needs to download
   demands: []                                   # the demands
   preBuildSteps: []                             # any steps to run before the build
   postBuildSteps: []                            # any additional steps to run after the build
@@ -171,34 +170,9 @@ jobs:
           displayName: Install ${{ tool }}
 
       # download artifacts
-      - ${{ each dep in parameters.requiredArtifacts }}:
-        - ${{ if ne(dep, '') }}:
-          - task: DownloadBuildArtifacts@0
-            displayName: Download the ${{ dep }} artifacts
-            inputs:
-              artifactName: ${{ dep }}
-              downloadPath: 'download-temp'
-          - pwsh: |
-              New-Item '.\output\' -Type Directory -Force | Out-Null
-              Get-ChildItem '.\download-temp\${{ dep }}\' | Copy-Item -Destination '.\output\' -Recurse -Force
-              Remove-Item '.\download-temp\${{ dep }}\' -Recurse -Force
-            displayName: Move the ${{ dep }} artifacts to the output directory
-          - pwsh: Remove-Item ./output/logs/ -Recurse -Force -ErrorAction Ignore
-            displayName: Delete old logs
-      - ${{ each dep in parameters.requiredArtifactsMap }}:
-        - ${{ if and(ne(dep.src, ''), ne(dep.dst, '')) }}:
-          - task: DownloadBuildArtifacts@0
-            displayName: Download the ${{ dep.src }} artifacts
-            inputs:
-              artifactName: ${{ dep.src }}
-              downloadPath: 'download-temp'
-          - pwsh: |
-              New-Item '.\output\${{ dep.dst }}\' -Type Directory -Force | Out-Null
-              Get-ChildItem '.\download-temp\${{ dep.src }}\' | Copy-Item -Destination '.\output\${{ dep.dst }}\' -Recurse -Force
-              Remove-Item '.\download-temp\${{ dep.src }}\' -Recurse -Force
-            displayName: Move the ${{ dep.src }} artifacts to the output directory
-          - pwsh: Remove-Item ./output/logs/ -Recurse -Force -ErrorAction Ignore
-            displayName: Delete old logs
+      - template: azure-templates-download-artifacts.yml
+        parameters:
+          artifacts: ${{ parameters.requiredArtifacts }}
 
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
