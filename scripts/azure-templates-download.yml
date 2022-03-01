@@ -21,7 +21,8 @@ jobs:
       - template: azure-templates-download-artifacts.yml
         parameters:
           sourceBuildId: ${{ parameters.buildExternals }}
-          artifacts: ${{ parameters.name }}
+          artifacts:
+            - name: ${{ parameters.name }}
       - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
         inputs:
