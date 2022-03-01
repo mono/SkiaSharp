@@ -2,6 +2,7 @@ parameters:
   updateBuild: false
 
 steps:
+
   - pwsh: |
       $featurePrefix = "refs/heads/$env:FEATURE_NAME_PREFIX"
       if ($env:BUILD_SOURCEBRANCH.StartsWith($featurePrefix)) {
@@ -12,18 +13,33 @@ steps:
         Write-Host "No feature name."
       }
     displayName: Determine the feature name, if any
+
   - pwsh: |
       $pr = "pr." + $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
       Write-Host "Preview label: $pr"
       Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$pr"
     displayName: Use a special preview label for PRs
     condition: eq(variables['Build.Reason'], 'PullRequest')
+
   - pwsh: |
       $nightly = "nightly"
       Write-Host "Preview label: $nightly"
       Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$nightly"
     displayName: Use a special preview label for scheduled
     condition: eq(variables['Build.Reason'], 'Schedule')
+
+  - pwsh: |
+      if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
+        $match = [regex]::Match("$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME", '.*\-(.+)\.(\d+)')
+        $label = $match.Groups[1].Value
+        Write-Host "Preview label: $label"
+        Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$label"
+        $buildnumber = $match.Groups[1].Value
+        Write-Host "Build number: $buildnumber"
+        Write-Host "##vso[task.setvariable variable=BUILD_NUMBER]$buildnumber"
+      }
+    displayName: Override the preview label and build number if this is a secondary build
+
   - pwsh: |
       $label = ""
       if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {

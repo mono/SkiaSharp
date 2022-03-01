@@ -222,12 +222,6 @@ jobs:
       - ${{ parameters.postBuildSteps }}
 
       # publish artifacts
-      - ${{ if endsWith(parameters.name, '_linux') }}:
-        - bash: |
-            mkdir -p ./output/logs/
-            cp $HOME/.config/NuGet/NuGet.Config ./output/logs/
-          condition: failed()
-          displayName: Copy the sometimes corrupt NuGet.Config to the logs
       - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
         condition: or(${{ parameters.shouldPublish }}, failed())
