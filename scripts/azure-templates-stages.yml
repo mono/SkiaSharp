@@ -462,8 +462,7 @@ stages:
   - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
     - stage: api_diff
       displayName: API Diff
-      ${{ if eq(parameters.isBuildPipeline, 'true') }}:
-        dependsOn: package
+      dependsOn: prepare
       jobs:
         - template: azure-templates-bootstrapper.yml # API Diff
           parameters:
@@ -516,11 +515,7 @@ stages:
   - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
     - stage: tests
       displayName: Tests
-      dependsOn:
-        - native_windows
-        - native_macos
-        - native_linux
-        - native_wasm
+      dependsOn: prepare
       jobs:
         - template: azure-templates-bootstrapper.yml # Tests|netfx (Windows)
           parameters:
@@ -788,8 +783,7 @@ stages:
   - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
     - stage: samples
       displayName: Samples
-      ${{ if eq(parameters.isBuildPipeline, 'true') }}:
-        dependsOn: package
+      dependsOn: prepare
       jobs:
         - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
           parameters:
