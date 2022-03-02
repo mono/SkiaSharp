@@ -44,6 +44,8 @@ jobs:
 
       - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
         - template: azure-templates-github-status.yml
+          parameters:
+            state: 'pending'
 
       # install any packages on linux
       - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
