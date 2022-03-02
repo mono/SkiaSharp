@@ -32,87 +32,87 @@ parameters:
   tools: []                                     # any additional .net global tools
 
 jobs:
-- ${{ if or(ne(parameters.isBuildPipeline, 'true'), and(gt(parameters.buildExternals, 0), or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'), startsWith(parameters.name, 'package_')))) }}:
-  - template: azure-templates-download.yml
-    parameters:
-      name: ${{ parameters.name }}
-      displayName: ${{ parameters.displayName }}
-      vmImage: ${{ parameters.vmImage }}
-      packages: ${{ parameters.packages }}
-      target: ${{ parameters.target }}
-      dependsOn: ${{ parameters.dependsOn }}
-      variables: ${{ parameters.variables }}
-      requiredArtifacts: ${{ parameters.requiredArtifacts }}
-      preBuildSteps: ${{ parameters.preBuildSteps }}
-      postBuildSteps: ${{ parameters.postBuildSteps }}
-      initScript: ${{ parameters.initScript }}
-      additionalArgs: ${{ parameters.additionalArgs }}
-      retryCount: ${{ parameters.retryCount }}
-      condition: ${{ parameters.condition }}
-      shouldPublish: ${{ parameters.shouldPublish }}
-      configuration: ${{ parameters.configuration }}
-      buildExternals: ${{ parameters.buildExternals }}
-      verbosity: ${{ parameters.verbosity }}
-      docker: ${{ parameters.docker }}
-      dockerArgs: ${{ parameters.dockerArgs }}
-      installAndroidNdk: ${{ parameters.installAndroidNdk }}
-      installAndroidSdk: ${{ parameters.installAndroidSdk }}
-      installTizenSdk: ${{ parameters.installTizenSdk }}
-      installWindowsSdk: ${{ parameters.installWindowsSdk }}
-      installPreviewVs: ${{ parameters.installPreviewVs }}
-      installDotNet: ${{ parameters.installDotNet }}
-      installLlvm: ${{ parameters.installLlvm }}
-      installEmsdk: ${{ parameters.installEmsdk }}
-      artifactName: ${{ parameters.artifactName }}
-      tools: ${{ parameters.tools }}
+  - ${{ if or(ne(parameters.isBuildPipeline, 'true'), gt(parameters.buildExternals, 0)) }}:
+    - template: azure-templates-download.yml
+      parameters:
+        name: ${{ parameters.name }}
+        displayName: ${{ parameters.displayName }}
+        vmImage: ${{ parameters.vmImage }}
+        packages: ${{ parameters.packages }}
+        target: ${{ parameters.target }}
+        dependsOn: ${{ parameters.dependsOn }}
+        variables: ${{ parameters.variables }}
+        requiredArtifacts: ${{ parameters.requiredArtifacts }}
+        preBuildSteps: ${{ parameters.preBuildSteps }}
+        postBuildSteps: ${{ parameters.postBuildSteps }}
+        initScript: ${{ parameters.initScript }}
+        additionalArgs: ${{ parameters.additionalArgs }}
+        retryCount: ${{ parameters.retryCount }}
+        condition: ${{ parameters.condition }}
+        shouldPublish: ${{ parameters.shouldPublish }}
+        configuration: ${{ parameters.configuration }}
+        buildExternals: ${{ parameters.buildExternals }}
+        verbosity: ${{ parameters.verbosity }}
+        docker: ${{ parameters.docker }}
+        dockerArgs: ${{ parameters.dockerArgs }}
+        installAndroidNdk: ${{ parameters.installAndroidNdk }}
+        installAndroidSdk: ${{ parameters.installAndroidSdk }}
+        installTizenSdk: ${{ parameters.installTizenSdk }}
+        installWindowsSdk: ${{ parameters.installWindowsSdk }}
+        installPreviewVs: ${{ parameters.installPreviewVs }}
+        installDotNet: ${{ parameters.installDotNet }}
+        installLlvm: ${{ parameters.installLlvm }}
+        installEmsdk: ${{ parameters.installEmsdk }}
+        artifactName: ${{ parameters.artifactName }}
+        tools: ${{ parameters.tools }}
 
-- ${{ if not(or(ne(parameters.isBuildPipeline, 'true'), and(gt(parameters.buildExternals, 0), or(startsWith(parameters.name, 'native_'), startsWith(parameters.name, 'managed_'), startsWith(parameters.name, 'package_'))))) }}:
-  - template: azure-templates-build.yml
-    parameters:
-      name: ${{ parameters.name }}
-      displayName: ${{ parameters.displayName }}
-      vmImage: ${{ parameters.vmImage }}
-      packages: ${{ parameters.packages }}
-      target: ${{ parameters.target }}
-      dependsOn: ${{ parameters.dependsOn }}
-      variables: ${{ parameters.variables }}
-      requiredArtifacts: ${{ parameters.requiredArtifacts }}
-      preBuildSteps: ${{ parameters.preBuildSteps }}
-      postBuildSteps: ${{ parameters.postBuildSteps }}
-      initScript: ${{ parameters.initScript }}
-      additionalArgs: ${{ parameters.additionalArgs }}
-      retryCount: ${{ parameters.retryCount }}
-      condition: ${{ parameters.condition }}
-      shouldPublish: ${{ parameters.shouldPublish }}
-      configuration: ${{ parameters.configuration }}
-      verbosity: ${{ parameters.verbosity }}
-      docker: ${{ parameters.docker }}
-      dockerArgs: ${{ parameters.dockerArgs }}
-      installAndroidNdk: ${{ parameters.installAndroidNdk }}
-      installAndroidSdk: ${{ parameters.installAndroidSdk }}
-      installTizenSdk: ${{ parameters.installTizenSdk }}
-      installWindowsSdk: ${{ parameters.installWindowsSdk }}
-      installPreviewVs: ${{ parameters.installPreviewVs }}
-      installDotNet: ${{ parameters.installDotNet }}
-      installLlvm: ${{ parameters.installLlvm }}
-      installEmsdk: ${{ parameters.installEmsdk }}
-      artifactName: ${{ parameters.artifactName }}
-      tools: ${{ parameters.tools }}
-          # - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
-          #   - pwsh: |
-          #       $sha = $env:BUILD_SOURCEVERSION
-          #       $isPR = [regex]::Match("$:env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
-          #       if ($isPR) {
-          #         $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
-          #       }
-          #       Set-Content -Path temp-test.json -Value "{
-          #         `"state`": `"pending`",
-          #         `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
-          #         `"context`": `"SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)`"
-          #       }"
-          #       curl -v `
-          #         -X POST `
-          #         -H "Accept: application/vnd.github.v3+json" `
-          #         -H "Authorization: token $(Github.Token)" `
-          #         https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$sha `
-          #         -d @temp-test.json
+  - ${{ if not(or(ne(parameters.isBuildPipeline, 'true'), gt(parameters.buildExternals, 0))) }}:
+    - template: azure-templates-build.yml
+      parameters:
+        name: ${{ parameters.name }}
+        displayName: ${{ parameters.displayName }}
+        vmImage: ${{ parameters.vmImage }}
+        packages: ${{ parameters.packages }}
+        target: ${{ parameters.target }}
+        dependsOn: ${{ parameters.dependsOn }}
+        variables: ${{ parameters.variables }}
+        requiredArtifacts: ${{ parameters.requiredArtifacts }}
+        preBuildSteps: ${{ parameters.preBuildSteps }}
+        postBuildSteps: ${{ parameters.postBuildSteps }}
+        initScript: ${{ parameters.initScript }}
+        additionalArgs: ${{ parameters.additionalArgs }}
+        retryCount: ${{ parameters.retryCount }}
+        condition: ${{ parameters.condition }}
+        shouldPublish: ${{ parameters.shouldPublish }}
+        configuration: ${{ parameters.configuration }}
+        verbosity: ${{ parameters.verbosity }}
+        docker: ${{ parameters.docker }}
+        dockerArgs: ${{ parameters.dockerArgs }}
+        installAndroidNdk: ${{ parameters.installAndroidNdk }}
+        installAndroidSdk: ${{ parameters.installAndroidSdk }}
+        installTizenSdk: ${{ parameters.installTizenSdk }}
+        installWindowsSdk: ${{ parameters.installWindowsSdk }}
+        installPreviewVs: ${{ parameters.installPreviewVs }}
+        installDotNet: ${{ parameters.installDotNet }}
+        installLlvm: ${{ parameters.installLlvm }}
+        installEmsdk: ${{ parameters.installEmsdk }}
+        artifactName: ${{ parameters.artifactName }}
+        tools: ${{ parameters.tools }}
+            # - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+            #   - pwsh: |
+            #       $sha = $env:BUILD_SOURCEVERSION
+            #       $isPR = [regex]::Match("$:env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
+            #       if ($isPR) {
+            #         $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
+            #       }
+            #       Set-Content -Path temp-test.json -Value "{
+            #         `"state`": `"pending`",
+            #         `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
+            #         `"context`": `"SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)`"
+            #       }"
+            #       curl -v `
+            #         -X POST `
+            #         -H "Accept: application/vnd.github.v3+json" `
+            #         -H "Authorization: token $(Github.Token)" `
+            #         https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$sha `
+            #         -d @temp-test.json
