@@ -470,7 +470,7 @@ stages:
           parameters:
             name: api_diff_windows
             displayName: API Diff
-            isBuildPipeline: true
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: docs-api-diff
             additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
@@ -522,6 +522,7 @@ stages:
           parameters:
             name: tests_netfx_windows
             displayName: Windows (.NET Framework)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: tests-netfx
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -543,6 +544,7 @@ stages:
           parameters:
             name: tests_netcore_windows
             displayName: Windows (.NET Core)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -568,6 +570,7 @@ stages:
           parameters:
             name: tests_netfx_macos
             displayName: macOS (.NET Framework)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-netfx
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -586,6 +589,7 @@ stages:
           parameters:
             name: tests_netcore_macos
             displayName: macOS (.NET Core)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -609,6 +613,7 @@ stages:
           parameters:
             name: tests_android_macos
             displayName: Android (macOS)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-android
             additionalArgs: --device=android-emulator-64_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -641,6 +646,7 @@ stages:
           parameters:
             name: tests_ios_macos
             displayName: iOS (macOS)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-ios
             additionalArgs: --device=ios-simulator-64 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -667,6 +673,7 @@ stages:
           parameters:
             name: tests_netfx_linux
             displayName: Linux (.NET Framework)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: tests-netfx
@@ -686,6 +693,7 @@ stages:
           parameters:
             name: tests_netcore_linux
             displayName: Linux (.NET Core)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: tests-netcore
@@ -710,6 +718,7 @@ stages:
           parameters:
             name: tests_wasm_linux
             displayName: WASM (Linux)
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
@@ -774,6 +783,7 @@ stages:
           parameters:
             name: samples_windows
             displayName: Windows
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: samples
             installPreviewVs: true
@@ -787,6 +797,7 @@ stages:
           parameters:
             name: samples_macos
             displayName: macOS
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: samples
             shouldPublish: false
@@ -799,6 +810,7 @@ stages:
           parameters:
             name: samples_linux
             displayName: Linux
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: samples
@@ -818,6 +830,7 @@ stages:
           parameters:
             name: native_checks_windows
             displayName: Run Code Checks
+            isBuildPipeline: ${{ parameters.isBuildPipeline }}
             condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: git-sync-deps
