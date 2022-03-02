@@ -11,27 +11,25 @@ stages:
     jobs:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
-        pool: 
-          name: Azure Pipelines
-          vmImage: ubuntu-18.04 
+        pool: ${{ parameters.VM_IMAGE_LINUX }}
         steps:
           - checkout: none
           - template: azure-templates-variables.yml
             parameters:
               updateBuild: true
-          # - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
-          #   - pwsh: |
-          #       Set-Content -Path temp-test.json -Value "{
-          #           `"state`": `"success`",
-          #           `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
-          #           `"context`": `"$env:SYSTEM_DEFINITIONNAME ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)`"
-          #       }"
-          #       curl -v `
-          #         -X POST `
-          #         -H "Accept: application/vnd.github.v3+json" `
-          #         -H "Authorization: token $env:GITHUB_TOKEN" `
-          #         https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:BUILD_SOURCEVERSION `
-          #         -d @temp-test.json
+          - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+            - pwsh: |
+                Set-Content -Path temp-test.json -Value "{
+                    `"state`": `"success`",
+                    `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
+                    `"context`": `"$env:SYSTEM_DEFINITIONNAME ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)`"
+                }"
+                curl -v `
+                  -X POST `
+                  -H "Accept: application/vnd.github.v3+json" `
+                  -H "Authorization: token $env:GITHUB_TOKEN" `
+                  https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:BUILD_SOURCEVERSION `
+                  -d @temp-test.json
 
 
   # - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
