@@ -95,7 +95,7 @@ namespace SkiaSharp.Views.Forms
 				// redraw the view
 				nativeView.Display();
 			});
-			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoop.NSDefaultRunLoopMode);
+			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Default);
 		}
 	}
 }
