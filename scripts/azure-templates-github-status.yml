@@ -8,9 +8,9 @@ steps:
       $state = 'pending'
       if ('${{ parameters.state }}') {
         $state = '${{ parameters.state }}'
-      } else if ($env:AGENT_JOBSTATUS -eq 'Failed') {
+      } elseif ($env:AGENT_JOBSTATUS -eq 'Failed') {
         $state = 'failure'
-      } else if ($env:AGENT_JOBSTATUS -eq 'Succeeded') {
+      } elseif ($env:AGENT_JOBSTATUS -eq 'Succeeded') {
         $state = 'success'
       }
       $context = "SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)""
