@@ -27,7 +27,7 @@ stages:
                 curl -v `
                   -X POST `
                   -H "Accept: application/vnd.github.v3+json" `
-                  -H "Authorization: token $env:GITHUB_TOKEN" `
+                  -H "Authorization: token $(Github.Token)" `
                   https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:BUILD_SOURCEVERSION `
                   -d @temp-test.json
 
