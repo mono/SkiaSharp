@@ -15,7 +15,7 @@ steps:
       }
       $context = "SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)"
       if ('${{ parameters.context }}') {
-        $state = '${{ parameters.context }}'
+        $context = '${{ parameters.context }}'
       }
       Set-Content -Path temp-test.json -Value "{
         `"state`": `"$state`",
