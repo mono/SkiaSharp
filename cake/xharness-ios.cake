@@ -37,7 +37,7 @@ Task("Default")
     CleanDirectories(TEST_RESULTS);
 
     try {
-        RunProcess("xharness", "apple test " +
+        DotNetTool("xharness apple test " +
             $"--app=\"{TEST_APP}\" " +
             $"--targets=\"{TEST_DEVICE}\" " +
             $"--output-directory=\"{TEST_RESULTS}\" " +
