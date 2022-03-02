@@ -18,41 +18,12 @@ stages:
             parameters:
               updateBuild: true
           - pwsh: 'dir env:'
-          - pwsh: |
-              Set-Content -Path temp-test.json -Value "{
-                `"state`": `"pending`",
-                `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
-                `"context`": `"SkiaSharp Tests`"
-              }"
-              curl -v `
-                -X POST `
-                -H "Accept: application/vnd.github.v3+json" `
-                -H "Authorization: token $(Github.Token)" `
-                https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:SYSTEM_PULLREQUEST_SOURCECOMMITID `
-                -d @temp-test.json
-            displayName: Queue up the status for the tests pipeline
-
+          - template: azure-templates-github-status.yml
+            parameters:
+              context: 'SkiaSharp Tests'
+              displayName: Queue up the status for the tests pipeline
           - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
-            - pwsh: |
-                $state = 'pending'
-                if ($env:AGENT_JOBSTATUS -eq 'Failed') {
-                  $state = 'failure'
-                } else if ($env:AGENT_JOBSTATUS -eq 'Succeeded') {
-                  $state = 'success'
-                }
-                Set-Content -Path temp-test.json -Value "{
-                  `"state`": `"$state`",
-                  `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
-                  `"context`": `"SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)`"
-                }"
-                curl -v `
-                  -X POST `
-                  -H "Accept: application/vnd.github.v3+json" `
-                  -H "Authorization: token $(Github.Token)" `
-                  https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:SYSTEM_PULLREQUEST_SOURCECOMMITID `
-                  -d @temp-test.json
-              displayName: Mark this job as complete
-              condition: always()
+            - template: azure-templates-github-status.yml
 
   # - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
   #   - stage: native_windows
@@ -925,16 +896,8 @@ stages:
           steps:
             - checkout: none
             - template: azure-templates-variables.yml
-            - pwsh: |
-                Set-Content -Path temp-test.json -Value "{
-                  `"state`": `"success`",
-                  `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
-                  `"context`": `"SkiaSharp Tests`"
-                }"
-                curl -v `
-                  -X POST `
-                  -H "Accept: application/vnd.github.v3+json" `
-                  -H "Authorization: token $(Github.Token)" `
-                  https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:SYSTEM_PULLREQUEST_SOURCECOMMITID `
-                  -d @temp-test.json
-              displayName: Posit the final status for the tests pipeline
+            - template: azure-templates-github-status.yml
+              parameters:
+                context: 'SkiaSharp Tests'
+                state: 'success'
+                displayName: Update the final status for the tests pipeline

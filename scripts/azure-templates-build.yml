@@ -42,6 +42,9 @@ jobs:
         submodules: recursive
       - template: azure-templates-variables.yml
 
+      - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+        - template: azure-templates-github-status.yml
+
       # install any packages on linux
       - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
         - bash: |
@@ -250,3 +253,6 @@ jobs:
             scanType: 'Register'
             verbosity: 'Verbose'
             alertWarningLevel: 'High'
+
+      - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+        - template: azure-templates-github-status.yml
