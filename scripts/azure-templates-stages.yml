@@ -740,6 +740,9 @@ stages:
           steps:
             - checkout: self
             - template: azure-templates-variables.yml
+            - template: azure-templates-github-status.yml
+              parameters:
+                state: 'pending'
             - task: DownloadBuildArtifacts@0
               displayName: Download the coverage_netcore_windows artifact
               inputs:
@@ -760,6 +763,7 @@ stages:
               inputs:
                 codeCoverageTool: Cobertura
                 summaryFileLocation: 'output/**/Cobertura.xml'
+            - template: azure-templates-github-status.yml
 
   - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
     - stage: samples
