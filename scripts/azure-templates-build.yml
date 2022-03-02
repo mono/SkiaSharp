@@ -7,7 +7,6 @@ parameters:
   dependsOn: []                                 # the dependiencies
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
-  demands: []                                   # the demands
   preBuildSteps: []                             # any steps to run before the build
   postBuildSteps: []                            # any additional steps to run after the build
   initScript: ''                                # any scripts to run before starting the bootstrapper
@@ -20,6 +19,7 @@ parameters:
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
   installAndroidNdk: true                       # whether or not to install the Android NDK
+  installAndroidSdk: true                       # whether or not to install the Android SDK
   installTizenSdk: true                         # whether or not to install the Tizen SDK
   installWindowsSdk: true                       # whether or not to install the Windows SDK
   installPreviewVs: false                       # whether or not to install the preview VS
@@ -32,12 +32,7 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 180
-    pool:
-      demands: ${{ parameters.demands }}
-      ${{ if startsWith(parameters.vmImage, 'Azure-Pipelines-') }}:
-        vmImage: ${{ replace(parameters.vmImage, 'Azure-Pipelines-', '') }}
-      ${{ if not(startsWith(parameters.vmImage, 'Azure-Pipelines-')) }}:
-        name: ${{ parameters.vmImage }}
+    pool: ${{ parameters.vmImage }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     variables: ${{ parameters.variables }}
@@ -57,15 +52,7 @@ jobs:
 
       # make sure mono/msbuild is the correct version
       - ${{ if and(ne(variables['MONO_VERSION_LINUX'], ''), eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
-        - bash: |
-            sudo apt remove -y mono-complete msbuild
-            sudo apt autoremove -y
-            sudo rm /etc/mono/config
-            sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-            echo "deb https://download.mono-project.com/repo/ubuntu $(MONO_VERSION_LINUX) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
-            sudo apt update
-            sudo apt install -y mono-complete msbuild
-            mono --version
+        - bash: ./scripts/install-mono.sh $(MONO_VERSION_LINUX)
           displayName: Install Mono and MSBuild
       - ${{ if endsWith(parameters.name, '_macos') }}:
         - bash: sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION_MACOS)
@@ -74,13 +61,12 @@ jobs:
       # install extra bits for the native builds
       - ${{ if startsWith(parameters.name, 'native_') }}:
         # switch to the correct Python version
+        - pwsh: .\scripts\install-python.ps1
+          displayName: Install Python
         - task: UsePythonVersion@0
           displayName: Switch to the correct Python version
           inputs:
-            ${{ if endsWith(parameters.name, '_windows') }}:
-              versionSpec: '3.x'
-            ${{ if not(endsWith(parameters.name, '_windows')) }}:
-              versionSpec: '2.7'
+            versionSpec: '3.x'
             architecture: 'x64'
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
@@ -93,11 +79,34 @@ jobs:
               displayName: Install the Tizen SDK
           # install llvm
           - ${{ if and(eq(parameters.installLlvm, 'true'), contains(parameters.name, '_win32_')) }}:
+            - pwsh: .\scripts\install-7zip.ps1
+              displayName: Install 7-zip
             - pwsh: .\scripts\install-llvm.ps1
               displayName: Install LLVM
 
-      # install extra bits for the manged builds
-      - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+      # install extra bits for the managed builds
+      - ${{ if and(not(startsWith(parameters.name, 'native_')), not(endsWith(parameters.name, '_linux'))) }}:
+        # install the bits needed for Android
+        - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
+          # install the correct version of the JDK for .NET 6
+          - pwsh: |
+              if ("$env:JAVA_HOME_11_X64") {
+                echo "##vso[task.setvariable variable=JAVA_HOME]$env:JAVA_HOME_11_X64"
+              } else {
+                .\scripts\install-openjdk.ps1
+              }
+            displayName: Install OpenJDK
+          # install the correct version of the Android SDK
+          - pwsh: .\scripts\install-android-sdk.ps1
+            displayName: Install Android SDK
+          # install the required version of the Android Platforms
+          - pwsh: .\scripts\install-android-platform.ps1 -API 29
+            displayName: Install Android API 29 (v10)
+          - pwsh: .\scripts\install-android-platform.ps1 -API 30
+            displayName: Install Android API 30 (v11)
+          - pwsh: .\scripts\install-android-platform.ps1 -API 31
+            displayName: Install Android API 31 (v12)
+        # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
           - task: UseDotNet@2
             inputs:
@@ -117,10 +126,8 @@ jobs:
             condition: ne(variables.DOTNET_VERSION_PREVIEW, '')
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
-              - pwsh: .\scripts\install-vs.ps1 -Version $env:VS_VERSION_PREVIEW
+              - pwsh: .\scripts\install-vs.ps1
                 displayName: Install Visual Studio
-            - pwsh: .\scripts\select-vs.ps1
-              displayName: Select Visual Studio
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
               condition: ne(variables.DOTNET_VERSION_PREVIEW, '')
@@ -132,9 +139,10 @@ jobs:
           - pwsh: dotnet --info
             displayName: Display all the .NET information
 
-      # select the correct version of the JDK for .NET 6
-      - pwsh: echo "##vso[task.setvariable variable=JAVA_HOME]$(JAVA_HOME_11_X64)"
-        displayName: Select JDK 11
+      # select the correct/latest version of Visual Studio
+      - ${{ if endsWith(parameters.name, '_windows') }}:
+        - pwsh: .\scripts\select-vs.ps1
+          displayName: Select Visual Studio
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
@@ -143,10 +151,7 @@ jobs:
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
-        - bash: |
-            git clone --branch $(EMSCRIPTEN_VERSION) https://github.com/emscripten-core/emsdk ~/emsdk
-            ~/emsdk/emsdk install $(EMSCRIPTEN_VERSION)
-            ~/emsdk/emsdk activate $(EMSCRIPTEN_VERSION)
+        - bash: ./scripts/install-emsdk.sh $(EMSCRIPTEN_VERSION)
           displayName: Install the Emscripten SDK
 
       # install the Windows tools
@@ -154,20 +159,23 @@ jobs:
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install the older Windows SDKs
           - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
-            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296  -Version 10.0.10240.0
               displayName: Install the Windows 10 SDK 10.0.10240
-            - ${{ if and(not(startsWith(parameters.name, 'native_')), not(startsWith(parameters.name, 'api_diff_'))) }}:
-              - pwsh: .\scripts\install-winsdk.ps1 -LinkId 864422
-                displayName: Install the Windows 10 SDK 10.0.16299
-              - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2083338
-                displayName: Install the Windows 10 SDK 10.0.18362
-              # - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2120843
-              #   displayName: Install the Windows 10 SDK 10.0.19041
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 864422  -Version 10.0.16299.0
+              displayName: Install the Windows 10 SDK 10.0.16299
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2083338 -Version 10.0.18362.0
+              displayName: Install the Windows 10 SDK 10.0.18362
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
+              displayName: Install the Windows 10 SDK 10.0.19041
 
       # install any .NET Core global tools
       - ${{ each tool in parameters.tools }}:
         - pwsh: dotnet tool install -g ${{ tool }}
           displayName: Install ${{ tool }}
+
+      # install nuget
+      - pwsh: .\scripts\install-nuget.ps1
+        displayName: Install NuGet
 
       # download artifacts
       - template: azure-templates-download-artifacts.yml

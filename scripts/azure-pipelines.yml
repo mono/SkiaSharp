@@ -14,17 +14,20 @@ parameters:
     type: number
     default: 5800178
   - name: VM_IMAGE_WINDOWS
-    type: string
-    default: 'Azure-Pipelines-windows-2022'
-  - name: VM_IMAGE_WINDOWS_NATIVE
-    type: string
-    default: 'Azure-Pipelines-windows-2019'
+    type: object
+    default:
+      name: Azure Pipelines
+      vmImage: windows-2022
   - name: VM_IMAGE_MAC
-    type: string
-    default: 'Azure-Pipelines-macOS-10.15'
+    type: object
+    default:
+      name: Azure Pipelines
+      vmImage: macOS-10.15
   - name: VM_IMAGE_LINUX
-    type: string
-    default: 'Azure-Pipelines-ubuntu-18.04'
+    type: object
+    default:
+      name: Azure Pipelines
+      vmImage: ubuntu-18.04
 
 variables:
   - template: azure-pipelines-variables.yml
@@ -43,6 +46,5 @@ stages:
       isBuildPipeline: true
       buildExternals: ${{ parameters.buildExternals }}
       VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
-      VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
       VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
       VM_IMAGE_LINUX: ${{ parameters.VM_IMAGE_LINUX }}
