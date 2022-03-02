@@ -20,7 +20,7 @@ stages:
           - pwsh: 'dir env:'
           - template: azure-templates-github-status.yml
             parameters:
-              context: 'SkiaSharp Tests'
+              context: 'SkiaSharp-Tests'
               state: 'pending'
               displayName: Queue up the status for the tests pipeline
           - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
@@ -899,5 +899,5 @@ stages:
             - template: azure-templates-variables.yml
             - template: azure-templates-github-status.yml
               parameters:
-                context: 'SkiaSharp Tests'
+                context: 'SkiaSharp-Tests'
                 displayName: Update the final status for the tests pipeline

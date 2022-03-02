@@ -1,6 +1,7 @@
 parameters:
   context: ''
   state: ''
+  pipelineName: '$(System.DefinitionName)'
   displayName: 'Update the GitHub status for this job'
 
 steps:
@@ -13,7 +14,7 @@ steps:
       } elseif ($env:AGENT_JOBSTATUS -eq 'Succeeded') {
         $state = 'success'
       }
-      $context = "SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)"
+      $context = "${{ parameters.pipelineName }} ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)"
       if ('${{ parameters.context }}') {
         $context = '${{ parameters.context }}'
       }
