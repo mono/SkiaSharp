@@ -29,7 +29,11 @@ steps:
           $env:SYSTEM_PULLREQUEST_SOURCECOMMITID = $sha
           Write-Host "##vso[task.setvariable variable=SYSTEM_PULLREQUEST_SOURCECOMMITID]$sha"
         }
+      } else {
+        Write-Host "Not a PR build."
       }
+    condition: eq(variables['Build.Reason'], 'ResourceTrigger')
+    displayName: Update the PR variables for downstream builds
 
   - pwsh: |
       $pr = "pr." + $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER

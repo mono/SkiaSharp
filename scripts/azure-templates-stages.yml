@@ -34,8 +34,14 @@ stages:
 
           - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
             - pwsh: |
+                $state = 'pending'
+                if ($env:AGENT_JOBSTATUS -eq 'Failed') {
+                  $state = 'failure'
+                } else if ($env:AGENT_JOBSTATUS -eq 'Succeeded') {
+                  $state = 'success'
+                }
                 Set-Content -Path temp-test.json -Value "{
-                  `"state`": `"pending`",
+                  `"state`": `"$state`",
                   `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
                   `"context`": `"SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)`"
                 }"
@@ -45,6 +51,8 @@ stages:
                   -H "Authorization: token $(Github.Token)" `
                   https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:SYSTEM_PULLREQUEST_SOURCECOMMITID `
                   -d @temp-test.json
+              displayName: Mark this job as complete
+              condition: always()
 
   # - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
   #   - stage: native_windows
