@@ -13,7 +13,7 @@ steps:
       } elseif ($env:AGENT_JOBSTATUS -eq 'Succeeded') {
         $state = 'success'
       }
-      $context = "SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)""
+      $context = "SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)"
       if ('${{ parameters.context }}') {
         $state = '${{ parameters.context }}'
       }
