@@ -21,6 +21,7 @@ stages:
           - template: azure-templates-github-status.yml
             parameters:
               context: 'SkiaSharp Tests'
+              state: 'pending'
               displayName: Queue up the status for the tests pipeline
           - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
             - template: azure-templates-github-status.yml
@@ -899,5 +900,4 @@ stages:
             - template: azure-templates-github-status.yml
               parameters:
                 context: 'SkiaSharp Tests'
-                state: 'success'
                 displayName: Update the final status for the tests pipeline
