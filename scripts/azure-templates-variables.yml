@@ -15,6 +15,23 @@ steps:
     displayName: Determine the feature name, if any
 
   - pwsh: |
+      $isPR = [regex]::Match("$:env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
+      if ($isPR) {
+        if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
+          $pr = $isPR.Groups[1].Value
+          Write-Host "PR number: $pr"
+          $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER = $pr
+          Write-Host "##vso[task.setvariable variable=SYSTEM_PULLREQUEST_PULLREQUESTNUMBER]$pr"
+        }
+        if (-not $env:SYSTEM_PULLREQUEST_SOURCECOMMITID) {
+          $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
+          Write-Host "PR SHA: $sha"
+          $env:SYSTEM_PULLREQUEST_SOURCECOMMITID = $sha
+          Write-Host "##vso[task.setvariable variable=SYSTEM_PULLREQUEST_SOURCECOMMITID]$sha"
+        }
+      }
+
+  - pwsh: |
       $pr = "pr." + $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
       Write-Host "Preview label: $pr"
       Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$pr"

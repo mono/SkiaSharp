@@ -98,21 +98,3 @@ jobs:
         installEmsdk: ${{ parameters.installEmsdk }}
         artifactName: ${{ parameters.artifactName }}
         tools: ${{ parameters.tools }}
-            # - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
-            #   - pwsh: |
-            #       $sha = $env:BUILD_SOURCEVERSION
-            #       $isPR = [regex]::Match("$:env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
-            #       if ($isPR) {
-            #         $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
-            #       }
-            #       Set-Content -Path temp-test.json -Value "{
-            #         `"state`": `"pending`",
-            #         `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
-            #         `"context`": `"SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)`"
-            #       }"
-            #       curl -v `
-            #         -X POST `
-            #         -H "Accept: application/vnd.github.v3+json" `
-            #         -H "Authorization: token $(Github.Token)" `
-            #         https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$sha `
-            #         -d @temp-test.json

@@ -18,16 +18,40 @@ stages:
             parameters:
               updateBuild: true
           - pwsh: 'dir env:'
-          - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
-            - pwsh: |
-                $sha = $env:BUILD_SOURCEVERSION
+          - pwsh: |
+              $sha = $env:BUILD_SOURCEVERSION
+              $isPR = [regex]::Match("$:env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
+              if ($isPR) {
                 if ($env:SYSTEM_PULLREQUEST_SOURCECOMMITID) {
                   $sha = $env:SYSTEM_PULLREQUEST_SOURCECOMMITID
+                } else {
+                  $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
+                }
+              }
+              Set-Content -Path temp-test.json -Value "{
+                `"state`": `"pending`",
+                `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
+                `"context`": `"SkiaSharp Tests`"
+              }"
+              curl -v `
+                -X POST `
+                -H "Accept: application/vnd.github.v3+json" `
+                -H "Authorization: token $(Github.Token)" `
+                https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$sha `
+                -d @temp-test.json
+            displayName: Queue up the status for the tests pipeline
+
+          - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+            - pwsh: |
+                $sha = $env:BUILD_SOURCEVERSION
+                $isPR = [regex]::Match("$:env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
+                if ($isPR) {
+                  $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
                 }
                 Set-Content -Path temp-test.json -Value "{
                   `"state`": `"pending`",
                   `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
-                  `"context`": `"SkiaSharp Tests`"
+                  `"context`": `"SkiaSharp ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)`"
                 }"
                 curl -v `
                   -X POST `
@@ -35,7 +59,6 @@ stages:
                   -H "Authorization: token $(Github.Token)" `
                   https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$sha `
                   -d @temp-test.json
-              displayName: Queue up the status for the tests pipeline
 
   # - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
   #   - stage: native_windows
@@ -445,33 +468,33 @@ stages:
             requiredArtifacts:
               - name: managed
               - name: native
-            postBuildSteps:
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the nuget artifacts
-                inputs:
-                  artifactName: nuget
-                  pathToPublish: 'output/nugets'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the special nuget artifacts
-                inputs:
-                  artifactName: nuget_special
-                  pathToPublish: 'output/nugets-special'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the special nuget artifacts
-                inputs:
-                  artifactName: nuget_symbols
-                  pathToPublish: 'output/nugets-symbols'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the SignList.xml into nuget artifacts
-                inputs:
-                  artifactName: nuget
-                  pathToPublish: 'SignList.xml'
-              - pwsh: |
-                  Remove-Item ./output/native/ -Recurse -Force
-                  Remove-Item ./output/nugets/ -Recurse -Force
-                  Remove-Item ./output/nugets-special/ -Recurse -Force
-                  Remove-Item ./output/nugets-symbols/ -Recurse -Force
-                displayName: Delete the pre-published folders
+            # postBuildSteps:
+            #   - task: PublishBuildArtifacts@1
+            #     displayName: Publish the nuget artifacts
+            #     inputs:
+            #       artifactName: nuget
+            #       pathToPublish: 'output/nugets'
+            #   - task: PublishBuildArtifacts@1
+            #     displayName: Publish the special nuget artifacts
+            #     inputs:
+            #       artifactName: nuget_special
+            #       pathToPublish: 'output/nugets-special'
+            #   - task: PublishBuildArtifacts@1
+            #     displayName: Publish the special nuget artifacts
+            #     inputs:
+            #       artifactName: nuget_symbols
+            #       pathToPublish: 'output/nugets-symbols'
+            #   - task: PublishBuildArtifacts@1
+            #     displayName: Publish the SignList.xml into nuget artifacts
+            #     inputs:
+            #       artifactName: nuget
+            #       pathToPublish: 'SignList.xml'
+            #   - pwsh: |
+            #       Remove-Item ./output/native/ -Recurse -Force
+            #       Remove-Item ./output/nugets/ -Recurse -Force
+            #       Remove-Item ./output/nugets-special/ -Recurse -Force
+            #       Remove-Item ./output/nugets-symbols/ -Recurse -Force
+            #     displayName: Delete the pre-published folders
 
   - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
     - stage: api_diff
