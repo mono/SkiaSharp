@@ -19,15 +19,6 @@ stages:
               updateBuild: true
           - pwsh: 'dir env:'
           - pwsh: |
-              $sha = $env:BUILD_SOURCEVERSION
-              $isPR = [regex]::Match("$:env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
-              if ($isPR) {
-                if ($env:SYSTEM_PULLREQUEST_SOURCECOMMITID) {
-                  $sha = $env:SYSTEM_PULLREQUEST_SOURCECOMMITID
-                } else {
-                  $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
-                }
-              }
               Set-Content -Path temp-test.json -Value "{
                 `"state`": `"pending`",
                 `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
@@ -37,17 +28,12 @@ stages:
                 -X POST `
                 -H "Accept: application/vnd.github.v3+json" `
                 -H "Authorization: token $(Github.Token)" `
-                https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$sha `
+                https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:SYSTEM_PULLREQUEST_SOURCECOMMITID `
                 -d @temp-test.json
             displayName: Queue up the status for the tests pipeline
 
           - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
             - pwsh: |
-                $sha = $env:BUILD_SOURCEVERSION
-                $isPR = [regex]::Match("$:env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
-                if ($isPR) {
-                  $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
-                }
                 Set-Content -Path temp-test.json -Value "{
                   `"state`": `"pending`",
                   `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
@@ -57,7 +43,7 @@ stages:
                   -X POST `
                   -H "Accept: application/vnd.github.v3+json" `
                   -H "Authorization: token $(Github.Token)" `
-                  https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$sha `
+                  https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:SYSTEM_PULLREQUEST_SOURCECOMMITID `
                   -d @temp-test.json
 
   # - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
@@ -932,11 +918,6 @@ stages:
             - checkout: none
             - template: azure-templates-variables.yml
             - pwsh: |
-                $sha = $env:BUILD_SOURCEVERSION
-                $isPR = [regex]::Match("$:env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
-                if ($isPR) {
-                  $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
-                }
                 Set-Content -Path temp-test.json -Value "{
                   `"state`": `"success`",
                   `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
@@ -946,6 +927,6 @@ stages:
                   -X POST `
                   -H "Accept: application/vnd.github.v3+json" `
                   -H "Authorization: token $(Github.Token)" `
-                  https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$sha `
+                  https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:SYSTEM_PULLREQUEST_SOURCECOMMITID `
                   -d @temp-test.json
               displayName: Posit the final status for the tests pipeline
