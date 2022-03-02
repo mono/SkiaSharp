@@ -17,6 +17,7 @@ stages:
           - template: azure-templates-variables.yml
             parameters:
               updateBuild: true
+          - pwsh: 'dir env:'
           - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
             - pwsh: |
                 Set-Content -Path temp-test.json -Value "{
