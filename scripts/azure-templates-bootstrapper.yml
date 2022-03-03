@@ -7,7 +7,6 @@ parameters:
   dependsOn: []                                 # the dependiencies
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
-  requiredArtifactsMap: []                      # the artifacts that this build needs to download
   preBuildSteps: []                             # any steps to run before the build
   postBuildSteps: []                            # any additional steps to run after the build
   initScript: ''                                # any scripts to run before starting the bootstrapper
@@ -17,6 +16,7 @@ parameters:
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
   buildExternals: ''                            # the build number to download externals from
+  isBuildPipeline: true
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -32,70 +32,70 @@ parameters:
   tools: []                                     # any additional .net global tools
 
 jobs:
-- ${{ if and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_')) }}:
-  - template: azure-templates-download.yml
-    parameters:
-      name: ${{ parameters.name }}
-      displayName: ${{ parameters.displayName }}
-      vmImage: ${{ parameters.vmImage }}
-      packages: ${{ parameters.packages }}
-      target: ${{ parameters.target }}
-      dependsOn: ${{ parameters.dependsOn }}
-      variables: ${{ parameters.variables }}
-      requiredArtifacts: ${{ parameters.requiredArtifacts }}
-      requiredArtifactsMap: ${{ parameters.requiredArtifactsMap }}
-      preBuildSteps: ${{ parameters.preBuildSteps }}
-      postBuildSteps: ${{ parameters.postBuildSteps }}
-      initScript: ${{ parameters.initScript }}
-      additionalArgs: ${{ parameters.additionalArgs }}
-      retryCount: ${{ parameters.retryCount }}
-      condition: ${{ parameters.condition }}
-      shouldPublish: ${{ parameters.shouldPublish }}
-      configuration: ${{ parameters.configuration }}
-      buildExternals: ${{ parameters.buildExternals }}
-      verbosity: ${{ parameters.verbosity }}
-      docker: ${{ parameters.docker }}
-      dockerArgs: ${{ parameters.dockerArgs }}
-      installAndroidNdk: ${{ parameters.installAndroidNdk }}
-      installAndroidSdk: ${{ parameters.installAndroidSdk }}
-      installTizenSdk: ${{ parameters.installTizenSdk }}
-      installWindowsSdk: ${{ parameters.installWindowsSdk }}
-      installPreviewVs: ${{ parameters.installPreviewVs }}
-      installDotNet: ${{ parameters.installDotNet }}
-      installLlvm: ${{ parameters.installLlvm }}
-      installEmsdk: ${{ parameters.installEmsdk }}
-      artifactName: ${{ parameters.artifactName }}
-      tools: ${{ parameters.tools }}
+  - ${{ if gt(parameters.buildExternals, 0) }}:
+    - template: azure-templates-download.yml
+      parameters:
+        name: ${{ parameters.name }}
+        displayName: ${{ parameters.displayName }}
+        vmImage: ${{ parameters.vmImage }}
+        packages: ${{ parameters.packages }}
+        target: ${{ parameters.target }}
+        dependsOn: ${{ parameters.dependsOn }}
+        variables: ${{ parameters.variables }}
+        requiredArtifacts: ${{ parameters.requiredArtifacts }}
+        preBuildSteps: ${{ parameters.preBuildSteps }}
+        postBuildSteps: ${{ parameters.postBuildSteps }}
+        initScript: ${{ parameters.initScript }}
+        additionalArgs: ${{ parameters.additionalArgs }}
+        retryCount: ${{ parameters.retryCount }}
+        condition: ${{ parameters.condition }}
+        shouldPublish: ${{ parameters.shouldPublish }}
+        configuration: ${{ parameters.configuration }}
+        buildExternals: ${{ parameters.buildExternals }}
+        verbosity: ${{ parameters.verbosity }}
+        docker: ${{ parameters.docker }}
+        dockerArgs: ${{ parameters.dockerArgs }}
+        installAndroidNdk: ${{ parameters.installAndroidNdk }}
+        installAndroidSdk: ${{ parameters.installAndroidSdk }}
+        installTizenSdk: ${{ parameters.installTizenSdk }}
+        installWindowsSdk: ${{ parameters.installWindowsSdk }}
+        installPreviewVs: ${{ parameters.installPreviewVs }}
+        installDotNet: ${{ parameters.installDotNet }}
+        installLlvm: ${{ parameters.installLlvm }}
+        installEmsdk: ${{ parameters.installEmsdk }}
+        artifactName: ${{ parameters.artifactName }}
+        tools: ${{ parameters.tools }}
 
-- ${{ if not(and(gt(parameters.buildExternals, 0), startsWith(parameters.name, 'native_'))) }}:
-  - template: azure-templates-build.yml
-    parameters:
-      name: ${{ parameters.name }}
-      displayName: ${{ parameters.displayName }}
-      vmImage: ${{ parameters.vmImage }}
-      packages: ${{ parameters.packages }}
-      target: ${{ parameters.target }}
-      dependsOn: ${{ parameters.dependsOn }}
-      variables: ${{ parameters.variables }}
-      requiredArtifacts: ${{ parameters.requiredArtifacts }}
-      requiredArtifactsMap: ${{ parameters.requiredArtifactsMap }}
-      preBuildSteps: ${{ parameters.preBuildSteps }}
-      postBuildSteps: ${{ parameters.postBuildSteps }}
-      initScript: ${{ parameters.initScript }}
-      additionalArgs: ${{ parameters.additionalArgs }}
-      retryCount: ${{ parameters.retryCount }}
-      condition: ${{ parameters.condition }}
-      shouldPublish: ${{ parameters.shouldPublish }}
-      configuration: ${{ parameters.configuration }}
-      verbosity: ${{ parameters.verbosity }}
-      docker: ${{ parameters.docker }}
-      dockerArgs: ${{ parameters.dockerArgs }}
-      installAndroidNdk: ${{ parameters.installAndroidNdk }}
-      installTizenSdk: ${{ parameters.installTizenSdk }}
-      installWindowsSdk: ${{ parameters.installWindowsSdk }}
-      installPreviewVs: ${{ parameters.installPreviewVs }}
-      installDotNet: ${{ parameters.installDotNet }}
-      installLlvm: ${{ parameters.installLlvm }}
-      installEmsdk: ${{ parameters.installEmsdk }}
-      artifactName: ${{ parameters.artifactName }}
-      tools: ${{ parameters.tools }}
+  - ${{ if not(gt(parameters.buildExternals, 0)) }}:
+    - template: azure-templates-build.yml
+      parameters:
+        name: ${{ parameters.name }}
+        displayName: ${{ parameters.displayName }}
+        vmImage: ${{ parameters.vmImage }}
+        packages: ${{ parameters.packages }}
+        target: ${{ parameters.target }}
+        dependsOn: ${{ parameters.dependsOn }}
+        variables: ${{ parameters.variables }}
+        requiredArtifacts: ${{ parameters.requiredArtifacts }}
+        preBuildSteps: ${{ parameters.preBuildSteps }}
+        postBuildSteps: ${{ parameters.postBuildSteps }}
+        initScript: ${{ parameters.initScript }}
+        additionalArgs: ${{ parameters.additionalArgs }}
+        retryCount: ${{ parameters.retryCount }}
+        condition: ${{ parameters.condition }}
+        shouldPublish: ${{ parameters.shouldPublish }}
+        configuration: ${{ parameters.configuration }}
+        isBuildPipeline: ${{ parameters.isBuildPipeline }}
+        verbosity: ${{ parameters.verbosity }}
+        docker: ${{ parameters.docker }}
+        dockerArgs: ${{ parameters.dockerArgs }}
+        installAndroidNdk: ${{ parameters.installAndroidNdk }}
+        installAndroidSdk: ${{ parameters.installAndroidSdk }}
+        installTizenSdk: ${{ parameters.installTizenSdk }}
+        installWindowsSdk: ${{ parameters.installWindowsSdk }}
+        installPreviewVs: ${{ parameters.installPreviewVs }}
+        installDotNet: ${{ parameters.installDotNet }}
+        installLlvm: ${{ parameters.installLlvm }}
+        installEmsdk: ${{ parameters.installEmsdk }}
+        artifactName: ${{ parameters.artifactName }}
+        tools: ${{ parameters.tools }}
