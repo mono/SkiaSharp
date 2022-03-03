@@ -21,7 +21,8 @@
     <BuildingForNet6 Condition="'$(BuildingForNet6)' == '' and $(IsWindows)">true</BuildingForNet6>
     <BuildingForNet6 Condition="'$(BuildingForNet6)' == ''">false</BuildingForNet6>
     <MDocDocumentationDirectory>$(MSBuildThisFileDirectory)..\docs\SkiaSharpAPI</MDocDocumentationDirectory>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>9.0</LangVersion>
+    <LangVersion Condition="$(IsWindows)">10.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
