@@ -409,6 +409,8 @@ stages:
             requiredArtifacts:
               - name: native
             artifactName: managed
+            preBuildSteps:
+              - pwsh: 'dir env:'
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
