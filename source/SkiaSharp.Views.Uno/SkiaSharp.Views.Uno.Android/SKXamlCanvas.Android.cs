@@ -1,6 +1,13 @@
-﻿using Android.Graphics;
-using Windows.Graphics.Display;
+﻿using System;
+using Android.Graphics;
+
+#if WINDOWS
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
+#else
+using Windows.UI.Core;
 using Windows.UI.Xaml;
+#endif
 
 namespace SkiaSharp.Views.UWP
 {
