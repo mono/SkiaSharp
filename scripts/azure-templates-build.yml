@@ -114,7 +114,6 @@ jobs:
             displayName: Install Android API 31 (v12)
         # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
-          - pwsh: Remove-Item -Recurse -Force "$env:AGENT_TOOLSDIRECTORY/dotnet"
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
@@ -125,9 +124,6 @@ jobs:
               packageType: 'sdk'
               version: $(DOTNET_VERSION)
             displayName: Install the correct version of .NET Core
-          # display dotnet info
-          - pwsh: dotnet --info
-            displayName: Display all the .NET information
           # install the bits needed for .NET 6 builds
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
@@ -135,12 +131,12 @@ jobs:
           # display dotnet info
           - pwsh: dotnet --info
             displayName: Display all the .NET information
-          - pwsh: .\scripts\select-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-            displayName: Select .NET Core
+          # install VS
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1
                 displayName: Install Visual Studio
+          # install workloads
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
               condition: and(succeeded(), ne(variables.DOTNET_VERSION_PREVIEW, ''))

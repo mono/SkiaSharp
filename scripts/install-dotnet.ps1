@@ -6,8 +6,6 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-dir env:
-
 $dotnetDll = Join-Path "$InstallDir" "sdk" "$Version" "dotnet.dll"
 if (Test-Path $dotnetDll) {
   Write-Host ".NET already installed."
@@ -33,20 +31,7 @@ if (Test-Path $dotnetDll) {
   }
 }
 
-# Write-Host "Setting install directory to '$InstallDir'..."
-# $env:DOTNET_INSTALL_DIR=$InstallDir
-# $env:DOTNET_ROOT=$InstallDir
-# $env:DOTNET_MULTILEVEL_LOOKUP=0
-
-# Write-Host "##vso[task.setvariable variable=DOTNET_INSTALL_DIR;]$InstallDir";
-# Write-Host "##vso[task.setvariable variable=DOTNET_ROOT;]$InstallDir";
-# Write-Host "##vso[task.setvariable variable=DOTNET_MULTILEVEL_LOOKUP;]0";
-
-# $env:PATH = "$InstallDir;$env:PATH"
-# Write-Host "##vso[task.setvariable variable=PATH;]$env:PATH";
-
 Write-Host "Checking all dotnet info..."
-& "$InstallDir/dotnet" --info
-# & dotnet --info
+& dotnet --info
 
 exit $LASTEXITCODE
