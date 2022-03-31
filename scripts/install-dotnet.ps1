@@ -40,10 +40,11 @@ if (Test-Path $dotnetDll) {
 # Write-Host "##vso[task.setvariable variable=DOTNET_ROOT;]$InstallDir";
 # Write-Host "##vso[task.setvariable variable=DOTNET_MULTILEVEL_LOOKUP;]0";
 
-$env:PATH = "$InstallDir;$env:PATH"
-Write-Host "##vso[task.setvariable variable=PATH;]$env:PATH";
+# $env:PATH = "$InstallDir;$env:PATH"
+# Write-Host "##vso[task.setvariable variable=PATH;]$env:PATH";
 
 Write-Host "Checking all dotnet info..."
-& dotnet --info
+& "$InstallDir/dotnet" --info
+# & dotnet --info
 
 exit $LASTEXITCODE
