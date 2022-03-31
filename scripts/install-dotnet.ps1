@@ -43,9 +43,4 @@ Write-Host "##vso[task.setvariable variable=DOTNET_MULTILEVEL_LOOKUP;]0";
 $env:PATH = "$InstallDir;$env:PATH"
 Write-Host "##vso[task.setvariable variable=PATH;]$env:PATH";
 
-Write-Host "Checking all dotnet info..."
-$dn = Join-Path "$InstallDir" "dotnet"
-& "$dn" --info
-& dotnet --info
-
 exit $LASTEXITCODE

@@ -130,6 +130,9 @@ jobs:
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
             condition: and(succeeded(), ne(variables.DOTNET_VERSION_PREVIEW, ''))
+          # display dotnet info
+          - pwsh: dotnet --info
+            displayName: Display all the .NET information
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1
@@ -141,9 +144,6 @@ jobs:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $false
               condition: and(succeeded(), eq(variables.DOTNET_VERSION_PREVIEW, ''))
               displayName: Install the .NET Core workloads
-          # display dotnet info
-          - pwsh: dotnet --info
-            displayName: Display all the .NET information
 
       # select the correct/latest version of Visual Studio
       - ${{ if endsWith(parameters.name, '_windows') }}:
