@@ -6,6 +6,8 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
+dir env:
+
 $dotnetDll = Join-Path "$InstallDir" "sdk" "$Version" "dotnet.dll"
 if (Test-Path $dotnetDll) {
   Write-Host ".NET already installed."
