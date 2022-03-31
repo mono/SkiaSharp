@@ -2,7 +2,7 @@
 
 XCODE_VERSION=$1
 
-ls -l /Applications/Xcode*
+ls /Applications/Xcode*
 
 echo "##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]/Applications/Xcode_$XCODE_VERSION.app"
 
