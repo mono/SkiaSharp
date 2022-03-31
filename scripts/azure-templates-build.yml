@@ -61,12 +61,7 @@ jobs:
         - bash: ./scripts/install-mono.sh $(MONO_VERSION_LINUX)
           displayName: Install Mono and MSBuild
       - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: |
-            ls -l '/Library/Frameworks/Mono.framework/Versions'
-            ls -l '/Library/Frameworks/Xamarin.iOS.framework/Versions'
-            ls -l '/Library/Frameworks/Xamarin.Android.framework/Versions'
-            ls -l '/Library/Frameworks/Xamarin.Mac.framework/Versions'
-            sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION_MACOS)
+        - bash: sudo ./scripts/select-xamarin.sh $(MONO_VERSION_MACOS)
           displayName: Switch to the latest Xamarin SDK
 
       # install extra bits for the native builds
@@ -157,8 +152,12 @@ jobs:
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
-          displayName: Switch to the latest Xcode
+        - ${{ if startsWith(parameters.name, 'native_') }}:
+          - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION_NATIVE)
+            displayName: Switch to the latest Xcode
+        - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+          - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
+            displayName: Switch to the latest Xcode
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
