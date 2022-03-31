@@ -114,7 +114,7 @@ jobs:
             displayName: Install Android API 31 (v12)
         # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
-          - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+          - pwsh: Remove-Item -Recurse -Force "$env:AGENT_TOOLSDIRECTORY/dotnet"
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
@@ -135,6 +135,8 @@ jobs:
           # display dotnet info
           - pwsh: dotnet --info
             displayName: Display all the .NET information
+          - pwsh: .\scripts\select-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            displayName: Select .NET Core
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1
