@@ -6,6 +6,12 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
+$dotnetDll = Join-Path "$InstallDir" "sdk" "$Version" "dotnet.dll"
+if (Test-Path $dotnetDll) {
+  Write-Host ".NET already installed."
+  exit 0
+}
+
 if ($IsMacOS -or $IsLinux) {
   $url = "https://dot.net/v1/dotnet-install.sh"
 } else {
