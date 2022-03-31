@@ -1,7 +1,7 @@
 Param(
-    [string] $Version,
-    [string] $InstallDir,
-    [string] $FeedUrl = "https://dotnetbuilds.blob.core.windows.net/public"
+  [string] $Version,
+  [string] $InstallDir,
+  [string] $FeedUrl = "https://dotnetbuilds.blob.core.windows.net/public"
 )
 
 $ErrorActionPreference = 'Stop'
@@ -26,7 +26,16 @@ if ($IsMacOS) {
   .\dotnet-install.ps1 -Version "$Version" -InstallDir "$InstallDir" -AzureFeed "$FeedUrl" -Verbose
 }
 
-Write-Host "Installed .NET Versions:"
-& dotnet --list-sdks
+$env:DOTNET_INSTALL_DIR=$InstallDir
+$env:DOTNET_ROOT=$InstallDir
+$env:DOTNET_MULTILEVEL_LOOKUP=0
+
+Write-Host "##vso[task.setvariable variable=DOTNET_INSTALL_DIR;]$InstallDir";
+Write-Host "##vso[task.setvariable variable=DOTNET_ROOT;]$InstallDir";
+Write-Host "##vso[task.setvariable variable=DOTNET_MULTILEVEL_LOOKUP;]0";
+
+Write-Host "##vso[task.setvariable variable=PATH;]$InstallDir;$env:PATH";
+
+& dotnet --info
 
 exit $LASTEXITCODE

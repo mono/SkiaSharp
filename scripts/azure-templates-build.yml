@@ -54,14 +54,19 @@ jobs:
             sudo apt update
             sudo apt install -y ${{ parameters.packages }}
           displayName: Install additional package dependencies
-          condition: ne('${{ parameters.packages }}', '')
+          condition: and(succeeded(), ne('${{ parameters.packages }}', ''))
 
       # make sure mono/msbuild is the correct version
       - ${{ if and(ne(variables['MONO_VERSION_LINUX'], ''), eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
         - bash: ./scripts/install-mono.sh $(MONO_VERSION_LINUX)
           displayName: Install Mono and MSBuild
       - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION_MACOS)
+        - bash: |
+            ls -l '/Library/Frameworks/Mono.framework/Versions'
+            ls -l '/Library/Frameworks/Xamarin.iOS.framework/Versions'
+            ls -l '/Library/Frameworks/Xamarin.Android.framework/Versions'
+            ls -l '/Library/Frameworks/Xamarin.Mac.framework/Versions'
+            sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION_MACOS)
           displayName: Switch to the latest Xamarin SDK
 
       # install extra bits for the native builds
@@ -129,17 +134,17 @@ jobs:
           # install the bits needed for .NET 6 builds
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
-            condition: ne(variables.DOTNET_VERSION_PREVIEW, '')
+            condition: and(succeeded(), ne(variables.DOTNET_VERSION_PREVIEW, ''))
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1
                 displayName: Install Visual Studio
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
-              condition: ne(variables.DOTNET_VERSION_PREVIEW, '')
+              condition: and(succeeded(), ne(variables.DOTNET_VERSION_PREVIEW, ''))
               displayName: Install the preview .NET Core workloads
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $false
-              condition: eq(variables.DOTNET_VERSION_PREVIEW, '')
+              condition: and(succeeded(), eq(variables.DOTNET_VERSION_PREVIEW, ''))
               displayName: Install the .NET Core workloads
           # display dotnet info
           - pwsh: dotnet --info
