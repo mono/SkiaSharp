@@ -18,9 +18,9 @@ namespace SkiaSharpSample.Samples
 		[Preserve]
 		public SkottieSample()
 		{
-			using var reader = new StreamReader(SampleMedia.Images.LottieLogo);
+			using var fileStream = new SKManagedStream(SampleMedia.Images.LottieLogo);
 
-			_animation = SkiaSharp.Skottie.Animation.Make(reader.ReadToEnd());
+			_animation = SkiaSharp.Skottie.Animation.Make(fileStream);
 			_animation.Seek(0, null);
 
 			Console.WriteLine($"SkottieSample(): Version:{_animation.Version} Duration:{_animation.Duration} Fps:{_animation.Fps} InPoint:{_animation.InPoint} OutPoint:{_animation.OutPoint}");
