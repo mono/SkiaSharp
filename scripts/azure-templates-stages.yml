@@ -2,8 +2,11 @@ parameters:
   isBuildPipeline: true
   buildExternals: 0
   VM_IMAGE_WINDOWS: ''
+  VM_IMAGE_WINDOWS_NATIVE: ''
   VM_IMAGE_MAC: ''
+  VM_IMAGE_MAC_NATIVE: ''
   VM_IMAGE_LINUX: ''
+  VM_IMAGE_LINUX_NATIVE: ''
 
 stages:
   - stage: prepare
@@ -36,7 +39,7 @@ stages:
             displayName: Android x86
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x86
             installWindowsSdk: false
@@ -47,7 +50,7 @@ stages:
             displayName: Android x64
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x64
             installWindowsSdk: false
@@ -58,7 +61,7 @@ stages:
             displayName: Android arm
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm
             installWindowsSdk: false
@@ -69,7 +72,7 @@ stages:
             displayName: Android arm64
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm64
             installWindowsSdk: false
@@ -80,7 +83,7 @@ stages:
             displayName: Tizen
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-tizen
             installWindowsSdk: false
             artifactName: native
@@ -90,7 +93,7 @@ stages:
             displayName: ANGLE x86
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
             artifactName: native
@@ -100,7 +103,7 @@ stages:
             displayName: ANGLE x64
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
             artifactName: native
@@ -110,7 +113,7 @@ stages:
             displayName: ANGLE arm
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
             artifactName: native
@@ -120,7 +123,7 @@ stages:
             displayName: ANGLE arm64
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
             artifactName: native
@@ -130,7 +133,7 @@ stages:
             displayName: UWP x86
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-uwp
             additionalArgs: --buildarch=x86 --skipAngle=true
             artifactName: native
@@ -139,7 +142,7 @@ stages:
             name: native_uwp_x64_windows
             displayName: UWP x64
             buildExternals: ${{ parameters.buildExternals }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-uwp
             additionalArgs: --buildarch=x64 --skipAngle=true
             artifactName: native
@@ -149,7 +152,7 @@ stages:
             displayName: UWP arm
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-uwp
             additionalArgs: --buildarch=arm --skipAngle=true
             artifactName: native
@@ -159,7 +162,7 @@ stages:
             displayName: UWP arm64
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-uwp
             additionalArgs: --buildarch=arm64 --skipAngle=true
             artifactName: native
@@ -169,7 +172,7 @@ stages:
             displayName: Win32 x86
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-windows
             additionalArgs: --buildarch=x86
             artifactName: native
@@ -179,7 +182,7 @@ stages:
             displayName: Win32 x64
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-windows
             additionalArgs: --buildarch=x64
             artifactName: native
@@ -189,7 +192,7 @@ stages:
             displayName: Win32 arm64
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-windows
             additionalArgs: --buildarch=arm64
             artifactName: native
@@ -199,7 +202,7 @@ stages:
             displayName: Nano Server x64
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-nanoserver
             additionalArgs: --buildarch=x64
             artifactName: native
@@ -215,7 +218,7 @@ stages:
             displayName: Android x86
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x86
         - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
@@ -224,7 +227,7 @@ stages:
             displayName: Android x64
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x64
         - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
@@ -233,7 +236,7 @@ stages:
             displayName: Android arm
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm
         - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
@@ -242,7 +245,7 @@ stages:
             displayName: Android arm64
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm64
         - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
@@ -251,7 +254,7 @@ stages:
             displayName: iOS
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-ios
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native Mac Catalyst (macOS)
@@ -260,7 +263,7 @@ stages:
             displayName: Mac Catalyst
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-maccatalyst
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
@@ -269,7 +272,7 @@ stages:
             displayName: macOS
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-macos
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
@@ -278,7 +281,7 @@ stages:
             displayName: tvOS
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-tvos
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
@@ -287,7 +290,7 @@ stages:
             displayName: watchOS
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-watchos
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
@@ -296,7 +299,7 @@ stages:
             displayName: Tizen
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-tizen
             condition: false # TODO: TIZEN INSTALL BUGS
 
@@ -310,7 +313,7 @@ stages:
             artifactName: native
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
             builds:
               - name: ''
               - name: nodeps
@@ -336,7 +339,7 @@ stages:
             displayName: Tizen
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
             packages: $(TIZEN_LINUX_PACKAGES)
             target: externals-tizen
 
@@ -349,7 +352,7 @@ stages:
           parameters:
             buildExternals: ${{ parameters.buildExternals }}
             isBuildPipeline: ${{ parameters.isBuildPipeline }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
             artifactName: native
             emscripten:
               - 2.0.5
