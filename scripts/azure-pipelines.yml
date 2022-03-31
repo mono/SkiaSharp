@@ -12,7 +12,7 @@ parameters:
   - name: buildExternals
     displayName: 'The specific native artifacts to use for this build.'
     type: number
-    default: 0
+    default: 5836420
   - name: VM_IMAGE_WINDOWS
     type: object
     default:
@@ -21,8 +21,13 @@ parameters:
   - name: VM_IMAGE_MAC
     type: object
     default:
-      name: Azure Pipelines
-      vmImage: macOS-10.15
+      name: VSEng-VSMac-Xamarin-Shared
+      vmImage: VSEng-VSMac-Xamarin-Shared
+      demands:
+        - macOS.Name -equals Monterey
+        - macOS.Architecture -equals x64
+        - Agent.HasDevices -equals False
+        - Agent.IsPaired -equals False
   - name: VM_IMAGE_LINUX
     type: object
     default:
