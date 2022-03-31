@@ -54,14 +54,14 @@ jobs:
             sudo apt update
             sudo apt install -y ${{ parameters.packages }}
           displayName: Install additional package dependencies
-          condition: ne('${{ parameters.packages }}', '')
+          condition: and(succeeded(), ne('${{ parameters.packages }}', ''))
 
       # make sure mono/msbuild is the correct version
       - ${{ if and(ne(variables['MONO_VERSION_LINUX'], ''), eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
         - bash: ./scripts/install-mono.sh $(MONO_VERSION_LINUX)
           displayName: Install Mono and MSBuild
       - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION_MACOS)
+        - bash: sudo ./scripts/select-xamarin.sh $(MONO_VERSION_MACOS)
           displayName: Switch to the latest Xamarin SDK
 
       # install extra bits for the native builds
@@ -114,36 +114,39 @@ jobs:
             displayName: Install Android API 31 (v12)
         # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
+          - ${{ if endsWith(parameters.name, '_macos') }}:
+            - pwsh: Remove-Item -Recurse -Force "$env:AGENT_TOOLSDIRECTORY/dotnet"
+              displayName: Cleanup existing versions of .NET Core
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
               version: $(DOTNET_VERSION_PREVIOUS)
-              performMultiLevelLookup: true
             displayName: Install the previous version of .NET Core
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
               version: $(DOTNET_VERSION)
-              performMultiLevelLookup: true
             displayName: Install the correct version of .NET Core
           # install the bits needed for .NET 6 builds
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
-            condition: ne(variables.DOTNET_VERSION_PREVIEW, '')
+            condition: and(succeeded(), ne(variables.DOTNET_VERSION_PREVIEW, ''))
+          # display dotnet info
+          - pwsh: dotnet --info
+            displayName: Display all the .NET information
+          # install VS
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1
                 displayName: Install Visual Studio
+          # install workloads
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
-              condition: ne(variables.DOTNET_VERSION_PREVIEW, '')
+              condition: and(succeeded(), ne(variables.DOTNET_VERSION_PREVIEW, ''))
               displayName: Install the preview .NET Core workloads
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $false
-              condition: eq(variables.DOTNET_VERSION_PREVIEW, '')
+              condition: and(succeeded(), eq(variables.DOTNET_VERSION_PREVIEW, ''))
               displayName: Install the .NET Core workloads
-          # display dotnet info
-          - pwsh: dotnet --info
-            displayName: Display all the .NET information
 
       # select the correct/latest version of Visual Studio
       - ${{ if endsWith(parameters.name, '_windows') }}:
@@ -152,8 +155,12 @@ jobs:
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
-          displayName: Switch to the latest Xcode
+        - ${{ if startsWith(parameters.name, 'native_') }}:
+          - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION_NATIVE)
+            displayName: Switch to the latest Xcode
+        - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+          - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
+            displayName: Switch to the latest Xcode
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
