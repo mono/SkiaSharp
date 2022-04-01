@@ -22,7 +22,7 @@ Task("libSkiaSharp")
             ? "11.0"
             : "10.8";
 
-        GnNinja($"macos/{arch}", "skia",
+        GnNinja($"macos/{arch}", "skia modules/skottie",
             $"target_os='mac' " +
             $"target_cpu='{skiaArch}' " +
             $"min_macos_version='{minVersion}' " +

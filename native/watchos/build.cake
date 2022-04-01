@@ -19,7 +19,7 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
-        GnNinja($"watchos/{arch}", "skia",
+        GnNinja($"watchos/{arch}", "skia modules/skottie",
             $"target_os='watchos' " +
             $"target_cpu='{skiaArch}' " +
             $"skia_enable_gpu=false " +

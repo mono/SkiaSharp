@@ -29,7 +29,7 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
-        GnNinja($"{VARIANT}/{arch}", "skia",
+        GnNinja($"{VARIANT}/{arch}", "skia modules/skottie",
             $"target_cpu='{skiaArch}' " +
             $"target_os='{VARIANT}' " +
             $"skia_use_icu=false " +

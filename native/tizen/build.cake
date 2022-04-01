@@ -21,7 +21,7 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
-        GnNinja($"tizen/{arch}", "skia",
+        GnNinja($"tizen/{arch}", "skia modules/skottie",
            $"target_os='tizen' " +
            $"target_cpu='{skiaArch}' " +
            $"skia_enable_gpu=true " +

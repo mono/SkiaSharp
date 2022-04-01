@@ -18,7 +18,7 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
-        GnNinja($"tvos/{arch}", "skia",
+        GnNinja($"tvos/{arch}", "skia modules/skottie",
             $"target_os='tvos' " +
             $"target_cpu='{skiaArch}' " +
             $"skia_use_icu=false " +
