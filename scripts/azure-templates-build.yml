@@ -115,7 +115,7 @@ jobs:
         # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
           - ${{ if endsWith(parameters.name, '_macos') }}:
-            - pwsh: Remove-Item -Recurse -Force "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            - pwsh: Remove-Item "$env:AGENT_TOOLSDIRECTORY/dotnet" -Recurse -Force -ErrorAction SilentlyContinue
               displayName: Cleanup existing versions of .NET Core
           - task: UseDotNet@2
             inputs:
