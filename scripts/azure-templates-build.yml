@@ -153,6 +153,11 @@ jobs:
         - pwsh: .\scripts\select-vs.ps1
           displayName: Select Visual Studio
 
+      # install nuget
+      - ${{ if endsWith(parameters.name, '_windows') }}:
+        - pwsh: .\scripts\install-nuget.ps1
+          displayName: Install NuGet
+
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
         - ${{ if startsWith(parameters.name, 'native_') }}:
@@ -185,10 +190,6 @@ jobs:
       - ${{ each tool in parameters.tools }}:
         - pwsh: dotnet tool install -g ${{ tool }}
           displayName: Install ${{ tool }}
-
-      # install nuget
-      - pwsh: .\scripts\install-nuget.ps1
-        displayName: Install NuGet
 
       # download artifacts
       - template: azure-templates-download-artifacts.yml
