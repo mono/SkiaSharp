@@ -17,7 +17,7 @@ if (!(Test-Path $jdk)) {
 }
 
 $env:JAVA_HOME = "$jdk\jdk-13.0.2"
-$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+$env:PATH = "$env:JAVA_HOME\bin" + [IO.Path]::PathSeparator + "$env:PATH"
 
 # install Tizen
 
