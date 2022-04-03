@@ -31,6 +31,11 @@ if (Test-Path $dotnetDll) {
   }
 }
 
+if (-not $env:PATH.Contains($InstallDir)) {
+  $env:PATH = "$InstallDir" + [IO.Path]::PathSeparator + "$env:PATH"
+  Write-Host "##vso[task.setvariable variable=PATH;]$env:PATH"
+}
+
 Write-Host "Checking all dotnet info..."
 & dotnet --info
 

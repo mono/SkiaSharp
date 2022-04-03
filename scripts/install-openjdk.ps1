@@ -56,8 +56,10 @@ $env:JAVA_HOME = "$java_home"
 
 # make sure that JAVA_HOME/bin is in the PATH
 $javaBin = Join-Path "$java_home" "bin"
-Write-Host "##vso[task.setvariable variable=PATH;]$javaBin;$env:PATH";
-$env:PATH = "$env:JAVA_HOME\bin" + [IO.Path]::PathSeparator + "$env:PATH"
+if (-not $env:PATH.Contains($javaBin)) {
+    $env:PATH = "$javaBin" + [IO.Path]::PathSeparator + "$env:PATH"
+    Write-Host "##vso[task.setvariable variable=PATH;]$env:PATH"
+}
 
 java -version
 
