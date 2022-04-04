@@ -8,7 +8,6 @@ DirectoryPath OUTPUT_SYMBOLS_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("outpu
 
 var NUGETS_SOURCES = new [] {
     OUTPUT_NUGETS_PATH.FullPath,
-    "https://api.nuget.org/v3/index.json",
 };
 
 string[] GetNuGetSources()
