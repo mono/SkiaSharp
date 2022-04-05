@@ -10,9 +10,10 @@
     <RootNamespace>SkiaSharpSample</RootNamespace>
     <ApplicationTitle>SkiaSharpSample</ApplicationTitle>
     <ApplicationId>com.companyname.SkiaSharpSample</ApplicationId>
+    <ApplicationId Condition="$(TargetFramework.Contains('-windows'))">69157F47-E4B3-4267-82FE-04460C520A8F</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>10.0</LangVersion>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
     <SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-ios'">14.2</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-maccatalyst'">14.0</SupportedOSPlatformVersion>
@@ -21,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <MauiImage Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
+    <MauiIcon Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
     <MauiSplashScreen Include="Resources\skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />
   </ItemGroup>
 
