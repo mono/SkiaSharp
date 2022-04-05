@@ -59,7 +59,11 @@ Write-Host "Extraction complete."
 Write-Host "Installing Python..."
 try {
     Push-Location "$tempDir"
-    .\setup.ps1
+    if ($IsMacOS -or $IsLinux) {
+        ./setup.sh
+    } else {
+        .\setup.ps1
+    }
 } finally {
     Pop-Location
 }

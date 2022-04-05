@@ -22,7 +22,9 @@ New-Item -ItemType Directory -Force -Path $destDir | Out-Null
 Write-Host "Downloading NuGet: $uri..."
 .\scripts\download-file.ps1 -Uri $uri -OutFile $exe
 
-Write-Host "##vso[task.setvariable variable=PATH;]$destDir;$env:PATH";
-$env:PATH = "$destDir;$env:PATH"
+if (-not $env:PATH.Contains($destDir)) {
+    $env:PATH = "$destDir" + [IO.Path]::PathSeparator + "$env:PATH"
+    Write-Host "##vso[task.setvariable variable=PATH;]$env:PATH"
+}
 
 exit $LASTEXITCODE

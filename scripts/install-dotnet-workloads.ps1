@@ -1,12 +1,10 @@
 Param(
-    [string] $InstallDir,
-    [string] $SourceUrl,
-    [boolean] $IsPreview = $true
+  [string] $SourceUrl,
+  [string] $InstallDir,
+  [boolean] $IsPreview = $true
 )
 
 $ErrorActionPreference = 'Stop'
-
-$env:DOTNET_ROOT="$InstallDir"
 
 $previewFeed = 'https://api.nuget.org/v3/index.json'
 $previewRuntime = 'https://api.nuget.org/v3/index.json'
