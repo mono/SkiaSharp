@@ -32,7 +32,7 @@ steps:
       } else {
         Write-Host "Not a PR build."
       }
-    condition: eq(variables['Build.Reason'], 'ResourceTrigger')
+    condition: or(eq(variables['Build.Reason'], 'ResourceTrigger'), eq(variables['Build.Reason'], 'Manual'))
     displayName: Update the PR variables for downstream builds
 
   - pwsh: |
@@ -58,7 +58,7 @@ steps:
       $buildnumber = $match.Groups[2].Value
       Write-Host "Build number: $buildnumber"
       Write-Host "##vso[task.setvariable variable=BUILD_NUMBER]$buildnumber"
-    condition: eq(variables['Build.Reason'], 'ResourceTrigger')
+    condition: or(eq(variables['Build.Reason'], 'ResourceTrigger'), eq(variables['Build.Reason'], 'Manual'))
     displayName: Override the preview label and build number if this is a secondary build
 
   - pwsh: |
