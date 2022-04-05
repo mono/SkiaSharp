@@ -13,21 +13,21 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		protected override SKCanvasView CreatePlatformView() => new SKCanvasView(Context);
 
-		protected override void ConnectHandler(SKCanvasView nativeView)
+		protected override void ConnectHandler(SKCanvasView platformView)
 		{
-			nativeView.PaintSurface += OnPaintSurface;
+			platformView.PaintSurface += OnPaintSurface;
 
-			base.ConnectHandler(nativeView);
+			base.ConnectHandler(platformView);
 		}
 
-		protected override void DisconnectHandler(SKCanvasView nativeView)
+		protected override void DisconnectHandler(SKCanvasView platformView)
 		{
-			touchHandler?.Detach(nativeView);
+			touchHandler?.Detach(platformView);
 			touchHandler = null;
 
-			nativeView.PaintSurface -= OnPaintSurface;
+			platformView.PaintSurface -= OnPaintSurface;
 
-			base.DisconnectHandler(nativeView);
+			base.DisconnectHandler(platformView);
 		}
 
 		// Mapper actions / properties

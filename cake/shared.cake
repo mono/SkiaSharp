@@ -42,7 +42,7 @@ void RunCake(FilePath cake, string target = null, Dictionary<string, string> arg
         cmd += $@" --{arg.Key}=""{arg.Value}""";
     }
 
-    DotNetCoreTool(cmd);
+    DotNetTool(cmd);
 }
 
 void RunProcess(FilePath process, string args = "")

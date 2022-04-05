@@ -1,6 +1,7 @@
 parameters:
   artifactName: ''                              # the name of the artifact to merge this run into
   buildExternals: ''                            # the build number to download externals from
+  isBuildPipeline: true
   vmImage: ''                                   # the VM image
   builds:
     - name: ''
@@ -24,6 +25,7 @@ jobs:
           name: ${{ replace(replace(format('native_linux_{0}_{1}_{2}_{3}_linux', item.arch, item.variant, build.name, item.alt), '__', '_'), '__', '_') }}
           displayName: Linux ${{ replace(replace(replace(replace(replace(format('({0}|{1}|{2}|{3})', item.arch, item.variant, build.name, item.alt), '||', '|'), '||', '|'), '(|', '('), '|)', ')'), '|', ', ') }}
           buildExternals: ${{ parameters.buildExternals }}
+          isBuildPipeline: ${{ parameters.isBuildPipeline }}
           vmImage: ${{ parameters.vmImage }}
           docker: ${{ item.docker }}
           dockerArgs: ${{ item.dockerArgs }}

@@ -1,0 +1,26 @@
+variables:
+  SKIASHARP_VERSION: 2.88.0
+  FEATURE_NAME_PREFIX: 'feature/'
+  VERBOSITY: normal
+  GIT_SHA: $(Build.SourceVersion)
+  GIT_BRANCH_NAME: $(Build.SourceBranch)
+  GIT_URL: $(Build.Repository.Uri)
+  FEATURE_NAME: ''
+  PREVIEW_LABEL: 'preview'
+  BUILD_NUMBER: $[counter(format('_{0}_{1}_{2}__', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch'], variables['PREVIEW_LABEL']), 1)]
+  TIZEN_LINUX_PACKAGES: libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
+  MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build
+  MONO_VERSION_MACOS: '6_12_13'
+  MONO_VERSION_LINUX: ''
+  XCODE_VERSION: 13.2.1
+  XCODE_VERSION_NATIVE: 13.2.1
+  DOTNET_VERSION_PREVIOUS: 3.1.417
+  DOTNET_VERSION: 5.0.406
+  DOTNET_VERSION_PREVIEW: '6.0.200-rtm.22107.3'
+  DOTNET_WORKLOAD_SOURCE: 'https://aka.ms/dotnet/maui/6.0.200/preview.14.json'
+  CONFIGURATION: 'Release'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  THROW_ON_TEST_FAILURE: true
+  NUGET_DIFF_PRERELEASE: false
+  ENABLE_CODE_COVERAGE: true
+  EMSCRIPTEN_VERSION: 2.0.23

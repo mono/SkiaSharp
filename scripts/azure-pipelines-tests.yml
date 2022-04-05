@@ -1,12 +1,6 @@
-trigger:
-  - main
-  - develop
-  - patch/*
+trigger: none
 
-pr:
-  - main
-  - develop
-  - patch/*
+pr: none
 
 parameters:
   - name: buildExternals
@@ -39,11 +33,15 @@ resources:
       name: xamarin/yaml-templates
       endpoint: xamarin
       ref: refs/heads/main
+  pipelines:
+    - pipeline: SkiaSharp
+      source: SkiaSharp
+      trigger: true
 
 stages:
   - template: azure-templates-stages.yml
     parameters:
-      isBuildPipeline: true
+      isBuildPipeline: false
       buildExternals: ${{ parameters.buildExternals }}
       VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
