@@ -120,13 +120,18 @@ jobs:
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
-              version: $(DOTNET_VERSION_PREVIOUS)
-            displayName: Install the previous version of .NET Core
+              version: 3.1.x
+            displayName: Install .NET Core 3.1.x
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
-              version: $(DOTNET_VERSION)
-            displayName: Install the correct version of .NET Core
+              version: 5.0.x
+            displayName: Install .NET Core 5.0.x
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: 6.0.x
+            displayName: Install .NET Core 6.0.x
           # install the bits needed for .NET 6 builds
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
