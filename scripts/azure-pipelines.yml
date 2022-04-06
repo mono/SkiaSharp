@@ -16,28 +16,34 @@ parameters:
   - name: VM_IMAGE_WINDOWS
     type: object
     default:
-      name: Azure Pipelines
-      vmImage: windows-2022
+      pool:
+        name: Azure Pipelines
+        vmImage: windows-2022
   - name: VM_IMAGE_MAC_NATIVE
     type: object
     default:
-      name: Azure Pipelines
-      vmImage: macos-11
+      pool:
+        name: Azure Pipelines
+        vmImage: macos-11
   - name: VM_IMAGE_MAC
     type: object
     default:
-      name: VSEng-VSMac-Xamarin-Shared
-      vmImage: VSEng-VSMac-Xamarin-Shared
-      demands:
-        - macOS.Name -equals Monterey
-        - macOS.Architecture -equals x64
-        - Agent.HasDevices -equals False
-        - Agent.IsPaired -equals False
+      pool:
+        name: VSEng-VSMac-Xamarin-Shared
+        vmImage: VSEng-VSMac-Xamarin-Shared
+        demands:
+          - macOS.Name -equals Monterey
+          - macOS.Architecture -equals x64
+          - Agent.HasDevices -equals False
+          - Agent.IsPaired -equals False
+      variables:
+        XCODE_VERSION: 13.3.0
   - name: VM_IMAGE_LINUX
     type: object
     default:
-      name: Azure Pipelines
-      vmImage: ubuntu-18.04
+      pool:
+        name: Azure Pipelines
+        vmImage: ubuntu-18.04
 
 variables:
   - template: azure-pipelines-variables.yml

@@ -37,11 +37,15 @@ jobs:
       parameters:
         name: ${{ parameters.name }}
         displayName: ${{ parameters.displayName }}
-        vmImage: ${{ parameters.vmImage }}
+        vmImage: ${{ parameters.vmImage.pool }}
         packages: ${{ parameters.packages }}
         target: ${{ parameters.target }}
         dependsOn: ${{ parameters.dependsOn }}
-        variables: ${{ parameters.variables }}
+        variables:
+          - ${{ each var in parameters.vmImage.variables }}:
+            - ${{ var }}
+          - ${{ each var in parameters.variables }}:
+            - ${{ var }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
         preBuildSteps: ${{ parameters.preBuildSteps }}
         postBuildSteps: ${{ parameters.postBuildSteps }}
