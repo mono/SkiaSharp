@@ -43,10 +43,10 @@ jobs:
         dependsOn: ${{ parameters.dependsOn }}
         variables:
           - ${{ each var in parameters.vmImage.variables }}:
-            - name: ${{ var.name }}
+            - name: ${{ var.key }}
               value: ${{ var.value }}
           - ${{ each var in parameters.variables }}:
-            - name: ${{ var.name }}
+            - name: ${{ var.key }}
               value: ${{ var.value }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
         preBuildSteps: ${{ parameters.preBuildSteps }}
