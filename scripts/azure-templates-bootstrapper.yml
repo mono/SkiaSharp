@@ -42,11 +42,11 @@ jobs:
         target: ${{ parameters.target }}
         dependsOn: ${{ parameters.dependsOn }}
         variables:
-          - ${{ each var in parameters.vmImage.variables }}:
-            - name: ${{ var.key }}
+          ${{ each var in parameters.vmImage.variables }}:
+            - name: ${{ var.name }}
               value: ${{ var.value }}
-          - ${{ each var in parameters.variables }}:
-            - name: ${{ var.key }}
+          ${{ each var in parameters.variables }}:
+            - name: ${{ var.name }}
               value: ${{ var.value }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
         preBuildSteps: ${{ parameters.preBuildSteps }}
@@ -82,10 +82,10 @@ jobs:
         target: ${{ parameters.target }}
         dependsOn: ${{ parameters.dependsOn }}
         variables:
-          - ${{ each var in parameters.vmImage.variables }}:
+          ${{ each var in parameters.vmImage.variables }}:
             - name: ${{ var.name }}
               value: ${{ var.value }}
-          - ${{ each var in parameters.variables }}:
+          ${{ each var in parameters.variables }}:
             - name: ${{ var.name }}
               value: ${{ var.value }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
