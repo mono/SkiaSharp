@@ -19,12 +19,16 @@ parameters:
       pool:
         name: Azure Pipelines
         vmImage: windows-2022
+      variables:
+        XCODE_VERSION: fishes
   - name: VM_IMAGE_MAC_NATIVE
     type: object
     default:
       pool:
         name: Azure Pipelines
         vmImage: macos-11
+      variables:
+        XCODE_VERSION: nope
   - name: VM_IMAGE_MAC
     type: object
     default:
@@ -44,6 +48,8 @@ parameters:
       pool:
         name: Azure Pipelines
         vmImage: ubuntu-18.04
+      variables:
+        XCODE_VERSION: carrots
 
 variables:
   - template: azure-pipelines-variables.yml
