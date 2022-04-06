@@ -13,6 +13,7 @@ jobs:
     pool: ${{ parameters.vmImage }}
     condition: ${{ parameters.condition }}
     steps:
+      - script: echo "$(XCODE_VERSION)"
       - checkout: none
       - template: azure-templates-download-artifacts.yml
         parameters:
