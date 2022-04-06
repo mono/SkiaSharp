@@ -42,10 +42,10 @@ jobs:
         target: ${{ parameters.target }}
         dependsOn: ${{ parameters.dependsOn }}
         variables:
-          ${{ each var in parameters.vmImage.variables }}:
-            ${{ var }}
-          ${{ each var in parameters.variables }}:
-            ${{ var }}
+          ${{ if ne(parameters.vmImage.variables, '') }}:
+            ${{ parameters.vmImage.variables }}
+          ${{ if ne(parameters.variables, '') }}:
+            ${{ parameters.variables }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
         preBuildSteps: ${{ parameters.preBuildSteps }}
         postBuildSteps: ${{ parameters.postBuildSteps }}
@@ -80,10 +80,10 @@ jobs:
         target: ${{ parameters.target }}
         dependsOn: ${{ parameters.dependsOn }}
         variables:
-          ${{ each var in parameters.vmImage.variables }}:
-            ${{ var }}
-          ${{ each var in parameters.variables }}:
-            ${{ var }}
+          ${{ if ne(parameters.vmImage.variables, '') }}:
+            ${{ parameters.vmImage.variables }}
+          ${{ if ne(parameters.variables, '') }}:
+            ${{ parameters.variables }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
         preBuildSteps: ${{ parameters.preBuildSteps }}
         postBuildSteps: ${{ parameters.postBuildSteps }}
