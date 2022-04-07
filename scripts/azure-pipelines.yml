@@ -19,6 +19,10 @@ parameters:
       pool:
         name: Azure Pipelines
         vmImage: windows-2022
+      preBuildSteps:
+        pwsh: |
+          dotnet tool install --global boots
+          boots https://aka.ms/xamarin-android-commercial-d17-1-windows
   - name: VM_IMAGE_MAC_NATIVE
     type: object
     default:
