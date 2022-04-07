@@ -48,6 +48,9 @@ jobs:
           parameters:
             state: 'pending'
 
+      # provisioning steps
+      - ${{ parameters.provisioningSteps }}
+
       # install any packages on linux
       - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
         - bash: |
@@ -191,9 +194,6 @@ jobs:
       - ${{ each tool in parameters.tools }}:
         - pwsh: dotnet tool install -g ${{ tool }}
           displayName: Install ${{ tool }}
-
-      # provisioning steps
-      - ${{ parameters.provisioningSteps }}
 
       # download artifacts
       - template: azure-templates-download-artifacts.yml
