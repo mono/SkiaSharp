@@ -146,7 +146,7 @@ jobs:
           # install VS
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
-              - pwsh: .\scripts\install-vs.ps1
+              - pwsh: .\scripts\install-vs.ps1 $(VISUAL_STUDIO_VERSION)
                 displayName: Install Visual Studio
           # install workloads
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
