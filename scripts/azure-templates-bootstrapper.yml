@@ -8,6 +8,7 @@ parameters:
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
   preBuildSteps: []                             # any steps to run before the build
+  provisioningSteps: []                         # any steps to run to provision the machine
   postBuildSteps: []                            # any additional steps to run after the build
   initScript: ''                                # any scripts to run before starting the bootstrapper
   additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
@@ -47,6 +48,11 @@ jobs:
           ${{ if ne(length(parameters.variables), 0) }}:
             ${{ parameters.variables }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
+        provisioningSteps:
+          - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
+            - ${{ parameters.vmImage.provisioningSteps }}
+          - ${{ if ne(length(parameters.provisioningSteps), 0) }}:
+            - ${{ parameters.provisioningSteps }}
         preBuildSteps:
           - ${{ if ne(parameters.vmImage.preBuildSteps, '') }}:
             - ${{ parameters.vmImage.preBuildSteps }}
@@ -89,6 +95,11 @@ jobs:
           ${{ if ne(length(parameters.variables), 0) }}:
             ${{ parameters.variables }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
+        provisioningSteps:
+          - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
+            - ${{ parameters.vmImage.provisioningSteps }}
+          - ${{ if ne(length(parameters.provisioningSteps), 0) }}:
+            - ${{ parameters.provisioningSteps }}
         preBuildSteps:
           - ${{ if ne(parameters.vmImage.preBuildSteps, '') }}:
             - ${{ parameters.vmImage.preBuildSteps }}

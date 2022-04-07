@@ -7,7 +7,8 @@ parameters:
   dependsOn: []                                 # the dependiencies
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
-  preBuildSteps: []                             # any steps to run before the build
+  provisioningSteps: []                         # any steps to run before the build
+  provisioningSteps: []                         # any steps to run to provision the machine
   postBuildSteps: []                            # any additional steps to run after the build
   initScript: ''                                # any scripts to run before starting the bootstrapper
   additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
@@ -191,6 +192,9 @@ jobs:
       - ${{ each tool in parameters.tools }}:
         - pwsh: dotnet tool install -g ${{ tool }}
           displayName: Install ${{ tool }}
+
+      # provisioning steps
+      - ${{ parameters.provisioningSteps }}
 
       # download artifacts
       - template: azure-templates-download-artifacts.yml
