@@ -123,7 +123,7 @@ namespace SkiaSharp
 
 		internal GRMtlTextureInfoNative ToNative () =>
 			new GRMtlTextureInfoNative {
-				fTexture = (void*)Texture.Handle
+				fTexture = (void*)(IntPtr)Texture.Handle
 			};
 
 		public readonly bool Equals (GRMtlTextureInfo obj) =>

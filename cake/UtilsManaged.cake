@@ -88,13 +88,12 @@ void RunNetCorePublish(FilePath testProject, DirectoryPath output)
 void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
 {
     try {
-        RunProcess("reportgenerator", new ProcessSettings {
-            Arguments = 
-                $"-reports:{testResultsGlob} " +
-                $"-targetdir:{output} " +
-                $"-reporttypes:HtmlInline_AzurePipelines;Cobertura " +
-                $"-assemblyfilters:-*.Tests"
-        });
+        DotNetTool(
+            $"reportgenerator" +
+            $"  -reports:{testResultsGlob}" +
+            $"  -targetdir:{output}" +
+            $"  -reporttypes:HtmlInline_AzurePipelines;Cobertura" +
+            $"  -assemblyfilters:-*.Tests");
     } catch (Exception ex) {
         Error("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
         Error(ex);
@@ -308,11 +307,6 @@ async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
         currentId = currentId.ToLower();
 
         Information($"Downloading '{currentId}' version '{currentVersion}'...");
-
-        if (currentId == "_nativeassets.maccatalyst") {
-            Warning($"Skipping '{currentId}' because we do not yet have this package working...");
-            return;
-        }
 
         var root = await comparer.ExtractCachedPackageAsync(currentId, currentVersion);
         var toolsDir = $"{root}/tools/";

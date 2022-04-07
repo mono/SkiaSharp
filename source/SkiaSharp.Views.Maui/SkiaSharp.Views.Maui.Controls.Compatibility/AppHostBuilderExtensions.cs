@@ -31,7 +31,7 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 					else
 						handlers.TryAddCompatibilityRenderer(typeof(SKCanvasView), typeof(SKCanvasViewRenderer));
 
-#if !WINDOWS
+#if !WINDOWS && !__MACCATALYST__
 					handlers.AddCompatibilityRenderer(typeof(SKGLView), typeof(SKGLViewRenderer));
 #endif
 

@@ -1,4 +1,4 @@
-﻿#if !__WATCHOS__
+﻿#if !__WATCHOS__ && !__MACCATALYST__
 
 using System;
 using System.ComponentModel;
