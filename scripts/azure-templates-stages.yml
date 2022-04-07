@@ -504,7 +504,7 @@ stages:
             ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))) }}:
               signType: 'Test'
 
-  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), eq(parameters.isBuildPipeline, 'true')) }}:
+  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), eq(parameters.isBuildPipeline, 'true'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
     - stage: sbom
       displayName: 'Software Bill of Materials'
       dependsOn: signing
