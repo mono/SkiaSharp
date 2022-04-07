@@ -38,6 +38,13 @@ parameters:
           - Agent.IsPaired -equals False
       variables:
         XCODE_VERSION: 13.3.0
+      preBuildSteps:
+        - task: xamops.azdevex.provisionator-task.provisionator@1
+          displayName: 'Provision Xamarin'
+          inputs:
+            provisioning_script: ./scripts/provisionator.csx
+          env:
+            AUTH_TOKEN_GITHUB_COM: $(github--pat--vs-mobiletools-engineering-service2)
   - name: VM_IMAGE_LINUX
     type: object
     default:
