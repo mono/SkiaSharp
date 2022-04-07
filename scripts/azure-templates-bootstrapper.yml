@@ -48,10 +48,10 @@ jobs:
             ${{ parameters.variables }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
         preBuildSteps:
-          ${{ if ne(length(parameters.vmImage.preBuildSteps), 0) }}:
-            ${{ parameters.vmImage.preBuildSteps }}
-          ${{ if ne(length(parameters.preBuildSteps), 0) }}:
-            ${{ parameters.preBuildSteps }}
+          - ${{ if ne(length(parameters.vmImage.preBuildSteps), 0) }}:
+            - ${{ parameters.vmImage.preBuildSteps }}
+          - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
+            - ${{ parameters.preBuildSteps }}
         postBuildSteps: ${{ parameters.postBuildSteps }}
         initScript: ${{ parameters.initScript }}
         additionalArgs: ${{ parameters.additionalArgs }}
@@ -90,10 +90,10 @@ jobs:
             ${{ parameters.variables }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
         preBuildSteps:
-          ${{ if ne(length(parameters.vmImage.preBuildSteps), 0) }}:
-            ${{ parameters.vmImage.preBuildSteps }}
-          ${{ if ne(length(parameters.preBuildSteps), 0) }}:
-            ${{ parameters.preBuildSteps }}
+          - ${{ if ne(length(parameters.vmImage.preBuildSteps), 0) }}:
+            - ${{ parameters.vmImage.preBuildSteps }}
+          - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
+            - ${{ parameters.preBuildSteps }}
         postBuildSteps: ${{ parameters.postBuildSteps }}
         initScript: ${{ parameters.initScript }}
         additionalArgs: ${{ parameters.additionalArgs }}
