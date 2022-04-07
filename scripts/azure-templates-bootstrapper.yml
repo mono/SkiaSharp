@@ -8,6 +8,7 @@ parameters:
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
   preBuildSteps: []                             # any steps to run before the build
+  provisioningSteps: []                         # any steps to run to provision the machine
   postBuildSteps: []                            # any additional steps to run after the build
   initScript: ''                                # any scripts to run before starting the bootstrapper
   additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
@@ -37,13 +38,26 @@ jobs:
       parameters:
         name: ${{ parameters.name }}
         displayName: ${{ parameters.displayName }}
-        vmImage: ${{ parameters.vmImage }}
+        vmImage: ${{ parameters.vmImage.pool }}
         packages: ${{ parameters.packages }}
         target: ${{ parameters.target }}
         dependsOn: ${{ parameters.dependsOn }}
-        variables: ${{ parameters.variables }}
+        variables:
+          ${{ if ne(parameters.vmImage.variables, '') }}:
+            ${{ parameters.vmImage.variables }}
+          ${{ if ne(length(parameters.variables), 0) }}:
+            ${{ parameters.variables }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
-        preBuildSteps: ${{ parameters.preBuildSteps }}
+        provisioningSteps:
+          - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
+            - ${{ parameters.vmImage.provisioningSteps }}
+          - ${{ if ne(length(parameters.provisioningSteps), 0) }}:
+            - ${{ parameters.provisioningSteps }}
+        preBuildSteps:
+          - ${{ if ne(parameters.vmImage.preBuildSteps, '') }}:
+            - ${{ parameters.vmImage.preBuildSteps }}
+          - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
+            - ${{ parameters.preBuildSteps }}
         postBuildSteps: ${{ parameters.postBuildSteps }}
         initScript: ${{ parameters.initScript }}
         additionalArgs: ${{ parameters.additionalArgs }}
@@ -71,13 +85,26 @@ jobs:
       parameters:
         name: ${{ parameters.name }}
         displayName: ${{ parameters.displayName }}
-        vmImage: ${{ parameters.vmImage }}
+        vmImage: ${{ parameters.vmImage.pool }}
         packages: ${{ parameters.packages }}
         target: ${{ parameters.target }}
         dependsOn: ${{ parameters.dependsOn }}
-        variables: ${{ parameters.variables }}
+        variables:
+          ${{ if ne(parameters.vmImage.variables, '') }}:
+            ${{ parameters.vmImage.variables }}
+          ${{ if ne(length(parameters.variables), 0) }}:
+            ${{ parameters.variables }}
         requiredArtifacts: ${{ parameters.requiredArtifacts }}
-        preBuildSteps: ${{ parameters.preBuildSteps }}
+        provisioningSteps:
+          - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
+            - ${{ parameters.vmImage.provisioningSteps }}
+          - ${{ if ne(length(parameters.provisioningSteps), 0) }}:
+            - ${{ parameters.provisioningSteps }}
+        preBuildSteps:
+          - ${{ if ne(parameters.vmImage.preBuildSteps, '') }}:
+            - ${{ parameters.vmImage.preBuildSteps }}
+          - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
+            - ${{ parameters.preBuildSteps }}
         postBuildSteps: ${{ parameters.postBuildSteps }}
         initScript: ${{ parameters.initScript }}
         additionalArgs: ${{ parameters.additionalArgs }}
