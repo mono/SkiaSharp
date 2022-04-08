@@ -144,10 +144,10 @@ jobs:
           - pwsh: dotnet --info
             displayName: Display all the .NET information
           # install VS
-          # - ${{ if endsWith(parameters.name, '_windows') }}:
-          #   - ${{ if eq(parameters.installPreviewVs, 'true') }}:
-          #     - pwsh: .\scripts\install-vs.ps1 $(VISUAL_STUDIO_VERSION)
-          #       displayName: Install Visual Studio
+          - ${{ if endsWith(parameters.name, '_windows') }}:
+            - ${{ if and(eq(parameters.installPreviewVs, 'true'), ne(variables.VISUAL_STUDIO_VERSION, '')) }}:
+              - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
+                displayName: Install Visual Studio
           # install workloads
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
@@ -157,10 +157,10 @@ jobs:
               condition: and(succeeded(), eq(variables.DOTNET_VERSION_PREVIEW, ''))
               displayName: Install the .NET Core workloads
 
-      # # select the correct/latest version of Visual Studio
-      # - ${{ if endsWith(parameters.name, '_windows') }}:
-      #   - pwsh: .\scripts\select-vs.ps1
-      #     displayName: Select Visual Studio
+      # select the correct/latest version of Visual Studio
+      - ${{ if endsWith(parameters.name, '_windows') }}:
+        - pwsh: .\scripts\select-vs.ps1
+          displayName: Select Visual Studio
 
       # install nuget
       - ${{ if endsWith(parameters.name, '_windows') }}:
