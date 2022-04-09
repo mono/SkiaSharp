@@ -1,5 +1,5 @@
 Param(
-    [string] $Version = "17/pre",
+    [string] $Version,
     [string] $TestPath = "2022\Preview"
 )
 
