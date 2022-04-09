@@ -11,8 +11,8 @@ $previewRuntime = 'https://api.nuget.org/v3/index.json'
 $previewEmscripten = 'https://api.nuget.org/v3/index.json'
 if ($IsPreview) {
   $previewFeed = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json'
-  $previewRuntime = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-6dd808ff-1/nuget/v3/index.json'
-  $previewEmscripten = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-emsdk-ee0a97a0/nuget/v3/index.json'
+  $previewRuntime = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-323bf2dd/nuget/v3/index.json'
+  $previewEmscripten = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-emsdk-572aeedc/nuget/v3/index.json'
 }
 
 Write-Host "Installing workloads..."

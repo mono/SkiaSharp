@@ -12,6 +12,7 @@ jobs:
     displayName: ${{ parameters.displayName }}
     pool: ${{ parameters.vmImage }}
     condition: ${{ parameters.condition }}
+    variables: ${{ parameters.variables }}
     steps:
       - checkout: none
       - template: azure-templates-download-artifacts.yml
