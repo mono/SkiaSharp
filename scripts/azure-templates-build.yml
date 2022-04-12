@@ -145,9 +145,10 @@ jobs:
             displayName: Display all the .NET information
           # install VS
           - ${{ if endsWith(parameters.name, '_windows') }}:
-            - ${{ if and(eq(parameters.installPreviewVs, 'true'), ne(variables.VISUAL_STUDIO_VERSION, '')) }}:
+            - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
                 displayName: Install Visual Studio
+                condition: ne(variables.VISUAL_STUDIO_VERSION, '')
           # install workloads
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
