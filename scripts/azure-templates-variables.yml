@@ -51,13 +51,17 @@ steps:
 
   - pwsh: |
       Write-Host "Working with $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
-      $match = [regex]::Match("$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME", '.*\-(.+)\.(\d+)')
-      $label = $match.Groups[1].Value
-      Write-Host "Preview label: $label"
-      Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$label"
-      $buildnumber = $match.Groups[2].Value
-      Write-Host "Build number: $buildnumber"
-      Write-Host "##vso[task.setvariable variable=BUILD_NUMBER]$buildnumber"
+      if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
+        $match = [regex]::Match("$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME", '.*\-(.+)\.(\d+)')
+        $label = $match.Groups[1].Value
+        Write-Host "Preview label: $label"
+        Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$label"
+        $buildnumber = $match.Groups[2].Value
+        Write-Host "Build number: $buildnumber"
+        Write-Host "##vso[task.setvariable variable=BUILD_NUMBER]$buildnumber"
+      } else {
+        Write-Host "Not a secondary build."
+      }
     condition: or(eq(variables['Build.Reason'], 'ResourceTrigger'), eq(variables['Build.Reason'], 'Manual'))
     displayName: Override the preview label and build number if this is a secondary build
 
