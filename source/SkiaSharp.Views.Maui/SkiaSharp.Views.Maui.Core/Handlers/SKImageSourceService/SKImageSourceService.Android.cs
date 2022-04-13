@@ -9,7 +9,29 @@ namespace SkiaSharp.Views.Maui.Handlers
 {
 	public partial class SKImageSourceService
 	{
-		public override Task<IImageSourceServiceResult<Drawable>?> GetDrawableAsync(IImageSource imageSource, Context context, CancellationToken cancellationToken = default)
+		public override async Task<IImageSourceServiceResult?> LoadDrawableAsync(
+			IImageSource imageSource,
+			global::Android.Widget.ImageView imageView,
+			CancellationToken cancellationToken = default)
+		{
+			var realResult = await GetDrawableAsync(imageView.Context!, imageSource, cancellationToken);
+
+			if (realResult is null)
+			{
+				imageView.SetImageDrawable(null);
+				return null;
+			}
+
+			imageView.SetImageDrawable(realResult.Value);
+
+			var result = new ImageSourceServiceLoadResult(
+				realResult.IsResolutionDependent,
+				() => realResult.Dispose());
+
+			return result;
+		}
+
+		public override Task<IImageSourceServiceResult<Drawable>?> GetDrawableAsync(Context context, IImageSource imageSource, CancellationToken cancellationToken = default)
 		{
 			var bitmap = imageSource switch
 			{
