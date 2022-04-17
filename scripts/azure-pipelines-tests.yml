@@ -3,10 +3,6 @@ trigger: none
 pr: none
 
 parameters:
-  - name: buildExternals
-    displayName: 'The specific native artifacts to use for this build.'
-    type: number
-    default: 0
   - name: VM_IMAGE_WINDOWS
     type: object
     default:
@@ -45,7 +41,6 @@ stages:
   - template: azure-templates-stages.yml
     parameters:
       isBuildPipeline: false
-      buildExternals: ${{ parameters.buildExternals }}
       VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
