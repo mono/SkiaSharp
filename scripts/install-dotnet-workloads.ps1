@@ -22,6 +22,7 @@ Write-Host "Installing workloads..."
   --source https://api.nuget.org/v3/index.json `
   --source $previewFeed `
   --source $previewRuntime `
-  --source $previewEmscripten
+  --source $previewEmscripten `
+  --skip-sign-check
 
 exit $LASTEXITCODE
