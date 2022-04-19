@@ -262,4 +262,6 @@ internal partial class VersionConstants {
     </ItemGroup>
   </Target>
 
+  <Import Project="SkiaSharp.Build.WinUI.NetCore.targets" Condition=" '$(EnablePriGenTooling)' != 'true' and '$(TargetPlatformIdentifier)' == 'windows' and '$(EnablePreviewMsixTooling)' == 'true' and '$(UseMaui)' != 'true' and '$(UseMauiCore)' != 'true' " />
+
 </Project>
