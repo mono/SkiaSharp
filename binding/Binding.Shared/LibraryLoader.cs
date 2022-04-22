@@ -191,22 +191,54 @@ namespace SkiaSharp
 
 		private static class Linux
 		{
-			private const string SystemLibrary = "dl";
+			private const string SystemLibrary = "libdl.so";
+			private const string SystemLibrary2 = "libdl.so.2"; // newer Linux distros use this
 
 			private const int RTLD_LAZY = 1;
 			private const int RTLD_NOW = 2;
 
-			public static IntPtr dlopen (string path, bool lazy = true) =>
-				dlopen (path, lazy ? RTLD_LAZY : RTLD_NOW);
+			private static bool UseSystemLibrary2 = true;
 
-			[DllImport (SystemLibrary)]
-			public static extern IntPtr dlopen (string path, int mode);
+			public static IntPtr dlopen (string path, bool lazy = true)
+			{
+				try {
+					return dlopen2 (path, lazy ? RTLD_LAZY : RTLD_NOW);
+				} catch (DllNotFoundException) {
+					UseSystemLibrary2 = false;
+					return dlopen1 (path, lazy ? RTLD_LAZY : RTLD_NOW);
+				}
+			}
 
-			[DllImport (SystemLibrary)]
-			public static extern IntPtr dlsym (IntPtr handle, string symbol);
+			public static IntPtr dlsym (IntPtr handle, string symbol)
+			{
+				return UseSystemLibrary2 ? dlsym2 (handle, symbol) : dlsym1 (handle, symbol);
+			}
 
-			[DllImport (SystemLibrary)]
-			public static extern void dlclose (IntPtr handle);
+			public static void dlclose (IntPtr handle)
+			{
+				if (UseSystemLibrary2)
+					dlclose2 (handle);
+				else
+					dlclose1 (handle);
+			}
+
+			[DllImport (SystemLibrary, EntryPoint="dlopen")]
+			private static extern IntPtr dlopen1 (string path, int mode);
+
+			[DllImport (SystemLibrary, EntryPoint="dlsym")]
+			private static extern IntPtr dlsym1 (IntPtr handle, string symbol);
+
+			[DllImport (SystemLibrary, EntryPoint="dlclose")]
+			private static extern void dlclose1 (IntPtr handle);
+
+			[DllImport (SystemLibrary2, EntryPoint="dlopen")]
+			private static extern IntPtr dlopen2 (string path, int mode);
+
+			[DllImport (SystemLibrary2, EntryPoint="dlsym")]
+			private static extern IntPtr dlsym2 (IntPtr handle, string symbol);
+
+			[DllImport (SystemLibrary2, EntryPoint="dlclose")]
+			private static extern void dlclose2 (IntPtr handle);
 		}
 
 		private static class Win32
