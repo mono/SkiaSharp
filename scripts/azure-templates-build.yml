@@ -7,6 +7,7 @@ parameters:
   dependsOn: []                                 # the dependiencies
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
+  provisioningSteps: []                         # any steps to run to provision the machine
   preBuildSteps: []                             # any steps to run before the build
   postBuildSteps: []                            # any additional steps to run after the build
   initScript: ''                                # any scripts to run before starting the bootstrapper
@@ -47,6 +48,9 @@ jobs:
         - template: azure-templates-github-status.yml
           parameters:
             state: 'pending'
+
+      # provisioning steps
+      - ${{ parameters.provisioningSteps }}
 
       # install any packages on linux
       - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
@@ -120,13 +124,18 @@ jobs:
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
-              version: $(DOTNET_VERSION_PREVIOUS)
-            displayName: Install the previous version of .NET Core
+              version: 3.1.x
+            displayName: Install .NET Core 3.1.x
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
-              version: $(DOTNET_VERSION)
-            displayName: Install the correct version of .NET Core
+              version: 5.0.x
+            displayName: Install .NET Core 5.0.x
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: 6.0.x
+            displayName: Install .NET Core 6.0.x
           # install the bits needed for .NET 6 builds
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
@@ -137,8 +146,9 @@ jobs:
           # install VS
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
-              - pwsh: .\scripts\install-vs.ps1
+              - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
                 displayName: Install Visual Studio
+                condition: ne(variables.VISUAL_STUDIO_VERSION, '')
           # install workloads
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
@@ -160,12 +170,8 @@ jobs:
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
-        - ${{ if startsWith(parameters.name, 'native_') }}:
-          - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION_NATIVE)
-            displayName: Switch to the latest Xcode
-        - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-          - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
-            displayName: Switch to the latest Xcode
+        - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
+          displayName: Switch to the latest Xcode
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:

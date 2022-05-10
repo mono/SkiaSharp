@@ -75,7 +75,7 @@ namespace SkiaSharp.Views.UWP
 		{
 			using (var image = SKImage.FromPicture(picture, dimensions))
 			{
-				return image.ToWriteableBitmap();
+				return image?.ToWriteableBitmap();
 			}
 		}
 
