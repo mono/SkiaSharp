@@ -79,7 +79,12 @@ namespace SkiaSharp.Views.UWP
 				if (glView == null || !EnableRenderLoop)
 					DoEnableRenderLoop(false);
 			});
+
+#if NET6_0_OR_GREATER
+			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Default);
+#else
 			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoop.NSDefaultRunLoopMode);
+#endif
 		}
 	}
 }
