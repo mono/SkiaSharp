@@ -1,4 +1,5 @@
-﻿using CoreAnimation;
+﻿#if !__MACCATALYST__
+using CoreAnimation;
 using Foundation;
 #if WINUI
 using Microsoft.UI.Xaml;
@@ -88,3 +89,4 @@ namespace SkiaSharp.Views.UWP
 		}
 	}
 }
+#endif

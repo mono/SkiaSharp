@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!--<TargetFrameworks>net6.0-android;net6.0-ios;net6.0-maccatalyst;net6.0-macos</TargetFrameworks>-->
-    <TargetFrameworks>net6.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks>net6.0-android;net6.0-ios;net6.0-maccatalyst;net6.0-macos</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.UWP</RootNamespace>
     <AssemblyName>SkiaSharp.Views.UWP</AssemblyName>
     <PackagingGroup>SkiaSharp.Views.Uno.WinUI</PackagingGroup>
@@ -44,6 +43,7 @@
   <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Apple\SKCGSurfaceFactory.cs" />
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Mac\SKGLView.cs" />
+    <Compile Include="..\SkiaSharp.Views.Uno.Mac\*.cs" Link="Mac\%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup Condition="!$(TargetFramework.Contains('-macos'))">
     <None Include="..\SkiaSharp.Views.Uno.Mac\*.cs" Link="Mac\%(Filename)%(Extension)" />
