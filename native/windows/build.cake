@@ -31,6 +31,7 @@ Task("libSkiaSharp")
         if (Skip(arch)) return;
 
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
+        var win_vcvars_version = "win_vcvars_version='14.2' ";
         var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
@@ -48,6 +49,7 @@ Task("libSkiaSharp")
             $"skia_use_system_zlib=false " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             clang +
+            win_vcvars_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '-D_HAS_AUTO_PTR_ETC=1' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL' ] " +
             ADDITIONAL_GN_ARGS);
