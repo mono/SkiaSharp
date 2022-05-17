@@ -706,10 +706,12 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedPixels, bitmap.Pixels);
 		}
 
-		[SkippableFact]
-		public void CanDecodePotentiallyCorruptPngFiles()
+		[SkippableTheory]
+		[InlineData("osm-liberty.png")]
+		[InlineData("testimage.png")]
+		public void CanDecodePotentiallyCorruptPngFiles(string filename)
 		{
-			var path = Path.Combine(PathToImages, "osm-liberty.png");
+			var path = Path.Combine(PathToImages, filename);
 
 			var bytes = File.ReadAllBytes(path);
 			using var data = SKData.CreateCopy(bytes);

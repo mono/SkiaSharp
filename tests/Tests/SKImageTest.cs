@@ -943,18 +943,18 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
-		public void CanDecodePotentiallyCorruptPngFiles()
+		[SkippableTheory]
+		[InlineData("osm-liberty.png", 30, 240, 0xFF725A50)]
+		[InlineData("testimage.png", 1040, 340, 0xFF0059FF)]
+		public void CanDecodePotentiallyCorruptPngFiles(string filename, int x, int y, uint color)
 		{
-			var path = Path.Combine(PathToImages, "osm-liberty.png");
+			var path = Path.Combine(PathToImages, filename);
 
-			var bytes = File.ReadAllBytes(path);
-			using var data = SKData.CreateCopy(bytes);
-			using var image = SKImage.FromEncodedData(data);
+			using var image = SKImage.FromEncodedData(path);
 			using var actualImage = image.ToRasterImage(true);
 			using var pixmap = actualImage.PeekPixels();
 
-			Assert.Equal((SKColor)0xFF725A50, pixmap.GetPixelColor(30, 240));
+			Assert.Equal((SKColor)color, pixmap.GetPixelColor(x, y));
 		}
 	}
 }
