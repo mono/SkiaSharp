@@ -89,6 +89,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.Forms.WPF",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.Forms.GTK",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.Uno",                           new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Uno.WinUI",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.WinUI",                         new Version (1, 57, 0) },
     { "SkiaSharp.Views.Maui.Core",                     new Version (1, 57, 0) },
     { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 57, 0) },

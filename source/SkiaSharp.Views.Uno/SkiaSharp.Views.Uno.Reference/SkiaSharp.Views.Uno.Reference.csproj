@@ -14,11 +14,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets" />
-    <None Include="nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets" Link="nuget\build\$(PackagingPlatform)\SkiaSharp.Views.Uno.targets" />
+    <None Remove="nuget\build\netstandard2.0\SkiaSharp.Views.Uno.WinUI.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\UWPExtensions.cs" />
     <Compile Include="..\SkiaSharp.Views.Uno\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="nuget\build\netstandard2.0\SkiaSharp.Views.Uno.WinUI.targets" />
   </ItemGroup>
 </Project>
