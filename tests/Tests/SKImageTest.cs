@@ -942,5 +942,19 @@ namespace SkiaSharp.Tests
 				return false;
 			}
 		}
+
+		[SkippableFact]
+		public void CanDecodePotentiallyCorruptPngFiles()
+		{
+			var path = Path.Combine(PathToImages, "osm-liberty.png");
+
+			var bytes = File.ReadAllBytes(path);
+			using var data = SKData.CreateCopy(bytes);
+			using var image = SKImage.FromEncodedData(data);
+			using var actualImage = image.ToRasterImage(true);
+			using var pixmap = actualImage.PeekPixels();
+
+			Assert.Equal((SKColor)0xFF725A50, pixmap.GetPixelColor(30, 240));
+		}
 	}
 }
