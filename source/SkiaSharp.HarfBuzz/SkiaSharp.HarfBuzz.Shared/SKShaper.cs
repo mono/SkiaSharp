@@ -135,6 +135,14 @@ namespace SkiaSharp.HarfBuzz
 				Width = 0f;
 			}
 
+			public Result(uint[] codepoints, uint[] clusters, SKPoint[] points)
+			{
+				Codepoints = codepoints;
+				Clusters = clusters;
+				Points = points;
+				Width = 0;
+			}
+
 			public Result(uint[] codepoints, uint[] clusters, SKPoint[] points, float width)
 			{
 				Codepoints = codepoints;
@@ -143,13 +151,13 @@ namespace SkiaSharp.HarfBuzz
 				Width = width;
 			}
 
-			public uint[] Codepoints { get; private set; }
+			public uint[] Codepoints { get; }
 
-			public uint[] Clusters { get; private set; }
+			public uint[] Clusters { get; }
 
-			public SKPoint[] Points { get; private set; }
+			public SKPoint[] Points { get; }
 
-			public float Width { get; private set; }
+			public float Width { get; }
 		}
 	}
 }
