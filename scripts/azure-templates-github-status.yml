@@ -11,7 +11,7 @@ steps:
         $state = '${{ parameters.state }}'
       } elseif ($env:AGENT_JOBSTATUS -eq 'Failed') {
         $state = 'failure'
-      } elseif ($env:AGENT_JOBSTATUS -eq 'Succeeded') {
+      } elseif ($env:AGENT_JOBSTATUS -eq 'Succeeded' -or $env:AGENT_JOBSTATUS -eq 'SucceededWithIssues') {
         $state = 'success'
       }
       $context = "${{ parameters.pipelineName }} ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)"

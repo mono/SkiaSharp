@@ -1,6 +1,4 @@
 ﻿using System;
-using Microsoft.Maui;
-using Microsoft.Maui.Controls.Compatibility;
 using Microsoft.Maui.Hosting;
 using SkiaSharp.Views.Maui.Controls.Compatibility;
 using SkiaSharp.Views.Maui.Controls.Hosting;
@@ -27,12 +25,12 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 				{
 #if !NETSTANDARD
 					if (replaceHandlers)
-						handlers.AddCompatibilityRenderer(typeof(SKCanvasView), typeof(SKCanvasViewRenderer));
+						handlers.AddHandler<SKCanvasView, SKCanvasViewRenderer>();
 					else
-						handlers.TryAddCompatibilityRenderer(typeof(SKCanvasView), typeof(SKCanvasViewRenderer));
+						handlers.TryAddHandler<SKCanvasView, SKCanvasViewRenderer>();
 
 #if !WINDOWS && !__MACCATALYST__
-					handlers.AddCompatibilityRenderer(typeof(SKGLView), typeof(SKGLViewRenderer));
+					handlers.AddHandler<SKGLView, SKGLViewRenderer>();
 #endif
 
 					CompatRegistrar.Registered.Register(typeof(SKImageImageSource), typeof(SKImageSourceHandler));

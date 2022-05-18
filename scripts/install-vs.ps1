@@ -1,5 +1,5 @@
 Param(
-    [string] $Version = "17/pre",
+    [string] $Version,
     [string] $TestPath = "2022\Preview"
 )
 
@@ -11,25 +11,30 @@ if (Test-Path $fullPath) {
   exit 0
 }
 
+$temp = "$env:TEMP"
+if ("$env:AGENT_TEMPDIRECTORY") {
+  $temp = "$env:AGENT_TEMPDIRECTORY"
+}
+
 $startTime = Get-Date
 
 Write-Host "Downloading Visual Studio Installer..."
 Invoke-WebRequest -UseBasicParsing `
   -Uri "https://aka.ms/vs/install/latest/vs_setup.exe" `
-  -OutFile "$env:TEMP\dd_vs_setup.exe"
+  -OutFile "$temp\dd_vs_setup.exe"
 
 Write-Host "Updating the Visual Studio Installer..."
-$exitCode = & "$env:TEMP\dd_vs_setup.exe" --update --quiet --wait | Out-Null
+$exitCode = & "$temp\dd_vs_setup.exe" --update --quiet --wait | Out-Null
 
 Write-Host "Exit code: $exitCode"
 
 Write-Host "Downloading Visual Studio ($Version)..."
 Invoke-WebRequest -UseBasicParsing `
   -Uri "https://aka.ms/vs/$Version/vs_community.exe" `
-  -OutFile "$env:TEMP\dd_vs_community.exe"
+  -OutFile "$temp\dd_vs_community.exe"
 
 Write-Host "Installing Visual Studio..."
-$exitCode = & "$env:TEMP\dd_vs_community.exe" --quiet --norestart --wait `
+$exitCode = & "$temp\dd_vs_community.exe" --quiet --norestart --wait `
   --includeRecommended `
   --add Microsoft.VisualStudio.Workload.NetCrossPlat `
   --add Microsoft.VisualStudio.Workload.NetCoreTools `
@@ -41,7 +46,7 @@ Write-Host "Exit code: $exitCode"
 
 $vsLogs = 'output\logs\vs-logs'
 New-Item -ItemType Directory -Force -Path "$vsLogs" | Out-Null
-Get-ChildItem "$env:TEMP\dd_*" |
+Get-ChildItem "$temp\dd_*" |
   Where-Object { $_.CreationTime -gt $startTime } |
   Copy-Item -Destination "$vsLogs"
 

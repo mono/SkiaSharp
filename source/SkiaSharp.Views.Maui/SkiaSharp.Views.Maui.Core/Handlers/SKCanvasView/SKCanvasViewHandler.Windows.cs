@@ -63,7 +63,7 @@ namespace SkiaSharp.Views.Maui.Handlers
 				VirtualView?.OnCanvasSizeChanged(newCanvasSize);
 			}
 
-			VirtualView?.OnPaintSurface(new SKPaintSurfaceEventArgs(e.Surface, e.Info));
+			VirtualView?.OnPaintSurface(new SKPaintSurfaceEventArgs(e.Surface, e.Info, e.RawInfo));
 		}
 
 		private SKPoint OnGetScaledCoord(double x, double y)

@@ -13,16 +13,16 @@ using SKFormsView = SkiaSharp.Views.Maui.Controls.SKCanvasView;
 
 #if __ANDROID__
 using Android.Content;
-using Microsoft.Maui.Controls.Compatibility.Platform.Android;
+using Microsoft.Maui.Controls.Handlers.Compatibility;
 using SKNativeView = SkiaSharp.Views.Android.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Android.SKPaintSurfaceEventArgs;
 #elif __IOS__
-using Microsoft.Maui.Controls.Compatibility.Platform.iOS;
+using Microsoft.Maui.Controls.Handlers.Compatibility;
 using SKNativeView = SkiaSharp.Views.iOS.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs;
 #elif WINDOWS
 using Windows.Graphics.Display;
-using Microsoft.Maui.Controls.Compatibility.Platform.UWP;
+using Microsoft.Maui.Controls.Handlers.Compatibility;
 using SKNativeView = SkiaSharp.Views.Windows.SKXamlCanvas;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Windows.SKPaintSurfaceEventArgs;
 using WVisibility = Microsoft.UI.Xaml.Visibility;

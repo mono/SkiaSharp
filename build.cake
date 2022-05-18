@@ -110,11 +110,6 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
 };
 
 var PREVIEW_ONLY_NUGETS = new List<string> {
-    "SkiaSharp.Views.Maui.Core",
-    "SkiaSharp.Views.Maui.Controls",
-    "SkiaSharp.Views.Maui.Controls.Compatibility",
-    "SkiaSharp.Views.WinUI",
-    "SkiaSharp.Views.Blazor",
 };
 
 Information("Source Control:");
