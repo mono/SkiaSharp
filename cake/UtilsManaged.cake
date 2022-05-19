@@ -272,7 +272,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     Verbose("Added search paths:");
     foreach (var path in comparer.SearchPaths) {
         var found = GetFiles($"{path}/*.dll").Any() || GetFiles($"{path}/*.winmd").Any();
-        Verbose($" {(found ? "-" : "!")} {path}");
+        Verbose($"    {(found ? " " : "!")} {path}");
     }
 
     return comparer;

@@ -450,7 +450,7 @@ Task ("samples")
         { "xamarin.forms.windows", "x86" },
     };
 
-    void BuildSample (FilePath sln)
+    void BuildSample (FilePath sln, bool dryrun)
     {
         var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
         var name = sln.GetFilenameWithoutExtension ();
@@ -470,12 +470,19 @@ Task ("samples")
                 buildPlatform = platformMatrix [platform];
             }
 
-            Information ($"Building {sln} ({platform})...");
-
-            RunNuGetRestorePackagesConfig (sln);
-            RunMSBuild (sln, platform: buildPlatform);
+            if (dryrun) {
+                Information ($"    BUILD       {sln}");
+            } else {
+                Information ($"Building sample {sln} ({platform})...");
+                RunNuGetRestorePackagesConfig (sln);
+                RunMSBuild (sln, platform: buildPlatform);
+            }
         } else {
-            Information ($"Skipping {sln} ({platform})...");
+            if (dryrun) {
+                Information ($"    SKIP   (NS) {sln} (not supported)");
+            } else {
+                Information ($"Skipping sample {sln} ({platform})...");
+            }
         }
     }
 
@@ -511,38 +518,49 @@ Task ("samples")
         Information ("    " + sln);
     }
 
-    foreach (var sln in solutions) {
-        // might have been deleted due to a platform build and cleanup
-        if (!FileExists (sln))
-            continue;
+    foreach (var dryrun in new [] { true, false }) {
+        if (dryrun)
+            Information ("Sample builds:");
 
-        var name = sln.GetFilenameWithoutExtension ();
-        var slnPlatform = name.GetExtension ();
+        foreach (var sln in solutions) {
+            // might have been deleted due to a platform build and cleanup
+            if (!FileExists (sln))
+                continue;
 
-        if (string.IsNullOrEmpty (slnPlatform)) {
-            // this is the main solution
-            var variants = GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln");
-            if (!variants.Any ()) {
-                // there is no platform variant
-                BuildSample (sln);
-                // delete the built sample
-                CleanDirectories (sln.GetDirectory ().FullPath);
+            var name = sln.GetFilenameWithoutExtension ();
+            var slnPlatform = name.GetExtension ();
+
+            if (string.IsNullOrEmpty (slnPlatform)) {
+                // this is the main solution
+                var variants = GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln");
+                if (!variants.Any ()) {
+                    // there is no platform variant
+                    BuildSample (sln, dryrun);
+                    // delete the built sample
+                    if (!dryrun)
+                        CleanDirectories (sln.GetDirectory ().FullPath);
+                } else {
+                    // skip as there is a platform variant
+                    if (dryrun)
+                        Information ($"    SKIP   (PS) {sln} (has platform specific)");
+                }
             } else {
-                // skip as there is a platform variant
-            }
-        } else {
-            // this is a platform variant
-            slnPlatform = slnPlatform.ToLower ();
-            var shouldBuild =
-                (isLinux && slnPlatform == ".linux") ||
-                (isMac && slnPlatform == ".mac") ||
-                (isWin && slnPlatform == ".windows");
-            if (shouldBuild) {
-                BuildSample (sln);
-                // delete the built sample
-                CleanDirectories (sln.GetDirectory ().FullPath);
-            } else {
-                // skip this as this is not the correct platform
+                // this is a platform variant
+                slnPlatform = slnPlatform.ToLower ();
+                var shouldBuild =
+                    (isLinux && slnPlatform == ".linux") ||
+                    (isMac && slnPlatform == ".mac") ||
+                    (isWin && slnPlatform == ".windows");
+                if (shouldBuild) {
+                    BuildSample (sln, dryrun);
+                    // delete the built sample
+                    if (!dryrun)
+                        CleanDirectories (sln.GetDirectory ().FullPath);
+                } else {
+                    // skip this as this is not the correct platform
+                    if (dryrun)
+                        Information ($"    SKIP   (AP) {sln} (has alternate platform)");
+                }
             }
         }
     }
