@@ -13,7 +13,11 @@ using Windows.UI.Xaml.Data;
 #endif
 
 
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public partial class SKXamlCanvas : Canvas
 	{

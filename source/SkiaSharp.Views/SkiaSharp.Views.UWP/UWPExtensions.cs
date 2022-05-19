@@ -8,7 +8,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media.Imaging;
 #endif
 
-#if WINDOWS
+#if WINDOWS || WINUI
 namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP

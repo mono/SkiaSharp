@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.UI.Xaml;
 
-namespace SkiaSharpSample.Wasm
+namespace SkiaSharpSample
 {
 	public class Program
 	{

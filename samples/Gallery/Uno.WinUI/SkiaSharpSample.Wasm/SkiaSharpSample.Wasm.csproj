@@ -3,6 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <NoWarn>NU1701</NoWarn>
+    <DefineConstants>$(DefineConstants);WINUI</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <MonoRuntimeDebuggerEnabled>true</MonoRuntimeDebuggerEnabled>
@@ -51,9 +52,11 @@
     <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="3.1.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Wasm\SkiaSharp.Views.Uno.WinUI.Wasm.csproj" />
   </ItemGroup>
-  <Import Project="..\..\Uno\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" Condition="Exists('..\..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems')" />
+  <Import Project="..\SkiaSharpSample.WinUI.Shared\SkiaSharpSample.WinUI.Shared.projitems" Label="Shared" Condition="Exists('..\..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems')" />
+  <Import Project="..\SkiaSharpSample.WinUI.Shared\SkiaSharpSample.WinUI.Shared.projitems" Label="Shared" />
 </Project>

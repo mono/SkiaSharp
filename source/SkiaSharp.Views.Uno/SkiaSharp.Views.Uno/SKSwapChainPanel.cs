@@ -11,7 +11,12 @@ using Microsoft.UI.Xaml.Data;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Data;
 #endif
+
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public partial class SKSwapChainPanel : FrameworkElement
 	{
