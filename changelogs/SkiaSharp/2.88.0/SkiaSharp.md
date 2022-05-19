@@ -17,28 +17,19 @@ Direct3D = 4,
 
 #### Type Changed: SkiaSharp.GRContext
 
-Added property:
+Modified base type:
 
-```csharp
-public bool IsAbandoned { get; }
+```diff
+-SkiaSharp.SKObject
++SkiaSharp.GRRecordingContext
 ```
 
 Added methods:
 
 ```csharp
-public static GRContext CreateGl (GRContextOptions options);
-public static GRContext CreateGl (GRGlInterface backendContext, GRContextOptions options);
-public static GRContext CreateVulkan (GRVkBackendContext backendContext, GRContextOptions options);
 protected override void DisposeNative ();
-```
-
-
-#### Type Changed: SkiaSharp.GRGlInterface
-
-Added method:
-
-```csharp
-public static GRGlInterface CreateAngle ();
+public void Flush (bool submit, bool synchronous);
+public void Submit (bool synchronous);
 ```
 
 
@@ -60,6 +51,16 @@ Obsoleted properties:
 ```diff
  [Obsolete ()]
  public bool IsVolatile { get; set; }
+```
+
+
+#### Type Changed: SkiaSharp.SKCanvas
+
+Added methods:
+
+```csharp
+public void Clear (SKColorF color);
+public void DrawColor (SKColorF color, SKBlendMode mode);
 ```
 
 
@@ -89,55 +90,53 @@ Bgra1010102 = 19,
 ```
 
 
-#### Type Changed: SkiaSharp.SKData
-
-Added property:
-
-```csharp
-public System.Span<byte> Span { get; }
-```
+#### Type Changed: SkiaSharp.SKImage
 
 Added methods:
 
 ```csharp
-public static SKData Create (long size);
-public static SKData CreateCopy (IntPtr bytes, int length);
-public static SKData CreateCopy (IntPtr bytes, long length);
+public SKImage ApplyImageFilter (GRContext context, SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset);
+public SKImage ApplyImageFilter (GRRecordingContext context, SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset);
+public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, SKColorType colorType);
+public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
+public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha);
+public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, SKColorType colorType);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc, object releaseContext);
+public bool IsValid (GRRecordingContext context);
 ```
 
 
-#### Type Changed: SkiaSharp.SKImage
+#### Type Changed: SkiaSharp.SKImageFilter
 
-Added property:
+Added methods:
 
 ```csharp
-public SKImageInfo Info { get; }
+public static SKImageFilter CreateDilate (float radiusX, float radiusY, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateErode (float radiusX, float radiusY, SKImageFilter input, SKImageFilter.CropRect cropRect);
 ```
+
+
+#### Type Changed: SkiaSharp.SKPixmap
 
 Added method:
 
 ```csharp
-public SKImage ApplyImageFilter (GRContext context, SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset);
-```
-
-
-#### Type Changed: SkiaSharp.SKPicture
-
-Added methods:
-
-```csharp
-public static SKPicture Deserialize (SKData data);
-public static SKPicture Deserialize (SKStream stream);
-public static SKPicture Deserialize (System.IO.Stream stream);
-public static SKPicture Deserialize (System.ReadOnlySpan<byte> data);
-public static SKPicture Deserialize (IntPtr data, int length);
-public SKData Serialize ();
-public void Serialize (SKWStream stream);
-public void Serialize (System.IO.Stream stream);
+public bool Erase (SKColorF color, SKColorSpace colorspace, SKRectI subset);
 ```
 
 
 #### Type Changed: SkiaSharp.SKSurface
+
+Added property:
+
+```csharp
+public GRRecordingContext Context { get; }
+```
 
 Obsoleted methods:
 
@@ -160,26 +159,41 @@ Obsoleted methods:
  public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props);
 ```
 
-Added method:
+Added methods:
 
 ```csharp
-public void Flush ();
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, SKColorType colorType);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, SKColorType colorType);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info);
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType);
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info, int sampleCount);
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKColorSpace colorspace);
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin, SKSurfaceProperties props, bool shouldCreateWithMips);
+public void Flush (bool submit, bool synchronous);
 ```
 
 
-#### New Type: SkiaSharp.GRContextOptions
+#### New Type: SkiaSharp.GRRecordingContext
 
 ```csharp
-public class GRContextOptions {
-	// constructors
-	public GRContextOptions ();
+public class GRRecordingContext : SkiaSharp.SKObject, System.IDisposable {
 	// properties
-	public bool AllowPathMaskCaching { get; set; }
-	public bool AvoidStencilBuffers { get; set; }
-	public int BufferMapThreshold { get; set; }
-	public bool DoManualMipmapping { get; set; }
-	public int GlyphCacheTextureMaximumBytes { get; set; }
-	public int RuntimeProgramCacheSize { get; set; }
+	public GRBackend Backend { get; }
+	// methods
+	public int GetMaxSurfaceSampleCount (SKColorType colorType);
 }
 ```
 
@@ -260,4 +274,32 @@ public class SKRuntimeEffectUniforms : System.Collections.Generic.IEnumerable<st
 }
 ```
 
+
+### New Namespace SkiaSharp.Internals
+
+#### New Type: SkiaSharp.Internals.IPlatformLock
+
+```csharp
+public interface IPlatformLock {
+	// methods
+	public virtual void EnterReadLock ();
+	public virtual void EnterUpgradeableReadLock ();
+	public virtual void EnterWriteLock ();
+	public virtual void ExitReadLock ();
+	public virtual void ExitUpgradeableReadLock ();
+	public virtual void ExitWriteLock ();
+}
+```
+
+#### New Type: SkiaSharp.Internals.PlatformLock
+
+```csharp
+public static class PlatformLock {
+	// properties
+	public static System.Func<IPlatformLock> Factory { get; set; }
+	// methods
+	public static IPlatformLock Create ();
+	public static IPlatformLock DefaultFactory ();
+}
+```
 
