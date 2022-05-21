@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-#if WINUI
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Core;
@@ -11,18 +10,6 @@ using Microsoft.UI.Xaml.Navigation;
 using LaunchActivatedEventArgs = Microsoft.UI.Xaml.LaunchActivatedEventArgs;
 using Window = Microsoft.UI.Xaml.Window;
 using CoreApplication = Windows.ApplicationModel.Core.CoreApplication;
-#else
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.UI.Core;
-using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
-using LaunchActivatedEventArgs = Windows.ApplicationModel.Activation.LaunchActivatedEventArgs;
-using Window = Windows.UI.Xaml.Window;
-using CoreApplication = Windows.ApplicationModel.Core.CoreApplication;
-#endif
 
 namespace SkiaSharpSample
 {
