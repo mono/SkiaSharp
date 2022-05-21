@@ -212,7 +212,7 @@ Task ("docs-update-frameworks")
     var monikers = new List<string> ();
     foreach (var id in TRACKED_NUGETS.Keys) {
         // skip doc generation for Uno, this is the same as UWP and it is not needed
-        if (id.StartsWith ("SkiaSharp.Views.Uno"))
+        if (id.StartsWith ("SkiaSharp.Views.Uno") || id.StartsWith ("SkiaSharp.Views.Uno.WinUI") )
             continue;
         // skip doc generation for NativeAssets as that has nothing but a native binary
         if (id.Contains ("NativeAssets"))
