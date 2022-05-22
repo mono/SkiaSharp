@@ -428,6 +428,26 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
+		[SkippableTheory]
+		[InlineData(-1, -1)]
+		[InlineData(0, 0)]
+		[InlineData(-1, 10)]
+		[InlineData(10, -1)]
+		[InlineData(0, 10)]
+		[InlineData(10, 0)]
+		public void BitmapDoesNotCrashOnInvalidResizes(int width, int hight)
+		{
+			using var bitmap = CreateTestBitmap();
+
+			var newInfo = bitmap.Info;
+			newInfo.Width = width;
+			newInfo.Height = hight;
+
+			using var newBitmap = bitmap.Resize(newInfo, SKFilterQuality.High);
+
+			Assert.Null(newBitmap);
+		}
+
 		[SkippableFact]
 		public void CanScalePixels()
 		{
