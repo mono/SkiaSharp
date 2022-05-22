@@ -6,15 +6,6 @@
 
 ### Namespace SkiaSharp.Views.tvOS
 
-#### Type Changed: SkiaSharp.Views.tvOS.SKCanvasView
-
-Added method:
-
-```csharp
-public override void WillMoveToWindow (UIKit.UIWindow window);
-```
-
-
 #### Type Changed: SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs
 
 Obsoleted constructors:

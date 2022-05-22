@@ -48,7 +48,8 @@ var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () 
 
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 
-DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
+DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
+DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
 
 var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview");
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";

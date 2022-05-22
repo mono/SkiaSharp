@@ -87,6 +87,10 @@ Task ("docs-api-diff")
     };
 
     foreach (var id in TRACKED_NUGETS.Keys) {
+        // skip doc generation for NativeAssets as that has nothing but a native binary
+        if (id.Contains ("NativeAssets"))
+            continue;
+
         Information ($"Comparing the assemblies in '{id}'...");
 
         var version = GetVersion (id);
@@ -143,7 +147,15 @@ Task ("docs-api-diff-past")
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
+    // some parts of SkiaSharp depend on other parts
+    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
+        comparer.SearchPaths.Add(dir.FullPath);
+
     foreach (var id in TRACKED_NUGETS.Keys) {
+        // skip doc generation for NativeAssets as that has nothing but a native binary
+        if (id.Contains ("NativeAssets"))
+            continue;
+
         Information ($"Comparing the assemblies in '{id}'...");
 
         var allVersions = await NuGetVersions.GetAllAsync (id);
@@ -197,9 +209,13 @@ Task ("docs-update-frameworks")
 
     // generate the temp frameworks.xml
     var xFrameworks = new XElement ("Frameworks");
+    var monikers = new List<string> ();
     foreach (var id in TRACKED_NUGETS.Keys) {
         // skip doc generation for Uno, this is the same as UWP and it is not needed
         if (id.StartsWith ("SkiaSharp.Views.Uno"))
+            continue;
+        // skip doc generation for NativeAssets as that has nothing but a native binary
+        if (id.Contains ("NativeAssets"))
             continue;
 
         // get the versions
@@ -212,10 +228,10 @@ Task ("docs-update-frameworks")
         var dev = new NuGetVersion (GetVersion (id));
         allVersions = allVersions.Union (new [] { dev }).ToArray ();
 
-        // "merge" the patches
+        // "merge" the patches so we only care about major.minor
         var merged = new Dictionary<string, NuGetVersion> ();
         foreach (var version in allVersions) {
-            merged [$"{version.Major}.{version.Minor}.{version.Patch}"] = version;
+            merged [$"{version.Major}.{version.Minor}"] = version;
         }
 
         foreach (var version in merged) {
@@ -235,6 +251,8 @@ Task ("docs-update-frameworks")
                         continue;
                     else
                         moniker = $"skiasharp-views-forms-{version.Key}";
+                else if (id.StartsWith ("SkiaSharp.Views.Maui"))
+                    moniker = $"skiasharp-views-maui-{version.Key}";
                 else if (id.StartsWith ("SkiaSharp.Views"))
                     moniker = $"skiasharp-views-{version.Key}";
                 else if (platform == null)
@@ -243,7 +261,8 @@ Task ("docs-update-frameworks")
                     moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version.Key}";
 
                 // add the node to the frameworks.xml
-                if (xFrameworks.Elements ("Framework")?.Any (e => e.Attribute ("Name").Value == moniker) != true) {
+                if (!monikers.Contains (moniker)) {
+                    monikers.Add (moniker);
                     xFrameworks.Add (
                         new XElement ("Framework",
                             new XAttribute ("Name", moniker),
@@ -257,11 +276,18 @@ Task ("docs-update-frameworks")
             }
         }
     }
+    monikers.Sort ();
 
     // save the frameworks.xml
     var fwxml = $"{docsTempPath}/frameworks.xml";
     var xdoc = new XDocument (xFrameworks);
     xdoc.Save (fwxml);
+
+    // update the docs json
+    var docsJsonPath = DOCS_ROOT_PATH.CombineWithFilePath (".openpublishing.publish.config.json");
+    var docsJson = ParseJsonFromFile (docsJsonPath);
+    docsJson ["docsets_to_publish"][0]["monikers"] = new JArray (monikers.ToArray ());
+    SerializeJsonToPrettyFile (docsJsonPath, docsJson);
 
     // generate doc files
     comparer = await CreateNuGetDiffAsync ();

@@ -6,15 +6,6 @@
 
 ### Namespace SkiaSharp.Views.iOS
 
-#### Type Changed: SkiaSharp.Views.iOS.SKCanvasView
-
-Added method:
-
-```csharp
-public override void WillMoveToWindow (UIKit.UIWindow window);
-```
-
-
 #### Type Changed: SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs
 
 Obsoleted constructors:
