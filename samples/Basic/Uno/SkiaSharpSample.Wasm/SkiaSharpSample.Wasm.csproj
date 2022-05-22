@@ -17,7 +17,8 @@
     <WasmShellMonoRuntimeExecutionMode>Interpreter</WasmShellMonoRuntimeExecutionMode>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <WasmShellMonoRuntimeExecutionMode>FullAOT</WasmShellMonoRuntimeExecutionMode>
+    <!-- Use FullAOT for local builds only for faster CI builds -->
+    <WasmShellMonoRuntimeExecutionMode Condition="'$(BUILD_BUILDID)' == ''">FullAOT</WasmShellMonoRuntimeExecutionMode>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />

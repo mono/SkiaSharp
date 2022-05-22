@@ -6,7 +6,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
     <DefineConstants>$(DefineConstants);__WASM__; WINUI; HAS_UNO</DefineConstants>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>8.0</LangVersion>
     <WasmShellILLinkerEnabled>true</WasmShellILLinkerEnabled>
     <WasmShellForceDisableWSL Condition="'$(OS)' != 'Unix' and ('$(CI)' == 'true' or '$(BUILD_BUILDID)' != '')">true</WasmShellForceDisableWSL>
   </PropertyGroup>
@@ -17,7 +17,8 @@
     <WasmShellMonoRuntimeExecutionMode>Interpreter</WasmShellMonoRuntimeExecutionMode>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <WasmShellMonoRuntimeExecutionMode>FullAOT</WasmShellMonoRuntimeExecutionMode>
+    <!-- Use FullAOT for local builds only for faster CI builds -->
+    <WasmShellMonoRuntimeExecutionMode Condition="'$(BUILD_BUILDID)' == ''">FullAOT</WasmShellMonoRuntimeExecutionMode>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Assets\SplashScreen.png" />
