@@ -408,7 +408,7 @@ Task ("docs-format-docs")
         // remove the no-longer-obsolete SK3dView attributes
         if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SK3dView") {
             xdoc.Root
-                .Element ("Attributes")
+                .Element ("Attributes")?
                 .Elements ("Attribute")
                 .SelectMany (e => e.Elements ("AttributeName"))
                 .Where (e => e.Value.Contains ("System.Obsolete"))
