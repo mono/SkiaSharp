@@ -466,7 +466,10 @@ stages:
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: api_diff
       displayName: API Diff
-      dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'tests') }}:
+        dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'both') }}:
+        dependsOn: package
       jobs:
         - template: azure-templates-bootstrapper.yml # API Diff
           parameters:
@@ -518,7 +521,14 @@ stages:
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: tests
       displayName: Tests
-      dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'tests') }}:
+        dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'both') }}:
+        dependsOn:
+          - native_windows
+          - native_macos
+          - native_linux
+          - native_wasm
       jobs:
         - template: azure-templates-bootstrapper.yml # Tests|netfx (Windows)
           parameters:
@@ -779,7 +789,10 @@ stages:
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: samples
       displayName: Samples
-      dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'tests') }}:
+        dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'both') }}:
+        dependsOn: package
       jobs:
         - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
           parameters:
@@ -901,7 +914,7 @@ stages:
                   uploadTSLint: false
                   uploadAsync: true
 
-  - ${{ if ne(parameters.buildPipelineType, 'build') }}:
+  - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
     - stage: finalize
       displayName: Finalize Build
       dependsOn:
