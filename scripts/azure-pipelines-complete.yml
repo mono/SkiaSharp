@@ -38,7 +38,9 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-18.04
 
-pool: ${{ parameters.VM_IMAGE_HOST.pool }}
+pool:
+  name: Azure Pipelines
+  vmImage: ubuntu-18.04
 
 variables:
   - template: azure-pipelines-variables.yml
