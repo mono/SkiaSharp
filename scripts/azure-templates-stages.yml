@@ -1,12 +1,22 @@
 parameters:
-  buildPipelineType: 'both'
-  buildExternals: 0
-  VM_IMAGE_WINDOWS: ''
-  VM_IMAGE_WINDOWS_NATIVE: ''
-  VM_IMAGE_MAC: ''
-  VM_IMAGE_MAC_NATIVE: ''
-  VM_IMAGE_LINUX: ''
-  VM_IMAGE_LINUX_NATIVE: ''
+  - name: buildPipelineType
+    type: string
+    default: 'both'
+  - name: buildExternals
+    type: number
+    default: 0
+  - name: VM_IMAGE_WINDOWS
+    type: object
+  - name: VM_IMAGE_WINDOWS_NATIVE
+    type: object
+  - name: VM_IMAGE_MAC
+    type: object
+  - name: VM_IMAGE_MAC_NATIVE
+    type: object
+  - name: VM_IMAGE_LINUX
+    type: object
+  - name: VM_IMAGE_LINUX_NATIVE
+    type: object
 
 stages:
   - stage: prepare
@@ -14,9 +24,7 @@ stages:
     jobs:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
-        pool:
-          name: Azure Pipelines
-          vmImage: ubuntu-18.04
+        pool: ${{ parameters.VM_IMAGE_LINUX }}
         steps:
           - checkout: none
           - template: azure-templates-variables.yml
