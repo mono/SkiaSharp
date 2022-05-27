@@ -3,6 +3,12 @@ trigger: none
 pr: none
 
 parameters:
+  - name: VM_IMAGE_HOST
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: ubuntu-18.04
   - name: VM_IMAGE_WINDOWS
     type: object
     default:
@@ -40,7 +46,8 @@ resources:
 stages:
   - template: azure-templates-stages.yml
     parameters:
-      isBuildPipeline: false
+      buildPipelineType: 'tests'
+      VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
       VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
