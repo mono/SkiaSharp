@@ -14,7 +14,9 @@ stages:
     jobs:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
-        pool: ${{ parameters.VM_IMAGE_LINUX }}
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-18.04
         steps:
           - checkout: none
           - template: azure-templates-variables.yml
