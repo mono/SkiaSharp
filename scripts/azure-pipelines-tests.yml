@@ -28,6 +28,9 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-18.04
 
+variables:
+  - template: azure-pipelines-variables.yml
+
 resources:
   repositories:
     - repository: xamarin-templates
@@ -39,9 +42,6 @@ resources:
     - pipeline: SkiaSharp
       source: SkiaSharp
       trigger: true
-
-variables:
-  - template: azure-pipelines-variables.yml
 
 stages:
   - template: azure-templates-stages.yml

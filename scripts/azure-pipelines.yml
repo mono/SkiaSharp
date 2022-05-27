@@ -59,6 +59,9 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-18.04
 
+variables:
+  - template: azure-pipelines-variables.yml
+
 resources:
   repositories:
     - repository: xamarin-templates
@@ -66,9 +69,6 @@ resources:
       name: xamarin/yaml-templates
       endpoint: xamarin
       ref: refs/heads/main
-
-variables:
-  - template: azure-pipelines-variables.yml
 
 stages:
   - template: azure-templates-stages.yml
