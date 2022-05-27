@@ -5,6 +5,8 @@ parameters:
   - name: buildExternals
     type: number
     default: 0
+  - name: VM_IMAGE_HOST
+    type: object
   - name: VM_IMAGE_WINDOWS
     type: object
   - name: VM_IMAGE_WINDOWS_NATIVE
@@ -24,7 +26,7 @@ stages:
     jobs:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
-        pool: ${{ parameters.VM_IMAGE_LINUX }}
+        pool: ${{ parameters.VM_IMAGE_HOST.pool }}
         steps:
           - checkout: none
           - template: azure-templates-variables.yml
@@ -764,7 +766,7 @@ stages:
         # TODO: add tests for windows nano server
         - job: coverage_reports                      # Coverage Reports
           displayName: Coverage Reports
-          pool: ${{ parameters.VM_IMAGE_LINUX }}
+          pool: ${{ parameters.VM_IMAGE_HOST.pool }}
           dependsOn:
             - tests_netcore_windows
             - tests_netcore_macos
@@ -935,7 +937,7 @@ stages:
       jobs:
         - job: finalize                              # Finalize Build
           displayName: Finalize Build
-          pool: ${{ parameters.VM_IMAGE_LINUX }}
+          pool: ${{ parameters.VM_IMAGE_HOST.pool }}
           steps:
             - checkout: none
             - template: azure-templates-variables.yml

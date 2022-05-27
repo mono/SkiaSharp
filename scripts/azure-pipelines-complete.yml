@@ -13,6 +13,12 @@ parameters:
     displayName: 'The specific native artifacts to use for this build.'
     type: number
     default: 0
+  - name: VM_IMAGE_HOST
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: ubuntu-18.04
   - name: VM_IMAGE_WINDOWS
     type: object
     default:
@@ -32,9 +38,7 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-18.04
 
-pool:
-  name: Azure Pipelines
-  vmImage: ubuntu-18.04
+pool: ${{ parameters.VM_IMAGE_HOST.pool }}
 
 variables:
   - template: azure-pipelines-variables.yml
@@ -44,6 +48,7 @@ stages:
     parameters:
       buildPipelineType: 'both'
       buildExternals: ${{ parameters.buildExternals }}
+      VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
       VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
