@@ -143,7 +143,7 @@ namespace SkiaSharpSample
 #endif
 
 #if !WINDOWS_UWP
-				global::Uno.UI.Adapter.Microsoft.Extensions.Logging.LoggingAdapter.Initialize();
+			global::Uno.UI.Adapter.Microsoft.Extensions.Logging.LoggingAdapter.Initialize();
 #endif
 		}
 	}

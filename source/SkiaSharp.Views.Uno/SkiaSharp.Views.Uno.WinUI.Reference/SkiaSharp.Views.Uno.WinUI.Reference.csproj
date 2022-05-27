@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <PackagingGroup>SkiaSharp.Views.Uno.WinUI</PackagingGroup>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);WINUI</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Uno.WinUI" Version="4.0.8" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="nuget\build\netstandard2.0\SkiaSharp.Views.Uno.WinUI.targets" />
+    <None Include="nuget\build\netstandard2.0\SkiaSharp.Views.Uno.WinUI.targets" 
+          Link="nuget\build\$(PackagingPlatform)\SkiaSharp.Views.Uno.WinUI.targets" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\UWPExtensions.cs" />
+    <Compile Include="..\SkiaSharp.Views.Uno.Reference\*.Reference.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Uno\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>
