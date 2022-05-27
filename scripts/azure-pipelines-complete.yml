@@ -59,8 +59,10 @@ jobs:
     steps:
       - pwsh: |
           echo "all:"
-          git diff-tree --no-commit-id --name-only -r $(GIT_SHA)
+          git diff-tree --no-commit-id --name-only -r HEAD~ HEAD
           echo "native:"
-          git diff-tree --no-commit-id --name-only -r $(GIT_SHA) native
+          git diff-tree --no-commit-id --name-only -r HEAD~ HEAD native
+          echo "scripts:"
+          git diff-tree --no-commit-id --name-only -r HEAD~ HEAD scripts
           echo "-"
           
