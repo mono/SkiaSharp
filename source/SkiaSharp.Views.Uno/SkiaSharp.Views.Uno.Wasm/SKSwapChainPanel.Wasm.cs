@@ -3,17 +3,9 @@ using System.Threading;
 using Uno.Foundation;
 using Uno.Foundation.Interop;
 using Uno.UI.Runtime.WebAssembly;
-#if WINUI
-using Microsoft.UI.Xaml;
-#else
 using Windows.UI.Xaml;
-#endif
 
-#if WINDOWS || WINUI
-namespace SkiaSharp.Views.Windows
-#else
 namespace SkiaSharp.Views.UWP
-#endif
 {
 	[HtmlElement("canvas")]
 	public partial class SKSwapChainPanel : FrameworkElement

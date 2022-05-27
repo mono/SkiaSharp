@@ -2,13 +2,13 @@
 using Windows.Foundation;
 using Windows.UI;
 
-#if WINDOWS || WINUI
+#if WINDOWS
 using Microsoft.UI.Xaml.Media.Imaging;
 #else
 using Windows.UI.Xaml.Media.Imaging;
 #endif
 
-#if WINDOWS || WINUI
+#if WINDOWS
 namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP

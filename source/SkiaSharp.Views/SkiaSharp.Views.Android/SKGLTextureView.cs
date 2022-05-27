@@ -4,9 +4,7 @@ using Android.Content;
 using Android.Opengl;
 using Android.Util;
 
-#if HAS_UNO_WINUI
-namespace SkiaSharp.Views.Windows
-#elif HAS_UNO
+#if HAS_UNO
 namespace SkiaSharp.Views.UWP
 #else
 namespace SkiaSharp.Views.Android
