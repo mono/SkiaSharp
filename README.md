@@ -3,10 +3,10 @@
 [![SkiaSharp](https://img.shields.io/nuget/vpre/SkiaSharp.svg?cacheSeconds=3600&label=SkiaSharp%20nuget)](https://www.nuget.org/packages/SkiaSharp)
 [![HarfBuzzSharp](https://img.shields.io/nuget/vpre/HarfBuzzSharp.svg?cacheSeconds=3600&label=HarfBuzzSharp%20nuget)](https://www.nuget.org/packages/HarfBuzzSharp)
 
-[![Views](https://img.shields.io/nuget/vpre/SkiaSharp.Views.svg?cacheSeconds=3600&label=Views%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views)
-[![Xamarin.Forms](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Forms.svg?cacheSeconds=3600&label=Xamarin.Forms%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Forms)
-[![.NET MAUI](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Maui.Controls.svg?cacheSeconds=3600&label=.NET%20MAUI%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls)
-[![Uno Platform](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Uno.svg?cacheSeconds=3600&label=Uno%20Platform%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Uno) 
+[![SkiaSharp.Views](https://img.shields.io/nuget/vpre/SkiaSharp.Views.svg?cacheSeconds=3600&label=SkiaSharp.Views%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views)
+[![SkiaSharp.Views.Forms](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Forms.svg?cacheSeconds=3600&label=SkiaSharp.Views.Forms%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Forms)
+[![SkiaSharp.Views.Maui.Controls](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Maui.Controls.svg?cacheSeconds=3600&label=SkiaSharp.Views.Maui.Controls%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls)
+[![SkiaSharp.Views.Uno](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Uno.svg?cacheSeconds=3600&label=SkiaSharp.Views.Uno%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Uno) 
 
 [![discord](https://img.shields.io/badge/chat-.NET%20Discord-E60256.svg)](https://aka.ms/dotnet-discord)
 [![SkiaSharp API Docs](https://img.shields.io/badge/docs-skiasharp-1faece.svg)](https://docs.microsoft.com/dotnet/api/SkiaSharp)
