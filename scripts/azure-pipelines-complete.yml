@@ -51,15 +51,16 @@ pool:
 variables:
   - template: azure-pipelines-variables.yml
 
-stages:
-  - template: azure-templates-stages.yml
-    parameters:
-      buildPipelineType: 'both'
-      buildExternals: ${{ parameters.buildExternals }}
-      VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
-      VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
-      VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
-      VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
-      VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
-      VM_IMAGE_LINUX: ${{ parameters.VM_IMAGE_LINUX }}
-      VM_IMAGE_LINUX_NATIVE: ${{ parameters.VM_IMAGE_LINUX }}
+jobs:
+  - job: testing
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-20.04
+    steps:
+      - pwsh: |
+          echo "all:"
+          git diff-tree --no-commit-id --name-only -r $(GIT_SHA)
+          echo "native:"
+          git diff-tree --no-commit-id --name-only -r $(GIT_SHA) native
+          echo "-"
+          
