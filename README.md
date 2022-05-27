@@ -4,12 +4,14 @@
 [![SkiaSharp.Views](https://img.shields.io/nuget/vpre/SkiaSharp.Views.svg?cacheSeconds=3600&label=SkiaSharp.Views%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views)
 [![SkiaSharp.Views.Forms](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Forms.svg?cacheSeconds=3600&label=SkiaSharp.Views.Forms%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Forms)
 [![SkiaSharp.Views.Maui.Controls](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Maui.Controls.svg?cacheSeconds=3600&label=SkiaSharp.Views.Maui.Controls%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls)
-[![HarfBuzzSharp](https://img.shields.io/nuget/vpre/HarfBuzzSharp.svg?cacheSeconds=3600&label=HarfBuzzSharp%20nuget)](https://www.nuget.org/packages/HarfBuzzSharp)
 [![SkiaSharp.Views.Uno](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Uno.svg?cacheSeconds=3600&label=SkiaSharp.Views.Uno%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Uno) 
+[![HarfBuzzSharp](https://img.shields.io/nuget/vpre/HarfBuzzSharp.svg?cacheSeconds=3600&label=HarfBuzzSharp%20nuget)](https://www.nuget.org/packages/HarfBuzzSharp)
+
 [![chat](https://img.shields.io/badge/chat-xamarin%2FXamarinComponents-E60256.svg)](https://gitter.im/xamarin/XamarinComponents)
 [![SkiaSharp API Docs](https://img.shields.io/badge/docs-skiasharp-1faece.svg)](https://docs.microsoft.com/dotnet/api/SkiaSharp)
 [![HarfBuzzSharp API Docs](https://img.shields.io/badge/docs-harfbuzzsharp-1faece.svg)](https://docs.microsoft.com/dotnet/api/SkiaSharp)
 [![SkiaSharp Guides](https://img.shields.io/badge/docs-guides-1faece.svg)](https://docs.microsoft.com/xamarin/graphics-games/skiasharp/)
+
 [![Build Status](https://dev.azure.com/devdiv/DevDiv/_apis/build/status/Xamarin/Components/SkiaSharp?branchName=main)](https://dev.azure.com/devdiv/DevDiv/_build/latest?definitionId=10789&branchName=main)
 [![Build Status](https://dev.azure.com/xamarin/public/_apis/build/status/mono/SkiaSharp/SkiaSharp%20(Public)?branchName=main)](https://dev.azure.com/xamarin/public/_build/latest?definitionId=4&branchName=main)
 
