@@ -58,6 +58,7 @@ jobs:
       vmImage: ubuntu-20.04
     steps:
       - pwsh: |
+          dir env:
           echo "all:"
           git diff-tree --no-commit-id --name-only -r HEAD~ HEAD
           echo "native:"
