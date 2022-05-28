@@ -47,26 +47,19 @@ jobs:
     steps:
       - pwsh: |
           $id = '0'
-          $checkout = 'self'
           if ('${{ parameters.buildExternals }}' -eq 'latest') {
             if ($env:SYSTEM_TEAMPROJECT -eq 'devdiv') {
               $id = '6214338'
             } else {
               $id = '63248'
             }
-            $checkout = 'none'
           } elseif ('${{ parameters.buildExternals }}') {
             $id = '${{ parameters.buildExternals }}'
-            $checkout = 'none'
-          } else {
-            $checkout = 'self'
           }
           echo "Setting DOWNLOAD_EXTERNALS = $id"
           echo "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]$id"
-          echo "Setting CHECKOUT_MODE = $checkout"
-          echo "##vso[task.setvariable variable=CHECKOUT_MODE]$checkout"
       # prepare
-      - checkout: $(CHECKOUT_MODE)
+      - checkout: self
         submodules: recursive
       - template: azure-templates-variables.yml
 
