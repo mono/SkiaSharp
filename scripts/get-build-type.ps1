@@ -1,0 +1,46 @@
+param (
+    [string] $ExternalsBuildId = ''
+)
+
+$ErrorActionPreference = 'Stop'
+
+Write-Host "All changes:"
+$all = (git diff-tree --no-commit-id --name-only -r HEAD~ HEAD)
+foreach ($d in $all) {
+    Write-Host " - $d"
+}
+
+# this was explicit, so just us that
+$intBuildId = "$ExternalsBuildId" -as [int]
+if ($intBuildId -gt 0) {
+    Write-Host "Explicit build using $intBuildId."
+    Write-Host "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]$intBuildId"
+    exit 0
+}
+
+# if this is a PR and we are requesting last-build artifacts
+if (("$ExternalsBuildId" -eq 'latest') -and ("$env:BUILD_REASON" -eq 'PullRequest')) {
+    Write-Host "Matching changes:"
+    $matching = @(
+        'cake',
+        'externals',
+        'native',
+        '.gitmodules',
+        'VERSIONS.txt'
+    )
+    $requiresFull = (git diff-tree --no-commit-id --name-only -r HEAD~ HEAD @matching)
+    foreach ($d in $requiresFull) {
+        Write-Host " - $d"
+    }
+
+    if (-not $requiresFull) {
+        Write-Host "Download-only build."
+        Write-Host "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]latest"
+        exit 0
+    }
+}
+
+# either not a PR, native files changed or explicit build-all
+Write-Host "Full build."
+Write-Host "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]"
+exit 0

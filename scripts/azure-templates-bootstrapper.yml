@@ -58,7 +58,6 @@ jobs:
       # determine build type
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
         displayName: Determine build type
-        condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # provisioning steps
       - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
