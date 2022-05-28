@@ -3,26 +3,27 @@ parameters:
   artifacts: [ ] # name, dir
 
 steps:
-  - pwsh: |
-      $buildId = "${{ parameters.sourceBuildId }}"
-      if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNID) {
-        $buildId = $env:RESOURCES_PIPELINE_SKIASHARP_RUNID
-        Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_RUNID = '$env:RESOURCES_PIPELINE_SKIASHARP_RUNID'"
-      }
-      if (-not $buildId) {
-        $buildId = $env:BUILD_BUILDID
-        Write-Host "Using BUILD_BUILDID = '$env:BUILD_BUILDID'"
-      }
-      $pipelineId = "$env:SYSTEM_DEFINITIONID"
-      if ($env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID) {
-        $pipelineId = $env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID
-        Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_PIPELINEID = '$env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID'"
-      }
-      Write-Host "DOWNLOAD_BUILD_ID = '$buildId'"
-      Write-Host "DOWNLOAD_PIPELINE_ID = '$pipelineId'"
-      Write-Host "##vso[task.setvariable variable=DOWNLOAD_BUILD_ID]$buildId"
-      Write-Host "##vso[task.setvariable variable=DOWNLOAD_PIPELINE_ID]$pipelineId"
-    displayName: Ensure all the variables are set for the download
+  - ${{ if ne(length(parameters.artifacts), 0) }}:
+    - pwsh: |
+        $buildId = "${{ parameters.sourceBuildId }}"
+        if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNID) {
+          $buildId = $env:RESOURCES_PIPELINE_SKIASHARP_RUNID
+          Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_RUNID = '$env:RESOURCES_PIPELINE_SKIASHARP_RUNID'"
+        }
+        if (-not $buildId) {
+          $buildId = $env:BUILD_BUILDID
+          Write-Host "Using BUILD_BUILDID = '$env:BUILD_BUILDID'"
+        }
+        $pipelineId = "$env:SYSTEM_DEFINITIONID"
+        if ($env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID) {
+          $pipelineId = $env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID
+          Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_PIPELINEID = '$env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID'"
+        }
+        Write-Host "DOWNLOAD_BUILD_ID = '$buildId'"
+        Write-Host "DOWNLOAD_PIPELINE_ID = '$pipelineId'"
+        Write-Host "##vso[task.setvariable variable=DOWNLOAD_BUILD_ID]$buildId"
+        Write-Host "##vso[task.setvariable variable=DOWNLOAD_PIPELINE_ID]$pipelineId"
+      displayName: Ensure all the variables are set for the download
 
   - ${{ each artifact in parameters.artifacts }}:
     - task: DownloadBuildArtifacts@0

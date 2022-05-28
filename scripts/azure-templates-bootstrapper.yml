@@ -16,7 +16,7 @@ parameters:
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
-  buildExternals: ''                            # the build number to download externals from
+  buildExternals: 'latest'                      # the build number to download externals from
   buildPipelineType: 'both'                     # the type of build pipeline setup
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
@@ -46,11 +46,17 @@ jobs:
         ${{ parameters.variables }}
     steps:
       - pwsh: |
-          if ($env:SYSTEM_TEAMPROJECT -eq 'devdiv') {
-            $id = '6214338'
-          } else {
-            $id = '63248'
+          $id = '0'
+          if ('${{ parameters.buildExternals }}' -eq 'latest') {
+            if ($env:SYSTEM_TEAMPROJECT -eq 'devdiv') {
+              $id = '6214338'
+            } else {
+              $id = '63248'
+            }
+          } else if ('${{ parameters.buildExternals }}') {
+            $id = '${{ parameters.buildExternals }}'
           }
+          echo "Setting DOWNLOAD_EXTERNALS = $id"
           echo "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]$id"
       # prepare
       - checkout: self
