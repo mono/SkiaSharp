@@ -61,6 +61,9 @@ jobs:
       # prepare
       - checkout: self
         submodules: recursive
+        condition: and(succeeded(), eq('$(DOWNLOAD_EXTERNALS)', ''))
+      - checkout: none
+        condition: and(succeeded(), ne('$(DOWNLOAD_EXTERNALS)', ''))
       - template: azure-templates-variables.yml
 
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
