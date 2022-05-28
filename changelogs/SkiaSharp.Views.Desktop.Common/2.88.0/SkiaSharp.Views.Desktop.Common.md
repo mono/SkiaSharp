@@ -6,18 +6,42 @@
 
 ### Namespace SkiaSharp.Views.Desktop
 
-#### Type Changed: SkiaSharp.Views.Desktop.Extensions
+#### Type Changed: SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs
 
-Added methods:
+Obsoleted constructors:
+
+```diff
+ [Obsolete ()]
+ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
+```
+
+Added constructors:
 
 ```csharp
-public static System.Drawing.Bitmap ToBitmap (this SkiaSharp.SKBitmap skiaBitmap);
-public static System.Drawing.Bitmap ToBitmap (this SkiaSharp.SKImage skiaImage);
-public static System.Drawing.Bitmap ToBitmap (this SkiaSharp.SKPixmap pixmap);
-public static System.Drawing.Bitmap ToBitmap (this SkiaSharp.SKPicture picture, SkiaSharp.SKSizeI dimensions);
-public static SkiaSharp.SKBitmap ToSKBitmap (this System.Drawing.Bitmap bitmap);
-public static SkiaSharp.SKImage ToSKImage (this System.Drawing.Bitmap bitmap);
-public static void ToSKPixmap (this System.Drawing.Bitmap bitmap, SkiaSharp.SKPixmap pixmap);
+public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info);
+public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
+```
+
+Added properties:
+
+```csharp
+public SkiaSharp.SKImageInfo Info { get; }
+public SkiaSharp.SKImageInfo RawInfo { get; }
+```
+
+
+#### Type Changed: SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs
+
+Added constructor:
+
+```csharp
+public SKPaintSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
+```
+
+Added property:
+
+```csharp
+public SkiaSharp.SKImageInfo RawInfo { get; }
 ```
 
 

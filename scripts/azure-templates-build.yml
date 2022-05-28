@@ -1,7 +1,7 @@
 parameters:
   name: ''                                      # in the form type_platform_host
   displayName: ''                               # the human name
-  vmImage: ''                                   # the VM image
+  pool: ''                                      # the agent pool
   packages: ''                                  # any additional packages
   target: ''                                    # the bootstrapper target
   dependsOn: []                                 # the dependiencies
@@ -16,7 +16,7 @@ parameters:
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
-  isBuildPipeline: true
+  buildPipelineType: 'both'                     # the type of build pipeline setup
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -34,7 +34,7 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 180
-    pool: ${{ parameters.vmImage }}
+    pool: ${{ parameters.pool }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     variables: ${{ parameters.variables }}
@@ -44,7 +44,7 @@ jobs:
         submodules: recursive
       - template: azure-templates-variables.yml
 
-      - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+      - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         - template: azure-templates-github-status.yml
           parameters:
             state: 'pending'
@@ -271,5 +271,5 @@ jobs:
             verbosity: 'Verbose'
             alertWarningLevel: 'High'
 
-      - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+      - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         - template: azure-templates-github-status.yml

@@ -1,7 +1,7 @@
 parameters:
   name: ''                                      # in the form type_platform_host
   displayName: ''                               # the human name
-  vmImage: ''                                   # the VM image
+  pool: ''                                      # the agent pool
   condition: succeeded()                        # whether or not to run this template
   buildExternals: ''                            # the build number to download externals from
   postBuildSteps: []                            # any additional steps to run after the build
@@ -10,7 +10,7 @@ parameters:
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
-    pool: ${{ parameters.vmImage }}
+    pool: ${{ parameters.pool }}
     condition: ${{ parameters.condition }}
     variables: ${{ parameters.variables }}
     steps:

@@ -17,7 +17,7 @@ parameters:
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
   buildExternals: ''                            # the build number to download externals from
-  isBuildPipeline: true
+  buildPipelineType: 'both'                     # the type of build pipeline setup
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -38,7 +38,7 @@ jobs:
       parameters:
         name: ${{ parameters.name }}
         displayName: ${{ parameters.displayName }}
-        vmImage: ${{ parameters.vmImage.pool }}
+        pool: ${{ parameters.vmImage.pool }}
         packages: ${{ parameters.packages }}
         target: ${{ parameters.target }}
         dependsOn: ${{ parameters.dependsOn }}
@@ -85,7 +85,7 @@ jobs:
       parameters:
         name: ${{ parameters.name }}
         displayName: ${{ parameters.displayName }}
-        vmImage: ${{ parameters.vmImage.pool }}
+        pool: ${{ parameters.vmImage.pool }}
         packages: ${{ parameters.packages }}
         target: ${{ parameters.target }}
         dependsOn: ${{ parameters.dependsOn }}
@@ -112,7 +112,7 @@ jobs:
         condition: ${{ parameters.condition }}
         shouldPublish: ${{ parameters.shouldPublish }}
         configuration: ${{ parameters.configuration }}
-        isBuildPipeline: ${{ parameters.isBuildPipeline }}
+        buildPipelineType: ${{ parameters.buildPipelineType }}
         verbosity: ${{ parameters.verbosity }}
         docker: ${{ parameters.docker }}
         dockerArgs: ${{ parameters.dockerArgs }}

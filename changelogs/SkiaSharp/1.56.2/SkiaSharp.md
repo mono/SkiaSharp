@@ -82,13 +82,13 @@ public SKColor GetUnPreMultipliedColor (int index);
 Obsoleted constructors:
 
 ```diff
- [Obsolete ("Use SKData.Empty instead.")]
+ [Obsolete ()]
  public SKData ();
- [Obsolete ("Use SKData.CreateCopy(byte[]) instead.")]
+ [Obsolete ()]
  public SKData (byte[] bytes);
- [Obsolete ("Use SKData.CreateCopy(byte[], ulong) instead.")]
+ [Obsolete ()]
  public SKData (byte[] bytes, ulong length);
- [Obsolete ("Use SKData.CreateCopy(IntPtr, ulong) instead.")]
+ [Obsolete ()]
  public SKData (IntPtr bytes, ulong length);
 ```
 
@@ -130,9 +130,9 @@ public bool IsTextureBacked { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use FromEncodedData instead.")]
+ [Obsolete ()]
  public static SKImage FromData (SKData data);
- [Obsolete ("Use FromEncodedData instead.")]
+ [Obsolete ()]
  public static SKImage FromData (SKData data, SKRectI subset);
 ```
 
@@ -212,11 +212,11 @@ public long RowBytes64 { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use AddPath(SKPath, SKPathAddMode) instead.")]
+ [Obsolete ()]
  public void AddPath (SKPath other, SKPath.AddMode mode);
- [Obsolete ("Use AddPath(SKPath, ref SKMatrix, SKPathAddMode) instead.")]
+ [Obsolete ()]
  public void AddPath (SKPath other, ref SKMatrix matrix, SKPath.AddMode mode);
- [Obsolete ("Use AddPath(SKPath, float, float, SKPathAddMode) instead.")]
+ [Obsolete ()]
  public void AddPath (SKPath other, float dx, float dy, SKPath.AddMode mode);
 ```
 
@@ -274,7 +274,7 @@ public SKPathVerb Peek ();
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use GetMatrix(float, out SKMatrix, SKPathMeasureMatrixFlags) instead.")]
+ [Obsolete ()]
  public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasure.MatrixFlags flags);
 ```
 
@@ -351,7 +351,7 @@ public sealed delegate SKDataReleaseDelegate : System.MulticastDelegate, System.
 #### New Type: SkiaSharp.SKFrontBufferedStream
 
 ```csharp
-public class SKFrontBufferedStream : System.IO.Stream, System.IDisposable {
+public class SKFrontBufferedStream : System.IO.Stream, System.IAsyncDisposable, System.IDisposable {
 	// constructors
 	public SKFrontBufferedStream (System.IO.Stream stream);
 	public SKFrontBufferedStream (System.IO.Stream stream, bool disposeUnderlyingStream);

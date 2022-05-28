@@ -11,7 +11,7 @@ $previewRuntime = 'https://api.nuget.org/v3/index.json'
 $previewEmscripten = 'https://api.nuget.org/v3/index.json'
 if ($IsPreview) {
   $previewFeed = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json'
-  $previewRuntime = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-a21b9a2d/nuget/v3/index.json'
+  $previewRuntime = 'https://api.nuget.org/v3/index.json'
   $previewEmscripten = 'https://api.nuget.org/v3/index.json'
 }
 
