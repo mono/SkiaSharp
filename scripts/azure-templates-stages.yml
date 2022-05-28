@@ -774,7 +774,7 @@ stages:
           steps:
             - checkout: self
             - template: azure-templates-variables.yml
-            ${{ if ne(parameters.buildPipelineType, 'both') }}:
+            - ${{ if ne(parameters.buildPipelineType, 'both') }}:
               - template: azure-templates-github-status.yml
                 parameters:
                   state: 'pending'
@@ -798,7 +798,7 @@ stages:
               inputs:
                 codeCoverageTool: Cobertura
                 summaryFileLocation: 'output/**/Cobertura.xml'
-            ${{ if ne(parameters.buildPipelineType, 'both') }}:
+            - ${{ if ne(parameters.buildPipelineType, 'both') }}:
               - template: azure-templates-github-status.yml
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
