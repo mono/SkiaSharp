@@ -46,7 +46,12 @@ jobs:
         ${{ parameters.variables }}
     steps:
       - pwsh: |
-          echo "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]63248"
+          if ($env:SYSTEM_TEAMPROJECT -eq 'devdiv') {
+            $id = '6214338'
+          } else {
+            $id = '63248'
+          }
+          echo "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]$id"
       # prepare
       - checkout: self
         submodules: recursive
