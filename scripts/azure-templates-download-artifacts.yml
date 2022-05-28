@@ -1,6 +1,7 @@
 parameters:
   sourceBuildId: ''
   artifacts: [ ] # name, dir
+  condition: succeeded()
 
 steps:
   - ${{ if ne(length(parameters.artifacts), 0) }}:
@@ -36,10 +37,12 @@ steps:
         Write-Host "##vso[task.setvariable variable=DOWNLOAD_BRANCH]$branchName"
         Write-Host "##vso[task.setvariable variable=DOWNLOAD_VERSION_TYPE]$versionType"
       displayName: Ensure all the variables are set for the download
+      condition: ${{ parameters.condition }}
 
   - ${{ each artifact in parameters.artifacts }}:
     - task: DownloadBuildArtifacts@0
       displayName: Download the pre-built ${{ artifact.name }} artifacts
+      condition: ${{ parameters.condition }}
       inputs:
         buildType: 'specific'
         project: '$(System.TeamProjectId)'
@@ -56,6 +59,8 @@ steps:
         Get-ChildItem '.\download-temp\${{ artifact.name }}\' | Copy-Item -Destination '.\output\${{ artifact.dir }}\' -Recurse -Force
         Remove-Item '.\download-temp\${{ artifact.name }}\' -Recurse -Force
       displayName: Move the ${{ artifact.name }} artifacts to the ./output/${{ artifact.dir }} directory
+      condition: ${{ parameters.condition }}
 
     - pwsh: Remove-Item ./output/logs/ -Recurse -Force -ErrorAction Ignore
       displayName: Delete old logs
+      condition: ${{ parameters.condition }}
