@@ -45,19 +45,6 @@ jobs:
       ${{ if ne(length(parameters.variables), 0) }}:
         ${{ parameters.variables }}
     steps:
-      - pwsh: |
-          $id = ''
-          if ('${{ parameters.buildExternals }}' -eq 'latest') {
-            if ($env:SYSTEM_TEAMPROJECT -eq 'devdiv') {
-              $id = '6214338'
-            } else {
-              $id = '63248'
-            }
-          } elseif ('${{ parameters.buildExternals }}') {
-            $id = '${{ parameters.buildExternals }}'
-          }
-          echo "Setting DOWNLOAD_EXTERNALS = $id"
-          echo "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]$id"
       # prepare
       - checkout: self
         submodules: recursive
@@ -67,6 +54,11 @@ jobs:
         - template: azure-templates-github-status.yml
           parameters:
             state: 'pending'
+
+      # determine build type
+      - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
+        displayName: Determine build type
+        condition: eq(variables['Build.Reason'], 'PullRequest')
 
       # provisioning steps
       - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
