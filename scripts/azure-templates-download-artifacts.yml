@@ -31,11 +31,6 @@ steps:
         Write-Host "##vso[task.setvariable variable=DOWNLOAD_BRANCH]$branchName"
       displayName: Ensure all the variables are set for the download
 
-        if ($env:SYSTEM_TEAMPROJECT -eq 'devdiv') {
-            $id = '6214338'
-        } else {
-            $id = '63248'
-        }
   - ${{ each artifact in parameters.artifacts }}:
     - task: DownloadBuildArtifacts@0
       displayName: Download the pre-built ${{ artifact.name }} artifacts
