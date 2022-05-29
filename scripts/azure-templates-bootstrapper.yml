@@ -302,7 +302,7 @@ jobs:
 
 
       - pwsh: |
-          (ls $(Build.SourcesDirectory) -Recurse | measure length -sum).sum / 1MB
+          (Get-ChildItem $(Build.SourcesDirectory) -Recurse | measure length -sum).sum / 1MB
         condition: always()
 
       # post-build steps
