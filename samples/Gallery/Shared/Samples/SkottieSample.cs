@@ -20,10 +20,16 @@ namespace SkiaSharpSample.Samples
 		{
 			using var fileStream = new SKManagedStream(SampleMedia.Images.LottieLogo);
 
-			_animation = SkiaSharp.Skottie.Animation.Make(fileStream);
-			_animation.Seek(0, null);
+			if (SkiaSharp.Skottie.Animation.TryCreate(fileStream, out _animation))
+			{
+				_animation.Seek(0, null);
 
-			Console.WriteLine($"SkottieSample(): Version:{_animation.Version} Duration:{_animation.Duration} Fps:{_animation.Fps} InPoint:{_animation.InPoint} OutPoint:{_animation.OutPoint}");
+				Console.WriteLine($"SkottieSample(): Version:{_animation.Version} Duration:{_animation.Duration} Fps:{_animation.Fps} InPoint:{_animation.InPoint} OutPoint:{_animation.OutPoint}");
+			}
+			else
+			{
+				Console.WriteLine($"SkottieSample(): failed to load animation");
+			}
 		}
 
 		public override string Title => "Skottie";
