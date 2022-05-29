@@ -2,70 +2,78 @@
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using SkiaSharp.SceneGraph;
 
 namespace SkiaSharp.Skottie
 {
-	public unsafe class Animation : SKObject
+	public unsafe class Animation : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
-		public enum RenderFlags
-		{
-			SkipTopLevelIsolation = 0x01,
-			DisableTopLevelClipping = 0x02,
-		}
-
 		internal Animation (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
-		// SK_C_API skottie_animation_t* skottie_animation_make_from_string(const char* data, size_t length);
-		public static Animation Make (string data)
-			=> GetObject (SkiaApi.skottie_animation_make_from_string (data, data.Length));
+		void ISKNonVirtualReferenceCounted.ReferenceNative ()
+			=> SkiaApi.skottie_animation_ref (Handle);
 
-		// SK_C_API skottie_animation_t* skottie_animation_make_from_stream(sk_stream_filestream_t* stream);
-		public static Animation Make (SKStream stream)
-			=> GetObject (SkiaApi.skottie_animation_make_from_stream (stream.Handle));
+		void ISKNonVirtualReferenceCounted.UnreferenceNative ()
+			=> SkiaApi.skottie_animation_unref (Handle);
 
-		// SK_C_API skottie_animation_t* skottie_animation_make_from_file(const char* path);
-		public static Animation MakeFromFile(string path)
-			=> GetObject (SkiaApi.skottie_animation_make_from_file (path));
+		protected override void DisposeNative ()
+			=> SkiaApi.skottie_animation_delete (Handle);
 
-		//SK_C_API void skottie_animation_render(skottie_animation_t *instance, sk_canvas_t *canvas, sk_rect_t *dst);
+		public static bool TryParse (string data, out Animation animation)
+		{
+			animation = GetObject (SkiaApi.skottie_animation_make_from_string (data, data.Length));
+			return animation != null;
+		}
+
+		public static bool TryCreate (Stream stream, out Animation animation)
+		{
+			using (var managed = new SKManagedStream (stream)) {
+				return TryCreate (managed, out animation);
+			}
+		}
+
+		public static bool TryCreate (SKStream stream, out Animation animation)
+		{
+			animation = GetObject (SkiaApi.skottie_animation_make_from_stream (stream.Handle));
+			return animation != null;
+		}
+
+		public static bool TryCreate (string path, out Animation animation)
+		{
+			animation = GetObject (SkiaApi.skottie_animation_make_from_file (path));
+			return animation != null;
+		}
+
 		public unsafe void Render(SKCanvas canvas, SKRect dst)
 			=> SkiaApi.skottie_animation_render (Handle, canvas.Handle, &dst);
 
-		//SK_C_API void skottie_animation_render_with_flags(skottie_animation_t *instance, sk_canvas_t *canvas, sk_rect_t *dst, skottie_animation_renderflags_t flags);
-		public void Render (SKCanvas canvas, SKRect dst, RenderFlags flags)
+		public void Render (SKCanvas canvas, SKRect dst, SkottieAnimationRenderflags flags)
 			=> SkiaApi.skottie_animation_render_with_flags (Handle, canvas.Handle, &dst, flags);
 
-		//SK_C_API void skottie_animation_seek(skottie_animation_t *instance, SkScalar t, sksg_invalidation_controller_t *ic);
-		public void Seek (float t, InvalidationController ic)			=> SkiaApi.skottie_animation_seek (Handle, t, ic?.Handle ?? IntPtr.Zero);
+		public void Seek (double t, InvalidationController ic = null)
+			=> SkiaApi.skottie_animation_seek (Handle, (float)t, ic?.Handle ?? IntPtr.Zero);
 
-		//SK_C_API void skottie_animation_seek_frame(skottie_animation_t *instance, double t, sksg_invalidation_controller_t *ic);
-		public void SeekFrame(float t, InvalidationController ic)
-			=> SkiaApi.skottie_animation_seek_frame (Handle, t, ic.Handle);
+		public void SeekFrame(double t, InvalidationController ic = null)
+			=> SkiaApi.skottie_animation_seek_frame (Handle, (float)t, ic?.Handle ?? IntPtr.Zero);
 
-		//SK_C_API void skottie_animation_seek_frame_time(skottie_animation_t *instance, double t, sksg_invalidation_controller_t *ic);
-		public void SeekFrameTime(float t, InvalidationController ic)
-			=> SkiaApi.skottie_animation_seek_frame_time (Handle, t, ic?.Handle ?? IntPtr.Zero);
+		public void SeekFrameTime(double t, InvalidationController ic = null)
+			=> SkiaApi.skottie_animation_seek_frame_time (Handle, (float)t, ic?.Handle ?? IntPtr.Zero);
 
-		//SK_C_API double skottie_animation_get_duration(skottie_animation_t *instance);
 		public double Duration
 			=> SkiaApi.skottie_animation_get_duration (Handle);
 
-		//SK_C_API double skottie_animation_get_fps(skottie_animation_t *instance);
 		public double Fps
 			=> SkiaApi.skottie_animation_get_fps (Handle);
 
-		//SK_C_API double skottie_animation_get_in_point(skottie_animation_t *instance);
 		public double InPoint
 			=> SkiaApi.skottie_animation_get_in_point (Handle);
 
-		//SK_C_API double skottie_animation_get_out_point(skottie_animation_t *instance);
 		public double OutPoint
 			=> SkiaApi.skottie_animation_get_out_point (Handle);
 
-		//SK_C_API void skottie_animation_get_version(skottie_animation_t *instance, sk_string_t *);
 		public string Version {
 			get {
 				using var str = new SKString ();
@@ -76,7 +84,6 @@ namespace SkiaSharp.Skottie
 			}
 		}
 
-		//SK_C_API skottie_animation_get_size(skottie_animation_t *instance, sk_size_t* size);
 		public unsafe SKSize Size {
 			get {
 				SKSize size;
