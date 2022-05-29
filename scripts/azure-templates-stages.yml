@@ -29,6 +29,7 @@ stages:
         pool: ${{ parameters.VM_IMAGE_HOST.pool }}
         steps:
           - checkout: none
+          - pwsh: 'gci env:'
           - template: azure-templates-variables.yml
             parameters:
               updateBuild: true
