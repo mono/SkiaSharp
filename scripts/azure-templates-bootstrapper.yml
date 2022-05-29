@@ -300,11 +300,6 @@ jobs:
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
-
-      - pwsh: |
-          (Get-ChildItem $(Build.SourcesDirectory) -Recurse | measure length -sum).sum / 1MB
-        condition: always()
-
       # post-build steps
       - ${{ parameters.postBuildSteps }}
 
