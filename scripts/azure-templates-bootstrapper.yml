@@ -50,6 +50,11 @@ jobs:
         submodules: recursive
       - template: azure-templates-variables.yml
 
+      # checkout required skia PR
+      - pwsh: .\scripts\checkout-skia.ps1
+        displayName: Checkout required skia PR
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         - template: azure-templates-github-status.yml
           parameters:
