@@ -25,6 +25,7 @@ if (("$ExternalsBuildId" -eq 'latest') -and ("$env:BUILD_REASON" -eq 'PullReques
         'cake',
         'externals',
         'native',
+        'scripts',
         '.gitmodules',
         'VERSIONS.txt'
     )
