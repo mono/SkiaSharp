@@ -45,6 +45,8 @@ jobs:
       ${{ if ne(length(parameters.variables), 0) }}:
         ${{ parameters.variables }}
     steps:
+      - pwsh: Get-Volume
+
       # prepare
       - checkout: self
         submodules: recursive
@@ -299,6 +301,11 @@ jobs:
                 /bin/bash /work/cmd.sh
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+
+      - pwsh: |
+          (ls $(Build.SourcesDirectory) -Recurse | measure length -sum).sum / 1MB
+        condition: always()
 
       # post-build steps
       - ${{ parameters.postBuildSteps }}

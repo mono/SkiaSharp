@@ -4,12 +4,6 @@ param (
 
 $ErrorActionPreference = 'Stop'
 
-Write-Host "All changes:"
-$all = (git diff-tree --no-commit-id --name-only -r HEAD~ HEAD)
-foreach ($d in $all) {
-    Write-Host " - $d"
-}
-
 # this was explicit, so just us that
 $intBuildId = "$ExternalsBuildId" -as [int]
 if ($intBuildId -gt 0) {
@@ -20,6 +14,12 @@ if ($intBuildId -gt 0) {
 
 # if this is a PR and we are requesting last-build artifacts
 if (("$ExternalsBuildId" -eq 'latest') -and ("$env:BUILD_REASON" -eq 'PullRequest')) {
+    Write-Host "All changes:"
+    $all = (git diff-tree --no-commit-id --name-only -r HEAD~ HEAD)
+    foreach ($d in $all) {
+        Write-Host " - $d"
+    }
+
     Write-Host "Matching changes:"
     $matching = @(
         'cake',
