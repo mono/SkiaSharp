@@ -10,6 +10,8 @@
 
 **API Changes**
 
+None.
+
 <!-- REPLACE THIS COMMENT
 
 List all API changes here (or just put None), example:
@@ -27,11 +29,13 @@ Changed:
 
 **Behavioral Changes**
 
+None.
+
 <!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. -->
 
 **Required skia PR**
 
-- none <!-- Replace this with the full URL to the skia PR. -->
+None. <!-- Replace this with the full URL to the skia PR. -->
 
 **PR Checklist**
 
