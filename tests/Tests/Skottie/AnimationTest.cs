@@ -142,7 +142,7 @@ namespace SkiaSharp.Tests
 		{
 			var animation = BuildDefaultAnimation();
 
-			Assert.True(animation.Fps > 0);
+			Assert.True(animation.Fps == 30);
 		}
 
 		[Trait(CategoryKey, ApiCategory)]
@@ -151,7 +151,7 @@ namespace SkiaSharp.Tests
 		{
 			var animation = BuildDefaultAnimation();
 
-			Assert.True(animation.InPoint > 0);
+			Assert.True(animation.InPoint == 0);
 		}
 
 		[Trait(CategoryKey, ApiCategory)]
