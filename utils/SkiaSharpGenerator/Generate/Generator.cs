@@ -41,15 +41,21 @@ namespace SkiaSharpGenerator
 			writer.WriteLine("using System;");
 			writer.WriteLine("using System.Runtime.InteropServices;");
 			writer.WriteLine();
-			writer.WriteLine($"namespace {config.Namespace}");
-			writer.WriteLine($"{{");
+			WriteNamespaces(writer);
+			writer.WriteLine();
 			WriteClasses(writer);
 			writer.WriteLine();
+			writer.WriteLine($"#region Functions");
+			writer.WriteLine();
+			writer.WriteLine($"namespace {config.Namespace}");
+			writer.WriteLine($"{{");
 			writer.WriteLine($"\tinternal unsafe partial class {config.ClassName}");
 			writer.WriteLine($"\t{{");
 			WriteFunctions(writer);
 			writer.WriteLine($"\t}}");
 			writer.WriteLine($"}}");
+			writer.WriteLine();
+			writer.WriteLine($"#endregion Functions");
 			writer.WriteLine();
 			WriteDelegates(writer);
 			writer.WriteLine();
@@ -377,11 +383,35 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"\t}}");
 		}
 
+		private void WriteNamespaces(TextWriter writer)
+		{
+			Log?.LogVerbose("  Writing namespaces...");
+
+			writer.WriteLine($"#region Namespaces");
+			writer.WriteLine();
+
+			var namspaces = config.Namespaces.Values;
+			foreach (var ns in namspaces)
+			{
+				if (string.IsNullOrEmpty(ns.CsName))
+					continue;
+
+				var full = $"{config.Namespace}.{ns.CsName}";
+
+				Log?.LogVerbose($"    {full}");
+
+				writer.WriteLine($"using {full};");
+			}
+
+			writer.WriteLine();
+			writer.WriteLine($"#endregion");
+		}
+
 		private void WriteClasses(TextWriter writer)
 		{
 			Log?.LogVerbose("  Writing usings...");
 
-			writer.WriteLine($"\t#region Class declarations");
+			writer.WriteLine($"#region Class declarations");
 			writer.WriteLine();
 
 			var classes = compilation.Classes
@@ -392,14 +422,14 @@ namespace SkiaSharpGenerator
 				var type = klass.GetDisplayName();
 				skiaTypes.Add(type, klass.SizeOf != 0);
 
-				if (klass.SizeOf == 0)
-					writer.WriteLine($"\tusing {klass.GetDisplayName()} = IntPtr;");
-
 				Log?.LogVerbose($"    {klass.GetDisplayName()}");
+
+				if (klass.SizeOf == 0)
+					writer.WriteLine($"using {klass.GetDisplayName()} = System.IntPtr;");
 			}
 
 			writer.WriteLine();
-			writer.WriteLine($"\t#endregion");
+			writer.WriteLine($"#endregion");
 		}
 
 		private void WriteFunctions(TextWriter writer)

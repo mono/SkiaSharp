@@ -1,23 +1,30 @@
 using System;
 using System.Runtime.InteropServices;
 
+#region Namespaces
+
+
+#endregion
+
+#region Class declarations
+
+using hb_blob_t = System.IntPtr;
+using hb_buffer_t = System.IntPtr;
+using hb_face_t = System.IntPtr;
+using hb_font_funcs_t = System.IntPtr;
+using hb_font_t = System.IntPtr;
+using hb_language_impl_t = System.IntPtr;
+using hb_map_t = System.IntPtr;
+using hb_set_t = System.IntPtr;
+using hb_shape_plan_t = System.IntPtr;
+using hb_unicode_funcs_t = System.IntPtr;
+
+#endregion
+
+#region Functions
+
 namespace HarfBuzzSharp
 {
-	#region Class declarations
-
-	using hb_blob_t = IntPtr;
-	using hb_buffer_t = IntPtr;
-	using hb_face_t = IntPtr;
-	using hb_font_funcs_t = IntPtr;
-	using hb_font_t = IntPtr;
-	using hb_language_impl_t = IntPtr;
-	using hb_map_t = IntPtr;
-	using hb_set_t = IntPtr;
-	using hb_shape_plan_t = IntPtr;
-	using hb_unicode_funcs_t = IntPtr;
-
-	#endregion
-
 	internal unsafe partial class HarfBuzzApi
 	{
 		#region hb-blob.h
@@ -4690,6 +4697,8 @@ namespace HarfBuzzSharp
 
 	}
 }
+
+#endregion Functions
 
 #region Delegates
 
