@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 
 #region Namespaces
 
+using SkiaSharp.SceneGraph;
+using SkiaSharp.Skottie;
 
 #endregion
 
@@ -84,6 +86,13 @@ using sk_wstream_managedstream_t = System.IntPtr;
 using sk_wstream_t = System.IntPtr;
 using sk_xmlstreamwriter_t = System.IntPtr;
 using sk_xmlwriter_t = System.IntPtr;
+using skottie_animation_builder_t = System.IntPtr;
+using skottie_animation_t = System.IntPtr;
+using skottie_logger_t = System.IntPtr;
+using skottie_marker_observer_t = System.IntPtr;
+using skottie_property_observer_t = System.IntPtr;
+using skottie_resource_provider_t = System.IntPtr;
+using sksg_invalidation_controller_t = System.IntPtr;
 using vk_device_t = System.IntPtr;
 using vk_instance_t = System.IntPtr;
 using vk_physical_device_features_2_t = System.IntPtr;
@@ -13190,14 +13199,14 @@ namespace SkiaSharp
 		// void skottie_animation_render_with_flags(skottie_animation_t* instance, sk_canvas_t* canvas, sk_rect_t* dst, skottie_animation_renderflags_t flags)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void skottie_animation_render_with_flags (skottie_animation_t instance, sk_canvas_t canvas, SKRect* dst, SkottieAnimationRenderflags flags);
+		internal static extern void skottie_animation_render_with_flags (skottie_animation_t instance, sk_canvas_t canvas, SKRect* dst, AnimationRenderFlags flags);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void skottie_animation_render_with_flags (skottie_animation_t instance, sk_canvas_t canvas, SKRect* dst, SkottieAnimationRenderflags flags);
+			internal delegate void skottie_animation_render_with_flags (skottie_animation_t instance, sk_canvas_t canvas, SKRect* dst, AnimationRenderFlags flags);
 		}
 		private static Delegates.skottie_animation_render_with_flags skottie_animation_render_with_flags_delegate;
-		internal static void skottie_animation_render_with_flags (skottie_animation_t instance, sk_canvas_t canvas, SKRect* dst, SkottieAnimationRenderflags flags) =>
+		internal static void skottie_animation_render_with_flags (skottie_animation_t instance, sk_canvas_t canvas, SKRect* dst, AnimationRenderFlags flags) =>
 			(skottie_animation_render_with_flags_delegate ??= GetSymbol<Delegates.skottie_animation_render_with_flags> ("skottie_animation_render_with_flags")).Invoke (instance, canvas, dst, flags);
 		#endif
 
@@ -16670,6 +16679,18 @@ namespace SkiaSharp {
 		Lossy = 0,
 		// LOSSLESS_SK_WEBPENCODER_COMPTRESSION = 1
 		Lossless = 1,
+	}
+}
+
+namespace SkiaSharp.Skottie {
+
+	// skottie_animation_renderflags_t
+	[Flags]
+	public enum AnimationRenderFlags {
+		// SKIP_TOP_LEVEL_ISOLATION = 0x01
+		SkipTopLevelIsolation = 1,
+		// DISABLE_TOP_LEVEL_CLIPPING = 0x02
+		DisableTopLevelClipping = 2,
 	}
 }
 

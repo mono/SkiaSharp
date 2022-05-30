@@ -50,7 +50,7 @@ namespace SkiaSharp.Skottie
 		public unsafe void Render(SKCanvas canvas, SKRect dst)
 			=> SkiaApi.skottie_animation_render (Handle, canvas.Handle, &dst);
 
-		public void Render (SKCanvas canvas, SKRect dst, SkottieAnimationRenderflags flags)
+		public void Render (SKCanvas canvas, SKRect dst, AnimationRenderFlags flags)
 			=> SkiaApi.skottie_animation_render_with_flags (Handle, canvas.Handle, &dst, flags);
 
 		public void Seek (double t, InvalidationController ic = null)
