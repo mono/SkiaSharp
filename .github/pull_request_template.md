@@ -4,9 +4,9 @@
 
 **Bugs Fixed**
 
-<!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. -->
-
 - Fixes #
+
+<!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. -->
 
 **API Changes**
 
@@ -35,7 +35,9 @@ None.
 
 **Required skia PR**
 
-None. <!-- Replace this with the full URL to the skia PR. -->
+None.
+
+<!-- Replace this with the full URL to the skia PR. -->
 
 **PR Checklist**
 
