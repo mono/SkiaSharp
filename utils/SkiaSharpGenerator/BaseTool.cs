@@ -270,11 +270,6 @@ namespace SkiaSharpGenerator
 				}
 			}
 
-			//	if (type.StartsWith("hb_ot_"))
-			//		type = "open_type_" + type[6..];
-			//	else if (type.StartsWith("hb_"))
-			//		type = type[3..];
-
 			string[] parts;
 
 			if (type.Any(c => char.IsLower(c)) && type.Any(c => char.IsUpper(c)))
