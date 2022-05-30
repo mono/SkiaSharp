@@ -20,8 +20,6 @@ if ((-not $match.Success) -or ($match.Groups.Count -ne 2)) {
 
 $skiaPR = $match.Groups[1].Value
 Write-Host "Found required skia PR: $skiaPR"
-Write-Host "Requesting full build..."
-Write-Host "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]required"
 
 try {
     Push-Location externals/skia
@@ -30,3 +28,6 @@ try {
 } finally {
     Pop-Location
 }
+
+Write-Host "Requesting full build."
+Write-Host "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]required"
