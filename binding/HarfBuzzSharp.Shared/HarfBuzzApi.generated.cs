@@ -1,23 +1,30 @@
 using System;
 using System.Runtime.InteropServices;
 
+#region Namespaces
+
+
+#endregion
+
+#region Class declarations
+
+using hb_blob_t = System.IntPtr;
+using hb_buffer_t = System.IntPtr;
+using hb_face_t = System.IntPtr;
+using hb_font_funcs_t = System.IntPtr;
+using hb_font_t = System.IntPtr;
+using hb_language_impl_t = System.IntPtr;
+using hb_map_t = System.IntPtr;
+using hb_set_t = System.IntPtr;
+using hb_shape_plan_t = System.IntPtr;
+using hb_unicode_funcs_t = System.IntPtr;
+
+#endregion
+
+#region Functions
+
 namespace HarfBuzzSharp
 {
-	#region Class declarations
-
-	using hb_blob_t = IntPtr;
-	using hb_buffer_t = IntPtr;
-	using hb_face_t = IntPtr;
-	using hb_font_funcs_t = IntPtr;
-	using hb_font_t = IntPtr;
-	using hb_language_impl_t = IntPtr;
-	using hb_map_t = IntPtr;
-	using hb_set_t = IntPtr;
-	using hb_shape_plan_t = IntPtr;
-	using hb_unicode_funcs_t = IntPtr;
-
-	#endregion
-
 	internal unsafe partial class HarfBuzzApi
 	{
 		#region hb-blob.h
@@ -4689,9 +4696,13 @@ namespace HarfBuzzSharp
 		#endregion
 
 	}
+}
 
-	#region Delegates
+#endregion Functions
 
+#region Delegates
+
+namespace HarfBuzzSharp {
 	// typedef hb_bool_t (*)(hb_buffer_t* buffer, hb_font_t* font, const char* message, void* user_data)* hb_buffer_message_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
@@ -4761,8 +4772,8 @@ namespace HarfBuzzSharp
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool FontGetVariationGlyphProxyDelegate(hb_font_t font, void* font_data, UInt32 unicode, UInt32 variation_selector, UInt32* glyph, void* user_data);
-// TODO: typedef const const hb_language_impl_t* hb_language_t
 
+// TODO: typedef const hb_language_impl_t* hb_language_t
 	// typedef hb_blob_t* (*)(hb_face_t* face, hb_tag_t tag, void* user_data)* hb_reference_table_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate hb_blob_t ReferenceTableProxyDelegate(hb_face_t face, UInt32 tag, void* user_data);
@@ -4801,9 +4812,13 @@ namespace HarfBuzzSharp
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate UInt32 UnicodeScriptProxyDelegate(hb_unicode_funcs_t ufuncs, UInt32 unicode, void* user_data);
 
-	#endregion
+}
 
-	#region Structs
+#endregion
+
+#region Structs
+
+namespace HarfBuzzSharp {
 
 	// hb_feature_t
 	[StructLayout (LayoutKind.Sequential)]
@@ -5468,10 +5483,13 @@ namespace HarfBuzzSharp
 		}
 
 	}
+}
 
-	#endregion
+#endregion
 
-	#region Enums
+#region Enums
+
+namespace HarfBuzzSharp {
 
 	// hb_buffer_cluster_level_t
 	public enum ClusterLevel {
@@ -6029,6 +6047,6 @@ namespace HarfBuzzSharp
 		// HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR = 29
 		SpaceSeparator = 29,
 	}
-
-	#endregion
 }
+
+#endregion

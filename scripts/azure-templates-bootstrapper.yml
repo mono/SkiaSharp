@@ -76,16 +76,19 @@ jobs:
             sudo apt update
             sudo apt install -y ${{ parameters.packages }}
           displayName: Install additional package dependencies
+          retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne('${{ parameters.packages }}', ''))
 
       # make sure mono/msbuild is the correct version
       - ${{ if and(ne(variables['MONO_VERSION_LINUX'], ''), eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
         - bash: ./scripts/install-mono.sh $(MONO_VERSION_LINUX)
           displayName: Install Mono and MSBuild
+          retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
       - ${{ if endsWith(parameters.name, '_macos') }}:
         - bash: sudo ./scripts/select-xamarin.sh $(MONO_VERSION_MACOS)
           displayName: Switch to the latest Xamarin SDK
+          retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install extra bits for the native builds
@@ -93,9 +96,11 @@ jobs:
         # switch to the correct Python version
         - pwsh: .\scripts\install-python.ps1
           displayName: Install Python
+          retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - task: UsePythonVersion@0
           displayName: Switch to the correct Python version
+          retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           inputs:
             versionSpec: '3.x'
@@ -105,19 +110,23 @@ jobs:
           - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
             - pwsh: .\scripts\install-android-ndk.ps1
               displayName: Install the Android NDK
+              retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # install tizen
           - ${{ if and(eq(parameters.installTizenSdk, 'true'), contains(parameters.name, '_tizen_')) }}:
             - pwsh: .\scripts\install-tizen.ps1
               displayName: Install the Tizen SDK
+              retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # install llvm
           - ${{ if and(eq(parameters.installLlvm, 'true'), contains(parameters.name, '_win32_')) }}:
             - pwsh: .\scripts\install-7zip.ps1
               displayName: Install 7-zip
+              retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             - pwsh: .\scripts\install-llvm.ps1
               displayName: Install LLVM
+              retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install extra bits for the managed builds
@@ -132,20 +141,25 @@ jobs:
                 .\scripts\install-openjdk.ps1
               }
             displayName: Install OpenJDK
+            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # install the correct version of the Android SDK
           - pwsh: .\scripts\install-android-sdk.ps1
             displayName: Install Android SDK
+            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # install the required version of the Android Platforms
           - pwsh: .\scripts\install-android-platform.ps1 -API 29
             displayName: Install Android API 29 (v10)
+            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           - pwsh: .\scripts\install-android-platform.ps1 -API 30
             displayName: Install Android API 30 (v11)
+            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           - pwsh: .\scripts\install-android-platform.ps1 -API 31
             displayName: Install Android API 31 (v12)
+            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
@@ -158,22 +172,26 @@ jobs:
             inputs:
               packageType: 'sdk'
               version: 3.1.x
+            retryCountOnTaskFailure: 3
             displayName: Install .NET Core 3.1.x
           - task: UseDotNet@2
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             inputs:
               packageType: 'sdk'
               version: 5.0.x
+            retryCountOnTaskFailure: 3
             displayName: Install .NET Core 5.0.x
           - task: UseDotNet@2
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             inputs:
               packageType: 'sdk'
               version: 6.0.x
+            retryCountOnTaskFailure: 3
             displayName: Install .NET Core 6.0.x
           # install the bits needed for .NET 6 builds
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
+            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
           # display dotnet info
           - pwsh: dotnet --info
@@ -184,14 +202,17 @@ jobs:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
               - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
                 displayName: Install Visual Studio
+                retryCountOnTaskFailure: 3
                 condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
           # install workloads
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
+              retryCountOnTaskFailure: 3
               displayName: Install the preview .NET Core workloads
             - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $false
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), eq(variables.DOTNET_VERSION_PREVIEW, ''))
+              retryCountOnTaskFailure: 3
               displayName: Install the .NET Core workloads
 
       # select the correct/latest version of Visual Studio
@@ -216,6 +237,7 @@ jobs:
       - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
         - bash: ./scripts/install-emsdk.sh $(EMSCRIPTEN_VERSION)
           displayName: Install the Emscripten SDK
+          retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install the Windows tools
@@ -225,21 +247,26 @@ jobs:
           - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
             - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296  -Version 10.0.10240.0
               displayName: Install the Windows 10 SDK 10.0.10240
+              retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             - pwsh: .\scripts\install-winsdk.ps1 -LinkId 864422  -Version 10.0.16299.0
               displayName: Install the Windows 10 SDK 10.0.16299
+              retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2083338 -Version 10.0.18362.0
               displayName: Install the Windows 10 SDK 10.0.18362
+              retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
               displayName: Install the Windows 10 SDK 10.0.19041
+              retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install any .NET Core global tools
       - ${{ each tool in parameters.tools }}:
         - pwsh: dotnet tool install -g ${{ tool }}
           displayName: Install ${{ tool }}
+          retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # download artifacts
@@ -275,6 +302,7 @@ jobs:
               # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
               AppxSymbolPackageEnabled: false
             displayName: Run the bootstrapper for ${{ parameters.target }}
+            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - ${{ if not(endsWith(parameters.name, '_windows')) }}:
           - bash: |
@@ -285,6 +313,7 @@ jobs:
             env:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
+            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
       - ${{ if ne(parameters.docker, '') }}:
         - task: Docker@2
@@ -312,12 +341,14 @@ jobs:
       - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
         condition: or(${{ parameters.shouldPublish }}, failed())
+        retryCountOnTaskFailure: 3
         inputs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
       - ${{ if ne(parameters.artifactName, '') }}:
         - task: PublishBuildArtifacts@1
           displayName: Publish the combined ${{ parameters.artifactName }} artifacts
+          retryCountOnTaskFailure: 3
           inputs:
             artifactName: ${{ parameters.artifactName }}
             pathToPublish: 'output'

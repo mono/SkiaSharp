@@ -18,6 +18,12 @@ namespace SkiaSharp.Views.UWP
 	[HtmlElement("canvas")]
 	public partial class SKSwapChainPanel : FrameworkElement
 	{
+#if HAS_UNO_WINUI
+		const string SKSwapChainPanelTypeFullName = "SkiaSharp.Views.Windows." + nameof(SKSwapChainPanel);
+#else
+		const string SKSwapChainPanelTypeFullName = "SkiaSharp.Views.UWP" + nameof(SKSwapChainPanel);
+#endif
+
 		private const int ResourceCacheBytes = 256 * 1024 * 1024; // 256 MB
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -192,15 +198,15 @@ namespace SkiaSharp.Views.UWP
 
 			long IJSObjectMetadata.CreateNativeInstance(IntPtr managedHandle)
 			{
-				WebAssemblyRuntime.InvokeJS($"SkiaSharp.Views.UWP.SKSwapChainPanel.createInstance('{managedHandle}', '{jsHandle}')");
+				WebAssemblyRuntime.InvokeJS(SKSwapChainPanelTypeFullName + $".createInstance('{managedHandle}', '{jsHandle}')");
 				return jsHandle;
 			}
 
 			string IJSObjectMetadata.GetNativeInstance(IntPtr managedHandle, long jsHandle) =>
-				$"SkiaSharp.Views.UWP.SKSwapChainPanel.getInstance('{jsHandle}')";
+				SKSwapChainPanelTypeFullName + $".getInstance('{jsHandle}')";
 
 			void IJSObjectMetadata.DestroyNativeInstance(IntPtr managedHandle, long jsHandle) =>
-				WebAssemblyRuntime.InvokeJS($"SkiaSharp.Views.UWP.SKSwapChainPanel.destroyInstance('{jsHandle}')");
+				WebAssemblyRuntime.InvokeJS(SKSwapChainPanelTypeFullName + $".destroyInstance('{jsHandle}')");
 
 			object IJSObjectMetadata.InvokeManaged(object instance, string method, string parameters)
 			{
