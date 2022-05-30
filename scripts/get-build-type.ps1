@@ -14,7 +14,7 @@ if ($env:DOWNLOAD_EXTERNALS -eq 'required') {
 # this was explicit, so just us that
 $intBuildId = "$ExternalsBuildId" -as [int]
 if ($intBuildId -gt 0) {
-    Write-Host "Explicit build using $intBuildId."
+    Write-Host "Explicit managed-only build using $intBuildId."
     Write-Host "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]$intBuildId"
     exit 0
 }
