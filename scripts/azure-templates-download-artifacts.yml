@@ -43,6 +43,7 @@ steps:
     - task: DownloadBuildArtifacts@0
       displayName: Download the pre-built ${{ artifact.name }} artifacts
       condition: ${{ parameters.condition }}
+      retryCountOnTaskFailure: 3
       inputs:
         buildType: 'specific'
         project: '$(System.TeamProjectId)'
