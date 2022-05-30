@@ -262,7 +262,7 @@ namespace SkiaSharpGenerator
 				if (type.StartsWith(nsPrefix))
 				{
 					var mapping = ns.Value;
-					if (mapping.Prefix is not null)
+					if (mapping.Prefix != null)
 					{
 						prefix = mapping.Prefix;
 						type = type[nsPrefix.Length..];
