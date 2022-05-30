@@ -127,6 +127,13 @@ public class Resource {
 
 	// inner types
 	public class Attribute {
+		// fields
+		public static int ignorePixelScaling;
+	}
+	public class Styleable {
+		// fields
+		public static int[] SKCanvasView;
+		public static int SKCanvasView_ignorePixelScaling;
 	}
 }
 ```
@@ -274,11 +281,17 @@ public class SKPaintGLSurfaceEventArgs : System.EventArgs {
 	[Obsolete]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType);
-	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
+	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info);
+
+	[Obsolete]
+public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
+	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
 	// properties
 	public SkiaSharp.GRBackendRenderTarget BackendRenderTarget { get; }
 	public SkiaSharp.SKColorType ColorType { get; }
+	public SkiaSharp.SKImageInfo Info { get; }
 	public SkiaSharp.GRSurfaceOrigin Origin { get; }
+	public SkiaSharp.SKImageInfo RawInfo { get; }
 
 	[Obsolete]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
@@ -292,8 +305,10 @@ public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 public class SKPaintSurfaceEventArgs : System.EventArgs {
 	// constructors
 	public SKPaintSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info);
+	public SKPaintSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
 	// properties
 	public SkiaSharp.SKImageInfo Info { get; }
+	public SkiaSharp.SKImageInfo RawInfo { get; }
 	public SkiaSharp.SKSurface Surface { get; }
 }
 ```

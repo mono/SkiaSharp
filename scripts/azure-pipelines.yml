@@ -11,41 +11,26 @@ pr:
 parameters:
   - name: buildExternals
     displayName: 'The specific native artifacts to use for this build.'
-    type: number
-    default: 0
+    type: string
+    default: 'latest'
+  - name: VM_IMAGE_HOST
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: ubuntu-18.04
   - name: VM_IMAGE_WINDOWS
     type: object
     default:
       pool:
         name: Azure Pipelines
         vmImage: windows-2022
-  - name: VM_IMAGE_MAC_NATIVE
+  - name: VM_IMAGE_MAC
     type: object
     default:
       pool:
         name: Azure Pipelines
         vmImage: macos-11
-  - name: VM_IMAGE_MAC
-    type: object
-    default:
-      pool:
-        name: VSEng-VSMac-Xamarin-Shared
-        vmImage: VSEng-VSMac-Xamarin-Shared
-        demands:
-          - macOS.Name -equals Monterey
-          - macOS.Architecture -equals x64
-          - Agent.HasDevices -equals False
-          - Agent.IsPaired -equals False
-      variables:
-        XCODE_VERSION: 13.3.0
-      provisioningSteps:
-        - task: xamops.azdevex.provisionator-task.provisionator@1
-          displayName: 'Provision Xamarin'
-          inputs:
-            provisioning_script: ./scripts/provisionator.csx
-            provisioning_extra_args: --force
-          env:
-            AUTH_TOKEN_GITHUB_COM: $(github--pat--vs-mobiletools-engineering-service2)
   - name: VM_IMAGE_LINUX
     type: object
     default:
@@ -67,11 +52,12 @@ resources:
 stages:
   - template: azure-templates-stages.yml
     parameters:
-      isBuildPipeline: true
+      buildPipelineType: 'build'
       buildExternals: ${{ parameters.buildExternals }}
+      VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
       VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
-      VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
+      VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC }}
       VM_IMAGE_LINUX: ${{ parameters.VM_IMAGE_LINUX }}
       VM_IMAGE_LINUX_NATIVE: ${{ parameters.VM_IMAGE_LINUX }}

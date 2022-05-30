@@ -1,12 +1,24 @@
 parameters:
-  isBuildPipeline: true
-  buildExternals: 0
-  VM_IMAGE_WINDOWS: ''
-  VM_IMAGE_WINDOWS_NATIVE: ''
-  VM_IMAGE_MAC: ''
-  VM_IMAGE_MAC_NATIVE: ''
-  VM_IMAGE_LINUX: ''
-  VM_IMAGE_LINUX_NATIVE: ''
+  - name: buildPipelineType
+    type: string
+    default: 'both'
+  - name: buildExternals
+    type: string
+    default: 'latest'
+  - name: VM_IMAGE_HOST
+    type: object
+  - name: VM_IMAGE_WINDOWS
+    type: object
+  - name: VM_IMAGE_WINDOWS_NATIVE
+    type: object
+  - name: VM_IMAGE_MAC
+    type: object
+  - name: VM_IMAGE_MAC_NATIVE
+    type: object
+  - name: VM_IMAGE_LINUX
+    type: object
+  - name: VM_IMAGE_LINUX_NATIVE
+    type: object
 
 stages:
   - stage: prepare
@@ -14,21 +26,22 @@ stages:
     jobs:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
-        pool: ${{ parameters.VM_IMAGE_LINUX }}
+        pool: ${{ parameters.VM_IMAGE_HOST.pool }}
         steps:
           - checkout: none
           - template: azure-templates-variables.yml
             parameters:
               updateBuild: true
-          - template: azure-templates-github-status.yml
-            parameters:
-              context: 'SkiaSharp-Tests'
-              state: 'pending'
-              displayName: Queue up the status for the tests pipeline
-          - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+          - ${{ if eq(parameters.buildPipelineType, 'build') }}:
+            - template: azure-templates-github-status.yml
+              parameters:
+                context: 'SkiaSharp-Tests'
+                state: 'pending'
+                displayName: Queue up the status for the tests pipeline
+          - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
             - template: azure-templates-github-status.yml
 
-  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+  - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_windows
       displayName: Native Windows
       dependsOn: prepare
@@ -38,7 +51,7 @@ stages:
             name: native_android_x86_windows
             displayName: Android x86
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x86
@@ -49,7 +62,7 @@ stages:
             name: native_android_x64_windows
             displayName: Android x64
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x64
@@ -60,7 +73,7 @@ stages:
             name: native_android_arm_windows
             displayName: Android arm
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm
@@ -71,7 +84,7 @@ stages:
             name: native_android_arm64_windows
             displayName: Android arm64
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm64
@@ -82,7 +95,7 @@ stages:
             name: native_tizen_windows
             displayName: Tizen
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-tizen
             installWindowsSdk: false
@@ -92,7 +105,7 @@ stages:
             name: native_uwp_angle_x86_windows
             displayName: ANGLE x86
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
@@ -102,7 +115,7 @@ stages:
             name: native_uwp_angle_x64_windows
             displayName: ANGLE x64
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
@@ -112,7 +125,7 @@ stages:
             name: native_uwp_angle_arm_windows
             displayName: ANGLE arm
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
@@ -122,7 +135,7 @@ stages:
             name: native_uwp_angle_arm64_windows
             displayName: ANGLE arm64
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
@@ -132,7 +145,7 @@ stages:
             name: native_uwp_x86_windows
             displayName: UWP x86
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-uwp
             additionalArgs: --buildarch=x86 --skipAngle=true
@@ -151,7 +164,7 @@ stages:
             name: native_uwp_arm_windows
             displayName: UWP arm
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-uwp
             additionalArgs: --buildarch=arm --skipAngle=true
@@ -161,7 +174,7 @@ stages:
             name: native_uwp_arm64_windows
             displayName: UWP arm64
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-uwp
             additionalArgs: --buildarch=arm64 --skipAngle=true
@@ -171,7 +184,7 @@ stages:
             name: native_win32_x86_windows
             displayName: Win32 x86
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-windows
             additionalArgs: --buildarch=x86
@@ -181,7 +194,7 @@ stages:
             name: native_win32_x64_windows
             displayName: Win32 x64
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-windows
             additionalArgs: --buildarch=x64
@@ -191,7 +204,7 @@ stages:
             name: native_win32_arm64_windows
             displayName: Win32 arm64
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-windows
             additionalArgs: --buildarch=arm64
@@ -201,13 +214,13 @@ stages:
             name: native_win32_x64_nanoserver_windows
             displayName: Nano Server x64
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-nanoserver
             additionalArgs: --buildarch=x64
             artifactName: native
 
-  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+  - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_macos
       displayName: Native macOS
       dependsOn: prepare
@@ -217,7 +230,7 @@ stages:
             name: native_android_x86_macos
             displayName: Android x86
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x86
@@ -226,7 +239,7 @@ stages:
             name: native_android_x64_macos
             displayName: Android x64
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x64
@@ -235,7 +248,7 @@ stages:
             name: native_android_arm_macos
             displayName: Android arm
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm
@@ -244,7 +257,7 @@ stages:
             name: native_android_arm64_macos
             displayName: Android arm64
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm64
@@ -253,7 +266,7 @@ stages:
             name: native_ios_macos
             displayName: iOS
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-ios
             artifactName: native
@@ -262,7 +275,7 @@ stages:
             name: native_maccatalyst_macos
             displayName: Mac Catalyst
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-maccatalyst
             artifactName: native
@@ -271,7 +284,7 @@ stages:
             name: native_macos_macos
             displayName: macOS
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-macos
             artifactName: native
@@ -280,7 +293,7 @@ stages:
             name: native_tvos_macos
             displayName: tvOS
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-tvos
             artifactName: native
@@ -289,7 +302,7 @@ stages:
             name: native_watchos_macos
             displayName: watchOS
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-watchos
             artifactName: native
@@ -298,12 +311,12 @@ stages:
             name: native_tizen_macos
             displayName: Tizen
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-tizen
             condition: false # TODO: TIZEN INSTALL BUGS
 
-  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+  - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_linux
       displayName: Native Linux
       dependsOn: prepare
@@ -312,7 +325,7 @@ stages:
           parameters:
             artifactName: native
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
             builds:
               - name: ''
@@ -338,12 +351,12 @@ stages:
             name: native_tizen_linux
             displayName: Tizen
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
             packages: $(TIZEN_LINUX_PACKAGES)
             target: externals-tizen
 
-  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+  - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_wasm
       displayName: Native WASM
       dependsOn: prepare
@@ -351,7 +364,7 @@ stages:
         - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
           parameters:
             buildExternals: ${{ parameters.buildExternals }}
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
             artifactName: native
             emscripten:
@@ -362,7 +375,7 @@ stages:
               - 2.0.12
               - 2.0.23
 
-  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+  - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: managed
       displayName: Build Managed
       dependsOn:
@@ -375,7 +388,7 @@ stages:
           parameters:
             name: managed_windows
             displayName: Managed (Windows)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: libs
             additionalArgs: --skipExternals="all"
@@ -390,7 +403,7 @@ stages:
           parameters:
             name: managed_macos
             displayName: Managed (macOS)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: libs
             additionalArgs: --skipExternals="all"
@@ -404,7 +417,7 @@ stages:
           parameters:
             name: managed_linux
             displayName: Managed (Linux)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: libs
@@ -416,7 +429,7 @@ stages:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
 
-  - ${{ if eq(parameters.isBuildPipeline, 'true') }}:
+  - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: package
       displayName: Package NuGets
       dependsOn: managed
@@ -425,7 +438,7 @@ stages:
           parameters:
             name: package_windows
             displayName: Package NuGets
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: nuget
             additionalArgs: --packall=true --skipbuild=true
@@ -463,16 +476,19 @@ stages:
                   Remove-Item ./output/nugets-symbols/ -Recurse -Force
                 displayName: Delete the pre-published folders
 
-  - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+  - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: api_diff
       displayName: API Diff
-      dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'tests') }}:
+        dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'both') }}:
+        dependsOn: package
       jobs:
         - template: azure-templates-bootstrapper.yml # API Diff
           parameters:
             name: api_diff_windows
             displayName: API Diff
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: docs-api-diff
             additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
@@ -492,7 +508,7 @@ stages:
                   artifactName: api-diff
                   pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
 
-  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), eq(parameters.isBuildPipeline, 'true'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
+  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
     - stage: signing
       displayName: Sign NuGets
       dependsOn: package
@@ -504,7 +520,7 @@ stages:
             ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))) }}:
               signType: 'Test'
 
-  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), eq(parameters.isBuildPipeline, 'true'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
+  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
     - stage: sbom
       displayName: 'Software Bill of Materials'
       dependsOn: signing
@@ -515,16 +531,23 @@ stages:
           packageName: 'SkiaSharp'
           packageFilter: '*.nupkg'
 
-  - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+  - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: tests
       displayName: Tests
-      dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'tests') }}:
+        dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'both') }}:
+        dependsOn:
+          - native_windows
+          - native_macos
+          - native_linux
+          - native_wasm
       jobs:
         - template: azure-templates-bootstrapper.yml # Tests|netfx (Windows)
           parameters:
             name: tests_netfx_windows
             displayName: Windows (.NET Framework)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: tests-netfx
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -546,7 +569,7 @@ stages:
           parameters:
             name: tests_netcore_windows
             displayName: Windows (.NET Core)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -572,7 +595,7 @@ stages:
           parameters:
             name: tests_netfx_macos
             displayName: macOS (.NET Framework)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-netfx
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -591,7 +614,7 @@ stages:
           parameters:
             name: tests_netcore_macos
             displayName: macOS (.NET Core)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -615,7 +638,7 @@ stages:
           parameters:
             name: tests_android_macos
             displayName: Android (macOS)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-android
             additionalArgs: --device=android-emulator-64_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -648,7 +671,7 @@ stages:
           parameters:
             name: tests_ios_macos
             displayName: iOS (macOS)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-ios
             additionalArgs: --device=ios-simulator-64 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
@@ -675,7 +698,7 @@ stages:
           parameters:
             name: tests_netfx_linux
             displayName: Linux (.NET Framework)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: tests-netfx
@@ -695,7 +718,7 @@ stages:
           parameters:
             name: tests_netcore_linux
             displayName: Linux (.NET Core)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: tests-netcore
@@ -720,7 +743,7 @@ stages:
           parameters:
             name: tests_wasm_linux
             displayName: WASM (Linux)
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
@@ -743,7 +766,7 @@ stages:
         # TODO: add tests for windows nano server
         - job: coverage_reports                      # Coverage Reports
           displayName: Coverage Reports
-          pool: ${{ parameters.VM_IMAGE_LINUX }}
+          pool: ${{ parameters.VM_IMAGE_HOST.pool }}
           dependsOn:
             - tests_netcore_windows
             - tests_netcore_macos
@@ -751,9 +774,10 @@ stages:
           steps:
             - checkout: self
             - template: azure-templates-variables.yml
-            - template: azure-templates-github-status.yml
-              parameters:
-                state: 'pending'
+            - ${{ if ne(parameters.buildPipelineType, 'both') }}:
+              - template: azure-templates-github-status.yml
+                parameters:
+                  state: 'pending'
             - task: DownloadBuildArtifacts@0
               displayName: Download the coverage_netcore_windows artifact
               inputs:
@@ -774,18 +798,22 @@ stages:
               inputs:
                 codeCoverageTool: Cobertura
                 summaryFileLocation: 'output/**/Cobertura.xml'
-            - template: azure-templates-github-status.yml
+            - ${{ if ne(parameters.buildPipelineType, 'both') }}:
+              - template: azure-templates-github-status.yml
 
-  - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+  - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: samples
       displayName: Samples
-      dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'tests') }}:
+        dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'both') }}:
+        dependsOn: package
       jobs:
         - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
           parameters:
             name: samples_windows
             displayName: Windows
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: samples
             installPreviewVs: true
@@ -799,7 +827,7 @@ stages:
           parameters:
             name: samples_macos
             displayName: macOS
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: samples
             shouldPublish: false
@@ -812,7 +840,7 @@ stages:
           parameters:
             name: samples_linux
             displayName: Linux
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: samples
@@ -823,7 +851,7 @@ stages:
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
 
-  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), eq(parameters.isBuildPipeline, 'true')) }}:
+  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests')) }}:
     - stage: checks
       displayName: Run Code Checks
       dependsOn: prepare
@@ -832,7 +860,7 @@ stages:
           parameters:
             name: native_checks_windows
             displayName: Run Code Checks
-            isBuildPipeline: ${{ parameters.isBuildPipeline }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
             condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: git-sync-deps
@@ -901,7 +929,7 @@ stages:
                   uploadTSLint: false
                   uploadAsync: true
 
-  - ${{ if ne(parameters.isBuildPipeline, 'true') }}:
+  - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
     - stage: finalize
       displayName: Finalize Build
       dependsOn:
@@ -911,7 +939,7 @@ stages:
       jobs:
         - job: finalize                              # Finalize Build
           displayName: Finalize Build
-          pool: ${{ parameters.VM_IMAGE_LINUX }}
+          pool: ${{ parameters.VM_IMAGE_HOST.pool }}
           steps:
             - checkout: none
             - template: azure-templates-variables.yml

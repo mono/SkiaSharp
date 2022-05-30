@@ -27,4 +27,8 @@ Write-Host "Installing LLVM..."
 # make sure that LLVM is in LLVM_HOME
 Write-Host "##vso[task.setvariable variable=LLVM_HOME;]$InstallDestination";
 
+# TODO: update the version of `win_vcvars_version` in
+#       - native\windows\build.cake
+#       - native\uwp\build.cake
+
 exit $LASTEXITCODE

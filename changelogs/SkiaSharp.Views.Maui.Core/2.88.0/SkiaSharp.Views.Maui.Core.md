@@ -17,10 +17,10 @@ public static class Extensions {
 	public static Microsoft.Maui.Graphics.Point ToMauiPoint (this SkiaSharp.SKPointI point);
 	public static Microsoft.Maui.Graphics.PointF ToMauiPointF (this SkiaSharp.SKPoint point);
 	public static Microsoft.Maui.Graphics.PointF ToMauiPointF (this SkiaSharp.SKPointI point);
-	public static Microsoft.Maui.Graphics.Rectangle ToMauiRectangle (this SkiaSharp.SKRect rect);
-	public static Microsoft.Maui.Graphics.Rectangle ToMauiRectangle (this SkiaSharp.SKRectI rect);
-	public static Microsoft.Maui.Graphics.RectangleF ToMauiRectangleF (this SkiaSharp.SKRect rect);
-	public static Microsoft.Maui.Graphics.RectangleF ToMauiRectangleF (this SkiaSharp.SKRectI rect);
+	public static Microsoft.Maui.Graphics.Rect ToMauiRectangle (this SkiaSharp.SKRect rect);
+	public static Microsoft.Maui.Graphics.Rect ToMauiRectangle (this SkiaSharp.SKRectI rect);
+	public static Microsoft.Maui.Graphics.RectF ToMauiRectangleF (this SkiaSharp.SKRect rect);
+	public static Microsoft.Maui.Graphics.RectF ToMauiRectangleF (this SkiaSharp.SKRectI rect);
 	public static Microsoft.Maui.Graphics.Size ToMauiSize (this SkiaSharp.SKSize size);
 	public static Microsoft.Maui.Graphics.Size ToMauiSize (this SkiaSharp.SKSizeI size);
 	public static Microsoft.Maui.Graphics.SizeF ToMauiSizeF (this SkiaSharp.SKSize size);
@@ -29,8 +29,8 @@ public static class Extensions {
 	public static SkiaSharp.SKColorF ToSKColorF (this Microsoft.Maui.Graphics.Color color);
 	public static SkiaSharp.SKPoint ToSKPoint (this Microsoft.Maui.Graphics.Point point);
 	public static SkiaSharp.SKPoint ToSKPoint (this Microsoft.Maui.Graphics.PointF point);
-	public static SkiaSharp.SKRect ToSKRect (this Microsoft.Maui.Graphics.Rectangle rect);
-	public static SkiaSharp.SKRect ToSKRect (this Microsoft.Maui.Graphics.RectangleF rect);
+	public static SkiaSharp.SKRect ToSKRect (this Microsoft.Maui.Graphics.Rect rect);
+	public static SkiaSharp.SKRect ToSKRect (this Microsoft.Maui.Graphics.RectF rect);
 	public static SkiaSharp.SKSize ToSKSize (this Microsoft.Maui.Graphics.Size size);
 	public static SkiaSharp.SKSize ToSKSize (this Microsoft.Maui.Graphics.SizeF size);
 }
@@ -48,7 +48,7 @@ public interface ISKBitmapImageSource : Microsoft.Maui.IImageSource {
 #### New Type: SkiaSharp.Views.Maui.ISKCanvasView
 
 ```csharp
-public interface ISKCanvasView : Microsoft.Maui.IElement, Microsoft.Maui.IFrameworkElement, Microsoft.Maui.ITransform, Microsoft.Maui.IView {
+public interface ISKCanvasView : Microsoft.Maui.IElement, Microsoft.Maui.ITransform, Microsoft.Maui.IView {
 	// properties
 	public virtual SkiaSharp.SKSize CanvasSize { get; }
 	public virtual bool EnableTouchEvents { get; }
@@ -122,8 +122,10 @@ public class SKPaintGLSurfaceEventArgs : System.EventArgs {
 public class SKPaintSurfaceEventArgs : System.EventArgs {
 	// constructors
 	public SKPaintSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info);
+	public SKPaintSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
 	// properties
 	public SkiaSharp.SKImageInfo Info { get; }
+	public SkiaSharp.SKImageInfo RawInfo { get; }
 	public SkiaSharp.SKSurface Surface { get; }
 }
 ```
@@ -183,19 +185,18 @@ public class SKTouchEventArgs : System.EventArgs {
 #### New Type: SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler
 
 ```csharp
-public class SKCanvasViewHandler : Microsoft.Maui.Handlers.ViewHandler`2[SkiaSharp.Views.Maui.ISKCanvasView,SkiaSharp.Views.Windows.SKXamlCanvas], Microsoft.Maui.IElementHandler, Microsoft.Maui.INativeViewHandler, Microsoft.Maui.IViewHandler {
+public class SKCanvasViewHandler : Microsoft.Maui.Handlers.ViewHandler`2[SkiaSharp.Views.Maui.ISKCanvasView,System.Object], Microsoft.Maui.IElementHandler, Microsoft.Maui.IPlatformViewHandler, Microsoft.Maui.IViewHandler {
 	// constructors
 	public SKCanvasViewHandler ();
-	public SKCanvasViewHandler (Microsoft.Maui.PropertyMapper mapper);
+	public SKCanvasViewHandler (Microsoft.Maui.PropertyMapper mapper, Microsoft.Maui.CommandMapper commands);
 	// fields
+	public static Microsoft.Maui.CommandMapper<SkiaSharp.Views.Maui.ISKCanvasView,SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler> SKCanvasViewCommandMapper;
 	public static Microsoft.Maui.PropertyMapper<SkiaSharp.Views.Maui.ISKCanvasView,SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler> SKCanvasViewMapper;
 	// methods
-	protected override void ConnectHandler (SkiaSharp.Views.Windows.SKXamlCanvas nativeView);
-	protected override SkiaSharp.Views.Windows.SKXamlCanvas CreateNativeView ();
-	protected override void DisconnectHandler (SkiaSharp.Views.Windows.SKXamlCanvas nativeView);
+	protected override object CreatePlatformView ();
 	public static void MapEnableTouchEvents (SKCanvasViewHandler handler, SkiaSharp.Views.Maui.ISKCanvasView canvasView);
 	public static void MapIgnorePixelScaling (SKCanvasViewHandler handler, SkiaSharp.Views.Maui.ISKCanvasView canvasView);
-	public static void OnInvalidateSurface (SKCanvasViewHandler handler, SkiaSharp.Views.Maui.ISKCanvasView canvasView);
+	public static void OnInvalidateSurface (SKCanvasViewHandler handler, SkiaSharp.Views.Maui.ISKCanvasView canvasView, object args);
 }
 ```
 
@@ -206,19 +207,6 @@ public class SKImageSourceService : Microsoft.Maui.ImageSourceService, Microsoft
 	// constructors
 	public SKImageSourceService ();
 	public SKImageSourceService (Microsoft.Extensions.Logging.ILogger logger);
-	// methods
-	public override System.Threading.Tasks.Task<Microsoft.Maui.IImageSourceServiceResult<Microsoft.UI.Xaml.Media.ImageSource>> GetImageSourceAsync (Microsoft.Maui.IImageSource imageSource, float scale, System.Threading.CancellationToken cancellationToken);
-}
-```
-
-### New Namespace SkiaSharp.Views.Maui.Platform
-
-#### New Type: SkiaSharp.Views.Maui.Platform.SKCanvasViewExtensions
-
-```csharp
-public static class SKCanvasViewExtensions {
-	// methods
-	public static void UpdateIgnorePixelScaling (this SkiaSharp.Views.Windows.SKXamlCanvas nativeView, SkiaSharp.Views.Maui.ISKCanvasView canvasView);
 }
 ```
 

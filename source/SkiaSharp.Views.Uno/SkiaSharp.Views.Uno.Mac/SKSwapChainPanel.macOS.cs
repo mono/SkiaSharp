@@ -1,8 +1,17 @@
 ﻿using CoreVideo;
+#if WINUI
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+#else
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+#endif
 
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public partial class SKSwapChainPanel : FrameworkElement
 	{

@@ -17,7 +17,7 @@ parameters:
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
   buildExternals: ''                            # the build number to download externals from
-  isBuildPipeline: true
+  buildPipelineType: 'both'                     # the type of build pipeline setup
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -33,96 +33,302 @@ parameters:
   tools: []                                     # any additional .net global tools
 
 jobs:
-  - ${{ if gt(parameters.buildExternals, 0) }}:
-    - template: azure-templates-download.yml
-      parameters:
-        name: ${{ parameters.name }}
-        displayName: ${{ parameters.displayName }}
-        vmImage: ${{ parameters.vmImage.pool }}
-        packages: ${{ parameters.packages }}
-        target: ${{ parameters.target }}
-        dependsOn: ${{ parameters.dependsOn }}
-        variables:
-          ${{ if ne(parameters.vmImage.variables, '') }}:
-            ${{ parameters.vmImage.variables }}
-          ${{ if ne(length(parameters.variables), 0) }}:
-            ${{ parameters.variables }}
-        requiredArtifacts: ${{ parameters.requiredArtifacts }}
-        provisioningSteps:
-          - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
-            - ${{ parameters.vmImage.provisioningSteps }}
-          - ${{ if ne(length(parameters.provisioningSteps), 0) }}:
-            - ${{ parameters.provisioningSteps }}
-        preBuildSteps:
-          - ${{ if ne(parameters.vmImage.preBuildSteps, '') }}:
-            - ${{ parameters.vmImage.preBuildSteps }}
-          - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
-            - ${{ parameters.preBuildSteps }}
-        postBuildSteps: ${{ parameters.postBuildSteps }}
-        initScript: ${{ parameters.initScript }}
-        additionalArgs: ${{ parameters.additionalArgs }}
-        retryCount: ${{ parameters.retryCount }}
-        condition: ${{ parameters.condition }}
-        shouldPublish: ${{ parameters.shouldPublish }}
-        configuration: ${{ parameters.configuration }}
-        buildExternals: ${{ parameters.buildExternals }}
-        verbosity: ${{ parameters.verbosity }}
-        docker: ${{ parameters.docker }}
-        dockerArgs: ${{ parameters.dockerArgs }}
-        installAndroidNdk: ${{ parameters.installAndroidNdk }}
-        installAndroidSdk: ${{ parameters.installAndroidSdk }}
-        installTizenSdk: ${{ parameters.installTizenSdk }}
-        installWindowsSdk: ${{ parameters.installWindowsSdk }}
-        installPreviewVs: ${{ parameters.installPreviewVs }}
-        installDotNet: ${{ parameters.installDotNet }}
-        installLlvm: ${{ parameters.installLlvm }}
-        installEmsdk: ${{ parameters.installEmsdk }}
-        artifactName: ${{ parameters.artifactName }}
-        tools: ${{ parameters.tools }}
+  - job: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    timeoutInMinutes: 180
+    pool: ${{ parameters.vmImage.pool }}
+    dependsOn: ${{ parameters.dependsOn }}
+    condition: ${{ parameters.condition }}
+    variables:
+      ${{ if ne(parameters.vmImage.variables, '') }}:
+        ${{ parameters.vmImage.variables }}
+      ${{ if ne(length(parameters.variables), 0) }}:
+        ${{ parameters.variables }}
+    steps:
+      # prepare
+      - checkout: self
+        submodules: recursive
+      - template: azure-templates-variables.yml
 
-  - ${{ if not(gt(parameters.buildExternals, 0)) }}:
-    - template: azure-templates-build.yml
-      parameters:
-        name: ${{ parameters.name }}
-        displayName: ${{ parameters.displayName }}
-        vmImage: ${{ parameters.vmImage.pool }}
-        packages: ${{ parameters.packages }}
-        target: ${{ parameters.target }}
-        dependsOn: ${{ parameters.dependsOn }}
-        variables:
-          ${{ if ne(parameters.vmImage.variables, '') }}:
-            ${{ parameters.vmImage.variables }}
-          ${{ if ne(length(parameters.variables), 0) }}:
-            ${{ parameters.variables }}
-        requiredArtifacts: ${{ parameters.requiredArtifacts }}
-        provisioningSteps:
-          - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
-            - ${{ parameters.vmImage.provisioningSteps }}
-          - ${{ if ne(length(parameters.provisioningSteps), 0) }}:
-            - ${{ parameters.provisioningSteps }}
-        preBuildSteps:
-          - ${{ if ne(parameters.vmImage.preBuildSteps, '') }}:
-            - ${{ parameters.vmImage.preBuildSteps }}
-          - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
-            - ${{ parameters.preBuildSteps }}
-        postBuildSteps: ${{ parameters.postBuildSteps }}
-        initScript: ${{ parameters.initScript }}
-        additionalArgs: ${{ parameters.additionalArgs }}
-        retryCount: ${{ parameters.retryCount }}
-        condition: ${{ parameters.condition }}
-        shouldPublish: ${{ parameters.shouldPublish }}
-        configuration: ${{ parameters.configuration }}
-        isBuildPipeline: ${{ parameters.isBuildPipeline }}
-        verbosity: ${{ parameters.verbosity }}
-        docker: ${{ parameters.docker }}
-        dockerArgs: ${{ parameters.dockerArgs }}
-        installAndroidNdk: ${{ parameters.installAndroidNdk }}
-        installAndroidSdk: ${{ parameters.installAndroidSdk }}
-        installTizenSdk: ${{ parameters.installTizenSdk }}
-        installWindowsSdk: ${{ parameters.installWindowsSdk }}
-        installPreviewVs: ${{ parameters.installPreviewVs }}
-        installDotNet: ${{ parameters.installDotNet }}
-        installLlvm: ${{ parameters.installLlvm }}
-        installEmsdk: ${{ parameters.installEmsdk }}
-        artifactName: ${{ parameters.artifactName }}
-        tools: ${{ parameters.tools }}
+      # checkout required skia PR
+      - pwsh: .\scripts\checkout-skia.ps1
+        displayName: Checkout required skia PR
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+
+      - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
+        - template: azure-templates-github-status.yml
+          parameters:
+            state: 'pending'
+
+      # determine build type
+      - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
+        displayName: Determine build type
+
+      # provisioning steps
+      - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
+        - ${{ parameters.vmImage.provisioningSteps }}
+      - ${{ if ne(length(parameters.provisioningSteps), 0) }}:
+        - ${{ parameters.provisioningSteps }}
+
+      # install any packages on linux
+      - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
+        - bash: |
+            sudo apt update
+            sudo apt install -y ${{ parameters.packages }}
+          displayName: Install additional package dependencies
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne('${{ parameters.packages }}', ''))
+
+      # make sure mono/msbuild is the correct version
+      - ${{ if and(ne(variables['MONO_VERSION_LINUX'], ''), eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
+        - bash: ./scripts/install-mono.sh $(MONO_VERSION_LINUX)
+          displayName: Install Mono and MSBuild
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+      - ${{ if endsWith(parameters.name, '_macos') }}:
+        - bash: sudo ./scripts/select-xamarin.sh $(MONO_VERSION_MACOS)
+          displayName: Switch to the latest Xamarin SDK
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+      # install extra bits for the native builds
+      - ${{ if startsWith(parameters.name, 'native_') }}:
+        # switch to the correct Python version
+        - pwsh: .\scripts\install-python.ps1
+          displayName: Install Python
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+        - task: UsePythonVersion@0
+          displayName: Switch to the correct Python version
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          inputs:
+            versionSpec: '3.x'
+            architecture: 'x64'
+        - ${{ if not(contains(parameters.name, '_checks_')) }}:
+          # install android ndk
+          - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
+            - pwsh: .\scripts\install-android-ndk.ps1
+              displayName: Install the Android NDK
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          # install tizen
+          - ${{ if and(eq(parameters.installTizenSdk, 'true'), contains(parameters.name, '_tizen_')) }}:
+            - pwsh: .\scripts\install-tizen.ps1
+              displayName: Install the Tizen SDK
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          # install llvm
+          - ${{ if and(eq(parameters.installLlvm, 'true'), contains(parameters.name, '_win32_')) }}:
+            - pwsh: .\scripts\install-7zip.ps1
+              displayName: Install 7-zip
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            - pwsh: .\scripts\install-llvm.ps1
+              displayName: Install LLVM
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+      # install extra bits for the managed builds
+      - ${{ if and(not(startsWith(parameters.name, 'native_')), not(endsWith(parameters.name, '_linux'))) }}:
+        # install the bits needed for Android
+        - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
+          # install the correct version of the JDK for .NET 6
+          - pwsh: |
+              if ("$env:JAVA_HOME_11_X64") {
+                echo "##vso[task.setvariable variable=JAVA_HOME]$env:JAVA_HOME_11_X64"
+              } else {
+                .\scripts\install-openjdk.ps1
+              }
+            displayName: Install OpenJDK
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          # install the correct version of the Android SDK
+          - pwsh: .\scripts\install-android-sdk.ps1
+            displayName: Install Android SDK
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          # install the required version of the Android Platforms
+          - pwsh: .\scripts\install-android-platform.ps1 -API 29
+            displayName: Install Android API 29 (v10)
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - pwsh: .\scripts\install-android-platform.ps1 -API 30
+            displayName: Install Android API 30 (v11)
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - pwsh: .\scripts\install-android-platform.ps1 -API 31
+            displayName: Install Android API 31 (v12)
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+        # install the bits needed for .NET
+        - ${{ if eq(parameters.installDotNet, 'true') }}:
+          - ${{ if endsWith(parameters.name, '_macos') }}:
+            - pwsh: Remove-Item "$env:AGENT_TOOLSDIRECTORY/dotnet" -Recurse -Force -ErrorAction SilentlyContinue
+              displayName: Cleanup existing versions of .NET Core
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - task: UseDotNet@2
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            inputs:
+              packageType: 'sdk'
+              version: 3.1.x
+            displayName: Install .NET Core 3.1.x
+          - task: UseDotNet@2
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            inputs:
+              packageType: 'sdk'
+              version: 5.0.x
+            displayName: Install .NET Core 5.0.x
+          - task: UseDotNet@2
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            inputs:
+              packageType: 'sdk'
+              version: 6.0.x
+            displayName: Install .NET Core 6.0.x
+          # install the bits needed for .NET 6 builds
+          - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            displayName: Install the preview version of .NET Core
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
+          # display dotnet info
+          - pwsh: dotnet --info
+            displayName: Display all the .NET information
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          # install VS
+          - ${{ if endsWith(parameters.name, '_windows') }}:
+            - ${{ if eq(parameters.installPreviewVs, 'true') }}:
+              - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
+                displayName: Install Visual Studio
+                condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
+          # install workloads
+          - ${{ if not(endsWith(parameters.name, '_linux')) }}:
+            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
+              displayName: Install the preview .NET Core workloads
+            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $false
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), eq(variables.DOTNET_VERSION_PREVIEW, ''))
+              displayName: Install the .NET Core workloads
+
+      # select the correct/latest version of Visual Studio
+      - ${{ if endsWith(parameters.name, '_windows') }}:
+        - pwsh: .\scripts\select-vs.ps1
+          displayName: Select Visual Studio
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+      # install nuget
+      - ${{ if endsWith(parameters.name, '_windows') }}:
+        - pwsh: .\scripts\install-nuget.ps1
+          displayName: Install NuGet
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+      # install the mac tools
+      - ${{ if endsWith(parameters.name, '_macos') }}:
+        - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
+          displayName: Switch to the latest Xcode
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+      # install the linux tools
+      - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
+        - bash: ./scripts/install-emsdk.sh $(EMSCRIPTEN_VERSION)
+          displayName: Install the Emscripten SDK
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+      # install the Windows tools
+      - ${{ if endsWith(parameters.name, '_windows') }}:
+        - ${{ if not(contains(parameters.name, '_checks_')) }}:
+          # install the older Windows SDKs
+          - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296  -Version 10.0.10240.0
+              displayName: Install the Windows 10 SDK 10.0.10240
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 864422  -Version 10.0.16299.0
+              displayName: Install the Windows 10 SDK 10.0.16299
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2083338 -Version 10.0.18362.0
+              displayName: Install the Windows 10 SDK 10.0.18362
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
+              displayName: Install the Windows 10 SDK 10.0.19041
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+      # install any .NET Core global tools
+      - ${{ each tool in parameters.tools }}:
+        - pwsh: dotnet tool install -g ${{ tool }}
+          displayName: Install ${{ tool }}
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+      # download artifacts
+      - template: azure-templates-download-artifacts.yml
+        parameters:
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          artifacts: ${{ parameters.requiredArtifacts }}
+      - template: azure-templates-download-artifacts.yml
+        parameters:
+          condition: and(succeeded(), ne(variables['DOWNLOAD_EXTERNALS'], ''))
+          sourceBuildId: $(DOWNLOAD_EXTERNALS)
+          artifacts:
+            - name: ${{ parameters.name }}
+
+      # pre-build steps
+      - ${{ if ne(parameters.vmImage.preBuildSteps, '') }}:
+        - ${{ parameters.vmImage.preBuildSteps }}
+      - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
+        - ${{ parameters.preBuildSteps }}
+
+      # build
+      - ${{ if eq(parameters.docker, '') }}:
+        - ${{ if endsWith(parameters.name, '_windows') }}:
+          - pwsh: |
+              dotnet tool restore
+              ${{ parameters.initScript }}
+              .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} {
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+              }
+            env:
+              JavaSdkDirectory: $(JAVA_HOME)
+              LLVM_HOME: $(LLVM_HOME)
+              # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
+              AppxSymbolPackageEnabled: false
+            displayName: Run the bootstrapper for ${{ parameters.target }}
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+        - ${{ if not(endsWith(parameters.name, '_windows')) }}:
+          - bash: |
+              dotnet tool restore
+              ${{ parameters.initScript }}
+              ./scripts/retry-command.sh ${{ parameters.retryCount }} \
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+            env:
+              JavaSdkDirectory: $(JAVA_HOME)
+            displayName: Run the bootstrapper for ${{ parameters.target }}
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+      - ${{ if ne(parameters.docker, '') }}:
+        - task: Docker@2
+          displayName: Build the Docker image for ${{ parameters.docker }}
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          inputs:
+            command: build
+            buildContext: ${{ parameters.docker }}
+            dockerfile: ${{ parameters.docker }}/Dockerfile
+            arguments: --tag skiasharp ${{ parameters.dockerArgs }}
+        - bash: |
+            echo dotnet tool restore > cmd.sh
+            echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
+            sed -i 's/--gnArgs=\" \"//' cmd.sh
+            docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
+              scripts/retry-command.sh ${{ parameters.retryCount }} \
+                /bin/bash /work/cmd.sh
+          displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+      # post-build steps
+      - ${{ parameters.postBuildSteps }}
+
+      # publish artifacts
+      - task: PublishBuildArtifacts@1
+        displayName: Publish the ${{ parameters.name }} artifacts
+        condition: or(${{ parameters.shouldPublish }}, failed())
+        inputs:
+          artifactName: ${{ parameters.name }}
+          pathToPublish: 'output'
+      - ${{ if ne(parameters.artifactName, '') }}:
+        - task: PublishBuildArtifacts@1
+          displayName: Publish the combined ${{ parameters.artifactName }} artifacts
+          inputs:
+            artifactName: ${{ parameters.artifactName }}
+            pathToPublish: 'output'
+      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+        - task: ComponentGovernanceComponentDetection@0
+          displayName: Run component detection
+          condition: always()
+          inputs:
+            scanType: 'Register'
+            verbosity: 'Verbose'
+            alertWarningLevel: 'High'
+
+      - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
+        - template: azure-templates-github-status.yml

@@ -28,7 +28,7 @@ public static class Extensions {
 #### New Type: SkiaSharp.Views.Forms.SKCanvasView
 
 ```csharp
-public class SKCanvasView : Xamarin.Forms.View, System.ComponentModel.INotifyPropertyChanged, Xamarin.Forms.IAnimatable, Xamarin.Forms.IElementController, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController, Xamarin.Forms.Internals.IDynamicResourceHandler, Xamarin.Forms.Internals.INameScope {
+public class SKCanvasView : Xamarin.Forms.View, System.ComponentModel.INotifyPropertyChanged, Xamarin.Forms.IAnimatable, Xamarin.Forms.IElementController, Xamarin.Forms.IGestureRecognizers, Xamarin.Forms.ITabStopElement, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController, Xamarin.Forms.Internals.IDynamicResourceHandler, Xamarin.Forms.Internals.IGestureController, Xamarin.Forms.Internals.INameScope, Xamarin.Forms.Internals.INavigationProxy {
 	// constructors
 	public SKCanvasView ();
 	// properties
@@ -44,7 +44,7 @@ public class SKCanvasView : Xamarin.Forms.View, System.ComponentModel.INotifyPro
 #### New Type: SkiaSharp.Views.Forms.SKGLView
 
 ```csharp
-public class SKGLView : Xamarin.Forms.View, System.ComponentModel.INotifyPropertyChanged, Xamarin.Forms.IAnimatable, Xamarin.Forms.IElementController, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController, Xamarin.Forms.Internals.IDynamicResourceHandler, Xamarin.Forms.Internals.INameScope {
+public class SKGLView : Xamarin.Forms.View, System.ComponentModel.INotifyPropertyChanged, Xamarin.Forms.IAnimatable, Xamarin.Forms.IElementController, Xamarin.Forms.IGestureRecognizers, Xamarin.Forms.ITabStopElement, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController, Xamarin.Forms.Internals.IDynamicResourceHandler, Xamarin.Forms.Internals.IGestureController, Xamarin.Forms.Internals.INameScope, Xamarin.Forms.Internals.INavigationProxy {
 	// constructors
 	public SKGLView ();
 	// fields

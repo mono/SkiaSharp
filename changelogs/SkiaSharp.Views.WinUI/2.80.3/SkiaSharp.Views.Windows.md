@@ -33,7 +33,7 @@ public class SKPaintGLSurfaceEventArgs : System.EventArgs {
 	// constructors
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget);
 
-	[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
+	[Obsolete]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
@@ -42,7 +42,7 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 	public SkiaSharp.SKColorType ColorType { get; }
 	public SkiaSharp.GRSurfaceOrigin Origin { get; }
 
-	[Obsolete ("Use BackendRenderTarget instead.")]
+	[Obsolete]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 	public SkiaSharp.SKSurface Surface { get; }
 }
@@ -63,7 +63,7 @@ public class SKPaintSurfaceEventArgs : System.EventArgs {
 #### New Type: SkiaSharp.Views.Windows.SKXamlCanvas
 
 ```csharp
-public class SKXamlCanvas : Microsoft.UI.Xaml.Controls.Canvas, Microsoft.UI.Composition.IAnimationObject, Microsoft.UI.Composition.IVisualElement, Microsoft.UI.Composition.IVisualElement2, System.IEquatable<Microsoft.UI.Xaml.Controls.Canvas>, System.IEquatable<Microsoft.UI.Xaml.Controls.Panel>, System.IEquatable<Microsoft.UI.Xaml.DependencyObject>, System.IEquatable<Microsoft.UI.Xaml.FrameworkElement>, System.IEquatable<Microsoft.UI.Xaml.UIElement>, System.Runtime.InteropServices.ICustomQueryInterface, WinRT.IWinRTObject {
+public class SKXamlCanvas : Microsoft.UI.Xaml.Controls.Canvas, Microsoft.UI.Composition.IAnimationObject, Microsoft.UI.Composition.IVisualElement, Microsoft.UI.Composition.IVisualElement2, System.IEquatable<Microsoft.UI.Xaml.Controls.Canvas>, System.IEquatable<Microsoft.UI.Xaml.Controls.Panel>, System.IEquatable<Microsoft.UI.Xaml.DependencyObject>, System.IEquatable<Microsoft.UI.Xaml.FrameworkElement>, System.IEquatable<Microsoft.UI.Xaml.UIElement>, System.Runtime.InteropServices.ICustomQueryInterface, System.Runtime.InteropServices.IDynamicInterfaceCastable, WinRT.IWinRTObject {
 	// constructors
 	public SKXamlCanvas ();
 	// properties

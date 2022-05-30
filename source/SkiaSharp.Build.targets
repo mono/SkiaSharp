@@ -59,7 +59,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
-    <PackageReference Include="mdoc" Version="5.8.3" PrivateAssets="All" GeneratePathProperty="true" />
+    <PackageReference Include="mdoc" Version="5.8.9" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
   <!-- HACK: Do not copy the native bootstrap files -->
@@ -233,14 +233,15 @@ internal partial class VersionConstants {
       <MDocIntermediateOutputPath>$(IntermediateOutputPath)mdoc\</MDocIntermediateOutputPath>
       <_ShouldGenerateDocs Condition=" '$(MDocDocumentationDirectory)' != '' and Exists('$(MDocDocumentationDirectory)\index.xml') ">true</_ShouldGenerateDocs>
     </PropertyGroup>
-    <ItemGroup>
+    <ItemGroup Condition=" '$(_ShouldGenerateDocs)' == 'true' ">
       <_MDocInputs Include="$(MDocDocumentationDirectory)\**\*" />
     </ItemGroup>
   </Target>
   <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' "
           AfterTargets="$(MDocGenerateDocsAfterTargets)" DependsOnTargets="_MDocGenerateDocsDep"
           Inputs="@(_MDocInputs)" Outputs="$(MDocOutputPath)">
-    <MakeDir Directories="$(MDocIntermediateOutputPath)" />
+    <MakeDir Condition=" '$(_ShouldGenerateDocs)' == 'true' "
+             Directories="$(MDocIntermediateOutputPath)" />
     <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
           WorkingDirectory="$(MDocIntermediateOutputPath)"
           Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc --quiet=true &quot;$(MDocDocumentationDirectory)&quot;" />
