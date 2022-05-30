@@ -14,6 +14,9 @@ namespace SkiaSharpGenerator
 		[JsonPropertyName("source")]
 		public Dictionary<string, string[]> Source { get; set; } = new Dictionary<string, string[]>();
 
+		[JsonPropertyName("namespaces")]
+		public Dictionary<string, NamespaceMapping> Namespaces { get; set; } = new Dictionary<string, NamespaceMapping>();
+
 		[JsonPropertyName("exclude")]
 		public Exclude Exclude { get; set; } = new Exclude();
 
@@ -21,12 +24,12 @@ namespace SkiaSharpGenerator
 		public List<string> IncludeDirs { get; set; } = new List<string>();
 
 		[JsonPropertyName("dllName")]
-		public string? DllName { get; set; } = "DllName";
+		public string DllName { get; set; } = "DllName";
 
 		[JsonPropertyName("namespace")]
-		public string? Namespace { get; set; } = "Namespace";
+		public string Namespace { get; set; } = "Namespace";
 
 		[JsonPropertyName("className")]
-		public string? ClassName { get; set; } = "ClassName";
+		public string ClassName { get; set; } = "ClassName";
 	}
 }

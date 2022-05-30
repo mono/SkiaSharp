@@ -13335,9 +13335,11 @@ namespace SkiaSharp
 		#endregion
 
 	}
+}
 
-	#region Delegates
+#region Delegates
 
+namespace SkiaSharp {
 	// typedef void (*)()* gr_gl_func_ptr
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void GRGlFuncPtr();
@@ -13477,9 +13479,13 @@ namespace SkiaSharp
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKSurfaceRasterReleaseProxyDelegate(void* addr, void* context);
 
-	#endregion
+}
 
-	#region Structs
+#endregion
+
+#region Structs
+
+namespace SkiaSharp {
 
 	// gr_context_options_t
 	[StructLayout (LayoutKind.Sequential)]
@@ -15582,10 +15588,13 @@ namespace SkiaSharp
 		}
 
 	}
+}
 
-	#endregion
+#endregion
 
-	#region Enums
+#region Enums
+
+namespace SkiaSharp {
 
 	// gr_backend_t
 	internal enum GRBackendNative {
@@ -16295,6 +16304,6 @@ namespace SkiaSharp
 		// LOSSLESS_SK_WEBPENCODER_COMPTRESSION = 1
 		Lossless = 1,
 	}
-
-	#endregion
 }
+
+#endregion
