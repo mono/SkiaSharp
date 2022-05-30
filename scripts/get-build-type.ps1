@@ -4,6 +4,13 @@ param (
 
 $ErrorActionPreference = 'Stop'
 
+# some stage earlier requested a full build
+if ($env:DOWNLOAD_EXTERNALS -eq 'required') {
+    Write-Host "Full build explicitly requested."
+    Write-Host "##vso[task.setvariable variable=DOWNLOAD_EXTERNALS]"
+    exit 0
+}
+
 # this was explicit, so just us that
 $intBuildId = "$ExternalsBuildId" -as [int]
 if ($intBuildId -gt 0) {
@@ -25,7 +32,7 @@ if (("$ExternalsBuildId" -eq 'latest') -and ("$env:BUILD_REASON" -eq 'PullReques
         'cake',
         'externals',
         'native',
-        'scripts',
+        # 'scripts',
         '.gitmodules',
         'VERSIONS.txt'
     )
