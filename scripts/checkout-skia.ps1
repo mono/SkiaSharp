@@ -9,6 +9,9 @@ $json = curl `
     -H "Accept: application/vnd.github.v3+json" `
     https://api.github.com/repos/mono/SkiaSharp/pulls/$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER | ConvertFrom-Json
 
+Write-Host "GitHub Response:"
+Write-Host $json
+
 $regex = '\*\*Required\ skia\ PR\*\*[\\rn\s-]+https?\://github\.com/mono/skia/pull/(\d+)'
 
 $match = [regex]::Match($json.body, $regex, [System.Text.RegularExpressions.RegexOptions]::Singleline)
