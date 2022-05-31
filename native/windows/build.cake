@@ -48,6 +48,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
+            $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             clang +
             win_vcvars_version +
