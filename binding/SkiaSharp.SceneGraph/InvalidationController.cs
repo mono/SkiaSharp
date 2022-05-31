@@ -7,49 +7,47 @@ namespace SkiaSharp.SceneGraph
 {
 	public unsafe class InvalidationController : SKObject, ISKSkipObjectRegistration
 	{
-		public InvalidationController()
-			: this(SceneGraphApi.sksg_invalidation_controller_new(), true)
+		public InvalidationController ()
+			: this (SceneGraphApi.sksg_invalidation_controller_new (), true)
 		{
 		}
 
-		internal InvalidationController(IntPtr handle, bool owns)
-			: base(handle, owns)
+		internal InvalidationController (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 
-		protected override void DisposeNative()
+		protected override void DisposeNative ()
 		{
-			SceneGraphApi.sksg_invalidation_controller_delete(Handle);
+			SceneGraphApi.sksg_invalidation_controller_delete (Handle);
 		}
 
-		public unsafe void Invalidate(SKRect rect, SKMatrix matrix)
+		public unsafe void Invalidate (SKRect rect, SKMatrix matrix)
 		{
-			SceneGraphApi.sksg_invalidation_controller_inval(Handle, &rect, &matrix);
+			SceneGraphApi.sksg_invalidation_controller_inval (Handle, &rect, &matrix);
 		}
 
-		public unsafe SKRect Bounds
-		{
-			get
-			{
+		public unsafe SKRect Bounds {
+			get {
 				SKRect rect;
-				SceneGraphApi.sksg_invalidation_controller_get_bounds(Handle, &rect);
+				SceneGraphApi.sksg_invalidation_controller_get_bounds (Handle, &rect);
 				return rect;
 			}
 		}
 
-		public unsafe void Begin()
+		public unsafe void Begin ()
 		{
-			SceneGraphApi.sksg_invalidation_controller_begin(Handle);
+			SceneGraphApi.sksg_invalidation_controller_begin (Handle);
 		}
 
-		public unsafe void End()
+		public unsafe void End ()
 		{
-			SceneGraphApi.sksg_invalidation_controller_end(Handle);
+			SceneGraphApi.sksg_invalidation_controller_end (Handle);
 		}
 
-		public unsafe void Reset()
+		public unsafe void Reset ()
 		{
-			SceneGraphApi.sksg_invalidation_controller_reset(Handle);
+			SceneGraphApi.sksg_invalidation_controller_reset (Handle);
 		}
 	}
 }
