@@ -37,6 +37,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
+            $"skia_enable_skottie=true " +
             win_vcvars_version +
             $"extra_cflags=[  " +
             $"  '-DSKIA_C_DLL', '/MD{d}', '/EHsc', '/Z7', " +
