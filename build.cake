@@ -34,7 +34,6 @@ var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 var SKIP_BUILD = Argument ("skipbuild", false);
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
-var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
@@ -109,6 +108,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Win32",              new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                            new Version (1, 60, 0) },
+    { "SkiaSharp.Skottie",                             new Version (1, 60, 0) },
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 60, 0) },
 };
 
@@ -153,14 +153,12 @@ Task ("libs")
 {
     // build the managed libraries
     var platform = "";
-    if (!BUILD_ALL_PLATFORMS) {
-        if (IsRunningOnWindows ()) {
-            platform = ".Windows";
-        } else if (IsRunningOnMacOs ()) {
-            platform = ".Mac";
-        } else if (IsRunningOnLinux ()) {
-            platform = ".Linux";
-        }
+    if (IsRunningOnWindows ()) {
+        platform = ".Windows";
+    } else if (IsRunningOnMacOs ()) {
+        platform = ".Mac";
+    } else if (IsRunningOnLinux ()) {
+        platform = ".Linux";
     }
 
     var net6 = $"./source/SkiaSharpSource{platform}-net6.slnf";
@@ -171,7 +169,7 @@ Task ("libs")
         if (FileExists (netfx))
             RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet6", "false" } });
     } else {
-        RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
+        RunMSBuild ($"./source/SkiaSharpSource{platform}.slnf");
     }
 
     // assemble the mdoc docs
