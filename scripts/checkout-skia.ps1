@@ -7,6 +7,7 @@ if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
 
 $json = curl `
     -H "Accept: application/vnd.github.v3+json" `
+    -H "Authorization: token $(GitHub.Token.PublicAccess)" `
     https://api.github.com/repos/mono/SkiaSharp/pulls/$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER | ConvertFrom-Json
 
 Write-Host "GitHub Response:"
