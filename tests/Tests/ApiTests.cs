@@ -13,14 +13,18 @@ namespace SkiaSharp.Tests
 	{
 		private static IEnumerable<Type> InteropApiTypes => new[]
 		{
-			typeof(SkiaSharp.SKNativeObject).Assembly.GetType("SkiaSharp.SkiaApi"),
-			typeof(HarfBuzzSharp.NativeObject).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi")
+			typeof(SkiaSharp.SkiaApi),
+			typeof(HarfBuzzSharp.HarfBuzzApi),
+			typeof(SkiaSharp.SceneGraphApi),
+			typeof(SkiaSharp.SkottieApi),
 		};
 
 		private static IEnumerable<Type> InteropApiDelegatesTypes => new[]
 		{
-			typeof(SkiaSharp.SKNativeObject).Assembly.GetType("SkiaSharp.SkiaApi+Delegates"),
-			typeof(HarfBuzzSharp.NativeObject).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi+Delegates")
+			typeof(SkiaSharp.SkiaApi).Assembly.GetType("SkiaSharp.SkiaApi+Delegates"),
+			typeof(HarfBuzzSharp.HarfBuzzApi).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi+Delegates"),
+			typeof(SkiaSharp.SceneGraphApi).Assembly.GetType("SkiaSharp.SceneGraphApi+Delegates"),
+			typeof(SkiaSharp.SkottieApi).Assembly.GetType("SkiaSharp.SkottieApi+Delegates"),
 		};
 
 		private static IEnumerable<MethodInfo> InteropMembers =>
