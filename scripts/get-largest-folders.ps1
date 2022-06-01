@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-Get-ChildItem . -Directory -Recurse -Depth 1 |
+Get-ChildItem . -Directory -Recurse -Depth 0 |
     Sort-Object FullName |
     Select-Object `
         FullName,
