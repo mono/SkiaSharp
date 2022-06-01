@@ -1,0 +1,72 @@
+﻿<Project Sdk="MSBuild.Sdk.Extras/3.0.44">
+  <PropertyGroup>
+    <TargetFrameworks>$(ClassicTargetFrameworks)</TargetFrameworks>
+    <RootNamespace>SkiaSharp</RootNamespace>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <PackagingPlatform Condition="'$(TargetFramework)' == 'monoandroid10.0'">monoandroid1.0</PackagingPlatform>
+    <DefineConstants Condition="'$(TargetFramework)' == 'xamarinmac2.0'">$(DefineConstants);__MACOS__</DefineConstants>
+    <DefineConstants Condition="'$(TargetFramework)' == 'tizen40'">$(DefineConstants);__TIZEN__;</DefineConstants>
+    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
+    <ExtrasTizenMetaPackageVersion>6.0.0.14995</ExtrasTizenMetaPackageVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'monoandroid10.0'">
+    <!-- Android -->
+    <None Include="..\..\output\native\android\x86\libSkiaSharp*" Link="nuget\runtimes\android-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\x86_64\libSkiaSharp*" Link="nuget\runtimes\android-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\armeabi-v7a\libSkiaSharp*" Link="nuget\runtimes\android-arm\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\arm64-v8a\libSkiaSharp*" Link="nuget\runtimes\android-arm64\native\%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp\nuget\build\monoandroid\SkiaSharp.targets" Link="nuget\build\$(PackagingPlatform)\SkiaSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarinios1.0'">
+    <!-- iOS -->
+    <None Include="..\..\output\native\ios\libSkiaSharp.framework\**" Link="nuget\runtimes\ios\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp\nuget\build\xamarinios\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarintvos1.0'">
+    <!-- tvOS -->
+    <None Include="..\..\output\native\tvos\libSkiaSharp.framework\**" Link="nuget\runtimes\tvos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp\nuget\build\xamarintvos\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarinwatchos1.0'">
+    <!-- watchOS -->
+    <None Include="..\..\output\native\watchos\libSkiaSharp.framework\**" Link="nuget\runtimes\watchos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp\nuget\build\xamarinwatchos\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarinmac2.0'">
+    <!-- macOS -->
+    <None Include="..\..\output\native\osx\libSkiaSharp.*" Link="nuget\runtimes\osx\native\libSkiaSharp.dylib" />
+    <None Include="..\SkiaSharp\nuget\build\xamarinmac\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'tizen40'">
+    <!-- Tizen -->
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+    <None Include="..\..\output\native\tizen\armel\libSkiaSharp.*" Link="nuget\build\$(TargetFramework)\arm\libSkiaSharp.so" />
+    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.*" Link="nuget\build\$(TargetFramework)\x86\libSkiaSharp.so" />
+    <None Include="..\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.StartsWith('uap10'))">
+    <!-- UWP -->
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+    <None Include="..\..\output\native\uwp\x64\libSkiaSharp*" Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\x86\libSkiaSharp*" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\arm\libSkiaSharp*" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\arm64\libSkiaSharp*" Link="nuget\runtimes\win10-arm64\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\x64\libGLESv2*" Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\x86\libGLESv2*" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\arm\libGLESv2*" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\arm64\libGLESv2*" Link="nuget\runtimes\win10-arm64\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\x64\libEGL*" Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\x86\libEGL*" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\arm\libEGL*" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\arm64\libEGL*" Link="nuget\runtimes\win10-arm64\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\x64\zlib*" Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\x86\zlib*" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\arm\zlib*" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\arm64\zlib*" Link="nuget\runtimes\win10-arm64\nativeassets\uap10.0\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

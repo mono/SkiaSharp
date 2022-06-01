@@ -301,6 +301,9 @@ Task ("tests-android")
         FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
         RunMSBuild (csproj,
             targets: new [] { "SignAndroidPackage" }, 
+            properties: new Dictionary<string, string> {
+                { "BuildTestOnly", "true" },
+            },
             platform: "AnyCPU",
             configuration: "Debug");
         // run the tests
