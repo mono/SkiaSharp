@@ -337,7 +337,7 @@ jobs:
       # post-build steps
       - ${{ parameters.postBuildSteps }}
 
-      - pwsh: (Get-ChildItem . -Recurse | Measure-Object -Property length -Sum -EA 0).Sum / 1MB
+      - pwsh: .\scripts\get-largest-folders.ps1
         displayName: Display the full folder size to debug out of space errors
         condition: failed()
 
