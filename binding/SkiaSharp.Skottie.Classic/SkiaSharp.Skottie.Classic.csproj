@@ -1,0 +1,35 @@
+﻿<Project Sdk="MSBuild.Sdk.Extras/3.0.44">
+
+  <PropertyGroup>
+    <TargetFrameworks>monoandroid10.0;xamarinios1.0;xamarintvos1.0;xamarinwatchos1.0;xamarinmac2.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(SolutionName)' == 'SkiaSharp.iOS.Tests' or '$(BuildTestOnly)' == 'true'">xamarinios1.0</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Skottie</RootNamespace>
+    <AssemblyName>SkiaSharp.Skottie</AssemblyName>
+    <PackagingGroup>SkiaSharp.Skottie</PackagingGroup>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'monoandroid10.0'">
+    <ProjectReference Include="..\SkiaSharp.Android\SkiaSharp.Android.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarinios1.0'">
+    <ProjectReference Include="..\SkiaSharp.iOS\SkiaSharp.iOS.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarintvos1.0'">
+    <ProjectReference Include="..\SkiaSharp.tvOS\SkiaSharp.tvOS.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarinwatchos1.0'">
+    <ProjectReference Include="..\SkiaSharp.watchOS\SkiaSharp.watchOS.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarinmac2.0'">
+    <ProjectReference Include="..\SkiaSharp.OSX\SkiaSharp.OSX.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SkiaSharp.SceneGraph.Classic\SkiaSharp.SceneGraph.Classic.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SkiaSharp.Skottie\**\*.cs" Exclude="..\SkiaSharp.Skottie\bin\**;..\SkiaSharp.Skottie\obj\**" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

@@ -341,7 +341,10 @@ Task ("tests-ios")
         // package the app
         FilePath csproj = "./tests/SkiaSharp.iOS.Tests/SkiaSharp.iOS.Tests.csproj";
         RunMSBuild (csproj,
-            properties: new Dictionary<string, string> { { "BuildIpa", "true" } },
+            properties: new Dictionary<string, string> {
+                { "BuildIpa", "true" },
+                { "BuildTestOnly", "true" },
+            },
             platform: "iPhoneSimulator",
             configuration: "Debug");
         // run the tests
