@@ -302,7 +302,6 @@ jobs:
               # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
               AppxSymbolPackageEnabled: false
             displayName: Run the bootstrapper for ${{ parameters.target }}
-            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - ${{ if not(endsWith(parameters.name, '_windows')) }}:
           - bash: |
@@ -313,7 +312,6 @@ jobs:
             env:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
-            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
       - ${{ if ne(parameters.docker, '') }}:
         - task: Docker@2
