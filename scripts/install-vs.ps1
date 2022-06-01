@@ -1,6 +1,7 @@
 Param(
     [string] $Version,
-    [string] $TestPath = "2022\Preview"
+    [string] $TestPath = "2022\Preview",
+    [boolean] $RemoveExisting = $false
 )
 
 $ErrorActionPreference = 'Stop'
@@ -17,6 +18,11 @@ if ("$env:AGENT_TEMPDIRECTORY") {
 }
 
 $startTime = Get-Date
+
+if ($RemoveExisting) {
+  Write-Host "Removing previous Visual Studio..."
+  & 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\InstallCleanup.exe' -f
+}
 
 Write-Host "Downloading Visual Studio Installer..."
 Invoke-WebRequest -UseBasicParsing `

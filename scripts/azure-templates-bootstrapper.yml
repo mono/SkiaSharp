@@ -200,7 +200,7 @@ jobs:
           # install VS
           - ${{ if endsWith(parameters.name, '_windows') }}:
             - ${{ if eq(parameters.installPreviewVs, 'true') }}:
-              - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
+              - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION) -RemoveExisting $true
                 displayName: Install Visual Studio
                 retryCountOnTaskFailure: 3
                 condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
@@ -287,6 +287,10 @@ jobs:
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
 
+      - pwsh: ./scripts/get-free-space.ps1
+        displayName: Display the free space to debug out of space errors
+        condition: failed()
+
       # build
       - ${{ if eq(parameters.docker, '') }}:
         - ${{ if endsWith(parameters.name, '_windows') }}:
@@ -332,12 +336,12 @@ jobs:
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
-      # post-build steps
-      - ${{ parameters.postBuildSteps }}
-
-      - pwsh: .\scripts\get-largest-folders.ps1
+      - pwsh: ./scripts/get-largest-folders.ps1
         displayName: Display the full folder size to debug out of space errors
         condition: failed()
+
+      # post-build steps
+      - ${{ parameters.postBuildSteps }}
 
       # publish artifacts
       - task: PublishBuildArtifacts@1
