@@ -169,7 +169,12 @@ Task ("libs")
         if (FileExists (netfx))
             RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet6", "false" } });
     } else {
-        RunMSBuild ($"./source/SkiaSharpSource{platform}.slnf");
+        var slnf = $"./source/SkiaSharpSource{platform}.slnf";
+        var sln = $"./source/SkiaSharpSource{platform}.sln";
+        if (FileExists (slnf))
+            RunMSBuild (slnf);
+        else
+            RunMSBuild (sln);
     }
 
     // assemble the mdoc docs
