@@ -72,6 +72,7 @@ namespace SkiaSharpGenerator
 
 			var delegates = compilation.Typedefs
 				.Where(t => t.ElementType.TypeKind == CppTypeKind.Pointer)
+				.Where(t => IncludeNamespace(t.GetDisplayName()))
 				.OrderBy(t => t.GetDisplayName())
 				.GroupBy(t => GetNamespace(t.GetDisplayName()));
 
@@ -149,6 +150,7 @@ namespace SkiaSharpGenerator
 
 			var classes = compilation.Classes
 				.Where(c => c.SizeOf != 0)
+				.Where(c => IncludeNamespace(c.GetDisplayName()))
 				.OrderBy(c => c.GetDisplayName())
 				.GroupBy(c => GetNamespace(c.GetDisplayName()));
 
@@ -313,6 +315,7 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#region Enums");
 
 			var enums = compilation.Enums
+				.Where(e => IncludeNamespace(e.GetDisplayName()))
 				.OrderBy(e => e.GetDisplayName())
 				.GroupBy(e => GetNamespace(e.GetDisplayName()));
 
@@ -437,6 +440,7 @@ namespace SkiaSharpGenerator
 			Log?.LogVerbose("  Writing p/invokes...");
 
 			var functionGroups = compilation.Functions
+				.Where(f => IncludeNamespace(f.Name))
 				.OrderBy(f => f.Name)
 				.GroupBy(f => f.Span.Start.File.ToLower().Replace("\\", "/"))
 				.OrderBy(g => Path.GetDirectoryName(g.Key) + "/" + Path.GetFileName(g.Key));

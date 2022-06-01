@@ -330,6 +330,17 @@ namespace SkiaSharpGenerator
 			}
 		}
 
+		protected bool IncludeNamespace(string name)
+		{
+			foreach (var ns in config.Namespaces)
+			{
+				if (name.StartsWith(ns.Key) && ns.Value.Exclude == true)
+					return false;
+			}
+
+			return true;
+		}
+
 		protected string GetNamespace(string name)
 		{
 			foreach (var ns in config.Namespaces)

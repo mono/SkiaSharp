@@ -9,5 +9,8 @@ namespace SkiaSharpGenerator
 
 		[JsonPropertyName("prefix")]
 		public string? Prefix { get; set; }
+
+		[JsonPropertyName("exclude")]
+		public bool? Exclude { get; set; }
 	}
 }
