@@ -27,6 +27,7 @@
     <LangVersion Condition="$(IsWindows)">10.0</LangVersion>
   </PropertyGroup>
 
+  <!-- Classic Tizen, Xamarin and UWP -->
   <PropertyGroup>
     <ClassicTargetFrameworks>tizen40</ClassicTargetFrameworks>
     <ClassicTargetFrameworks Condition="$(IsMacOS) or !$(IsCI)">$(ClassicTargetFrameworks);xamarinios1.0;xamarintvos1.0;xamarinwatchos1.0;xamarinmac2.0</ClassicTargetFrameworks>
@@ -34,15 +35,23 @@
     <ClassicTargetFrameworks Condition="$(IsWindows)">$(ClassicTargetFrameworks);uap10.0.10240;uap10.0.16299</ClassicTargetFrameworks>
   </PropertyGroup>
 
+  <!-- .NET Standard, .NET FX and .NET 6 -->
   <PropertyGroup>
     <BasicTargetFrameworks>netstandard1.3;netstandard2.0;net462</BasicTargetFrameworks>
     <Net6PlatformTargetFrameworks>net6.0-ios;net6.0-maccatalyst;net6.0-tvos;net6.0-macos;net6.0-android</Net6PlatformTargetFrameworks>
     <Net6TargetFrameworks>net6.0;$(Net6PlatformTargetFrameworks)</Net6TargetFrameworks>
   </PropertyGroup>
 
+  <!-- Base TFMs for the core parts -->
   <PropertyGroup>
     <AllTargetFrameworks>$(BasicTargetFrameworks)</AllTargetFrameworks>
     <AllTargetFrameworks Condition="$(BuildingForNet6)">$(AllTargetFrameworks);$(Net6TargetFrameworks)</AllTargetFrameworks>
+  </PropertyGroup>
+
+  <!-- .NET MAUI -->
+  <PropertyGroup>
+    <MauiTargetFrameworks>net6.0;net6.0-ios;net6.0-maccatalyst;net6.0-android</MauiTargetFrameworks>
+    <MauiTargetFrameworks Condition="$(IsWindows)">$(MauiTargetFrameworks);net6.0-windows10.0.19041</MauiTargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
