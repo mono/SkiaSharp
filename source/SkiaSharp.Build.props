@@ -27,6 +27,11 @@
     <LangVersion Condition="$(IsWindows)">10.0</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Disable csc shared compilation to reduce memory usage on CI -->
+    <UseSharedCompilation>False</UseSharedCompilation>
+  </PropertyGroup>
+
   <!-- Classic Tizen, Xamarin and UWP -->
   <PropertyGroup>
     <ClassicTargetFrameworks>tizen40</ClassicTargetFrameworks>
