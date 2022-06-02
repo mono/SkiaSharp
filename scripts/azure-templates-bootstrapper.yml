@@ -64,6 +64,9 @@ jobs:
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
         displayName: Determine build type
 
+      - pwsh: ./scripts/get-free-space.ps1
+        displayName: Display the free space to debug out of space errors
+
       # provisioning steps
       - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
         - ${{ parameters.vmImage.provisioningSteps }}
