@@ -64,6 +64,10 @@ jobs:
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
         displayName: Determine build type
 
+      - pwsh: ./scripts/get-free-space.ps1
+        displayName: Display the free space to debug out of space errors
+        condition: always()
+
       # provisioning steps
       - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
         - ${{ parameters.vmImage.provisioningSteps }}
@@ -130,9 +134,9 @@ jobs:
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install extra bits for the managed builds
-      - ${{ if and(not(startsWith(parameters.name, 'native_')), not(endsWith(parameters.name, '_linux'))) }}:
-        # install the bits needed for Android
-        - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
+      - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+        # install the bits needed for Android on macOS and Windows
+        - ${{ if and(eq(parameters.installAndroidSdk, 'true'), not(endsWith(parameters.name, '_linux'))) }}:
           # install the correct version of the JDK for .NET 6
           - pwsh: |
               if ("$env:JAVA_HOME_11_X64") {
@@ -188,7 +192,6 @@ jobs:
               version: 6.0.x
             retryCountOnTaskFailure: 3
             displayName: Install .NET Core 6.0.x
-          # install the bits needed for .NET 6 builds
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET Core
             retryCountOnTaskFailure: 3
@@ -287,6 +290,10 @@ jobs:
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
 
+      - pwsh: ./scripts/get-free-space.ps1
+        displayName: Display the free space to debug out of space errors
+        condition: always()
+
       # build
       - ${{ if eq(parameters.docker, '') }}:
         - ${{ if endsWith(parameters.name, '_windows') }}:
@@ -302,7 +309,6 @@ jobs:
               # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
               AppxSymbolPackageEnabled: false
             displayName: Run the bootstrapper for ${{ parameters.target }}
-            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - ${{ if not(endsWith(parameters.name, '_windows')) }}:
           - bash: |
@@ -313,7 +319,6 @@ jobs:
             env:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
-            retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
       - ${{ if ne(parameters.docker, '') }}:
         - task: Docker@2
@@ -333,6 +338,14 @@ jobs:
                 /bin/bash /work/cmd.sh
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+
+      - pwsh: ./scripts/get-free-space.ps1
+        displayName: Display the free space to debug out of space errors
+        condition: always()
+
+      - pwsh: ./scripts/get-largest-folders.ps1
+        displayName: Display the full folder size to debug out of space errors
+        condition: always()
 
       # post-build steps
       - ${{ parameters.postBuildSteps }}
