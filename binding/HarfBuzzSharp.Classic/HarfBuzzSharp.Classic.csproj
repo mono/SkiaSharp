@@ -1,0 +1,61 @@
+<Project Sdk="MSBuild.Sdk.Extras/3.0.44">
+  <PropertyGroup>
+    <TargetFrameworks>$(ClassicTargetFrameworks)</TargetFrameworks>
+    <RootNamespace>HarfBuzzSharp</RootNamespace>
+    <AssemblyName>HarfBuzzSharp</AssemblyName>
+    <PackagingGroup>HarfBuzzSharp</PackagingGroup>
+    <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
+    <PackagingPlatform Condition="'$(TargetFramework)' == 'monoandroid10.0'">monoandroid1.0</PackagingPlatform>
+    <DefineConstants Condition="'$(TargetFramework)' == 'xamarinmac2.0'">$(DefineConstants);__MACOS__</DefineConstants>
+    <DefineConstants Condition="'$(TargetFramework)' == 'tizen40'">$(DefineConstants);__TIZEN__;</DefineConstants>
+    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
+    <ExtrasTizenMetaPackageVersion>6.0.0.14995</ExtrasTizenMetaPackageVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'monoandroid10.0'">
+    <!-- Android -->
+    <None Include="..\..\output\native\android\x86\libHarfBuzzSharp*" Link="nuget\runtimes\android-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\x86_64\libHarfBuzzSharp*" Link="nuget\runtimes\android-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\armeabi-v7a\libHarfBuzzSharp*" Link="nuget\runtimes\android-arm\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\android\arm64-v8a\libHarfBuzzSharp*" Link="nuget\runtimes\android-arm64\native\%(Filename)%(Extension)" />
+    <None Include="..\HarfBuzzSharp\nuget\build\monoandroid\HarfBuzzSharp.targets" Link="nuget\build\$(PackagingPlatform)\HarfBuzzSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarinios1.0'">
+    <!-- iOS -->
+    <None Include="..\..\output\native\ios\libHarfBuzzSharp.framework\**" Link="nuget\runtimes\ios\native\libHarfBuzzSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\HarfBuzzSharp\nuget\build\xamarinios\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarintvos1.0'">
+    <!-- tvOS -->
+    <None Include="..\..\output\native\tvos\libHarfBuzzSharp.framework\**" Link="nuget\runtimes\tvos\native\libHarfBuzzSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\HarfBuzzSharp\nuget\build\xamarintvos\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarinwatchos1.0'">
+    <!-- watchOS -->
+    <None Include="..\..\output\native\watchos\libHarfBuzzSharp.framework\**" Link="nuget\runtimes\watchos\native\libHarfBuzzSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\HarfBuzzSharp\nuget\build\xamarinwatchos\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'xamarinmac2.0'">
+    <!-- macOS -->
+    <None Include="..\..\output\native\osx\libHarfBuzzSharp.*" Link="nuget\runtimes\osx\native\%(Filename)%(Extension)" />
+    <None Include="..\HarfBuzzSharp\nuget\build\xamarinmac\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'tizen40'">
+    <!-- Tizen -->
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+    <None Include="..\..\output\native\tizen\armel\libHarfBuzzSharp.*" Link="nuget\build\$(TargetFramework)\arm\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\tizen\i386\libHarfBuzzSharp.*" Link="nuget\build\$(TargetFramework)\x86\%(Filename)%(Extension)" />
+    <None Include="..\HarfBuzzSharp\nuget\build\tizen40\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.StartsWith('uap10'))">
+    <!-- UWP -->
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+    <None Include="..\..\output\native\uwp\x64\libHarfBuzzSharp*" Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\x86\libHarfBuzzSharp*" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\arm\libHarfBuzzSharp*" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\uwp\arm64\libHarfBuzzSharp*" Link="nuget\runtimes\win10-arm64\nativeassets\uap10.0\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>
