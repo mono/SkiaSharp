@@ -339,6 +339,10 @@ jobs:
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
+      - pwsh: ./scripts/get-free-space.ps1
+        displayName: Display the free space to debug out of space errors
+        condition: always()
+
       - pwsh: ./scripts/get-largest-folders.ps1
         displayName: Display the full folder size to debug out of space errors
         condition: always()
