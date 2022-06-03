@@ -399,10 +399,10 @@ stages:
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
-        - template: azure-templates-bootstrapper.yml # Build Managed .NET 6 (Windows)
+        - template: azure-templates-bootstrapper.yml # Build Managed .NET (Windows)
           parameters:
             name: managed_net6_windows
-            displayName:   .NET 6 (Windows)
+            displayName: Managed .NET (Windows)
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: libs
