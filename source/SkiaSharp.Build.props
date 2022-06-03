@@ -27,6 +27,14 @@
     <LangVersion Condition="$(IsWindows)">10.0</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Disable csc shared compilation to reduce memory usage on CI -->
+    <UseSharedCompilation>False</UseSharedCompilation>
+
+    <!-- Force the use of Uno Roslyn generators to reduce memory usage on CI -->
+    <UnoUIUseRoslynSourceGenerators>true</UnoUIUseRoslynSourceGenerators>
+  </PropertyGroup>
+
   <!-- Classic Tizen, Xamarin and UWP -->
   <PropertyGroup>
     <ClassicTargetFrameworks>tizen40</ClassicTargetFrameworks>
