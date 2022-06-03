@@ -335,20 +335,16 @@ jobs:
       - ${{ parameters.postBuildSteps }}
 
       # publish artifacts
-      - task: PublishBuildArtifacts@1
+      - publish: output
+        artifact:  ${{ parameters.name }}
         displayName: Publish the ${{ parameters.name }} artifacts
         condition: or(${{ parameters.shouldPublish }}, failed())
         retryCountOnTaskFailure: 3
-        inputs:
-          artifactName: ${{ parameters.name }}
-          pathToPublish: 'output'
       - ${{ if ne(parameters.artifactName, '') }}:
-        - task: PublishBuildArtifacts@1
+        - publish: output
+          artifact: ${{ parameters.artifactName }}
           displayName: Publish the combined ${{ parameters.artifactName }} artifacts
           retryCountOnTaskFailure: 3
-          inputs:
-            artifactName: ${{ parameters.artifactName }}
-            pathToPublish: 'output'
       - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
         - task: ComponentGovernanceComponentDetection@0
           displayName: Run component detection

@@ -464,26 +464,18 @@ stages:
               - name: managed
               - name: native
             postBuildSteps:
-              - task: PublishBuildArtifacts@1
+              - public: output/nugets
+                artifact: nuget
                 displayName: Publish the nuget artifacts
-                inputs:
-                  artifactName: nuget
-                  pathToPublish: 'output/nugets'
-              - task: PublishBuildArtifacts@1
+              - publish: output/nugets-special
+                artifact: nuget_special
                 displayName: Publish the special nuget artifacts
-                inputs:
-                  artifactName: nuget_special
-                  pathToPublish: 'output/nugets-special'
-              - task: PublishBuildArtifacts@1
+              - publish: output/nugets-symbols
+                artifact: nuget_symbols
                 displayName: Publish the special nuget artifacts
-                inputs:
-                  artifactName: nuget_symbols
-                  pathToPublish: 'output/nugets-symbols'
-              - task: PublishBuildArtifacts@1
+              - publish: SignList.xml
+                artifact: nuget
                 displayName: Publish the SignList.xml into nuget artifacts
-                inputs:
-                  artifactName: nuget
-                  pathToPublish: 'SignList.xml'
               - pwsh: |
                   Remove-Item ./output/native/ -Recurse -Force
                   Remove-Item ./output/nugets/ -Recurse -Force
@@ -516,12 +508,10 @@ stages:
               - pwsh: .\scripts\install-gtk.ps1
                 displayName: Install GTK# 2.12
             postBuildSteps:
-              - task: PublishBuildArtifacts@1
+              - publish: $(Build.SourcesDirectory)\output\api-diff
+                artifact: api-diff
                 displayName: Publish the API diffs
                 condition: always()
-                inputs:
-                  artifactName: api-diff
-                  pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
 
   - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
     - stage: signing
@@ -601,11 +591,9 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                   testRunTitle: 'Windows .NET Core Tests'
-              - task: PublishBuildArtifacts@1
+              - publish: output/coverage
+                artifact: coverage_netcore_windows
                 displayName: 'Publish the code coverage results'
-                inputs:
-                  artifactName: coverage_netcore_windows
-                  pathToPublish: 'output/coverage'
         - template: azure-templates-bootstrapper.yml # Tests|netfx (macOS)
           parameters:
             name: tests_netfx_macos
@@ -644,11 +632,9 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                   testRunTitle: 'macOS .NET Core Tests'
-              - task: PublishBuildArtifacts@1
+              - publish: output/coverage
+                artifact: coverage_netcore_macos
                 displayName: 'Publish the code coverage results'
-                inputs:
-                  artifactName: coverage_netcore_macos
-                  pathToPublish: 'output/coverage'
         - template: azure-templates-bootstrapper.yml # Tests|android (macOS)
           parameters:
             name: tests_android_macos
@@ -676,12 +662,10 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/SkiaSharp.Android.Tests/**/TestResults.xml'
                   testRunTitle: 'Android Tests'
-              - task: PublishBuildArtifacts@1
+              - publish: output/logs/testlogs
+                artifact: testlogs_android
                 displayName: Publish the test logs
                 condition: always()
-                inputs:
-                  artifactName: testlogs_android
-                  pathToPublish: 'output/logs/testlogs'
         - template: azure-templates-bootstrapper.yml # Tests|ios (macOS)
           parameters:
             name: tests_ios_macos
@@ -703,12 +687,10 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/SkiaSharp.iOS.Tests/**/TestResults.xml'
                   testRunTitle: 'iOS Tests'
-              - task: PublishBuildArtifacts@1
+              - publish: output/logs/testlogs
+                artifact: testlogs_ios
                 displayName: Publish the test logs
                 condition: always()
-                inputs:
-                  artifactName: testlogs_ios
-                  pathToPublish: 'output/logs/testlogs'
         - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
           parameters:
             name: tests_netfx_linux
@@ -749,11 +731,9 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
                   testRunTitle: 'Linux .NET Core Tests'
-              - task: PublishBuildArtifacts@1
+              - publish: output/coverage
                 displayName: 'Publish the code coverage results'
-                inputs:
-                  artifactName: coverage_netcore_linux
-                  pathToPublish: 'output/coverage'
+                artifact: coverage_netcore_linux
         - template: azure-templates-bootstrapper.yml # Tests [WASM] (Linux)
           parameters:
             name: tests_wasm_linux

@@ -20,8 +20,6 @@ jobs:
         additionalArgs: --emscriptenVersion=${{ version }}
         artifactName: ${{ parameters.artifactName }}
         postBuildSteps:
-          - task: PublishBuildArtifacts@1
+          - publish: output
             displayName: Publish the native_wasm_linux artifacts
-            inputs:
-              artifactName: native_wasm_linux
-              pathToPublish: 'output'
+            artifact: native_wasm_linux
