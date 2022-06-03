@@ -12,7 +12,7 @@ parameters:
   postBuildSteps: []                            # any additional steps to run after the build
   initScript: ''                                # any scripts to run before starting the bootstrapper
   additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
-  retryCount: 1                                 # the number of times to retry the bootstrapper
+  retryCount: 3                                 # the number of times to retry the bootstrapper
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
@@ -63,10 +63,6 @@ jobs:
       # determine build type
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
         displayName: Determine build type
-
-      - pwsh: ./scripts/get-free-space.ps1
-        displayName: Display the free space to debug out of space errors
-        condition: always()
 
       # provisioning steps
       - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
@@ -290,10 +286,6 @@ jobs:
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
 
-      - pwsh: ./scripts/get-free-space.ps1
-        displayName: Display the free space to debug out of space errors
-        condition: always()
-
       # build
       - ${{ if eq(parameters.docker, '') }}:
         - ${{ if endsWith(parameters.name, '_windows') }}:
@@ -338,14 +330,6 @@ jobs:
                 /bin/bash /work/cmd.sh
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-
-      - pwsh: ./scripts/get-free-space.ps1
-        displayName: Display the free space to debug out of space errors
-        condition: always()
-
-      - pwsh: ./scripts/get-largest-folders.ps1
-        displayName: Display the full folder size to debug out of space errors
-        condition: always()
 
       # post-build steps
       - ${{ parameters.postBuildSteps }}
