@@ -124,7 +124,7 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                             new XAttribute("Version", version),
                         }));
                     } else {
-                        Warning($"Unable to find version information for package '{packagingGroup}'.");
+                        Warning($"Unable to find version information for project '{packagingGroup}'.");
                     }
                 } else {
                     Debug($"Removing the file '{relFilePath}' for project '{rel}'.");

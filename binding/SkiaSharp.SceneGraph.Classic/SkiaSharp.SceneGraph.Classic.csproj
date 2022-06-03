@@ -1,0 +1,14 @@
+﻿<Project Sdk="MSBuild.Sdk.Extras/3.0.44">
+  <PropertyGroup>
+    <TargetFrameworks>$(ClassicTargetFrameworks)</TargetFrameworks>
+    <RootNamespace>SkiaSharp.SceneGraph</RootNamespace>
+    <AssemblyName>SkiaSharp.SceneGraph</AssemblyName>
+    <PackagingGroup>SkiaSharp.Skottie</PackagingGroup>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SkiaSharp.Classic\SkiaSharp.Classic.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SkiaSharp.SceneGraph\**\*.cs" Exclude="..\SkiaSharp.SceneGraph\bin\**;..\SkiaSharp.SceneGraph\obj\**" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>
