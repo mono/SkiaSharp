@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net6.0-ios;net6.0-maccatalyst;net6.0-android</TargetFrameworks>
-    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net6.0-windows10.0.19041</TargetFrameworks>
+    <TargetFrameworks>$(MauiTargetFrameworks)</TargetFrameworks>
     <TargetPlatformMinVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</TargetPlatformMinVersion>
     <PackagingGroup>SkiaSharp.Views.Maui.Core</PackagingGroup>
     <RootNamespace>SkiaSharp.Views.Maui.Core</RootNamespace>

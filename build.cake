@@ -34,12 +34,12 @@ var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 var SKIP_BUILD = Argument ("skipbuild", false);
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
-var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
+var SOLUTION_TYPE = Argument ("solutionType", "").ToLower ().Trim ();
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
 
 var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
@@ -153,25 +153,28 @@ Task ("libs")
 {
     // build the managed libraries
     var platform = "";
-    if (!BUILD_ALL_PLATFORMS) {
-        if (IsRunningOnWindows ()) {
-            platform = ".Windows";
-        } else if (IsRunningOnMacOs ()) {
-            platform = ".Mac";
-        } else if (IsRunningOnLinux ()) {
-            platform = ".Linux";
-        }
+    if (IsRunningOnWindows ()) {
+        platform = ".Windows";
+    } else if (IsRunningOnMacOs ()) {
+        platform = ".Mac";
+    } else if (IsRunningOnLinux ()) {
+        platform = ".Linux";
     }
 
     var net6 = $"./source/SkiaSharpSource{platform}-net6.slnf";
     var netfx = $"./source/SkiaSharpSource{platform}-netfx.slnf";
     if (FileExists (net6) || FileExists (netfx)) {
-        if (FileExists (net6))
+        if (FileExists (net6) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "net6"))
             RunMSBuild (net6, properties: new Dictionary<string, string> { { "BuildingForNet6", "true" } });
-        if (FileExists (netfx))
+        if (FileExists (netfx) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "netfx"))
             RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet6", "false" } });
     } else {
-        RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
+        var slnf = $"./source/SkiaSharpSource{platform}.slnf";
+        var sln = $"./source/SkiaSharpSource{platform}.sln";
+        if (FileExists (slnf))
+            RunMSBuild (slnf);
+        else
+            RunMSBuild (sln);
     }
 
     // assemble the mdoc docs
@@ -298,6 +301,9 @@ Task ("tests-android")
         FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
         RunMSBuild (csproj,
             targets: new [] { "SignAndroidPackage" }, 
+            properties: new Dictionary<string, string> {
+                { "BuildTestOnly", "true" },
+            },
             platform: "AnyCPU",
             configuration: "Debug");
         // run the tests
@@ -338,7 +344,10 @@ Task ("tests-ios")
         // package the app
         FilePath csproj = "./tests/SkiaSharp.iOS.Tests/SkiaSharp.iOS.Tests.csproj";
         RunMSBuild (csproj,
-            properties: new Dictionary<string, string> { { "BuildIpa", "true" } },
+            properties: new Dictionary<string, string> {
+                { "BuildIpa", "true" },
+                { "BuildTestOnly", "true" },
+            },
             platform: "iPhoneSimulator",
             configuration: "Debug");
         // run the tests
