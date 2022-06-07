@@ -35,6 +35,10 @@
     <Compile Remove="**\*.Windows.cs" />
     <None Include="**\*.Windows.cs" />
   </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-tizen'))">
+    <Compile Remove="**\*.Tizen.cs" />
+    <None Include="**\*.Tizen.cs" />
+  </ItemGroup>
   <!-- forms files -->
   <ItemGroup>
     <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Native.Shared\SKCanvasViewRendererBase.cs" Link="SKCanvasViewRendererBase.cs" />
@@ -69,5 +73,15 @@
     <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.UWP\SKCanvasViewRenderer.cs" Link="Windows\SKCanvasViewRenderer.cs" />
     <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.UWP\SKGLViewRenderer.cs" Link="Windows\SKGLViewRenderer.cs" />
     <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.UWP\SKImageSourceHandler.cs" Link="Windows\SKImageSourceHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKCanvasViewRenderer.cs" Link="Tizen\SKCanvasViewRenderer.cs" />
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKGLViewRenderer.cs" Link="Tizen\SKGLViewRenderer.cs" />
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKImageSourceHandler.cs" Link="Tizen\SKImageSourceHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-tizen'))">
+    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKCanvasViewRenderer.cs" Link="Tizen\SKCanvasViewRenderer.cs" />
+    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKGLViewRenderer.cs" Link="Tizen\SKGLViewRenderer.cs" />
+    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKImageSourceHandler.cs" Link="Tizen\SKImageSourceHandler.cs" />
   </ItemGroup>
 </Project>

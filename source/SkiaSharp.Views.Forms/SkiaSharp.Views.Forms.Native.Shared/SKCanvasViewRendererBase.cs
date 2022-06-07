@@ -26,6 +26,11 @@ using Microsoft.Maui.Controls.Handlers.Compatibility;
 using SKNativeView = SkiaSharp.Views.Windows.SKXamlCanvas;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Windows.SKPaintSurfaceEventArgs;
 using WVisibility = Microsoft.UI.Xaml.Visibility;
+#elif __TIZEN__
+using Microsoft.Maui.Controls.Compatibility.Platform.Tizen;
+using TForms = Microsoft.Maui.Controls.Compatibility.Forms;
+using SKNativeView = SkiaSharp.Views.Tizen.SKCanvasView;
+using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintSurfaceEventArgs;
 #endif
 
 #else
@@ -77,6 +82,9 @@ namespace SkiaSharp.Views.Maui.Controls.Compatibility
 namespace SkiaSharp.Views.Forms
 #endif
 {
+#if __MAUI__ && __TIZEN__
+	[Obsolete]
+#endif
 	public abstract class SKCanvasViewRendererBase<TFormsView, TNativeView> : ViewRenderer<TFormsView, TNativeView>
 		where TFormsView : SKFormsView
 		where TNativeView : SKNativeView

@@ -84,6 +84,13 @@
     <None Include="nuget\build\macos\SkiaSharp.targets" Link="nuget\build\net6.0-macos\SkiaSharp.targets" />
     <None Include="nuget\build\macos\SkiaSharp.Local.targets" Link="nuget\build\net6.0-macos\SkiaSharp.Local.targets" />
   </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <!-- Tizen -->
+    <None Include="..\..\output\native\tizen\armel\libSkiaSharp.*" Link="nuget\build\net6.0-tizen\arm\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.*" Link="nuget\build\net6.0-tizen\x86\%(Filename)%(Extension)" />
+    <None Include="nuget\build\tizen40\SkiaSharp.targets" Link="nuget\build\net6.0-tizen\SkiaSharp.targets" />
+    <None Include="nuget\build\tizen40\SkiaSharp.targets" Link="nuget\build\net6.0-tizen\SkiaSharp.Local.targets" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
