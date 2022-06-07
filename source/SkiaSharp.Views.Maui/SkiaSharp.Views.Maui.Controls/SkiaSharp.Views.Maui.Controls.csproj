@@ -38,6 +38,10 @@
     <Compile Remove="**\*.Windows.cs" />
     <None Include="**\*.Windows.cs" />
   </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-tizen'))">
+    <Compile Remove="**\*.Tizen.cs" />
+    <None Include="**\*.Tizen.cs" />
+  </ItemGroup>
   <!-- forms files -->
   <ItemGroup>
     <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Shared\RendererTypes.cs" Link="RendererTypes.cs" />

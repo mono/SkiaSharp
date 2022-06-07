@@ -18,7 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-android'))">
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-android')) or $(TargetFramework.Contains('-tizen'))">
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
@@ -49,6 +49,12 @@
     <Compile Remove="**\*.Windows.cs" />
     <None Include="**\*.Windows.cs" />
   </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-tizen'))">
+    <Compile Remove="**\Tizen\**\*.cs" />
+    <None Include="**\Tizen\**\*.cs" />
+    <Compile Remove="**\*.Tizen.cs" />
+    <None Include="**\*.Tizen.cs" />
+  </ItemGroup>
   <!-- forms files -->
   <ItemGroup>
     <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Shared\SKPaintGLSurfaceEventArgs.cs" Link="Core\SKPaintGLSurfaceEventArgs.cs" />
@@ -72,5 +78,11 @@
   </ItemGroup>
   <ItemGroup Condition="!$(TargetFramework.Contains('-windows'))">
     <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.UWP\SKTouchHandler.cs" Link="Platform\Windows\SKTouchHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKTouchHandler.cs" Link="Platform\Tizen\SKTouchHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-tizen'))">
+    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKTouchHandler.cs" Link="Platform\Tizen\SKTouchHandler.cs" />
   </ItemGroup>
 </Project>
