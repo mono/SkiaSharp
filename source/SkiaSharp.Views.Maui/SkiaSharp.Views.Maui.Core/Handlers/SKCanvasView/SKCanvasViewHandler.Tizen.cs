@@ -70,12 +70,10 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		private SKPoint OnGetScaledCoord(double x, double y)
 		{
-			if (VirtualView?.IgnorePixelScaling == false && PlatformView != null)
+			if (VirtualView?.IgnorePixelScaling == true && PlatformView != null)
 			{
-				var scale = PlatformView.ContentScaleFactor;
-
-				x *= scale;
-				y *= scale;
+				x = ScalingInfo.FromPixel(x);
+				y = ScalingInfo.FromPixel(y);
 			}
 
 			return new SKPoint((float)x, (float)y);

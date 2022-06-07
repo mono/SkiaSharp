@@ -2,9 +2,8 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Maui;
 using Microsoft.Extensions.Logging;
-using SkiaSharp.Views.Tizen;
+using Microsoft.Maui;
 using Tizen.UIExtensions.ElmSharp;
 
 namespace SkiaSharp.Views.Maui.Handlers
@@ -13,7 +12,6 @@ namespace SkiaSharp.Views.Maui.Handlers
 	{
 		public override Task<IImageSourceServiceResult<Image>?> GetImageAsync(IImageSource imageSource, Image image, CancellationToken cancellationToken = default) =>
 			GetImageAsync((IStreamImageSource)imageSource, image, cancellationToken);
-
 
 		public async Task<IImageSourceServiceResult<Image>?> GetImageAsync(IStreamImageSource imageSource, Image image, CancellationToken cancellationToken = default)
 		{

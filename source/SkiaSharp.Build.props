@@ -124,6 +124,10 @@
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
   </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <SupportedOSPlatformVersion>6.5</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>6.5</TargetPlatformMinVersion>
+  </PropertyGroup>
 
   <Target Name="PrintRID"
           BeforeTargets="BeforeBuild">
