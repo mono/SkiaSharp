@@ -107,7 +107,7 @@ namespace SkiaSharp.Views.Mac
 		{
 			// Track if the scale of the display has changed and if so force the SKGLView to reshape itself.
 			// If this is not done, the output will scale correctly when the window is dragged from a non-retina to a retina display.
-			if (lastBackingScaleFactor != Window.BackingScaleFactor)
+			if (Window != null && lastBackingScaleFactor != Window.BackingScaleFactor)
 			{
 				bool isFirstDraw = lastBackingScaleFactor == 0;
 				lastBackingScaleFactor = Window.BackingScaleFactor;
