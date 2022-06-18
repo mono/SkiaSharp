@@ -91,8 +91,8 @@ namespace SkiaSharp.Skottie
 		public void SeekFrameTime (TimeSpan time, InvalidationController? ic = null)
 			=> SeekFrameTime (time.TotalSeconds, ic);
 
-		public double Duration
-			=> SkottieApi.skottie_animation_get_duration (Handle);
+		public TimeSpan Duration
+			=> TimeSpan.FromSeconds(SkottieApi.skottie_animation_get_duration (Handle));
 
 		public double Fps
 			=> SkottieApi.skottie_animation_get_fps (Handle);

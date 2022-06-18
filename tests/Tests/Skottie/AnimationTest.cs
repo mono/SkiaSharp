@@ -184,7 +184,7 @@ namespace SkiaSharp.Tests
 		{
 			var animation = BuildDefaultAnimation();
 
-			Assert.Equal(5.9667, animation.Duration, PRECISION);
+			Assert.Equal(TimeSpan.FromSeconds(5.9666666), animation.Duration);
 		}
 
 		[SkippableFact]
