@@ -47,8 +47,10 @@
 
   <!-- .NET Standard, .NET FX and .NET 6 -->
   <PropertyGroup>
-    <BasicTargetFrameworks>netstandard1.3;netstandard2.0;netstandard2.1;net462;netcoreapp3.1;net5.0</BasicTargetFrameworks>
-    <BasicTargetFrameworks Condition="$(BuildingForNet6)">$(BasicTargetFrameworks);net6.0</BasicTargetFrameworks>
+    <AncientTargetFrameworks>netstandard1.3</AncientTargetFrameworks>
+    <BasicTargetFrameworksWithoutAncient>netstandard2.0;netstandard2.1;net462;netcoreapp3.1;net5.0</BasicTargetFrameworksWithoutAncient>
+    <BasicTargetFrameworksWithoutAncient Condition="$(BuildingForNet6)">$(BasicTargetFrameworksWithoutAncient);net6.0</BasicTargetFrameworksWithoutAncient>
+    <BasicTargetFrameworks>$(AncientTargetFrameworks);$(BasicTargetFrameworksWithoutAncient)</BasicTargetFrameworks>
     <Net6PlatformTargetFrameworks>net6.0-ios;net6.0-maccatalyst;net6.0-tvos;net6.0-macos;net6.0-android</Net6PlatformTargetFrameworks>
     <Net6PlatformTargetFrameworks Condition="$(IsNet6TizenSupported)">$(Net6PlatformTargetFrameworks);net6.0-tizen</Net6PlatformTargetFrameworks>
   </PropertyGroup>
