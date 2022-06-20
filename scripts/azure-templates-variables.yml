@@ -2,6 +2,7 @@ parameters:
   updateBuild: false
 
 steps:
+
   - pwsh: |
       $featurePrefix = "refs/heads/$env:FEATURE_NAME_PREFIX"
       if ($env:BUILD_SOURCEBRANCH.StartsWith($featurePrefix)) {
@@ -12,24 +13,68 @@ steps:
         Write-Host "No feature name."
       }
     displayName: Determine the feature name, if any
+
+  - pwsh: |
+      $isPR = [regex]::Match("$env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
+      if ($isPR) {
+        if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
+          $pr = $isPR.Groups[1].Value
+          Write-Host "PR number: $pr"
+          $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER = $pr
+          Write-Host "##vso[task.setvariable variable=SYSTEM_PULLREQUEST_PULLREQUESTNUMBER]$pr"
+        }
+        if (-not $env:SYSTEM_PULLREQUEST_SOURCECOMMITID) {
+          $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
+          Write-Host "PR SHA: $sha"
+          $env:SYSTEM_PULLREQUEST_SOURCECOMMITID = $sha
+          Write-Host "##vso[task.setvariable variable=SYSTEM_PULLREQUEST_SOURCECOMMITID]$sha"
+        }
+      } else {
+        Write-Host "Not a PR build."
+      }
+    condition: or(eq(variables['Build.Reason'], 'ResourceTrigger'), eq(variables['Build.Reason'], 'Manual'))
+    displayName: Update the PR variables for downstream builds
+
   - pwsh: |
       $pr = "pr." + $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
       Write-Host "Preview label: $pr"
       Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$pr"
     displayName: Use a special preview label for PRs
     condition: eq(variables['Build.Reason'], 'PullRequest')
+
   - pwsh: |
       $nightly = "nightly"
       Write-Host "Preview label: $nightly"
       Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$nightly"
     displayName: Use a special preview label for scheduled
     condition: eq(variables['Build.Reason'], 'Schedule')
+
+  - pwsh: |
+      Write-Host "Working with $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
+      if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
+        $match = [regex]::Match("$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME", '.*\-(.+)\.(\d+)')
+        $label = $match.Groups[1].Value
+        Write-Host "Preview label: $label"
+        Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$label"
+        $buildnumber = $match.Groups[2].Value
+        Write-Host "Build number: $buildnumber"
+        Write-Host "##vso[task.setvariable variable=BUILD_NUMBER]$buildnumber"
+      } else {
+        Write-Host "Not a secondary build."
+      }
+    condition: or(eq(variables['Build.Reason'], 'ResourceTrigger'), eq(variables['Build.Reason'], 'Manual'))
+    displayName: Override the preview label and build number if this is a secondary build
+
   - pwsh: |
       $label = ""
-      if ($env:BUILD_REASON -ne "PullRequest") {
-        $label = "+" + $env:BUILD_SOURCEBRANCHNAME
+      if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
+        $label = $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME
+      } else {
+        if ($env:BUILD_REASON -ne "PullRequest") {
+          $label = "+" + $env:BUILD_SOURCEBRANCHNAME
+        }
+        $label = "$env:SKIASHARP_VERSION-$env:PREVIEW_LABEL.$env:BUILD_NUMBER$label"
       }
-      $label = "$env:SKIASHARP_VERSION-$env:PREVIEW_LABEL.$env:BUILD_NUMBER$label"
       Write-Host "Build label: $label"
       Write-Host "##vso[build.updatebuildnumber]$label"
     displayName: Update the build number with a more readable one

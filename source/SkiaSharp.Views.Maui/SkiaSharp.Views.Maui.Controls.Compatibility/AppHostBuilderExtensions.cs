@@ -1,6 +1,5 @@
 ﻿using System;
-using Microsoft.Maui;
-using Microsoft.Maui.Controls.Compatibility;
+using Microsoft.Maui.Controls.Compatibility.Hosting;
 using Microsoft.Maui.Hosting;
 using SkiaSharp.Views.Maui.Controls.Compatibility;
 using SkiaSharp.Views.Maui.Controls.Hosting;
@@ -26,14 +25,34 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 				.ConfigureMauiHandlers(handlers =>
 				{
 #if !NETSTANDARD
-					if (replaceHandlers)
-						handlers.AddCompatibilityRenderer(typeof(SKCanvasView), typeof(SKCanvasViewRenderer));
-					else
-						handlers.TryAddCompatibilityRenderer(typeof(SKCanvasView), typeof(SKCanvasViewRenderer));
+					if (registerRenderers)
+					{
+#if __TIZEN__
+#pragma warning disable CS0612 // Type or member is obsolete
+						if (replaceHandlers)
+							handlers.AddCompatibilityRenderer<SKCanvasView, SKCanvasViewRenderer>();
+						else
+							handlers.TryAddCompatibilityRenderer(typeof(SKCanvasView), typeof(SKCanvasViewRenderer));
 
-#if !WINDOWS
-					handlers.AddCompatibilityRenderer(typeof(SKGLView), typeof(SKGLViewRenderer));
+						if (replaceHandlers)
+							handlers.AddCompatibilityRenderer<SKGLView, SKGLViewRenderer>();
+						else
+							handlers.TryAddCompatibilityRenderer(typeof(SKGLView), typeof(SKGLViewRenderer));
+#pragma warning restore CS0612 // Type or member is obsolete
+#else
+						if (replaceHandlers)
+							handlers.AddHandler<SKCanvasView, SKCanvasViewRenderer>();
+						else
+							handlers.TryAddHandler<SKCanvasView, SKCanvasViewRenderer>();
+
+#if !WINDOWS && !__MACCATALYST__
+						if (replaceHandlers)
+							handlers.AddHandler<SKGLView, SKGLViewRenderer>();
+						else
+							handlers.TryAddHandler<SKGLView, SKGLViewRenderer>();
 #endif
+#endif
+					}
 
 					CompatRegistrar.Registered.Register(typeof(SKImageImageSource), typeof(SKImageSourceHandler));
 					CompatRegistrar.Registered.Register(typeof(SKBitmapImageSource), typeof(SKImageSourceHandler));

@@ -72,7 +72,7 @@ public class SKCanvasView : Android.Views.View, Android.Graphics.Drawables.Drawa
 #### New Type: SkiaSharp.Views.Android.SKGLSurfaceView
 
 ```csharp
-public class SKGLSurfaceView : Android.Opengl.GLSurfaceView, Android.Graphics.Drawables.Drawable.ICallback, Android.Runtime.IJavaObject, Android.Views.Accessibility.IAccessibilityEventSource, Android.Views.ISurfaceHolderCallback, Android.Views.KeyEvent.ICallback, Java.Interop.IJavaPeerable, System.IDisposable {
+public class SKGLSurfaceView : Android.Opengl.GLSurfaceView, Android.Graphics.Drawables.Drawable.ICallback, Android.Runtime.IJavaObject, Android.Views.Accessibility.IAccessibilityEventSource, Android.Views.ISurfaceHolderCallback, Android.Views.ISurfaceHolderCallback2, Android.Views.KeyEvent.ICallback, Java.Interop.IJavaPeerable, System.IDisposable {
 	// constructors
 	public SKGLSurfaceView (Android.Content.Context context);
 	public SKGLSurfaceView (Android.Content.Context context, Android.Util.IAttributeSet attrs);

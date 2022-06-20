@@ -2,13 +2,13 @@
 using Windows.Foundation;
 using Windows.UI;
 
-#if WINDOWS
+#if WINDOWS || WINUI
 using Microsoft.UI.Xaml.Media.Imaging;
 #else
 using Windows.UI.Xaml.Media.Imaging;
 #endif
 
-#if WINDOWS
+#if WINDOWS || WINUI
 namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
@@ -75,7 +75,7 @@ namespace SkiaSharp.Views.UWP
 		{
 			using (var image = SKImage.FromPicture(picture, dimensions))
 			{
-				return image.ToWriteableBitmap();
+				return image?.ToWriteableBitmap();
 			}
 		}
 

@@ -1,14 +1,19 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using ElmSharp;
 
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Platform
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	internal class SKTouchHandler
 	{
 		private readonly MomentumHandler momentumHandler;
-		private Action<SKTouchEventArgs> onTouchAction;
-		private Func<double, double, SKPoint> scalePixels;
-		private GestureLayer gestureLayer;
+		private Action<SKTouchEventArgs>? onTouchAction;
+		private Func<double, double, SKPoint>? scalePixels;
+		private GestureLayer? gestureLayer;
 
 		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
 		{
@@ -52,7 +57,10 @@ namespace SkiaSharp.Views.Forms
 				};
 				gestureLayer.IsEnabled = true;
 
-				AddMomentumGesture();
+				gestureLayer.SetMomentumCallback(GestureLayer.GestureState.Start, (data) => { momentumHandler.OnStarted(); });
+				gestureLayer.SetMomentumCallback(GestureLayer.GestureState.Move, (data) => { momentumHandler.OnMoved(); });
+				gestureLayer.SetMomentumCallback(GestureLayer.GestureState.End, (data) => { momentumHandler.OnFinished(); });
+				gestureLayer.SetMomentumCallback(GestureLayer.GestureState.Abort, (data) => { momentumHandler.OnAborted(); });
 			}
 		}
 
@@ -64,14 +72,6 @@ namespace SkiaSharp.Views.Forms
 				gestureLayer.Unrealize();
 				gestureLayer = null;
 			}
-		}
-
-		private void AddMomentumGesture()
-		{
-			gestureLayer.SetMomentumCallback(GestureLayer.GestureState.Start, (data) => { momentumHandler.OnStarted(); });
-			gestureLayer.SetMomentumCallback(GestureLayer.GestureState.Move, (data) => { momentumHandler.OnMoved(); });
-			gestureLayer.SetMomentumCallback(GestureLayer.GestureState.End, (data) => { momentumHandler.OnFinished(); });
-			gestureLayer.SetMomentumCallback(GestureLayer.GestureState.Abort, (data) => { momentumHandler.OnAborted(); });
 		}
 
 		private class MomentumHandler
@@ -107,7 +107,7 @@ namespace SkiaSharp.Views.Forms
 
 			private void PostEvent(SKTouchAction action)
 			{
-				if (handler.onTouchAction == null || handler.scalePixels == null)
+				if (handler.onTouchAction == null || handler.scalePixels == null || handler.gestureLayer == null)
 					return;
 
 				var p = handler.gestureLayer.EvasCanvas.Pointer;

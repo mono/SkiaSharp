@@ -7,7 +7,7 @@
 #### New Type: SkiaSharp.Views.Mac.SKMetalView
 
 ```csharp
-public class SKMetalView : MetalKit.MTKView, AppKit.INSAccessibility, AppKit.INSAccessibilityElementProtocol, AppKit.INSAppearanceCustomization, AppKit.INSDraggingDestination, AppKit.INSTouchBarProvider, AppKit.INSUserInterfaceItemIdentification, CoreAnimation.ICALayerDelegate, Foundation.INSCoding, Foundation.INSObjectProtocol, MetalKit.IMTKViewDelegate, ObjCRuntime.INativeObject, System.ComponentModel.IComponent, System.IDisposable, System.IEquatable<Foundation.NSObject> {
+public class SKMetalView : MetalKit.MTKView, AppKit.INSAccessibility, AppKit.INSAccessibilityElementProtocol, AppKit.INSAppearanceCustomization, AppKit.INSDraggingDestination, AppKit.INSTouchBarProvider, AppKit.INSUserActivityRestoring, AppKit.INSUserInterfaceItemIdentification, CoreAnimation.ICALayerDelegate, Foundation.INSCoding, Foundation.INSObjectProtocol, MetalKit.IMTKViewDelegate, ObjCRuntime.INativeObject, System.ComponentModel.IComponent, System.IDisposable, System.IEquatable<Foundation.NSObject> {
 	// constructors
 	public SKMetalView ();
 	public SKMetalView (CoreGraphics.CGRect frame);

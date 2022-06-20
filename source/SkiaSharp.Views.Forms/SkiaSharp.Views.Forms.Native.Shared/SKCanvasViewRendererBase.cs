@@ -6,25 +6,31 @@ using System.ComponentModel;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Platform;
+using Microsoft.Maui.Platform;
 using SkiaSharp.Views.Maui.Platform;
 
 using SKFormsView = SkiaSharp.Views.Maui.Controls.SKCanvasView;
 
 #if __ANDROID__
 using Android.Content;
-using Microsoft.Maui.Controls.Compatibility.Platform.Android;
+using Microsoft.Maui.Controls.Handlers.Compatibility;
 using SKNativeView = SkiaSharp.Views.Android.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Android.SKPaintSurfaceEventArgs;
 #elif __IOS__
-using Microsoft.Maui.Controls.Compatibility.Platform.iOS;
+using Microsoft.Maui.Controls.Handlers.Compatibility;
 using SKNativeView = SkiaSharp.Views.iOS.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs;
 #elif WINDOWS
 using Windows.Graphics.Display;
-using Microsoft.Maui.Controls.Compatibility.Platform.UWP;
+using Microsoft.Maui.Controls.Handlers.Compatibility;
 using SKNativeView = SkiaSharp.Views.Windows.SKXamlCanvas;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Windows.SKPaintSurfaceEventArgs;
 using WVisibility = Microsoft.UI.Xaml.Visibility;
+#elif __TIZEN__
+using Microsoft.Maui.Controls.Compatibility.Platform.Tizen;
+using TForms = Microsoft.Maui.Controls.Compatibility.Forms;
+using SKNativeView = SkiaSharp.Views.Tizen.SKCanvasView;
+using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintSurfaceEventArgs;
 #endif
 
 #else
@@ -76,6 +82,9 @@ namespace SkiaSharp.Views.Maui.Controls.Compatibility
 namespace SkiaSharp.Views.Forms
 #endif
 {
+#if __MAUI__ && __TIZEN__
+	[Obsolete]
+#endif
 	public abstract class SKCanvasViewRendererBase<TFormsView, TNativeView> : ViewRenderer<TFormsView, TNativeView>
 		where TFormsView : SKFormsView
 		where TNativeView : SKNativeView

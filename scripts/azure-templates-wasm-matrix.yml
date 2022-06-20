@@ -1,5 +1,8 @@
 parameters:
   artifactName: ''                              # the name of the artifact to merge this run into
+  buildExternals: ''                            # the build number to download externals from
+  buildPipelineType: false
+  vmImage: ''                                   # the VM image
   emscripten: [ ]
 
 jobs:
@@ -8,7 +11,9 @@ jobs:
       parameters:
         name: native_wasm_${{ replace(version, '.', '_') }}_linux
         displayName: WASM (${{ version }})
-        vmImage: $(VM_IMAGE_LINUX)
+        buildExternals: ${{ parameters.buildExternals }}
+        buildPipelineType: ${{ parameters.buildPipelineType }}
+        vmImage: ${{ parameters.vmImage }}
         docker: scripts/Docker/wasm
         target: externals-wasm
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version }}

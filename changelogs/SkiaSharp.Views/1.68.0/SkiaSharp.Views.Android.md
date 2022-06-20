@@ -11,7 +11,7 @@
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
+ [Obsolete ()]
  protected virtual void OnDraw (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info);
 ```
 
@@ -33,7 +33,7 @@ public event System.EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use PaintSurface instead.")]
+ [Obsolete ()]
  public virtual void SetRenderer (SKGLSurfaceView.ISKRenderer renderer);
 ```
 
@@ -49,7 +49,7 @@ protected virtual void OnPaintSurface (SKPaintGLSurfaceEventArgs e);
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
+ [Obsolete ()]
  protected virtual void OnDrawFrame (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 ```
 
@@ -78,7 +78,7 @@ public event System.EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use PaintSurface instead.")]
+ [Obsolete ()]
  public virtual void SetRenderer (SKGLTextureView.ISKRenderer renderer);
 ```
 
@@ -94,7 +94,7 @@ protected virtual void OnPaintSurface (SKPaintGLSurfaceEventArgs e);
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
+ [Obsolete ()]
  protected virtual void OnDrawFrame (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 ```
 
@@ -117,7 +117,7 @@ protected virtual void OnPaintSurface (SKPaintGLSurfaceEventArgs e);
 Obsoleted constructors:
 
 ```diff
- [Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
+ [Obsolete ()]
  public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 ```
 
@@ -131,7 +131,7 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 Obsoleted properties:
 
 ```diff
- [Obsolete ("Use BackendRenderTarget instead.")]
+ [Obsolete ()]
  public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 ```
 

@@ -1,23 +1,30 @@
 using System;
 using System.Runtime.InteropServices;
 
+#region Namespaces
+
+
+#endregion
+
+#region Class declarations
+
+using hb_blob_t = System.IntPtr;
+using hb_buffer_t = System.IntPtr;
+using hb_face_t = System.IntPtr;
+using hb_font_funcs_t = System.IntPtr;
+using hb_font_t = System.IntPtr;
+using hb_language_impl_t = System.IntPtr;
+using hb_map_t = System.IntPtr;
+using hb_set_t = System.IntPtr;
+using hb_shape_plan_t = System.IntPtr;
+using hb_unicode_funcs_t = System.IntPtr;
+
+#endregion
+
+#region Functions
+
 namespace HarfBuzzSharp
 {
-	#region Class declarations
-
-	using hb_blob_t = IntPtr;
-	using hb_buffer_t = IntPtr;
-	using hb_face_t = IntPtr;
-	using hb_font_funcs_t = IntPtr;
-	using hb_font_t = IntPtr;
-	using hb_language_impl_t = IntPtr;
-	using hb_map_t = IntPtr;
-	using hb_set_t = IntPtr;
-	using hb_shape_plan_t = IntPtr;
-	using hb_unicode_funcs_t = IntPtr;
-
-	#endregion
-
 	internal unsafe partial class HarfBuzzApi
 	{
 		#region hb-blob.h
@@ -62,6 +69,34 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_blob_create_from_file hb_blob_create_from_file_delegate;
 		internal static hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] String file_name) =>
 			(hb_blob_create_from_file_delegate ??= GetSymbol<Delegates.hb_blob_create_from_file> ("hb_blob_create_from_file")).Invoke (file_name);
+		#endif
+
+		// extern hb_blob_t* hb_blob_create_from_file_or_fail(const char* file_name)
+		#if !USE_DELEGATES
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern hb_blob_t hb_blob_create_from_file_or_fail (/* char */ void* file_name);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate hb_blob_t hb_blob_create_from_file_or_fail (/* char */ void* file_name);
+		}
+		private static Delegates.hb_blob_create_from_file_or_fail hb_blob_create_from_file_or_fail_delegate;
+		internal static hb_blob_t hb_blob_create_from_file_or_fail (/* char */ void* file_name) =>
+			(hb_blob_create_from_file_or_fail_delegate ??= GetSymbol<Delegates.hb_blob_create_from_file_or_fail> ("hb_blob_create_from_file_or_fail")).Invoke (file_name);
+		#endif
+
+		// extern hb_blob_t* hb_blob_create_or_fail(const char* data, unsigned int length, hb_memory_mode_t mode, void* user_data, hb_destroy_func_t destroy)
+		#if !USE_DELEGATES
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern hb_blob_t hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate hb_blob_t hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy);
+		}
+		private static Delegates.hb_blob_create_or_fail hb_blob_create_or_fail_delegate;
+		internal static hb_blob_t hb_blob_create_or_fail (/* char */ void* data, UInt32 length, MemoryMode mode, void* user_data, DestroyProxyDelegate destroy) =>
+			(hb_blob_create_or_fail_delegate ??= GetSymbol<Delegates.hb_blob_create_or_fail> ("hb_blob_create_or_fail")).Invoke (data, length, mode, user_data, destroy);
 		#endif
 
 		// extern hb_blob_t* hb_blob_create_sub_blob(hb_blob_t* parent, unsigned int offset, unsigned int length)
@@ -354,6 +389,22 @@ namespace HarfBuzzSharp
 			(hb_buffer_deserialize_glyphs_delegate ??= GetSymbol<Delegates.hb_buffer_deserialize_glyphs> ("hb_buffer_deserialize_glyphs")).Invoke (buffer, buf, buf_len, end_ptr, font, format);
 		#endif
 
+		// extern hb_bool_t hb_buffer_deserialize_unicode(hb_buffer_t* buffer, const char* buf, int buf_len, const char** end_ptr, hb_buffer_serialize_format_t format)
+		#if !USE_DELEGATES
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_buffer_deserialize_unicode (hb_buffer_t buffer, /* char */ void* buf, Int32 buf_len, /* char */ void** end_ptr, SerializeFormat format);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_buffer_deserialize_unicode (hb_buffer_t buffer, /* char */ void* buf, Int32 buf_len, /* char */ void** end_ptr, SerializeFormat format);
+		}
+		private static Delegates.hb_buffer_deserialize_unicode hb_buffer_deserialize_unicode_delegate;
+		internal static bool hb_buffer_deserialize_unicode (hb_buffer_t buffer, /* char */ void* buf, Int32 buf_len, /* char */ void** end_ptr, SerializeFormat format) =>
+			(hb_buffer_deserialize_unicode_delegate ??= GetSymbol<Delegates.hb_buffer_deserialize_unicode> ("hb_buffer_deserialize_unicode")).Invoke (buffer, buf, buf_len, end_ptr, format);
+		#endif
+
 		// extern void hb_buffer_destroy(hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -578,6 +629,22 @@ namespace HarfBuzzSharp
 			(hb_buffer_guess_segment_properties_delegate ??= GetSymbol<Delegates.hb_buffer_guess_segment_properties> ("hb_buffer_guess_segment_properties")).Invoke (buffer);
 		#endif
 
+		// extern hb_bool_t hb_buffer_has_positions(hb_buffer_t* buffer)
+		#if !USE_DELEGATES
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_buffer_has_positions (hb_buffer_t buffer);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_buffer_has_positions (hb_buffer_t buffer);
+		}
+		private static Delegates.hb_buffer_has_positions hb_buffer_has_positions_delegate;
+		internal static bool hb_buffer_has_positions (hb_buffer_t buffer) =>
+			(hb_buffer_has_positions_delegate ??= GetSymbol<Delegates.hb_buffer_has_positions> ("hb_buffer_has_positions")).Invoke (buffer);
+		#endif
+
 		// extern void hb_buffer_normalize_glyphs(hb_buffer_t* buffer)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -678,6 +745,20 @@ namespace HarfBuzzSharp
 			(hb_buffer_reverse_range_delegate ??= GetSymbol<Delegates.hb_buffer_reverse_range> ("hb_buffer_reverse_range")).Invoke (buffer, start, end);
 		#endif
 
+		// extern unsigned int hb_buffer_serialize(hb_buffer_t* buffer, unsigned int start, unsigned int end, char* buf, unsigned int buf_size, unsigned int* buf_consumed, hb_font_t* font, hb_buffer_serialize_format_t format, hb_buffer_serialize_flags_t flags)
+		#if !USE_DELEGATES
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_buffer_serialize (hb_buffer_t buffer, UInt32 start, UInt32 end, /* char */ void* buf, UInt32 buf_size, UInt32* buf_consumed, hb_font_t font, SerializeFormat format, SerializeFlag flags);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_buffer_serialize (hb_buffer_t buffer, UInt32 start, UInt32 end, /* char */ void* buf, UInt32 buf_size, UInt32* buf_consumed, hb_font_t font, SerializeFormat format, SerializeFlag flags);
+		}
+		private static Delegates.hb_buffer_serialize hb_buffer_serialize_delegate;
+		internal static UInt32 hb_buffer_serialize (hb_buffer_t buffer, UInt32 start, UInt32 end, /* char */ void* buf, UInt32 buf_size, UInt32* buf_consumed, hb_font_t font, SerializeFormat format, SerializeFlag flags) =>
+			(hb_buffer_serialize_delegate ??= GetSymbol<Delegates.hb_buffer_serialize> ("hb_buffer_serialize")).Invoke (buffer, start, end, buf, buf_size, buf_consumed, font, format, flags);
+		#endif
+
 		// extern hb_buffer_serialize_format_t hb_buffer_serialize_format_from_string(const char* str, int len)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -732,6 +813,20 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_buffer_serialize_list_formats hb_buffer_serialize_list_formats_delegate;
 		internal static /* char */ void** hb_buffer_serialize_list_formats () =>
 			(hb_buffer_serialize_list_formats_delegate ??= GetSymbol<Delegates.hb_buffer_serialize_list_formats> ("hb_buffer_serialize_list_formats")).Invoke ();
+		#endif
+
+		// extern unsigned int hb_buffer_serialize_unicode(hb_buffer_t* buffer, unsigned int start, unsigned int end, char* buf, unsigned int buf_size, unsigned int* buf_consumed, hb_buffer_serialize_format_t format, hb_buffer_serialize_flags_t flags)
+		#if !USE_DELEGATES
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_buffer_serialize_unicode (hb_buffer_t buffer, UInt32 start, UInt32 end, /* char */ void* buf, UInt32 buf_size, UInt32* buf_consumed, SerializeFormat format, SerializeFlag flags);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_buffer_serialize_unicode (hb_buffer_t buffer, UInt32 start, UInt32 end, /* char */ void* buf, UInt32 buf_size, UInt32* buf_consumed, SerializeFormat format, SerializeFlag flags);
+		}
+		private static Delegates.hb_buffer_serialize_unicode hb_buffer_serialize_unicode_delegate;
+		internal static UInt32 hb_buffer_serialize_unicode (hb_buffer_t buffer, UInt32 start, UInt32 end, /* char */ void* buf, UInt32 buf_size, UInt32* buf_consumed, SerializeFormat format, SerializeFlag flags) =>
+			(hb_buffer_serialize_unicode_delegate ??= GetSymbol<Delegates.hb_buffer_serialize_unicode> ("hb_buffer_serialize_unicode")).Invoke (buffer, start, end, buf, buf_size, buf_consumed, format, flags);
 		#endif
 
 		// extern void hb_buffer_set_cluster_level(hb_buffer_t* buffer, hb_buffer_cluster_level_t cluster_level)
@@ -2208,6 +2303,20 @@ namespace HarfBuzzSharp
 			(hb_font_get_nominal_glyph_delegate ??= GetSymbol<Delegates.hb_font_get_nominal_glyph> ("hb_font_get_nominal_glyph")).Invoke (font, unicode, glyph);
 		#endif
 
+		// extern unsigned int hb_font_get_nominal_glyphs(hb_font_t* font, unsigned int count, const hb_codepoint_t* first_unicode, unsigned int unicode_stride, hb_codepoint_t* first_glyph, unsigned int glyph_stride)
+		#if !USE_DELEGATES
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_font_get_nominal_glyphs (hb_font_t font, UInt32 count, UInt32* first_unicode, UInt32 unicode_stride, UInt32* first_glyph, UInt32 glyph_stride);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_font_get_nominal_glyphs (hb_font_t font, UInt32 count, UInt32* first_unicode, UInt32 unicode_stride, UInt32* first_glyph, UInt32 glyph_stride);
+		}
+		private static Delegates.hb_font_get_nominal_glyphs hb_font_get_nominal_glyphs_delegate;
+		internal static UInt32 hb_font_get_nominal_glyphs (hb_font_t font, UInt32 count, UInt32* first_unicode, UInt32 unicode_stride, UInt32* first_glyph, UInt32 glyph_stride) =>
+			(hb_font_get_nominal_glyphs_delegate ??= GetSymbol<Delegates.hb_font_get_nominal_glyphs> ("hb_font_get_nominal_glyphs")).Invoke (font, count, first_unicode, unicode_stride, first_glyph, glyph_stride);
+		#endif
+
 		// extern hb_font_t* hb_font_get_parent(hb_font_t* font)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -3244,6 +3353,20 @@ namespace HarfBuzzSharp
 			(hb_ot_layout_lookup_collect_glyphs_delegate ??= GetSymbol<Delegates.hb_ot_layout_lookup_collect_glyphs> ("hb_ot_layout_lookup_collect_glyphs")).Invoke (face, table_tag, lookup_index, glyphs_before, glyphs_input, glyphs_after, glyphs_output);
 		#endif
 
+		// extern unsigned int hb_ot_layout_lookup_get_glyph_alternates(hb_face_t* face, unsigned int lookup_index, hb_codepoint_t glyph, unsigned int start_offset, unsigned int* alternate_count, hb_codepoint_t* alternate_glyphs)
+		#if !USE_DELEGATES
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 hb_ot_layout_lookup_get_glyph_alternates (hb_face_t face, UInt32 lookup_index, UInt32 glyph, UInt32 start_offset, UInt32* alternate_count, UInt32* alternate_glyphs);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 hb_ot_layout_lookup_get_glyph_alternates (hb_face_t face, UInt32 lookup_index, UInt32 glyph, UInt32 start_offset, UInt32* alternate_count, UInt32* alternate_glyphs);
+		}
+		private static Delegates.hb_ot_layout_lookup_get_glyph_alternates hb_ot_layout_lookup_get_glyph_alternates_delegate;
+		internal static UInt32 hb_ot_layout_lookup_get_glyph_alternates (hb_face_t face, UInt32 lookup_index, UInt32 glyph, UInt32 start_offset, UInt32* alternate_count, UInt32* alternate_glyphs) =>
+			(hb_ot_layout_lookup_get_glyph_alternates_delegate ??= GetSymbol<Delegates.hb_ot_layout_lookup_get_glyph_alternates> ("hb_ot_layout_lookup_get_glyph_alternates")).Invoke (face, lookup_index, glyph, start_offset, alternate_count, alternate_glyphs);
+		#endif
+
 		// extern void hb_ot_layout_lookup_substitute_closure(hb_face_t* face, unsigned int lookup_index, hb_set_t* glyphs)
 		#if !USE_DELEGATES
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -3844,6 +3967,20 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_set_clear hb_set_clear_delegate;
 		internal static void hb_set_clear (hb_set_t set) =>
 			(hb_set_clear_delegate ??= GetSymbol<Delegates.hb_set_clear> ("hb_set_clear")).Invoke (set);
+		#endif
+
+		// extern hb_set_t* hb_set_copy(const hb_set_t* set)
+		#if !USE_DELEGATES
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern hb_set_t hb_set_copy (hb_set_t set);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate hb_set_t hb_set_copy (hb_set_t set);
+		}
+		private static Delegates.hb_set_copy hb_set_copy_delegate;
+		internal static hb_set_t hb_set_copy (hb_set_t set) =>
+			(hb_set_copy_delegate ??= GetSymbol<Delegates.hb_set_copy> ("hb_set_copy")).Invoke (set);
 		#endif
 
 		// extern hb_set_t* hb_set_create()
@@ -4559,9 +4696,13 @@ namespace HarfBuzzSharp
 		#endregion
 
 	}
+}
 
-	#region Delegates
+#endregion Functions
 
+#region Delegates
+
+namespace HarfBuzzSharp {
 	// typedef hb_bool_t (*)(hb_buffer_t* buffer, hb_font_t* font, const char* message, void* user_data)* hb_buffer_message_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
@@ -4631,15 +4772,15 @@ namespace HarfBuzzSharp
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool FontGetVariationGlyphProxyDelegate(hb_font_t font, void* font_data, UInt32 unicode, UInt32 variation_selector, UInt32* glyph, void* user_data);
-// TODO: typedef const const hb_language_impl_t* hb_language_t
 
+// TODO: typedef const hb_language_impl_t* hb_language_t
 	// typedef hb_blob_t* (*)(hb_face_t* face, hb_tag_t tag, void* user_data)* hb_reference_table_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate hb_blob_t ReferenceTableProxyDelegate(hb_face_t face, UInt32 tag, void* user_data);
 
 	// typedef hb_unicode_combining_class_t (*)(hb_unicode_funcs_t* ufuncs, hb_codepoint_t unicode, void* user_data)* hb_unicode_combining_class_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate UnicodeCombiningClass UnicodeCombiningClassProxyDelegate(hb_unicode_funcs_t ufuncs, UInt32 unicode, void* user_data);
+	internal unsafe delegate int UnicodeCombiningClassProxyDelegate(hb_unicode_funcs_t ufuncs, UInt32 unicode, void* user_data);
 
 	// typedef hb_bool_t (*)(hb_unicode_funcs_t* ufuncs, hb_codepoint_t a, hb_codepoint_t b, hb_codepoint_t* ab, void* user_data)* hb_unicode_compose_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4661,7 +4802,7 @@ namespace HarfBuzzSharp
 
 	// typedef hb_unicode_general_category_t (*)(hb_unicode_funcs_t* ufuncs, hb_codepoint_t unicode, void* user_data)* hb_unicode_general_category_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate UnicodeGeneralCategory UnicodeGeneralCategoryProxyDelegate(hb_unicode_funcs_t ufuncs, UInt32 unicode, void* user_data);
+	internal unsafe delegate int UnicodeGeneralCategoryProxyDelegate(hb_unicode_funcs_t ufuncs, UInt32 unicode, void* user_data);
 
 	// typedef hb_codepoint_t (*)(hb_unicode_funcs_t* ufuncs, hb_codepoint_t unicode, void* user_data)* hb_unicode_mirroring_func_t
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4671,9 +4812,13 @@ namespace HarfBuzzSharp
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate UInt32 UnicodeScriptProxyDelegate(hb_unicode_funcs_t ufuncs, UInt32 unicode, void* user_data);
 
-	#endregion
+}
 
-	#region Structs
+#endregion
+
+#region Structs
+
+namespace HarfBuzzSharp {
 
 	// hb_feature_t
 	[StructLayout (LayoutKind.Sequential)]
@@ -5338,10 +5483,13 @@ namespace HarfBuzzSharp
 		}
 
 	}
+}
 
-	#endregion
+#endregion
 
-	#region Enums
+#region Enums
+
+namespace HarfBuzzSharp {
 
 	// hb_buffer_cluster_level_t
 	public enum ClusterLevel {
@@ -5899,6 +6047,6 @@ namespace HarfBuzzSharp
 		// HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR = 29
 		SpaceSeparator = 29,
 	}
-
-	#endregion
 }
+
+#endregion

@@ -88,13 +88,12 @@ void RunNetCorePublish(FilePath testProject, DirectoryPath output)
 void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
 {
     try {
-        RunProcess("reportgenerator", new ProcessSettings {
-            Arguments = 
-                $"-reports:{testResultsGlob} " +
-                $"-targetdir:{output} " +
-                $"-reporttypes:HtmlInline_AzurePipelines;Cobertura " +
-                $"-assemblyfilters:-*.Tests"
-        });
+        DotNetTool(
+            $"reportgenerator" +
+            $"  -reports:{testResultsGlob}" +
+            $"  -targetdir:{output}" +
+            $"  -reporttypes:HtmlInline_AzurePipelines;Cobertura" +
+            $"  -assemblyfilters:-*.Tests");
     } catch (Exception ex) {
         Error("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
         Error(ex);
@@ -182,7 +181,10 @@ string[] GetReferenceSearchPaths()
     var refs = new List<string>();
 
     if (IsRunningOnWindows()) {
-        var vs = VS_INSTALL ?? VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" });
+        var vs =
+            VS_INSTALL ??
+            VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" }) ??
+            VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin", IncludePrerelease = true });
         var referenceAssemblies = $"{vs}/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
         var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 
@@ -197,7 +199,6 @@ string[] GetReferenceSearchPaths()
         refs.Add($"{pf}/Windows Kits/10/UnionMetadata/Facade");
         refs.Add($"{pf}/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0");
         refs.Add($"{pf}/Windows Kits/10/References/Windows.Foundation.FoundationContract/1.0.0.0");
-        refs.Add($"{pf}/GtkSharp/2.12/lib");
         refs.Add($"{pf}/GtkSharp/2.12/lib/gtk-sharp-2.0");
         refs.Add($"{vs}/Common7/IDE/PublicAssemblies");
     } else {
@@ -238,7 +239,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     comparer.SearchPaths.AddRange(GetReferenceSearchPaths());
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
 
-    await AddDep("OpenTK.GLControl", "NET40");
+    await AddDep("OpenTK.GLControl", "NET20");
     await AddDep("Tizen.NET", "netstandard2.0");
     await AddDep("Xamarin.Forms", "netstandard2.0");
     await AddDep("Xamarin.Forms", "MonoAndroid90");
@@ -254,7 +255,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");
     await AddDep("Uno.UI", "netstandard2.0");
-    await AddDep("Uno.UI", "MonoAndroid90");
+    await AddDep("Uno.UI", "MonoAndroid10.0");
     await AddDep("Uno.UI", "xamarinios10");
     await AddDep("Uno.UI", "xamarinmac20");
     await AddDep("Uno.UI", "UAP");
@@ -266,6 +267,12 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Xamarin.Forms", "Xamarin.iOS10", "reference");
     await AddDep("Xamarin.Forms", "Xamarin.Mac", "reference");
     await AddDep("Xamarin.Forms", "uap10.0", "reference");
+
+    Verbose("Added search paths:");
+    foreach (var path in comparer.SearchPaths) {
+        var found = GetFiles($"{path}/*.dll").Any() || GetFiles($"{path}/*.winmd").Any();
+        Verbose($"    {(found ? " " : "!")} {path}");
+    }
 
     return comparer;
 
@@ -308,11 +315,6 @@ async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
         currentId = currentId.ToLower();
 
         Information($"Downloading '{currentId}' version '{currentVersion}'...");
-
-        if (currentId == "_nativeassets.maccatalyst") {
-            Warning($"Skipping '{currentId}' because we do not yet have this package working...");
-            return;
-        }
 
         var root = await comparer.ExtractCachedPackageAsync(currentId, currentVersion);
         var toolsDir = $"{root}/tools/";

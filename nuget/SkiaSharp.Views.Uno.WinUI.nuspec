@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+
+    <!-- package -->
+    <id>SkiaSharp.Views.Uno.WinUI</id>
+    <title>SkiaSharp for Uno Platform</title>
+    <version>1.0.0</version>
+    <description>
+SkiaSharp for Uno Platform is a set of views that can be used to draw on the screen.
+    </description>
+    <summary>
+SkiaSharp for Uno Platform is a set of views that can be used to draw on the screen.
+    </summary>
+    <releaseNotes>
+Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release notes.
+    </releaseNotes>
+    <projectUrl>https://go.microsoft.com/fwlink/?linkid=868515</projectUrl>
+    <iconUrl>https://go.microsoft.com/fwlink/?linkid=2130524</iconUrl>
+    <tags>ui uno xamarin graphics ios android catalyst windows winui macos cross-platform skiasharp</tags>
+
+    <!-- legal -->
+    <licenseUrl>https://go.microsoft.com/fwlink/?linkid=868514</licenseUrl>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+
+    <dependencies>
+      <group targetFramework="netstandard2.0">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+        <dependency id="SkiaSharp.NativeAssets.WebAssembly" version="1.0.0" />
+      </group>
+      <group targetFramework="net6.0-ios13.6">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="net6.0-maccatalyst13.5">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="net6.0-macos12.1">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="net6.0-android30.0">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="net5.0-windows10.0.18362.0">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+        <dependency id="SkiaSharp.Views" version="1.0.0" />
+      </group>
+    </dependencies>
+
+  </metadata>
+  <files>
+
+    <!-- SkiaSharp.Views.Windows.dll -->
+    <file src="lib/netstandard2.0/SkiaSharp.Views.Windows.dll" />
+    <file src="lib/netstandard2.0/SkiaSharp.Views.Windows.pdb" />
+    <file src="lib/netstandard2.0/SkiaSharp.Views.Windows.xml" />
+    <file src="uno-runtime/webassembly/SkiaSharp.Views.Windows.dll" />
+    <file src="uno-runtime/webassembly/SkiaSharp.Views.Windows.pdb" />
+    <file src="uno-runtime/webassembly/SkiaSharp.Views.Windows.xml" />
+    <file src="uno-runtime/skia/SkiaSharp.Views.Windows.dll" />
+    <file src="uno-runtime/skia/SkiaSharp.Views.Windows.pdb" />
+    <file src="uno-runtime/skia/SkiaSharp.Views.Windows.xml" />
+    <file platform="windows" src="lib/net6.0-android/SkiaSharp.Views.Windows.dll" target="lib/net6.0-android3.0/SkiaSharp.Views.Windows.dll"/>
+    <file platform="windows" src="lib/net6.0-android/SkiaSharp.Views.Windows.pdb" target="lib/net6.0-android3.0/SkiaSharp.Views.Windows.pdb"/>
+    <file platform="windows" src="lib/net6.0-android/SkiaSharp.Views.Windows.xml" target="lib/net6.0-android3.0/SkiaSharp.Views.Windows.xml"/>
+    <file platform="windows" src="lib/net6.0-ios/SkiaSharp.Views.Windows.dll" target="lib/net6.0-ios13.6/SkiaSharp.Views.Windows.dll"/>
+    <file platform="windows" src="lib/net6.0-ios/SkiaSharp.Views.Windows.pdb" target="lib/net6.0-ios13.6/SkiaSharp.Views.Windows.pdb"/>
+    <file platform="windows" src="lib/net6.0-ios/SkiaSharp.Views.Windows.xml" target="lib/net6.0-ios13.6/SkiaSharp.Views.Windows.xml"/>
+    <file platform="windows" src="lib/net6.0-macos/SkiaSharp.Views.Windows.dll" target="lib/net6.0-macos12.1/SkiaSharp.Views.Windows.dll"/>
+    <file platform="windows" src="lib/net6.0-macos/SkiaSharp.Views.Windows.pdb" target="lib/net6.0-macos12.1/SkiaSharp.Views.Windows.pdb"/>
+    <file platform="windows" src="lib/net6.0-macos/SkiaSharp.Views.Windows.xml" target="lib/net6.0-macos12.1/SkiaSharp.Views.Windows.xml"/>
+    <file platform="windows" src="lib/net6.0-maccatalyst/SkiaSharp.Views.Windows.dll" target="lib/net6.0-maccatalyst13.5/SkiaSharp.Views.Windows.dll"/>
+    <file platform="windows" src="lib/net6.0-maccatalyst/SkiaSharp.Views.Windows.pdb" target="lib/net6.0-maccatalyst13.5/SkiaSharp.Views.Windows.pdb"/>
+    <file platform="windows" src="lib/net6.0-maccatalyst/SkiaSharp.Views.Windows.xml" target="lib/net6.0-maccatalyst13.5/SkiaSharp.Views.Windows.xml"/>
+    
+    <!-- Fallback to avoid netstandard2.0 to be used incorrectly and cause hard to troubleshoot build errors -->
+    <file src="_._" target="lib/net5.0-windows10.0.18362.0/_._" />
+
+    <!-- the build bits -->
+    <file src="build/netstandard2.0/SkiaSharp.Views.Uno.WinUI.targets" />
+    <file src="build/netstandard2.0/SkiaSharp.Views.Uno.WinUI.targets" target="buildTransitive/netstandard2.0/SkiaSharp.Views.Uno.WinUI.targets" />
+
+    <!-- legal -->
+    <file src="LICENSE.txt" />
+
+  </files>
+</package>

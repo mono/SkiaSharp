@@ -2,13 +2,27 @@
 using System.Runtime.InteropServices;
 using Uno.Foundation;
 using Uno.UI.Runtime.WebAssembly;
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
 using Windows.UI.Xaml;
+#endif
 
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	[HtmlElement("canvas")]
 	public partial class SKXamlCanvas
 	{
+#if HAS_UNO_WINUI
+		const string SKXamlCanvasFullTypeName = "SkiaSharp.Views.Windows." + nameof(SKXamlCanvas);
+#else
+		const string SKXamlCanvasFullTypeName = "SkiaSharp.Views.UWP." + nameof(SKXamlCanvas);
+#endif
+
 		private byte[] pixels;
 		private GCHandle pixelsHandle;
 		private int pixelWidth;
@@ -53,7 +67,7 @@ namespace SkiaSharp.Views.UWP
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
-			WebAssemblyRuntime.InvokeJS($"SkiaSharp.Views.UWP.SKXamlCanvas.invalidateCanvas({pixelsHandle.AddrOfPinnedObject()}, \"{this.GetHtmlId()}\", {info.Width}, {pixelHeight});");
+			WebAssemblyRuntime.InvokeJS(SKXamlCanvasFullTypeName + $".invalidateCanvas({pixelsHandle.AddrOfPinnedObject()}, \"{this.GetHtmlId()}\", {info.Width}, {pixelHeight});");
 		}
 
 		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)

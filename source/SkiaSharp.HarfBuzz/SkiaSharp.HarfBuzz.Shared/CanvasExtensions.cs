@@ -53,8 +53,17 @@ namespace SkiaSharp.HarfBuzz
 			// build
 			using var textBlob = builder.Build();
 
+			// adjust alignment
+			var xOffset = 0f;
+			if (paint.TextAlign != SKTextAlign.Left) {
+				var width = result.Width;
+				if (paint.TextAlign == SKTextAlign.Center)
+					width *= 0.5f;
+				xOffset -= width;
+			}
+
 			// draw the text
-			canvas.DrawText(textBlob, 0, 0, paint);
+			canvas.DrawText(textBlob, xOffset, 0, paint);
 		}
 	}
 }

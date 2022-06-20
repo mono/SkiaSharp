@@ -2,16 +2,33 @@
 {
   "dllName": "SKIA",
   "namespace": "SkiaSharp",
+  "namespaces": {
+    "sk_managed": {
+      "prefix": "SKManaged"
+    },
+    "sk_": {
+      "prefix": "SK"
+    },
+    "gr_": {
+      "prefix": "GR"
+    },
+    "sksg_": {
+      "exclude": true
+    },
+    "skottie_": {
+      "exclude": true
+    }
+  },
   "className": "SkiaApi",
   "includeDirs": [
     "."
   ],
   "headers": {
-    "include/c": [ "sk_*", "gr_*" ],
+    "include/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
     "include/xamarin": [ "sk_*" ]
   },
   "source": {
-    "src/c": [ "sk_*", "gr_*" ],
+    "src/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
     "src/xamarin": [ "sk_*" ]
   },
   "mappings": {

@@ -1,4 +1,7 @@
-﻿#if !__WATCHOS__ && !__WASM__ && !UNO_REFERENCE_API
+﻿#if !__WATCHOS__ && !__WASM__ && (!UNO_REFERENCE_API || (NET6_0_OR_GREATER && (__IOS__ || __MACOS__)))
+// Note that `(!UNO_REFERENCE_API || (NET6_0_OR_GREATER && (__IOS__ || __MACOS__)))` is required
+// because of https://github.com/unoplatform/uno/issues/8814, where !UNO_REFERENCE_API should be enough.
+
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Views.GlesInterop

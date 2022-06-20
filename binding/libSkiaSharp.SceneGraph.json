@@ -1,0 +1,42 @@
+// configuration for the libSkiaSharp binary
+{
+  "dllName": "SKIA",
+  "namespace": "SkiaSharp",
+  "namespaces": {
+    "sk_": {
+      "prefix": "SK",
+      "exclude": true
+    },
+    "gr_": {
+      "exclude": true
+    },
+    "vk_": {
+      "exclude": true
+    },
+    "sksg_": {
+      "cs": "SceneGraph",
+      "prefix": ""
+    },
+    "skottie_": {
+      "exclude": true
+    }
+  },
+  "className": "SceneGraphApi",
+  "includeDirs": [
+    "."
+  ],
+  "headers": {
+    "include/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
+    "include/xamarin": [ "sk_*" ]
+  },
+  "source": {
+    "src/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
+    "src/xamarin": [ "sk_*" ]
+  },
+  "mappings": {
+    "types": {
+    },
+    "functions": {
+    }
+  }
+}
