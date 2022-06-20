@@ -1,7 +1,6 @@
-﻿using System;
-using System.ComponentModel;
+﻿#nullable enable
+using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using SkiaSharp.SceneGraph;
 
 namespace SkiaSharp.Skottie
@@ -22,27 +21,54 @@ namespace SkiaSharp.Skottie
 		protected override void DisposeNative ()
 			=> SkottieApi.skottie_animation_delete (Handle);
 
-		public static bool TryParse (string data, out Animation animation)
+		public static Animation? Parse (string json) =>
+			TryParse (json, out var animation)
+				? animation
+				: null;
+
+		public static bool TryParse (string json, [System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out Animation? animation)
 		{
-			animation = GetObject (SkottieApi.skottie_animation_make_from_string (data, data.Length));
+			_ = json ?? throw new ArgumentNullException (nameof (json));
+
+			animation = GetObject (SkottieApi.skottie_animation_make_from_string (json, json.Length));
 			return animation != null;
 		}
 
-		public static bool TryCreate (Stream stream, out Animation animation)
+		public static Animation? Create (Stream stream) =>
+			TryCreate (stream, out var animation)
+				? animation
+				: null;
+
+		public static bool TryCreate (Stream stream, [System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out Animation? animation)
 		{
-			using (var managed = new SKManagedStream (stream)) {
-				return TryCreate (managed, out animation);
-			}
+			_ = stream ?? throw new ArgumentNullException (nameof (stream));
+
+			using var managed = new SKManagedStream (stream);
+			return TryCreate (managed, out animation);
 		}
 
-		public static bool TryCreate (SKStream stream, out Animation animation)
+		public static Animation? Create (SKStream stream) =>
+			TryCreate (stream, out var animation)
+				? animation
+				: null;
+
+		public static bool TryCreate (SKStream stream, [System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out Animation? animation)
 		{
+			_ = stream ?? throw new ArgumentNullException (nameof (stream));
+
 			animation = GetObject (SkottieApi.skottie_animation_make_from_stream (stream.Handle));
 			return animation != null;
 		}
 
-		public static bool TryCreate (string path, out Animation animation)
+		public static Animation? Create (string path) =>
+			TryCreate (path, out var animation)
+				? animation
+				: null;
+
+		public static bool TryCreate (string path, [System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out Animation? animation)
 		{
+			_ = path ?? throw new ArgumentNullException (nameof (path));
+
 			animation = GetObject (SkottieApi.skottie_animation_make_from_file (path));
 			return animation != null;
 		}
@@ -53,17 +79,20 @@ namespace SkiaSharp.Skottie
 		public void Render (SKCanvas canvas, SKRect dst, AnimationRenderFlags flags)
 			=> SkottieApi.skottie_animation_render_with_flags (Handle, canvas.Handle, &dst, flags);
 
-		public void Seek (double t, InvalidationController ic = null)
-			=> SkottieApi.skottie_animation_seek (Handle, (float)t, ic?.Handle ?? IntPtr.Zero);
+		public void Seek (double percent, InvalidationController? ic = null)
+			=> SkottieApi.skottie_animation_seek (Handle, (float)percent, ic?.Handle ?? IntPtr.Zero);
 
-		public void SeekFrame (double t, InvalidationController ic = null)
-			=> SkottieApi.skottie_animation_seek_frame (Handle, (float)t, ic?.Handle ?? IntPtr.Zero);
+		public void SeekFrame (double frame, InvalidationController? ic = null)
+			=> SkottieApi.skottie_animation_seek_frame (Handle, (float)frame, ic?.Handle ?? IntPtr.Zero);
 
-		public void SeekFrameTime (double t, InvalidationController ic = null)
-			=> SkottieApi.skottie_animation_seek_frame_time (Handle, (float)t, ic?.Handle ?? IntPtr.Zero);
+		public void SeekFrameTime (double seconds, InvalidationController? ic = null)
+			=> SkottieApi.skottie_animation_seek_frame_time (Handle, (float)seconds, ic?.Handle ?? IntPtr.Zero);
 
-		public double Duration
-			=> SkottieApi.skottie_animation_get_duration (Handle);
+		public void SeekFrameTime (TimeSpan time, InvalidationController? ic = null)
+			=> SeekFrameTime (time.TotalSeconds, ic);
+
+		public TimeSpan Duration
+			=> TimeSpan.FromSeconds(SkottieApi.skottie_animation_get_duration (Handle));
 
 		public double Fps
 			=> SkottieApi.skottie_animation_get_fps (Handle);
@@ -77,9 +106,7 @@ namespace SkiaSharp.Skottie
 		public string Version {
 			get {
 				using var str = new SKString ();
-
 				SkottieApi.skottie_animation_get_version (Handle, str.Handle);
-
 				return str.ToString ();
 			}
 		}
@@ -92,7 +119,7 @@ namespace SkiaSharp.Skottie
 			}
 		}
 
-		internal static Animation GetObject (IntPtr handle) =>
+		internal static Animation? GetObject (IntPtr handle) =>
 			handle == IntPtr.Zero ? null : new Animation (handle, true);
 	}
 }
