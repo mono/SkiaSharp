@@ -43,8 +43,8 @@ namespace SkiaSharp.Skottie
 		{
 			_ = stream ?? throw new ArgumentNullException (nameof (stream));
 
-			using var managed = new SKManagedStream (stream);
-			return TryCreate (managed, out animation);
+			using var data = SKData.Create (stream);
+			return TryCreate (data, out animation);
 		}
 
 		public static Animation? Create (SKStream stream) =>
@@ -57,6 +57,19 @@ namespace SkiaSharp.Skottie
 			_ = stream ?? throw new ArgumentNullException (nameof (stream));
 
 			animation = GetObject (SkottieApi.skottie_animation_make_from_stream (stream.Handle));
+			return animation != null;
+		}
+
+		public static Animation? Create (SKData data) =>
+			TryCreate (data, out var animation)
+				? animation
+				: null;
+
+		public static bool TryCreate (SKData data, [System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out Animation? animation)
+		{
+			_ = data ?? throw new ArgumentNullException (nameof (data));
+
+			animation = GetObject (SkottieApi.skottie_animation_make_from_data ((void*)data.Data, (IntPtr)data.Size));
 			return animation != null;
 		}
 
@@ -92,7 +105,7 @@ namespace SkiaSharp.Skottie
 			=> SeekFrameTime (time.TotalSeconds, ic);
 
 		public TimeSpan Duration
-			=> TimeSpan.FromSeconds(SkottieApi.skottie_animation_get_duration (Handle));
+			=> TimeSpan.FromSeconds (SkottieApi.skottie_animation_get_duration (Handle));
 
 		public double Fps
 			=> SkottieApi.skottie_animation_get_fps (Handle);
