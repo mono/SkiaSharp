@@ -221,6 +221,20 @@ namespace SkiaSharp
 			(skottie_animation_keepalive_delegate ??= GetSymbol<Delegates.skottie_animation_keepalive> ("skottie_animation_keepalive")).Invoke ();
 		#endif
 
+		// skottie_animation_t* skottie_animation_make_from_data(const char* data, size_t length)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern skottie_animation_t skottie_animation_make_from_data (/* char */ void* data, /* size_t */ IntPtr length);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate skottie_animation_t skottie_animation_make_from_data (/* char */ void* data, /* size_t */ IntPtr length);
+		}
+		private static Delegates.skottie_animation_make_from_data skottie_animation_make_from_data_delegate;
+		internal static skottie_animation_t skottie_animation_make_from_data (/* char */ void* data, /* size_t */ IntPtr length) =>
+			(skottie_animation_make_from_data_delegate ??= GetSymbol<Delegates.skottie_animation_make_from_data> ("skottie_animation_make_from_data")).Invoke (data, length);
+		#endif
+
 		// skottie_animation_t* skottie_animation_make_from_file(const char* path)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

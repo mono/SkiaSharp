@@ -30,6 +30,29 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void When_Default_TryCreate_From_SKData()
+		{
+			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			using var data = SKData.Create(path);
+			var result = Animation.TryCreate(data, out var animation);
+
+			Assert.True(result);
+			Assert.NotNull(animation);
+			Assert.NotEqual(IntPtr.Zero, animation.Handle);
+		}
+
+		[SkippableFact]
+		public void When_Default_Create_From_SKData()
+		{
+			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			using var data = SKData.Create(path);
+			var animation = Animation.Create(data);
+
+			Assert.NotNull(animation);
+			Assert.NotEqual(IntPtr.Zero, animation.Handle);
+		}
+
+		[SkippableFact]
 		public void When_Default_TryCreate_From_SKStream()
 		{
 			var path = Path.Combine(PathToImages, "LottieLogo1.json");
@@ -71,6 +94,30 @@ namespace SkiaSharp.Tests
 			var path = Path.Combine(PathToImages, "LottieLogo1.json");
 			using var fileStream = File.OpenRead(path);
 			var animation = Animation.Create(fileStream);
+
+			Assert.NotNull(animation);
+			Assert.NotEqual(IntPtr.Zero, animation.Handle);
+		}
+
+		[SkippableFact]
+		public void When_Default_TryCreate_From_NonSeekableStream()
+		{
+			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			using var fileStream = File.OpenRead(path);
+			using var nonseekable = new NonSeekableReadOnlyStream(fileStream);
+			var result = Animation.TryCreate(nonseekable, out var animation);
+
+			Assert.True(result);
+			Assert.NotEqual(IntPtr.Zero, animation?.Handle);
+		}
+
+		[SkippableFact]
+		public void When_Default_Create_From_NonSeekableStream()
+		{
+			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			using var fileStream = File.OpenRead(path);
+			using var nonseekable = new NonSeekableReadOnlyStream(fileStream);
+			var animation = Animation.Create(nonseekable);
 
 			Assert.NotNull(animation);
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
