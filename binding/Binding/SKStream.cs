@@ -546,6 +546,9 @@ namespace SkiaSharp
 			return SKData.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
 		}
 
+		public SKData DetachAsUnregisteredData () =>
+			SKData.GetUnregisteredObject (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
+
 		public void CopyTo (IntPtr data)
 		{
 			SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, (void*)data);
@@ -583,5 +586,9 @@ namespace SkiaSharp
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_dynamicmemorywstream_destroy (Handle);
+	}
+
+	internal class SKUnregisteredDynamicMemoryWStream : SKDynamicMemoryWStream, ISKSkipObjectRegistration
+	{
 	}
 }
