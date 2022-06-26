@@ -275,7 +275,7 @@ namespace SkiaSharp
 			private readonly bool disposeHost;
 
 			public unsafe SKDataStream (SKData host, bool disposeHost = false)
-				: base((byte *) host.Data, host.Size)
+				: base ((byte*)host.Data, host.Size, host.Size, FileAccess.ReadWrite)
 			{
 				this.host = host;
 				this.disposeHost = disposeHost;

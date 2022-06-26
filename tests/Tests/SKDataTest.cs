@@ -37,6 +37,42 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
+		[SkippableFact]
+		public void AsStreamReturnsCorrectStreamData()
+		{
+			var data = SKData.CreateCopy(OddData);
+
+			var stream = data.AsStream();
+
+			var buffer = new byte[5];
+			stream.Read(buffer, 0, 5);
+
+			Assert.Equal(OddData, buffer);
+		}
+
+		[SkippableFact]
+		public void CanWriteToAsStream()
+		{
+			var data = SKData.Create(5);
+
+			var stream = data.AsStream();
+			stream.Write(OddData, 0, 5);
+
+			Assert.Equal(OddData, data.ToArray());
+		}
+
+		[SkippableFact]
+		public void CanCopyToAsStream()
+		{
+			var data = SKData.Create(5);
+
+			var stream = data.AsStream();
+			var ms = new MemoryStream(OddData);
+			ms.CopyTo(stream);
+
+			Assert.Equal(OddData, data.ToArray());
+		}
+
 		[SkippableTheory]
 		[InlineData(null, 0, 0, 0)]
 		[InlineData("", 0, 0, 0)]
