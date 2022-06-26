@@ -47,6 +47,20 @@ namespace SkiaSharp.Skottie
 			return TryCreate (data, out animation);
 		}
 
+		public static Animation? CreatePrevious(Stream stream)
+		{
+			using var data = SKData.CreatePrevious(stream);
+			TryCreate(data, out var animation);
+			return animation;
+		}
+
+		public static Animation? CreateUnregistered(Stream stream)
+		{
+			using var data = SKData.CreateUnregistered(stream);
+			TryCreate(data, out var animation);
+			return animation;
+		}
+
 		public static Animation? Create (SKStream stream) =>
 			TryCreate (stream, out var animation)
 				? animation

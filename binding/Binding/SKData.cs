@@ -87,6 +87,9 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr)size));
 		}
 
+		internal static SKData CreateUnregistered (long size) =>
+			GetUnregisteredObject (SkiaApi.sk_data_new_uninitialized ((IntPtr)size));
+
 		public static SKData Create (string filename)
 		{
 			if (string.IsNullOrEmpty (filename))
@@ -98,7 +101,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKData Create (Stream stream)
+		public static SKData CreatePrevious (Stream stream)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
@@ -110,6 +113,38 @@ namespace SkiaSharp
 					managed.CopyTo (memory);
 				}
 				return memory.DetachAsData ();
+			}
+		}
+
+		public static SKData Create (Stream stream)
+		{
+			_ = stream ?? throw new ArgumentNullException (nameof (stream));
+
+			if (stream.CanSeek) {
+				var data = Create (stream.Length);
+				using var dataStream = data.AsStream ();
+				stream.CopyTo (dataStream);
+				return data;
+			} else {
+				using var memory = new SKUnregisteredDynamicMemoryWStream ();
+				SKManagedStream.CopyTo (stream, memory);
+				return memory.DetachAsData ();
+			}
+		}
+
+		internal static SKData CreateUnregistered (Stream stream)
+		{
+			_ = stream ?? throw new ArgumentNullException (nameof (stream));
+
+			if (stream.CanSeek) {
+				var data = CreateUnregistered (stream.Length);
+				using var dataStream = data.AsStream ();
+				stream.CopyTo (dataStream);
+				return data;
+			} else {
+				using var memory = new SKUnregisteredDynamicMemoryWStream ();
+				SKManagedStream.CopyTo (stream, memory);
+				return memory.DetachAsUnregisteredData ();
 			}
 		}
 
@@ -266,6 +301,19 @@ namespace SkiaSharp
 
 		internal static SKData GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKData (h, o));
+
+		internal static SKData GetUnregisteredObject (IntPtr handle) =>
+			new SKUnregisteredData (handle, true);
+
+		//
+
+		private class SKUnregisteredData : SKData, ISKSkipObjectRegistration
+		{
+			public SKUnregisteredData (IntPtr handle, bool owns)
+				: base (handle, owns)
+			{
+			}
+		}
 
 		//
 
