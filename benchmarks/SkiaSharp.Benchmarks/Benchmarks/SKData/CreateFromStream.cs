@@ -8,14 +8,16 @@ using BenchmarkDotNet.Jobs;
 namespace SkiaSharp.Benchmarks;
 
 [EtwProfiler]
-//[NativeMemoryProfiler]
+// [NativeMemoryProfiler]
 [MemoryDiagnoser]
-//[SimpleJob(RuntimeMoniker.Mono)]
-[SimpleJob(RuntimeMoniker.Net472)]
-[SimpleJob(RuntimeMoniker.NetCoreApp31)]
+// [SimpleJob(RuntimeMoniker.Mono)]
+// [SimpleJob(RuntimeMoniker.Net472)]
+// [SimpleJob(RuntimeMoniker.NetCoreApp31)]
 [SimpleJob(RuntimeMoniker.Net60)]
 public class SKDataCreateFromStream
 {
+	private const int iterations = 1000;
+
 	private byte[] data;
 
 	private Stream seekable;
@@ -52,45 +54,51 @@ public class SKDataCreateFromStream
 		ArrayPool<byte>.Shared.Return(buffer);
 	}
 
-	[IterationSetup]
-	public void IterationSetup()
-	{
-		seekable.Position = 0;
-	}
-
 	[Benchmark]
 	public void Seekable()
 	{
-		var skdata = SKData.Create(seekable);
-		skdata.Dispose();
+		for (var i = 0; i < iterations; i++)
+		{
+			seekable.Position = 0;
+			var skdata = SKData.Create(seekable);
+			skdata.Dispose();
+		}
 	}
 
 	[Benchmark]
 	public void NonSeekable()
 	{
-		var skdata = SKData.Create(nonseekable);
-		skdata.Dispose();
+		for (var i = 0; i < iterations; i++)
+		{
+			seekable.Position = 0;
+			var skdata = SKData.Create(nonseekable);
+			skdata.Dispose();
+		}
 	}
 
 	[Benchmark]
 	public unsafe void PInvoke()
 	{
-		fixed (byte* ptr = buffer)
+		for (var i = 0; i < iterations; i++)
 		{
-			var memory = SkiaApi.sk_dynamicmemorywstream_new();
-
-			int len;
-			while ((len = nonseekable.Read(buffer, 0, buffer.Length)) > 0)
+			seekable.Position = 0;
+			fixed (byte* ptr = buffer)
 			{
-				SkiaApi.sk_wstream_write(memory, ptr, (IntPtr)len);
+				var memory = SkiaApi.sk_dynamicmemorywstream_new();
+
+				int len;
+				while ((len = nonseekable.Read(buffer, 0, buffer.Length)) > 0)
+				{
+					SkiaApi.sk_wstream_write(memory, ptr, (IntPtr)len);
+				}
+				SkiaApi.sk_wstream_flush(memory);
+
+				var skdata = SkiaApi.sk_dynamicmemorywstream_detach_as_data(memory);
+
+				SkiaApi.sk_dynamicmemorywstream_destroy(memory);
+
+				SkiaApi.sk_data_unref(skdata);
 			}
-			SkiaApi.sk_wstream_flush(memory);
-
-			var skdata = SkiaApi.sk_dynamicmemorywstream_detach_as_data(memory);
-
-			SkiaApi.sk_dynamicmemorywstream_destroy(memory);
-
-			SkiaApi.sk_data_unref(skdata);
 		}
 	}
 }
