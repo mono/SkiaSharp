@@ -26,8 +26,21 @@ namespace SkiaSharp
 			disposeStream = disposeManagedStream;
 		}
 
-		public int CopyTo (SKWStream destination) =>
-			CopyTo (stream, destination);
+		public int CopyTo (SKWStream destination)
+		{
+			if (destination == null)
+				throw new ArgumentNullException (nameof (destination));
+
+			var total = 0;
+			int len;
+			using var buffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
+			while ((len = stream.Read ((byte[])buffer, 0, buffer.Length)) > 0) {
+				destination.Write ((byte[])buffer, len);
+				total += len;
+			}
+			destination.Flush ();
+			return total;
+		}
 
 		public SKStreamAsset ToMemoryStream ()
 		{
@@ -234,24 +247,6 @@ namespace SkiaSharp
 		{
 			if (wasCopied)
 				throw new InvalidOperationException ("This stream was duplicated or forked and cannot be read anymore.");
-		}
-
-		internal static int CopyTo (Stream stream, SKWStream destination)
-		{
-			_ = stream ?? throw new ArgumentNullException (nameof (stream));
-			_ = destination ?? throw new ArgumentNullException (nameof (destination));
-
-			using var buffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
-
-			var total = 0;
-			int len;
-			while ((len = stream.Read ((byte[])buffer, 0, buffer.Length)) > 0) {
-				destination.Write ((byte[])buffer, len);
-				total += len;
-			}
-			destination.Flush ();
-
-			return total;
 		}
 	}
 }
