@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 #region Namespaces
@@ -11381,7 +11381,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_newline (sk_wstream_t cstream);
-		#else
+#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
@@ -11390,10 +11390,13 @@ namespace SkiaSharp
 		private static Delegates.sk_wstream_newline sk_wstream_newline_delegate;
 		internal static bool sk_wstream_newline (sk_wstream_t cstream) =>
 			(sk_wstream_newline_delegate ??= GetSymbol<Delegates.sk_wstream_newline> ("sk_wstream_newline")).Invoke (cstream);
-		#endif
+#endif
 
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_wstream_write (sk_wstream_t cstream, byte[] buffer, /* size_t */ IntPtr size);
 		// bool sk_wstream_write(sk_wstream_t* cstream, const void* buffer, size_t size)
-		#if !USE_DELEGATES
+#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write (sk_wstream_t cstream, void* buffer, /* size_t */ IntPtr size);
