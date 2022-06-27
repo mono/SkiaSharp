@@ -16,7 +16,7 @@ namespace SkiaSharp.Benchmarks;
 [SimpleJob(RuntimeMoniker.Net60)]
 public class SKDataCreateFromStream
 {
-	private const int iterations = 1000;
+	private int iterations;
 
 	private byte[] data;
 
@@ -38,6 +38,8 @@ public class SKDataCreateFromStream
 		nonseekable = new NonSeekableReadOnlyStream(seekable);
 
 		buffer = ArrayPool<byte>.Shared.Rent(SKData.CopyBufferSize);
+
+		iterations = 100_000 / SizeKB;
 
 		// init skiasharp static things
 		SKObject.GetInstance<SKObject>(IntPtr.Zero, out _);
