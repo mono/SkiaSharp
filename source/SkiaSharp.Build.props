@@ -55,6 +55,12 @@
     <Net6PlatformTargetFrameworks Condition="$(IsNet6TizenSupported)">$(Net6PlatformTargetFrameworks);net6.0-tizen</Net6PlatformTargetFrameworks>
   </PropertyGroup>
 
+  <!-- Special case for SkiaSharp.Benchmarks -->
+  <PropertyGroup Condition="'$(SolutionName)' == 'SkiaSharp.Benchmarks' or '$(IsBenchmarks)' == 'true' or $(MSBuildStartupDirectory.Contains('benchmarks\SkiaSharp.Benchmarks'))">
+    <BasicTargetFrameworks>net462;netcoreapp3.1</BasicTargetFrameworks>
+    <Net6PlatformTargetFrameworks>net6.0</Net6PlatformTargetFrameworks>
+  </PropertyGroup>
+
   <!-- Base TFMs for the core parts -->
   <PropertyGroup>
     <AllTargetFrameworks>$(BasicTargetFrameworks)</AllTargetFrameworks>
