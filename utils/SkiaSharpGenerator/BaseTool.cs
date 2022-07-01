@@ -176,18 +176,18 @@ namespace SkiaSharpGenerator
 			}
 		}
 
-		protected async Task<Config> LoadConfigAsync(string configPath)
+		protected Config LoadConfig(string configPath)
 		{
 			Log?.LogVerbose("Loading configuration...");
 
-			using var configJson = File.OpenRead(configPath);
-
-			var config = await JsonSerializer.DeserializeAsync<Config>(configJson, new JsonSerializerOptions
+			var jsonOptions = new JsonSerializerOptions
 			{
 				AllowTrailingCommas = true,
 				ReadCommentHandling = JsonCommentHandling.Skip,
-			});
+			};
 
+			var text = File.ReadAllText(configPath);
+			Config config = JsonSerializer.Deserialize<Config>(text, jsonOptions);
 			return config ?? throw new InvalidOperationException("Unable to parse json config file.");
 		}
 
@@ -269,6 +269,9 @@ namespace SkiaSharpGenerator
 					}
 				}
 			}
+
+			// edge case: trim _ from start of type after removing prefix
+			type = type.TrimStart('_');
 
 			string[] parts;
 

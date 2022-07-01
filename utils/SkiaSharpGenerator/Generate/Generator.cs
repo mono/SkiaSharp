@@ -17,11 +17,11 @@ namespace SkiaSharpGenerator
 
 		public TextWriter OutputWriter { get; }
 
-		public async Task GenerateAsync()
+		public void DoGenerate()
 		{
 			Log?.Log("Starting C# API generation...");
 
-			config = await LoadConfigAsync(ConfigFile);
+			config = LoadConfig(ConfigFile);
 
 			LoadStandardMappings();
 
