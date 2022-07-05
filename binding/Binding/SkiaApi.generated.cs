@@ -12370,7 +12370,7 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_fontstyleset_t sk_fontmgr_match_family (sk_fontmgr_t param0, IntPtr familyName);
-#else
+		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			internal delegate sk_fontstyleset_t sk_fontmgr_match_family (sk_fontmgr_t param0, IntPtr familyName);
@@ -12378,13 +12378,13 @@ namespace SkiaSharp
 		private static Delegates.sk_fontmgr_match_family sk_fontmgr_match_family_delegate;
 		internal static sk_fontstyleset_t sk_fontmgr_match_family (sk_fontmgr_t param0, IntPtr familyName) =>
 			(sk_fontmgr_match_family_delegate ??= GetSymbol<Delegates.sk_fontmgr_match_family> ("sk_fontmgr_match_family")).Invoke (param0, familyName);
-#endif
+		#endif
 
 		// sk_typeface_t* sk_fontmgr_match_family_style(sk_fontmgr_t*, const char* familyName, sk_fontstyle_t* style)
-#if !USE_DELEGATES
+		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_fontmgr_match_family_style (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
-#else
+		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			internal delegate sk_typeface_t sk_fontmgr_match_family_style (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
@@ -12392,10 +12392,10 @@ namespace SkiaSharp
 		private static Delegates.sk_fontmgr_match_family_style sk_fontmgr_match_family_style_delegate;
 		internal static sk_typeface_t sk_fontmgr_match_family_style (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style) =>
 			(sk_fontmgr_match_family_style_delegate ??= GetSymbol<Delegates.sk_fontmgr_match_family_style> ("sk_fontmgr_match_family_style")).Invoke (param0, familyName, style);
-#endif
+		#endif
 
 		// sk_typeface_t* sk_fontmgr_match_family_style_character(sk_fontmgr_t*, const char* familyName, sk_fontstyle_t* style, const char** bcp47, int bcp47Count, int32_t character)
-#if !USE_DELEGATES
+		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_fontmgr_match_family_style_character (sk_fontmgr_t param0, [MarshalAs (UnmanagedType.LPStr)] String familyName, sk_fontstyle_t style, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] bcp47, Int32 bcp47Count, Int32 character);
 		#else
