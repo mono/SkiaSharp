@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace SkiaSharp
 {
@@ -58,7 +59,11 @@ namespace SkiaSharp
 
 		public SKFontStyleSet GetFontStyles (string familyName)
 		{
-			return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_match_family (Handle, familyName));
+			var familyNameUtf8ByteList = Encoding.UTF8.GetBytes(familyName);
+			fixed (byte* familyNamePointer = familyNameUtf8ByteList)
+			{
+				return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_match_family (Handle, new IntPtr(familyNamePointer)));
+			}
 		}
 
 		public SKTypeface MatchFamily (string familyName) =>
@@ -68,10 +73,13 @@ namespace SkiaSharp
 		{
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
-
-			var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_family_style (Handle, familyName, style.Handle));
-			tf?.PreventPublicDisposal ();
-			return tf;
+			var familyNameUtf8ByteList = Encoding.UTF8.GetBytes(familyName);
+			fixed (byte* familyNamePointer = familyNameUtf8ByteList)
+			{
+				var tf = SKTypeface.GetObject(SkiaApi.sk_fontmgr_match_family_style(Handle, new IntPtr(familyNamePointer), style.Handle));
+				tf?.PreventPublicDisposal();
+				return tf;
+			}
 		}
 
 		public SKTypeface MatchTypeface (SKTypeface face, SKFontStyle style)
