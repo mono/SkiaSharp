@@ -74,8 +74,27 @@ void RunMSBuild(
 
         if (!string.IsNullOrEmpty(MSBUILD_EXE)) {
             c.ToolPath = MSBUILD_EXE;
-        } else if (IsRunningOnWindows() && !string.IsNullOrEmpty(VS_INSTALL)) {
-            c.ToolPath = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("MSBuild/Current/Bin/MSBuild.exe");
+        } else if (IsRunningOnWindows()) {
+            if (!string.IsNullOrEmpty(VS_INSTALL)) {
+                c.ToolPath = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("MSBuild/Current/Bin/MSBuild.exe");
+            } else {
+                // check for msbuild 17, this is required to build .net 6 projects (non-natives)
+                bool vs2022Eexists = DirectoryExists("C:/Program Files/Microsoft Visual Studio/2022/Enterprise");
+                bool vs2022Cexists = DirectoryExists("C:/Program Files/Microsoft Visual Studio/2022/Community");
+                bool vs2022Pexists = DirectoryExists("C:/Program Files/Microsoft Visual Studio/2022/Preview");
+                if (!vs2022Pexists && !vs2022Cexists && !vs2022Eexists) {
+                    throw new Exception("Visual Studio 2022 (Preview, Community, or Enterprise) is required");
+                }
+                if (vs2022Pexists) {
+                    c.ToolPath = "C:/Program Files/Microsoft Visual Studio/2022/Preview/MSBuild/Current/Bin/MSBuild.exe";
+                }
+                if (vs2022Cexists) {
+                    c.ToolPath = "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe";
+                }
+                if (vs2022Eexists) {
+                    c.ToolPath = "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/MSBuild.exe";
+                }
+            }
         }
 
         c.NoLogo = VERBOSITY == Verbosity.Minimal;
