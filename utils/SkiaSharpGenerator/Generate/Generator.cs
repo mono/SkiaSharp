@@ -64,6 +64,40 @@ namespace SkiaSharpGenerator
 			WriteEnums(writer);
 		}
 
+		class TabulationInfo
+		{
+			int longest = 0;
+
+			ILogger? Log { get; set; }
+
+			public TabulationInfo(ILogger? log)
+			{
+				Log = log;
+			}
+
+			public void Compute<LIST, T>(LIST list, Func<T, string> getter)
+				where LIST : IEnumerable<T>
+			{
+				foreach (var item in list)
+				{
+					var str = getter.Invoke(item);
+					var len = str.Length;
+					if (longest < len)
+						longest = len;
+				}
+			}
+
+			public string Tabulate(string target)
+			{
+				int len = longest - target.Length;
+				if (len < 0)
+				{
+					throw new ArithmeticException($"tabulating {target} results in a negative length, longest is {longest}, target length is {target.Length}");
+				}
+				return "".PadLeft(len, ' ');
+			}
+		}
+
 		private void WriteDelegates(TextWriter writer)
 		{
 			Log?.LogVerbose("  Writing delegates...");
@@ -76,14 +110,19 @@ namespace SkiaSharpGenerator
 				.OrderBy(t => t.GetDisplayName())
 				.GroupBy(t => GetNamespace(t.GetDisplayName()));
 
+			TabulationInfo tabulationInfo = new TabulationInfo(Log);
+
 			foreach (var group in delegates)
 			{
 				writer.WriteLine();
 				writer.WriteLine($"namespace {group.Key} {{");
 
+				tabulationInfo.Compute<IGrouping<string, CppTypedef>, CppTypedef>(group, g => g.GetDisplayName());
+
 				foreach (var del in group)
 				{
-					WriteDelegate(writer, del);
+					string name = del.GetDisplayName();
+					WriteDelegate(writer, del, name, tabulationInfo.Tabulate(name));
 				}
 
 				writer.WriteLine($"}}");
@@ -93,7 +132,7 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#endregion");
 		}
 
-		private void WriteDelegate(TextWriter writer, CppTypedef del)
+		private void WriteDelegate(TextWriter writer, CppTypedef del, string name, string tabulation)
 		{
 			if (!(((CppPointerType)del.ElementType).ElementType is CppFunctionType function))
 			{
@@ -103,9 +142,7 @@ namespace SkiaSharpGenerator
 				return;
 			}
 
-			var name = del.GetDisplayName();
-
-			Log?.LogVerbose($"    {name}");
+			Log?.LogVerbose($"    {name}");//{tabulation}\n                from source file: {del.SourceFile}");
 
 			functionMappings.TryGetValue(name, out var map);
 			name = map?.CsType ?? CleanName(name);
@@ -154,14 +191,19 @@ namespace SkiaSharpGenerator
 				.OrderBy(c => c.GetDisplayName())
 				.GroupBy(c => GetNamespace(c.GetDisplayName()));
 
+			TabulationInfo tabulationInfo = new TabulationInfo(Log);
+
 			foreach (var group in classes)
 			{
 				writer.WriteLine();
 				writer.WriteLine($"namespace {group.Key} {{");
 
+				tabulationInfo.Compute<IGrouping<string, CppClass>, CppClass>(group, g => g.GetDisplayName());
+
 				foreach (var klass in group)
 				{
-					WriteStruct(writer, klass);
+					string name = klass.GetDisplayName();
+					WriteStruct(writer, klass, name, tabulationInfo.Tabulate(name));
 				}
 
 				writer.WriteLine($"}}");
@@ -171,17 +213,15 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#endregion");
 		}
 
-		private void WriteStruct(TextWriter writer, CppClass klass)
+		private void WriteStruct(TextWriter writer, CppClass klass, string cppClassName, string tabulation)
 		{
-			var cppClassName = klass.GetDisplayName();
-
 			if (excludedTypes.Contains(cppClassName) == true)
 			{
 				Log?.LogVerbose($"    Skipping struct '{cppClassName}' because it was in the exclude list.");
 				return;
 			}
 
-			Log?.LogVerbose($"    {cppClassName}");
+			Log?.LogVerbose($"    {cppClassName}");//{tabulation}\n                from source file: {klass.SourceFile}");
 
 			typeMappings.TryGetValue(cppClassName, out var map);
 			var name = map?.CsType ?? CleanName(cppClassName);
@@ -319,14 +359,18 @@ namespace SkiaSharpGenerator
 				.OrderBy(e => e.GetDisplayName())
 				.GroupBy(e => GetNamespace(e.GetDisplayName()));
 
+			TabulationInfo tabulationInfo = new TabulationInfo(Log);
+
 			foreach (var group in enums)
 			{
 				writer.WriteLine();
 				writer.WriteLine($"namespace {group.Key} {{");
 
+				tabulationInfo.Compute<IGrouping<string, CppEnum>, CppEnum>(group, g => g.GetDisplayName());
 				foreach (var enm in group)
 				{
-					WriteEnum(writer, enm);
+					string name = enm.GetDisplayName();
+					WriteEnum(writer, enm, name, tabulationInfo.Tabulate(name));
 				}
 
 				writer.WriteLine($"}}");
@@ -336,9 +380,8 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#endregion");
 		}
 
-		private void WriteEnum(TextWriter writer, CppEnum enm)
+		private void WriteEnum(TextWriter writer, CppEnum enm, string cppEnumName, string tabulation)
 		{
-			var cppEnumName = enm.GetDisplayName();
 
 			if (string.IsNullOrEmpty(cppEnumName))
 			{
@@ -350,7 +393,7 @@ namespace SkiaSharpGenerator
 			if (map?.Generate == false)
 				return;
 
-			Log?.LogVerbose($"    {cppEnumName}");
+			Log?.LogVerbose($"    {cppEnumName}");//{tabulation}\n                from source file: {enm.SourceFile}");
 
 			var name = map?.CsType ?? CleanName(cppEnumName);
 
@@ -409,7 +452,6 @@ namespace SkiaSharpGenerator
 			writer.WriteLine();
 			writer.WriteLine($"#endregion");
 		}
-
 		private void WriteClasses(TextWriter writer)
 		{
 			Log?.LogVerbose("  Writing usings...");
@@ -420,15 +462,20 @@ namespace SkiaSharpGenerator
 			var classes = compilation.Classes
 				.OrderBy(c => c.GetDisplayName())
 				.ToList();
+
+			TabulationInfo tabulationInfo = new TabulationInfo(Log);
+
+			tabulationInfo.Compute<List<CppClass>, CppClass>(classes, g => g.GetDisplayName());
 			foreach (var klass in classes)
 			{
-				var type = klass.GetDisplayName();
-				skiaTypes.Add(type, klass.SizeOf != 0);
+				string name = klass.GetDisplayName();
 
-				Log?.LogVerbose($"    {klass.GetDisplayName()}");
+				skiaTypes.Add(name, klass.SizeOf != 0);
+
+				Log?.LogVerbose($"    {name}");//{tabulationInfo.Tabulate(name)}\n                from source file: {klass.SourceFile}");
 
 				if (klass.SizeOf == 0)
-					writer.WriteLine($"using {klass.GetDisplayName()} = System.IntPtr;");
+					writer.WriteLine($"using {name} = System.IntPtr;");
 			}
 
 			writer.WriteLine();
@@ -445,6 +492,8 @@ namespace SkiaSharpGenerator
 				.GroupBy(f => f.Span.Start.File.ToLower().Replace("\\", "/"))
 				.OrderBy(g => Path.GetDirectoryName(g.Key) + "/" + Path.GetFileName(g.Key));
 
+			TabulationInfo tabulationInfo = new TabulationInfo(Log);
+
 			foreach (var group in functionGroups)
 			{
 				var fullPath = Path.GetFullPath(group.Key).ToLower();
@@ -455,11 +504,14 @@ namespace SkiaSharpGenerator
 				}
 
 				writer.WriteLine($"\t\t#region {Path.GetFileName(group.Key)}");
+
+				tabulationInfo.Compute<IGrouping<string, CppFunction>, CppFunction>(group, g => g.Name);
 				foreach (var function in group)
 				{
-					Log?.LogVerbose($"    {function.Name}");
+					string name = function.Name;
 
-					var name = function.Name;
+					Log?.LogVerbose($"    {name}");//{tabulationInfo.Tabulate(name)}\n                from source file: {function.SourceFile}");
+
 					functionMappings.TryGetValue(name, out var funcMap);
 					var skipFunction = false;
 
