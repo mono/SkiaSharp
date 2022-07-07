@@ -227,6 +227,12 @@ namespace SkiaSharp
 	{
 		internal bool fromFinalizer = false;
 
+		// stack trace
+		private string s;
+		private static readonly object L = new();
+
+		public static bool LOG_ALLOCATIONS = false;
+
 		private int isDisposed = 0;
 
 		internal SKNativeObject (IntPtr handle)
@@ -236,15 +242,61 @@ namespace SkiaSharp
 
 		internal SKNativeObject (IntPtr handle, bool ownsHandle)
 		{
-			Handle = handle;
-			OwnsHandle = ownsHandle;
+			if (LOG_ALLOCATIONS)
+			{
+				lock (L)
+				{
+#if NETSTANDARD2_0_OR_GREATER
+				string tmp = new System.Diagnostics.StackTrace(true).ToString();
+				if (tmp == null || tmp.Length == 0)
+				{
+					s = "No Stack Info";
+				}
+				else
+				{
+					s = tmp;
+				}
+				Console.WriteLine("SKNativeObject() entering from:\n" + s);
+				Console.WriteLine("saved StackTrace for SKNativeObject()");
+
+#endif
+					Handle = handle;
+					OwnsHandle = ownsHandle;
+#if NETSTANDARD2_0_OR_GREATER
+				Console.WriteLine("SKNativeObject() exiting from stack trace:\n" + s);
+#endif
+				}
+			}
+			else
+            {
+				Handle = handle;
+				OwnsHandle = ownsHandle;
+			}
 		}
 
 		~SKNativeObject ()
 		{
-			fromFinalizer = true;
+			if (LOG_ALLOCATIONS)
+			{
+				lock (L)
+				{
+#if NETSTANDARD2_0_OR_GREATER
+				if (s != null) Console.WriteLine("~SKNativeObject() entering from stack trace:\n" + s);
+#endif
+					fromFinalizer = true;
 
-			Dispose (false);
+					Dispose(false);
+#if NETSTANDARD2_0_OR_GREATER
+				if (s != null) Console.WriteLine("~SKNativeObject() exiting from stack trace:\n" + s);
+#endif
+				}
+			}
+			else
+            {
+				fromFinalizer = true;
+
+				Dispose(false);
+			}
 		}
 
 		public virtual IntPtr Handle { get; protected set; }
