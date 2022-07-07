@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using CppAst;
 
 namespace SkiaSharpGenerator
@@ -44,8 +43,82 @@ namespace SkiaSharpGenerator
 		public IEnumerable<CppDiagnosticMessage> Messages =>
 			compilation?.Diagnostics?.Messages ?? Array.Empty<CppDiagnosticMessage>();
 
+		protected void Enforce()
+		{
+			Log?.LogVerbose("Enforcing skia headers...");
+
+			var options = new CppParserOptions();
+
+			Log?.LogVerbose($"SkiaRoot = {SkiaRoot}");
+
+			foreach (var header in config.IncludeDirs)
+			{
+				var path = Path.Combine(SkiaRoot, header);
+				options.IncludeFolders.Add(path);
+			}
+
+			var e = new EnumerationOptions { MatchCasing = MatchCasing.CaseSensitive };
+
+			var paths = new List<(KeyValuePair<string, string[]>, string)>();
+
+			foreach (var header in config.Headers)
+			{
+				var path = Path.Combine(SkiaRoot, header.Key);
+				options.IncludeFolders.Add(path);
+				paths.Add((header, path));
+			}
+
+			foreach (var header in paths)
+			{
+				Log?.LogVerbose($"scanning dir for C headers: {header.Item2}");
+				var C_headers = new List<string>();
+
+				foreach (var filter in header.Item1.Value)
+				{
+					C_headers.AddRange(Directory.EnumerateFiles(header.Item2, filter, e));
+				}
+
+				foreach (var file in C_headers)
+				{
+					Log?.LogVerbose($"{file}");
+				}
+
+				var c = CppParser.ParseFiles(C_headers, options);
+
+				if (c == null || c.HasErrors)
+				{
+					Log?.LogError("Parsing C headers failed.");
+				}
+			}
+
+			foreach (var header in paths)
+			{
+				Log?.LogVerbose($"scanning dir for CPP headers: {header.Item2}");
+				var CPP_headers = new List<string>();
+
+				CPP_headers.AddRange(Directory.EnumerateFiles(header.Item2, "Sk*", e));
+
+				foreach (var file in CPP_headers)
+				{
+					Log?.LogVerbose($"{file}");
+				}
+
+				var cpp = CppParser.ParseFiles(CPP_headers, options);
+
+				if (cpp == null || cpp.HasErrors)
+				{
+					Log?.LogError("Parsing CPP headers failed.");
+				}
+			}
+
+			//System.Diagnostics.Debugger.Launch();
+			Log?.LogVerbose("Enforcement done.");
+			Environment.Exit(0);
+		}
+
 		protected void ParseSkiaHeaders()
 		{
+			//Enforce();
 			Log?.LogVerbose("Parsing skia headers...");
 
 			var options = new CppParserOptions();
