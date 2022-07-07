@@ -527,5 +527,8 @@ namespace SkiaSharp
 			}
 			return icc;
 		}
+
+		internal static SKColorSpaceIccProfile GetObject(IntPtr handle) =>
+			handle == IntPtr.Zero ? null : new SKColorSpaceIccProfile(handle, true);
 	}
 }

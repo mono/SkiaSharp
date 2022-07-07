@@ -312,6 +312,83 @@ namespace SkiaSharp
 		}
 	}
 
+	public struct SKAndroidCodecOptions : IEquatable<SKAndroidCodecOptions>
+	{
+		public static readonly SKAndroidCodecOptions Default;
+
+		static SKAndroidCodecOptions()
+		{
+			Default = new SKAndroidCodecOptions(SKZeroInitialized.No);
+		}
+
+		public SKAndroidCodecOptions(SKZeroInitialized zeroInitialized)
+		{
+			ZeroInitialized = zeroInitialized;
+			Subset = null;
+			SampleSize = 1;
+		}
+		public SKAndroidCodecOptions(SKZeroInitialized zeroInitialized, SKRectI subset)
+		{
+			ZeroInitialized = zeroInitialized;
+			Subset = subset;
+			SampleSize = 1;
+		}
+		public SKAndroidCodecOptions(SKRectI subset)
+		{
+			ZeroInitialized = SKZeroInitialized.No;
+			Subset = subset;
+			SampleSize = 1;
+		}
+		public SKAndroidCodecOptions(int frameIndex)
+		{
+			ZeroInitialized = SKZeroInitialized.No;
+			Subset = null;
+			SampleSize = 1;
+		}
+		public SKAndroidCodecOptions(int frameIndex, int priorFrame)
+		{
+			ZeroInitialized = SKZeroInitialized.No;
+			Subset = null;
+			SampleSize = 1;
+		}
+
+		public SKZeroInitialized ZeroInitialized { readonly get; set; }
+		public SKRectI? Subset { readonly get; set; }
+		public readonly bool HasSubset => Subset != null;
+		public int SampleSize { readonly get; set; }
+
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete]
+		public SKTransferFunctionBehavior PremulBehavior
+		{
+			readonly get => SKTransferFunctionBehavior.Respect;
+			set { }
+		}
+
+		public readonly bool Equals(SKAndroidCodecOptions obj) =>
+			ZeroInitialized == obj.ZeroInitialized &&
+			Subset == obj.Subset &&
+			SampleSize == obj.SampleSize;
+
+		public readonly override bool Equals(object obj) =>
+			obj is SKAndroidCodecOptions f && Equals(f);
+
+		public static bool operator ==(SKAndroidCodecOptions left, SKAndroidCodecOptions right) =>
+			left.Equals(right);
+
+		public static bool operator !=(SKAndroidCodecOptions left, SKAndroidCodecOptions right) =>
+			!left.Equals(right);
+
+		public readonly override int GetHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ZeroInitialized);
+			hash.Add(Subset);
+			hash.Add(SampleSize);
+			return hash.ToHashCode();
+		}
+	}
+
 	public partial struct SKFontMetrics
 	{
 		private const uint flagsUnderlineThicknessIsValid = (1U << 0);
