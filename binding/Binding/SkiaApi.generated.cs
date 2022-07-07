@@ -2586,6 +2586,20 @@ namespace SkiaSharp
 			(sk_codec_new_from_data_delegate ??= GetSymbol<Delegates.sk_codec_new_from_data> ("sk_codec_new_from_data")).Invoke (data);
 		#endif
 
+		// sk_codec_t* sk_codec_new_from_data_with_png_chunk_reader(sk_data_t* data, sk_png_chunk_reader_t* chunk_reader)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_codec_t sk_codec_new_from_data_with_png_chunk_reader (sk_data_t data, sk_png_chunk_reader_t chunk_reader);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_codec_t sk_codec_new_from_data_with_png_chunk_reader (sk_data_t data, sk_png_chunk_reader_t chunk_reader);
+		}
+		private static Delegates.sk_codec_new_from_data_with_png_chunk_reader sk_codec_new_from_data_with_png_chunk_reader_delegate;
+		internal static sk_codec_t sk_codec_new_from_data_with_png_chunk_reader (sk_data_t data, sk_png_chunk_reader_t chunk_reader) =>
+			(sk_codec_new_from_data_with_png_chunk_reader_delegate ??= GetSymbol<Delegates.sk_codec_new_from_data_with_png_chunk_reader> ("sk_codec_new_from_data_with_png_chunk_reader")).Invoke (data, chunk_reader);
+		#endif
+
 		// sk_codec_t* sk_codec_new_from_stream(sk_stream_t* stream, sk_codec_result_t* result)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2598,6 +2612,20 @@ namespace SkiaSharp
 		private static Delegates.sk_codec_new_from_stream sk_codec_new_from_stream_delegate;
 		internal static sk_codec_t sk_codec_new_from_stream (sk_stream_t stream, SKCodecResult* result) =>
 			(sk_codec_new_from_stream_delegate ??= GetSymbol<Delegates.sk_codec_new_from_stream> ("sk_codec_new_from_stream")).Invoke (stream, result);
+		#endif
+
+		// sk_codec_t* sk_codec_new_from_stream_with_png_chunk_reader_and_selection_policy(sk_stream_t* stream, sk_codec_result_t* result, sk_png_chunk_reader_t* chunk_reader, sk_codec_selection_policy_t policy)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_codec_t sk_codec_new_from_stream_with_png_chunk_reader_and_selection_policy (sk_stream_t stream, SKCodecResult* result, sk_png_chunk_reader_t chunk_reader, SKCodecSelectionPolicy policy);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_codec_t sk_codec_new_from_stream_with_png_chunk_reader_and_selection_policy (sk_stream_t stream, SKCodecResult* result, sk_png_chunk_reader_t chunk_reader, SKCodecSelectionPolicy policy);
+		}
+		private static Delegates.sk_codec_new_from_stream_with_png_chunk_reader_and_selection_policy sk_codec_new_from_stream_with_png_chunk_reader_and_selection_policy_delegate;
+		internal static sk_codec_t sk_codec_new_from_stream_with_png_chunk_reader_and_selection_policy (sk_stream_t stream, SKCodecResult* result, sk_png_chunk_reader_t chunk_reader, SKCodecSelectionPolicy policy) =>
+			(sk_codec_new_from_stream_with_png_chunk_reader_and_selection_policy_delegate ??= GetSymbol<Delegates.sk_codec_new_from_stream_with_png_chunk_reader_and_selection_policy> ("sk_codec_new_from_stream_with_png_chunk_reader_and_selection_policy")).Invoke (stream, result, chunk_reader, policy);
 		#endif
 
 		// int sk_codec_next_scanline(sk_codec_t* codec)
@@ -15901,6 +15929,14 @@ namespace SkiaSharp {
 		TopDown = 0,
 		// BOTTOM_UP_SK_CODEC_SCANLINE_ORDER = 1
 		BottomUp = 1,
+	}
+
+	// sk_codec_selection_policy_t
+	public enum SKCodecSelectionPolicy {
+		// PREFER_STILL_IMAGE_SK_CODEC_SELECTION_POLICY = 0
+		PreferStillImage = 0,
+		// PREFER_ANIMATION_SK_CODEC_SELECTION_POLICY = 1
+		PreferAnimation = 1,
 	}
 
 	// sk_codec_zero_initialized_t
