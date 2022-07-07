@@ -104,13 +104,95 @@ namespace SkiaSharp
 
 		public readonly int BitsPerPixel => BytesPerPixel * 8;
 
-		public readonly int BytesSize => Width * Height * BytesPerPixel;
+		/// <summary>
+		/// Returns storage required by pixel array, given SKImageInfo dimensions, SKColorType,
+		/// <br></br> and rowBytes. rowBytes is assumed to be at least as large as minRowBytes().
+		/// <br></br>
+		/// <br></br>
+		/// <br></br> example: https://fiddle.skia.org/c/@ImageInfo_computeByteSize
+		/// </summary>
+		/// <returns>
+		/// <br></br> Zero if height is zero.
+		/// <br></br> int.MaxValue if answer exceeds the range of int.MaxValue.
+		/// <br></br> Memory required by pixel buffer.
+		/// </returns>
+		public readonly int BytesSize
+		{
+			get
+			{
+				int h = Height;
 
-		public readonly long BytesSize64 => (long)Width * (long)Height * (long)BytesPerPixel;
+				if (h == 0) return 0;
 
-		public readonly int RowBytes => Width * BytesPerPixel;
+				int w = Width;
+				int bpp = BytesPerPixel;
 
-		public readonly long RowBytes64 => (long)Width * (long)BytesPerPixel;
+
+				SKSafeMath safe = new();
+				int bytes = safe.Add(
+					safe.Mul(
+						safe.Add(h, -1),
+						RowBytes
+					),
+					safe.Mul(w, bpp)
+				);
+				return safe.Ok ? bytes : int.MaxValue;
+			}
+		}
+
+		/// <summary>
+		/// Returns storage required by pixel array, as a 64-bit integer, given SKImageInfo dimensions, SKColorType,
+		/// <br></br> and rowBytes. rowBytes is assumed to be at least as large as minRowBytes().
+		/// <br></br>
+		/// <br></br>
+		/// <br></br> example: https://fiddle.skia.org/c/@ImageInfo_computeByteSize
+		/// </summary>
+		/// <returns>
+		/// <br></br> Zero if height is zero.
+		/// <br></br> long.MaxValue if answer exceeds the range of long.MaxValue.
+		/// <br></br> Memory required by pixel buffer.
+		/// </returns>
+		public readonly long BytesSize64
+		{
+			get
+			{
+				long h = Height;
+
+				if (h == 0) return 0;
+
+				long w = Width;
+				long bpp = BytesPerPixel;
+
+
+				SKSafeMath safe = new();
+				long bytes = safe.Add(
+					safe.Mul(
+						safe.Add(h, -1),
+						RowBytes64
+					),
+					safe.Mul(w, bpp)
+				);
+				return safe.Ok ? bytes : long.MaxValue;
+			}
+		}
+
+		public readonly int RowBytes
+		{
+			get
+			{
+				SKSafeMath safe = new();
+				return safe.Mul(Width, BytesPerPixel);
+			}
+		}
+
+		public readonly long RowBytes64
+		{
+			get
+			{
+				SKSafeMath safe = new();
+				return safe.Mul<long>(Width, BytesPerPixel);
+			}
+		}
 
 		public readonly bool IsEmpty => Width <= 0 || Height <= 0;
 
