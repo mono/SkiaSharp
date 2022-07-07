@@ -111,6 +111,22 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
+		/// Register a listener that may be called the next time our generation ID changes.
+		/// <br></br>
+		/// <br></br> We'll only call the listener if we're confident that we are the only SkPixelRef with this
+		/// <br></br> generation ID.  If our generation ID changes and we decide not to call the listener, we'll
+		/// <br></br> never call it: you must add a new listener for each generation ID change.  We also won't call
+		/// <br></br> the listener when we're certain no one knows what our generation ID is.
+		/// <br></br>
+		/// <br></br> This can be used to invalidate caches keyed by SkPixelRef generation ID.
+		/// <br></br> Takes ownership of listener.  Threadsafe.
+		/// </summary>
+		public void AddGenIDChangeListener(SKIDChangeListener listener)
+		{
+			SkiaApi.sk_managed_pixel_ref_add_generation_id_listener(Handle, listener.Handle);
+		}
+
+		/// <summary>
 		/// Call when this pixelref is part of the key to a resourcecache entry. This allows the cache
 		/// <br></br> to know automatically those entries can be purged when this pixelref is changed or deleted.
 		/// </summary>
