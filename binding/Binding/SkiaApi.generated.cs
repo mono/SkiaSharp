@@ -13262,6 +13262,52 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region sk_managedpngchunkreader.h
+
+		// void sk_managed_png_chunk_reader_delete(sk_managed_png_chunk_reader_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managed_png_chunk_reader_delete (sk_managed_png_chunk_reader_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managed_png_chunk_reader_delete (sk_managed_png_chunk_reader_t param0);
+		}
+		private static Delegates.sk_managed_png_chunk_reader_delete sk_managed_png_chunk_reader_delete_delegate;
+		internal static void sk_managed_png_chunk_reader_delete (sk_managed_png_chunk_reader_t param0) =>
+			(sk_managed_png_chunk_reader_delete_delegate ??= GetSymbol<Delegates.sk_managed_png_chunk_reader_delete> ("sk_managed_png_chunk_reader_delete")).Invoke (param0);
+		#endif
+
+		// sk_managed_png_chunk_reader_t* sk_managed_png_chunk_reader_new(void* context)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_managed_png_chunk_reader_t sk_managed_png_chunk_reader_new (void* context);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_managed_png_chunk_reader_t sk_managed_png_chunk_reader_new (void* context);
+		}
+		private static Delegates.sk_managed_png_chunk_reader_new sk_managed_png_chunk_reader_new_delegate;
+		internal static sk_managed_png_chunk_reader_t sk_managed_png_chunk_reader_new (void* context) =>
+			(sk_managed_png_chunk_reader_new_delegate ??= GetSymbol<Delegates.sk_managed_png_chunk_reader_new> ("sk_managed_png_chunk_reader_new")).Invoke (context);
+		#endif
+
+		// void sk_managed_png_chunk_reader_set_procs(sk_managed_png_chunk_reader_procs_t procs)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managed_png_chunk_reader_set_procs (SKManagedPngChunkReaderDelegates procs);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managed_png_chunk_reader_set_procs (SKManagedPngChunkReaderDelegates procs);
+		}
+		private static Delegates.sk_managed_png_chunk_reader_set_procs sk_managed_png_chunk_reader_set_procs_delegate;
+		internal static void sk_managed_png_chunk_reader_set_procs (SKManagedPngChunkReaderDelegates procs) =>
+			(sk_managed_png_chunk_reader_set_procs_delegate ??= GetSymbol<Delegates.sk_managed_png_chunk_reader_set_procs> ("sk_managed_png_chunk_reader_set_procs")).Invoke (procs);
+		#endif
+
+		#endregion
+
 		#region sk_managedstream.h
 
 		// void sk_managedstream_destroy(sk_stream_managedstream_t* s)
@@ -14943,31 +14989,23 @@ namespace SkiaSharp {
 
 	// sk_managed_png_chunk_reader_procs_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKManagedPngChunkReaderProcs : IEquatable<SKManagedPngChunkReaderProcs> {
+	internal unsafe partial struct SKManagedPngChunkReaderDelegates : IEquatable<SKManagedPngChunkReaderDelegates> {
 		// public sk_managed_png_chunk_reader_read_chunk_proc fReadChunk
-		private SKManagedPngChunkReaderReadChunkProxyDelegate fReadChunk;
-		public SKManagedPngChunkReaderReadChunkProxyDelegate ReadChunk {
-			readonly get => fReadChunk;
-			set => fReadChunk = value;
-		}
+		public SKManagedPngChunkReaderReadChunkProxyDelegate fReadChunk;
 
 		// public sk_managed_png_chunk_reader_destroy_proc fDestroy
-		private SKManagedPngChunkReaderDestroyProxyDelegate fDestroy;
-		public SKManagedPngChunkReaderDestroyProxyDelegate Destroy {
-			readonly get => fDestroy;
-			set => fDestroy = value;
-		}
+		public SKManagedPngChunkReaderDestroyProxyDelegate fDestroy;
 
-		public readonly bool Equals (SKManagedPngChunkReaderProcs obj) =>
+		public readonly bool Equals (SKManagedPngChunkReaderDelegates obj) =>
 			fReadChunk == obj.fReadChunk && fDestroy == obj.fDestroy;
 
 		public readonly override bool Equals (object obj) =>
-			obj is SKManagedPngChunkReaderProcs f && Equals (f);
+			obj is SKManagedPngChunkReaderDelegates f && Equals (f);
 
-		public static bool operator == (SKManagedPngChunkReaderProcs left, SKManagedPngChunkReaderProcs right) =>
+		public static bool operator == (SKManagedPngChunkReaderDelegates left, SKManagedPngChunkReaderDelegates right) =>
 			left.Equals (right);
 
-		public static bool operator != (SKManagedPngChunkReaderProcs left, SKManagedPngChunkReaderProcs right) =>
+		public static bool operator != (SKManagedPngChunkReaderDelegates left, SKManagedPngChunkReaderDelegates right) =>
 			!left.Equals (right);
 
 		public readonly override int GetHashCode ()
