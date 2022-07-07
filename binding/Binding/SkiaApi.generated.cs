@@ -35,6 +35,7 @@ using sk_fontstyleset_t = System.IntPtr;
 using sk_image_t = System.IntPtr;
 using sk_imagefilter_croprect_t = System.IntPtr;
 using sk_imagefilter_t = System.IntPtr;
+using sk_managed_png_chunk_reader_t = System.IntPtr;
 using sk_manageddrawable_t = System.IntPtr;
 using sk_managedtracememorydump_t = System.IntPtr;
 using sk_maskfilter_t = System.IntPtr;
@@ -54,6 +55,7 @@ using sk_picture_recorder_t = System.IntPtr;
 using sk_picture_t = System.IntPtr;
 using sk_pixelref_factory_t = System.IntPtr;
 using sk_pixmap_t = System.IntPtr;
+using sk_png_chunk_reader_t = System.IntPtr;
 using sk_refcnt_t = System.IntPtr;
 using sk_region_cliperator_t = System.IntPtr;
 using sk_region_iterator_t = System.IntPtr;
@@ -13168,6 +13170,52 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region sk_managed_png_chunk_reader.h
+
+		// void sk_managed_png_chunk_reader_delete(sk_managed_png_chunk_reader_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managed_png_chunk_reader_delete (sk_managed_png_chunk_reader_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managed_png_chunk_reader_delete (sk_managed_png_chunk_reader_t param0);
+		}
+		private static Delegates.sk_managed_png_chunk_reader_delete sk_managed_png_chunk_reader_delete_delegate;
+		internal static void sk_managed_png_chunk_reader_delete (sk_managed_png_chunk_reader_t param0) =>
+			(sk_managed_png_chunk_reader_delete_delegate ??= GetSymbol<Delegates.sk_managed_png_chunk_reader_delete> ("sk_managed_png_chunk_reader_delete")).Invoke (param0);
+		#endif
+
+		// sk_managed_png_chunk_reader_t* sk_managed_png_chunk_reader_new(void* context)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_managed_png_chunk_reader_t sk_managed_png_chunk_reader_new (void* context);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_managed_png_chunk_reader_t sk_managed_png_chunk_reader_new (void* context);
+		}
+		private static Delegates.sk_managed_png_chunk_reader_new sk_managed_png_chunk_reader_new_delegate;
+		internal static sk_managed_png_chunk_reader_t sk_managed_png_chunk_reader_new (void* context) =>
+			(sk_managed_png_chunk_reader_new_delegate ??= GetSymbol<Delegates.sk_managed_png_chunk_reader_new> ("sk_managed_png_chunk_reader_new")).Invoke (context);
+		#endif
+
+		// void sk_managed_png_chunk_reader_set_procs(sk_managed_png_chunk_reader_procs_t procs)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managed_png_chunk_reader_set_procs (SKManagedPngChunkReaderProcs procs);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managed_png_chunk_reader_set_procs (SKManagedPngChunkReaderProcs procs);
+		}
+		private static Delegates.sk_managed_png_chunk_reader_set_procs sk_managed_png_chunk_reader_set_procs_delegate;
+		internal static void sk_managed_png_chunk_reader_set_procs (SKManagedPngChunkReaderProcs procs) =>
+			(sk_managed_png_chunk_reader_set_procs_delegate ??= GetSymbol<Delegates.sk_managed_png_chunk_reader_set_procs> ("sk_managed_png_chunk_reader_set_procs")).Invoke (procs);
+		#endif
+
+		#endregion
+
 		#region sk_manageddrawable.h
 
 		// sk_manageddrawable_t* sk_manageddrawable_new(void* context)
@@ -13391,6 +13439,15 @@ namespace SkiaSharp {
 	// typedef void (*)(void* context)* sk_image_texture_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKImageTextureReleaseProxyDelegate(void* context);
+
+	// typedef void (*)(sk_managed_png_chunk_reader_t* d, void* context)* sk_managed_png_chunk_reader_destroy_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKManagedPngChunkReaderDestroyProxyDelegate(sk_managed_png_chunk_reader_t d, void* context);
+
+	// typedef bool (*)(sk_managed_png_chunk_reader_t* d, void* context, const char[-1] tag, const void* data, size_t length)* sk_managed_png_chunk_reader_read_chunk_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	[return: MarshalAs (UnmanagedType.I1)]
+	internal unsafe delegate bool SKManagedPngChunkReaderReadChunkProxyDelegate(sk_managed_png_chunk_reader_t d, void* context, /* char */ void* tag, void* data, /* size_t */ IntPtr length);
 
 	// typedef void (*)(sk_manageddrawable_t* d, void* context)* sk_manageddrawable_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -14879,6 +14936,45 @@ namespace SkiaSharp {
 			hash.Add (fYCount);
 			hash.Add (fBounds);
 			hash.Add (fColors);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_managed_png_chunk_reader_procs_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKManagedPngChunkReaderProcs : IEquatable<SKManagedPngChunkReaderProcs> {
+		// public sk_managed_png_chunk_reader_read_chunk_proc fReadChunk
+		private SKManagedPngChunkReaderReadChunkProxyDelegate fReadChunk;
+		public SKManagedPngChunkReaderReadChunkProxyDelegate ReadChunk {
+			readonly get => fReadChunk;
+			set => fReadChunk = value;
+		}
+
+		// public sk_managed_png_chunk_reader_destroy_proc fDestroy
+		private SKManagedPngChunkReaderDestroyProxyDelegate fDestroy;
+		public SKManagedPngChunkReaderDestroyProxyDelegate Destroy {
+			readonly get => fDestroy;
+			set => fDestroy = value;
+		}
+
+		public readonly bool Equals (SKManagedPngChunkReaderProcs obj) =>
+			fReadChunk == obj.fReadChunk && fDestroy == obj.fDestroy;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKManagedPngChunkReaderProcs f && Equals (f);
+
+		public static bool operator == (SKManagedPngChunkReaderProcs left, SKManagedPngChunkReaderProcs right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKManagedPngChunkReaderProcs left, SKManagedPngChunkReaderProcs right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fReadChunk);
+			hash.Add (fDestroy);
 			return hash.ToHashCode ();
 		}
 
