@@ -116,9 +116,6 @@ namespace SkiaSharp
 
 		// Other
 
-		internal static SKBitmap GetObject(IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			GetOrAddObject(handle, owns, unrefExisting, (h, o) => new SKBitmap(h, o));
-
 		public bool SetInfo(SKImageInfo info)
 		{
 			// bool 	setInfo (const SkImageInfo &imageInfo, size_t rowBytes=0)
@@ -137,23 +134,6 @@ namespace SkiaSharp
 		}
 
 		// AllocPixels
-
-		public void AllocPixels()
-        {
-			AllocPixels((Allocator)null);
-		}
-
-		public void AllocPixels(Allocator allocator)
-		{
-			if (!TryAllocPixels(allocator))
-			{
-				SKImageInfo i = Info;
-				throw new OutOfMemoryException("SkBitmap::tryAllocPixels failed "
-					+ "ColorType:" + i.ColorType + "AlphaType:" + i.AlphaType +
-					"[w:" + i.Width + " h:" + i.Height + "] rb:" + RowBytes
-				);
-			}
-		}
 
 		public void AllocPixels(SKImageInfo info)
 		{
