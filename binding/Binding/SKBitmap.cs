@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
 
 namespace SkiaSharp
 {
@@ -115,7 +116,127 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_bitmap_destructor (Handle);
 
+		// Other
+
+		internal static SKBitmap GetObject(IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddObject(handle, owns, unrefExisting, (h, o) => new SKBitmap(h, o));
+
+		// Allocator
+
+		/// <summary>
+		/// Abstract subclass of HeapAllocator.
+		/// </summary>
+		public unsafe abstract class Allocator : SKObject, ISKSkipObjectRegistration
+		{
+			private static readonly SKManagedAllocatorDelegates delegates;
+			private readonly IntPtr userData;
+			private int fromNative;
+
+			static Allocator()
+			{
+				delegates = new SKManagedAllocatorDelegates
+				{
+					fAllocPixelRef = AllocPixelRefInternal,
+					fDestroy = DestroyInternal,
+				};
+
+				SkiaApi.sk_managedallocator_set_procs(delegates);
+			}
+
+			protected Allocator()
+				: base(IntPtr.Zero, true)
+			{
+				userData = DelegateProxies.CreateUserData(this, true);
+				Handle = SkiaApi.sk_managedallocator_new((void*)userData);
+
+				if (Handle == IntPtr.Zero)
+					throw new InvalidOperationException("Unable to create a new SKManagedAllocator instance.");
+			}
+
+			protected override void Dispose(bool disposing) =>
+				base.Dispose(disposing);
+
+			protected override void DisposeNative()
+			{
+				if (Interlocked.CompareExchange(ref fromNative, 0, 0) == 0)
+				{
+					SkiaApi.sk_managedallocator_delete(Handle);
+				}
+			}
+
+			/// <summary>
+			/// Allocates the pixel memory for the bitmap, given its dimensions and
+			/// <br></br> SKColorType. Returns true on success, where success means either setPixels()
+			/// <br></br> or setPixelRef() was called.
+			/// <br></br>
+			/// <br></br> bitmap: SKBitmap containing SKImageInfo as input, and SKPixelRef as output
+			/// </summary>
+			/// <param name="bitmap">SKBitmap containing SKImageInfo as input, and SKPixelRef as output</param>
+			/// <returns>true if SKPixelRef was allocated</returns>
+			public abstract bool AllocPixelRef(SKBitmap bitmap);
+
+			// impl
+
+			[MonoPInvokeCallback(typeof(SKManagedAllocatorAllocpixelrefProxyDelegate))]
+			private static bool AllocPixelRefInternal(IntPtr d, void* context, IntPtr bitmap)
+			{
+				var dump = DelegateProxies.GetUserData<Allocator>((IntPtr)context, out _);
+				return dump.AllocPixelRef(SKBitmap.GetObject(bitmap, false, false));
+			}
+
+			[MonoPInvokeCallback(typeof(SKManagedAllocatorDestroyProxyDelegate))]
+			private static void DestroyInternal(IntPtr s, void* context)
+			{
+				var id = DelegateProxies.GetUserData<Allocator>((IntPtr)context, out var gch);
+				if (id != null)
+				{
+					Interlocked.Exchange(ref id.fromNative, 1);
+					id.Dispose();
+				}
+				gch.Free();
+			}
+		}
+
+		/// <summary>
+		/// Subclass of SkBitmap::Allocator that returns a SkPixelRef that allocates its pixel
+		/// <br></br> memory from the heap. This is the default SkBitmap::Allocator invoked by
+		/// <br></br> AllocPixels() and TryAllocPixels().
+		/// </summary>
+		public class HeapAllocator : Allocator
+		{
+            public override bool AllocPixelRef(SKBitmap bitmap)
+            {
+				return SkiaApi.sk_bitmap_heapalloc(bitmap.Handle);
+            }
+		}
+
 		// TryAllocPixels
+
+		// AllocPixels
+
+		public void AllocPixels()
+        {
+			AllocPixels((Allocator)null);
+		}
+
+		public void AllocPixels(Allocator allocator)
+		{
+			if (!TryAllocPixels(allocator))
+			{
+				SKImageInfo i = Info;
+				throw new OutOfMemoryException("SkBitmap::tryAllocPixels failed "
+					+ "ColorType:" + i.ColorType + "AlphaType:" + i.AlphaType +
+					"[w:" + i.Width + " h:" + i.Height + "] rb:" + RowBytes
+				);
+			}
+		}
+
+		// TryAllocPixels
+
+		public bool TryAllocPixels()
+		{
+			return TryAllocPixels((Allocator)null);
+		}
 
 		public bool TryAllocPixels (SKImageInfo info)
 		{
@@ -126,6 +247,19 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			return SkiaApi.sk_bitmap_try_alloc_pixels (Handle, &cinfo, (IntPtr)rowBytes);
+		}
+
+		public bool TryAllocPixels(Allocator allocator)
+		{
+			if (Info == null)
+			{
+				throw new NullReferenceException("Info must be set before allocating pixels");
+			}
+			if (allocator == null)
+			{
+				allocator = new HeapAllocator();
+			}
+			return SkiaApi.sk_bitmap_try_alloc_pixels_with_allocator(Handle, allocator.Handle);
 		}
 
 		public bool TryAllocPixels (SKImageInfo info, SKBitmapAllocFlags flags)
@@ -315,6 +449,11 @@ namespace SkiaSharp
 			fixed (SKPointI* o = &offset) {
 				return SkiaApi.sk_bitmap_extract_alpha (Handle, destination.Handle, paint == null ? IntPtr.Zero : paint.Handle, o);
 			}
+		}
+
+		public void SetPixelRef(SKPixelRef pixelRef, int x, int y)
+		{
+			SkiaApi.sk_bitmap_set_pixel_ref(Handle, (void*)(pixelRef == null ? IntPtr.Zero : pixelRef.SkPixelRefHandle), x, y);
 		}
 
 		// properties
