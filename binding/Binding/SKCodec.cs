@@ -367,12 +367,12 @@ namespace SkiaSharp
 			Create(stream, out result, null);
 
 		public static SKCodec Create(SKStream stream, out SKCodecResult result, SKPngChunkReader chunkReader) =>
-			Create(stream, out result, chunkReader, SKCodecSelectionPolicy.preferStillImage);
+			Create(stream, out result, chunkReader, SKCodecSelectionPolicy.PreferStillImage);
 
 		public static SKCodec Create(SKStream stream, out SKCodecResult result, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
 			Create(stream, out result, null, SKCodecSelectionPolicy);
 
-		public static SKCodec Create(SKStream stream, out SKCodecResult result, SKPngChunkReader chunkReader, SKCodecSelectionPolicy SKCodecSelectionPolicy)
+		public static SKCodec Create(SKStream stream, out SKCodecResult result, SKPngChunkReader chunkReader, SKCodecSelectionPolicy selectionPolicy)
 		{
 			if (stream == null)
 				throw new ArgumentNullException(nameof(stream));
@@ -381,7 +381,7 @@ namespace SkiaSharp
 
 			fixed (SKCodecResult* r = &result)
 			{
-				var codec = GetObject(SkiaApi.sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy(stream.Handle, r, chunkReader == null ? IntPtr.Zero : chunkReader.Handle, (SKCodecSKCodecSelectionPolicy)SKCodecSelectionPolicy));
+				var codec = GetObject(SkiaApi.sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy(stream.Handle, r, chunkReader == null ? IntPtr.Zero : chunkReader.Handle, selectionPolicy));
 				stream.RevokeOwnership(codec);
 				return codec;
 			}
