@@ -289,7 +289,7 @@ namespace SkiaSharp
 			Create (filename, out var result);
 
 		public static SKCodec Create(string filename, SKPngChunkReader chunkReader) =>
-			Create(filename, out var result, chunkReader, SKCodecSelectionPolicy.preferStillImage);
+			Create(filename, out var result, chunkReader, SKCodecSelectionPolicy.PreferStillImage);
 
 		public static SKCodec Create(string filename, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
 			Create(filename, out var result, null, SKCodecSelectionPolicy);
@@ -300,10 +300,10 @@ namespace SkiaSharp
 
 
 		public static SKCodec Create(string filename, out SKCodecResult result) =>
-			Create(filename, out result, null, SKCodecSelectionPolicy.preferStillImage);
+			Create(filename, out result, null, SKCodecSelectionPolicy.PreferStillImage);
 
 		public static SKCodec Create(string filename, out SKCodecResult result, SKPngChunkReader chunkReader) =>
-			Create (filename, out result, chunkReader, SKCodecSelectionPolicy.preferStillImage);
+			Create (filename, out result, chunkReader, SKCodecSelectionPolicy.PreferStillImage);
 
 		public static SKCodec Create(string filename, out SKCodecResult result, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
 			Create (filename, out result, null, SKCodecSelectionPolicy);
