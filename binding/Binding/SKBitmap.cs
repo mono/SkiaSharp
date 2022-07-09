@@ -458,6 +458,21 @@ namespace SkiaSharp
 
 		// properties
 
+		public SKPixelRef PixelRef
+		{
+			get
+            {
+                void* p = SkiaApi.sk_bitmap_get_pixelref(Handle);
+                if (p is null)
+                {
+                    return null;
+                }
+                SKPixelRef pr = new SKPixelRef(p);
+                pr.bitmapSource = this;
+                return pr;
+            }
+        }
+
 		public bool ReadyToDraw => SkiaApi.sk_bitmap_ready_to_draw (Handle);
 
 		public SKImageInfo Info {
