@@ -797,7 +797,7 @@ namespace SkiaSharp
 		public bool ReadPixels(SKPixmap dstPixmap, int x, int y)
 		{
 			if (GetPixels() == null) return false;
-    		return Pixmap.ReadPixels(dstPixmap.Info, dstPixmap.Pixels, dstPixmap.RowBytes, x, y);
+    		return Pixmap.ReadPixels(dstPixmap.Info, dstPixmap.GetPixels(), dstPixmap.RowBytes, x, y);
 		}
 
 		public bool WritePixels(SKPixmap pixmap) => WritePixels(pixmap, 0, 0);
