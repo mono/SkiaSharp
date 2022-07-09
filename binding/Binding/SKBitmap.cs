@@ -453,7 +453,7 @@ namespace SkiaSharp
 
 		public void SetPixelRef(SKPixelRef pixelRef, int x, int y)
 		{
-			SkiaApi.sk_bitmap_set_pixel_ref(Handle, (void*)(pixelRef == null ? IntPtr.Zero : pixelRef.SkPixelRefHandle), x, y);
+			SkiaApi.sk_bitmap_set_pixelref(Handle, (void*)(pixelRef == null ? IntPtr.Zero : pixelRef.SkPixelRefHandle), x, y);
 		}
 
 		// properties
