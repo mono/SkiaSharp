@@ -24,14 +24,14 @@ namespace SkiaSharp
 				fDestroy = DestroyInternal
 			};
 
-			SkiaApi.sk_managed_pixelref_set_procs(delegates);
+			SkiaApi.sk_managedpixelref_set_procs(delegates);
 		}
 
 		internal unsafe SKPixelRef (void* nativePixelRef)
 			: base (IntPtr.Zero, true)
 		{
 			userData = DelegateProxies.CreateUserData (this, true);
-			Handle = SkiaApi.sk_managed_pixelref_new_from_existing ((void*)userData, nativePixelRef);
+			Handle = SkiaApi.sk_managedpixelref_new_from_existing ((void*)userData, nativePixelRef);
 
 			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKPixelRef instance.");
@@ -41,7 +41,7 @@ namespace SkiaSharp
 			: base(IntPtr.Zero, true)
 		{
 			userData = DelegateProxies.CreateUserData(this, true);
-			Handle = SkiaApi.sk_managed_pixelref_new((void*)userData, width, height, (void*)addr, rowBytes);
+			Handle = SkiaApi.sk_managedpixelref_new((void*)userData, width, height, (void*)addr, rowBytes);
 
 			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException("Unable to create a new SKPixelRef instance.");
@@ -54,7 +54,7 @@ namespace SkiaSharp
 		{
 			if (Interlocked.CompareExchange(ref fromNative, 0, 0) == 0)
 			{
-				SkiaApi.sk_managed_pixelref_delete (Handle);
+				SkiaApi.sk_managedpixelref_delete (Handle);
 			}
 		}
 
@@ -70,19 +70,19 @@ namespace SkiaSharp
 			gch.Free();
 		}
 
-		public SKSizeI Dimensions => SkiaApi.sk_managed_pixelref_dimensions(Handle);
-		public int Width => SkiaApi.sk_managed_pixelref_width(Handle);
-		public int Height => SkiaApi.sk_managed_pixelref_height(Handle);
-		public IntPtr Pixels => (IntPtr)SkiaApi.sk_managed_pixelref_pixels(Handle);
-		public IntPtr SkPixelRefHandle => (IntPtr)SkiaApi.sk_managed_pixelref_pixelref(Handle);
-		public IntPtr RowBytes => SkiaApi.sk_managed_pixelref_rowBytes(Handle);
+		public SKSizeI Dimensions => SkiaApi.sk_managedpixelref_dimensions(Handle);
+		public int Width => SkiaApi.sk_managedpixelref_width(Handle);
+		public int Height => SkiaApi.sk_managedpixelref_height(Handle);
+		public IntPtr Pixels => (IntPtr)SkiaApi.sk_managedpixelref_pixels(Handle);
+		public IntPtr SkPixelRefHandle => (IntPtr)SkiaApi.sk_managedpixelref_pixelref(Handle);
+		public IntPtr RowBytes => SkiaApi.sk_managedpixelref_rowBytes(Handle);
 
 		/// <summary>
 		/// Returns a non-zero, unique value corresponding to the pixels in this
 		/// <br></br> pixelref. Each time the pixels are changed (and NotifyPixelsChanged is
 		/// <br></br> called), a different generation ID will be returned.
 		/// </summary>
-		public uint GenerationID => SkiaApi.sk_managed_pixelref_generation_id(Handle);
+		public uint GenerationID => SkiaApi.sk_managedpixelref_generation_id(Handle);
 
 		/// <summary>
 		/// Call this if you have changed the contents of the pixels. This will in-
@@ -91,14 +91,14 @@ namespace SkiaSharp
 		/// </summary>
 		public void NotifyPixelsChanged()
 		{
-			SkiaApi.sk_managed_pixelref_notify_pixels_changed(Handle);
+			SkiaApi.sk_managedpixelref_notify_pixels_changed(Handle);
 		}
 
 		/// <summary>
 		/// Returns true if this pixelref is marked as immutable, meaning that the
 		/// <br></br> contents of its pixels will not change for the lifetime of the pixelref.
 		/// </summary>
-		public bool IsImmutable => SkiaApi.sk_managed_pixelref_is_immutable(Handle);
+		public bool IsImmutable => SkiaApi.sk_managedpixelref_is_immutable(Handle);
 
 		/// <summary>
 		/// Marks this pixelref is immutable, meaning that the contents of its
@@ -107,7 +107,7 @@ namespace SkiaSharp
 		/// </summary>
 		public void SetImmutable()
 		{
-			SkiaApi.sk_managed_pixelref_set_immutable(Handle);
+			SkiaApi.sk_managedpixelref_set_immutable(Handle);
 		}
 
 		/// <summary>
@@ -132,7 +132,7 @@ namespace SkiaSharp
 		/// </summary>
 		public void NotifyAddedToCache()
 		{
-			SkiaApi.sk_managed_pixelref_notify_added_to_cache(Handle);
+			SkiaApi.sk_managedpixelref_notify_added_to_cache(Handle);
 		}
 	}
 }
