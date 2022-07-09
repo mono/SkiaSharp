@@ -123,7 +123,7 @@ namespace SkiaSharp
 		/// </summary>
 		public void AddGenIDChangeListener(SKIDChangeListener listener)
 		{
-			SkiaApi.sk_managed_pixel_ref_add_generation_id_listener(Handle, listener.Handle);
+			SkiaApi.sk_managedpixelref_add_generation_id_listener(Handle, listener.Handle);
 		}
 
 		/// <summary>
