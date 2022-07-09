@@ -77,14 +77,14 @@ namespace SkiaSharp
 
 		// impl
 
-		[MonoPInvokeCallback(typeof(SKIdChangeListenerChangedProxyDelegate))]
+		[MonoPInvokeCallback(typeof(SKIdchangelistenerChangedProxyDelegate))]
 		private static void ChangedInternal(IntPtr d, void* context)
 		{
 			var dump = DelegateProxies.GetUserData<SKIDChangeListener>((IntPtr)context, out _);
 			dump.Changed();
 		}
 
-		[MonoPInvokeCallback(typeof(SKIdChangeListenerDestroyProxyDelegate))]
+		[MonoPInvokeCallback(typeof(SKIdchangelistenerDestroyProxyDelegate))]
 		private static void DestroyInternal(IntPtr s, void* context)
 		{
 			var id = DelegateProxies.GetUserData<SKIDChangeListener>((IntPtr)context, out var gch);
@@ -136,7 +136,7 @@ namespace SkiaSharp
 				}
 			}
 
-			[MonoPInvokeCallback(typeof(SKIdChangeListenerListDestroyProxyDelegate))]
+			[MonoPInvokeCallback(typeof(SKIdchangelistenerlistDestroyProxyDelegate))]
 			private static void DestroyInternal(IntPtr s, void* context)
 			{
 				var id = DelegateProxies.GetUserData<List>((IntPtr)context, out var gch);
