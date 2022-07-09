@@ -54,8 +54,8 @@ using sk_path_t = System.IntPtr;
 using sk_pathmeasure_t = System.IntPtr;
 using sk_picture_recorder_t = System.IntPtr;
 using sk_picture_t = System.IntPtr;
-using sk_pixel_ref_t = System.IntPtr;
 using sk_pixelref_factory_t = System.IntPtr;
+using sk_pixelref_t = System.IntPtr;
 using sk_pixmap_t = System.IntPtr;
 using sk_refcnt_t = System.IntPtr;
 using sk_region_cliperator_t = System.IntPtr;
@@ -1119,18 +1119,18 @@ namespace SkiaSharp
 			(sk_bitmap_get_pixel_colors_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixel_colors> ("sk_bitmap_get_pixel_colors")).Invoke (cbitmap, colors);
 		#endif
 
-		// void* sk_bitmap_get_pixel_ref(sk_bitmap_t* cbitmap)
+		// void* sk_bitmap_get_pixelref(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* sk_bitmap_get_pixel_ref (sk_bitmap_t cbitmap);
+		internal static extern void* sk_bitmap_get_pixelref (sk_bitmap_t cbitmap);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void* sk_bitmap_get_pixel_ref (sk_bitmap_t cbitmap);
+			internal delegate void* sk_bitmap_get_pixelref (sk_bitmap_t cbitmap);
 		}
-		private static Delegates.sk_bitmap_get_pixel_ref sk_bitmap_get_pixel_ref_delegate;
-		internal static void* sk_bitmap_get_pixel_ref (sk_bitmap_t cbitmap) =>
-			(sk_bitmap_get_pixel_ref_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixel_ref> ("sk_bitmap_get_pixel_ref")).Invoke (cbitmap);
+		private static Delegates.sk_bitmap_get_pixelref sk_bitmap_get_pixelref_delegate;
+		internal static void* sk_bitmap_get_pixelref (sk_bitmap_t cbitmap) =>
+			(sk_bitmap_get_pixelref_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixelref> ("sk_bitmap_get_pixelref")).Invoke (cbitmap);
 		#endif
 
 		// void* sk_bitmap_get_pixels(sk_bitmap_t* cbitmap, size_t* length)
@@ -1359,18 +1359,18 @@ namespace SkiaSharp
 			(sk_bitmap_set_immutable_delegate ??= GetSymbol<Delegates.sk_bitmap_set_immutable> ("sk_bitmap_set_immutable")).Invoke (cbitmap);
 		#endif
 
-		// void sk_bitmap_set_pixel_ref(sk_bitmap_t* cbitmap, void* cpixelref, int x, int y)
+		// void sk_bitmap_set_pixelref(sk_bitmap_t* cbitmap, void* cpixelref, int x, int y)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_bitmap_set_pixel_ref (sk_bitmap_t cbitmap, void* cpixelref, Int32 x, Int32 y);
+		internal static extern void sk_bitmap_set_pixelref (sk_bitmap_t cbitmap, void* cpixelref, Int32 x, Int32 y);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_bitmap_set_pixel_ref (sk_bitmap_t cbitmap, void* cpixelref, Int32 x, Int32 y);
+			internal delegate void sk_bitmap_set_pixelref (sk_bitmap_t cbitmap, void* cpixelref, Int32 x, Int32 y);
 		}
-		private static Delegates.sk_bitmap_set_pixel_ref sk_bitmap_set_pixel_ref_delegate;
-		internal static void sk_bitmap_set_pixel_ref (sk_bitmap_t cbitmap, void* cpixelref, Int32 x, Int32 y) =>
-			(sk_bitmap_set_pixel_ref_delegate ??= GetSymbol<Delegates.sk_bitmap_set_pixel_ref> ("sk_bitmap_set_pixel_ref")).Invoke (cbitmap, cpixelref, x, y);
+		private static Delegates.sk_bitmap_set_pixelref sk_bitmap_set_pixelref_delegate;
+		internal static void sk_bitmap_set_pixelref (sk_bitmap_t cbitmap, void* cpixelref, Int32 x, Int32 y) =>
+			(sk_bitmap_set_pixelref_delegate ??= GetSymbol<Delegates.sk_bitmap_set_pixelref> ("sk_bitmap_set_pixelref")).Invoke (cbitmap, cpixelref, x, y);
 		#endif
 
 		// void sk_bitmap_set_pixels(sk_bitmap_t* cbitmap, void* pixels)
@@ -13231,222 +13231,6 @@ namespace SkiaSharp
 
 		#endregion
 
-		#region sk_managed_pixel_ref.h
-
-		// void sk_managed_pixel_ref_delete(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_managed_pixel_ref_delete (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_managed_pixel_ref_delete (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_delete sk_managed_pixel_ref_delete_delegate;
-		internal static void sk_managed_pixel_ref_delete (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_delete_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_delete> ("sk_managed_pixel_ref_delete")).Invoke (param0);
-		#endif
-
-		// sk_isize_t sk_managed_pixel_ref_dimensions(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKSizeI sk_managed_pixel_ref_dimensions (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate SKSizeI sk_managed_pixel_ref_dimensions (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_dimensions sk_managed_pixel_ref_dimensions_delegate;
-		internal static SKSizeI sk_managed_pixel_ref_dimensions (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_dimensions_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_dimensions> ("sk_managed_pixel_ref_dimensions")).Invoke (param0);
-		#endif
-
-		// uint32_t sk_managed_pixel_ref_generation_id(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern UInt32 sk_managed_pixel_ref_generation_id (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate UInt32 sk_managed_pixel_ref_generation_id (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_generation_id sk_managed_pixel_ref_generation_id_delegate;
-		internal static UInt32 sk_managed_pixel_ref_generation_id (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_generation_id_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_generation_id> ("sk_managed_pixel_ref_generation_id")).Invoke (param0);
-		#endif
-
-		// int32_t sk_managed_pixel_ref_height(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_managed_pixel_ref_height (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_managed_pixel_ref_height (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_height sk_managed_pixel_ref_height_delegate;
-		internal static Int32 sk_managed_pixel_ref_height (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_height_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_height> ("sk_managed_pixel_ref_height")).Invoke (param0);
-		#endif
-
-		// bool sk_managed_pixel_ref_is_immutable(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_managed_pixel_ref_is_immutable (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_managed_pixel_ref_is_immutable (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_is_immutable sk_managed_pixel_ref_is_immutable_delegate;
-		internal static bool sk_managed_pixel_ref_is_immutable (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_is_immutable_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_is_immutable> ("sk_managed_pixel_ref_is_immutable")).Invoke (param0);
-		#endif
-
-		// sk_pixel_ref_t* sk_managed_pixel_ref_new(void* context, int32_t, int32_t, void*, size_t)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_pixel_ref_t sk_managed_pixel_ref_new (void* context, Int32 param1, Int32 param2, void* param3, /* size_t */ IntPtr param4);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_pixel_ref_t sk_managed_pixel_ref_new (void* context, Int32 param1, Int32 param2, void* param3, /* size_t */ IntPtr param4);
-		}
-		private static Delegates.sk_managed_pixel_ref_new sk_managed_pixel_ref_new_delegate;
-		internal static sk_pixel_ref_t sk_managed_pixel_ref_new (void* context, Int32 param1, Int32 param2, void* param3, /* size_t */ IntPtr param4) =>
-			(sk_managed_pixel_ref_new_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_new> ("sk_managed_pixel_ref_new")).Invoke (context, param1, param2, param3, param4);
-		#endif
-
-		// sk_pixel_ref_t* sk_managed_pixel_ref_new_from_existing(void* context, void* pixelRef)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_pixel_ref_t sk_managed_pixel_ref_new_from_existing (void* context, void* pixelRef);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_pixel_ref_t sk_managed_pixel_ref_new_from_existing (void* context, void* pixelRef);
-		}
-		private static Delegates.sk_managed_pixel_ref_new_from_existing sk_managed_pixel_ref_new_from_existing_delegate;
-		internal static sk_pixel_ref_t sk_managed_pixel_ref_new_from_existing (void* context, void* pixelRef) =>
-			(sk_managed_pixel_ref_new_from_existing_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_new_from_existing> ("sk_managed_pixel_ref_new_from_existing")).Invoke (context, pixelRef);
-		#endif
-
-		// void sk_managed_pixel_ref_notify_added_to_cache(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_managed_pixel_ref_notify_added_to_cache (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_managed_pixel_ref_notify_added_to_cache (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_notify_added_to_cache sk_managed_pixel_ref_notify_added_to_cache_delegate;
-		internal static void sk_managed_pixel_ref_notify_added_to_cache (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_notify_added_to_cache_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_notify_added_to_cache> ("sk_managed_pixel_ref_notify_added_to_cache")).Invoke (param0);
-		#endif
-
-		// void sk_managed_pixel_ref_notify_pixels_changed(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_managed_pixel_ref_notify_pixels_changed (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_managed_pixel_ref_notify_pixels_changed (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_notify_pixels_changed sk_managed_pixel_ref_notify_pixels_changed_delegate;
-		internal static void sk_managed_pixel_ref_notify_pixels_changed (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_notify_pixels_changed_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_notify_pixels_changed> ("sk_managed_pixel_ref_notify_pixels_changed")).Invoke (param0);
-		#endif
-
-		// void* sk_managed_pixel_ref_pixel_ref(sk_pixel_ref_t* d)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* sk_managed_pixel_ref_pixel_ref (sk_pixel_ref_t d);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void* sk_managed_pixel_ref_pixel_ref (sk_pixel_ref_t d);
-		}
-		private static Delegates.sk_managed_pixel_ref_pixel_ref sk_managed_pixel_ref_pixel_ref_delegate;
-		internal static void* sk_managed_pixel_ref_pixel_ref (sk_pixel_ref_t d) =>
-			(sk_managed_pixel_ref_pixel_ref_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_pixel_ref> ("sk_managed_pixel_ref_pixel_ref")).Invoke (d);
-		#endif
-
-		// void* sk_managed_pixel_ref_pixels(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* sk_managed_pixel_ref_pixels (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void* sk_managed_pixel_ref_pixels (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_pixels sk_managed_pixel_ref_pixels_delegate;
-		internal static void* sk_managed_pixel_ref_pixels (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_pixels_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_pixels> ("sk_managed_pixel_ref_pixels")).Invoke (param0);
-		#endif
-
-		// size_t sk_managed_pixel_ref_rowBytes(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_managed_pixel_ref_rowBytes (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr sk_managed_pixel_ref_rowBytes (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_rowBytes sk_managed_pixel_ref_rowBytes_delegate;
-		internal static /* size_t */ IntPtr sk_managed_pixel_ref_rowBytes (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_rowBytes_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_rowBytes> ("sk_managed_pixel_ref_rowBytes")).Invoke (param0);
-		#endif
-
-		// void sk_managed_pixel_ref_set_immutable(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_managed_pixel_ref_set_immutable (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_managed_pixel_ref_set_immutable (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_set_immutable sk_managed_pixel_ref_set_immutable_delegate;
-		internal static void sk_managed_pixel_ref_set_immutable (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_set_immutable_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_set_immutable> ("sk_managed_pixel_ref_set_immutable")).Invoke (param0);
-		#endif
-
-		// void sk_managed_pixel_ref_set_procs(sk_pixel_ref_procs_t procs)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_managed_pixel_ref_set_procs (SKPixelRefDelegates procs);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_managed_pixel_ref_set_procs (SKPixelRefDelegates procs);
-		}
-		private static Delegates.sk_managed_pixel_ref_set_procs sk_managed_pixel_ref_set_procs_delegate;
-		internal static void sk_managed_pixel_ref_set_procs (SKPixelRefDelegates procs) =>
-			(sk_managed_pixel_ref_set_procs_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_set_procs> ("sk_managed_pixel_ref_set_procs")).Invoke (procs);
-		#endif
-
-		// int32_t sk_managed_pixel_ref_width(sk_pixel_ref_t*)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_managed_pixel_ref_width (sk_pixel_ref_t param0);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_managed_pixel_ref_width (sk_pixel_ref_t param0);
-		}
-		private static Delegates.sk_managed_pixel_ref_width sk_managed_pixel_ref_width_delegate;
-		internal static Int32 sk_managed_pixel_ref_width (sk_pixel_ref_t param0) =>
-			(sk_managed_pixel_ref_width_delegate ??= GetSymbol<Delegates.sk_managed_pixel_ref_width> ("sk_managed_pixel_ref_width")).Invoke (param0);
-		#endif
-
-		#endregion
-
 		#region sk_managedallocator.h
 
 		// void sk_managedallocator_delete(sk_managedallocator_t*)
@@ -13535,6 +13319,222 @@ namespace SkiaSharp
 		private static Delegates.sk_manageddrawable_unref sk_manageddrawable_unref_delegate;
 		internal static void sk_manageddrawable_unref (sk_manageddrawable_t param0) =>
 			(sk_manageddrawable_unref_delegate ??= GetSymbol<Delegates.sk_manageddrawable_unref> ("sk_manageddrawable_unref")).Invoke (param0);
+		#endif
+
+		#endregion
+
+		#region sk_managedpixelref.h
+
+		// void sk_managedpixelref_delete(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managedpixelref_delete (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managedpixelref_delete (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_delete sk_managedpixelref_delete_delegate;
+		internal static void sk_managedpixelref_delete (sk_pixelref_t param0) =>
+			(sk_managedpixelref_delete_delegate ??= GetSymbol<Delegates.sk_managedpixelref_delete> ("sk_managedpixelref_delete")).Invoke (param0);
+		#endif
+
+		// sk_isize_t sk_managedpixelref_dimensions(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKSizeI sk_managedpixelref_dimensions (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate SKSizeI sk_managedpixelref_dimensions (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_dimensions sk_managedpixelref_dimensions_delegate;
+		internal static SKSizeI sk_managedpixelref_dimensions (sk_pixelref_t param0) =>
+			(sk_managedpixelref_dimensions_delegate ??= GetSymbol<Delegates.sk_managedpixelref_dimensions> ("sk_managedpixelref_dimensions")).Invoke (param0);
+		#endif
+
+		// uint32_t sk_managedpixelref_generation_id(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 sk_managedpixelref_generation_id (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 sk_managedpixelref_generation_id (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_generation_id sk_managedpixelref_generation_id_delegate;
+		internal static UInt32 sk_managedpixelref_generation_id (sk_pixelref_t param0) =>
+			(sk_managedpixelref_generation_id_delegate ??= GetSymbol<Delegates.sk_managedpixelref_generation_id> ("sk_managedpixelref_generation_id")).Invoke (param0);
+		#endif
+
+		// int32_t sk_managedpixelref_height(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_managedpixelref_height (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_managedpixelref_height (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_height sk_managedpixelref_height_delegate;
+		internal static Int32 sk_managedpixelref_height (sk_pixelref_t param0) =>
+			(sk_managedpixelref_height_delegate ??= GetSymbol<Delegates.sk_managedpixelref_height> ("sk_managedpixelref_height")).Invoke (param0);
+		#endif
+
+		// bool sk_managedpixelref_is_immutable(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_managedpixelref_is_immutable (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_managedpixelref_is_immutable (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_is_immutable sk_managedpixelref_is_immutable_delegate;
+		internal static bool sk_managedpixelref_is_immutable (sk_pixelref_t param0) =>
+			(sk_managedpixelref_is_immutable_delegate ??= GetSymbol<Delegates.sk_managedpixelref_is_immutable> ("sk_managedpixelref_is_immutable")).Invoke (param0);
+		#endif
+
+		// sk_pixelref_t* sk_managedpixelref_new(void* context, int32_t, int32_t, void*, size_t)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_pixelref_t sk_managedpixelref_new (void* context, Int32 param1, Int32 param2, void* param3, /* size_t */ IntPtr param4);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_pixelref_t sk_managedpixelref_new (void* context, Int32 param1, Int32 param2, void* param3, /* size_t */ IntPtr param4);
+		}
+		private static Delegates.sk_managedpixelref_new sk_managedpixelref_new_delegate;
+		internal static sk_pixelref_t sk_managedpixelref_new (void* context, Int32 param1, Int32 param2, void* param3, /* size_t */ IntPtr param4) =>
+			(sk_managedpixelref_new_delegate ??= GetSymbol<Delegates.sk_managedpixelref_new> ("sk_managedpixelref_new")).Invoke (context, param1, param2, param3, param4);
+		#endif
+
+		// sk_pixelref_t* sk_managedpixelref_new_from_existing(void* context, void* pixelRef)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_pixelref_t sk_managedpixelref_new_from_existing (void* context, void* pixelRef);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_pixelref_t sk_managedpixelref_new_from_existing (void* context, void* pixelRef);
+		}
+		private static Delegates.sk_managedpixelref_new_from_existing sk_managedpixelref_new_from_existing_delegate;
+		internal static sk_pixelref_t sk_managedpixelref_new_from_existing (void* context, void* pixelRef) =>
+			(sk_managedpixelref_new_from_existing_delegate ??= GetSymbol<Delegates.sk_managedpixelref_new_from_existing> ("sk_managedpixelref_new_from_existing")).Invoke (context, pixelRef);
+		#endif
+
+		// void sk_managedpixelref_notify_added_to_cache(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managedpixelref_notify_added_to_cache (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managedpixelref_notify_added_to_cache (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_notify_added_to_cache sk_managedpixelref_notify_added_to_cache_delegate;
+		internal static void sk_managedpixelref_notify_added_to_cache (sk_pixelref_t param0) =>
+			(sk_managedpixelref_notify_added_to_cache_delegate ??= GetSymbol<Delegates.sk_managedpixelref_notify_added_to_cache> ("sk_managedpixelref_notify_added_to_cache")).Invoke (param0);
+		#endif
+
+		// void sk_managedpixelref_notify_pixels_changed(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managedpixelref_notify_pixels_changed (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managedpixelref_notify_pixels_changed (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_notify_pixels_changed sk_managedpixelref_notify_pixels_changed_delegate;
+		internal static void sk_managedpixelref_notify_pixels_changed (sk_pixelref_t param0) =>
+			(sk_managedpixelref_notify_pixels_changed_delegate ??= GetSymbol<Delegates.sk_managedpixelref_notify_pixels_changed> ("sk_managedpixelref_notify_pixels_changed")).Invoke (param0);
+		#endif
+
+		// void* sk_managedpixelref_pixelref(sk_pixelref_t* d)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* sk_managedpixelref_pixelref (sk_pixelref_t d);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void* sk_managedpixelref_pixelref (sk_pixelref_t d);
+		}
+		private static Delegates.sk_managedpixelref_pixelref sk_managedpixelref_pixelref_delegate;
+		internal static void* sk_managedpixelref_pixelref (sk_pixelref_t d) =>
+			(sk_managedpixelref_pixelref_delegate ??= GetSymbol<Delegates.sk_managedpixelref_pixelref> ("sk_managedpixelref_pixelref")).Invoke (d);
+		#endif
+
+		// void* sk_managedpixelref_pixels(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* sk_managedpixelref_pixels (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void* sk_managedpixelref_pixels (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_pixels sk_managedpixelref_pixels_delegate;
+		internal static void* sk_managedpixelref_pixels (sk_pixelref_t param0) =>
+			(sk_managedpixelref_pixels_delegate ??= GetSymbol<Delegates.sk_managedpixelref_pixels> ("sk_managedpixelref_pixels")).Invoke (param0);
+		#endif
+
+		// size_t sk_managedpixelref_rowBytes(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_managedpixelref_rowBytes (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_managedpixelref_rowBytes (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_rowBytes sk_managedpixelref_rowBytes_delegate;
+		internal static /* size_t */ IntPtr sk_managedpixelref_rowBytes (sk_pixelref_t param0) =>
+			(sk_managedpixelref_rowBytes_delegate ??= GetSymbol<Delegates.sk_managedpixelref_rowBytes> ("sk_managedpixelref_rowBytes")).Invoke (param0);
+		#endif
+
+		// void sk_managedpixelref_set_immutable(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managedpixelref_set_immutable (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managedpixelref_set_immutable (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_set_immutable sk_managedpixelref_set_immutable_delegate;
+		internal static void sk_managedpixelref_set_immutable (sk_pixelref_t param0) =>
+			(sk_managedpixelref_set_immutable_delegate ??= GetSymbol<Delegates.sk_managedpixelref_set_immutable> ("sk_managedpixelref_set_immutable")).Invoke (param0);
+		#endif
+
+		// void sk_managedpixelref_set_procs(sk_pixelref_procs_t procs)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managedpixelref_set_procs (SKPixelRefDelegates procs);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managedpixelref_set_procs (SKPixelRefDelegates procs);
+		}
+		private static Delegates.sk_managedpixelref_set_procs sk_managedpixelref_set_procs_delegate;
+		internal static void sk_managedpixelref_set_procs (SKPixelRefDelegates procs) =>
+			(sk_managedpixelref_set_procs_delegate ??= GetSymbol<Delegates.sk_managedpixelref_set_procs> ("sk_managedpixelref_set_procs")).Invoke (procs);
+		#endif
+
+		// int32_t sk_managedpixelref_width(sk_pixelref_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_managedpixelref_width (sk_pixelref_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_managedpixelref_width (sk_pixelref_t param0);
+		}
+		private static Delegates.sk_managedpixelref_width sk_managedpixelref_width_delegate;
+		internal static Int32 sk_managedpixelref_width (sk_pixelref_t param0) =>
+			(sk_managedpixelref_width_delegate ??= GetSymbol<Delegates.sk_managedpixelref_width> ("sk_managedpixelref_width")).Invoke (param0);
 		#endif
 
 		#endregion
@@ -13720,7 +13720,7 @@ namespace SkiaSharp {
 	// typedef bool (*)(sk_managedallocator_t* d, void* context, sk_bitmap_t* bitmap)* sk_managedallocator_allocpixelref_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
-	internal unsafe delegate bool SKManagedAllocatorAllocpixelrefProxyDelegate(sk_managedallocator_t d, void* context, sk_bitmap_t bitmap);
+	internal unsafe delegate bool SKManagedAllocatorAllocPixelRefProxyDelegate(sk_managedallocator_t d, void* context, sk_bitmap_t bitmap);
 
 	// typedef void (*)(sk_managedallocator_t* d, void* context)* sk_managedallocator_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -13825,9 +13825,9 @@ namespace SkiaSharp {
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedWStreamWriteProxyDelegate(sk_wstream_managedstream_t s, void* context, void* buffer, /* size_t */ IntPtr size);
 
-	// typedef void (*)(sk_pixel_ref_t* d, void* context)* sk_pixel_ref_destroy_proc
+	// typedef void (*)(sk_pixelref_t* d, void* context)* sk_pixelref_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKPixelRefDestroyProxyDelegate(sk_pixel_ref_t d, void* context);
+	internal unsafe delegate void SKPixelRefDestroyProxyDelegate(sk_pixelref_t d, void* context);
 
 	// typedef void (*)(void* addr, void* context)* sk_surface_raster_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -15226,7 +15226,7 @@ namespace SkiaSharp {
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKManagedAllocatorDelegates : IEquatable<SKManagedAllocatorDelegates> {
 		// public sk_managedallocator_allocpixelref_proc fAllocPixelRef
-		public SKManagedAllocatorAllocpixelrefProxyDelegate fAllocPixelRef;
+		public SKManagedAllocatorAllocPixelRefProxyDelegate fAllocPixelRef;
 
 		// public sk_managedallocator_destroy_proc fDestroy
 		public SKManagedAllocatorDestroyProxyDelegate fDestroy;
@@ -15571,10 +15571,10 @@ namespace SkiaSharp {
 
 	}
 
-	// sk_pixel_ref_procs_t
+	// sk_pixelref_procs_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKPixelRefDelegates : IEquatable<SKPixelRefDelegates> {
-		// public sk_pixel_ref_destroy_proc fDestroy
+		// public sk_pixelref_destroy_proc fDestroy
 		public SKPixelRefDestroyProxyDelegate fDestroy;
 
 		public readonly bool Equals (SKPixelRefDelegates obj) =>
