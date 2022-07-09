@@ -58,7 +58,7 @@ namespace SkiaSharp
 			}
 		}
 
-		[MonoPInvokeCallback(typeof(SKPixelRefDestroyProxyDelegate))]
+		[MonoPInvokeCallback(typeof(SKPixelrefDestroyProxyDelegate))]
 		private static void DestroyInternal(IntPtr s, void* context)
 		{
 			var id = DelegateProxies.GetUserData<SKPixelRef>((IntPtr)context, out var gch);

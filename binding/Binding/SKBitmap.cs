@@ -177,7 +177,7 @@ namespace SkiaSharp
 
 			// impl
 
-			[MonoPInvokeCallback(typeof(SKManagedAllocatorAllocpixelrefProxyDelegate))]
+			[MonoPInvokeCallback(typeof(SKManagedAllocatorAllocPixelRefProxyDelegate))]
 			private static bool AllocPixelRefInternal(IntPtr d, void* context, IntPtr bitmap)
 			{
 				var dump = DelegateProxies.GetUserData<Allocator>((IntPtr)context, out _);
