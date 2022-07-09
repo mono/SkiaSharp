@@ -177,7 +177,7 @@ namespace SkiaSharp
 
 			// impl
 
-			[MonoPInvokeCallback(typeof(SKManagedAllocatorAllocpixelrefProxyDelegate))]
+			[MonoPInvokeCallback(typeof(SKManagedAllocatorAllocPixelRefProxyDelegate))]
 			private static bool AllocPixelRefInternal(IntPtr d, void* context, IntPtr bitmap)
 			{
 				var dump = DelegateProxies.GetUserData<Allocator>((IntPtr)context, out _);
@@ -453,7 +453,7 @@ namespace SkiaSharp
 
 		public void SetPixelRef(SKPixelRef pixelRef, int x, int y)
 		{
-			SkiaApi.sk_bitmap_set_pixel_ref(Handle, (void*)(pixelRef == null ? IntPtr.Zero : pixelRef.SkPixelRefHandle), x, y);
+			SkiaApi.sk_bitmap_set_pixelref(Handle, (void*)(pixelRef == null ? IntPtr.Zero : pixelRef.SkPixelRefHandle), x, y);
 		}
 
 		// properties
