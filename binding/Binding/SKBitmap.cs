@@ -786,7 +786,7 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
 		}
 
-		public bool ReadPixels (SKImageInfo info, IntPtr dstpixels, int rowBytes, int x, int y)
+		public bool ReadPixels (SKImageInfo info, IntPtr dstPixels, int rowBytes, int x, int y)
 		{
 			if (GetPixels() == null) return false;
 			return Pixmap.ReadPixels(info, dstPixels, rowBytes, x, y);
@@ -794,10 +794,10 @@ namespace SkiaSharp
 
 		public bool ReadPixels(SKPixmap dstPixmap) => ReadPixels(dstPixmap, 0, 0);
 
-		public bool ReadPixels(SKPixmap pixmap, int x, int y)
+		public bool ReadPixels(SKPixmap dstPixmap, int x, int y)
 		{
 			if (GetPixels() == null) return false;
-    		return Pixmap.ReadPixels(dst.Info, dst.Pixels, dst.RowBytes, srcX, srcY);
+    		return Pixmap.ReadPixels(dstPixmap.Info, dstPixmap.Pixels, dstPixmap.RowBytes, x, y);
 		}
 
 		public bool WritePixels(SKPixmap pixmap) => WritePixels(pixmap, 0, 0);
