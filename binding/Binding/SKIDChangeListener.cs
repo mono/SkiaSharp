@@ -24,14 +24,14 @@ namespace SkiaSharp
 				fDestroy = DestroyInternal
 			};
 
-			SkiaApi.sk_managed_id_change_listener_set_procs(delegates);
+			SkiaApi.sk_managedidchangelistener_set_procs(delegates);
 		}
 
 		protected SKIDChangeListener()
 			: base(IntPtr.Zero, true)
 		{
 			userData = DelegateProxies.CreateUserData(this, true);
-			Handle = SkiaApi.sk_managed_id_change_listener_new((void*)userData);
+			Handle = SkiaApi.sk_managedidchangelistener_new((void*)userData);
 
 			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException("Unable to create a new SKIDChangeListener instance.");
@@ -48,7 +48,7 @@ namespace SkiaSharp
 		{
 			if (Interlocked.CompareExchange(ref fromNative, 0, 0) == 0)
 			{
-				SkiaApi.sk_managed_id_change_listener_delete(Handle);
+				SkiaApi.sk_managedidchangelistener_delete(Handle);
 			}
 		}
 
@@ -64,7 +64,7 @@ namespace SkiaSharp
 		/// </summary>
 		public void MarkShouldDeregister()
 		{
-			SkiaApi.sk_managed_id_change_listener_mark_should_deregister(Handle);
+			SkiaApi.sk_managedidchangelistener_mark_should_deregister(Handle);
 		}
 
 		/// <summary>
@@ -72,7 +72,7 @@ namespace SkiaSharp
 		/// </summary>
 		public bool ShouldDeregister()
 		{
-			return SkiaApi.sk_managed_id_change_listener_should_deregister(Handle);
+			return SkiaApi.sk_managedidchangelistener_should_deregister(Handle);
 		}
 
 		// impl
@@ -112,14 +112,14 @@ namespace SkiaSharp
 					fDestroy = DestroyInternal
 				};
 
-				SkiaApi.sk_managed_id_change_listener_list_set_procs(delegates);
+				SkiaApi.sk_managedidchangelistenerlist_set_procs(delegates);
 			}
 
 			public List()
 				: base(IntPtr.Zero, true)
 			{
 				userData = DelegateProxies.CreateUserData(this, true);
-				Handle = SkiaApi.sk_managed_id_change_listener_list_new((void*)userData);
+				Handle = SkiaApi.sk_managedidchangelistenerlist_new((void*)userData);
 
 				if (Handle == IntPtr.Zero)
 					throw new InvalidOperationException("Unable to create a new SKIDChangeListener.List instance.");
@@ -132,7 +132,7 @@ namespace SkiaSharp
 			{
 				if (Interlocked.CompareExchange(ref fromNative, 0, 0) == 0)
 				{
-					SkiaApi.sk_managed_id_change_listener_list_delete(Handle);
+					SkiaApi.sk_managedidchangelistenerlist_delete(Handle);
 				}
 			}
 
@@ -154,13 +154,13 @@ namespace SkiaSharp
 			/// </summary>
 			public void Add(SKIDChangeListener listener, bool singleThreaded = false)
 			{
-				SkiaApi.sk_managed_id_change_listener_list_add(Handle, listener.Handle, singleThreaded);
+				SkiaApi.sk_managedidchangelistenerlist_add(Handle, listener.Handle, singleThreaded);
 			}
 
 			/// <returns>The number of registered listeners (including deregisterd listeners that are yet-to-be removed).</returns>
 			public int Count()
 			{
-				return SkiaApi.sk_managed_id_change_listener_list_count(Handle);
+				return SkiaApi.sk_managedidchangelistenerlist_count(Handle);
 			}
 
 			/// <summary>
@@ -168,7 +168,7 @@ namespace SkiaSharp
 			/// </summary>
 			public void Changed(bool singleThreaded = false)
 			{
-				SkiaApi.sk_managed_id_change_listener_list_changed(Handle, singleThreaded);
+				SkiaApi.sk_managedidchangelistenerlist_changed(Handle, singleThreaded);
 			}
 
 			/// <summary>
@@ -176,7 +176,7 @@ namespace SkiaSharp
 			/// </summary>
 			public void Reset(bool singleThreaded = false)
 			{
-				SkiaApi.sk_managed_id_change_listener_list_reset(Handle, singleThreaded);
+				SkiaApi.sk_managedidchangelistenerlist_reset(Handle, singleThreaded);
 			}
 		}
 	}
