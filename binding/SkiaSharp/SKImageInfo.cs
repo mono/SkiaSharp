@@ -83,6 +83,15 @@ namespace SkiaSharp
 			ColorSpace = null;
 		}
 
+		public SKImageInfo(int width, int height, SKAlphaType alphaType)
+		{
+			Width = width;
+			Height = height;
+			ColorType = PlatformColorType;
+			AlphaType = SKAlphaType.Premul;
+			ColorSpace = null;
+		}
+
 		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType)
 		{
 			Width = width;
@@ -97,6 +106,15 @@ namespace SkiaSharp
 			Width = width;
 			Height = height;
 			ColorType = colorType;
+			AlphaType = alphaType;
+			ColorSpace = colorspace;
+		}
+
+		public SKImageInfo(int width, int height, SKAlphaType alphaType, SKColorSpace colorspace)
+		{
+			Width = width;
+			Height = height;
+			ColorType = PlatformColorType;
 			AlphaType = alphaType;
 			ColorSpace = colorspace;
 		}
