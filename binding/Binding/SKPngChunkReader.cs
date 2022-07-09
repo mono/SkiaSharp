@@ -25,14 +25,14 @@ namespace SkiaSharp
 				fDestroy = DestroyInternal,
 			};
 
-			SkiaApi.sk_managed_png_chunk_reader_set_procs(delegates);
+			SkiaApi.sk_managedpngchunkreader_set_procs(delegates);
 		}
 
 		protected SKPngChunkReader()
 			: base(IntPtr.Zero, true)
 		{
 			userData = DelegateProxies.CreateUserData(this, true);
-			Handle = SkiaApi.sk_managed_png_chunk_reader_new((void*)userData);
+			Handle = SkiaApi.sk_managedpngchunkreader_new((void*)userData);
 
 			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException("Unable to create a new SKManagedAllocator instance.");
@@ -45,7 +45,7 @@ namespace SkiaSharp
 		{
 			if (Interlocked.CompareExchange(ref fromNative, 0, 0) == 0)
 			{
-				SkiaApi.sk_managed_png_chunk_reader_delete(Handle);
+				SkiaApi.sk_managedpngchunkreader_delete(Handle);
 			}
 		}
 
