@@ -16088,6 +16088,8 @@ namespace SkiaSharp {
 		Dng = 10,
 		// HEIF_SK_ENCODED_FORMAT = 11
 		Heif = 11,
+		// AVIF_SK_ENCODED_FORMAT = 12
+		Avif = 12,
 	}
 
 	// sk_encodedorigin_t
