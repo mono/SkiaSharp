@@ -12,6 +12,25 @@ namespace SkiaSharp
 	{
 		internal const float NearlyZero = 1.0f / (1 << 12);
 
+		internal static int GetPreambleSize (SKData data)
+		{
+			_ = data ?? throw new ArgumentNullException (nameof (data));
+
+			var buffer = data.AsSpan ();
+			var len = buffer.Length;
+
+			if (len >= 2 && buffer[0] == 0xfe && buffer[1] == 0xff)
+				return 2;
+			else if (len >= 3 && buffer[0] == 0xef && buffer[1] == 0xbb && buffer[2] == 0xbf)
+				return 3;
+			else if (len >= 3 && buffer[0] == 0x2b && buffer[1] == 0x2f && buffer[2] == 0x76)
+				return 3;
+			else if (len >= 4 && buffer[0] == 0 && buffer[1] == 0 && buffer[2] == 0xfe && buffer[3] == 0xff)
+				return 4;
+			else
+				return 0;
+		}
+
 		internal static Span<byte> AsSpan (this IntPtr ptr, int size) =>
 			new Span<byte> ((void*)ptr, size);
 
@@ -105,8 +124,7 @@ namespace SkiaSharp
 		// GetUnicodeStringLength
 
 		private static int GetUnicodeStringLength (SKTextEncoding encoding) =>
-			encoding switch
-			{
+			encoding switch {
 				SKTextEncoding.Utf8 => 1,
 				SKTextEncoding.Utf16 => 1,
 				SKTextEncoding.Utf32 => 2,
@@ -116,8 +134,7 @@ namespace SkiaSharp
 		// GetCharacterByteSize
 
 		internal static int GetCharacterByteSize (this SKTextEncoding encoding) =>
-			encoding switch
-			{
+			encoding switch {
 				SKTextEncoding.Utf8 => 1,
 				SKTextEncoding.Utf16 => 2,
 				SKTextEncoding.Utf32 => 4,
@@ -156,8 +173,7 @@ namespace SkiaSharp
 		}
 
 		public static byte[] GetEncodedText (ReadOnlySpan<char> text, SKTextEncoding encoding) =>
-			encoding switch
-			{
+			encoding switch {
 				SKTextEncoding.Utf8 => Encoding.UTF8.GetBytes (text),
 				SKTextEncoding.Utf16 => Encoding.Unicode.GetBytes (text),
 				SKTextEncoding.Utf32 => Encoding.UTF32.GetBytes (text),
@@ -177,8 +193,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return encoding switch
-			{
+			return encoding switch {
 				SKTextEncoding.Utf8 => Encoding.UTF8.GetString (data, index, count),
 				SKTextEncoding.Utf16 => Encoding.Unicode.GetString (data, index, count),
 				SKTextEncoding.Utf32 => Encoding.UTF32.GetString (data, index, count),
@@ -197,8 +212,7 @@ namespace SkiaSharp
 				return string.Empty;
 
 			fixed (byte* bp = data) {
-				return encoding switch
-				{
+				return encoding switch {
 					SKTextEncoding.Utf8 => Encoding.UTF8.GetString (bp, data.Length),
 					SKTextEncoding.Utf16 => Encoding.Unicode.GetString (bp, data.Length),
 					SKTextEncoding.Utf32 => Encoding.UTF32.GetString (bp, data.Length),

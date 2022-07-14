@@ -179,6 +179,32 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(data);
 		}
 
+		[SkippableFact]
+		public void CanCreateFromPartiallyReadStream()
+		{
+			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
+
+			stream.Position = 10;
+
+			using var data = SKData.Create(stream);
+
+			Assert.NotNull(data);
+			Assert.Equal(stream.Length - 10, data.Size);
+		}
+
+		[SkippableFact]
+		public void CanCreateFromPartiallyReadNonSeekable()
+		{
+			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
+			stream.Position = 10;
+
+			using var nonSeekable = new NonSeekableReadOnlyStream(stream);
+			using var data = SKData.Create(nonSeekable);
+
+			Assert.NotNull(data);
+			Assert.Equal(stream.Length - 10, data.Size);
+		}
+
 		[SkippableFact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
 		public void DataDisposedReturnsInvalidStream()
 		{

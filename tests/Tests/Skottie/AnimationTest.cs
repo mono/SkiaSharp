@@ -8,10 +8,29 @@ namespace SkiaSharp.Tests
 {
 	public class AnimationTest : SKTest
 	{
-		[SkippableFact]
-		public void When_Default_TryParse()
+		public static TheoryData<string> DefaultLottieFiles =>
+			new TheoryData<string>
+			{
+				"LottieLogo1.json",
+				"LottieLogo1_bom.json",
+			};
+
+		[SkippableTheory]
+		[InlineData("LottieLogo1.json", 0)]
+		[InlineData("LottieLogo1_bom.json", 3)]
+		public void EnsureLottieHasCorrectPreamble(string filename, int preamble)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
+			var data = SKData.Create(path);
+
+			Assert.Equal(preamble, Utils.GetPreambleSize(data));
+		}
+
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_TryParse(string filename)
+		{
+			var path = Path.Combine(PathToImages, filename);
 			var result = Animation.TryParse(File.ReadAllText(path), out var animation);
 
 			Assert.True(result);
@@ -19,20 +38,22 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_Parse()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_Parse(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			var animation = Animation.Parse(File.ReadAllText(path));
 
 			Assert.NotNull(animation);
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_TryCreate_From_SKData()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_TryCreate_From_SKData(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			using var data = SKData.Create(path);
 			var result = Animation.TryCreate(data, out var animation);
 
@@ -41,10 +62,11 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_Create_From_SKData()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_Create_From_SKData(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			using var data = SKData.Create(path);
 			var animation = Animation.Create(data);
 
@@ -52,10 +74,11 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_TryCreate_From_SKStream()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_TryCreate_From_SKStream(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			using var fileStream = File.OpenRead(path);
 			using var managedStream = new SKManagedStream(fileStream);
 			var result = Animation.TryCreate(managedStream, out var animation);
@@ -65,10 +88,11 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_Create_From_SKStream()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_Create_From_SKStream(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			using var fileStream = File.OpenRead(path);
 			using var managedStream = new SKManagedStream(fileStream);
 			var animation = Animation.Create(managedStream);
@@ -77,10 +101,11 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_TryCreate_From_Stream()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_TryCreate_From_Stream(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			using var fileStream = File.OpenRead(path);
 			var result = Animation.TryCreate(fileStream, out var animation);
 
@@ -88,10 +113,11 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation?.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_Create_From_Stream()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_Create_From_Stream(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			using var fileStream = File.OpenRead(path);
 			var animation = Animation.Create(fileStream);
 
@@ -99,10 +125,11 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_TryCreate_From_NonSeekableStream()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_TryCreate_From_NonSeekableStream(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			using var fileStream = File.OpenRead(path);
 			using var nonseekable = new NonSeekableReadOnlyStream(fileStream);
 			var result = Animation.TryCreate(nonseekable, out var animation);
@@ -111,10 +138,11 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation?.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_Create_From_NonSeekableStream()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_Create_From_NonSeekableStream(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			using var fileStream = File.OpenRead(path);
 			using var nonseekable = new NonSeekableReadOnlyStream(fileStream);
 			var animation = Animation.Create(nonseekable);
@@ -123,20 +151,22 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_TryCreate_From_File()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_TryCreate_From_File(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			var result = Animation.TryCreate(path, out var animation);
 
 			Assert.True(result);
 			Assert.NotEqual(IntPtr.Zero, animation?.Handle);
 		}
 
-		[SkippableFact]
-		public void When_Default_Create_From_File()
+		[SkippableTheory]
+		[MemberData(nameof(DefaultLottieFiles))]
+		public void When_Default_Create_From_File(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			var animation = Animation.Create(path);
 
 			Assert.NotNull(animation);
