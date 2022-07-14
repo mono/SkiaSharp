@@ -3,9 +3,9 @@ FROM amd64/alpine:3.9
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 3.1.412 | * ]
 
-RUN apk add --no-cache bash curl wget python python3 git build-base ninja fontconfig-dev libintl
-RUN apk add --no-cache samurai --repository http://dl-cdn.alpinelinux.org/alpine/edge/main
-RUN apk add --no-cache clang gn --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing
+RUN apk add --no-cache bash curl wget git build-base ninja fontconfig-dev libintl
+RUN apk add --no-cache samurai clang python3 --repository http://dl-cdn.alpinelinux.org/alpine/edge/main
+RUN apk add --no-cache gn --repository http://dl-cdn.alpinelinux.org/alpine/edge/community
 
 ARG DOTNET_SDK_VERSION=3.1.412
 
