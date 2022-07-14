@@ -21,6 +21,8 @@ namespace SkiaSharp.Skottie
 		protected override void DisposeNative ()
 			=> SkottieApi.skottie_animation_delete (Handle);
 
+		// Parse
+
 		public static Animation? Parse (string json) =>
 			TryParse (json, out var animation)
 				? animation
@@ -33,6 +35,8 @@ namespace SkiaSharp.Skottie
 			animation = GetObject (SkottieApi.skottie_animation_make_from_string (json, json.Length));
 			return animation != null;
 		}
+
+		// Create
 
 		public static Animation? Create (Stream stream) =>
 			TryCreate (stream, out var animation)
@@ -56,8 +60,8 @@ namespace SkiaSharp.Skottie
 		{
 			_ = stream ?? throw new ArgumentNullException (nameof (stream));
 
-			animation = GetObject (SkottieApi.skottie_animation_make_from_stream (stream.Handle));
-			return animation != null;
+			using var data = SKData.Create (stream);
+			return TryCreate (data, out animation);
 		}
 
 		public static Animation? Create (SKData data) =>
@@ -69,8 +73,13 @@ namespace SkiaSharp.Skottie
 		{
 			_ = data ?? throw new ArgumentNullException (nameof (data));
 
-			animation = GetObject (SkottieApi.skottie_animation_make_from_data ((void*)data.Data, (IntPtr)data.Size));
-			return animation != null;
+			var preamble = Utils.GetPreambleSize (data);
+			var span = data.AsSpan ().Slice (preamble);
+
+			fixed (byte* ptr = span) {
+				animation = GetObject (SkottieApi.skottie_animation_make_from_data (ptr, (IntPtr)span.Length));
+				return animation != null;
+			}
 		}
 
 		public static Animation? Create (string path) =>
@@ -82,15 +91,19 @@ namespace SkiaSharp.Skottie
 		{
 			_ = path ?? throw new ArgumentNullException (nameof (path));
 
-			animation = GetObject (SkottieApi.skottie_animation_make_from_file (path));
-			return animation != null;
+			using var data = SKData.Create (path);
+			return TryCreate (data, out animation);
 		}
+
+		// Render
 
 		public unsafe void Render (SKCanvas canvas, SKRect dst)
 			=> SkottieApi.skottie_animation_render (Handle, canvas.Handle, &dst);
 
 		public void Render (SKCanvas canvas, SKRect dst, AnimationRenderFlags flags)
 			=> SkottieApi.skottie_animation_render_with_flags (Handle, canvas.Handle, &dst, flags);
+
+		// Seek*
 
 		public void Seek (double percent, InvalidationController? ic = null)
 			=> SkottieApi.skottie_animation_seek (Handle, (float)percent, ic?.Handle ?? IntPtr.Zero);
@@ -103,6 +116,8 @@ namespace SkiaSharp.Skottie
 
 		public void SeekFrameTime (TimeSpan time, InvalidationController? ic = null)
 			=> SeekFrameTime (time.TotalSeconds, ic);
+
+		// Properties
 
 		public TimeSpan Duration
 			=> TimeSpan.FromSeconds (SkottieApi.skottie_animation_get_duration (Handle));
