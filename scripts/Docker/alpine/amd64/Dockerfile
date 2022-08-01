@@ -6,11 +6,11 @@ FROM amd64/alpine:3.9
 RUN apk add -X https://dl-cdn.alpinelinux.org/alpine/v3.16/main -u alpine-keys --allow-untrusted
 RUN apk add --no-cache bash curl wget python python3 git build-base ninja fontconfig-dev libintl clang
 
-RUN git clone https://gn.googlesource.com/gn /work/externals/gn \
-    && cd /work/externals/gn \
+RUN git clone https://gn.googlesource.com/gn /usr/share/gn \
+    && cd /usr/share/gn \
     && python build/gen.py --allow-warning \
     && ninja -C out \
-    && /work/externals/gn/out/gn --version
+    && /usr/share/gn/out/gn --version
 
 ARG DOTNET_SDK_VERSION=3.1.412
 
@@ -26,6 +26,6 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 1
 
 RUN dotnet help
 
-ENV GN_EXE=/work/externals/gn/out/gn NINJA_EXE=ninja
+ENV GN_EXE=/usr/share/gn/out/gn NINJA_EXE=ninja
 
 WORKDIR /work
