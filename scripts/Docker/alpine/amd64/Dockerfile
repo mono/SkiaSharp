@@ -3,9 +3,14 @@ FROM amd64/alpine:3.9
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 3.1.412 | * ]
 
+RUN apk add -X https://dl-cdn.alpinelinux.org/alpine/v3.16/main -u alpine-keys --allow-untrusted
 RUN apk add --no-cache bash curl wget python python3 git build-base ninja fontconfig-dev libintl clang
-RUN apk add --no-cache samurai --repository http://dl-cdn.alpinelinux.org/alpine/edge/main
-RUN apk add --no-cache gn --repository http://dl-cdn.alpinelinux.org/alpine/edge/community
+
+RUN git clone https://gn.googlesource.com/gn /usr/share/gn \
+    && cd /usr/share/gn \
+    && python build/gen.py --allow-warning \
+    && ninja -C out \
+    && /usr/share/gn/out/gn --version
 
 ARG DOTNET_SDK_VERSION=3.1.412
 
@@ -21,6 +26,6 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 1
 
 RUN dotnet help
 
-ENV GN_EXE=gn NINJA_EXE=ninja
+ENV GN_EXE=/usr/share/gn/out/gn NINJA_EXE=ninja
 
 WORKDIR /work
