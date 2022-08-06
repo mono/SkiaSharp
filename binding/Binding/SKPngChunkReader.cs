@@ -41,9 +41,7 @@ namespace SkiaSharp
 			}
 		}
 
-		protected abstract bool ReadChunk (string tag, IntPtr data, IntPtr length)
-		{
-		}
+		protected abstract bool ReadChunk (string tag, IntPtr data, IntPtr length);
 
 		// impl
 
