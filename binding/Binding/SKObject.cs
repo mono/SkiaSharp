@@ -229,9 +229,29 @@ namespace SkiaSharp
 
 		// stack trace
 		private string s;
-		private static readonly object L = new();
 
 		public static bool LOG_ALLOCATIONS = false;
+		private static Action<string> c1;
+		private static Action<string> c2;
+		private static Action<string> c3;
+		private static Action<string> c4;
+
+		public static Action<string> LOG_ALLOCATION_CONSTRUCTOR_ENTER_CALLBACK {
+			get { return c1; }
+			set { c1 = value; }
+		}
+		public static Action<string> LOG_ALLOCATION_CONSTRUCTOR_EXIT_CALLBACK {
+			get { return c2; }
+			set { c2 = value; }
+		}
+		public static Action<string> LOG_ALLOCATION_DESTRUCTOR_ENTER_CALLBACK {
+			get { return c3; }
+			set { c3 = value; }
+		}
+		public static Action<string> LOG_ALLOCATION_DESTRUCTOR_EXIT_CALLBACK {
+			get { return c4; }
+			set { c4 = value; }
+		}
 
 		private int isDisposed = 0;
 
@@ -242,33 +262,37 @@ namespace SkiaSharp
 
 		internal SKNativeObject (IntPtr handle, bool ownsHandle)
 		{
-			if (LOG_ALLOCATIONS)
-			{
-				lock (L)
-				{
-#if NETSTANDARD2_0_OR_GREATER
-				string tmp = new System.Diagnostics.StackTrace(true).ToString();
-				if (tmp == null || tmp.Length == 0)
-				{
-					s = "No Stack Info";
+			if (LOG_ALLOCATIONS) {
+				string tmp;
+#if NETCOREAPP2_0_OR_GREATER
+				tmp = new System.Diagnostics.StackTrace(true).ToString ();
+#elif NET20_OR_GREATER
+				tmp = new System.Diagnostics.StackTrace(true).ToString ();
+#elif NETSTANDARD2_0_OR_GREATER
+				tmp = new System.Diagnostics.StackTrace(true).ToString ();
+#elif NET20_OR_GREATER
+				tmp = new System.Diagnostics.StackTrace(true).ToString ();
+#else
+				try {
+					throw new Exception ();
+				} catch (Exception thrown) {
+					tmp = thrown.StackTrace?.ToString();
 				}
-				else
-				{
+#endif
+				if (tmp == null || tmp.Length == 0) {
+					s = "No Stack Info";
+				} else {
 					s = tmp;
 				}
-				Console.WriteLine("SKNativeObject() entering from:\n" + s);
-				Console.WriteLine("saved StackTrace for SKNativeObject()");
-
-#endif
-					Handle = handle;
-					OwnsHandle = ownsHandle;
-#if NETSTANDARD2_0_OR_GREATER
-				Console.WriteLine("SKNativeObject() exiting from stack trace:\n" + s);
-#endif
+				if (LOG_ALLOCATION_CONSTRUCTOR_ENTER_CALLBACK != null) {
+					LOG_ALLOCATION_CONSTRUCTOR_ENTER_CALLBACK.Invoke (s);
 				}
-			}
-			else
-            {
+				Handle = handle;
+				OwnsHandle = ownsHandle;
+				if (LOG_ALLOCATION_CONSTRUCTOR_EXIT_CALLBACK != null) {
+					LOG_ALLOCATION_CONSTRUCTOR_EXIT_CALLBACK.Invoke (s);
+				}
+			} else {
 				Handle = handle;
 				OwnsHandle = ownsHandle;
 			}
@@ -276,26 +300,20 @@ namespace SkiaSharp
 
 		~SKNativeObject ()
 		{
-			if (LOG_ALLOCATIONS)
-			{
-				lock (L)
-				{
-#if NETSTANDARD2_0_OR_GREATER
-				if (s != null) Console.WriteLine("~SKNativeObject() entering from stack trace:\n" + s);
-#endif
-					fromFinalizer = true;
-
-					Dispose(false);
-#if NETSTANDARD2_0_OR_GREATER
-				if (s != null) Console.WriteLine("~SKNativeObject() exiting from stack trace:\n" + s);
-#endif
+			if (LOG_ALLOCATIONS) {
+				if (LOG_ALLOCATION_DESTRUCTOR_ENTER_CALLBACK != null) {
+					LOG_ALLOCATION_DESTRUCTOR_ENTER_CALLBACK.Invoke (s);
 				}
-			}
-			else
-            {
 				fromFinalizer = true;
 
-				Dispose(false);
+				Dispose (false);
+				if (LOG_ALLOCATION_DESTRUCTOR_EXIT_CALLBACK != null) {
+					LOG_ALLOCATION_DESTRUCTOR_EXIT_CALLBACK.Invoke (s);
+				}
+			} else {
+				fromFinalizer = true;
+
+				Dispose (false);
 			}
 		}
 
