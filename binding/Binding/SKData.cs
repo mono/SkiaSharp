@@ -103,7 +103,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 			if (stream.CanSeek) {
-				return Create (stream, stream.Length);
+				return Create (stream, stream.Length - stream.Position);
 			} else {
 				using var memory = new SKDynamicMemoryWStream ();
 				using (var managed = new SKManagedStream (stream)) {
