@@ -59,7 +59,11 @@ void RunMSBuild(
     MSBuild(solution, c => {
         c.Configuration = configuration ?? CONFIGURATION;
         c.Verbosity = VERBOSITY;
-        c.MaxCpuCount = 0;
+
+        if (IsRunningOnWindows())
+            c.MaxCpuCount = 0;
+        else
+            c.MaxCpuCount = 1;
 
         var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
         var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + ".binlog");

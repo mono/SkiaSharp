@@ -2,13 +2,13 @@ FROM amd64/debian:9
 
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 3.1.412 | * ]
-#   CLANG_VERSION        - the version of clang/llvm tools                  [ 10 | * ]
+#   CLANG_VERSION        - the version of clang/llvm tools                  [ 12 | * ]
 #   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 6 | * ]
 
-ARG CLANG_VERSION=10
+ARG CLANG_VERSION=12
 ARG TOOLCHAIN_VERSION=6
 RUN apt-get update \
-    && apt-get install -y apt-transport-https curl wget python git make dirmngr gnupg \
+    && apt-get install -y apt-transport-https curl wget python python3 git make dirmngr gnupg \
     && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
     && echo "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-${CLANG_VERSION} main" | tee /etc/apt/sources.list.d/llvm.list \
     && apt-get update \

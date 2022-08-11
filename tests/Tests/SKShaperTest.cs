@@ -101,5 +101,52 @@ namespace SkiaSharp.HarfBuzz.Tests
 				return new Blob(data, size, MemoryMode.Writeable, () => Marshal.FreeCoTaskMem(data));
 			}
 		}
+
+		[SkippableTheory]
+		[InlineData(SKTextAlign.Left, 300)]
+		[InlineData(SKTextAlign.Center, 162)]
+		[InlineData(SKTextAlign.Right, 23)]
+		public void TextAlignMovesTextPosition(SKTextAlign align, int offset)
+		{
+			var font = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(font);
+
+			using var bitmap = new SKBitmap(600, 200);
+			using var canvas = new SKCanvas(bitmap);
+
+			canvas.Clear(SKColors.White);
+
+			using var paint = new SKPaint();
+			paint.Typeface = tf;
+			paint.IsAntialias = true;
+			paint.TextSize = 64;
+			paint.Color = SKColors.Black;
+			paint.TextAlign = align;
+
+			canvas.DrawShapedText("SkiaSharp", 300, 100, paint);
+
+			AssertTextAlign(bitmap, offset, 0);
+		}
+
+		private static void AssertTextAlign(SKBitmap bitmap, int x, int y)
+		{
+			// [S]kia[S]har[p]
+
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 6, y + 66));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 28, y + 87));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 28, y + 66));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 6, y + 87));
+
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 120, y + 66));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 142, y + 87));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 142, y + 66));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 120, y + 87));
+
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 246, y + 70));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 246, y + 113));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 271, y + 83));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 83));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 113));
+		}
 	}
 }

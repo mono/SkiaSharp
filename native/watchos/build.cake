@@ -19,7 +19,7 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
-        GnNinja($"watchos/{arch}", "skia",
+        GnNinja($"watchos/{arch}", "skia modules/skottie",
             $"target_os='watchos' " +
             $"target_cpu='{skiaArch}' " +
             $"skia_enable_gpu=false " +
@@ -32,6 +32,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
+            $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] ");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch);

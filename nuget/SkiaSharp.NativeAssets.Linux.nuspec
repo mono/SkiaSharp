@@ -34,6 +34,12 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
       <group targetFramework="netstandard1.3">
         <dependency id="SkiaSharp" version="1.0.0" />
       </group>
+      <group targetFramework="netcoreapp3.1">
+        <dependency id="SkiaSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="net5.0">
+        <dependency id="SkiaSharp" version="1.0.0" />
+      </group>
     </dependencies>
 
   </metadata>
@@ -44,14 +50,16 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file src="build/net462/SkiaSharp.targets" target="buildTransitive/net462/SkiaSharp.NativeAssets.Linux.targets" />
 
     <!-- libSkiaSharp.dll and other native files -->
-    <file platform="linux" src="runtimes/linux-x64/native/libSkiaSharp.so" />
-    <file platform="linux" src="runtimes/linux-arm/native/libSkiaSharp.so" />
-    <file platform="linux" src="runtimes/linux-arm64/native/libSkiaSharp.so" />
-    <file platform="linux" src="runtimes/linux-musl-x64/native/libSkiaSharp.so" />
+    <file src="runtimes/linux-x64/native/libSkiaSharp.so" />
+    <file src="runtimes/linux-arm/native/libSkiaSharp.so" />
+    <file src="runtimes/linux-arm64/native/libSkiaSharp.so" />
+    <file src="runtimes/linux-musl-x64/native/libSkiaSharp.so" />
 
     <!-- placeholders -->
     <file src="_._" target="lib/net462/_._" />
     <file src="_._" target="lib/netstandard1.3/_._" />
+    <file src="_._" target="lib/netcoreapp3.1/_._" />
+    <file src="_._" target="lib/net5.0/_._" />
 
     <!-- legal -->
     <file src="LICENSE.txt" />

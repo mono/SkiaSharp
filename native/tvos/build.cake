@@ -18,7 +18,7 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
-        GnNinja($"tvos/{arch}", "skia",
+        GnNinja($"tvos/{arch}", "skia modules/skottie",
             $"target_os='tvos' " +
             $"target_cpu='{skiaArch}' " +
             $"skia_use_icu=false " +
@@ -30,6 +30,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
+            $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] ");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch);

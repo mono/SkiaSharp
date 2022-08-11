@@ -1,5 +1,6 @@
 ﻿using System;
 using UIKit;
+using ObjCRuntime;
 
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
@@ -15,14 +16,14 @@ namespace SkiaSharp.Views.iOS
 
 		public static SKColor ToSKColor(this UIColor color)
 		{
-			System.nfloat r, g, b, a;
+			nfloat r, g, b, a;
 			color.GetRGBA(out r, out g, out b, out a);
 			return new SKColor((byte)(r * 255), (byte)(g * 255), (byte)(b * 255), (byte)(a * 255));
 		}
 
 		public static SKColorF ToSKColorF(this UIColor color)
 		{
-			System.nfloat r, g, b, a;
+			nfloat r, g, b, a;
 			color.GetRGBA(out r, out g, out b, out a);
 			return new SKColorF((float)r, (float)g, (float)b, (float)a);
 		}

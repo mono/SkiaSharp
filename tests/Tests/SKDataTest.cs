@@ -37,6 +37,42 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
+		[SkippableFact]
+		public void AsStreamReturnsCorrectStreamData()
+		{
+			var data = SKData.CreateCopy(OddData);
+
+			var stream = data.AsStream();
+
+			var buffer = new byte[5];
+			stream.Read(buffer, 0, 5);
+
+			Assert.Equal(OddData, buffer);
+		}
+
+		[SkippableFact]
+		public void CanWriteToAsStream()
+		{
+			var data = SKData.Create(5);
+
+			var stream = data.AsStream();
+			stream.Write(OddData, 0, 5);
+
+			Assert.Equal(OddData, data.ToArray());
+		}
+
+		[SkippableFact]
+		public void CanCopyToAsStream()
+		{
+			var data = SKData.Create(5);
+
+			var stream = data.AsStream();
+			var ms = new MemoryStream(OddData);
+			ms.CopyTo(stream);
+
+			Assert.Equal(OddData, data.ToArray());
+		}
+
 		[SkippableTheory]
 		[InlineData(null, 0, 0, 0)]
 		[InlineData("", 0, 0, 0)]
@@ -141,6 +177,32 @@ namespace SkiaSharp.Tests
 			using var data = SKData.Create(nonSeekable);
 
 			Assert.NotNull(data);
+		}
+
+		[SkippableFact]
+		public void CanCreateFromPartiallyReadStream()
+		{
+			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
+
+			stream.Position = 10;
+
+			using var data = SKData.Create(stream);
+
+			Assert.NotNull(data);
+			Assert.Equal(stream.Length - 10, data.Size);
+		}
+
+		[SkippableFact]
+		public void CanCreateFromPartiallyReadNonSeekable()
+		{
+			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
+			stream.Position = 10;
+
+			using var nonSeekable = new NonSeekableReadOnlyStream(stream);
+			using var data = SKData.Create(nonSeekable);
+
+			Assert.NotNull(data);
+			Assert.Equal(stream.Length - 10, data.Size);
 		}
 
 		[SkippableFact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]

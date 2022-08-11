@@ -7,7 +7,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory(".."));
 
 // required
 FilePath PROJECT = Argument("project", EnvironmentVariable("ANDROID_TEST_PROJECT") ?? "");
-string TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-32_30");
+string TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-64_30");
 string DEVICE_NAME = Argument("skin", EnvironmentVariable("ANDROID_TEST_SKIN") ?? "Nexus 5X");
 
 // optional
@@ -179,7 +179,7 @@ Task("Default")
 
     CleanDirectories(TEST_RESULTS);
 
-    RunProcess("xharness", "android test " +
+    DotNetTool("xharness android test " +
         $"--app=\"{TEST_APP}\" " +
         $"--package-name=\"{TEST_APP_PACKAGE_NAME}\" " +
         $"--instrumentation=\"{TEST_APP_INSTRUMENTATION}\" " +

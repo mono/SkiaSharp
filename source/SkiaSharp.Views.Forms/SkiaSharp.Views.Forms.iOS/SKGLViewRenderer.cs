@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !__MACCATALYST__
+using System;
 using CoreAnimation;
 using Foundation;
 
@@ -94,7 +95,8 @@ namespace SkiaSharp.Views.Forms
 				// redraw the view
 				nativeView.Display();
 			});
-			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoop.NSDefaultRunLoopMode);
+			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Default);
 		}
 	}
 }
+#endif

@@ -1,8 +1,17 @@
 ﻿#if UNO_REFERENCE_API
 using System;
-using Windows.UI.Xaml;
 
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
+using Windows.UI.Xaml;
+#endif
+
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public partial class SKSwapChainPanel : FrameworkElement
 	{

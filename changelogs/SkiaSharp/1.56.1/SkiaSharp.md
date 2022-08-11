@@ -27,9 +27,9 @@ public bool InstallMaskPixels (SKMask mask);
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use DrawTextOnPath instead.")]
+ [Obsolete ()]
  public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint);
- [Obsolete ("Use DrawTextOnPath instead.")]
+ [Obsolete ()]
  public void DrawText (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint);
 ```
 
@@ -44,7 +44,7 @@ public SKData DrawNamedDestinationAnnotation (SKPoint point, string value);
 public void DrawPositionedText (byte[] text, SKPoint[] points, SKPaint paint);
 public void DrawText (byte[] text, float x, float y, SKPaint paint);
 
-[Obsolete ("Use DrawTextOnPath instead.")]
+[Obsolete]
 public void DrawText (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint);
 public void DrawTextOnPath (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint);
 public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint);
@@ -138,7 +138,7 @@ public void AddPoly (SKPoint[] points, bool close);
 Obsoleted fields:
 
 ```diff
- [Obsolete ("Use SKStrokeJoin.Miter instead.")]
+ [Obsolete ()]
  Mitter = 0,
 ```
 

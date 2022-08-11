@@ -1,0 +1,58 @@
+// configuration for the libSkiaSharp binary
+{
+  "dllName": "SKIA",
+  "namespace": "SkiaSharp",
+  "namespaces": {
+    "sk_": {
+      "prefix": "SK",
+      "exclude": true
+    },
+    "gr_": {
+      "exclude": true
+    },
+    "vk_": {
+      "exclude": true
+    },
+    "sksg_": {
+      "exclude": true
+    },
+    "skottie_": {
+      "cs": "Skottie",
+      "prefix": ""
+    }
+  },
+  "className": "SkottieApi",
+  "includeDirs": [
+    "."
+  ],
+  "headers": {
+    "include/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
+    "include/xamarin": [ "sk_*" ]
+  },
+  "source": {
+    "src/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
+    "src/xamarin": [ "sk_*" ]
+  },
+  "mappings": {
+    "types": {
+      "skottie_animation_renderflags_t": {
+        "cs": "AnimationRenderFlags",
+        "flags": true
+      }
+    },
+    "functions": {
+      "skottie_animation_make_from_string": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "1": "int"
+
+        }
+      },
+      "skottie_animation_make_from_file": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      }
+    }
+  }
+}

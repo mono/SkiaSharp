@@ -95,7 +95,7 @@ public class SKCanvasLayer : CoreAnimation.CALayer, CoreAnimation.ICAMediaTiming
 #### New Type: SkiaSharp.Views.Mac.SKCanvasView
 
 ```csharp
-public class SKCanvasView : AppKit.NSView, AppKit.INSAccessibility, AppKit.INSAccessibilityElementProtocol, AppKit.INSAppearanceCustomization, AppKit.INSDraggingDestination, AppKit.INSTouchBarProvider, AppKit.INSUserInterfaceItemIdentification, Foundation.INSCoding, Foundation.INSObjectProtocol, ObjCRuntime.INativeObject, System.IDisposable, System.IEquatable<Foundation.NSObject> {
+public class SKCanvasView : AppKit.NSView, AppKit.INSAccessibility, AppKit.INSAccessibilityElementProtocol, AppKit.INSAppearanceCustomization, AppKit.INSDraggingDestination, AppKit.INSTouchBarProvider, AppKit.INSUserActivityRestoring, AppKit.INSUserInterfaceItemIdentification, Foundation.INSCoding, Foundation.INSObjectProtocol, ObjCRuntime.INativeObject, System.IDisposable, System.IEquatable<Foundation.NSObject> {
 	// constructors
 	public SKCanvasView ();
 	public SKCanvasView (CoreGraphics.CGRect frame);
@@ -133,7 +133,7 @@ public class SKGLLayer : CoreAnimation.CAOpenGLLayer, CoreAnimation.ICAMediaTimi
 #### New Type: SkiaSharp.Views.Mac.SKGLView
 
 ```csharp
-public class SKGLView : AppKit.NSOpenGLView, AppKit.INSAccessibility, AppKit.INSAccessibilityElementProtocol, AppKit.INSAppearanceCustomization, AppKit.INSDraggingDestination, AppKit.INSTouchBarProvider, AppKit.INSUserInterfaceItemIdentification, Foundation.INSCoding, Foundation.INSObjectProtocol, ObjCRuntime.INativeObject, System.IDisposable, System.IEquatable<Foundation.NSObject> {
+public class SKGLView : AppKit.NSOpenGLView, AppKit.INSAccessibility, AppKit.INSAccessibilityElementProtocol, AppKit.INSAppearanceCustomization, AppKit.INSDraggingDestination, AppKit.INSTouchBarProvider, AppKit.INSUserActivityRestoring, AppKit.INSUserInterfaceItemIdentification, Foundation.INSCoding, Foundation.INSObjectProtocol, ObjCRuntime.INativeObject, System.IDisposable, System.IEquatable<Foundation.NSObject> {
 	// constructors
 	public SKGLView ();
 	public SKGLView (CoreGraphics.CGRect frame);

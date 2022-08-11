@@ -47,6 +47,7 @@ Task("libSkiaSharp")
         $"skia_use_system_zlib=false " +
         $"skia_use_vulkan=false " +
         $"skia_use_wuffs=true " +
+        $"skia_enable_skottie=true " +
         $"use_PIC=false " +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 

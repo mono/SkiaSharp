@@ -9,7 +9,7 @@
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
-#tool nuget:?package=mdoc&version=5.8.3
+#tool nuget:?package=mdoc&version=5.8.9
 #tool nuget:?package=xunit.runner.console&version=2.4.1
 #tool nuget:?package=vswhere&version=2.8.4
 
@@ -34,12 +34,12 @@ var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 var SKIP_BUILD = Argument ("skipbuild", false);
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
-var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
+var SOLUTION_TYPE = Argument ("solutionType", "").ToLower ().Trim ();
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
 
 var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
@@ -48,11 +48,13 @@ var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () 
 
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 
-DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
+DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
+DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
 
 var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview");
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
+var BUILD_COUNTER = Argument ("buildCounter", EnvironmentVariable ("BUILD_COUNTER") ?? BUILD_NUMBER);
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? ""). Replace ("refs/heads/", "");
 var GIT_URL = Argument ("gitUrl", EnvironmentVariable ("GIT_URL") ?? "");
@@ -64,35 +66,36 @@ var PREVIEW_NUGET_SUFFIX = string.IsNullOrEmpty (BUILD_NUMBER)
 var PREVIEW_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json");
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
-    { "SkiaSharp",                                     new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Android",                new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.iOS",                    new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.MacCatalyst",            new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.macOS",                  new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Tizen",                  new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.tvOS",                   new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.UWP",                    new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.watchOS",                new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Win32",                  new Version (1, 57, 0) },
-    { "SkiaSharp.Views",                               new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Desktop.Common",                new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Gtk2",                          new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Gtk3",                          new Version (1, 57, 0) },
-    { "SkiaSharp.Views.WindowsForms",                  new Version (1, 57, 0) },
-    { "SkiaSharp.Views.WPF",                           new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms",                         new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms.WPF",                     new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms.GTK",                     new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Uno",                           new Version (1, 57, 0) },
-    { "SkiaSharp.Views.WinUI",                         new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Maui.Core",                     new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Blazor",                        new Version (1, 57, 0) },
+    { "SkiaSharp",                                     new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.Android",                new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.iOS",                    new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.MacCatalyst",            new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.macOS",                  new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.Tizen",                  new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.tvOS",                   new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.UWP",                    new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.watchOS",                new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.Win32",                  new Version (1, 60, 0) },
+    { "SkiaSharp.Views",                               new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Desktop.Common",                new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Gtk2",                          new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Gtk3",                          new Version (1, 60, 0) },
+    { "SkiaSharp.Views.WindowsForms",                  new Version (1, 60, 0) },
+    { "SkiaSharp.Views.WPF",                           new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Forms",                         new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Forms.WPF",                     new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Forms.GTK",                     new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Uno",                           new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Uno.WinUI",                     new Version (1, 60, 0) },
+    { "SkiaSharp.Views.WinUI",                         new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Maui.Core",                     new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Blazor",                        new Version (1, 60, 0) },
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Android",            new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.iOS",                new Version (1, 0, 0) },
@@ -105,16 +108,12 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "HarfBuzzSharp.NativeAssets.watchOS",            new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Win32",              new Version (1, 0, 0) },
-    { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
-    { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 57, 0) },
+    { "SkiaSharp.HarfBuzz",                            new Version (1, 60, 0) },
+    { "SkiaSharp.Skottie",                             new Version (1, 60, 0) },
+    { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 60, 0) },
 };
 
 var PREVIEW_ONLY_NUGETS = new List<string> {
-    "SkiaSharp.Views.Maui.Core",
-    "SkiaSharp.Views.Maui.Controls",
-    "SkiaSharp.Views.Maui.Controls.Compatibility",
-    "SkiaSharp.Views.WinUI",
-    "SkiaSharp.Views.Blazor",
 };
 
 Information("Source Control:");
@@ -155,25 +154,28 @@ Task ("libs")
 {
     // build the managed libraries
     var platform = "";
-    if (!BUILD_ALL_PLATFORMS) {
-        if (IsRunningOnWindows ()) {
-            platform = ".Windows";
-        } else if (IsRunningOnMacOs ()) {
-            platform = ".Mac";
-        } else if (IsRunningOnLinux ()) {
-            platform = ".Linux";
-        }
+    if (IsRunningOnWindows ()) {
+        platform = ".Windows";
+    } else if (IsRunningOnMacOs ()) {
+        platform = ".Mac";
+    } else if (IsRunningOnLinux ()) {
+        platform = ".Linux";
     }
 
     var net6 = $"./source/SkiaSharpSource{platform}-net6.slnf";
     var netfx = $"./source/SkiaSharpSource{platform}-netfx.slnf";
     if (FileExists (net6) || FileExists (netfx)) {
-        if (FileExists (net6))
+        if (FileExists (net6) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "net6"))
             RunMSBuild (net6, properties: new Dictionary<string, string> { { "BuildingForNet6", "true" } });
-        if (FileExists (netfx))
+        if (FileExists (netfx) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "netfx"))
             RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet6", "false" } });
     } else {
-        RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
+        var slnf = $"./source/SkiaSharpSource{platform}.slnf";
+        var sln = $"./source/SkiaSharpSource{platform}.sln";
+        if (FileExists (slnf))
+            RunMSBuild (slnf);
+        else
+            RunMSBuild (sln);
     }
 
     // assemble the mdoc docs
@@ -204,6 +206,8 @@ Task ("tests-netfx")
 
     void RunDesktopTest (string arch)
     {
+        if (Skip(arch)) return;
+
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
 
         // SkiaSharp.Tests.dll
@@ -298,6 +302,9 @@ Task ("tests-android")
         FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
         RunMSBuild (csproj,
             targets: new [] { "SignAndroidPackage" }, 
+            properties: new Dictionary<string, string> {
+                { "BuildTestOnly", "true" },
+            },
             platform: "AnyCPU",
             configuration: "Debug");
         // run the tests
@@ -338,7 +345,10 @@ Task ("tests-ios")
         // package the app
         FilePath csproj = "./tests/SkiaSharp.iOS.Tests/SkiaSharp.iOS.Tests.csproj";
         RunMSBuild (csproj,
-            properties: new Dictionary<string, string> { { "BuildIpa", "true" } },
+            properties: new Dictionary<string, string> {
+                { "BuildIpa", "true" },
+                { "BuildTestOnly", "true" },
+            },
             platform: "iPhoneSimulator",
             configuration: "Debug");
         // run the tests
@@ -453,7 +463,7 @@ Task ("samples")
         { "xamarin.forms.windows", "x86" },
     };
 
-    void BuildSample (FilePath sln)
+    void BuildSample (FilePath sln, bool dryrun)
     {
         var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
         var name = sln.GetFilenameWithoutExtension ();
@@ -473,12 +483,19 @@ Task ("samples")
                 buildPlatform = platformMatrix [platform];
             }
 
-            Information ($"Building {sln} ({platform})...");
-
-            RunNuGetRestorePackagesConfig (sln);
-            RunMSBuild (sln, platform: buildPlatform);
+            if (dryrun) {
+                Information ($"    BUILD       {sln}");
+            } else {
+                Information ($"Building sample {sln} ({platform})...");
+                RunNuGetRestorePackagesConfig (sln);
+                RunMSBuild (sln, platform: buildPlatform);
+            }
         } else {
-            Information ($"Skipping {sln} ({platform})...");
+            if (dryrun) {
+                Information ($"    SKIP   (NS) {sln} (not supported)");
+            } else {
+                Information ($"Skipping sample {sln} ({platform})...");
+            }
         }
     }
 
@@ -514,38 +531,49 @@ Task ("samples")
         Information ("    " + sln);
     }
 
-    foreach (var sln in solutions) {
-        // might have been deleted due to a platform build and cleanup
-        if (!FileExists (sln))
-            continue;
+    foreach (var dryrun in new [] { true, false }) {
+        if (dryrun)
+            Information ("Sample builds:");
 
-        var name = sln.GetFilenameWithoutExtension ();
-        var slnPlatform = name.GetExtension ();
+        foreach (var sln in solutions) {
+            // might have been deleted due to a platform build and cleanup
+            if (!FileExists (sln))
+                continue;
 
-        if (string.IsNullOrEmpty (slnPlatform)) {
-            // this is the main solution
-            var variants = GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln");
-            if (!variants.Any ()) {
-                // there is no platform variant
-                BuildSample (sln);
-                // delete the built sample
-                CleanDirectories (sln.GetDirectory ().FullPath);
+            var name = sln.GetFilenameWithoutExtension ();
+            var slnPlatform = name.GetExtension ();
+
+            if (string.IsNullOrEmpty (slnPlatform)) {
+                // this is the main solution
+                var variants = GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln");
+                if (!variants.Any ()) {
+                    // there is no platform variant
+                    BuildSample (sln, dryrun);
+                    // delete the built sample
+                    if (!dryrun)
+                        CleanDirectories (sln.GetDirectory ().FullPath);
+                } else {
+                    // skip as there is a platform variant
+                    if (dryrun)
+                        Information ($"    SKIP   (PS) {sln} (has platform specific)");
+                }
             } else {
-                // skip as there is a platform variant
-            }
-        } else {
-            // this is a platform variant
-            slnPlatform = slnPlatform.ToLower ();
-            var shouldBuild =
-                (isLinux && slnPlatform == ".linux") ||
-                (isMac && slnPlatform == ".mac") ||
-                (isWin && slnPlatform == ".windows");
-            if (shouldBuild) {
-                BuildSample (sln);
-                // delete the built sample
-                CleanDirectories (sln.GetDirectory ().FullPath);
-            } else {
-                // skip this as this is not the correct platform
+                // this is a platform variant
+                slnPlatform = slnPlatform.ToLower ();
+                var shouldBuild =
+                    (isLinux && slnPlatform == ".linux") ||
+                    (isMac && slnPlatform == ".mac") ||
+                    (isWin && slnPlatform == ".windows");
+                if (shouldBuild) {
+                    BuildSample (sln, dryrun);
+                    // delete the built sample
+                    if (!dryrun)
+                        CleanDirectories (sln.GetDirectory ().FullPath);
+                } else {
+                    // skip this as this is not the correct platform
+                    if (dryrun)
+                        Information ($"    SKIP   (AP) {sln} (has alternate platform)");
+                }
             }
         }
     }
@@ -776,20 +804,20 @@ Task ("nuget-special")
     var versions = new List<string> ();
     if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
         var v = $"0.0.0-{PREVIEW_LABEL}";
-        if (!string.IsNullOrEmpty (BUILD_NUMBER))
-            v += $".{BUILD_NUMBER}";
+        if (!string.IsNullOrEmpty (BUILD_COUNTER))
+            v += $".{BUILD_COUNTER}";
         versions.Add (v);
     } else {
         if (!string.IsNullOrEmpty (GIT_SHA)) {
             var v = $"0.0.0-commit.{GIT_SHA}";
-            if (!string.IsNullOrEmpty (BUILD_NUMBER))
-                v += $".{BUILD_NUMBER}";
+            if (!string.IsNullOrEmpty (BUILD_COUNTER))
+                v += $".{BUILD_COUNTER}";
             versions.Add (v);
         }
         if (!string.IsNullOrEmpty (GIT_BRANCH_NAME)) {
             var v = $"0.0.0-branch.{GIT_BRANCH_NAME.Replace ("/", ".")}";
-            if (!string.IsNullOrEmpty (BUILD_NUMBER))
-                v += $".{BUILD_NUMBER}";
+            if (!string.IsNullOrEmpty (BUILD_COUNTER))
+                v += $".{BUILD_COUNTER}";
             versions.Add (v);
         }
     }

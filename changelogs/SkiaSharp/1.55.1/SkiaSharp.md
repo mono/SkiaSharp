@@ -56,9 +56,9 @@ public void SetPixels (IntPtr pixels, SKColorTable ct);
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use DrawPositionedText instead.")]
+ [Obsolete ()]
  public void DrawText (string text, SKPoint[] points, SKPaint paint);
- [Obsolete ("Use DrawPositionedText instead.")]
+ [Obsolete ()]
  public void DrawText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint);
 ```
 

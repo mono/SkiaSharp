@@ -786,6 +786,9 @@ namespace SkiaSharp
 
 		public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality)
 		{
+			if (info.IsEmpty)
+				return null;
+
 			var dst = new SKBitmap (info);
 			if (ScalePixels (dst, quality)) {
 				return dst;

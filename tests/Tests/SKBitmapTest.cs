@@ -428,6 +428,26 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
+		[SkippableTheory]
+		[InlineData(-1, -1)]
+		[InlineData(0, 0)]
+		[InlineData(-1, 10)]
+		[InlineData(10, -1)]
+		[InlineData(0, 10)]
+		[InlineData(10, 0)]
+		public void BitmapDoesNotCrashOnInvalidResizes(int width, int hight)
+		{
+			using var bitmap = CreateTestBitmap();
+
+			var newInfo = bitmap.Info;
+			newInfo.Width = width;
+			newInfo.Height = hight;
+
+			using var newBitmap = bitmap.Resize(newInfo, SKFilterQuality.High);
+
+			Assert.Null(newBitmap);
+		}
+
 		[SkippableFact]
 		public void CanScalePixels()
 		{
@@ -704,6 +724,20 @@ namespace SkiaSharp.Tests
 			bitmap.SetPixel(1, 2, SKColors.Blue);
 
 			Assert.Equal(expectedPixels, bitmap.Pixels);
+		}
+
+		[SkippableTheory]
+		[InlineData("osm-liberty.png")]
+		[InlineData("testimage.png")]
+		public void CanDecodePotentiallyCorruptPngFiles(string filename)
+		{
+			var path = Path.Combine(PathToImages, filename);
+
+			var bytes = File.ReadAllBytes(path);
+			using var data = SKData.CreateCopy(bytes);
+			using var bitmap = SKBitmap.Decode(data);
+
+			Assert.NotNull(bitmap);
 		}
 	}
 }

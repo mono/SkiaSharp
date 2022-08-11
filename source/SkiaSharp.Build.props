@@ -12,6 +12,10 @@
     <IsWindows>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))</IsWindows>
     <IsMacOS>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))</IsMacOS>
     <IsLinux>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))</IsLinux>
+    <IsCI Condition="'$(IsCI)' == '' and ('$(CI)' == 'true' or '$(TF_BUILD)' == 'true')">true</IsCI>
+    <IsCI Condition="'$(IsCI)' == ''">false</IsCI>
+    <IsNet6TizenSupported Condition="'$(IsNet6TizenSupported)' == ''">true</IsNet6TizenSupported>
+    <IsNet6TizenSupported Condition="'$(IsNet6TizenSupported)' == ''">false</IsNet6TizenSupported>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -22,6 +26,52 @@
     <BuildingForNet6 Condition="'$(BuildingForNet6)' == ''">false</BuildingForNet6>
     <MDocDocumentationDirectory>$(MSBuildThisFileDirectory)..\docs\SkiaSharpAPI</MDocDocumentationDirectory>
     <LangVersion>9.0</LangVersion>
+    <LangVersion Condition="$(IsWindows)">10.0</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Disable csc shared compilation to reduce memory usage on CI -->
+    <UseSharedCompilation>False</UseSharedCompilation>
+
+    <!-- Force the use of Uno Roslyn generators to reduce memory usage on CI -->
+    <UnoUIUseRoslynSourceGenerators>true</UnoUIUseRoslynSourceGenerators>
+  </PropertyGroup>
+
+  <!-- Classic Tizen, Xamarin and UWP -->
+  <PropertyGroup>
+    <ClassicTargetFrameworks>tizen40</ClassicTargetFrameworks>
+    <ClassicTargetFrameworks Condition="$(IsMacOS) or !$(IsCI)">$(ClassicTargetFrameworks);xamarinios1.0;xamarintvos1.0;xamarinwatchos1.0;xamarinmac2.0</ClassicTargetFrameworks>
+    <ClassicTargetFrameworks Condition="$(IsWindows) or $(IsMacOS)">$(ClassicTargetFrameworks);monoandroid10.0</ClassicTargetFrameworks>
+    <ClassicTargetFrameworks Condition="$(IsWindows)">$(ClassicTargetFrameworks);uap10.0.10240;uap10.0.16299</ClassicTargetFrameworks>
+  </PropertyGroup>
+
+  <!-- .NET Standard, .NET FX and .NET 6 -->
+  <PropertyGroup>
+    <AncientTargetFrameworks>netstandard1.3</AncientTargetFrameworks>
+    <BasicTargetFrameworksWithoutAncient>netstandard2.0;netstandard2.1;net462;netcoreapp3.1;net5.0</BasicTargetFrameworksWithoutAncient>
+    <BasicTargetFrameworksWithoutAncient Condition="$(BuildingForNet6)">$(BasicTargetFrameworksWithoutAncient);net6.0</BasicTargetFrameworksWithoutAncient>
+    <BasicTargetFrameworks>$(AncientTargetFrameworks);$(BasicTargetFrameworksWithoutAncient)</BasicTargetFrameworks>
+    <Net6PlatformTargetFrameworks>net6.0-ios;net6.0-maccatalyst;net6.0-tvos;net6.0-macos;net6.0-android</Net6PlatformTargetFrameworks>
+    <Net6PlatformTargetFrameworks Condition="$(IsNet6TizenSupported)">$(Net6PlatformTargetFrameworks);net6.0-tizen</Net6PlatformTargetFrameworks>
+  </PropertyGroup>
+
+  <!-- Special case for SkiaSharp.Benchmarks -->
+  <PropertyGroup Condition="'$(SolutionName)' == 'SkiaSharp.Benchmarks' or '$(IsBenchmarks)' == 'true' or $(MSBuildStartupDirectory.Contains('benchmarks\SkiaSharp.Benchmarks'))">
+    <BasicTargetFrameworks>net462;netcoreapp3.1</BasicTargetFrameworks>
+    <Net6PlatformTargetFrameworks>net6.0</Net6PlatformTargetFrameworks>
+  </PropertyGroup>
+
+  <!-- Base TFMs for the core parts -->
+  <PropertyGroup>
+    <AllTargetFrameworks>$(BasicTargetFrameworks)</AllTargetFrameworks>
+    <AllTargetFrameworks Condition="$(BuildingForNet6)">$(AllTargetFrameworks);$(Net6PlatformTargetFrameworks)</AllTargetFrameworks>
+  </PropertyGroup>
+
+  <!-- .NET MAUI -->
+  <PropertyGroup>
+    <MauiTargetFrameworks>net6.0;net6.0-ios;net6.0-maccatalyst;net6.0-android</MauiTargetFrameworks>
+    <MauiTargetFrameworks Condition="$(IsNet6TizenSupported)">$(MauiTargetFrameworks);net6.0-tizen</MauiTargetFrameworks>
+    <MauiTargetFrameworks Condition="$(IsWindows)">$(MauiTargetFrameworks);net6.0-windows10.0.19041.0</MauiTargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -81,6 +131,10 @@
   <PropertyGroup Condition="$(TargetFramework.Contains('-windows10'))">
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <SupportedOSPlatformVersion>6.5</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>6.5</TargetPlatformMinVersion>
   </PropertyGroup>
 
   <Target Name="PrintRID"

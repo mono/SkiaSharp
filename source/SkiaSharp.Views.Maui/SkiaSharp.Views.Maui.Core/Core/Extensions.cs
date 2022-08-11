@@ -46,22 +46,22 @@ namespace SkiaSharp.Views.Maui
 
 		// Rect
 
-		public static Rectangle ToMauiRectangle(this SKRectI rect) =>
-			new Rectangle(rect.Left, rect.Top, rect.Width, rect.Height);
+		public static Rect ToMauiRectangle(this SKRectI rect) =>
+			new Rect(rect.Left, rect.Top, rect.Width, rect.Height);
 
-		public static RectangleF ToMauiRectangleF(this SKRectI rect) =>
-			new RectangleF(rect.Left, rect.Top, rect.Width, rect.Height);
+		public static RectF ToMauiRectangleF(this SKRectI rect) =>
+			new RectF(rect.Left, rect.Top, rect.Width, rect.Height);
 
-		public static Rectangle ToMauiRectangle(this SKRect rect) =>
-			new Rectangle(rect.Left, rect.Top, rect.Width, rect.Height);
+		public static Rect ToMauiRectangle(this SKRect rect) =>
+			new Rect(rect.Left, rect.Top, rect.Width, rect.Height);
 
-		public static RectangleF ToMauiRectangleF(this SKRect rect) =>
-			new RectangleF(rect.Left, rect.Top, rect.Width, rect.Height);
+		public static RectF ToMauiRectangleF(this SKRect rect) =>
+			new RectF(rect.Left, rect.Top, rect.Width, rect.Height);
 
-		public static SKRect ToSKRect(this Rectangle rect) =>
+		public static SKRect ToSKRect(this Rect rect) =>
 			new SKRect((float)rect.Left, (float)rect.Top, (float)rect.Right, (float)rect.Bottom);
 
-		public static SKRect ToSKRect(this RectangleF rect) =>
+		public static SKRect ToSKRect(this RectF rect) =>
 			new SKRect(rect.Left, rect.Top, rect.Right, rect.Bottom);
 
 		// Color

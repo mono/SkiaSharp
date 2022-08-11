@@ -9,7 +9,7 @@
 Obsoleted constructors:
 
 ```diff
- [Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate releaseDelegate) instead.")]
+ [Obsolete ()]
  public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate);
 ```
 

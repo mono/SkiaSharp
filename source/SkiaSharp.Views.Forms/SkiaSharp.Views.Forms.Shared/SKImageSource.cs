@@ -153,6 +153,8 @@ namespace SkiaSharp.Views.Forms
 		{
 			if (propertyName == PictureProperty.PropertyName)
 				OnSourceChanged();
+			else if (propertyName == DimensionsProperty.PropertyName)
+				OnSourceChanged();
 			base.OnPropertyChanged(propertyName);
 		}
 	}
