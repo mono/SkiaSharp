@@ -14,6 +14,8 @@ namespace SkiaSharp
 {
 	internal static class PlatformConfiguration
 	{
+		private const string LibCLibrary = "libc";
+
 		public static bool IsUnix { get; }
 
 		public static bool IsWindows { get; }
@@ -91,7 +93,7 @@ namespace SkiaSharp
 			}
 		}
 
-		[DllImport ("c", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (LibCLibrary, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
 		private static extern IntPtr gnu_get_libc_version ();
 #endif
 	}
