@@ -7,12 +7,12 @@ using Windows.System;
 #endif
 
 #if HARFBUZZ
-namespace HarfBuzzSharp
+namespace HarfBuzzSharp.Internals
 #else
-namespace SkiaSharp
+namespace SkiaSharp.Internals
 #endif
 {
-	internal static class PlatformConfiguration
+	public static class PlatformConfiguration
 	{
 		private const string LibCLibrary = "libc";
 

@@ -3,6 +3,12 @@ using System.IO;
 using System.Runtime.InteropServices;
 
 #if HARFBUZZ
+using HarfBuzzSharp.Internals;
+#else
+using SkiaSharp.Internals;
+#endif
+
+#if HARFBUZZ
 namespace HarfBuzzSharp
 #else
 namespace SkiaSharp
