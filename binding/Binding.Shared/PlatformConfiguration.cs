@@ -7,13 +7,15 @@ using Windows.System;
 #endif
 
 #if HARFBUZZ
-namespace HarfBuzzSharp
+namespace HarfBuzzSharp.Internals
 #else
-namespace SkiaSharp
+namespace SkiaSharp.Internals
 #endif
 {
-	internal static class PlatformConfiguration
+	public static class PlatformConfiguration
 	{
+		private const string LibCLibrary = "libc";
+
 		public static bool IsUnix { get; }
 
 		public static bool IsWindows { get; }
@@ -91,7 +93,7 @@ namespace SkiaSharp
 			}
 		}
 
-		[DllImport ("c", ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (LibCLibrary, ExactSpelling = true, CallingConvention = CallingConvention.Cdecl)]
 		private static extern IntPtr gnu_get_libc_version ();
 #endif
 	}

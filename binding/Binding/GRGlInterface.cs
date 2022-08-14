@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using SkiaSharp.Internals;
 
 #if __TIZEN__
 using System.Reflection;

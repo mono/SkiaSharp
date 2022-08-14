@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp.Tests
 {
