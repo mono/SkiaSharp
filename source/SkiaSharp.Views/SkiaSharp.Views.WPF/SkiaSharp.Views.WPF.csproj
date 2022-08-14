@@ -1,17 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net462;netcoreapp3.0</TargetFrameworks>
-    <UseWpf>true</UseWpf>
+    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+    <UseWPF>true</UseWPF>
     <RootNamespace>SkiaSharp.Views.WPF</RootNamespace>
     <AssemblyName>SkiaSharp.Views.WPF</AssemblyName>
     <PackagingGroup>SkiaSharp.Views.WPF</PackagingGroup>
     <DefineConstants>$(DefineConstants);__DESKTOP__;__WPF__</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="WindowsBase" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\SkiaSharp.Views.Desktop.Common\SkiaSharp.Views.Desktop.Common.csproj" />

@@ -1,0 +1,59 @@
+trigger:
+  - main
+  - develop
+  - patch/*
+
+pr:
+  - main
+  - develop
+  - patch/*
+
+parameters:
+  - name: buildExternals
+    displayName: 'The specific native artifacts to use for this build.'
+    type: string
+    default: 'latest'
+  - name: VM_IMAGE_HOST
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: ubuntu-18.04
+  - name: VM_IMAGE_WINDOWS
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: windows-2022
+  - name: VM_IMAGE_MAC
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: macos-11
+  - name: VM_IMAGE_LINUX
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: ubuntu-18.04
+
+pool:
+  name: Azure Pipelines
+  vmImage: ubuntu-18.04
+
+variables:
+  - template: azure-pipelines-variables.yml
+
+stages:
+  - template: azure-templates-stages.yml
+    parameters:
+      buildPipelineType: 'both'
+      buildExternals: ${{ parameters.buildExternals }}
+      VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
+      VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
+      VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
+      VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
+      VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC }}
+      VM_IMAGE_LINUX: ${{ parameters.VM_IMAGE_LINUX }}
+      VM_IMAGE_LINUX_NATIVE: ${{ parameters.VM_IMAGE_LINUX }}

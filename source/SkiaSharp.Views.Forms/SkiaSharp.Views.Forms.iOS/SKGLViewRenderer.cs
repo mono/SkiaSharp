@@ -1,13 +1,25 @@
-﻿using CoreAnimation;
+﻿#if !__MACCATALYST__
+using System;
+using CoreAnimation;
 using Foundation;
+
+#if __MAUI__
+using SKFormsView = SkiaSharp.Views.Maui.Controls.SKGLView;
+using SKNativeView = SkiaSharp.Views.iOS.SKGLView;
+#else
 using Xamarin.Forms;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
 using SKNativeView = SkiaSharp.Views.iOS.SKGLView;
 
 [assembly: ExportRenderer(typeof(SKFormsView), typeof(SkiaSharp.Views.Forms.SKGLViewRenderer))]
+#endif
 
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Controls.Compatibility
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	public class SKGLViewRenderer : SKGLViewRendererBase<SKFormsView, SKNativeView>
 	{
@@ -39,7 +51,7 @@ namespace SkiaSharp.Views.Forms
 				displayLink.Dispose();
 				displayLink = null;
 			}
-			
+
 			base.Dispose(disposing);
 		}
 
@@ -57,7 +69,11 @@ namespace SkiaSharp.Views.Forms
 			if (oneShot)
 			{
 				var nativeView = Control;
-				nativeView?.BeginInvokeOnMainThread(() => nativeView?.Display());
+				nativeView?.BeginInvokeOnMainThread(() =>
+				{
+					if (nativeView.Handle != IntPtr.Zero)
+						nativeView.Display();
+				});
 				return;
 			}
 
@@ -67,18 +83,20 @@ namespace SkiaSharp.Views.Forms
 				var nativeView = Control;
 				var formsView = Element;
 
-				// redraw the view
-				nativeView?.Display();
-
 				// stop the render loop if this was a one-shot, or the views are disposed
-				if (nativeView == null || formsView == null || !formsView.HasRenderLoop)
+				if (nativeView == null || formsView == null || nativeView.Handle == IntPtr.Zero || !formsView.HasRenderLoop)
 				{
 					displayLink.Invalidate();
 					displayLink.Dispose();
 					displayLink = null;
+					return;
 				}
+
+				// redraw the view
+				nativeView.Display();
 			});
-			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoop.NSDefaultRunLoopMode);
+			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Default);
 		}
 	}
 }
+#endif

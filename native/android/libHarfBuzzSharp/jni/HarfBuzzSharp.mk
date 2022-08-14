@@ -3,7 +3,7 @@ include $(CLEAR_VARS)
 
 cmd-strip = $(PRIVATE_STRIP) --strip-all $(call host-path,$1)
 
-src_root = ../../../../externals/harfbuzz/src
+src_root = ../../../../externals/skia/third_party/externals/harfbuzz/src
 
 LOCAL_MODULE           := HarfBuzzSharp
 
@@ -23,10 +23,12 @@ LOCAL_SRC_FILES        := $(src_root)/hb-aat-layout.cc                          
                           $(src_root)/hb-buffer-serialize.cc                    \
                           $(src_root)/hb-buffer.cc                              \
                           $(src_root)/hb-common.cc                              \
+                          $(src_root)/hb-draw.cc                                \
                           $(src_root)/hb-face.cc                                \
                           $(src_root)/hb-fallback-shape.cc                      \
                           $(src_root)/hb-font.cc                                \
                           $(src_root)/hb-map.cc                                 \
+                          $(src_root)/hb-number.cc                              \
                           $(src_root)/hb-ot-cff1-table.cc                       \
                           $(src_root)/hb-ot-cff2-table.cc                       \
                           $(src_root)/hb-ot-color.cc                            \
@@ -46,8 +48,8 @@ LOCAL_SRC_FILES        := $(src_root)/hb-aat-layout.cc                          
                           $(src_root)/hb-ot-shape-complex-indic.cc              \
                           $(src_root)/hb-ot-shape-complex-khmer.cc              \
                           $(src_root)/hb-ot-shape-complex-myanmar.cc            \
+                          $(src_root)/hb-ot-shape-complex-syllabic.cc           \
                           $(src_root)/hb-ot-shape-complex-thai.cc               \
-                          $(src_root)/hb-ot-shape-complex-use-table.cc          \
                           $(src_root)/hb-ot-shape-complex-use.cc                \
                           $(src_root)/hb-ot-shape-complex-vowel-constraints.cc  \
                           $(src_root)/hb-ot-shape-fallback.cc                   \
@@ -60,6 +62,7 @@ LOCAL_SRC_FILES        := $(src_root)/hb-aat-layout.cc                          
                           $(src_root)/hb-shape.cc                               \
                           $(src_root)/hb-shaper.cc                              \
                           $(src_root)/hb-static.cc                              \
+                          $(src_root)/hb-style.cc                               \
                           $(src_root)/hb-subset-cff-common.cc                   \
                           $(src_root)/hb-subset-cff1.cc                         \
                           $(src_root)/hb-subset-cff2.cc                         \
@@ -67,7 +70,6 @@ LOCAL_SRC_FILES        := $(src_root)/hb-aat-layout.cc                          
                           $(src_root)/hb-subset-plan.cc                         \
                           $(src_root)/hb-subset.cc                              \
                           $(src_root)/hb-ucd.cc                                 \
-                          $(src_root)/hb-unicode.cc                             \
-                          $(src_root)/hb-warning.cc
+                          $(src_root)/hb-unicode.cc
 
 include $(BUILD_SHARED_LIBRARY)

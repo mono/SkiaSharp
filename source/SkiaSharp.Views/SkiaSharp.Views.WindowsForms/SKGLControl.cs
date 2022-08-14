@@ -49,16 +49,8 @@ namespace SkiaSharp.Views.Desktop
 			ResizeRedraw = true;
 		}
 
-		[Bindable(false)]
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public SKSize CanvasSize => lastSize;
 
-		[Bindable(false)]
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public GRContext GRContext => grContext;
 
 		[Category("Appearance")]
@@ -120,7 +112,9 @@ namespace SkiaSharp.Views.Desktop
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
+#pragma warning disable CS0612 // Type or member is obsolete
 				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo));
+#pragma warning restore CS0612 // Type or member is obsolete
 			}
 
 			// update the control

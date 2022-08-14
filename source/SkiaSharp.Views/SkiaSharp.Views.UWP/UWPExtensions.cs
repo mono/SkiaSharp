@@ -1,15 +1,24 @@
 ﻿using System;
 using Windows.Foundation;
 using Windows.UI;
-using Windows.UI.Xaml.Media.Imaging;
 
-#if !HAS_UNO
-using SkiaSharp.Views.UWP.Interop;
+#if WINDOWS || WINUI
+using Microsoft.UI.Xaml.Media.Imaging;
+#else
+using Windows.UI.Xaml.Media.Imaging;
 #endif
 
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
+#if WINDOWS
+	public static class WindowsExtensions
+#else
 	public static class UWPExtensions
+#endif
 	{
 		// Point
 
@@ -66,7 +75,7 @@ namespace SkiaSharp.Views.UWP
 		{
 			using (var image = SKImage.FromPicture(picture, dimensions))
 			{
-				return image.ToWriteableBitmap();
+				return image?.ToWriteableBitmap();
 			}
 		}
 
@@ -164,19 +173,8 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-		internal static IntPtr GetPixels(this WriteableBitmap bitmap)
-		{
-			var buffer = bitmap.PixelBuffer as IBufferByteAccess;
-			if (buffer == null)
-				throw new InvalidCastException("Unable to convert WriteableBitmap.PixelBuffer to IBufferByteAccess.");
-
-			IntPtr ptr;
-			var hr = buffer.Buffer(out ptr);
-			if (hr < 0)
-				throw new InvalidCastException("Unable to retrieve pixel address from WriteableBitmap.PixelBuffer.");
-
-			return ptr;
-		}
+		internal static IntPtr GetPixels(this WriteableBitmap bitmap) =>
+			bitmap.PixelBuffer.GetByteBuffer();
 #endif
 	}
 }

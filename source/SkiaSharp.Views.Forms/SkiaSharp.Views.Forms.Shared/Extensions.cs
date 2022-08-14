@@ -55,14 +55,16 @@ namespace SkiaSharp.Views.Forms
 
 		// Xamarin.Forms.Color
 
-		public static Color ToFormsColor(this SKColor color)
-		{
-			return new Color(color.Red / 255.0, color.Green / 255.0, color.Blue / 255.0, color.Alpha / 255.0);
-		}
+		public static Color ToFormsColor(this SKColor color) =>
+			new Color(color.Red / 255.0, color.Green / 255.0, color.Blue / 255.0, color.Alpha / 255.0);
 
-		public static SKColor ToSKColor(this Color color)
-		{
-			return new SKColor((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255), (byte)(color.A * 255));
-		}
+		public static Color ToFormsColor(this SKColorF color) =>
+			new Color(color.Red, color.Green, color.Blue, color.Alpha);
+
+		public static SKColor ToSKColor(this Color color) =>
+			new SKColor((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255), (byte)(color.A * 255));
+
+		public static SKColorF ToSKColorF(this Color color) =>
+			new SKColorF((float)color.R, (float)color.G, (float)color.B, (float)color.A);
 	}
 }

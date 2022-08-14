@@ -1,13 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#nullable enable
+
+using System;
 using Android.Views;
 
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Platform
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	internal class SKTouchHandler
 	{
-		private Action<SKTouchEventArgs> onTouchAction;
-		private Func<double, double, SKPoint> scalePixels;
+		private Action<SKTouchEventArgs>? onTouchAction;
+		private Func<double, double, SKPoint>? scalePixels;
 
 		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
 		{
@@ -39,12 +44,15 @@ namespace SkiaSharp.Views.Forms
 			scalePixels = null;
 		}
 
-		private void OnTouch(object sender, View.TouchEventArgs e)
+		private void OnTouch(object? sender, View.TouchEventArgs e)
 		{
 			if (onTouchAction == null || scalePixels == null)
 				return;
 
 			var evt = e.Event;
+			if (evt == null)
+				return;
+
 			var count = evt.PointerCount;
 
 			switch (evt.ActionMasked)
@@ -106,14 +114,18 @@ namespace SkiaSharp.Views.Forms
 			if (onTouchAction == null || scalePixels == null)
 				return;
 
-			if (!e.Event.IsFromSource(InputSourceType.Mouse))
+			var evt = e.Event;
+			if (evt == null)
 				return;
 
-			var evt = e.Event;
+			if (!evt.IsFromSource(InputSourceType.Mouse))
+				return;
+
 			var pointer = evt.ActionIndex;
 
 			var id = evt.GetPointerId(pointer);
-			var coords = scalePixels(evt.GetX(pointer), evt.GetY(pointer));
+			var coords = scalePixels?.Invoke(evt.GetX(pointer), evt.GetY(pointer)) ??
+			             new SKPoint(evt.GetX(pointer), evt.GetY(pointer));
 
 			var toolType = evt.GetToolType(pointer);
 			var deviceType = GetDeviceType(toolType);
@@ -180,7 +192,8 @@ namespace SkiaSharp.Views.Forms
 			var id = evt.GetPointerId(pointerIndex);
 			var toolType = evt.GetToolType(pointerIndex);
 			var button = GetButton(evt.ButtonState, toolType);
-			var coords = scalePixels(evt.GetX(pointerIndex), evt.GetY(pointerIndex));
+			var coords = scalePixels?.Invoke(evt.GetX(pointerIndex), evt.GetY(pointerIndex)) ??
+			             new SKPoint(evt.GetX(pointerIndex), evt.GetY(pointerIndex));
 			var deviceType = GetDeviceType(toolType);
 			var pressure = evt.GetPressure(pointerIndex);
 

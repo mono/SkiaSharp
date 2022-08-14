@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable CS0618
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -18,11 +20,22 @@ using EGLContext = Javax.Microedition.Khronos.Egl.EGLContext;
 using EGLDisplay = Javax.Microedition.Khronos.Egl.EGLDisplay;
 using EGLSurface = Javax.Microedition.Khronos.Egl.EGLSurface;
 
+#if HAS_UNO_WINUI
+namespace SkiaSharp.Views.Windows
+#elif HAS_UNO
+namespace SkiaSharp.Views.UWP
+#else
 namespace SkiaSharp.Views.Android
+#endif
 {
-	public class GLTextureView : TextureView, TextureView.ISurfaceTextureListener, View.IOnLayoutChangeListener
+#if HAS_UNO
+	internal
+#else
+	public
+#endif
+	partial class GLTextureView : TextureView, TextureView.ISurfaceTextureListener, View.IOnLayoutChangeListener
 	{
-		private const bool EnableLogging = false;
+		internal static bool EnableLogging = false;
 
 		private WeakReference<GLTextureView> thisWeakRef;
 		private GLThread glThread;
@@ -902,10 +915,10 @@ namespace SkiaSharp.Views.Android
 											{
 												eglHelper.Start();
 											}
-											catch (Exception t)
+											catch (Exception)
 											{
 												threadManager.ReleaseEglContextLocked(this);
-												throw t;
+												throw;
 											}
 											haveEglContext = true;
 											createEglContext = true;

@@ -5,7 +5,6 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <WasmHead>true</WasmHead>
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
     <LangVersion>8.0</LangVersion>
     <WasmShellILLinkerEnabled>true</WasmShellILLinkerEnabled>
@@ -18,15 +17,19 @@
     <WasmShellMonoRuntimeExecutionMode>Interpreter</WasmShellMonoRuntimeExecutionMode>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <WasmShellMonoRuntimeExecutionMode>FullAOT</WasmShellMonoRuntimeExecutionMode>
+    <!-- Use FullAOT for local builds only for faster CI builds -->
+    <WasmShellMonoRuntimeExecutionMode Condition="'$(BUILD_BUILDID)' == ''">FullAOT</WasmShellMonoRuntimeExecutionMode>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
-    <PackageReference Include="Uno.UI" Version="2.4.4" />
-    <PackageReference Include="Uno.UI.RemoteControl" Version="2.4.4" Condition="'$(Configuration)'=='Debug'" />
-    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.12" />
-    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.4.0-dev.12" />
+    <PackageReference Include="Uno.UI.WebAssembly" Version="4.0.8" />
+    <PackageReference Include="Uno.UI.RemoteControl" Version="4.0.8" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI.Adapter.Microsoft.Extensions.Logging" Version="4.0.8" />
+    <PackageReference Include="Uno.Core.Extensions.Logging.Singleton" Version="4.0.1" />
+    <PackageReference Include="Uno.Core.Extensions.Logging" Version="4.0.1" />
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="2.1.0" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
@@ -38,5 +41,6 @@
     <EmbeddedResource Include="WasmScripts\*.js" />
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
+  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\wasm\SkiaSharp.targets')" />
   <Import Project="..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.Views.Uno\nuget\build\netstandard2.0\SkiaSharp.Views.Uno.targets')" />
 </Project>

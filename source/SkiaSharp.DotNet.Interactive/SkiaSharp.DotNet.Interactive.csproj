@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>SkiaSharp.DotNet.Interactive</RootNamespace>
+    <AssemblyName>SkiaSharp.DotNet.Interactive</AssemblyName>
+    <MDocDocumentationDirectory></MDocDocumentationDirectory>
+    <SignAssembly>false</SignAssembly>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <PackagingLocation>interactive-extensions\dotnet</PackagingLocation>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.21255.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+
+  <!-- uncomment this block for local testing -->
+  <!--<PropertyGroup>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+    <PackageVersion>0.0.1-preview.$([System.DateTime]::Now.ToString('yyyy.M.d.H.m.s'))</PackageVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Update="..\..\binding\SkiaSharp\SkiaSharp.csproj" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\output\native\osx\libSkiaSharp*" Pack="true" PackagePath="runtimes\osx\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\windows\x64\libSkiaSharp*" Pack="true" PackagePath="runtimes\win-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\windows\x86\libSkiaSharp*" Pack="true" PackagePath="runtimes\win-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\windows\arm64\libSkiaSharp*" Pack="true" PackagePath="runtimes\win-arm64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\linux\x64\libSkiaSharp*" Pack="true" PackagePath="runtimes\linux-x64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\linux\x86\libSkiaSharp*" Pack="true" PackagePath="runtimes\linux-x86\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\linux\arm64\libSkiaSharp*" Pack="true" PackagePath="runtimes\linux-arm64\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\linux\arm\libSkiaSharp*" Pack="true" PackagePath="runtimes\linux-arm\native\%(Filename)%(Extension)" />
+    <None Include="..\..\output\SkiaSharp\nuget\lib\netstandard2.0\SkiaSharp.dll" Pack="true" PackagePath="lib\netstandard2.0\SkiaSharp.dll" />
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="$(PackagingLocation)" />
+  </ItemGroup>-->
+
+</Project>

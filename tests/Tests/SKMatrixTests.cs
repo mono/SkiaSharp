@@ -189,6 +189,17 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void IsInvertibleIsTrueForInvertableMatrix()
+		{
+			var matrix = new SKMatrix(
+				1, 2, 3,
+				0, 1, 4,
+				5, 6, 1);
+
+			Assert.True(matrix.IsInvertible);
+		}
+
+		[SkippableFact]
 		public void InverseOfMatrixIsCorrect()
 		{
 			var rowMajor = new float[] {
@@ -226,6 +237,21 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(10, newPoint.X, PRECISION);
 			Assert.Equal(40, newPoint.Y, PRECISION);
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public void SetScaleTranslateWorksCorrectly()
+		{
+			var tempMatrix = SKMatrix.MakeIdentity();
+
+			tempMatrix.Values = new float[] { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
+
+			SKMatrix.RotateDegrees(ref tempMatrix, 0);
+
+			tempMatrix.SetScaleTranslate(1.2f, 1.0f, 0, 0);
+
+			Assert.Equal(1.2f, tempMatrix.Values[0]);
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp.Tests
 {
@@ -7,6 +8,7 @@ namespace SkiaSharp.Tests
 	{
 		protected const string CategoryKey = "Category";
 
+		protected const string ApiCategory = "API";
 		protected const string GpuCategory = "GPU";
 		protected const string MatchCharacterCategory = "MatchCharacter";
 
@@ -19,19 +21,24 @@ namespace SkiaSharp.Tests
 
 		protected static readonly string[] UnicodeFontFamilies;
 		protected static readonly string DefaultFontFamily;
-		protected static readonly string PathToAssembly;
-		protected static readonly string PathToFonts;
-		protected static readonly string PathToImages;
+
+		public static readonly string PathToAssembly;
+		public static readonly string PathToFonts;
+		public static readonly string PathToImages;
 
 		static BaseTest()
 		{
 			// the the base paths
+#if __ANDROID__ || __IOS__
+			PathToAssembly = Xamarin.Essentials.FileSystem.CacheDirectory;
+#else
 			PathToAssembly = Directory.GetCurrentDirectory();
+#endif
 			PathToFonts = Path.Combine(PathToAssembly, "fonts");
 			PathToImages = Path.Combine(PathToAssembly, "images");
 
 			// some platforms run the tests from a temporary location, so copy the native files
-#if !NET_STANDARD
+#if !NETCOREAPP && !__ANDROID__ && !__IOS__
 			var skiaRoot = Path.GetDirectoryName(typeof(SkiaSharp.SKImageInfo).Assembly.Location);
 			var harfRoot = Path.GetDirectoryName(typeof(HarfBuzzSharp.Buffer).Assembly.Location);
 
@@ -56,11 +63,19 @@ namespace SkiaSharp.Tests
 			IsRuntimeMono = Type.GetType("Mono.Runtime") != null;
 
 			// set the test fields
+#if __ANDROID__
+			DefaultFontFamily = "sans-serif";
+			UnicodeFontFamilies = new[] { "Noto Color Emoji" };
+#elif __IOS__
+			DefaultFontFamily = "Arial";
+			UnicodeFontFamilies = new[] { "Apple Color Emoji" };
+#else
 			DefaultFontFamily = IsLinux ? "DejaVu Sans" : "Arial";
 			UnicodeFontFamilies =
 				IsLinux ? new[] { "Symbola" } :
 				IsMac ? new[] { "Apple Color Emoji" } :
 				new[] { "Segoe UI Emoji", "Segoe UI Symbol" };
+#endif
 		}
 
 		public static void CollectGarbage()

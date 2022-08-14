@@ -110,6 +110,44 @@ namespace SkiaSharp
 		}
 	}
 
+#if __IOS__ || __MACOS__
+
+	public unsafe partial struct GRMtlTextureInfo
+	{
+		public GRMtlTextureInfo (Metal.IMTLTexture texture)
+		{
+			Texture = texture;
+		}
+
+		public Metal.IMTLTexture Texture { get; set; }
+
+		internal GRMtlTextureInfoNative ToNative () =>
+			new GRMtlTextureInfoNative {
+				fTexture = (void*)(IntPtr)Texture.Handle
+			};
+
+		public readonly bool Equals (GRMtlTextureInfo obj) =>
+			Texture == obj.Texture;
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRMtlTextureInfo f && Equals (f);
+
+		public static bool operator == (GRMtlTextureInfo left, GRMtlTextureInfo right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRMtlTextureInfo left, GRMtlTextureInfo right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (Texture);
+			return hash.ToHashCode ();
+		}
+	}
+
+#endif
+
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[Flags]
 	[Obsolete]
@@ -287,6 +325,7 @@ namespace SkiaSharp
 				SKColorType.Rgb888x => GRPixelConfig.Rgb888,
 				SKColorType.Bgra8888 => GRPixelConfig.Bgra8888,
 				SKColorType.Rgba1010102 => GRPixelConfig.Rgba1010102,
+				SKColorType.Bgra1010102 => GRPixelConfig.Unknown,
 				SKColorType.AlphaF16 => GRPixelConfig.AlphaHalf,
 				SKColorType.RgbaF16 => GRPixelConfig.RgbaHalf,
 				SKColorType.RgbaF16Clamped => GRPixelConfig.RgbaHalfClamped,
@@ -296,6 +335,7 @@ namespace SkiaSharp
 				SKColorType.RgF16 => GRPixelConfig.RgHalf,
 				SKColorType.Rg88 => GRPixelConfig.Rg88,
 				SKColorType.Rgb101010x => GRPixelConfig.Unknown,
+				SKColorType.Bgr101010x => GRPixelConfig.Unknown,
 				SKColorType.RgbaF32 => GRPixelConfig.Unknown,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
 			};

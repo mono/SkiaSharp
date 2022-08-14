@@ -10,11 +10,10 @@ namespace SkiaSharp.Views.Android
 {
 	public class SKCanvasView : View
 	{
-		private Bitmap bitmap;
-		private SKImageInfo info;
 		private bool ignorePixelScaling;
-
 		private bool designMode;
+		private SurfaceFactory surfaceFactory;
+		private float density;
 
 		public SKCanvasView(Context context)
 			: base(context)
@@ -25,13 +24,13 @@ namespace SkiaSharp.Views.Android
 		public SKCanvasView(Context context, IAttributeSet attrs)
 			: base(context, attrs)
 		{
-			Initialize();
+			Initialize(attrs);
 		}
 
 		public SKCanvasView(Context context, IAttributeSet attrs, int defStyleAttr)
 			: base(context, attrs, defStyleAttr)
 		{
-			Initialize();
+			Initialize(attrs);
 		}
 
 		protected SKCanvasView(IntPtr javaReference, JniHandleOwnership transfer)
@@ -40,26 +39,37 @@ namespace SkiaSharp.Views.Android
 			Initialize();
 		}
 
-		private void Initialize()
+		private void Initialize(IAttributeSet attrs = null)
 		{
 			designMode = !Extensions.IsValidEnvironment;
+			surfaceFactory = new SurfaceFactory();
+			density = Resources.DisplayMetrics.Density;
 
-			if (designMode)
-				return;
+			if (attrs != null)
+			{
+				using var a = Context.ObtainStyledAttributes(attrs, Resource.Styleable.SKCanvasView);
 
-			// create the initial info
-			info = new SKImageInfo(0, 0, SKColorType.Rgba8888, SKAlphaType.Premul);
+				var N = a.IndexCount;
+				for (var i = 0; i < N; ++i)
+				{
+					var attr = a.GetIndex(i);
+					if (attr == Resource.Styleable.SKCanvasView_ignorePixelScaling)
+						IgnorePixelScaling = a.GetBoolean(attr, false);
+				}
+
+				a.Recycle();
+			}
 		}
 
-		public SKSize CanvasSize => info.Size;
+		public SKSize CanvasSize { get; private set; }
 
 		public bool IgnorePixelScaling
 		{
-			get { return ignorePixelScaling; }
+			get => ignorePixelScaling;
 			set
 			{
 				ignorePixelScaling = value;
-				UpdateCanvasSize(Width, Height);
+				surfaceFactory.UpdateCanvasSize(Width, Height);
 				Invalidate();
 			}
 		}
@@ -71,37 +81,42 @@ namespace SkiaSharp.Views.Android
 			if (designMode)
 				return;
 
-			if (info.Width == 0 || info.Height == 0 || Visibility != ViewStates.Visible)
+			// bail out if the view is not actually visible
+			if (Visibility != ViewStates.Visible)
 			{
-				FreeBitmap();
+				surfaceFactory.FreeBitmap();
 				return;
 			}
 
-			// create the bitmap data if we need it
-			if (bitmap == null || bitmap.Handle == IntPtr.Zero || bitmap.Width != info.Width || bitmap.Height != info.Height)
+			// create a skia surface
+			var surface = surfaceFactory.CreateSurface(out var info);
+			if (surface == null)
 			{
-				FreeBitmap();
-				bitmap = Bitmap.CreateBitmap(info.Width, info.Height, Bitmap.Config.Argb8888);
+				CanvasSize = SKSize.Empty;
+				return;
 			}
 
-			// create a surface
-			using (var surface = SKSurface.Create(info, bitmap.LockPixels(), info.RowBytes))
+			var userVisibleSize = IgnorePixelScaling
+				? new SKSizeI((int)(info.Width / density), (int)(info.Height / density))
+				: info.Size;
+
+			CanvasSize = userVisibleSize;
+
+			if (IgnorePixelScaling)
 			{
-				// draw using SkiaSharp
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+				var skiaCanvas = surface.Canvas;
+				skiaCanvas.Scale(density);
+				skiaCanvas.Save();
+			}
+
+			// draw using SkiaSharp
+			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 #pragma warning disable CS0618 // Type or member is obsolete
-				OnDraw(surface, info);
+			OnDraw(surface, info);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				surface.Canvas.Flush();
-			}
-			bitmap.UnlockPixels();
-
-			// draw bitmap to canvas
-			if (IgnorePixelScaling)
-				canvas.DrawBitmap(bitmap, info.Rect.ToRect(), new RectF(0, 0, Width, Height), null);
-			else
-				canvas.DrawBitmap(bitmap, 0, 0, null);
+			// draw the surface to the view
+			surfaceFactory.DrawSurface(surface, canvas);
 		}
 
 		protected override void OnSizeChanged(int w, int h, int oldw, int oldh)
@@ -109,25 +124,7 @@ namespace SkiaSharp.Views.Android
 			base.OnSizeChanged(w, h, oldw, oldh);
 
 			// update the info with the new sizes
-			UpdateCanvasSize(w, h);
-		}
-
-		private void UpdateCanvasSize(int w, int h)
-		{
-			if (designMode)
-				return;
-
-			if (IgnorePixelScaling)
-			{
-				var scale = Resources.DisplayMetrics.Density;
-				info.Width = (int)(w / scale);
-				info.Height = (int)(h / scale);
-			}
-			else
-			{
-				info.Width = w;
-				info.Height = h;
-			}
+			surfaceFactory.UpdateCanvasSize(w, h);
 		}
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
@@ -137,7 +134,7 @@ namespace SkiaSharp.Views.Android
 			PaintSurface?.Invoke(this, e);
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		[Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
 		protected virtual void OnDraw(SKSurface surface, SKImageInfo info)
 		{
@@ -145,29 +142,24 @@ namespace SkiaSharp.Views.Android
 
 		protected override void OnDetachedFromWindow()
 		{
-			FreeBitmap();
+			surfaceFactory.Dispose();
 
 			base.OnDetachedFromWindow();
 		}
 
-		protected override void Dispose(bool disposing)
+		protected override void OnAttachedToWindow()
 		{
-			if (disposing)
-				FreeBitmap();
+			base.OnAttachedToWindow();
 
-			base.Dispose(disposing);
+			surfaceFactory.UpdateCanvasSize(Width, Height);
+			Invalidate();
 		}
 
-		private void FreeBitmap()
+		protected override void Dispose(bool disposing)
 		{
-			if (bitmap != null)
-			{
-				// free and recycle the bitmap data
-				if (bitmap.Handle != IntPtr.Zero && !bitmap.IsRecycled)
-					bitmap.Recycle();
-				bitmap.Dispose();
-				bitmap = null;
-			}
+			surfaceFactory.Dispose();
+
+			base.Dispose(disposing);
 		}
 	}
 }

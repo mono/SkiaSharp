@@ -288,10 +288,13 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKColorSpaceXyz Dcip3 {
+		[Obsolete ("Use DisplayP3 instead.")]
+		public static SKColorSpaceXyz Dcip3 => DisplayP3;
+
+		public static SKColorSpaceXyz DisplayP3 {
 			get {
 				SKColorSpaceXyz xyz;
-				SkiaApi.sk_colorspace_xyz_named_dcip3 (&xyz);
+				SkiaApi.sk_colorspace_xyz_named_display_p3 (&xyz);
 				return xyz;
 			}
 		}
@@ -450,7 +453,7 @@ namespace SkiaSharp
 			: this (SkiaApi.sk_colorspace_icc_profile_new (), true)
 		{
 			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SK3dView instance.");
+				throw new InvalidOperationException ("Unable to create a new SKColorSpaceIccProfile instance.");
 		}
 
 		protected override void DisposeNative () =>

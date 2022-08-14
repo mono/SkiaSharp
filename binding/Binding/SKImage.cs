@@ -172,8 +172,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, &subset);
-			return GetObject (handle);
+			return FromEncodedData (data)?.Subset (subset);
 		}
 
 		public static SKImage FromEncodedData (SKData data)
@@ -181,7 +180,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, null);
+			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle);
 			return GetObject (handle);
 		}
 
@@ -320,32 +319,40 @@ namespace SkiaSharp
 			return FromTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null, releaseProc, releaseContext);
 		}
 
-		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, SKColorType colorType)
-		{
-			return FromTexture (context, texture, GRSurfaceOrigin.BottomLeft, colorType, SKAlphaType.Premul, null, null, null);
-		}
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, SKColorType colorType) =>
+			FromTexture ((GRRecordingContext)context, texture, colorType);
 
-		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType)
-		{
-			return FromTexture (context, texture, origin, colorType, SKAlphaType.Premul, null, null, null);
-		}
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType) =>
+			FromTexture ((GRRecordingContext)context, texture, origin, colorType);
 
-		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha)
-		{
-			return FromTexture (context, texture, origin, colorType, alpha, null, null, null);
-		}
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha) =>
+			FromTexture ((GRRecordingContext)context, texture, origin, colorType, alpha);
 
-		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace)
-		{
-			return FromTexture (context, texture, origin, colorType, alpha, colorspace, null, null);
-		}
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace) =>
+			FromTexture ((GRRecordingContext)context, texture, origin, colorType, alpha, colorspace);
 
-		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc)
-		{
-			return FromTexture (context, texture, origin, colorType, alpha, colorspace, releaseProc, null);
-		}
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc) =>
+			FromTexture ((GRRecordingContext)context, texture, origin, colorType, alpha, colorspace, releaseProc);
 
-		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc, object releaseContext) =>
+			FromTexture ((GRRecordingContext)context, texture, origin, colorType, alpha, colorspace, releaseProc, releaseContext);
+
+		public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, SKColorType colorType) =>
+			FromTexture (context, texture, GRSurfaceOrigin.BottomLeft, colorType, SKAlphaType.Premul, null, null, null);
+
+		public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType) =>
+			FromTexture (context, texture, origin, colorType, SKAlphaType.Premul, null, null, null);
+
+		public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha) =>
+			FromTexture (context, texture, origin, colorType, alpha, null, null, null);
+
+		public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace) =>
+			FromTexture (context, texture, origin, colorType, alpha, colorspace, null, null);
+
+		public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc) =>
+			FromTexture (context, texture, origin, colorType, alpha, colorspace, releaseProc, null);
+
+		public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
 		{
 			if (context == null)
 				throw new ArgumentNullException (nameof (context));
@@ -390,22 +397,28 @@ namespace SkiaSharp
 			return FromAdoptedTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null);
 		}
 
-		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, SKColorType colorType)
-		{
-			return FromAdoptedTexture (context, texture, GRSurfaceOrigin.BottomLeft, colorType, SKAlphaType.Premul, null);
-		}
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, SKColorType colorType) =>
+			FromAdoptedTexture ((GRRecordingContext)context, texture, colorType);
 
-		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType)
-		{
-			return FromAdoptedTexture (context, texture, origin, colorType, SKAlphaType.Premul, null);
-		}
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType) =>
+			FromAdoptedTexture ((GRRecordingContext)context, texture, origin, colorType);
 
-		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha)
-		{
-			return FromAdoptedTexture (context, texture, origin, colorType, alpha, null);
-		}
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha) =>
+			FromAdoptedTexture ((GRRecordingContext)context, texture, origin, colorType, alpha);
 
-		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace)
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace) =>
+			FromAdoptedTexture ((GRRecordingContext)context, texture, origin, colorType, alpha, colorspace);
+
+		public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, SKColorType colorType) =>
+			FromAdoptedTexture (context, texture, GRSurfaceOrigin.BottomLeft, colorType, SKAlphaType.Premul, null);
+
+		public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType) =>
+			FromAdoptedTexture (context, texture, origin, colorType, SKAlphaType.Premul, null);
+
+		public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha) =>
+			FromAdoptedTexture (context, texture, origin, colorType, alpha, null);
+
+		public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace)
 		{
 			if (context == null)
 				throw new ArgumentNullException (nameof (context));
@@ -512,6 +525,9 @@ namespace SkiaSharp
 		public SKData EncodedData =>
 			SKData.GetObject (SkiaApi.sk_image_ref_encoded (Handle));
 
+		public SKImageInfo Info =>
+			new SKImageInfo (Width, Height, ColorType, AlphaType, ColorSpace);
+
 		// ToShader
 
 		public SKShader ToShader () =>
@@ -553,6 +569,9 @@ namespace SkiaSharp
 			SkiaApi.sk_image_is_lazy_generated (Handle);
 
 		public bool IsValid (GRContext context) =>
+			IsValid ((GRRecordingContext)context);
+
+		public bool IsValid (GRRecordingContext context) =>
 			SkiaApi.sk_image_is_valid (Handle, context?.Handle ?? IntPtr.Zero);
 
 		// ReadPixels
@@ -655,7 +674,21 @@ namespace SkiaSharp
 
 			fixed (SKRectI* os = &outSubset)
 			fixed (SKPointI* oo = &outOffset) {
-				return GetObject (SkiaApi.sk_image_make_with_filter (Handle, filter.Handle, &subset, &clipBounds, os, oo));
+				return GetObject (SkiaApi.sk_image_make_with_filter_legacy (Handle, filter.Handle, &subset, &clipBounds, os, oo));
+			}
+		}
+
+		public SKImage ApplyImageFilter (GRContext context, SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset) =>
+			ApplyImageFilter ((GRRecordingContext)context, filter, subset, clipBounds, out outSubset, out outOffset);
+
+		public SKImage ApplyImageFilter (GRRecordingContext context, SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset)
+		{
+			if (filter == null)
+				throw new ArgumentNullException (nameof (filter));
+
+			fixed (SKRectI* os = &outSubset)
+			fixed (SKPointI* oo = &outOffset) {
+				return GetObject (SkiaApi.sk_image_make_with_filter (Handle, context?.Handle ?? IntPtr.Zero, filter.Handle, &subset, &clipBounds, os, oo));
 			}
 		}
 

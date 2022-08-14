@@ -14,7 +14,6 @@
     <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\$(KeyFileName)</AssemblyOriginatorKeyFile>
 
-    <GenerateAssemblyVersionInfo Condition=" '$(GenerateAssemblyVersionInfo)' == '' ">true</GenerateAssemblyVersionInfo>
     <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_SHA)</AssemblyVersionGitSha>
     <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_COMMIT)</AssemblyVersionGitSha>
 
@@ -25,6 +24,10 @@
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
 
     <!--
       Ignore this message:
@@ -33,23 +36,40 @@
         assembly was compiled for project '<project name>'. Connect to a Mac Server and try again to build the full
         application.
     -->
-    <MSBuildWarningsAsMessages>VSX1000</MSBuildWarningsAsMessages>
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);VSX1000</MSBuildWarningsAsMessages>
     <!--
       Ignore this message:
         Warning MSB9004
         ManifestResourceWithNoCulture item type is deprecated. Emit EmbeddedResource items instead, with metadata
         WithCulture='false', Type='Resx', and optional LogicalName.
     -->
-    <MSBuildWarningsAsMessages>MSB9004</MSBuildWarningsAsMessages>
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB9004</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <PropertyGroup>
     <PackagingPlatform Condition=" '$(PackagingPlatform)' == '' ">$(TargetFramework)</PackagingPlatform>
   </PropertyGroup>
 
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PackageReference Include="mdoc" Version="5.8.9" PrivateAssets="All" GeneratePathProperty="true" />
+  </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="mdoc" Version="5.7.4.10" PrivateAssets="All" />
-    <PackageReference Include="Xamarin.Build.TypeRedirector" Version="0.1.2-preview" PrivateAssets="All" />
+    <PackageReference Include="Nullable" Version="1.3.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- HACK: Do not copy the native bootstrap files -->
+  <Target Name="_RemoveWasdkBootstrapDll" BeforeTargets="ResolveReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)%(Extension)' == 'Microsoft.WindowsAppRuntime.Bootstrap.dll'" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Workaround for https://github.com/dotnet/sdk/issues/11105
+  -->
+  <ItemGroup>
+    <SourceRoot Include="$([MSBuild]::EnsureTrailingSlash($(NuGetPackageRoot)))" Condition="'$(NuGetPackageRoot)' != ''" />
   </ItemGroup>
 
   <!--
@@ -112,14 +132,13 @@ internal partial class VersionConstants {
     ===================================================================================================================
   -->
   <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
-    <_SignAssemblyDependsOn Condition=" '$(TypeRedirectorSkip)' == 'false'">
-      _RedirectMovedTypes
-    </_SignAssemblyDependsOn>
     <_SignAssemblyAfterTargets>
       CoreCompile
     </_SignAssemblyAfterTargets>
   </PropertyGroup>
-  <Target Name="_SignAssembly" AfterTargets="$(_SignAssemblyAfterTargets)" DependsOnTargets="$(_SignAssemblyDependsOn)" Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
+  <Target Name="_SignAssembly"
+          AfterTargets="$(_SignAssemblyAfterTargets)"
+          Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
@@ -135,7 +154,9 @@ internal partial class VersionConstants {
       Build
     </_SignAssemblyVerifyAfterTargets>
   </PropertyGroup>
-  <Target Name="_SignAssemblyVerify" AfterTargets="$(_SignAssemblyVerifyAfterTargets)" Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+  <Target Name="_SignAssemblyVerify"
+          AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
+          Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" />
   </Target>
 
@@ -162,7 +183,7 @@ internal partial class VersionConstants {
       Build
     </_CopyToOutputDirectoryAfterTargets>
   </PropertyGroup>
-  <Target Name="_CopyToOutputDirectoryDep">
+  <Target Name="_CopyToOutputDirectoryDep" DependsOnTargets="$(_CopyToOutputDirectoryDependsOn)">
     <ItemGroup Condition=" '$(PackagingLocation)' == '' ">
       <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(PackagingPlatform)\$(TargetFileName)" />
       <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
@@ -174,7 +195,7 @@ internal partial class VersionConstants {
       <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\$(PackagingLocation)\$(TargetName).pdb" />
     </ItemGroup>
     <ItemGroup>
-      <_CopyItems Include="@(_NoneWithTargetPath)" Dest="%(_NoneWithTargetPath.TargetPath)" />
+      <_CopyItems Include="@(_NoneWithTargetPath)" Condition=" '%(_NoneWithTargetPath.Extension)' != '.cs' " Dest="%(_NoneWithTargetPath.TargetPath)" />
     </ItemGroup>
   </Target>
   <Target Name="_CopyToOutputDirectory" Condition=" '$(SkipCopyToOutputDirectory)' != 'true' and '$(TargetPath)' != '' "
@@ -195,30 +216,28 @@ internal partial class VersionConstants {
     This runs during the build phase.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' ">
+  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' ">
     <MDocGenerateDocsAfterTargets>
       CoreCompile
     </MDocGenerateDocsAfterTargets>
   </PropertyGroup>
   <Target Name="_MDocGenerateDocsDep">
     <PropertyGroup>
-      <MDocVersion Condition=" '%(Identity)' == 'mdoc' ">@(PackageReference -> '%(Version)')</MDocVersion>
-      <MDocPackagePath Condition=" '%(Name)' == 'mdoc' ">@(PackageDefinitions -> '%(ResolvedPath)')</MDocPackagePath>
-      <MDocPackagePath Condition=" '$(MDocPackagePath)' == '' ">$(NuGetPackageRoot)\mdoc\$(MDocVersion)</MDocPackagePath>
-      <MDocToolPath>$(MDocPackagePath)\tools\mdoc.exe</MDocToolPath>
+      <MDocToolPath>$(Pkgmdoc)\tools\mdoc.exe</MDocToolPath>
       <MDocOutputName>$(TargetName).xml</MDocOutputName>
       <MDocOutputPath>$(TargetDir)$(MDocOutputName)</MDocOutputPath>
       <MDocIntermediateOutputPath>$(IntermediateOutputPath)mdoc\</MDocIntermediateOutputPath>
       <_ShouldGenerateDocs Condition=" '$(MDocDocumentationDirectory)' != '' and Exists('$(MDocDocumentationDirectory)\index.xml') ">true</_ShouldGenerateDocs>
     </PropertyGroup>
-    <ItemGroup>
+    <ItemGroup Condition=" '$(_ShouldGenerateDocs)' == 'true' ">
       <_MDocInputs Include="$(MDocDocumentationDirectory)\**\*" />
     </ItemGroup>
   </Target>
-  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' "
+  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' "
           AfterTargets="$(MDocGenerateDocsAfterTargets)" DependsOnTargets="_MDocGenerateDocsDep"
           Inputs="@(_MDocInputs)" Outputs="$(MDocOutputPath)">
-    <MakeDir Directories="$(MDocIntermediateOutputPath)" />
+    <MakeDir Condition=" '$(_ShouldGenerateDocs)' == 'true' "
+             Directories="$(MDocIntermediateOutputPath)" />
     <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
           WorkingDirectory="$(MDocIntermediateOutputPath)"
           Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc --quiet=true &quot;$(MDocDocumentationDirectory)&quot;" />
@@ -232,5 +251,14 @@ internal partial class VersionConstants {
       <FileWrites Include="$(MDocIntermediateOutputPath)\*" />
     </ItemGroup>
   </Target>
+
+  <!-- HACK: the new IDE seems to not like Analyzers in AdditionalFiles -->
+  <Target Name="After_InjectAdditionalFiles" AfterTargets="_InjectAdditionalFiles">
+    <ItemGroup>
+      <AdditionalFiles Remove="@(AdditionalFiles)" Condition="'%(Extension)' == '.dll'" />
+    </ItemGroup>
+  </Target>
+
+  <Import Project="SkiaSharp.Build.WinUI.NetCore.targets" Condition=" '$(EnablePriGenTooling)' != 'true' and '$(TargetPlatformIdentifier)' == 'windows' and '$(EnablePreviewMsixTooling)' == 'true' and '$(UseMaui)' != 'true' and '$(UseMauiCore)' != 'true' " />
 
 </Project>

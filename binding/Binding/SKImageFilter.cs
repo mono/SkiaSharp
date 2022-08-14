@@ -249,14 +249,20 @@ namespace SkiaSharp
 
 		// CreateDilate
 
-		public static SKImageFilter CreateDilate(int radiusX, int radiusY, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
+		public static SKImageFilter CreateDilate(int radiusX, int radiusY, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null) =>
+			CreateDilate ((float)radiusX, (float)radiusY, input, cropRect);
+
+		public static SKImageFilter CreateDilate(float radiusX, float radiusY, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
 		{
 			return GetObject(SkiaApi.sk_imagefilter_new_dilate(radiusX, radiusY, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
 		// CreateErode
 
-		public static SKImageFilter CreateErode(int radiusX, int radiusY, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
+		public static SKImageFilter CreateErode(int radiusX, int radiusY, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null) =>
+			CreateErode ((float)radiusX, (float)radiusY, input, cropRect);
+
+		public static SKImageFilter CreateErode(float radiusX, float radiusY, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
 		{
 			return GetObject(SkiaApi.sk_imagefilter_new_erode(radiusX, radiusY, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}

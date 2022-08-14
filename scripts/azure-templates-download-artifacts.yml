@@ -1,0 +1,68 @@
+parameters:
+  sourceBuildId: ''
+  artifacts: [ ] # name, dir
+  condition: succeeded()
+
+steps:
+  - ${{ if ne(length(parameters.artifacts), 0) }}:
+    - pwsh: |
+        $buildId = "${{ parameters.sourceBuildId }}"
+        if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNID) {
+          $buildId = $env:RESOURCES_PIPELINE_SKIASHARP_RUNID
+          Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_RUNID = '$env:RESOURCES_PIPELINE_SKIASHARP_RUNID'"
+        }
+        if (-not $buildId) {
+          $buildId = $env:BUILD_BUILDID
+          Write-Host "Using BUILD_BUILDID = '$env:BUILD_BUILDID'"
+        }
+        $versionType = 'specific'
+        if ($buildId -eq 'latest') {
+          $versionType = 'latestFromBranch'
+        }
+        $pipelineId = "$env:SYSTEM_DEFINITIONID"
+        if ($env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID) {
+          $pipelineId = $env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID
+          Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_PIPELINEID = '$env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID'"
+        }
+        $branchName = "$env:BUILD_SOURCEBRANCH"
+        if ($env:SYSTEM_PULLREQUEST_TARGETBRANCH) {
+          $branchName = "refs/heads/$env:SYSTEM_PULLREQUEST_TARGETBRANCH"
+        }
+        Write-Host "DOWNLOAD_BUILD_ID = '$buildId'"
+        Write-Host "DOWNLOAD_PIPELINE_ID = '$pipelineId'"
+        Write-Host "DOWNLOAD_BRANCH = '$branchName'"
+        Write-Host "DOWNLOAD_VERSION_TYPE = '$versionType'"
+        Write-Host "##vso[task.setvariable variable=DOWNLOAD_BUILD_ID]$buildId"
+        Write-Host "##vso[task.setvariable variable=DOWNLOAD_PIPELINE_ID]$pipelineId"
+        Write-Host "##vso[task.setvariable variable=DOWNLOAD_BRANCH]$branchName"
+        Write-Host "##vso[task.setvariable variable=DOWNLOAD_VERSION_TYPE]$versionType"
+      displayName: Ensure all the variables are set for the download
+      condition: ${{ parameters.condition }}
+
+  - ${{ each artifact in parameters.artifacts }}:
+    - task: DownloadBuildArtifacts@0
+      displayName: Download the pre-built ${{ artifact.name }} artifacts
+      condition: ${{ parameters.condition }}
+      retryCountOnTaskFailure: 3
+      inputs:
+        buildType: 'specific'
+        project: '$(System.TeamProjectId)'
+        pipeline: '$(DOWNLOAD_PIPELINE_ID)'
+        branchName: '$(DOWNLOAD_BRANCH)'
+        buildVersionToDownload: '$(DOWNLOAD_VERSION_TYPE)'
+        buildId: '$(DOWNLOAD_BUILD_ID)'
+        downloadType: 'single'
+        allowPartiallySucceededBuilds: true
+        artifactName: ${{ artifact.name }}
+        downloadPath: 'download-temp'
+
+    - pwsh: |
+        New-Item '.\output\${{ artifact.dir }}\' -Type Directory -Force | Out-Null
+        Get-ChildItem '.\download-temp\${{ artifact.name }}\' | Copy-Item -Destination '.\output\${{ artifact.dir }}\' -Recurse -Force
+        Remove-Item '.\download-temp\${{ artifact.name }}\' -Recurse -Force
+      displayName: Move the ${{ artifact.name }} artifacts to the ./output/${{ artifact.dir }} directory
+      condition: ${{ parameters.condition }}
+
+    - pwsh: Remove-Item ./output/logs/ -Recurse -Force -ErrorAction Ignore
+      displayName: Delete old logs
+      condition: ${{ parameters.condition }}

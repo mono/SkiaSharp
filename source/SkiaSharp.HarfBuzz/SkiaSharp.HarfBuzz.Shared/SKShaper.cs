@@ -70,6 +70,7 @@ namespace SkiaSharp.HarfBuzz
 			var points = new SKPoint[len];
 			var clusters = new uint[len];
 			var codepoints = new uint[len];
+			var xOffsetStart = xOffset;
 
 			for (var i = 0; i < len; i++)
 			{
@@ -86,7 +87,9 @@ namespace SkiaSharp.HarfBuzz
 				yOffset += pos[i].YAdvance * textSizeY;
 			}
 
-			return new Result(codepoints, clusters, points);
+			var width = xOffset - xOffsetStart;
+
+			return new Result(codepoints, clusters, points, width);
 		}
 
 		public Result Shape(string text, SKPaint paint) =>
@@ -129,6 +132,7 @@ namespace SkiaSharp.HarfBuzz
 				Codepoints = new uint[0];
 				Clusters = new uint[0];
 				Points = new SKPoint[0];
+				Width = 0f;
 			}
 
 			public Result(uint[] codepoints, uint[] clusters, SKPoint[] points)
@@ -136,13 +140,24 @@ namespace SkiaSharp.HarfBuzz
 				Codepoints = codepoints;
 				Clusters = clusters;
 				Points = points;
+				Width = 0;
 			}
 
-			public uint[] Codepoints { get; private set; }
+			public Result(uint[] codepoints, uint[] clusters, SKPoint[] points, float width)
+			{
+				Codepoints = codepoints;
+				Clusters = clusters;
+				Points = points;
+				Width = width;
+			}
 
-			public uint[] Clusters { get; private set; }
+			public uint[] Codepoints { get; }
 
-			public SKPoint[] Points { get; private set; }
+			public uint[] Clusters { get; }
+
+			public SKPoint[] Points { get; }
+
+			public float Width { get; }
 		}
 	}
 }

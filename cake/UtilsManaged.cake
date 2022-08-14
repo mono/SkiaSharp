@@ -1,17 +1,24 @@
-void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath)
+void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefaultExcludes = false, string symbolsFormat = null)
 {
     EnsureDirectoryExists(outputPath);
-    NuGetPack(nuspecPath, new NuGetPackSettings {
+    var settings = new NuGetPackSettings {
         OutputDirectory = MakeAbsolute(outputPath),
         BasePath = nuspecPath.GetDirectory(),
-        ToolPath = NuGetToolPath,
         Properties = new Dictionary<string, string> {
             // NU5048: The 'PackageIconUrl'/'iconUrl' element is deprecated. Consider using the 'PackageIcon'/'icon' element instead.
             // NU5105: The package version 'xxx' uses SemVer 2.0.0 or components of SemVer 1.0.0 that are not supported on legacy clients.
             // NU5125: The 'licenseUrl' element will be deprecated. Consider using the 'license' element instead.
             { "NoWarn", "NU5048,NU5105,NU5125" }
         },
-    });
+    };
+    if (allowDefaultExcludes) {
+        settings.ArgumentCustomization = args => args.Append("-NoDefaultExcludes");
+    }
+    if (!string.IsNullOrEmpty(symbolsFormat)) {
+        settings.Symbols = true;
+        settings.SymbolPackageFormat = symbolsFormat;
+    }
+    NuGetPack(nuspecPath, settings);
 }
 
 void RunTests(FilePath testAssembly, bool is32)
@@ -46,7 +53,7 @@ void RunNetCoreTests(FilePath testAssembly)
         Configuration = CONFIGURATION,
         NoBuild = true,
         TestAdapterPath = ".",
-        Logger = "xunit",
+        Loggers = new [] { "xunit" },
         WorkingDirectory = dir,
         Verbosity = DotNetCoreVerbosity.Normal,
         ArgumentCustomization = args => {
@@ -76,6 +83,25 @@ void RunNetCorePublish(FilePath testProject, DirectoryPath output)
         OutputDirectory = output,
     };
     DotNetCorePublish(testProject.GetFilename().ToString(), settings);
+}
+
+void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
+{
+    try {
+        DotNetTool(
+            $"reportgenerator" +
+            $"  -reports:{testResultsGlob}" +
+            $"  -targetdir:{output}" +
+            $"  -reporttypes:HtmlInline_AzurePipelines;Cobertura" +
+            $"  -assemblyfilters:-*.Tests");
+    } catch (Exception ex) {
+        Error("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
+        Error(ex);
+        throw;
+    }
+    var xml = $"{output}/Cobertura.xml";
+    var root = FindRegexMatchGroupsInFile(xml, @"<source>(.*)<\/source>", 0)[1].Value;
+    ReplaceTextInFiles(xml, root, "");
 }
 
 IEnumerable<(string Name, string Value)> CreateTraitsDictionary(string args)
@@ -113,7 +139,7 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
     // try find any cross-platform frameworks
     foreach (var dir in platformDirs) {
         var d = dir.GetDirectoryName().ToLower();
-        if (d.StartsWith("netstandard") || d.StartsWith("portable")) {
+        if (d.StartsWith("netstandard") || d.StartsWith("portable") || d.Equals("net6.0")) {
             // we just want this single platform
             yield return (dir, null);
             yield break;
@@ -123,24 +149,28 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
     // there were no cross-platform libraries, so process each platform
     foreach (var dir in platformDirs) {
         var d = dir.GetDirectoryName().ToLower();
-        if (d.StartsWith("monoandroid"))
+        if (d.StartsWith("monoandroid") || (d.StartsWith("net") && d.Contains("-android")))
             yield return (dir, "android");
         else if (d.StartsWith("net4"))
             yield return (dir, "net");
         else if (d.StartsWith("uap"))
             yield return (dir, "uwp");
-        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios"))
+        else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios") || (d.StartsWith("net") && d.Contains("-ios")))
             yield return (dir, "ios");
-        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac"))
+        else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac") || (d.StartsWith("net") && d.Contains("-macos")))
             yield return (dir, "macos");
-        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos"))
+        else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos") || (d.StartsWith("net") && d.Contains("-tvos")))
             yield return (dir, "tvos");
-        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos"))
+        else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos") || (d.StartsWith("net") && d.Contains("-watchos")))
             yield return (dir, "watchos");
-        else if (d.StartsWith("tizen"))
+        else if (d.StartsWith("tizen") || (d.StartsWith("net") && d.Contains("-tizen")))
             yield return (dir, "tizen");
+        else if (d.StartsWith("net") && d.Contains("-windows"))
+            yield return (dir, "windows");
+        else if (d.StartsWith("net") && d.Contains("-maccatalyst"))
+            yield return (dir, "maccatalyst");
         else if (d.StartsWith("netcoreapp"))
-            ; // skip this one for now
+            continue; // skip this one for now
         else
             throw new Exception($"Unknown platform '{d}' found at '{dir}'.");
     }
@@ -151,7 +181,10 @@ string[] GetReferenceSearchPaths()
     var refs = new List<string>();
 
     if (IsRunningOnWindows()) {
-        var vs = VS_INSTALL ?? VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" });
+        var vs =
+            VS_INSTALL ??
+            VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" }) ??
+            VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin", IncludePrerelease = true });
         var referenceAssemblies = $"{vs}/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
         var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 
@@ -166,7 +199,7 @@ string[] GetReferenceSearchPaths()
         refs.Add($"{pf}/Windows Kits/10/UnionMetadata/Facade");
         refs.Add($"{pf}/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0");
         refs.Add($"{pf}/Windows Kits/10/References/Windows.Foundation.FoundationContract/1.0.0.0");
-        refs.Add($"{pf}/GtkSharp/2.12/lib");
+        refs.Add($"{pf}/GtkSharp/2.12/lib/gtk-sharp-2.0");
         refs.Add($"{vs}/Common7/IDE/PublicAssemblies");
     } else {
         // TODO
@@ -175,13 +208,44 @@ string[] GetReferenceSearchPaths()
     return refs.ToArray();
 }
 
+string[] GetDotNetPacksSearchPaths()
+{
+    var refs = new List<string>();
+
+    RunProcess("dotnet", "--list-sdks", out var sdks);
+
+    var last = sdks.Last();
+    var start = last.IndexOf("[") + 1;
+    var latestSdk = (DirectoryPath)(last.Substring(start, last.Length - start - 1));
+    var dotnetRoot = latestSdk.Combine("..");
+
+    foreach(var pack in GetDirectories(dotnetRoot.Combine("packs").FullPath + "/*.Ref.*")) {
+        var paths = GetDirectories(pack.FullPath + "/*");
+        foreach (var path in paths) {
+            var r = GetDirectories(path.FullPath + "/ref/net*");
+            refs.AddRange(r.Select(d => d.FullPath));
+        }
+    }
+
+    foreach(var pack in GetDirectories(dotnetRoot.Combine("packs").FullPath + "/*.Ref")) {
+        var paths = GetDirectories(pack.FullPath + "/*");
+        foreach (var path in paths) {
+            var r = GetDirectories(path.FullPath + "/ref/net*");
+            refs.AddRange(r.Select(d => d.FullPath));
+        }
+    }
+
+    return refs.ToArray();
+}
+
 async Task<NuGetDiff> CreateNuGetDiffAsync()
 {
     var comparer = new NuGetDiff();
+    comparer.SearchPaths.AddRange(GetDotNetPacksSearchPaths());
     comparer.SearchPaths.AddRange(GetReferenceSearchPaths());
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
 
-    await AddDep("OpenTK.GLControl", "NET40");
+    await AddDep("OpenTK.GLControl", "NET20");
     await AddDep("Tizen.NET", "netstandard2.0");
     await AddDep("Xamarin.Forms", "netstandard2.0");
     await AddDep("Xamarin.Forms", "MonoAndroid90");
@@ -189,7 +253,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Xamarin.Forms", "Xamarin.Mac");
     await AddDep("Xamarin.Forms", "tizen40");
     await AddDep("Xamarin.Forms", "uap10.0.16299");
-    await AddDep("Xamarin.Forms.Platform.WPF", "net45");
+    await AddDep("Xamarin.Forms.Platform.WPF", "net461");
     await AddDep("Xamarin.Forms.Platform.GTK", "net45");
     await AddDep("GtkSharp", "netstandard2.0");
     await AddDep("GdkSharp", "netstandard2.0");
@@ -197,15 +261,24 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");
     await AddDep("Uno.UI", "netstandard2.0");
-    await AddDep("Uno.UI", "MonoAndroid90");
+    await AddDep("Uno.UI", "MonoAndroid10.0");
     await AddDep("Uno.UI", "xamarinios10");
     await AddDep("Uno.UI", "xamarinmac20");
     await AddDep("Uno.UI", "UAP");
+    await AddDep("Microsoft.WindowsAppSDK", "net5.0-windows10.0.18362.0");
+    await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
+    await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
 
     await AddDep("OpenTK.GLControl", "NET40", "reference");
     await AddDep("Xamarin.Forms", "Xamarin.iOS10", "reference");
     await AddDep("Xamarin.Forms", "Xamarin.Mac", "reference");
     await AddDep("Xamarin.Forms", "uap10.0", "reference");
+
+    Verbose("Added search paths:");
+    foreach (var path in comparer.SearchPaths) {
+        var found = GetFiles($"{path}/*.dll").Any() || GetFiles($"{path}/*.winmd").Any();
+        Verbose($"    {(found ? " " : "!")} {path}");
+    }
 
     return comparer;
 
@@ -214,5 +287,62 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
         var version = GetVersion(id, type);
         var root = await comparer.ExtractCachedPackageAsync(id, version);
         comparer.SearchPaths.Add(System.IO.Path.Combine(root, "lib", platform));
+    }
+}
+
+async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
+{
+    var version = "0.0.0-";
+    if (!string.IsNullOrEmpty(PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith("pr."))
+        version += PREVIEW_LABEL.ToLower();
+    else if (!string.IsNullOrEmpty(GIT_SHA))
+        version += "commit." + GIT_SHA.ToLower();
+    else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))
+        version += "branch." + GIT_BRANCH_NAME.Replace("/", ".").ToLower();
+    else
+        version += "branch.main";
+    version += ".*";
+
+    var filter = new NuGetVersions.Filter {
+        IncludePrerelease = true,
+        SourceUrl = PREVIEW_FEED_URL,
+        VersionRange = VersionRange.Parse(version),
+    };
+
+    var latestVersion = await NuGetVersions.GetLatestAsync(id, filter);
+
+    var comparer = new NuGetDiff(PREVIEW_FEED_URL);
+    comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
+
+    await Download(id, latestVersion);
+
+    async Task Download(string currentId, NuGetVersion currentVersion)
+    {
+        currentId = currentId.ToLower();
+
+        Information($"Downloading '{currentId}' version '{currentVersion}'...");
+
+        var root = await comparer.ExtractCachedPackageAsync(currentId, currentVersion);
+        var toolsDir = $"{root}/tools/";
+        if (DirectoryExists(toolsDir)) {
+            var allFiles = GetFiles(toolsDir + "**/*");
+            foreach (var file in allFiles) {
+                var relative = MakeAbsolute(Directory(toolsDir)).GetRelativePath(file);
+                var dir = $"{outputDirectory}/{relative.GetDirectory()}";
+                EnsureDirectoryExists(dir);
+                CopyFileToDirectory(file, dir);
+            }
+        }
+
+        var nuspec = $"{root}/{currentId}.nuspec";
+        var xdoc = XDocument.Load(nuspec);
+        var xmlns = xdoc.Root.Name.Namespace;
+        var dependencies = xdoc.Root.Descendants(xmlns + "dependency").ToArray();
+
+        foreach (var dep in dependencies) {
+            var depId = dep.Attribute("id").Value;
+            var depVersion = dep.Attribute("version").Value;
+            await Download(depId, NuGetVersion.Parse(depVersion));
+        }
     }
 }

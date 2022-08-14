@@ -5,11 +5,22 @@ using CoreGraphics;
 using Foundation;
 using SkiaSharp.Views.GlesInterop;
 
+#if HAS_UNO_WINUI
+namespace SkiaSharp.Views.Windows
+#elif HAS_UNO
+namespace SkiaSharp.Views.UWP
+#else
 namespace SkiaSharp.Views.Mac
+#endif
 {
 	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]
-	public class SKGLView : NSOpenGLView
+#if HAS_UNO
+	internal
+#else
+	public
+#endif
+	partial class SKGLView : NSOpenGLView
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -88,11 +99,32 @@ namespace SkiaSharp.Views.Mac
 			base.Reshape();
 
 			// get the new surface size
-			newSize = ConvertSizeToBacking(Bounds.Size).ToSKSize().ToSizeI();
+			var size = ConvertSizeToBacking(Bounds.Size);
+			newSize = new SKSizeI((int)size.Width, (int)size.Height);
 		}
+
+		private nfloat lastBackingScaleFactor = 0;
 
 		public override void DrawRect(CGRect dirtyRect)
 		{
+			// Track if the scale of the display has changed and if so force the SKGLView to reshape itself.
+			// If this is not done, the output will scale correctly when the window is dragged from a non-retina to a retina display.
+			if (Window != null && lastBackingScaleFactor != Window.BackingScaleFactor)
+			{
+				bool isFirstDraw = lastBackingScaleFactor == 0;
+				lastBackingScaleFactor = Window.BackingScaleFactor;
+				if (!isFirstDraw)
+				{
+					Reshape();
+					// A redraw will also be necessary. Invoke later or the request will be ignored
+					Invoke(() => {
+						NeedsDisplay = true;
+					}, 0);
+					// do not proceed at the wrong scale
+					return;
+				}
+			}
+
 			base.DrawRect(dirtyRect);
 
 			Gles.glClear(Gles.GL_COLOR_BUFFER_BIT | Gles.GL_DEPTH_BUFFER_BIT | Gles.GL_STENCIL_BUFFER_BIT);
@@ -132,8 +164,8 @@ namespace SkiaSharp.Views.Mac
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
 #pragma warning disable CS0618 // Type or member is obsolete
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
 				DrawInSurface(e.Surface, e.RenderTarget);
 #pragma warning restore CS0618 // Type or member is obsolete
 				OnPaintSurface(e);

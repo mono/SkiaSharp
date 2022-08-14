@@ -1,0 +1,88 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(MauiTargetFrameworks)</TargetFrameworks>
+    <TargetPlatformMinVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</TargetPlatformMinVersion>
+    <PackagingGroup>SkiaSharp.Views.Maui.Core</PackagingGroup>
+    <RootNamespace>SkiaSharp.Views.Maui.Core</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Maui.Core</AssemblyName>
+    <Nullable>Enable</Nullable>
+    <SignAssembly>false</SignAssembly>
+    <DefineConstants>$(DefineConstants);__MAUI__</DefineConstants>
+    <PackagingPlatform Condition="$(TargetFramework.Contains('-windows'))">net6.0-windows</PackagingPlatform>
+    <UseMauiCore>true</UseMauiCore>
+    <AndroidGenerateResourceDesigner>false</AndroidGenerateResourceDesigner>
+    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-android')) or $(TargetFramework.Contains('-tizen'))">
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <ProjectReference Include="..\..\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" />
+  </ItemGroup>
+  <!-- local files -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-'))">
+    <Compile Remove="**\Ref\**\*.cs" />
+    <None Include="**\Ref\**\*.cs" />
+    <Compile Remove="**\*.Ref.cs" />
+    <None Include="**\*.Ref.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-ios')) and !$(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Remove="**\iOS\**\*.cs" />
+    <None Include="**\iOS\**\*.cs" />
+    <Compile Remove="**\*.iOS.cs" />
+    <None Include="**\*.iOS.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-android'))">
+    <Compile Remove="**\Android\**\*.cs" />
+    <None Include="**\Android\**\*.cs" />
+    <Compile Remove="**\*.Android.cs" />
+    <None Include="**\*.Android.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-windows'))">
+    <Compile Remove="**\Windows\**\*.cs" />
+    <None Include="**\Windows\**\*.cs" />
+    <Compile Remove="**\*.Windows.cs" />
+    <None Include="**\*.Windows.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-tizen'))">
+    <Compile Remove="**\Tizen\**\*.cs" />
+    <None Include="**\Tizen\**\*.cs" />
+    <Compile Remove="**\*.Tizen.cs" />
+    <None Include="**\*.Tizen.cs" />
+  </ItemGroup>
+  <!-- forms files -->
+  <ItemGroup>
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Shared\SKPaintGLSurfaceEventArgs.cs" Link="Core\SKPaintGLSurfaceEventArgs.cs" />
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Shared\SKPaintSurfaceEventArgs.cs" Link="Core\SKPaintSurfaceEventArgs.cs" />
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Shared\SKTouchEventArgs.cs" Link="Core\SKTouchEventArgs.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.iOS\SKTouchHandler.cs" Link="Platform\iOS\SKTouchHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-ios')) and !$(TargetFramework.Contains('-maccatalyst'))">
+    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.iOS\SKTouchHandler.cs" Link="Platform\iOS\SKTouchHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Android\SKTouchHandler.cs" Link="Platform\Android\SKTouchHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-android'))">
+    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Android\SKTouchHandler.cs" Link="Platform\Android\SKTouchHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.UWP\SKTouchHandler.cs" Link="Platform\Windows\SKTouchHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-windows'))">
+    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.UWP\SKTouchHandler.cs" Link="Platform\Windows\SKTouchHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKTouchHandler.cs" Link="Platform\Tizen\SKTouchHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-tizen'))">
+    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKTouchHandler.cs" Link="Platform\Tizen\SKTouchHandler.cs" />
+  </ItemGroup>
+</Project>

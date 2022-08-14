@@ -2,7 +2,9 @@
 using System;
 using System.ComponentModel;
 
-#if WINDOWS_UWP || HAS_UNO
+#if HAS_UNO_WINUI
+namespace SkiaSharp.Views.Windows
+#elif (WINDOWS_UWP || HAS_UNO)
 namespace SkiaSharp.Views.UWP
 #elif __ANDROID__
 namespace SkiaSharp.Views.Android
@@ -16,10 +18,15 @@ namespace SkiaSharp.Views.Desktop
 namespace SkiaSharp.Views.Mac
 #elif __TIZEN__
 namespace SkiaSharp.Views.Tizen
+#elif WINDOWS
+namespace SkiaSharp.Views.Windows
+#elif __BLAZOR__
+namespace SkiaSharp.Views.Blazor
 #endif
 {
 	public class SKPaintGLSurfaceEventArgs : EventArgs
 	{
+#if !__BLAZOR__
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		[Obsolete]
 		private GRBackendRenderTargetDesc? rtDesc;
@@ -33,7 +40,10 @@ namespace SkiaSharp.Views.Tizen
 			BackendRenderTarget = new GRBackendRenderTarget(GRBackend.OpenGL, renderTarget);
 			ColorType = renderTarget.Config.ToColorType();
 			Origin = renderTarget.Origin;
+			Info = new SKImageInfo(renderTarget.Width, renderTarget.Height, ColorType);
+			RawInfo = Info;
 		}
+#endif
 
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget)
 			: this(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888)
@@ -46,21 +56,43 @@ namespace SkiaSharp.Views.Tizen
 			BackendRenderTarget = renderTarget;
 			ColorType = colorType;
 			Origin = origin;
+			Info = new SKImageInfo(renderTarget.Width, renderTarget.Height, ColorType);
+			RawInfo = Info;
 		}
 
+		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info)
+			: this(surface, renderTarget, origin, info, info)
+		{
+		}
+
+		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info, SKImageInfo rawInfo)
+		{
+			Surface = surface;
+			BackendRenderTarget = renderTarget;
+			ColorType = info.ColorType;
+			Origin = origin;
+			Info = info;
+			RawInfo = rawInfo;
+		}
+
+#if !__BLAZOR__
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, GRGlFramebufferInfo glInfo)
 		{
 			Surface = surface;
 			BackendRenderTarget = renderTarget;
 			ColorType = colorType;
 			Origin = origin;
-#pragma warning disable CS0612 // Type or member is obsolete
 			rtDesc = CreateDesc(glInfo);
-#pragma warning restore CS0612 // Type or member is obsolete
+			Info = new SKImageInfo(renderTarget.Width, renderTarget.Height, colorType);
+			RawInfo = Info;
 		}
+#endif
 
 		public SKSurface Surface { get; private set; }
 
+#if !__BLAZOR__
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		[Obsolete("Use BackendRenderTarget instead.")]
 		public GRBackendRenderTargetDesc RenderTarget => rtDesc ??= CreateDesc(BackendRenderTarget.GetGlFramebufferInfo());
@@ -77,12 +109,17 @@ namespace SkiaSharp.Views.Tizen
 				Config = ColorType.ToPixelConfig(),
 				Origin = Origin,
 			};
+#endif
 
 		public GRBackendRenderTarget BackendRenderTarget { get; private set; }
 
 		public SKColorType ColorType { get; private set; }
 
 		public GRSurfaceOrigin Origin { get; private set; }
+
+		public SKImageInfo Info { get; private set; }
+
+		public SKImageInfo RawInfo { get; private set; }
 	}
 }
 #endif

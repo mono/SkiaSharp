@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using CoreGraphics;
 using Foundation;
+using ObjCRuntime;
 
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
@@ -47,6 +48,15 @@ namespace SkiaSharp.Views.Mac
 			if (bitmapData == null)
 			{
 				bitmapData = NSMutableData.FromLength(info.BytesSize);
+
+				// in case allocation has failed
+				if (bitmapData == null)
+				{
+					Dispose();
+					info = Info;
+					return null;
+				}
+
 				dataProvider = new CGDataProvider(bitmapData.MutableBytes, info.BytesSize, Dummy);
 
 				void Dummy(IntPtr data)

@@ -1,9 +1,24 @@
-﻿using System;
-using Xamarin.Forms;
+﻿#nullable enable
 
+using System;
+
+#if __MAUI__
+using Microsoft.Maui;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+#else
+using Xamarin.Forms;
+#endif
+
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Controls
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
+#if !__MAUI__
 	[RenderWith(typeof(SKCanvasViewRenderer))]
+#endif
 	public partial class SKCanvasView : View, ISKCanvasViewController
 	{
 		public static readonly BindableProperty IgnorePixelScalingProperty =
@@ -13,14 +28,14 @@ namespace SkiaSharp.Views.Forms
 			BindableProperty.Create(nameof(EnableTouchEvents), typeof(bool), typeof(SKCanvasView), false);
 
 		// the user can subscribe to repaint
-		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
+		public event EventHandler<SKPaintSurfaceEventArgs>? PaintSurface;
 
 		// the user can subscribe to touch events
-		public event EventHandler<SKTouchEventArgs> Touch;
+		public event EventHandler<SKTouchEventArgs>? Touch;
 
 		// the native listens to this event
-		private event EventHandler SurfaceInvalidated;
-		private event EventHandler<GetPropertyValueEventArgs<SKSize>> GetCanvasSize;
+		private event EventHandler? SurfaceInvalidated;
+		private event EventHandler<GetPropertyValueEventArgs<SKSize>>? GetCanvasSize;
 
 		// the user asks the for the size
 		public SKSize CanvasSize

@@ -5,9 +5,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:SkiaSharpSample"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:not_win="http://uno.ui/not_win"
     xmlns:sample="using:SkiaSharpSample"
     xmlns:views="using:SkiaSharp.Views.UWP"
-    mc:Ignorable="d">
+    mc:Ignorable="d not_win">
     <Page.Resources>
         <Style x:Key="ShellButton" TargetType="ButtonBase">
             <Setter Property="Background" Value="Transparent" />
@@ -44,6 +45,7 @@
                 <!--  the samples canvas  -->
                 <Grid Tapped="OnSampleTapped" Background="White">
                     <views:SKXamlCanvas x:Name="canvas" Grid.Row="1" PaintSurface="OnPaintCanvas" />
+                    <views:SKSwapChainPanel x:Name="glview" Grid.Row="1" PaintSurface="OnPaintGL" Visibility="Collapsed" />
                 </Grid>
             </SplitView.Content>
         </SplitView>
@@ -51,9 +53,18 @@
         <CommandBar
             x:Name="commandBar"
             Background="{StaticResource XamarinLightBlue}"
+            not_win:Style="{StaticResource XamlDefaultCommandBar}"
             OverflowButtonVisibility="Collapsed"
             Foreground="White">
             <!--  the toolbar items  -->
+            <AppBarButton Icon="Repair" Label="Backend" IsCompact="True" Foreground="White">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="Memory" Tag="Memory" Click="OnBackendSelected" />
+                        <MenuFlyoutItem Text="OpenGL" Tag="OpenGL" Click="OnBackendSelected" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </AppBarButton>
             <AppBarButton
                 Click="OnToggleSlideshow"
                 Foreground="White"

@@ -1,0 +1,271 @@
+// configuration for the libHarfBuzzSharp binary
+{
+  "dllName": "HARFBUZZ",
+  "namespace": "HarfBuzzSharp",
+  "namespaces": {
+    "hb_ot_": {
+      "prefix": "OpenType"
+    },
+    "hb_": {
+      "prefix": ""
+    }
+  },
+  "className": "HarfBuzzApi",
+  "includeDirs": [
+    "src"
+  ],
+  "headers": {
+    "src": [
+      "hb.h",
+      "hb-ot.h"
+    ]
+  },
+  "source": {
+    "src": [ "hb-*" ]
+  },
+  "exclude": {
+    "files": [
+      "src/hb-deprecated.h",
+      "src/hb-shape-plan.h",
+      "src/hb-ot-deprecated.h",
+      "src/hb-ot-var.h"
+    ],
+    "types": [
+      "hb_segment_properties_t",
+      "hb_user_data_key_t",
+      "_hb_var_int_t"
+    ]
+  },
+  "mappings": {
+    "types": {
+      // type aliases
+      "hb_bool_t": {
+        "cs": "Boolean"
+      },
+      "hb_codepoint_t": {
+        "cs": "UInt32"
+      },
+      "hb_color_t": {
+        "cs": "UInt32"
+      },
+      "hb_mask_t": {
+        "cs": "UInt32"
+      },
+      "hb_position_t": {
+        "cs": "Int32"
+      },
+      "hb_tag_t": {
+        "cs": "UInt32"
+      },
+      "hb_var_int_t": {
+        "cs": "Int32"
+      },
+      "hb_font_get_font_h_extents_func_t": {
+        "cs": "FontGetFontExtentsProxyDelegate"
+      },
+      "hb_font_get_font_v_extents_func_t": {
+        "cs": "FontGetFontExtentsProxyDelegate"
+      },
+      "hb_font_get_glyph_h_advance_func_t": {
+        "cs": "FontGetGlyphAdvanceProxyDelegate"
+      },
+      "hb_font_get_glyph_h_advances_func_t": {
+        "cs": "FontGetGlyphAdvancesProxyDelegate"
+      },
+      "hb_font_get_glyph_h_kerning_func_t": {
+        "cs": "FontGetGlyphKerningProxyDelegate"
+      },
+      "hb_font_get_glyph_h_origin_func_t": {
+        "cs": "FontGetGlyphOriginProxyDelegate"
+      },
+      "hb_font_get_glyph_v_advance_func_t": {
+        "cs": "FontGetGlyphAdvanceProxyDelegate"
+      },
+      "hb_font_get_glyph_v_advances_func_t": {
+        "cs": "FontGetGlyphAdvancesProxyDelegate"
+      },
+      "hb_font_get_glyph_v_origin_func_t": {
+        "cs": "FontGetGlyphOriginProxyDelegate"
+      },
+      "hb_ot_name_id_t": {
+        "cs": "OpenTypeNameId"
+      },
+      "hb_language_t": {
+        "cs": "IntPtr"
+      },
+      // structs
+      "hb_glyph_info_t": {
+        "members": {
+          "var1": "",
+          "var2": ""
+        }
+      },
+      "hb_glyph_position_t": {
+        "members": {
+          "var": ""
+        }
+      },
+      "hb_feature_t": {
+        "properties": false
+      },
+      // enums
+      "hb_buffer_flags_t": {
+        "flags": true,
+        "members": {
+          "HB_BUFFER_FLAG_BOT": "BeginningOfText",
+          "HB_BUFFER_FLAG_EOT": "EndOfText"
+        }
+      },
+      "hb_buffer_serialize_flags_t": {
+        "flags": true,
+        "cs": "SerializeFlag"
+      },
+      "hb_buffer_content_type_t": {
+        "cs": "ContentType"
+      },
+      "hb_buffer_cluster_level_t": {
+        "cs": "ClusterLevel"
+      },
+      "hb_buffer_serialize_format_t": {
+        "cs": "SerializeFormat"
+      },
+      "hb_direction_t": {
+        "members": {
+          "HB_DIRECTION_LTR": "LeftToRight",
+          "HB_DIRECTION_RTL": "RightToLeft",
+          "HB_DIRECTION_TTB": "TopToBottom",
+          "HB_DIRECTION_BTT": "BottomToTop"
+        }
+      },
+      "hb_memory_mode_t": {
+        "members": {
+          "HB_MEMORY_MODE_READONLY": "ReadOnly",
+          "HB_MEMORY_MODE_WRITABLE": "Writeable",
+          "HB_MEMORY_MODE_READONLY_MAY_MAKE_WRITABLE": "ReadOnlyMayMakeWriteable"
+        }
+      },
+      "hb_ot_metrics_tag_t": {
+        "members": {
+          "HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_SIZE": "SubScriptEmXSize",
+          "HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_SIZE": "SubScriptEmYSize",
+          "HB_OT_METRICS_TAG_SUBSCRIPT_EM_X_OFFSET": "SubScriptEmXOffset",
+          "HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_OFFSET": "SubScriptEmYOffset",
+          "HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_SIZE": "SuperScriptEmXSize",
+          "HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_SIZE": "SuperScriptEmYSize",
+          "HB_OT_METRICS_TAG_SUPERSCRIPT_EM_X_OFFSET": "SuperScriptEmXOffset",
+          "HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_OFFSET": "SuperScriptEmYOffset",
+          "_HB_OT_METRICS_TAG_MAX_VALUE": ""
+        }
+      },
+      "hb_ot_meta_tag_t": {
+        "members": {
+          "_HB_OT_META_TAG_MAX_VALUE": ""
+        }
+      },
+      "hb_ot_layout_baseline_tag_t": {
+        "members": {
+          "_HB_OT_LAYOUT_BASELINE_TAG_MAX_VALUE": ""
+        }
+      },
+      "hb_ot_var_axis_flags_t": {
+        "members": {
+          "_HB_OT_VAR_AXIS_FLAG_MAX_VALUE": ""
+        }
+      },
+      "hb_unicode_combining_class_t": {
+        "members": {
+          "HB_UNICODE_COMBINING_CLASS_CCC10": "CCC10",
+          "HB_UNICODE_COMBINING_CLASS_CCC11": "CCC11",
+          "HB_UNICODE_COMBINING_CLASS_CCC12": "CCC12",
+          "HB_UNICODE_COMBINING_CLASS_CCC13": "CCC13",
+          "HB_UNICODE_COMBINING_CLASS_CCC14": "CCC14",
+          "HB_UNICODE_COMBINING_CLASS_CCC15": "CCC15",
+          "HB_UNICODE_COMBINING_CLASS_CCC16": "CCC16",
+          "HB_UNICODE_COMBINING_CLASS_CCC17": "CCC17",
+          "HB_UNICODE_COMBINING_CLASS_CCC18": "CCC18",
+          "HB_UNICODE_COMBINING_CLASS_CCC19": "CCC19",
+          "HB_UNICODE_COMBINING_CLASS_CCC20": "CCC20",
+          "HB_UNICODE_COMBINING_CLASS_CCC21": "CCC21",
+          "HB_UNICODE_COMBINING_CLASS_CCC22": "CCC22",
+          "HB_UNICODE_COMBINING_CLASS_CCC23": "CCC23",
+          "HB_UNICODE_COMBINING_CLASS_CCC24": "CCC24",
+          "HB_UNICODE_COMBINING_CLASS_CCC25": "CCC25",
+          "HB_UNICODE_COMBINING_CLASS_CCC26": "CCC26",
+          "HB_UNICODE_COMBINING_CLASS_CCC27": "CCC27",
+          "HB_UNICODE_COMBINING_CLASS_CCC28": "CCC28",
+          "HB_UNICODE_COMBINING_CLASS_CCC29": "CCC29",
+          "HB_UNICODE_COMBINING_CLASS_CCC30": "CCC30",
+          "HB_UNICODE_COMBINING_CLASS_CCC31": "CCC31",
+          "HB_UNICODE_COMBINING_CLASS_CCC32": "CCC32",
+          "HB_UNICODE_COMBINING_CLASS_CCC33": "CCC33",
+          "HB_UNICODE_COMBINING_CLASS_CCC34": "CCC34",
+          "HB_UNICODE_COMBINING_CLASS_CCC35": "CCC35",
+          "HB_UNICODE_COMBINING_CLASS_CCC36": "CCC36",
+          "HB_UNICODE_COMBINING_CLASS_CCC84": "CCC84",
+          "HB_UNICODE_COMBINING_CLASS_CCC91": "CCC91",
+          "HB_UNICODE_COMBINING_CLASS_CCC103": "CCC103",
+          "HB_UNICODE_COMBINING_CLASS_CCC107": "CCC107",
+          "HB_UNICODE_COMBINING_CLASS_CCC118": "CCC118",
+          "HB_UNICODE_COMBINING_CLASS_CCC122": "CCC122",
+          "HB_UNICODE_COMBINING_CLASS_CCC129": "CCC129",
+          "HB_UNICODE_COMBINING_CLASS_CCC130": "CCC130",
+          "HB_UNICODE_COMBINING_CLASS_CCC133": "CCC133"
+        }
+      },
+      "hb_glyph_flags_t": {
+        "flags": true
+      },
+      "hb_script_t": {
+        "cs": "UInt32",
+        "generate": false
+      }
+    },
+    "functions": {
+      "hb_unicode_combining_class_func_t": {
+        "parameters": {
+          "-1": "int"
+        }
+      },
+      "hb_unicode_general_category_func_t": {
+        "parameters": {
+          "-1": "int"
+        }
+      },
+      "hb_font_get_glyph_from_name": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "hb_font_glyph_from_string": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "hb_language_from_string": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "hb_script_from_string": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "hb_feature_from_string": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "hb_blob_create_from_file": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "hb_buffer_deserialize_glyphs": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      }
+    }
+  }
+}

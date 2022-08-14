@@ -1,4 +1,4 @@
-﻿#if !__WATCHOS__
+﻿#if !__WATCHOS__ && !__MACCATALYST__
 
 using System;
 using System.ComponentModel;
@@ -8,7 +8,11 @@ using GLKit;
 using OpenGLES;
 using SkiaSharp.Views.GlesInterop;
 
-#if __TVOS__
+#if HAS_UNO_WINUI
+namespace SkiaSharp.Views.Windows
+#elif HAS_UNO
+namespace SkiaSharp.Views.UWP
+#elif __TVOS__
 namespace SkiaSharp.Views.tvOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
@@ -16,7 +20,12 @@ namespace SkiaSharp.Views.iOS
 {
 	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]
-	public class SKGLView : GLKView, IGLKViewDelegate, IComponent
+#if HAS_UNO
+	internal
+#else
+	public
+#endif
+	class SKGLView : GLKView, IGLKViewDelegate, IComponent
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -139,9 +148,9 @@ namespace SkiaSharp.Views.iOS
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
+#pragma warning disable CS0618 // Type or member is obsolete
 				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
 				OnPaintSurface(e);
-#pragma warning disable CS0618 // Type or member is obsolete
 				DrawInSurface(e.Surface, e.RenderTarget);
 #pragma warning restore CS0618 // Type or member is obsolete
 			}

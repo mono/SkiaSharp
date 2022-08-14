@@ -1,17 +1,33 @@
 ﻿using System;
 using Windows.ApplicationModel;
 using Windows.Graphics.Display;
+
+#if WINDOWS
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+#else
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+#endif
 
+#if WINDOWS
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public partial class SKXamlCanvas : Canvas
 	{
+		private const float DpiBase = 96.0f;
+
 		private static readonly DependencyProperty ProxyVisibilityProperty =
 			DependencyProperty.Register(
 				"ProxyVisibility",
@@ -34,8 +50,10 @@ namespace SkiaSharp.Views.UWP
 			if (designMode)
 				return;
 
+#if !WINDOWS
 			var display = DisplayInformation.GetForCurrentView();
 			OnDpiChanged(display);
+#endif
 
 			Loaded += OnLoaded;
 			Unloaded += OnUnloaded;
@@ -49,7 +67,7 @@ namespace SkiaSharp.Views.UWP
 			SetBinding(ProxyVisibilityProperty, binding);
 		}
 
-		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.PixelWidth, bitmap.PixelHeight);
+		public SKSize CanvasSize { get; private set; }
 
 		public bool IgnorePixelScaling
 		{
@@ -79,11 +97,20 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-		private void OnDpiChanged(DisplayInformation sender, object args = null)
+#if WINDOWS
+		private void OnXamlRootChanged(XamlRoot xamlRoot = null, XamlRootChangedEventArgs e = null)
 		{
-			Dpi = sender.LogicalDpi / 96.0f;
+			var root = xamlRoot ?? XamlRoot;
+			Dpi = root.RasterizationScale;
 			Invalidate();
 		}
+#else
+		private void OnDpiChanged(DisplayInformation sender, object args = null)
+		{
+			Dpi = sender.LogicalDpi / DpiBase;
+			Invalidate();
+		}
+#endif
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
@@ -96,10 +123,15 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 1)
 				return;
 
+#if WINDOWS
+			XamlRoot.Changed += OnXamlRootChanged;
+			OnXamlRootChanged();
+#else
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged += OnDpiChanged;
 
 			OnDpiChanged(display);
+#endif
 		}
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
@@ -108,18 +140,23 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 0)
 				return;
 
+#if WINDOWS
+			XamlRoot.Changed -= OnXamlRootChanged;
+#else
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged -= OnDpiChanged;
+#endif
 
 			FreeBitmap();
 		}
 
 		public void Invalidate()
 		{
-			if (Dispatcher.HasThreadAccess)
-				DoInvalidate();
-			else
-				Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate).AsTask().Wait();
+#if WINDOWS
+			DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, DoInvalidate);
+#else
+			Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
+#endif
 		}
 
 		private void DoInvalidate()
@@ -130,30 +167,43 @@ namespace SkiaSharp.Views.UWP
 			if (!isVisible)
 				return;
 
-			var info = CreateBitmap();
+			var info = CreateBitmap(out var unscaledSize, out var dpi);
 
 			if (info.Width <= 0 || info.Height <= 0)
+			{
+				CanvasSize = SKSize.Empty;
 				return;
+			}
+
+			var userVisibleSize = IgnorePixelScaling ? unscaledSize : info.Size;
+			CanvasSize = userVisibleSize;
 
 			using (var surface = SKSurface.Create(info, pixels, info.RowBytes))
 			{
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+				if (IgnorePixelScaling)
+				{
+					var canvas = surface.Canvas;
+					canvas.Scale(dpi);
+					canvas.Save();
+				}
+
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 			bitmap.Invalidate();
 		}
 
-		private SKSizeI CreateSize()
+		private SKSizeI CreateSize(out SKSizeI unscaledSize, out float dpi)
 		{
+			unscaledSize = SKSizeI.Empty;
+			dpi = (float)Dpi;
+
 			var w = ActualWidth;
 			var h = ActualHeight;
 
 			if (!IsPositive(w) || !IsPositive(h))
 				return SKSizeI.Empty;
 
-			if (IgnorePixelScaling)
-				return new SKSizeI((int)w, (int)h);
-
-			var dpi = Dpi;
+			unscaledSize = new SKSizeI((int)w, (int)h);
 			return new SKSizeI((int)(w * dpi), (int)(h * dpi));
 
 			static bool IsPositive(double value)
@@ -162,9 +212,9 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-		private SKImageInfo CreateBitmap()
+		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)
 		{
-			var size = CreateSize();
+			var size = CreateSize(out unscaledSize, out dpi);
 			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
 			if (bitmap?.PixelWidth != info.Width || bitmap?.PixelHeight != info.Height)
@@ -180,17 +230,8 @@ namespace SkiaSharp.Views.UWP
 					ImageSource = bitmap,
 					AlignmentX = AlignmentX.Left,
 					AlignmentY = AlignmentY.Top,
-					Stretch = Stretch.None
+					Stretch = Stretch.Fill
 				};
-				if (!IgnorePixelScaling)
-				{
-					var scale = 1.0 / Dpi;
-					brush.Transform = new ScaleTransform
-					{
-						ScaleX = scale,
-						ScaleY = scale
-					};
-				}
 				Background = brush;
 			}
 

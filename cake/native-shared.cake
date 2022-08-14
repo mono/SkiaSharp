@@ -1,6 +1,6 @@
 #load "shared.cake"
 
-var PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? "python");
+var PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? "python3");
 
 if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
     var dir = MakeAbsolute((FilePath)PYTHON_EXE).GetDirectory();
@@ -10,7 +10,7 @@ if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
 
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
-DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz"));
+DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia/third_party/externals/harfbuzz"));
 
 var EXE_EXTENSION = IsRunningOnWindows() ? ".exe" : "";
 var GN_EXE = Argument("gn", EnvironmentVariable("GN_EXE") ?? SKIA_PATH.CombineWithFilePath($"bin/gn{EXE_EXTENSION}").FullPath);
@@ -77,42 +77,6 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
     RunProcess(NINJA_EXE, new ProcessSettings {
         Arguments = $"-C out/{outDir} {target}",
         WorkingDirectory = SKIA_PATH.FullPath,
-    });
-}
-
-void StripSign(FilePath target)
-{
-    if (!IsRunningOnMac())
-        throw new InvalidOperationException("lipo is only available on macOS.");
-
-    target = MakeAbsolute(target);
-    var archive = target;
-    if (target.FullPath.EndsWith(".framework")) {
-        archive = $"{target}/{target.GetFilenameWithoutExtension()}";
-    }
-
-    // strip anything we can
-    RunProcess("strip", new ProcessSettings {
-        Arguments = $"-x -S {archive}",
-    });
-
-    // re-sign with empty
-    RunProcess("codesign", new ProcessSettings {
-        Arguments = $"--force --sign - --timestamp=none {target}",
-    });
-}
-
-void RunLipo(DirectoryPath directory, FilePath output, FilePath[] inputs)
-{
-    if (!IsRunningOnMac())
-        throw new InvalidOperationException("lipo is only available on macOS.");
-
-    EnsureDirectoryExists(directory.CombineWithFilePath(output).GetDirectory());
-
-    var inputString = string.Join(" ", inputs.Select(i => string.Format("\"{0}\"", i)));
-    RunProcess("lipo", new ProcessSettings {
-        Arguments = string.Format("-create -output \"{0}\" {1}", output, inputString),
-        WorkingDirectory = directory,
     });
 }
 

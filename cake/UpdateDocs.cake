@@ -33,39 +33,32 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
             var changelogPath = (FilePath)$"./changelogs/{id}/{version}/{dllName}.md";
             EnsureDirectoryExists (changelogPath.GetDirectory ());
             CopyFile (file, changelogPath);
+            var changelogOutputPath = (FilePath)$"./output/logs/changelogs/{id}/{version}/{dllName}.md";
+            EnsureDirectoryExists (changelogOutputPath.GetDirectory ());
+            CopyFile (file, changelogOutputPath);
         }
     }
 }
 
-Task ("docs-download-build-artifact")
-    .IsDependentOn ("determine-last-successful-build")
-    .Does (() =>
+Task ("docs-download-output")
+    .Does (async () =>
 {
-    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "nuget");
-
     EnsureDirectoryExists ("./output");
     CleanDirectories ("./output");
 
-    DownloadFile(url, "./output/nuget.zip");
-});
-
-Task ("docs-expand-build-artifact")
-    .Does (() =>
-{
-    Unzip ("./output/nuget.zip", "./output");
-    MoveDirectory ("./output/nuget", OUTPUT_NUGETS_PATH);
+    await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
+    await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         var version = GetVersion (id);
-        var name = $"{id}.{version}.nupkg";
+        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
+            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
+            : version;
+        var name = $"{id}.{localNugetVersion}.nupkg";
         CleanDirectories ($"./output/{id}");
         Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
     }
 });
-
-Task ("docs-download-output")
-    .IsDependentOn ("docs-download-build-artifact")
-    .IsDependentOn ("docs-expand-build-artifact");
 
 Task ("docs-api-diff")
     .Does (async () =>
@@ -84,17 +77,27 @@ Task ("docs-api-diff")
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
-    // some libraries depend in SkiaSharp
+    // some parts of SkiaSharp depend on other parts
     comparer.SearchPaths.Add($"./output/SkiaSharp/nuget/lib/netstandard2.0");
+    foreach (var dir in GetDirectories($"./output/SkiaSharp.Views.Maui.Core/nuget/lib/*"))
+        comparer.SearchPaths.Add(dir.FullPath);
 
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE
     };
 
     foreach (var id in TRACKED_NUGETS.Keys) {
+        // skip doc generation for NativeAssets as that has nothing but a native binary
+        if (id.Contains ("NativeAssets"))
+            continue;
+
         Information ($"Comparing the assemblies in '{id}'...");
 
         var version = GetVersion (id);
+        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
+            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
+            : version;
+
         var latestVersion = (await NuGetVersions.GetLatestAsync (id, filter))?.ToNormalizedString ();
         Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");
 
@@ -105,9 +108,9 @@ Task ("docs-api-diff")
         }
 
         // generate the diff and copy to the changelogs
-        Debug ($"Running a diff on '{latestVersion}' vs '{version}' of '{id}'...");
+        Debug ($"Running a diff on '{latestVersion}' vs '{localNugetVersion}' of '{id}'...");
         var diffRoot = $"{baseDir}/{id}";
-        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id.ToLower ()}.{version}.nupkg")) {
+        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id.ToLower ()}.{localNugetVersion}.nupkg")) {
             // run the diff with just the breaking changes
             comparer.MarkdownDiffFileExtension = ".breaking.md";
             comparer.IgnoreNonBreakingChanges = true;
@@ -144,7 +147,15 @@ Task ("docs-api-diff-past")
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
+    // some parts of SkiaSharp depend on other parts
+    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
+        comparer.SearchPaths.Add(dir.FullPath);
+
     foreach (var id in TRACKED_NUGETS.Keys) {
+        // skip doc generation for NativeAssets as that has nothing but a native binary
+        if (id.Contains ("NativeAssets"))
+            continue;
+
         Information ($"Comparing the assemblies in '{id}'...");
 
         var allVersions = await NuGetVersions.GetAllAsync (id);
@@ -198,9 +209,13 @@ Task ("docs-update-frameworks")
 
     // generate the temp frameworks.xml
     var xFrameworks = new XElement ("Frameworks");
+    var monikers = new List<string> ();
     foreach (var id in TRACKED_NUGETS.Keys) {
         // skip doc generation for Uno, this is the same as UWP and it is not needed
-        if (id.StartsWith ("SkiaSharp.Views.Uno"))
+        if (id.StartsWith ("SkiaSharp.Views.Uno") || id.StartsWith ("SkiaSharp.Views.Uno.WinUI") )
+            continue;
+        // skip doc generation for NativeAssets as that has nothing but a native binary
+        if (id.Contains ("NativeAssets"))
             continue;
 
         // get the versions
@@ -213,10 +228,10 @@ Task ("docs-update-frameworks")
         var dev = new NuGetVersion (GetVersion (id));
         allVersions = allVersions.Union (new [] { dev }).ToArray ();
 
-        // "merge" the patches
+        // "merge" the patches so we only care about major.minor
         var merged = new Dictionary<string, NuGetVersion> ();
         foreach (var version in allVersions) {
-            merged [$"{version.Major}.{version.Minor}.{version.Patch}"] = version;
+            merged [$"{version.Major}.{version.Minor}"] = version;
         }
 
         foreach (var version in merged) {
@@ -236,6 +251,8 @@ Task ("docs-update-frameworks")
                         continue;
                     else
                         moniker = $"skiasharp-views-forms-{version.Key}";
+                else if (id.StartsWith ("SkiaSharp.Views.Maui"))
+                    moniker = $"skiasharp-views-maui-{version.Key}";
                 else if (id.StartsWith ("SkiaSharp.Views"))
                     moniker = $"skiasharp-views-{version.Key}";
                 else if (platform == null)
@@ -244,7 +261,8 @@ Task ("docs-update-frameworks")
                     moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version.Key}";
 
                 // add the node to the frameworks.xml
-                if (xFrameworks.Elements ("Framework")?.Any (e => e.Attribute ("Name").Value == moniker) != true) {
+                if (!monikers.Contains (moniker)) {
+                    monikers.Add (moniker);
                     xFrameworks.Add (
                         new XElement ("Framework",
                             new XAttribute ("Name", moniker),
@@ -258,11 +276,18 @@ Task ("docs-update-frameworks")
             }
         }
     }
+    monikers.Sort ();
 
     // save the frameworks.xml
     var fwxml = $"{docsTempPath}/frameworks.xml";
     var xdoc = new XDocument (xFrameworks);
     xdoc.Save (fwxml);
+
+    // update the docs json
+    var docsJsonPath = DOCS_ROOT_PATH.CombineWithFilePath (".openpublishing.publish.config.json");
+    var docsJson = ParseJsonFromFile (docsJsonPath);
+    docsJson ["docsets_to_publish"][0]["monikers"] = new JArray (monikers.ToArray ());
+    SerializeJsonToPrettyFile (docsJsonPath, docsJson);
 
     // generate doc files
     comparer = await CreateNuGetDiffAsync ();
@@ -311,6 +336,16 @@ Task ("docs-format-docs")
                     .Skip (1)
                     .Remove ();
             }
+        }
+
+        // remove any assembly attributes for now: https://github.com/mono/api-doc-tools/issues/560
+        if (xdoc.Root.Name == "Overview") {
+            xdoc.Root
+                .Elements ("Assemblies")
+                .Elements ("Assembly")
+                .Elements ("Attributes")
+                .Elements ("Attribute")
+                .Remove ();
         }
 
         // remove any duplicate AssemblyVersions
@@ -373,7 +408,7 @@ Task ("docs-format-docs")
         // remove the no-longer-obsolete SK3dView attributes
         if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SK3dView") {
             xdoc.Root
-                .Element ("Attributes")
+                .Element ("Attributes")?
                 .Elements ("Attribute")
                 .SelectMany (e => e.Elements ("AttributeName"))
                 .Where (e => e.Value.Contains ("System.Obsolete"))

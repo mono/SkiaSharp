@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <PropertyGroup>
+        <_HarfBuzzSharpExpandNativeReferencesStamp>obj\$(Configuration)\$(TargetFramework)\harfbuzzsharpextract.stamp</_HarfBuzzSharpExpandNativeReferencesStamp>
+        <_HarfBuzzSharpExpandNativeReferencesPath>obj\$(Configuration)\$(TargetFramework)\harfbuzzsharpextract\</_HarfBuzzSharpExpandNativeReferencesPath>
+    </PropertyGroup>
+
+    <Target Name="_HarfBuzzSharpExpandNativeReferencesFixes" BeforeTargets="_ExpandNativeReferences" Condition=" '$(OS)' == 'Unix' "
+            Inputs="$(MSBuildThisFileFullPath)" Outputs="$(_HarfBuzzSharpExpandNativeReferencesStamp)">
+
+        <RemoveDir Directories="$(_HarfBuzzSharpExpandNativeReferencesPath)" />
+        <MakeDir Directories="$(_HarfBuzzSharpExpandNativeReferencesPath)" />
+        <Exec Command="unzip -d $(_HarfBuzzSharpExpandNativeReferencesPath) $(MSBuildThisFileDirectory)..\..\runtimes\maccatalyst\native\libHarfBuzzSharp.framework.zip" />
+
+        <ItemGroup>
+            <NativeReference Include="$(_HarfBuzzSharpExpandNativeReferencesPath)libHarfBuzzSharp.framework" Kind="Framework" />
+        </ItemGroup>
+
+        <Touch Files="$(_HarfBuzzSharpExpandNativeReferencesStamp)" AlwaysCreate="True" />
+
+        <ItemGroup>
+            <FileWrites Include="$(_HarfBuzzSharpExpandNativeReferencesPath)\**" />
+            <FileWrites Include="$(_HarfBuzzSharpExpandNativeReferencesStamp)" />
+        </ItemGroup>
+
+    </Target>
+
+</Project>

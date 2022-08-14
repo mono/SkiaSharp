@@ -101,15 +101,34 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Essentials" Version="1.5.1" />
-    <PackageReference Include="Uno.UI" Version="2.4.4" />
-    <PackageReference Include="Uno.UI.RemoteControl" Version="2.4.4" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI" Version="4.0.8" />
+    <PackageReference Include="Uno.UI.RemoteControl" Version="4.0.8" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI.Adapter.Microsoft.Extensions.Logging" Version="4.0.8" />
+    <PackageReference Include="Uno.Core.Extensions.Logging.Singleton" Version="4.0.1" />
+    <PackageReference Include="Uno.Core.Extensions.Logging" Version="4.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.iOS\SkiaSharp.iOS.csproj">
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.Classic\HarfBuzzSharp.Classic.csproj">
+      <Project>{33c80641-94c5-4d6a-b9fa-5a7deef7efe6}</Project>
+      <Name>HarfBuzzSharp.Classic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Classic\SkiaSharp.Classic.csproj">
       <Project>{6A678CFB-21A7-4E81-8909-FD72ABBFD408}</Project>
-      <Name>SkiaSharp.iOS</Name>
+      <Name>SkiaSharp.Classic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.SceneGraph.Classic\SkiaSharp.SceneGraph.Classic.csproj">
+      <Project>{74a027d9-90f4-487e-afc5-6aa96f3406a9}</Project>
+      <Name>SkiaSharp.SceneGraph.Classic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Skottie.Classic\SkiaSharp.Skottie.Classic.csproj">
+      <Project>{63f51f9f-e67d-47e3-9861-99a91927c166}</Project>
+      <Name>SkiaSharp.Skottie.Classic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj">
+      <Project>{731bccc9-4e61-4410-aaf2-897d7e1e88ad}</Project>
+      <Name>SkiaSharp.HarfBuzz</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.iOS\SkiaSharp.Views.Uno.iOS.csproj">
       <Project>{9b0eb9f0-6114-4adf-8a4b-562daeb29c48}</Project>
@@ -119,4 +138,5 @@
   <Import Project="..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" Condition="Exists('..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\xamarinios1.0\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\xamarinios1.0\SkiaSharp.targets')" />
+  <Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\xamarinios1.0\HarfBuzzSharp.targets" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\xamarinios1.0\HarfBuzzSharp.targets')" />
 </Project>

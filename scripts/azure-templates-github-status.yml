@@ -1,0 +1,33 @@
+parameters:
+  context: ''
+  state: ''
+  pipelineName: '$(System.DefinitionName)'
+  displayName: 'Update the GitHub status for this job'
+
+steps:
+  - pwsh: |
+      $state = 'pending'
+      if ('${{ parameters.state }}') {
+        $state = '${{ parameters.state }}'
+      } elseif ($env:AGENT_JOBSTATUS -eq 'Failed') {
+        $state = 'failure'
+      } elseif ($env:AGENT_JOBSTATUS -eq 'Succeeded' -or $env:AGENT_JOBSTATUS -eq 'SucceededWithIssues') {
+        $state = 'success'
+      }
+      $context = "${{ parameters.pipelineName }} ($env:SYSTEM_STAGEDISPLAYNAME $env:SYSTEM_PHASEDISPLAYNAME)"
+      if ('${{ parameters.context }}') {
+        $context = '${{ parameters.context }}'
+      }
+      Set-Content -Path temp-test.json -Value "{
+        `"state`": `"$state`",
+        `"target_url`": `"$env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI/$env:SYSTEM_TEAMPROJECT/_build/results?buildId=$env:BUILD_BUILDID&view=logs&j=$env:SYSTEM_JOBID`",
+        `"context`": `"$context`"
+      }"
+      curl -v `
+        -X POST `
+        -H "Accept: application/vnd.github.v3+json" `
+        -H "Authorization: token $(Github.Token.Status)" `
+        https://api.github.com/repos/$env:BUILD_REPOSITORY_ID/statuses/$env:SYSTEM_PULLREQUEST_SOURCECOMMITID `
+        -d @temp-test.json
+    displayName: ${{ parameters.displayName }}
+    condition: always()

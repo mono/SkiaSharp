@@ -21,7 +21,7 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
-        GnNinja($"tizen/{arch}", "skia",
+        GnNinja($"tizen/{arch}", "skia modules/skottie",
            $"target_os='tizen' " +
            $"target_cpu='{skiaArch}' " +
            $"skia_enable_gpu=true " +
@@ -34,7 +34,8 @@ Task("libSkiaSharp")
            $"skia_use_system_libpng=false " +
            $"skia_use_system_libwebp=false " +
            $"skia_use_system_zlib=true " +
-           $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_BUILD_FOR_TIZEN', '-DXML_DEV_URANDOM' ] " +
+           $"skia_enable_skottie=true " +
+           $"extra_cflags=[ '-DSKIA_C_DLL', '-DXML_DEV_URANDOM', '-DSK_NO_MAKE_SHARED_PTR' ] " +
            $"ncli='{TIZEN_STUDIO_HOME}' " +
            $"ncli_version='4.0'");
 

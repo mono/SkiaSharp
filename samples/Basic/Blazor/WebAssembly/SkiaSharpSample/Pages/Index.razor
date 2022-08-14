@@ -1,0 +1,73 @@
+﻿@page "/"
+
+<h1>Raster (Bitmap) Canvas</h1>
+
+<p>The canvas below is using pixels in memory. Click and drag to move the text.</p>
+
+<div class="container">
+    <div class="row">
+        <div class="col border rounded p-2 canvas-container">
+
+            <SKCanvasView
+                @ref="skiaView" OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true"
+                @onpointerdown="OnPointerDown"
+                @onpointermove="OnPointerMove"
+                @onpointerup="OnPointerUp" />
+
+        </div>
+    </div>
+</div>
+
+@code {
+    SKCanvasView skiaView = null!;
+    SKPoint? touchLocation;
+    [Inject] IJSRuntime JS { get; set; } = null!;
+
+    void OnPaintSurface(SKPaintSurfaceEventArgs e)
+    {
+        // the the canvas and properties
+        var canvas = e.Surface.Canvas;
+
+        // make sure the canvas is blank
+        canvas.Clear(SKColors.White);
+
+        // decide what the text looks like
+        using var paint = new SKPaint
+        {
+            Color = SKColors.Black,
+            IsAntialias = true,
+            Style = SKPaintStyle.Fill,
+            TextAlign = SKTextAlign.Center,
+            TextSize = 24
+        };
+
+        // adjust the location based on the pointer
+        var coord = (touchLocation is SKPoint loc)
+            ? new SKPoint(loc.X, loc.Y)
+            : new SKPoint(e.Info.Width / 2, (e.Info.Height + paint.TextSize) / 2);
+
+        // draw some text
+        canvas.DrawText("SkiaSharp", coord, paint);
+    }
+
+    void OnPointerDown(PointerEventArgs e)
+    {
+        touchLocation = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+        skiaView.Invalidate();
+    }
+
+    void OnPointerMove(PointerEventArgs e)
+    {
+        if (touchLocation == null)
+            return;
+
+        touchLocation = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+        skiaView.Invalidate();
+    }
+
+    void OnPointerUp(PointerEventArgs e)
+    {
+        touchLocation = null;
+        skiaView.Invalidate();
+    }
+}

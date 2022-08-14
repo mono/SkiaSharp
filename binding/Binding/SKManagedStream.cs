@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Buffers;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace SkiaSharp
 {
@@ -90,18 +87,25 @@ namespace SkiaSharp
 
 		private IntPtr OnReadManagedStream (IntPtr buffer, IntPtr size)
 		{
-			byte[] managedBuffer;
-			using (var reader = new BinaryReader (stream, Encoding.UTF8, true)) {
-				managedBuffer = reader.ReadBytes ((int)size);
-			}
-			var result = managedBuffer.Length;
-			if (buffer != IntPtr.Zero) {
-				Marshal.Copy (managedBuffer, 0, buffer, result);
-			}
-			if (!stream.CanSeek && (int)size > 0 && result <= (int)size) {
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (buffer));
+			if ((int)size < 0)
+				throw new ArgumentOutOfRangeException (nameof (size));
+
+			if (size == IntPtr.Zero)
+				return IntPtr.Zero;
+
+			using var managedBuffer = Utils.RentArray<byte> ((int)size);
+			var len = stream.Read (managedBuffer.Array, 0, managedBuffer.Length);
+
+			var src = managedBuffer.Span.Slice (0, len);
+			var dst = buffer.AsSpan (managedBuffer.Length);
+			src.CopyTo (dst);
+
+			if (!stream.CanSeek && (int)size > 0 && len <= (int)size)
 				isAsEnd = true;
-			}
-			return (IntPtr)result;
+
+			return (IntPtr)len;
 		}
 
 		protected override IntPtr OnRead (IntPtr buffer, IntPtr size)

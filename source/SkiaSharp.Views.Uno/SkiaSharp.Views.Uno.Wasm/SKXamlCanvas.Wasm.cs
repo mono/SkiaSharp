@@ -1,27 +1,40 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Uno.Foundation;
+using Uno.UI.Runtime.WebAssembly;
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
 using Windows.UI.Xaml;
+#endif
 
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
-	public partial class SKXamlCanvas : FrameworkElement
+	[HtmlElement("canvas")]
+	public partial class SKXamlCanvas
 	{
-		private IntPtr pixels;
+#if HAS_UNO_WINUI
+		const string SKXamlCanvasFullTypeName = "SkiaSharp.Views.Windows." + nameof(SKXamlCanvas);
+#else
+		const string SKXamlCanvasFullTypeName = "SkiaSharp.Views.UWP." + nameof(SKXamlCanvas);
+#endif
+
+		private byte[] pixels;
+		private GCHandle pixelsHandle;
 		private int pixelWidth;
 		private int pixelHeight;
 
 		public SKXamlCanvas()
-			: base("canvas")
 		{
 			Initialize();
 		}
 
 		partial void DoUnloaded() =>
 			FreeBitmap();
-
-		private SKSize GetCanvasSize() =>
-			new SKSize(pixelWidth, pixelHeight);
 
 		private void DoInvalidate()
 		{
@@ -32,51 +45,55 @@ namespace SkiaSharp.Views.UWP
 				return;
 
 			if (ActualWidth <= 0 || ActualHeight <= 0)
+			{
+				CanvasSize = SKSize.Empty;
 				return;
-
-			int width, height;
-			if (IgnorePixelScaling)
-			{
-				width = (int)ActualWidth;
-				height = (int)ActualHeight;
-			}
-			else
-			{
-				width = (int)(ActualWidth * Dpi);
-				height = (int)(ActualHeight * Dpi);
 			}
 
-			var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Opaque);
-			CreateBitmap(info);
+			var info = CreateBitmap(out var unscaledSize, out var dpi);
 
-			using (var surface = SKSurface.Create(info, pixels, info.RowBytes))
+			using (var surface = SKSurface.Create(info, pixelsHandle.AddrOfPinnedObject(), info.RowBytes))
 			{
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+				var userVisibleSize = IgnorePixelScaling ? unscaledSize : info.Size;
+				CanvasSize = userVisibleSize;
+
+				if (IgnorePixelScaling)
+				{
+					var canvas = surface.Canvas;
+					canvas.Scale(dpi);
+					canvas.Save();
+				}
+
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
-			WebAssemblyRuntime.InvokeJS($"SkiaSharp.Views.UWP.SKXamlCanvas.invalidateCanvas({pixels}, \"{HtmlId}\", {info.Width}, {pixelHeight});");
+			WebAssemblyRuntime.InvokeJS(SKXamlCanvasFullTypeName + $".invalidateCanvas({pixelsHandle.AddrOfPinnedObject()}, \"{this.GetHtmlId()}\", {info.Width}, {pixelHeight});");
 		}
 
-		private unsafe void CreateBitmap(SKImageInfo info)
+		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)
 		{
-			if (pixels == IntPtr.Zero || pixelWidth != info.Width || pixelHeight != info.Height)
+			var size = CreateSize(out unscaledSize, out dpi);
+			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Opaque);
+
+			if (pixels == null || pixelWidth != info.Width || pixelHeight != info.Height)
 			{
 				FreeBitmap();
 
-				var ptr = Marshal.AllocHGlobal(info.BytesSize);
-
-				pixels = ptr;
+				pixels = new byte[info.BytesSize];
+				pixelsHandle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 				pixelWidth = info.Width;
 				pixelHeight = info.Height;
 			}
+
+			return info;
 		}
 
 		private void FreeBitmap()
 		{
-			if (pixels != IntPtr.Zero)
+			if (pixels != null)
 			{
-				Marshal.FreeHGlobal(pixels);
-				pixels = IntPtr.Zero;
+				pixelsHandle.Free();
+				pixels = null;
 			}
 		}
 	}

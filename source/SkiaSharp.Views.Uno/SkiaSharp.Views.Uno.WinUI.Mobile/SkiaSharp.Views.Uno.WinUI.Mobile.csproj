@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net6.0-android;net6.0-ios;net6.0-maccatalyst;net6.0-macos</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
+    <PackagingGroup>SkiaSharp.Views.Uno.WinUI</PackagingGroup>
+    <PackageId>SkiaSharp.Views.Uno.WinUI</PackageId>
+    <SignAssembly>false</SignAssembly>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Uno.WinUI" Version="4.1.9" />
+  </ItemGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);HAS_UNO;WINUI</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <Compile Include="..\SkiaSharp.Views.Uno.Android\*.cs" Link="Android\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\GLTextureView.cs" Link="Android\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SKGLTextureView.cs" Link="Android\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SKGLTextureViewRenderer.cs" Link="Android\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SurfaceFactory.cs" Link="Android\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-android'))">
+    <None Include="..\SkiaSharp.Views.Uno.Android\*.cs" Link="Android\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\GLTextureView.cs" Link="Android\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SKGLTextureView.cs" Link="Android\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SKGLTextureViewRenderer.cs" Link="Android\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SurfaceFactory.cs" Link="Android\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Include="..\SkiaSharp.Views.Uno.iOS\*.cs" Link="iOS\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Apple\SKCGSurfaceFactory.cs" Link="iOS\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.AppleiOS\SKGLView.cs" Link="iOS\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-ios')) and !$(TargetFramework.Contains('-maccatalyst'))">
+    <None Include="..\SkiaSharp.Views.Uno.iOS\*.cs" Link="iOS\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Apple\SKCGSurfaceFactory.cs" Link="iOS\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views.AppleiOS\SKGLView.cs" Link="iOS\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Apple\SKCGSurfaceFactory.cs" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Mac\SKGLView.cs" />
+    <Compile Include="..\SkiaSharp.Views.Uno.Mac\*.cs" Link="Mac\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-macos'))">
+    <None Include="..\SkiaSharp.Views.Uno.Mac\*.cs" Link="Mac\%(Filename)%(Extension)" />
+    <!-- <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Apple\SKCGSurfaceFactory.cs" Link="Mac\%(Filename)%(Extension)" /> -->
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Mac\SKGLView.cs" Link="Mac\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\UWPExtensions.cs" Link="%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Uno\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

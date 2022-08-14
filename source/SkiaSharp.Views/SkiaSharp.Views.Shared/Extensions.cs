@@ -1,5 +1,8 @@
 ﻿using System;
-#if WINDOWS_UWP || HAS_UNO
+
+#if HAS_UNO_WINUI
+namespace SkiaSharp.Views.Windows
+#elif WINDOWS_UWP || HAS_UNO
 namespace SkiaSharp.Views.UWP
 #elif __ANDROID__
 namespace SkiaSharp.Views.Android
@@ -15,6 +18,8 @@ namespace SkiaSharp.Views.Desktop
 namespace SkiaSharp.Views.Mac
 #elif __TIZEN__
 namespace SkiaSharp.Views.Tizen
+#elif WINDOWS
+namespace SkiaSharp.Views.Windows
 #endif
 {
 	public static class Extensions
@@ -106,7 +111,7 @@ namespace SkiaSharp.Views.Tizen
 			return new System.Drawing.Size(size.Width, size.Height);
 		}
 
-#if __DESKTOP__ && !NET_STANDARD
+#if __DESKTOP__
 
 		// System.Drawing.Bitmap
 

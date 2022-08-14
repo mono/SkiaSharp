@@ -26,6 +26,7 @@ namespace SkiaSharpSample
 			public static Stream LogosSvg => Embedded.Load("logos.svg");
 			public static Stream AnimatedHeartGif => Embedded.Load("animated-heart.gif");
 			public static Stream OpacitySvg => Embedded.Load("opacity.svg");
+			public static Stream LottieLogo => Embedded.Load("LottieLogo1.json");
 		}
 
 		public static class Fonts

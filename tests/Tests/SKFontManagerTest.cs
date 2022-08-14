@@ -13,16 +13,19 @@ namespace SkiaSharp.Tests
 			var fonts = SKFontManager.Default;
 			var emoji = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(emoji, SKTextEncoding.Utf32);
-			using (var typeface = fonts.MatchCharacter(emojiChar))
+			using var typeface = fonts.MatchCharacter(emojiChar);
+			Assert.NotNull(typeface);
+
+			var familyName = typeface.FamilyName;
+			if (typeface.FamilyName.EndsWith("##fallback"))
 			{
-				Assert.NotNull(typeface);
-				if (IsLinux)
-					Assert.Equal("Symbola", typeface.FamilyName);
-				else if (IsMac)
-					Assert.Equal("Apple Color Emoji", typeface.FamilyName);
-				else if (IsWindows)
-					Assert.Contains(typeface.FamilyName, new[] { "Segoe UI Emoji", "Segoe UI Symbol" });
+				using var stream = typeface.OpenStream();
+				using var temp = SKTypeface.FromStream(stream);
+
+				familyName = temp.FamilyName;
 			}
+
+			Assert.Contains(familyName, UnicodeFontFamilies);
 		}
 
 		[SkippableFact]

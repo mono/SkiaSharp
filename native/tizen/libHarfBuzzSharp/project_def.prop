@@ -1,7 +1,7 @@
 type = sharedLib
 profile = mobile-4.0
 
-harfbuzz_root = ../../../externals/harfbuzz
+harfbuzz_root = $(abspath ../../../externals/skia/third_party/externals/harfbuzz)
 
 APPNAME = HarfBuzzSharp
 
@@ -19,10 +19,12 @@ USER_SRCS = $(harfbuzz_root)/src/hb-aat-layout.cc                            \
             $(harfbuzz_root)/src/hb-buffer-serialize.cc                      \
             $(harfbuzz_root)/src/hb-buffer.cc                                \
             $(harfbuzz_root)/src/hb-common.cc                                \
+            $(harfbuzz_root)/src/hb-draw.cc                                  \
             $(harfbuzz_root)/src/hb-face.cc                                  \
             $(harfbuzz_root)/src/hb-fallback-shape.cc                        \
             $(harfbuzz_root)/src/hb-font.cc                                  \
             $(harfbuzz_root)/src/hb-map.cc                                   \
+            $(harfbuzz_root)/src/hb-number.cc                                \
             $(harfbuzz_root)/src/hb-ot-cff1-table.cc                         \
             $(harfbuzz_root)/src/hb-ot-cff2-table.cc                         \
             $(harfbuzz_root)/src/hb-ot-color.cc                              \
@@ -42,8 +44,8 @@ USER_SRCS = $(harfbuzz_root)/src/hb-aat-layout.cc                            \
             $(harfbuzz_root)/src/hb-ot-shape-complex-indic.cc                \
             $(harfbuzz_root)/src/hb-ot-shape-complex-khmer.cc                \
             $(harfbuzz_root)/src/hb-ot-shape-complex-myanmar.cc              \
+            $(harfbuzz_root)/src/hb-ot-shape-complex-syllabic.cc             \
             $(harfbuzz_root)/src/hb-ot-shape-complex-thai.cc                 \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-use-table.cc            \
             $(harfbuzz_root)/src/hb-ot-shape-complex-use.cc                  \
             $(harfbuzz_root)/src/hb-ot-shape-complex-vowel-constraints.cc    \
             $(harfbuzz_root)/src/hb-ot-shape-fallback.cc                     \
@@ -56,6 +58,7 @@ USER_SRCS = $(harfbuzz_root)/src/hb-aat-layout.cc                            \
             $(harfbuzz_root)/src/hb-shape.cc                                 \
             $(harfbuzz_root)/src/hb-shaper.cc                                \
             $(harfbuzz_root)/src/hb-static.cc                                \
+            $(harfbuzz_root)/src/hb-style.cc                                 \
             $(harfbuzz_root)/src/hb-subset-cff-common.cc                     \
             $(harfbuzz_root)/src/hb-subset-cff1.cc                           \
             $(harfbuzz_root)/src/hb-subset-cff2.cc                           \
@@ -63,5 +66,4 @@ USER_SRCS = $(harfbuzz_root)/src/hb-aat-layout.cc                            \
             $(harfbuzz_root)/src/hb-subset-plan.cc                           \
             $(harfbuzz_root)/src/hb-subset.cc                                \
             $(harfbuzz_root)/src/hb-ucd.cc                                   \
-            $(harfbuzz_root)/src/hb-unicode.cc                               \
-            $(harfbuzz_root)/src/hb-warning.cc
+            $(harfbuzz_root)/src/hb-unicode.cc

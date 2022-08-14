@@ -1,5 +1,6 @@
 Param(
-    [string] $Version = "10.0.0"
+    [string] $Version = "12.0.0",
+    [string] $InstallDestination = "C:\Program Files\LLVM"
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,9 +19,16 @@ New-Item -ItemType Directory -Force -Path "$llvmTemp" | Out-Null
 
 # install
 Write-Host "Installing LLVM..."
-& $install /S
+& 7z x $install -y -o"$InstallDestination"
+
+# echo version
+& "$InstallDestination\bin\clang.exe" --version
 
 # make sure that LLVM is in LLVM_HOME
-Write-Host "##vso[task.setvariable variable=LLVM_HOME;]C:\Program Files\LLVM";
+Write-Host "##vso[task.setvariable variable=LLVM_HOME;]$InstallDestination";
+
+# TODO: update the version of `win_vcvars_version` in
+#       - native\windows\build.cake
+#       - native\uwp\build.cake
 
 exit $LASTEXITCODE

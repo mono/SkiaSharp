@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HarfBuzzSharp
+﻿namespace HarfBuzzSharp
 {
 	public partial struct Script
 	{

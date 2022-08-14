@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using SkiaSharp.Internals;
 
 #if __TIZEN__
 using System.Reflection;
@@ -29,7 +30,7 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.gr_glinterface_create_native_interface ());
 		}
 
-		private static GRGlInterface CreateAngle ()
+		public static GRGlInterface CreateAngle ()
 		{
 			if (PlatformConfiguration.IsWindows) {
 				return CreateAngle (AngleLoader.GetProc);

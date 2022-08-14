@@ -1,5 +1,19 @@
 <Project>
 
+  <!-- annd some compatibility packages for the really old platforms -->
+  <ItemGroup Condition="
+      '$(TargetFramework)' == 'netstandard1.3'">
+    <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup Condition="
+      $(TargetFramework.StartsWith('net4')) or
+      $(TargetFramework.StartsWith('netstandard1')) or
+      $(TargetFramework.StartsWith('uap10')) or
+      '$(TargetFramework)' == 'netstandard2.0' or
+      '$(TargetFramework)' == 'tizen40'">
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+  </ItemGroup>
+
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.targets" />
 
 </Project>

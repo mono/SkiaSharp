@@ -5,9 +5,20 @@ using Javax.Microedition.Khronos.Opengles;
 
 using EGLConfig = Javax.Microedition.Khronos.Egl.EGLConfig;
 
+#if HAS_UNO_WINUI
+namespace SkiaSharp.Views.Windows
+#elif HAS_UNO
+namespace SkiaSharp.Views.UWP
+#else
 namespace SkiaSharp.Views.Android
+#endif
 {
-	public abstract class SKGLTextureViewRenderer : Java.Lang.Object, GLTextureView.IRenderer
+#if HAS_UNO
+	internal
+#else
+	public
+#endif
+	abstract partial class SKGLTextureViewRenderer : Java.Lang.Object, GLTextureView.IRenderer
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -83,9 +94,9 @@ namespace SkiaSharp.Views.Android
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
+#pragma warning disable CS0618 // Type or member is obsolete
 				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
 				OnPaintSurface(e);
-#pragma warning disable CS0618 // Type or member is obsolete
 				OnDrawFrame(e.Surface, e.RenderTarget);
 #pragma warning restore CS0618 // Type or member is obsolete
 			}

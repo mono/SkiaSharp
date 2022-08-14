@@ -5,34 +5,27 @@ namespace SkiaSharp.Views.Android
 	public class SKLockedSurface
 	{
 		private readonly Canvas canvas;
-		private readonly Bitmap bitmap;
+		private readonly SurfaceFactory surfaceFactory;
 
-		internal SKLockedSurface(Canvas canvas, Bitmap bitmap)
+		internal SKLockedSurface(Canvas canvas, SurfaceFactory surfaceFactory)
 		{
-			this.bitmap = bitmap;
 			this.canvas = canvas;
+			this.surfaceFactory = surfaceFactory;
 
 			// create a surface
-			ImageInfo = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
-			Surface = SKSurface.Create(ImageInfo, bitmap.LockPixels(), ImageInfo.RowBytes);
+			Surface = surfaceFactory.CreateSurface(out var info);
+			ImageInfo = info;
 		}
 
-		public SKImageInfo ImageInfo { get; private set; }
+		public SKImageInfo ImageInfo { get; }
 
-		public SKSurface Surface { get; private set; }
+		public SKSurface Surface { get; }
 
 		public SKCanvas Canvas => Surface.Canvas;
 
 		internal Canvas Post()
 		{
-			// dispose our canvas
-			Surface.Canvas.Flush();
-			Surface.Dispose();
-
-			// unlock the bitmap data and write to canvas
-			bitmap.UnlockPixels();
-			canvas.DrawBitmap(bitmap, 0, 0, null);
-
+			surfaceFactory.DrawSurface(Surface, canvas);
 			return canvas;
 		}
 	}

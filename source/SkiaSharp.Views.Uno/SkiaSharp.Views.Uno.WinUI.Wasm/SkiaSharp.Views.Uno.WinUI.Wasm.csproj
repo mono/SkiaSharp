@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <PackagingGroup>SkiaSharp.Views.Uno.WinUI</PackagingGroup>
+    <PackagingLocation>uno-runtime\webassembly</PackagingLocation>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);__WASM__;WINUI</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Uno.WinUI" Version="4.1.9" />
+    <PackageReference Include="Uno.WinUI.Runtime.WebAssembly" Version="4.1.9" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="nuget\build\netstandard2.0\SkiaSharp.Views.Uno.WinUI.targets" />
+    <None Remove="WasmScripts\SkiaSharp.Views.Uno.Wasm.js" />
+    <None Include="nuget\build\netstandard2.0\SkiaSharp.Views.Uno.WinUI.targets" Link="nuget\build\$(PackagingPlatform)\SkiaSharp.Views.Uno.WinUI.targets" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\UWPExtensions.cs" />
+    <Compile Include="..\SkiaSharp.Views.Uno\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Uno.Wasm\*.cs" Link="%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\SkiaSharp.View.Uno.Wasm\WasmScripts\*.js" />
+    <EmbeddedResource Include="..\SkiaSharp.Views.Uno.Wasm\LinkerDefinition.Wasm.xml">
+      <LogicalName>$(AssemblyName).xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WasmScripts\SkiaSharp.Views.Uno.Wasm.js" />
+  </ItemGroup>
+</Project>

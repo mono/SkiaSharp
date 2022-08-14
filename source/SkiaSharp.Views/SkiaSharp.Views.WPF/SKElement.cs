@@ -15,6 +15,8 @@ namespace SkiaSharp.Views.WPF
 	[DefaultProperty("Name")]
 	public class SKElement : FrameworkElement
 	{
+		private const double BitmapDpi = 96.0;
+
 		private readonly bool designMode;
 
 		private WriteableBitmap bitmap;
@@ -25,15 +27,11 @@ namespace SkiaSharp.Views.WPF
 			designMode = DesignerProperties.GetIsInDesignMode(this);
 		}
 
-		[Bindable(false)]
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.PixelWidth, bitmap.PixelHeight);
+		public SKSize CanvasSize { get; private set; }
 
 		public bool IgnorePixelScaling
 		{
-			get { return ignorePixelScaling; }
+			get => ignorePixelScaling;
 			set
 			{
 				ignorePixelScaling = value;
@@ -51,10 +49,14 @@ namespace SkiaSharp.Views.WPF
 			if (designMode)
 				return;
 
-			if (Visibility != Visibility.Visible)
+			if (Visibility != Visibility.Visible || PresentationSource.FromVisual(this) == null)
 				return;
 
-			var size = CreateSize(out var scaleX, out var scaleY);
+			var size = CreateSize(out var unscaledSize, out var scaleX, out var scaleY);
+			var userVisibleSize = IgnorePixelScaling ? unscaledSize : size;
+
+			CanvasSize = userVisibleSize;
+
 			if (size.Width <= 0 || size.Height <= 0)
 				return;
 
@@ -63,14 +65,21 @@ namespace SkiaSharp.Views.WPF
 			// reset the bitmap if the size has changed
 			if (bitmap == null || info.Width != bitmap.PixelWidth || info.Height != bitmap.PixelHeight)
 			{
-				bitmap = new WriteableBitmap(info.Width, size.Height, 96 * scaleX, 96 * scaleY, PixelFormats.Pbgra32, null);
+				bitmap = new WriteableBitmap(info.Width, size.Height, BitmapDpi * scaleX, BitmapDpi * scaleY, PixelFormats.Pbgra32, null);
 			}
 
 			// draw on the bitmap
 			bitmap.Lock();
 			using (var surface = SKSurface.Create(info, bitmap.BackBuffer, bitmap.BackBufferStride))
 			{
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+				if (IgnorePixelScaling)
+				{
+					var canvas = surface.Canvas;
+					canvas.Scale(scaleX, scaleY);
+					canvas.Save();
+				}
+
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
 			// draw the bitmap to the screen
@@ -92,10 +101,11 @@ namespace SkiaSharp.Views.WPF
 			InvalidateVisual();
 		}
 
-		private SKSizeI CreateSize(out double scaleX, out double scaleY)
+		private SKSizeI CreateSize(out SKSizeI unscaledSize, out float scaleX, out float scaleY)
 		{
-			scaleX = 1.0;
-			scaleY = 1.0;
+			unscaledSize = SKSizeI.Empty;
+			scaleX = 1.0f;
+			scaleY = 1.0f;
 
 			var w = ActualWidth;
 			var h = ActualHeight;
@@ -103,12 +113,11 @@ namespace SkiaSharp.Views.WPF
 			if (!IsPositive(w) || !IsPositive(h))
 				return SKSizeI.Empty;
 
-			if (IgnorePixelScaling)
-				return new SKSizeI((int)w, (int)h);
+			unscaledSize = new SKSizeI((int)w, (int)h);
 
 			var m = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice;
-			scaleX = m.M11;
-			scaleY = m.M22;
+			scaleX = (float)m.M11;
+			scaleY = (float)m.M22;
 			return new SKSizeI((int)(w * scaleX), (int)(h * scaleY));
 
 			bool IsPositive(double value)

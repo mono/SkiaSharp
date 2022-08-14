@@ -30,11 +30,11 @@ namespace SkiaSharp.Views.Mac
 		[Obsolete("Use PaintSurface instead.")]
 		public ISKCanvasLayerDelegate SKDelegate { get; set; }
 
-		public SKSize CanvasSize => drawable.Info.Size;
+		public SKSize CanvasSize { get; private set; }
 
 		public bool IgnorePixelScaling
 		{
-			get { return ignorePixelScaling; }
+			get => ignorePixelScaling;
 			set
 			{
 				ignorePixelScaling = value;
@@ -47,13 +47,29 @@ namespace SkiaSharp.Views.Mac
 			base.DrawInContext(ctx);
 
 			// create the skia context
-			using (var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentsScale, out var info))
+			using (var surface = drawable.CreateSurface(Bounds, ContentsScale, out var info))
 			{
 				if (info.Width == 0 || info.Height == 0)
+				{
+					CanvasSize = SKSize.Empty;
 					return;
+				}
+
+				var userVisibleSize = IgnorePixelScaling
+					? new SKSizeI((int)Bounds.Width, (int)Bounds.Height)
+					: info.Size;
+
+				CanvasSize = userVisibleSize;
+
+				if (IgnorePixelScaling)
+				{
+					var skiaCanvas = surface.Canvas;
+					skiaCanvas.Scale((float)ContentsScale);
+					skiaCanvas.Save();
+				}
 
 				// draw on the image using SKiaSharp
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 #pragma warning disable CS0618 // Type or member is obsolete
 				DrawInSurface(surface, info);
 				SKDelegate?.DrawInSurface(surface, info);

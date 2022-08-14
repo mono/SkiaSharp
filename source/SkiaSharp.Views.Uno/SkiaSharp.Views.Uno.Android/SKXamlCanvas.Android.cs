@@ -1,49 +1,35 @@
-﻿using System;
-using Android.Graphics;
+﻿using Android.Graphics;
 using Windows.Graphics.Display;
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
 using Windows.UI.Xaml;
+#endif
 
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
-	public partial class SKXamlCanvas : FrameworkElement
+	public partial class SKXamlCanvas
 	{
-		private Bitmap bitmap;
-		private SKImageInfo info;
+		private SurfaceFactory surfaceFactory;
 
 		public SKXamlCanvas()
 		{
+			surfaceFactory = new SurfaceFactory();
 			Initialize();
 			SetWillNotDraw(false);
 		}
 
 		partial void DoUnloaded() =>
-			FreeBitmap();
-
-		private SKSize GetCanvasSize() =>
-			info.Size;
+			surfaceFactory.Dispose();
 
 		private void DoInvalidate()
 		{
-			UpdateCanvasSize((int)ActualWidth, (int)ActualHeight);
+			surfaceFactory.UpdateCanvasSize((int)(ActualWidth * Dpi), (int)(ActualHeight * Dpi));
 			base.Invalidate();
-		}
-
-		private void UpdateCanvasSize(int w, int h)
-		{
-			if (designMode)
-				return;
-
-			if (!IgnorePixelScaling)
-			{
-				var display = DisplayInformation.GetForCurrentView();
-				var scale = display.LogicalDpi / 96.0f;
-
-				info = new SKImageInfo((int)(w * scale), (int)(h * scale), SKColorType.Rgba8888, SKAlphaType.Premul);
-			}
-			else
-			{
-				info = new SKImageInfo(w, h, SKColorType.Rgba8888, SKAlphaType.Premul);
-			}
 		}
 
 		protected override void OnDraw(Canvas canvas)
@@ -53,52 +39,38 @@ namespace SkiaSharp.Views.UWP
 			if (designMode)
 				return;
 
-			if (info.Width == 0 || info.Height == 0 || Visibility != Visibility.Visible || !isVisible)
+			// bail out if the view is not actually visible
+			if (Visibility != Visibility.Visible || !isVisible)
 			{
-				FreeBitmap();
+				surfaceFactory.FreeBitmap();
 				return;
 			}
 
-			// create the bitmap data if we need it
-			if (bitmap == null || bitmap.Handle == IntPtr.Zero || bitmap.Width != info.Width || bitmap.Height != info.Height)
+			// create a skia surface
+			var surface = surfaceFactory.CreateSurface(out var info);
+			if (surface == null)
 			{
-				FreeBitmap();
-				bitmap = Bitmap.CreateBitmap(info.Width, info.Height, Bitmap.Config.Argb8888);
+				CanvasSize = SKSize.Empty;
+				return;
 			}
 
-			// create a surface
-			using (var surface = SKSurface.Create(info, bitmap.LockPixels(), info.RowBytes))
-			{
-				// draw using SkiaSharp
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+			var userVisibleSize = IgnorePixelScaling
+				? new SKSizeI((int)ActualWidth, (int)ActualHeight)
+				: info.Size;
+			CanvasSize = userVisibleSize;
 
-				surface.Canvas.Flush();
-			}
-			bitmap.UnlockPixels();
-
-			// draw bitmap to canvas
 			if (IgnorePixelScaling)
 			{
-				var src = new Rect(0, 0, info.Rect.Width, info.Rect.Height);
-				var dst = new RectF(0, 0, (float)Width, (float)Height);
-				canvas.DrawBitmap(bitmap, src, dst, null);
+				var skiaCanvas = surface.Canvas;
+				skiaCanvas.Scale((float)Dpi);
+				skiaCanvas.Save();
 			}
-			else
-			{
-				canvas.DrawBitmap(bitmap, 0, 0, null);
-			}
-		}
 
-		private void FreeBitmap()
-		{
-			if (bitmap != null)
-			{
-				// free and recycle the bitmap data
-				if (bitmap.Handle != IntPtr.Zero && !bitmap.IsRecycled)
-					bitmap.Recycle();
-				bitmap.Dispose();
-				bitmap = null;
-			}
+			// draw using SkiaSharp
+			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
+
+			// draw the surface to the view
+			surfaceFactory.DrawSurface(surface, canvas);
 		}
 	}
 }

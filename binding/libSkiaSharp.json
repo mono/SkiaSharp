@@ -2,16 +2,33 @@
 {
   "dllName": "SKIA",
   "namespace": "SkiaSharp",
+  "namespaces": {
+    "sk_managed": {
+      "prefix": "SKManaged"
+    },
+    "sk_": {
+      "prefix": "SK"
+    },
+    "gr_": {
+      "prefix": "GR"
+    },
+    "sksg_": {
+      "exclude": true
+    },
+    "skottie_": {
+      "exclude": true
+    }
+  },
   "className": "SkiaApi",
   "includeDirs": [
     "."
   ],
   "headers": {
-    "include/c": [ "sk_*", "gr_*" ],
+    "include/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
     "include/xamarin": [ "sk_*" ]
   },
   "source": {
-    "src/c": [ "sk_*", "gr_*" ],
+    "src/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
     "src/xamarin": [ "sk_*" ]
   },
   "mappings": {
@@ -49,7 +66,8 @@
       "gr_backend_t": {
         "cs": "GRBackendNative",
         "members": {
-          "OPENGL_GR_BACKEND": "OpenGL"
+          "OPENGL_GR_BACKEND": "OpenGL",
+          "DIRECT3D_GR_BACKEND": "Direct3D"
         },
         "internal": true
       },
@@ -67,6 +85,14 @@
       },
       "gr_vk_backendcontext_t": {
         "cs": "GRVkBackendContextNative",
+        "internal": true
+      },
+      "gr_mtl_textureinfo_t": {
+        "cs": "GRMtlTextureInfoNative",
+        "internal": true
+      },
+      "gr_context_options_t": {
+        "cs": "GRContextOptionsNative",
         "internal": true
       },
       "sk_color4f_t": {
@@ -327,6 +353,10 @@
         "cs": "SKManagedDrawableDelegates",
         "internal": true
       },
+      "sk_managedtracememorydump_procs_t": {
+        "cs": "SKManagedTraceMemoryDumpDelegates",
+        "internal": true
+      },
       "sk_imageinfo_t": {
         "cs": "SKImageInfoNative",
         "internal": true
@@ -392,23 +422,23 @@
       },
       "sk_fontmgr_match_family": {
         "parameters": {
-          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+          "1": "IntPtr"
         }
       },
       "sk_fontmgr_match_family_style": {
         "parameters": {
-          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+          "1": "IntPtr"
         }
       },
       "sk_fontmgr_match_family_style_character": {
         "parameters": {
-          "1": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "1": "IntPtr",
           "3": "[MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[]"
         }
       },
       "sk_typeface_create_from_name": {
         "parameters": {
-          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+          "0": "IntPtr"
         }
       },
       "sk_path_parse_svg_string": {

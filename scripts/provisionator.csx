@@ -1,0 +1,1 @@
+XamarinChannel("Stable");

@@ -4,9 +4,20 @@ using Android.Content;
 using Android.Opengl;
 using Android.Util;
 
+#if HAS_UNO_WINUI
+namespace SkiaSharp.Views.Windows
+#elif HAS_UNO
+namespace SkiaSharp.Views.UWP
+#else
 namespace SkiaSharp.Views.Android
+#endif
 {
-	public class SKGLTextureView : GLTextureView
+#if HAS_UNO
+	internal
+#else
+	public
+#endif
+	partial class SKGLTextureView : GLTextureView
 	{
 		private SKGLTextureViewRenderer renderer;
 

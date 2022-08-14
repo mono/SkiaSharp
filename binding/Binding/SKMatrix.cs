@@ -217,6 +217,26 @@ namespace SkiaSharp
 			};
 		}
 
+		public static SKMatrix CreateScaleTranslation (float sx, float sy, float tx, float ty)
+		{
+			if (sx == 0 && sy == 0 && tx == 0 && ty == 0)
+				return Identity;
+
+			return new SKMatrix {
+				scaleX = sx,
+				skewX = 0,
+				transX = tx,
+
+				skewY = 0,
+				scaleY = sy,
+				transY = ty,
+
+				persp0 = 0,
+				persp1 = 0,
+				persp2 = 1,
+			};
+		}
+
 		// Make*
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -267,7 +287,7 @@ namespace SkiaSharp
 		// Set*
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
+		[Obsolete ("Use CreateScaleTranslation(float, float, float, float) instead.")]
 		public void SetScaleTranslate (float sx, float sy, float tx, float ty)
 		{
 			scaleX = sx;

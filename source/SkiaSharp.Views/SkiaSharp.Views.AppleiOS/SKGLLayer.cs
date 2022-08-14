@@ -1,4 +1,4 @@
-﻿#if !__WATCHOS__
+﻿#if !__WATCHOS__ && !__MACCATALYST__
 
 using System;
 using System.ComponentModel;
@@ -97,9 +97,9 @@ namespace SkiaSharp.Views.iOS
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
+#pragma warning disable CS0618 // Type or member is obsolete
 				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
 				OnPaintSurface(e);
-#pragma warning disable CS0618 // Type or member is obsolete
 				DrawInSurface(e.Surface, e.RenderTarget);
 				SKDelegate?.DrawInSurface(e.Surface, e.RenderTarget);
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -169,7 +169,7 @@ namespace SkiaSharp.Views.iOS
 
 		private void ResizeGLContexts()
 		{
-			// nuke old buffers
+			// delete old buffers
 			Gles.glDeleteRenderbuffers(1, ref renderBuffer);
 
 			// re-create render buffer

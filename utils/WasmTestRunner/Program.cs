@@ -14,6 +14,8 @@ namespace WasmTestRunner
 		private const string DefaultUrl = "http://localhost:5000/";
 		private const string ResultsFileName = "TestResults.xml";
 
+		public static string ChromeDriverPath { get; set; }
+
 		public static string OutputPath { get; set; } = Directory.GetCurrentDirectory();
 
 		public static int Timeout { get; set; } = 30;
@@ -30,6 +32,7 @@ namespace WasmTestRunner
 		{
 			var p = new OptionSet
 			{
+				{ "d|driver=", "the path to the ChromeDriver executable. Default is use the local version.", v => ChromeDriverPath = v },
 				{ "o|output=", "the path to the test results file. Default is the current directory.", v => OutputPath = v },
 				{ "t|timeout=", "the number of seconds to wait before timing out. Default is 30.", (int v) => Timeout = v },
 				{ "no-headless", "do not use a headless browser.", v => UseHeadless = false },
@@ -43,7 +46,7 @@ namespace WasmTestRunner
 				extra = p.Parse(args);
 
 				if (extra.Count > 1)
-					throw new OptionException();
+					throw new OptionException("To many extras provided.", "extras");
 
 				Url = extra.FirstOrDefault() ?? DefaultUrl;
 				if (string.IsNullOrEmpty(OutputPath))
@@ -53,11 +56,13 @@ namespace WasmTestRunner
 				if (!string.IsNullOrEmpty(dir))
 					Directory.CreateDirectory(dir);
 			}
-			catch (OptionException e)
+			catch (OptionException ex)
 			{
 				Console.Error.Write("wasm-test: ");
-				Console.Error.WriteLine(e.Message);
+				Console.Error.WriteLine(ex.Message);
 				Console.Error.WriteLine("Try `wasm-test --help' for more information.");
+				if (Verbose)
+					Console.Error.WriteLine(ex);
 
 				return 1;
 			}
@@ -105,7 +110,9 @@ namespace WasmTestRunner
 
 			options.AddArgument("window-size=1024x768");
 
-			using var service = ChromeDriverService.CreateDefaultService();
+			using var service = string.IsNullOrEmpty(ChromeDriverPath)
+				? ChromeDriverService.CreateDefaultService()
+				: ChromeDriverService.CreateDefaultService(ChromeDriverPath);
 			using var driver = new ChromeDriver(service, options);
 
 			driver.Url = Url;

@@ -11,7 +11,7 @@ namespace SkiaSharpSample
 	/// <summary>
 	/// Provides application-specific behavior to supplement the default Application class.
 	/// </summary>
-	sealed partial class App : Application
+	public sealed partial class App : Application
 	{
 		/// <summary>
 		/// Initializes the singleton application object.  This is the first line of authored code
@@ -140,6 +140,9 @@ namespace SkiaSharpSample
 				.AddConsole(LogLevel.Debug);
 #else
 				.AddConsole(LogLevel.Information);
+#endif
+#if !WINDOWS_UWP
+			Uno.UI.Adapter.Microsoft.Extensions.Logging.LoggingAdapter.Initialize();
 #endif
 		}
 	}

@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
-	public class Language : NativeObject
+	public unsafe class Language : NativeObject
 	{
 		private static readonly Lazy<Language> defaultLanguage =
 			new Lazy<Language> (() => new StaticLanguage (HarfBuzzApi.hb_language_get_default ()));
@@ -25,7 +25,7 @@ namespace HarfBuzzSharp
 			: base (IntPtr.Zero)
 		{
 			Handle = HarfBuzzApi.hb_language_from_string (name, -1);
-			Name = Marshal.PtrToStringAnsi (HarfBuzzApi.hb_language_to_string (Handle));
+			Name = Marshal.PtrToStringAnsi ((IntPtr)HarfBuzzApi.hb_language_to_string (Handle));
 		}
 
 		public string Name { get; }

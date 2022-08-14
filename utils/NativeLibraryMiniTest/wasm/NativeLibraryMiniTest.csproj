@@ -10,13 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.4.0-dev.12" />
-    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="1.4.0-dev.12" />
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="2.1.0" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="2.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\source\*.cs" />
-    <Content Include="..\..\..\output\native\wasm\*.a" />
+    <Content Include="..\..\..\output\native\wasm\libSkiaSharp.a\*\*.a" Visible="false" />
+    <Content Include="..\..\..\output\native\wasm\libHarfBuzzSharp.a\*\*.a" Visible="false" />
   </ItemGroup>
 
   <Target Name="CleanThings" BeforeTargets="BuildDist">

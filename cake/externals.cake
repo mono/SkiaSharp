@@ -12,6 +12,7 @@ foreach (var cake in GetFiles("native/*/build.cake"))
 
     var task = Task($"externals-{native}")
         .WithCriteria(should)
+        .WithCriteria(!SKIP_BUILD)
         .Does(() => RunCake(localCake, "Default"));
 
     externalsTask.IsDependentOn(task);
@@ -20,24 +21,23 @@ foreach (var cake in GetFiles("native/*/build.cake"))
 Task("externals-osx")
     .IsDependentOn("externals-macos");
 
+Task("externals-nano")
+    .IsDependentOn("externals-nanoserver");
+
+Task("externals-catalyst")
+    .IsDependentOn("externals-maccatalyst");
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS DOWNLOAD - download any externals that are needed
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task("externals-download")
-    .IsDependentOn("determine-last-successful-build")
-    .Does(() =>
+    .Does(async () =>
 {
-    var artifactName = "native";
-    var artifactFilename = $"{artifactName}.zip";
-    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, artifactName);
+    EnsureDirectoryExists ("./output");
+    CleanDirectories ("./output");
 
-    var outputPath = "./output";
-    EnsureDirectoryExists(outputPath);
-    CleanDirectories(outputPath);
-
-    DownloadFile(url, $"{outputPath}/{artifactFilename}");
-    Unzip($"{outputPath}/{artifactFilename}", outputPath);
+    await DownloadPackageAsync("_nativeassets", "./output/native");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,11 +73,17 @@ bool ShouldBuildExternal(string platform)
 
     switch (platform) {
         case "mac":
-        case "macos":
-            platform = "osx";
+        case "osx":
+            platform = "macos";
+            break;
+        case "catalyst":
+            platform = "maccatalyst";
             break;
         case "win":
             platform = "windows";
+            break;
+        case "nano":
+            platform = "nanoserver";
             break;
     }
 

@@ -42,15 +42,34 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Essentials" Version="1.5.1" />
-    <PackageReference Include="Uno.UI" Version="2.4.4" />
-    <PackageReference Include="Uno.UI.RemoteControl" Version="2.4.4" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI" Version="4.0.8" />
+    <PackageReference Include="Uno.UI.RemoteControl" Version="4.0.8" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI.Adapter.Microsoft.Extensions.Logging" Version="4.0.8" />
+    <PackageReference Include="Uno.Core.Extensions.Logging.Singleton" Version="4.0.1" />
+    <PackageReference Include="Uno.Core.Extensions.Logging" Version="4.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.OSX\SkiaSharp.OSX.csproj">
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.Classic\HarfBuzzSharp.Classic.csproj">
+      <Project>{bc6753cf-0be7-4a2b-a793-7ef715cd3799}</Project>
+      <Name>HarfBuzzSharp.Classic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Classic\SkiaSharp.Classic.csproj">
       <Project>{816e7ec5-91af-4bce-acb7-52725ee475b8}</Project>
-      <Name>SkiaSharp.OSX</Name>
+      <Name>SkiaSharp.Classic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.SceneGraph.Classic\SkiaSharp.SceneGraph.Classic.csproj">
+      <Project>{74a027d9-90f4-487e-afc5-6aa96f3406a9}</Project>
+      <Name>SkiaSharp.SceneGraph.Classic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Skottie.Classic\SkiaSharp.Skottie.Classic.csproj">
+      <Project>{63f51f9f-e67d-47e3-9861-99a91927c166}</Project>
+      <Name>SkiaSharp.Skottie.Classic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj">
+      <Project>{731bccc9-4e61-4410-aaf2-897d7e1e88ad}</Project>
+      <Name>SkiaSharp.HarfBuzz</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.Mac\SkiaSharp.Views.Uno.Mac.csproj">
       <Project>{052ce6f4-abc1-4419-902f-999250d2ec83}</Project>
@@ -79,6 +98,7 @@
   <Import Project="..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" Condition="Exists('..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\xamarinmac2.0\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\xamarinmac2.0\SkiaSharp.targets')" />
+  <Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\xamarinmac2.0\HarfBuzzSharp.targets" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\xamarinmac2.0\HarfBuzzSharp.targets')" />
   <Target Name="VS16Mac_RemoveSystemMemory" BeforeTargets="ResolveAssemblyReferences">
     <!--
         VS4Mac seems to process System.Memory differently, and removes

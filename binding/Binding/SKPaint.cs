@@ -14,6 +14,7 @@ namespace SkiaSharp
 	public unsafe class SKPaint : SKObject, ISKSkipObjectRegistration
 	{
 		private SKFont font;
+		private bool lcdRenderText;
 
 		internal SKPaint (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -38,6 +39,8 @@ namespace SkiaSharp
 
 			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
+
+			LcdRenderText = font.Edging == SKFontEdging.SubpixelAntialias;
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -55,7 +58,10 @@ namespace SkiaSharp
 
 		public bool IsAntialias {
 			get => SkiaApi.sk_paint_is_antialias (Handle);
-			set => SkiaApi.sk_paint_set_antialias (Handle, value);
+			set {
+				SkiaApi.sk_paint_set_antialias (Handle, value);
+				UpdateFontEdging (value);
+			}
 		}
 
 		public bool IsDither {
@@ -81,8 +87,11 @@ namespace SkiaSharp
 		}
 
 		public bool LcdRenderText {
-			get => GetFont ().Edging == SKFontEdging.SubpixelAntialias;
-			set => GetFont ().Edging = value ? SKFontEdging.SubpixelAntialias : SKFontEdging.Antialias;
+			get => lcdRenderText;
+			set {
+				lcdRenderText = value;
+				UpdateFontEdging (IsAntialias);
+			}
 		}
 
 		public bool IsEmbeddedBitmapText {
@@ -700,6 +709,17 @@ namespace SkiaSharp
 
 		internal SKFont GetFont () =>
 			font ??= OwnedBy (SKFont.GetObject (SkiaApi.sk_compatpaint_get_font (Handle), false), this);
+
+		private void UpdateFontEdging (bool antialias)
+		{
+			var edging = SKFontEdging.Alias;
+			if (antialias) {
+				edging = lcdRenderText
+					? SKFontEdging.SubpixelAntialias
+					: SKFontEdging.Antialias;
+			}
+			GetFont ().Edging = edging;
+		}
 
 		//
 

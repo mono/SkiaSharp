@@ -59,7 +59,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void ToRasterImageFalseReturnsNonLazy()
+		public void ToRasterImageTrueFalseReturnsNonLazy()
 		{
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
 			using var image = SKImage.FromEncodedData(data);
@@ -72,6 +72,22 @@ namespace SkiaSharp.Tests
 			Assert.False(nonLazy.IsLazyGenerated);
 			Assert.NotNull(nonLazy.PeekPixels());
 			Assert.Equal(nonLazy, nonLazy.ToRasterImage());
+		}
+
+		[SkippableFact]
+		public void ToRasterImageTrueTrueReturnsNonLazy()
+		{
+			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			using var image = SKImage.FromEncodedData(data);
+
+			Assert.True(image.IsLazyGenerated);
+			Assert.Null(image.PeekPixels());
+
+			using var nonLazy = image.ToRasterImage(true);
+			Assert.NotEqual(image, nonLazy);
+			Assert.False(nonLazy.IsLazyGenerated);
+			Assert.NotNull(nonLazy.PeekPixels());
+			Assert.Equal(nonLazy, nonLazy.ToRasterImage(true));
 		}
 
 		[SkippableFact]
@@ -819,6 +835,46 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableTheory]
+		[InlineData(0f, 0f, 0f, 0f)]
+		[InlineData(0f, 0f, 1f, 1f)]
+		[InlineData(0.5f, 0.5f, 1f, 1f)]
+		public void SubsetEncodesSubset(float xRatio, float yRatio, float wRatio, float hRatio)
+		{
+			var path = Path.Combine(PathToImages, "baboon.jpg");
+			using var image = SKImage.FromEncodedData(path);
+			var width = image.Width;
+			var height = image.Height;
+
+			var rect = new SKRectI(0, 0, width, height);
+			var subset = image;
+			if (xRatio != 0 || yRatio != 0 || wRatio != 0 || hRatio != 0)
+			{
+				var floatingRect = new SKRect(width * xRatio, height * yRatio, width * wRatio, height * hRatio);
+				rect = SKRectI.Floor(floatingRect);
+				subset = image.Subset(rect);
+			}
+
+			using var encoded = subset.Encode();
+			using var img2 = SKImage.FromEncodedData(encoded);
+
+			Assert.Equal(rect.Width, img2.Width);
+			Assert.Equal(rect.Height, img2.Height);
+
+			var subsetPixels = GetPixels(subset);
+			var img2Pixels = GetPixels(img2);
+
+			Assert.Equal(subsetPixels, img2Pixels);
+
+			static SKColor[] GetPixels(SKImage image)
+			{
+				using var bmp = new SKBitmap(image.Width, image.Height);
+				using var cnv = new SKCanvas(bmp);
+				cnv.DrawImage(image, 0, 0);
+				return bmp.Pixels;
+			}
+		}
+
 		[Obsolete]
 		[SkippableFact]
 		public void EncodeWithSimpleSerializer()
@@ -885,6 +941,20 @@ namespace SkiaSharp.Tests
 
 				return false;
 			}
+		}
+
+		[SkippableTheory]
+		[InlineData("osm-liberty.png", 30, 240, 0xFF725A50)]
+		[InlineData("testimage.png", 1040, 340, 0xFF0059FF)]
+		public void CanDecodePotentiallyCorruptPngFiles(string filename, int x, int y, uint color)
+		{
+			var path = Path.Combine(PathToImages, filename);
+
+			using var image = SKImage.FromEncodedData(path);
+			using var actualImage = image.ToRasterImage(true);
+			using var pixmap = actualImage.PeekPixels();
+
+			Assert.Equal((SKColor)color, pixmap.GetPixelColor(x, y));
 		}
 	}
 }

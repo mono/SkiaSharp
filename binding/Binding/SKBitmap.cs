@@ -459,9 +459,10 @@ namespace SkiaSharp
 			get { return SkiaApi.sk_bitmap_is_immutable (Handle); }
 		}
 
+		[Obsolete]
 		public bool IsVolatile {
-			get { return SkiaApi.sk_bitmap_is_volatile (Handle); }
-			set { SkiaApi.sk_bitmap_set_volatile (Handle, value); }
+			get => false;
+			set { }
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -785,6 +786,9 @@ namespace SkiaSharp
 
 		public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality)
 		{
+			if (info.IsEmpty)
+				return null;
+
 			var dst = new SKBitmap (info);
 			if (ScalePixels (dst, quality)) {
 				return dst;

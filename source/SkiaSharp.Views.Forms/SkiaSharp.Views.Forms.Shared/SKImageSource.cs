@@ -1,7 +1,17 @@
 ﻿using System.Threading.Tasks;
-using Xamarin.Forms;
 
+#if __MAUI__
+using Microsoft.Maui;
+using Microsoft.Maui.Controls;
+#else
+using Xamarin.Forms;
+#endif
+
+#if __MAUI__
+namespace SkiaSharp.Views.Maui.Controls
+#else
 namespace SkiaSharp.Views.Forms
+#endif
 {
 	public sealed partial class SKImageImageSource : ImageSource
 	{
@@ -142,6 +152,8 @@ namespace SkiaSharp.Views.Forms
 		protected override void OnPropertyChanged(string propertyName = null)
 		{
 			if (propertyName == PictureProperty.PropertyName)
+				OnSourceChanged();
+			else if (propertyName == DimensionsProperty.PropertyName)
 				OnSourceChanged();
 			base.OnPropertyChanged(propertyName);
 		}

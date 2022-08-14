@@ -1,7 +1,5 @@
-﻿using System;
-using Android.Content;
+﻿using Android.Content;
 using Android.Graphics;
-using Android.Runtime;
 using Android.Util;
 using Android.Views;
 
@@ -9,7 +7,7 @@ namespace SkiaSharp.Views.Android
 {
 	public class SKSurfaceView : SurfaceView, ISurfaceHolderCallback
 	{
-		private Bitmap bitmap;
+		private SurfaceFactory surfaceFactory;
 
 		public SKSurfaceView(Context context)
 			: base(context)
@@ -31,26 +29,28 @@ namespace SkiaSharp.Views.Android
 
 		private void Initialize()
 		{
+			surfaceFactory = new SurfaceFactory();
 			Holder.AddCallback(this);
 		}
 
-		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.Width, bitmap.Height);
+		public SKSize CanvasSize => surfaceFactory.Info.Size;
 
 		// ISurfaceHolderCallback
 
-		public virtual void SurfaceChanged(ISurfaceHolder holder, [GeneratedEnum] Format format, int width, int height)
+		public virtual void SurfaceChanged(ISurfaceHolder holder, Format format, int width, int height)
 		{
-			CreateBitmap(width, height);
+			surfaceFactory.UpdateCanvasSize(width, height);
 		}
 
 		public virtual void SurfaceCreated(ISurfaceHolder holder)
 		{
-			CreateBitmap(holder.SurfaceFrame.Width(), holder.SurfaceFrame.Height());
+			var surfaceFrame = Holder.SurfaceFrame.ToSKRect();
+			surfaceFactory.UpdateCanvasSize(surfaceFrame.Width, surfaceFrame.Height);
 		}
 
 		public virtual void SurfaceDestroyed(ISurfaceHolder holder)
 		{
-			FreeBitmap();
+			surfaceFactory.Dispose();
 		}
 
 		// lock / unlock the SKSurface
@@ -58,7 +58,11 @@ namespace SkiaSharp.Views.Android
 		public SKLockedSurface LockSurface()
 		{
 			var canvas = Holder.LockCanvas();
-			return new SKLockedSurface(canvas, bitmap);
+			if (canvas == null)
+				return null;
+
+			surfaceFactory.UpdateCanvasSize(canvas.Width, canvas.Height);
+			return new SKLockedSurface(canvas, surfaceFactory);
 		}
 
 		public void UnlockSurfaceAndPost(SKLockedSurface surface)
@@ -71,35 +75,9 @@ namespace SkiaSharp.Views.Android
 
 		protected override void Dispose(bool disposing)
 		{
-			if (disposing)
-			{
-				FreeBitmap();
-			}
+			surfaceFactory.Dispose();
+
 			base.Dispose(disposing);
-		}
-
-		private void CreateBitmap(int width, int height)
-		{
-			// create the bitmap data
-			if (bitmap == null || bitmap.Handle == IntPtr.Zero || bitmap.Width != width || bitmap.Height != height)
-			{
-				FreeBitmap();
-				bitmap = Bitmap.CreateBitmap(width, height, Bitmap.Config.Argb8888);
-			}
-		}
-
-		private void FreeBitmap()
-		{
-			if (bitmap != null)
-			{
-				// free and recycle the bitmap data
-				if (bitmap.Handle != IntPtr.Zero && !bitmap.IsRecycled)
-				{
-					bitmap.Recycle();
-				}
-				bitmap.Dispose();
-				bitmap = null;
-			}
 		}
 	}
 }

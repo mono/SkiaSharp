@@ -96,9 +96,9 @@ namespace SkiaSharp.Views.Mac
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
+#pragma warning disable CS0618 // Type or member is obsolete
 				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
 				OnPaintSurface(e);
-#pragma warning disable CS0618 // Type or member is obsolete
 				DrawInSurface(e.Surface, e.RenderTarget);
 				SKDelegate?.DrawInSurface(e.Surface, e.RenderTarget);
 #pragma warning restore CS0618 // Type or member is obsolete

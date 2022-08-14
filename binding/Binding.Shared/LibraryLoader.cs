@@ -3,6 +3,12 @@ using System.IO;
 using System.Runtime.InteropServices;
 
 #if HARFBUZZ
+using HarfBuzzSharp.Internals;
+#else
+using SkiaSharp.Internals;
+#endif
+
+#if HARFBUZZ
 namespace HarfBuzzSharp
 #else
 namespace SkiaSharp
@@ -47,31 +53,63 @@ namespace SkiaSharp
 				var path = typeof (T).Assembly.Location;
 				if (!string.IsNullOrEmpty (path)) {
 					path = Path.GetDirectoryName (path);
-					// 1.1 in platform sub dir
-					var lib = Path.Combine (path, arch, libWithExt);
-					if (File.Exists (lib))
-						return lib;
-					// 1.2 in root
-					lib = Path.Combine (path, libWithExt);
-					if (File.Exists (lib))
-						return lib;
+					if (CheckLibraryPath (path, arch, libWithExt, out var localLib))
+						return localLib;
 				}
 
 				// 2. try current directory
-				path = Directory.GetCurrentDirectory ();
-				if (!string.IsNullOrEmpty (path)) {
-					// 2.1 in platform sub dir
-					var lib = Path.Combine (path, arch, libWithExt);
-					if (File.Exists (lib))
-						return lib;
-					// 2.2 in root
-					lib = Path.Combine (lib, libWithExt);
-					if (File.Exists (lib))
-						return lib;
+				if (CheckLibraryPath (Directory.GetCurrentDirectory (), arch, libWithExt, out var lib))
+					return lib;
+
+				// 3. try app domain
+				try {
+					if (AppDomain.CurrentDomain is AppDomain domain) {
+						// 3.1 RelativeSearchPath
+						if (CheckLibraryPath (domain.RelativeSearchPath, arch, libWithExt, out lib))
+							return lib;
+
+						// 3.2 BaseDirectory
+						if (CheckLibraryPath (domain.BaseDirectory, arch, libWithExt, out lib))
+							return lib;
+					}
+				} catch {
+					// no-op as there may not be any domain or path
 				}
 
-				// 3. use PATH or default loading mechanism
+				// 4. use PATH or default loading mechanism
 				return libWithExt;
+			}
+
+			static bool CheckLibraryPath(string root, string arch, string libWithExt, out string foundPath)
+			{
+				if (!string.IsNullOrEmpty (root)) {
+					// a. in specific platform sub dir
+					if (!string.IsNullOrEmpty (PlatformConfiguration.LinuxFlavor)) {
+						var muslLib = Path.Combine (root, PlatformConfiguration.LinuxFlavor + "-" + arch, libWithExt);
+						if (File.Exists (muslLib)) {
+							foundPath = muslLib;
+							return true;
+						}
+					}
+
+					// b. in generic platform sub dir
+					var searchLib = Path.Combine (root, arch, libWithExt);
+					if (File.Exists (searchLib)) {
+						foundPath = searchLib;
+						return true;
+					}
+
+					// c. in root
+					searchLib = Path.Combine (root, libWithExt);
+					if (File.Exists (searchLib)) {
+						foundPath = searchLib;
+						return true;
+					}
+				}
+
+				// d. nothing
+				foundPath = null;
+				return false;
 			}
 		}
 
@@ -160,21 +198,53 @@ namespace SkiaSharp
 		private static class Linux
 		{
 			private const string SystemLibrary = "libdl.so";
+			private const string SystemLibrary2 = "libdl.so.2"; // newer Linux distros use this
 
 			private const int RTLD_LAZY = 1;
 			private const int RTLD_NOW = 2;
 
-			public static IntPtr dlopen (string path, bool lazy = true) =>
-				dlopen (path, lazy ? RTLD_LAZY : RTLD_NOW);
+			private static bool UseSystemLibrary2 = true;
 
-			[DllImport (SystemLibrary)]
-			public static extern IntPtr dlopen (string path, int mode);
+			public static IntPtr dlopen (string path, bool lazy = true)
+			{
+				try {
+					return dlopen2 (path, lazy ? RTLD_LAZY : RTLD_NOW);
+				} catch (DllNotFoundException) {
+					UseSystemLibrary2 = false;
+					return dlopen1 (path, lazy ? RTLD_LAZY : RTLD_NOW);
+				}
+			}
 
-			[DllImport (SystemLibrary)]
-			public static extern IntPtr dlsym (IntPtr handle, string symbol);
+			public static IntPtr dlsym (IntPtr handle, string symbol)
+			{
+				return UseSystemLibrary2 ? dlsym2 (handle, symbol) : dlsym1 (handle, symbol);
+			}
 
-			[DllImport (SystemLibrary)]
-			public static extern void dlclose (IntPtr handle);
+			public static void dlclose (IntPtr handle)
+			{
+				if (UseSystemLibrary2)
+					dlclose2 (handle);
+				else
+					dlclose1 (handle);
+			}
+
+			[DllImport (SystemLibrary, EntryPoint="dlopen")]
+			private static extern IntPtr dlopen1 (string path, int mode);
+
+			[DllImport (SystemLibrary, EntryPoint="dlsym")]
+			private static extern IntPtr dlsym1 (IntPtr handle, string symbol);
+
+			[DllImport (SystemLibrary, EntryPoint="dlclose")]
+			private static extern void dlclose1 (IntPtr handle);
+
+			[DllImport (SystemLibrary2, EntryPoint="dlopen")]
+			private static extern IntPtr dlopen2 (string path, int mode);
+
+			[DllImport (SystemLibrary2, EntryPoint="dlsym")]
+			private static extern IntPtr dlsym2 (IntPtr handle, string symbol);
+
+			[DllImport (SystemLibrary2, EntryPoint="dlclose")]
+			private static extern void dlclose2 (IntPtr handle);
 		}
 
 		private static class Win32

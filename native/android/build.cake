@@ -10,7 +10,7 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower ()
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
-    .WithCriteria(IsRunningOnMac() || IsRunningOnWindows())
+    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows())
     .Does(() =>
 {
     Build("x86", "x86");
@@ -35,6 +35,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
+            $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
             $"ndk='{ANDROID_NDK_HOME}' " +
             $"ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 16)}");
@@ -46,7 +47,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMac() || IsRunningOnWindows())
+    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows())
     .Does(() =>
 {
     var cmd = IsRunningOnWindows() ? ".cmd" : "";
