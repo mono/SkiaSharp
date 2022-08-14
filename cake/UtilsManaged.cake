@@ -220,13 +220,19 @@ string[] GetDotNetPacksSearchPaths()
     var dotnetRoot = latestSdk.Combine("..");
 
     foreach(var pack in GetDirectories(dotnetRoot.Combine("packs").FullPath + "/*.Ref.*")) {
-        var latestPath = GetDirectories(pack.FullPath + "/*").Last();
-        refs.AddRange(GetDirectories(latestPath.FullPath + "/ref/net*").Select(d => d.FullPath));
+        var paths = GetDirectories(pack.FullPath + "/*");
+        foreach (var path in paths) {
+            var r = GetDirectories(path.FullPath + "/ref/net*");
+            refs.AddRange(r.Select(d => d.FullPath));
+        }
     }
 
     foreach(var pack in GetDirectories(dotnetRoot.Combine("packs").FullPath + "/*.Ref")) {
-        var latestPath = GetDirectories(pack.FullPath + "/*").Last();
-        refs.AddRange(GetDirectories(latestPath.FullPath + "/ref/net*").Select(d => d.FullPath));
+        var paths = GetDirectories(pack.FullPath + "/*");
+        foreach (var path in paths) {
+            var r = GetDirectories(path.FullPath + "/ref/net*");
+            refs.AddRange(r.Select(d => d.FullPath));
+        }
     }
 
     return refs.ToArray();
