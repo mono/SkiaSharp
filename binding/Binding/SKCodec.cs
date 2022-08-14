@@ -41,12 +41,7 @@ namespace SkiaSharp
 		public SKEncodedImageFormat EncodedFormat =>
 			SkiaApi.sk_codec_get_encoded_format (Handle);
 
-		public SKSizeI Dimensions
-		{
-			get {
-				return Info.Size;
-			}
-		}
+		public SKSizeI EncodedDimensions => Info.Size;
 
 		public SKSizeI GetScaledDimensions (float desiredScale)
 		{
@@ -283,29 +278,27 @@ namespace SkiaSharp
 		public int GetOutputScanline (int inputScanline) =>
 			SkiaApi.sk_codec_output_scanline (Handle, inputScanline);
 
-		// create (streams)
+		// create (filename)
 
 		public static SKCodec Create (string filename) =>
 			Create (filename, out var result);
 
-		public static SKCodec Create(string filename, SKPngChunkReader chunkReader) =>
-			Create(filename, out var result, chunkReader, SKCodecSelectionPolicy.PreferStillImage);
+		public static SKCodec Create (string filename, SKPngChunkReader chunkReader) =>
+			Create (filename, out var result, chunkReader, SKCodecSelectionPolicy.PreferStillImage);
 
-		public static SKCodec Create(string filename, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
-			Create(filename, out var result, null, SKCodecSelectionPolicy);
+		public static SKCodec Create (string filename, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
+			Create (filename, out var result, null, SKCodecSelectionPolicy);
 
-		public static SKCodec Create(string filename, SKPngChunkReader chunkReader, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
-			Create(filename, out var result, chunkReader, SKCodecSelectionPolicy);
+		public static SKCodec Create (string filename, SKPngChunkReader chunkReader, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
+			Create (filename, out var result, chunkReader, SKCodecSelectionPolicy);
 
+		public static SKCodec Create (string filename, out SKCodecResult result) =>
+			Create (filename, out result, null, SKCodecSelectionPolicy.PreferStillImage);
 
-
-		public static SKCodec Create(string filename, out SKCodecResult result) =>
-			Create(filename, out result, null, SKCodecSelectionPolicy.PreferStillImage);
-
-		public static SKCodec Create(string filename, out SKCodecResult result, SKPngChunkReader chunkReader) =>
+		public static SKCodec Create (string filename, out SKCodecResult result, SKPngChunkReader chunkReader) =>
 			Create (filename, out result, chunkReader, SKCodecSelectionPolicy.PreferStillImage);
 
-		public static SKCodec Create(string filename, out SKCodecResult result, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
+		public static SKCodec Create (string filename, out SKCodecResult result, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
 			Create (filename, out result, null, SKCodecSelectionPolicy);
 
 		public static SKCodec Create (string filename, out SKCodecResult result, SKPngChunkReader chunkReader, SKCodecSelectionPolicy SKCodecSelectionPolicy)
@@ -319,88 +312,78 @@ namespace SkiaSharp
 			return Create (stream, out result, chunkReader, SKCodecSelectionPolicy);
 		}
 
-
+		// create (streams)
 
 		public static SKCodec Create (Stream stream) =>
 			Create (stream, out var result);
 
-		public static SKCodec Create(Stream stream, SKPngChunkReader chunkReader) =>
-			Create(stream, out var result, chunkReader);
+		public static SKCodec Create (Stream stream, SKPngChunkReader chunkReader) =>
+			Create (stream, out var result, chunkReader);
 
-		public static SKCodec Create(Stream stream, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
-			Create(stream, out var result, SKCodecSelectionPolicy);
+		public static SKCodec Create (Stream stream, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
+			Create (stream, out var result, SKCodecSelectionPolicy);
 
-		public static SKCodec Create(Stream stream, SKPngChunkReader chunkReader, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
-			Create(stream, out var result, chunkReader, SKCodecSelectionPolicy);
-
-
+		public static SKCodec Create (Stream stream, SKPngChunkReader chunkReader, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
+			Create (stream, out var result, chunkReader, SKCodecSelectionPolicy);
 
 		public static SKCodec Create (Stream stream, out SKCodecResult result) =>
 			Create (WrapManagedStream (stream), out result);
 
-		public static SKCodec Create(Stream stream, out SKCodecResult result, SKPngChunkReader chunkReader) =>
-			Create(WrapManagedStream(stream), out result, chunkReader);
+		public static SKCodec Create (Stream stream, out SKCodecResult result, SKPngChunkReader chunkReader) =>
+			Create (WrapManagedStream (stream), out result, chunkReader);
 
-		public static SKCodec Create(Stream stream, out SKCodecResult result, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
-			Create(WrapManagedStream(stream), out result, SKCodecSelectionPolicy);
+		public static SKCodec Create (Stream stream, out SKCodecResult result, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
+			Create (WrapManagedStream (stream), out result, SKCodecSelectionPolicy);
 
-		public static SKCodec Create(Stream stream, out SKCodecResult result, SKPngChunkReader chunkReader, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
-			Create(WrapManagedStream(stream), out result, chunkReader, SKCodecSelectionPolicy);
-
-
+		public static SKCodec Create (Stream stream, out SKCodecResult result, SKPngChunkReader chunkReader, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
+			Create (WrapManagedStream (stream), out result, chunkReader, SKCodecSelectionPolicy);
 
 		public static SKCodec Create (SKStream stream) =>
 			Create (stream, out var result);
 
-		public static SKCodec Create(SKStream stream, SKPngChunkReader chunkReader) =>
-			Create(stream, out var result, chunkReader);
+		public static SKCodec Create (SKStream stream, SKPngChunkReader chunkReader) =>
+			Create (stream, out var result, chunkReader);
 
-		public static SKCodec Create(SKStream stream, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
-			Create(stream, out var result, SKCodecSelectionPolicy);
+		public static SKCodec Create (SKStream stream, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
+			Create (stream, out var result, SKCodecSelectionPolicy);
 
-		public static SKCodec Create(SKStream stream, SKPngChunkReader chunkReader, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
-			Create(stream, out var result, chunkReader, SKCodecSelectionPolicy);
+		public static SKCodec Create (SKStream stream, SKPngChunkReader chunkReader, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
+			Create (stream, out var result, chunkReader, SKCodecSelectionPolicy);
 
+		public static SKCodec Create (SKStream stream, out SKCodecResult result) =>
+			Create (stream, out result, null);
 
+		public static SKCodec Create (SKStream stream, out SKCodecResult result, SKPngChunkReader chunkReader) =>
+			Create (stream, out result, chunkReader, SKCodecSelectionPolicy.PreferStillImage);
 
-		public static SKCodec Create(SKStream stream, out SKCodecResult result) =>
-			Create(stream, out result, null);
+		public static SKCodec Create (SKStream stream, out SKCodecResult result, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
+			Create (stream, out result, null, SKCodecSelectionPolicy);
 
-		public static SKCodec Create(SKStream stream, out SKCodecResult result, SKPngChunkReader chunkReader) =>
-			Create(stream, out result, chunkReader, SKCodecSelectionPolicy.PreferStillImage);
-
-		public static SKCodec Create(SKStream stream, out SKCodecResult result, SKCodecSelectionPolicy SKCodecSelectionPolicy) =>
-			Create(stream, out result, null, SKCodecSelectionPolicy);
-
-		public static SKCodec Create(SKStream stream, out SKCodecResult result, SKPngChunkReader chunkReader, SKCodecSelectionPolicy selectionPolicy)
+		public static SKCodec Create (SKStream stream, out SKCodecResult result, SKPngChunkReader chunkReader, SKCodecSelectionPolicy selectionPolicy)
 		{
 			if (stream == null)
-				throw new ArgumentNullException(nameof(stream));
+				throw new ArgumentNullException (nameof (stream));
 			if (stream is SKFileStream filestream && !filestream.IsValid)
-				throw new ArgumentException("File stream was not valid.", nameof(stream));
+				throw new ArgumentException ("File stream was not valid.", nameof (stream));
 
-			fixed (SKCodecResult* r = &result)
-			{
-				var codec = GetObject(SkiaApi.sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy(stream.Handle, r, chunkReader == null ? IntPtr.Zero : chunkReader.Handle, selectionPolicy));
-				stream.RevokeOwnership(codec);
+			fixed (SKCodecResult* r = &result) {
+				var codec = GetObject (SkiaApi.sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy (stream.Handle, r, chunkReader?.Handle ?? IntPtr.Zero, selectionPolicy));
+				stream.RevokeOwnership (codec);
 				return codec;
 			}
 		}
 
-
 		// create (data)
 
-		public static SKCodec Create (SKData data)
-		{
-			return Create(data, null);
-		}
+		public static SKCodec Create (SKData data) =>
+			Create (data, null);
 
-		public static SKCodec Create(SKData data, SKPngChunkReader chunkReader)
+		public static SKCodec Create (SKData data, SKPngChunkReader chunkReader)
 		{
 			if (data == null)
-				throw new ArgumentNullException(nameof(data));
+				throw new ArgumentNullException (nameof (data));
 
-			return GetObject(SkiaApi.sk_codec_new_from_data_with_pngchunkreader(data.Handle, chunkReader == null ? IntPtr.Zero : chunkReader.Handle));
+			return GetObject (SkiaApi.sk_codec_new_from_data_with_pngchunkreader (data.Handle, chunkReader?.Handle ?? IntPtr.Zero));
 		}
 
 		// utils

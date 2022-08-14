@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -12,32 +10,30 @@ namespace SkiaSharp
 		private readonly IntPtr userData;
 		private int fromNative;
 
-		static SKPngChunkReader()
+		static SKPngChunkReader ()
 		{
-			delegates = new SKManagedPngChunkReaderDelegates
-			{
+			delegates = new SKManagedPngChunkReaderDelegates {
 				fReadChunk = ReadChunkInternal,
 				fDestroy = DestroyInternal,
 			};
 
-			SkiaApi.sk_managedpngchunkreader_set_procs(delegates);
+			SkiaApi.sk_managedpngchunkreader_set_procs (delegates);
 		}
 
-		protected SKPngChunkReader()
-			: base(IntPtr.Zero, true)
+		protected SKPngChunkReader ()
+			: base (IntPtr.Zero, true)
 		{
-			userData = DelegateProxies.CreateUserData(this, true);
-			Handle = SkiaApi.sk_managedpngchunkreader_new((void*)userData);
+			userData = DelegateProxies.CreateUserData (this, true);
+			Handle = SkiaApi.sk_managedpngchunkreader_new ((void*)userData);
 
 			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException("Unable to create a new SKManagedAllocator instance.");
+				throw new InvalidOperationException ("Unable to create a new SKManagedAllocator instance.");
 		}
 
-		protected override void DisposeNative()
+		protected override void DisposeNative ()
 		{
-			if (Interlocked.CompareExchange(ref fromNative, 0, 0) == 0)
-			{
-				SkiaApi.sk_managedpngchunkreader_delete(Handle);
+			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0) {
+				SkiaApi.sk_managedpngchunkreader_delete (Handle);
 			}
 		}
 
@@ -45,23 +41,22 @@ namespace SkiaSharp
 
 		// impl
 
-		[MonoPInvokeCallback (typeof(SKManagedPngChunkReaderReadChunkProxyDelegate))]
-		private static bool ReadChunkInternal(IntPtr d, void* context, void* tag, void* data, IntPtr length)
+		[MonoPInvokeCallback (typeof (SKManagedPngChunkReaderReadChunkProxyDelegate))]
+		private static bool ReadChunkInternal (IntPtr d, void* context, void* tag, void* data, IntPtr length)
 		{
-			var dump = DelegateProxies.GetUserData<SKPngChunkReader>((IntPtr)context, out _);
-			return dump.ReadChunk(Marshal.PtrToStringAnsi((IntPtr)tag), (IntPtr)data, length);
+			var dump = DelegateProxies.GetUserData<SKPngChunkReader> ((IntPtr)context, out _);
+			return dump.ReadChunk (Marshal.PtrToStringAnsi ((IntPtr)tag), (IntPtr)data, length);
 		}
 
-		[MonoPInvokeCallback(typeof(SKManagedPngChunkReaderDestroyProxyDelegate))]
-		private static void DestroyInternal(IntPtr s, void* context)
+		[MonoPInvokeCallback (typeof (SKManagedPngChunkReaderDestroyProxyDelegate))]
+		private static void DestroyInternal (IntPtr s, void* context)
 		{
-			var id = DelegateProxies.GetUserData<SKPngChunkReader>((IntPtr)context, out var gch);
-			if (id != null)
-			{
-				Interlocked.Exchange(ref id.fromNative, 1);
-				id.Dispose();
+			var id = DelegateProxies.GetUserData<SKPngChunkReader> ((IntPtr)context, out var gch);
+			if (id != null) {
+				Interlocked.Exchange (ref id.fromNative, 1);
+				id.Dispose ();
 			}
-			gch.Free();
+			gch.Free ();
 		}
 	}
 }

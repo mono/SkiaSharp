@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
-using System.Threading;
 
 namespace SkiaSharp
 {
@@ -116,48 +115,39 @@ namespace SkiaSharp
 
 		// Other
 
-		public bool SetInfo(SKImageInfo info)
+		public bool SetInfo (SKImageInfo info) =>
+			SetInfo (info, 0);
+
+		public bool SetInfo (SKImageInfo info, int rowBytes)
 		{
-			// bool 	setInfo (const SkImageInfo &imageInfo, size_t rowBytes=0)
-			return SetInfo(info, 0);
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_bitmap_set_info (Handle, &cinfo, (IntPtr)rowBytes);
 		}
 
-		public bool SetInfo(SKImageInfo info, int rowBytes)
-		{
-			var cinfo = SKImageInfoNative.FromManaged(ref info);
-			return SkiaApi.sk_bitmap_set_info(Handle, &cinfo, (IntPtr)rowBytes);
-		}
-
-		public bool ComputeIsOpaque()
-		{
-			return SkiaApi.sk_bitmap_compute_is_opaque(Handle);
-		}
+		public bool ComputeIsOpaque () =>
+			SkiaApi.sk_bitmap_compute_is_opaque (Handle);
 
 		// AllocPixels
 
-		public void AllocPixels(SKImageInfo info)
-		{
-			AllocPixels(info, info.RowBytes);
-		}
+		public void AllocPixels (SKImageInfo info) =>
+			AllocPixels (info, info.RowBytes);
 
-		public void AllocPixels(SKImageInfo info, int rowBytes)
+		public void AllocPixels (SKImageInfo info, int rowBytes)
 		{
-			if (!TryAllocPixels(info, rowBytes))
-			{
+			if (!TryAllocPixels (info, rowBytes)) {
 				SKImageInfo i = Info;
-				throw new OutOfMemoryException("SkBitmap::tryAllocPixels failed "
+				throw new OutOfMemoryException ("SkBitmap::tryAllocPixels failed "
 					+ "ColorType:" + i.ColorType + "AlphaType:" + i.AlphaType +
 					"[w:" + i.Width + " h:" + i.Height + "] rb:" + RowBytes
 				);
 			}
 		}
 
-		public void AllocPixels(SKImageInfo info, SKBitmapAllocFlags flags)
+		public void AllocPixels (SKImageInfo info, SKBitmapAllocFlags flags)
 		{
-			if (!TryAllocPixels(info, flags))
-			{
+			if (!TryAllocPixels (info, flags)) {
 				SKImageInfo i = Info;
-				throw new OutOfMemoryException("SkBitmap::tryAllocPixels failed "
+				throw new OutOfMemoryException ("SkBitmap::tryAllocPixels failed "
 					+ "ColorType:" + i.ColorType + "AlphaType:" + i.AlphaType +
 					"[w:" + i.Width + " h:" + i.Height + "] rb:" + RowBytes
 				);
@@ -366,8 +356,6 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKImage AsImage () => SKImage.FromBitmap (this);
-
 		// properties
 
 		public bool ReadyToDraw => SkiaApi.sk_bitmap_ready_to_draw (Handle);
@@ -412,9 +400,8 @@ namespace SkiaSharp
 			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
 		}
 
-		public uint GenerationId {
-			get { return (uint)SkiaApi.sk_bitmap_get_generation_id(Handle); }
-		}
+		public uint GenerationId =>
+			(uint)SkiaApi.sk_bitmap_get_generation_id (Handle);
 
 		// *Pixels*
 
@@ -788,24 +775,26 @@ namespace SkiaSharp
 
 		public bool ReadPixels (SKImageInfo info, IntPtr dstPixels, int rowBytes, int x, int y)
 		{
-			if (GetPixels() == null) return false;
-			return Pixmap.ReadPixels(info, dstPixels, rowBytes, x, y);
+			if (GetPixels () == null)
+				return false;
+			return Pixmap.ReadPixels (info, dstPixels, rowBytes, x, y);
 		}
 
-		public bool ReadPixels(SKPixmap dstPixmap) => ReadPixels(dstPixmap, 0, 0);
+		public bool ReadPixels (SKPixmap dstPixmap) =>
+			ReadPixels (dstPixmap, 0, 0);
 
-		public bool ReadPixels(SKPixmap dstPixmap, int x, int y)
+		public bool ReadPixels (SKPixmap dstPixmap, int x, int y)
 		{
-			if (GetPixels() == null) return false;
-    		return Pixmap.ReadPixels(dstPixmap.Info, dstPixmap.GetPixels(), dstPixmap.RowBytes, x, y);
+			if (GetPixels () == null)
+				return false;
+			return Pixmap.ReadPixels (dstPixmap.Info, dstPixmap.GetPixels (), dstPixmap.RowBytes, x, y);
 		}
 
-		public bool WritePixels(SKPixmap pixmap) => WritePixels(pixmap, 0, 0);
+		public bool WritePixels (SKPixmap pixmap) =>
+			WritePixels (pixmap, 0, 0);
 
-		public bool WritePixels(SKPixmap dstPixmap, int x, int y)
-		{
-			return SkiaApi.sk_bitmap_write_pixels_at_location(Handle, dstPixmap.Handle, x, y);
-		}
+		public bool WritePixels (SKPixmap dstPixmap, int x, int y) =>
+			SkiaApi.sk_bitmap_write_pixels_at_location (Handle, dstPixmap.Handle, x, y);
 
 		public bool InstallPixels (SKPixmap pixmap)
 		{
@@ -925,6 +914,9 @@ namespace SkiaSharp
 			}
 			return bmp;
 		}
+
+		public SKImage ToImage () =>
+			SKImage.FromBitmap (this);
 
 		// Encode
 
