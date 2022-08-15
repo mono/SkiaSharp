@@ -4,8 +4,6 @@
 
 ### Namespace HarfBuzzSharp
 
-#### Removed Type HarfBuzzSharp.Resource
-
 ### New Namespace HarfBuzzSharp.Internals
 
 #### New Type: HarfBuzzSharp.Internals.PlatformConfiguration
