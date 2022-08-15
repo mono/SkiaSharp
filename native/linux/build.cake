@@ -108,7 +108,7 @@ Task("libHarfBuzzSharp")
             $"target_cpu='{arch}' " +
             $"visibility_hidden=false " +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[] " +
+            $"extra_cflags=[ '-DPNG_READ_UNKNOWN_CHUNKS_SUPPORTED' ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +

@@ -326,6 +326,7 @@ namespace SkiaSharp
 			fixed (SKCodecResult* r = &result) {
 				var codec = GetObject (SkiaApi.sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy (stream.Handle, r, chunkReader?.Handle ?? IntPtr.Zero, selectionPolicy));
 				stream.RevokeOwnership (codec);
+				Referenced (codec, chunkReader);
 				return codec;
 			}
 		}
@@ -340,7 +341,9 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return GetObject (SkiaApi.sk_codec_new_from_data_with_pngchunkreader (data.Handle, chunkReader?.Handle ?? IntPtr.Zero));
+			var codec = GetObject (SkiaApi.sk_codec_new_from_data_with_pngchunkreader (data.Handle, chunkReader?.Handle ?? IntPtr.Zero));
+			Referenced (codec, chunkReader);
+			return codec;
 		}
 
 		// utils

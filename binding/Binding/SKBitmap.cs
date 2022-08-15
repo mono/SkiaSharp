@@ -775,7 +775,7 @@ namespace SkiaSharp
 
 		public bool ReadPixels (SKImageInfo info, IntPtr dstPixels, int rowBytes, int x, int y)
 		{
-			if (GetPixels () == null)
+			if (GetPixels () == IntPtr.Zero)
 				return false;
 			return Pixmap.ReadPixels (info, dstPixels, rowBytes, x, y);
 		}
@@ -785,7 +785,7 @@ namespace SkiaSharp
 
 		public bool ReadPixels (SKPixmap dstPixmap, int x, int y)
 		{
-			if (GetPixels () == null)
+			if (GetPixels () == IntPtr.Zero)
 				return false;
 			return Pixmap.ReadPixels (dstPixmap.Info, dstPixmap.GetPixels (), dstPixmap.RowBytes, x, y);
 		}

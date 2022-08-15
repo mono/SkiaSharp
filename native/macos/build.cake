@@ -36,7 +36,9 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
+            $"extra_cflags=[ " +
+            $"  '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-DPNG_READ_UNKNOWN_CHUNKS_SUPPORTED', " +
+            $"  '-stdlib=libc++' ] " +
             $"extra_ldflags=[ '-stdlib=libc++' ]");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch);

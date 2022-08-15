@@ -52,6 +52,7 @@ Task("libSkiaSharp")
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
         $"  '-DSKNX_NO_SIMD', '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
+        $"  '-DPNG_READ_UNKNOWN_CHUNKS_SUPPORTED', " +
         $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
         $"] " +
         $"extra_cflags_cc=[ '-frtti' ] " +

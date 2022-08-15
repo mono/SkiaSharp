@@ -41,7 +41,8 @@ Task("libSkiaSharp")
             win_vcvars_version +
             $"extra_cflags=[  " +
             $"  '-DSKIA_C_DLL', '/MD{d}', '/EHsc', '/Z7', " +
-            $"  '-DSK_HAS_DWRITE_1_H', '-DSK_HAS_DWRITE_2_H', '-DNO_GETENV', '-D_HAS_AUTO_PTR_ETC=1' ] " +
+            $"  '-DSK_HAS_DWRITE_1_H', '-DSK_HAS_DWRITE_2_H', '-DNO_GETENV', '-D_HAS_AUTO_PTR_ETC=1', " +
+            $"  '-DPNG_READ_UNKNOWN_CHUNKS_SUPPORTED' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL' ]");
 
         var outDir = OUTPUT_PATH.Combine(dir);
