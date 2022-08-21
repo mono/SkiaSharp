@@ -27,7 +27,7 @@ namespace SkiaSharp
 			Handle = SkiaApi.sk_managedpngchunkreader_new ((void*)userData);
 
 			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKManagedAllocator instance.");
+				throw new InvalidOperationException ("Unable to create a new SKPngChunkReader instance.");
 		}
 
 		protected override void DisposeNative ()
