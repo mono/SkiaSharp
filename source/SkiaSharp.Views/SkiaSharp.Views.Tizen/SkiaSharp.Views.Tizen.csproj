@@ -1,13 +1,24 @@
-﻿<Project Sdk="Tizen.NET.Sdk/1.0.9">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>tizen40</TargetFramework>
+    <TargetFrameworks>tizen40;net6-tizen</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.Tizen</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
-    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <DefineConstants>$(DefineConstants);__TIZEN__;</DefineConstants>
+    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
   </PropertyGroup>
+
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('tizen')) == true">
+    <TargetFrameworkIdentifier>Tizen</TargetFrameworkIdentifier>
+    <DisableStandardFrameworkResolution>true</DisableStandardFrameworkResolution>
+    <DisableImplicitTizenReferences>true</DisableImplicitTizenReferences>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="$(TargetFramework.StartsWith('tizen')) == true">
+    <PackageReference Include="Tizen.NET" Version="9.0.0.*" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
   </ItemGroup>
@@ -16,5 +27,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.StartsWith('tizen')) == true">
+    <Compile Remove="**\*.nui.cs" />
+    <None Include="**\*.nui.cs" />
   </ItemGroup>
 </Project>

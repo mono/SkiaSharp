@@ -1,4 +1,4 @@
-﻿using SkiaSharp.Views.Tizen;
+﻿using SkiaSharp.Views.Tizen.NUI;
 
 namespace SkiaSharp.Views.Maui.Platform
 {
