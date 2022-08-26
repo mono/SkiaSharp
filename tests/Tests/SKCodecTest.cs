@@ -497,7 +497,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void CanReadPngChunks_NonStandard()
 		{
-			var path = Path.Combine(PathToImages, "png_chunks/NPatch.png");
+			var path = Path.Combine(PathToImages, "png_chunks/circle.9.png");
 
 			using var chunkReader = new TestPngChunkReader();
 			using var codec = SKCodec.Create(path, chunkReader, SKCodecSelectionPolicy.PreferStillImage, out var codecResult);
