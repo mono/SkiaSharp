@@ -495,9 +495,9 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void CanReadPngChunks_iTXt()
+		public void CanReadPngChunks_NonStandard()
 		{
-			var path = Path.Combine(PathToImages, "png_chunks/good_itxt.png");
+			var path = Path.Combine(PathToImages, "png_chunks/NPatch.png");
 
 			using var chunkReader = new TestPngChunkReader();
 			using var codec = SKCodec.Create(path, chunkReader, SKCodecSelectionPolicy.PreferStillImage, out var codecResult);
