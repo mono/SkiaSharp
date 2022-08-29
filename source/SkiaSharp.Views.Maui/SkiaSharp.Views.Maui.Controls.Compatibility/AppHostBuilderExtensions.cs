@@ -27,19 +27,7 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 #if !NETSTANDARD
 					if (registerRenderers)
 					{
-#if __TIZEN__
-#pragma warning disable CS0612 // Type or member is obsolete
-						if (replaceHandlers)
-							handlers.AddCompatibilityRenderer<SKCanvasView, SKCanvasViewRenderer>();
-						else
-							handlers.TryAddCompatibilityRenderer(typeof(SKCanvasView), typeof(SKCanvasViewRenderer));
-
-						if (replaceHandlers)
-							handlers.AddCompatibilityRenderer<SKGLView, SKGLViewRenderer>();
-						else
-							handlers.TryAddCompatibilityRenderer(typeof(SKGLView), typeof(SKGLViewRenderer));
-#pragma warning restore CS0612 // Type or member is obsolete
-#else
+#if !__TIZEN__
 						if (replaceHandlers)
 							handlers.AddHandler<SKCanvasView, SKCanvasViewRenderer>();
 						else
@@ -54,10 +42,12 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 #endif
 					}
 
+#if !__TIZEN__
 					CompatRegistrar.Registered.Register(typeof(SKImageImageSource), typeof(SKImageSourceHandler));
 					CompatRegistrar.Registered.Register(typeof(SKBitmapImageSource), typeof(SKImageSourceHandler));
 					CompatRegistrar.Registered.Register(typeof(SKPixmapImageSource), typeof(SKImageSourceHandler));
 					CompatRegistrar.Registered.Register(typeof(SKPictureImageSource), typeof(SKImageSourceHandler));
+#endif
 #endif
 				});
 	}

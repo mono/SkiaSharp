@@ -4,16 +4,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui;
-using Tizen.UIExtensions.ElmSharp;
+using Microsoft.Maui.Platform;
 
 namespace SkiaSharp.Views.Maui.Handlers
 {
 	public partial class SKImageSourceService
 	{
-		public override Task<IImageSourceServiceResult<Image>?> GetImageAsync(IImageSource imageSource, Image image, CancellationToken cancellationToken = default) =>
-			GetImageAsync((IStreamImageSource)imageSource, image, cancellationToken);
+		public override Task<IImageSourceServiceResult<MauiImageSource>?> GetImageAsync(
+			IImageSource imageSource,
+			CancellationToken cancellationToken = default) =>
+			GetImageAsync((IStreamImageSource)imageSource, cancellationToken);
 
-		public async Task<IImageSourceServiceResult<Image>?> GetImageAsync(IStreamImageSource imageSource, Image image, CancellationToken cancellationToken = default)
+		public async Task<IImageSourceServiceResult<MauiImageSource>?> GetImageAsync(IStreamImageSource imageSource, CancellationToken cancellationToken = default)
 		{
 			if (imageSource.IsEmpty)
 				return null;
@@ -32,12 +34,11 @@ namespace SkiaSharp.Views.Maui.Handlers
 				if (stream == null)
 					throw new InvalidOperationException("Unable to load image stream.");
 
-				var isLoadComplated = await image.LoadAsync(stream, cancellationToken);
+				var image = new MauiImageSource();
+				await image.LoadSource(stream);
 
-				if (!isLoadComplated)
-					throw new InvalidOperationException("Unable to decode image from stream.");
+				return new ImageSourceServiceResult(image, image.Dispose);
 
-				return new ImageSourceServiceResult(image);
 			}
 			catch (Exception ex)
 			{
