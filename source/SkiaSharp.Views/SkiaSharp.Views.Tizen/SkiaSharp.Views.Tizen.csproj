@@ -1,24 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Tizen.NET.Sdk/1.0.9">
   <PropertyGroup>
-    <TargetFrameworks>tizen40;net6-tizen</TargetFrameworks>
+    <TargetFramework>tizen40</TargetFramework>
     <RootNamespace>SkiaSharp.Views.Tizen</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <DefineConstants>$(DefineConstants);__TIZEN__;</DefineConstants>
-    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
   </PropertyGroup>
-
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('tizen')) == true">
-    <TargetFrameworkIdentifier>Tizen</TargetFrameworkIdentifier>
-    <DisableStandardFrameworkResolution>true</DisableStandardFrameworkResolution>
-    <DisableImplicitTizenReferences>true</DisableImplicitTizenReferences>
-  </PropertyGroup>
-  
-  <ItemGroup Condition="$(TargetFramework.StartsWith('tizen')) == true">
-    <PackageReference Include="Tizen.NET" Version="9.0.0.*" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
   </ItemGroup>
