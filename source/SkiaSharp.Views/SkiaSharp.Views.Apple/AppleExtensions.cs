@@ -40,12 +40,12 @@ namespace SkiaSharp.Views.Mac
 
 		public static SKRect ToSKRect(this CGRect rect)
 		{
-			return new SKRect((float)rect.Left, (float)rect.Top, (float)rect.Right, (float)rect.Bottom);
+			return new SKRect((float)rect.Left, (float)rect.Top, (float)rect.Width, (float)rect.Height);
 		}
 
 		public static CGRect ToRect(this SKRect rect)
 		{
-			return new CGRect(rect.Left, rect.Top, rect.Right, rect.Bottom);
+			return new CGRect(rect.Left, rect.Top, rect.Width, rect.Height);
 		}
 
 		// CGSize
