@@ -82,5 +82,22 @@ namespace SkiaSharp.Views.iOS.Tests
 
 			Assert.Equal(expected, actual);
 		}
+
+		[SkippableTheory]
+		[InlineData(0, 0, 0, 0)]
+		[InlineData(5, 5, 5, 5)]
+		[InlineData(1, 2, 3, 4)]
+		[InlineData(1, 1, 0, 0)]
+		[InlineData(0, 0, 1, 1)]
+		[InlineData(100, 100, 100, 100)]
+		public void CGRectToSKRect(int x, int y, int w, int h)
+		{
+			var initial = new CGRect(x, y, w, h);
+			var expected = SKRect.Create(x, y, w, h);
+
+			var actual = initial.ToSKRect();
+
+			Assert.Equal(expected, actual);
+		}
 	}
 }
