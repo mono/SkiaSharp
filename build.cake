@@ -162,13 +162,13 @@ Task ("libs")
         platform = ".Linux";
     }
 
-    var net6 = $"./source/SkiaSharpSource{platform}-net6.slnf";
+    var net = $"./source/SkiaSharpSource{platform}-net.slnf";
     var netfx = $"./source/SkiaSharpSource{platform}-netfx.slnf";
-    if (FileExists (net6) || FileExists (netfx)) {
-        if (FileExists (net6) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "net6"))
-            RunMSBuild (net6, properties: new Dictionary<string, string> { { "BuildingForNet6", "true" } });
+    if (FileExists (net) || FileExists (netfx)) {
+        if (FileExists (net) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "net"))
+            RunMSBuild (net, properties: new Dictionary<string, string> { { "BuildingForNet", "true" } });
         if (FileExists (netfx) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "netfx"))
-            RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet6", "false" } });
+            RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet", "false" } });
     } else {
         var slnf = $"./source/SkiaSharpSource{platform}.slnf";
         var sln = $"./source/SkiaSharpSource{platform}.sln";

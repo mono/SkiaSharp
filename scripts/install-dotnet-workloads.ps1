@@ -7,10 +7,12 @@ Param(
 $ErrorActionPreference = 'Stop'
 
 $previewFeed = 'https://api.nuget.org/v3/index.json'
+$previewNextFeed = 'https://api.nuget.org/v3/index.json'
 $previewRuntime = 'https://api.nuget.org/v3/index.json'
 $previewEmscripten = 'https://api.nuget.org/v3/index.json'
 if ($IsPreview) {
   $previewFeed = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json'
+  $previewNextFeed = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json'
   $previewRuntime = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-531f715f/nuget/v3/index.json'
   $previewEmscripten = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-emsdk-3f6c45a2/nuget/v3/index.json'
 }
@@ -21,6 +23,7 @@ Write-Host "Installing .NET workloads..."
   --from-rollback-file $SourceUrl `
   --source https://api.nuget.org/v3/index.json `
   --source $previewFeed `
+  --source $previewNextFeed `
   --source $previewRuntime `
   --source $previewEmscripten `
   --skip-sign-check

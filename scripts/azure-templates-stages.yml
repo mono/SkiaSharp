@@ -402,12 +402,12 @@ stages:
                 displayName: Delete the native folder
         - template: azure-templates-bootstrapper.yml # Build Managed .NET (Windows)
           parameters:
-            name: managed_net6_windows
+            name: managed_net_windows
             displayName: Managed .NET (Windows)
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: libs
-            additionalArgs: --skipExternals="all" --solutionType=net6
+            additionalArgs: --skipExternals="all" --solutionType=net
             installPreviewVs: true
             requiredArtifacts:
               - name: native
