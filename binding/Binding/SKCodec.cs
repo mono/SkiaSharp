@@ -4,7 +4,6 @@ using System.IO;
 
 namespace SkiaSharp
 {
-	// TODO: `Create(...)` should have overloads that accept a SKPngChunkReader
 	// TODO: missing the `QueryYuv8` and `GetYuv8Planes` members
 
 	public unsafe class SKCodec : SKObject, ISKSkipObjectRegistration
@@ -41,6 +40,8 @@ namespace SkiaSharp
 
 		public SKEncodedImageFormat EncodedFormat =>
 			SkiaApi.sk_codec_get_encoded_format (Handle);
+
+		public SKSizeI EncodedDimensions => Info.Size;
 
 		public SKSizeI GetScaledDimensions (float desiredScale)
 		{
@@ -277,12 +278,15 @@ namespace SkiaSharp
 		public int GetOutputScanline (int inputScanline) =>
 			SkiaApi.sk_codec_output_scanline (Handle, inputScanline);
 
-		// create (streams)
+		// create (filename)
 
 		public static SKCodec Create (string filename) =>
-			Create (filename, out var result);
+			Create (filename, null, SKCodecSelectionPolicy.PreferStillImage, out _);
 
-		public static SKCodec Create (string filename, out SKCodecResult result)
+		public static SKCodec Create (string filename, out SKCodecResult result) =>
+			Create (filename, null, SKCodecSelectionPolicy.PreferStillImage, out result);
+
+		public static SKCodec Create (string filename, SKPngChunkReader chunkReader, SKCodecSelectionPolicy selectionPolicy, out SKCodecResult result)
 		{
 			var stream = SKFileStream.OpenStream (filename);
 			if (stream == null) {
@@ -290,40 +294,56 @@ namespace SkiaSharp
 				return null;
 			}
 
-			return Create (stream, out result);
+			return Create (stream, chunkReader, selectionPolicy, out result);
 		}
 
+		// create (Stream)
+
 		public static SKCodec Create (Stream stream) =>
-			Create (stream, out var result);
+			Create (WrapManagedStream (stream), null, SKCodecSelectionPolicy.PreferStillImage, out _);
 
 		public static SKCodec Create (Stream stream, out SKCodecResult result) =>
-			Create (WrapManagedStream (stream), out result);
+			Create (WrapManagedStream (stream), null, SKCodecSelectionPolicy.PreferStillImage, out result);
+
+		public static SKCodec Create (Stream stream, SKPngChunkReader chunkReader, SKCodecSelectionPolicy selectionPolicy, out SKCodecResult result) =>
+			Create (WrapManagedStream (stream), chunkReader, selectionPolicy, out result);
+
+		// create (SKStream)
 
 		public static SKCodec Create (SKStream stream) =>
-			Create (stream, out var result);
+			Create (stream, null, SKCodecSelectionPolicy.PreferStillImage, out _);
 
-		public static SKCodec Create (SKStream stream, out SKCodecResult result)
+		public static SKCodec Create (SKStream stream, out SKCodecResult result) =>
+			Create (stream, null, SKCodecSelectionPolicy.PreferStillImage, out result);
+
+		public static SKCodec Create (SKStream stream, SKPngChunkReader chunkReader, SKCodecSelectionPolicy selectionPolicy, out SKCodecResult result)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 			if (stream is SKFileStream filestream && !filestream.IsValid)
-				throw new ArgumentException ("File stream was not valid.", nameof(stream));
+				throw new ArgumentException ("File stream was not valid.", nameof (stream));
 
 			fixed (SKCodecResult* r = &result) {
-				var codec = GetObject (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));
+				var codec = GetObject (SkiaApi.sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy (stream.Handle, r, chunkReader?.Handle ?? IntPtr.Zero, selectionPolicy));
 				stream.RevokeOwnership (codec);
+				Referenced (codec, chunkReader);
 				return codec;
 			}
 		}
 
 		// create (data)
 
-		public static SKCodec Create (SKData data)
+		public static SKCodec Create (SKData data) =>
+			Create (data, null);
+
+		public static SKCodec Create (SKData data, SKPngChunkReader chunkReader)
 		{
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return GetObject (SkiaApi.sk_codec_new_from_data (data.Handle));
+			var codec = GetObject (SkiaApi.sk_codec_new_from_data_with_pngchunkreader (data.Handle, chunkReader?.Handle ?? IntPtr.Zero));
+			Referenced (codec, chunkReader);
+			return codec;
 		}
 
 		// utils

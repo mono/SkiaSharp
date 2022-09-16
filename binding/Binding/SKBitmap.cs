@@ -37,8 +37,6 @@ namespace SkiaSharp
 	}
 
 	// TODO: keep in mind SKBitmap may be going away (according to Google)
-	// TODO: `ComputeIsOpaque` may be useful
-	// TODO: `GenerationID` may be useful
 	// TODO: `GetAddr` and `GetPixel` are confusing
 
 	public unsafe class SKBitmap : SKObject, ISKSkipObjectRegistration
@@ -114,6 +112,47 @@ namespace SkiaSharp
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_bitmap_destructor (Handle);
+
+		// Other
+
+		public bool SetInfo (SKImageInfo info) =>
+			SetInfo (info, 0);
+
+		public bool SetInfo (SKImageInfo info, int rowBytes)
+		{
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_bitmap_set_info (Handle, &cinfo, (IntPtr)rowBytes);
+		}
+
+		public bool ComputeIsOpaque () =>
+			SkiaApi.sk_bitmap_compute_is_opaque (Handle);
+
+		// AllocPixels
+
+		public void AllocPixels (SKImageInfo info) =>
+			AllocPixels (info, info.RowBytes);
+
+		public void AllocPixels (SKImageInfo info, int rowBytes)
+		{
+			if (!TryAllocPixels (info, rowBytes)) {
+				SKImageInfo i = Info;
+				throw new OutOfMemoryException ("SkBitmap::tryAllocPixels failed "
+					+ "ColorType:" + i.ColorType + "AlphaType:" + i.AlphaType +
+					"[w:" + i.Width + " h:" + i.Height + "] rb:" + RowBytes
+				);
+			}
+		}
+
+		public void AllocPixels (SKImageInfo info, SKBitmapAllocFlags flags)
+		{
+			if (!TryAllocPixels (info, flags)) {
+				SKImageInfo i = Info;
+				throw new OutOfMemoryException ("SkBitmap::tryAllocPixels failed "
+					+ "ColorType:" + i.ColorType + "AlphaType:" + i.AlphaType +
+					"[w:" + i.Width + " h:" + i.Height + "] rb:" + RowBytes
+				);
+			}
+		}
 
 		// TryAllocPixels
 
@@ -361,6 +400,9 @@ namespace SkiaSharp
 			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
 		}
 
+		public uint GenerationId =>
+			(uint)SkiaApi.sk_bitmap_get_generation_id (Handle);
+
 		// *Pixels*
 
 		public IntPtr GetPixels () =>
@@ -400,6 +442,14 @@ namespace SkiaSharp
 		}
 
 		// more properties
+
+		public SKPixmap Pixmap {
+			get {
+				var pixmap = new SKPixmap (SkiaApi.sk_bitmap_get_pixmap (Handle), false); // pixmap is owned by this
+				pixmap.pixelSource = this;
+				return pixmap;
+			}
+		}
 
 		public byte[] Bytes {
 			get {
@@ -723,6 +773,29 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
 		}
 
+		public bool ReadPixels (SKImageInfo info, IntPtr dstPixels, int rowBytes, int x, int y)
+		{
+			if (GetPixels () == IntPtr.Zero)
+				return false;
+			return Pixmap.ReadPixels (info, dstPixels, rowBytes, x, y);
+		}
+
+		public bool ReadPixels (SKPixmap dstPixmap) =>
+			ReadPixels (dstPixmap, 0, 0);
+
+		public bool ReadPixels (SKPixmap dstPixmap, int x, int y)
+		{
+			if (GetPixels () == IntPtr.Zero)
+				return false;
+			return Pixmap.ReadPixels (dstPixmap.Info, dstPixmap.GetPixels (), dstPixmap.RowBytes, x, y);
+		}
+
+		public bool WritePixels (SKPixmap pixmap) =>
+			WritePixels (pixmap, 0, 0);
+
+		public bool WritePixels (SKPixmap dstPixmap, int x, int y) =>
+			SkiaApi.sk_bitmap_write_pixels_at_location (Handle, dstPixmap.Handle, x, y);
+
 		public bool InstallPixels (SKPixmap pixmap)
 		{
 			return SkiaApi.sk_bitmap_install_pixels_with_pixmap (Handle, pixmap.Handle);
@@ -841,6 +914,9 @@ namespace SkiaSharp
 			}
 			return bmp;
 		}
+
+		public SKImage ToImage () =>
+			SKImage.FromBitmap (this);
 
 		// Encode
 

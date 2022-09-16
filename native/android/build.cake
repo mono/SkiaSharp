@@ -36,7 +36,7 @@ Task("libSkiaSharp")
             $"skia_use_system_zlib=false " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"skia_enable_skottie=true " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-DPNG_READ_UNKNOWN_CHUNKS_SUPPORTED' ] " +
             $"ndk='{ANDROID_NDK_HOME}' " +
             $"ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 16)}");
 

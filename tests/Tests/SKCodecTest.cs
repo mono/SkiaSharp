@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -490,6 +492,32 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
 			Assert.NotEmpty(pixels);
+		}
+
+		[SkippableFact]
+		public void CanReadPngChunks_NonStandard()
+		{
+			var path = Path.Combine(PathToImages, "png_chunks/circle.9.png");
+
+			using var chunkReader = new TestPngChunkReader();
+			using var codec = SKCodec.Create(path, chunkReader, SKCodecSelectionPolicy.PreferStillImage, out var codecResult);
+			using var bmp = SKBitmap.Decode(codec);
+
+			var chunks = chunkReader.Chunks;
+
+			Assert.NotEmpty(chunks);
+		}
+
+		unsafe class TestPngChunkReader : SKPngChunkReader
+		{
+			protected override bool ReadChunk(string tag, IntPtr data, IntPtr length)
+			{
+				var d = new ReadOnlySpan<byte>((void*)data, (int)length).ToArray();
+				Chunks.Add((tag, d));
+				return true;
+			}
+
+			public List<(string, byte[])> Chunks { get; } = new List<(string, byte[])>();
 		}
 	}
 }

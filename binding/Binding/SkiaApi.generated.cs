@@ -36,6 +36,7 @@ using sk_image_t = System.IntPtr;
 using sk_imagefilter_croprect_t = System.IntPtr;
 using sk_imagefilter_t = System.IntPtr;
 using sk_manageddrawable_t = System.IntPtr;
+using sk_managedpngchunkreader_t = System.IntPtr;
 using sk_managedtracememorydump_t = System.IntPtr;
 using sk_maskfilter_t = System.IntPtr;
 using sk_matrix44_t = System.IntPtr;
@@ -54,6 +55,7 @@ using sk_picture_recorder_t = System.IntPtr;
 using sk_picture_t = System.IntPtr;
 using sk_pixelref_factory_t = System.IntPtr;
 using sk_pixmap_t = System.IntPtr;
+using sk_pngchunkreader_t = System.IntPtr;
 using sk_refcnt_t = System.IntPtr;
 using sk_region_cliperator_t = System.IntPtr;
 using sk_region_iterator_t = System.IntPtr;
@@ -930,6 +932,22 @@ namespace SkiaSharp
 
 		#region sk_bitmap.h
 
+		// bool sk_bitmap_compute_is_opaque(sk_bitmap_t* cbitmap)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_bitmap_compute_is_opaque (sk_bitmap_t cbitmap);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_bitmap_compute_is_opaque (sk_bitmap_t cbitmap);
+		}
+		private static Delegates.sk_bitmap_compute_is_opaque sk_bitmap_compute_is_opaque_delegate;
+		internal static bool sk_bitmap_compute_is_opaque (sk_bitmap_t cbitmap) =>
+			(sk_bitmap_compute_is_opaque_delegate ??= GetSymbol<Delegates.sk_bitmap_compute_is_opaque> ("sk_bitmap_compute_is_opaque")).Invoke (cbitmap);
+		#endif
+
 		// void sk_bitmap_destructor(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1074,6 +1092,20 @@ namespace SkiaSharp
 			(sk_bitmap_get_byte_count_delegate ??= GetSymbol<Delegates.sk_bitmap_get_byte_count> ("sk_bitmap_get_byte_count")).Invoke (cbitmap);
 		#endif
 
+		// uint32_t sk_bitmap_get_generation_id(sk_bitmap_t* cbitmap)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt32 sk_bitmap_get_generation_id (sk_bitmap_t cbitmap);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate UInt32 sk_bitmap_get_generation_id (sk_bitmap_t cbitmap);
+		}
+		private static Delegates.sk_bitmap_get_generation_id sk_bitmap_get_generation_id_delegate;
+		internal static UInt32 sk_bitmap_get_generation_id (sk_bitmap_t cbitmap) =>
+			(sk_bitmap_get_generation_id_delegate ??= GetSymbol<Delegates.sk_bitmap_get_generation_id> ("sk_bitmap_get_generation_id")).Invoke (cbitmap);
+		#endif
+
 		// void sk_bitmap_get_info(sk_bitmap_t* cbitmap, sk_imageinfo_t* info)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1128,6 +1160,20 @@ namespace SkiaSharp
 		private static Delegates.sk_bitmap_get_pixels sk_bitmap_get_pixels_delegate;
 		internal static void* sk_bitmap_get_pixels (sk_bitmap_t cbitmap, /* size_t */ IntPtr* length) =>
 			(sk_bitmap_get_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixels> ("sk_bitmap_get_pixels")).Invoke (cbitmap, length);
+		#endif
+
+		// const sk_pixmap_t* sk_bitmap_get_pixmap(sk_bitmap_t* cbitmap)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_pixmap_t sk_bitmap_get_pixmap (sk_bitmap_t cbitmap);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_pixmap_t sk_bitmap_get_pixmap (sk_bitmap_t cbitmap);
+		}
+		private static Delegates.sk_bitmap_get_pixmap sk_bitmap_get_pixmap_delegate;
+		internal static sk_pixmap_t sk_bitmap_get_pixmap (sk_bitmap_t cbitmap) =>
+			(sk_bitmap_get_pixmap_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixmap> ("sk_bitmap_get_pixmap")).Invoke (cbitmap);
 		#endif
 
 		// size_t sk_bitmap_get_row_bytes(sk_bitmap_t* cbitmap)
@@ -1326,6 +1372,22 @@ namespace SkiaSharp
 			(sk_bitmap_set_immutable_delegate ??= GetSymbol<Delegates.sk_bitmap_set_immutable> ("sk_bitmap_set_immutable")).Invoke (cbitmap);
 		#endif
 
+		// bool sk_bitmap_set_info(sk_bitmap_t* cbitmap, const sk_imageinfo_t* requestedInfo, size_t rowBytes)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_bitmap_set_info (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_bitmap_set_info (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes);
+		}
+		private static Delegates.sk_bitmap_set_info sk_bitmap_set_info_delegate;
+		internal static bool sk_bitmap_set_info (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes) =>
+			(sk_bitmap_set_info_delegate ??= GetSymbol<Delegates.sk_bitmap_set_info> ("sk_bitmap_set_info")).Invoke (cbitmap, requestedInfo, rowBytes);
+		#endif
+
 		// void sk_bitmap_set_pixels(sk_bitmap_t* cbitmap, void* pixels)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1384,6 +1446,22 @@ namespace SkiaSharp
 		private static Delegates.sk_bitmap_try_alloc_pixels_with_flags sk_bitmap_try_alloc_pixels_with_flags_delegate;
 		internal static bool sk_bitmap_try_alloc_pixels_with_flags (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags) =>
 			(sk_bitmap_try_alloc_pixels_with_flags_delegate ??= GetSymbol<Delegates.sk_bitmap_try_alloc_pixels_with_flags> ("sk_bitmap_try_alloc_pixels_with_flags")).Invoke (cbitmap, requestedInfo, flags);
+		#endif
+
+		// bool sk_bitmap_write_pixels_at_location(sk_bitmap_t* cbitmap, const sk_pixmap_t* cpixmap, int x, int y)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_bitmap_write_pixels_at_location (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap, Int32 x, Int32 y);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_bitmap_write_pixels_at_location (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap, Int32 x, Int32 y);
+		}
+		private static Delegates.sk_bitmap_write_pixels_at_location sk_bitmap_write_pixels_at_location_delegate;
+		internal static bool sk_bitmap_write_pixels_at_location (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap, Int32 x, Int32 y) =>
+			(sk_bitmap_write_pixels_at_location_delegate ??= GetSymbol<Delegates.sk_bitmap_write_pixels_at_location> ("sk_bitmap_write_pixels_at_location")).Invoke (cbitmap, cpixmap, x, y);
 		#endif
 
 		#endregion
@@ -2584,6 +2662,20 @@ namespace SkiaSharp
 			(sk_codec_new_from_data_delegate ??= GetSymbol<Delegates.sk_codec_new_from_data> ("sk_codec_new_from_data")).Invoke (data);
 		#endif
 
+		// sk_codec_t* sk_codec_new_from_data_with_pngchunkreader(sk_data_t* data, sk_pngchunkreader_t* chunk_reader)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_codec_t sk_codec_new_from_data_with_pngchunkreader (sk_data_t data, sk_pngchunkreader_t chunk_reader);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_codec_t sk_codec_new_from_data_with_pngchunkreader (sk_data_t data, sk_pngchunkreader_t chunk_reader);
+		}
+		private static Delegates.sk_codec_new_from_data_with_pngchunkreader sk_codec_new_from_data_with_pngchunkreader_delegate;
+		internal static sk_codec_t sk_codec_new_from_data_with_pngchunkreader (sk_data_t data, sk_pngchunkreader_t chunk_reader) =>
+			(sk_codec_new_from_data_with_pngchunkreader_delegate ??= GetSymbol<Delegates.sk_codec_new_from_data_with_pngchunkreader> ("sk_codec_new_from_data_with_pngchunkreader")).Invoke (data, chunk_reader);
+		#endif
+
 		// sk_codec_t* sk_codec_new_from_stream(sk_stream_t* stream, sk_codec_result_t* result)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2596,6 +2688,20 @@ namespace SkiaSharp
 		private static Delegates.sk_codec_new_from_stream sk_codec_new_from_stream_delegate;
 		internal static sk_codec_t sk_codec_new_from_stream (sk_stream_t stream, SKCodecResult* result) =>
 			(sk_codec_new_from_stream_delegate ??= GetSymbol<Delegates.sk_codec_new_from_stream> ("sk_codec_new_from_stream")).Invoke (stream, result);
+		#endif
+
+		// sk_codec_t* sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy(sk_stream_t* stream, sk_codec_result_t* result, sk_pngchunkreader_t* chunk_reader, sk_codec_selection_policy_t policy)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_codec_t sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy (sk_stream_t stream, SKCodecResult* result, sk_pngchunkreader_t chunk_reader, SKCodecSelectionPolicy policy);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_codec_t sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy (sk_stream_t stream, SKCodecResult* result, sk_pngchunkreader_t chunk_reader, SKCodecSelectionPolicy policy);
+		}
+		private static Delegates.sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy_delegate;
+		internal static sk_codec_t sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy (sk_stream_t stream, SKCodecResult* result, sk_pngchunkreader_t chunk_reader, SKCodecSelectionPolicy policy) =>
+			(sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy_delegate ??= GetSymbol<Delegates.sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy> ("sk_codec_new_from_stream_with_pngchunkreader_and_selection_policy")).Invoke (stream, result, chunk_reader, policy);
 		#endif
 
 		// int sk_codec_next_scanline(sk_codec_t* codec)
@@ -13214,6 +13320,52 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region sk_managedpngchunkreader.h
+
+		// void sk_managedpngchunkreader_delete(sk_managedpngchunkreader_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managedpngchunkreader_delete (sk_managedpngchunkreader_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managedpngchunkreader_delete (sk_managedpngchunkreader_t param0);
+		}
+		private static Delegates.sk_managedpngchunkreader_delete sk_managedpngchunkreader_delete_delegate;
+		internal static void sk_managedpngchunkreader_delete (sk_managedpngchunkreader_t param0) =>
+			(sk_managedpngchunkreader_delete_delegate ??= GetSymbol<Delegates.sk_managedpngchunkreader_delete> ("sk_managedpngchunkreader_delete")).Invoke (param0);
+		#endif
+
+		// sk_managedpngchunkreader_t* sk_managedpngchunkreader_new(void* context)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_managedpngchunkreader_t sk_managedpngchunkreader_new (void* context);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_managedpngchunkreader_t sk_managedpngchunkreader_new (void* context);
+		}
+		private static Delegates.sk_managedpngchunkreader_new sk_managedpngchunkreader_new_delegate;
+		internal static sk_managedpngchunkreader_t sk_managedpngchunkreader_new (void* context) =>
+			(sk_managedpngchunkreader_new_delegate ??= GetSymbol<Delegates.sk_managedpngchunkreader_new> ("sk_managedpngchunkreader_new")).Invoke (context);
+		#endif
+
+		// void sk_managedpngchunkreader_set_procs(sk_managedpngchunkreader_procs_t procs)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_managedpngchunkreader_set_procs (SKManagedPngChunkReaderDelegates procs);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_managedpngchunkreader_set_procs (SKManagedPngChunkReaderDelegates procs);
+		}
+		private static Delegates.sk_managedpngchunkreader_set_procs sk_managedpngchunkreader_set_procs_delegate;
+		internal static void sk_managedpngchunkreader_set_procs (SKManagedPngChunkReaderDelegates procs) =>
+			(sk_managedpngchunkreader_set_procs_delegate ??= GetSymbol<Delegates.sk_managedpngchunkreader_set_procs> ("sk_managedpngchunkreader_set_procs")).Invoke (procs);
+		#endif
+
+		#endregion
+
 		#region sk_managedstream.h
 
 		// void sk_managedstream_destroy(sk_stream_managedstream_t* s)
@@ -13407,6 +13559,15 @@ namespace SkiaSharp {
 	// typedef sk_picture_t* (*)(sk_manageddrawable_t* d, void* context)* sk_manageddrawable_newPictureSnapshot_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate sk_picture_t SKManagedDrawableNewPictureSnapshotProxyDelegate(sk_manageddrawable_t d, void* context);
+
+	// typedef void (*)(sk_managedpngchunkreader_t* d, void* context)* sk_managedpngchunkreader_destroy_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKManagedPngChunkReaderDestroyProxyDelegate(sk_managedpngchunkreader_t d, void* context);
+
+	// typedef bool (*)(sk_managedpngchunkreader_t* d, void* context, const char[-1] tag, const void* data, size_t length)* sk_managedpngchunkreader_read_chunk_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	[return: MarshalAs (UnmanagedType.I1)]
+	internal unsafe delegate bool SKManagedPngChunkReaderReadChunkProxyDelegate(sk_managedpngchunkreader_t d, void* context, /* char */ void* tag, void* data, /* size_t */ IntPtr length);
 
 	// typedef void (*)(sk_stream_managedstream_t* s, void* context)* sk_managedstream_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -14923,6 +15084,37 @@ namespace SkiaSharp {
 
 	}
 
+	// sk_managedpngchunkreader_procs_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKManagedPngChunkReaderDelegates : IEquatable<SKManagedPngChunkReaderDelegates> {
+		// public sk_managedpngchunkreader_read_chunk_proc fReadChunk
+		public SKManagedPngChunkReaderReadChunkProxyDelegate fReadChunk;
+
+		// public sk_managedpngchunkreader_destroy_proc fDestroy
+		public SKManagedPngChunkReaderDestroyProxyDelegate fDestroy;
+
+		public readonly bool Equals (SKManagedPngChunkReaderDelegates obj) =>
+			fReadChunk == obj.fReadChunk && fDestroy == obj.fDestroy;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKManagedPngChunkReaderDelegates f && Equals (f);
+
+		public static bool operator == (SKManagedPngChunkReaderDelegates left, SKManagedPngChunkReaderDelegates right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKManagedPngChunkReaderDelegates left, SKManagedPngChunkReaderDelegates right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fReadChunk);
+			hash.Add (fDestroy);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// sk_managedstream_procs_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKManagedStreamDelegates : IEquatable<SKManagedStreamDelegates> {
@@ -15767,6 +15959,14 @@ namespace SkiaSharp {
 		TopDown = 0,
 		// BOTTOM_UP_SK_CODEC_SCANLINE_ORDER = 1
 		BottomUp = 1,
+	}
+
+	// sk_codec_selection_policy_t
+	public enum SKCodecSelectionPolicy {
+		// PREFER_STILL_IMAGE_SK_CODEC_SELECTION_POLICY = 0
+		PreferStillImage = 0,
+		// PREFER_ANIMATION_SK_CODEC_SELECTION_POLICY = 1
+		PreferAnimation = 1,
 	}
 
 	// sk_codec_zero_initialized_t
