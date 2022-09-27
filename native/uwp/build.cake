@@ -122,11 +122,13 @@ Task("ANGLE")
         if (Skip(arch)) return;
 
         var triplet = $"{arch}-uwp{toolset_suffix}";
+        var tripletsRoot = MakeAbsolute ((DirectoryPath)"ANGLE/triplets");
 
         // make the versioned triplets
         if (!string.IsNullOrEmpty(VC_TOOLSET_VERSION)) {
-            var cmake = VCPKG_PATH.CombineWithFilePath ($"triplets/community/{triplet}.cmake");
+            var cmake = tripletsRoot.CombineWithFilePath ($"{triplet}.cmake");
             if (!FileExists (cmake)) {
+                EnsureDirectoryExists (tripletsRoot);
                 var src = VCPKG_PATH.CombineWithFilePath ($"triplets/{arch}-uwp.cmake");
                 if (!FileExists (src))
                     src = VCPKG_PATH.CombineWithFilePath ($"triplets/community/{arch}-uwp.cmake");
@@ -141,7 +143,7 @@ Task("ANGLE")
         var d = CONFIGURATION.ToLower() == "release" ? "" : "debug/";
         var zd = CONFIGURATION.ToLower() == "release" ? "" : "d";
 
-        RunProcess (vcpkg, $"install angle:{triplet}");
+        RunProcess (vcpkg, $"install angle:{triplet} --overlay-triplets=\"{tripletsRoot}\"");
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
