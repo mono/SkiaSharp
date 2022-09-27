@@ -143,7 +143,7 @@ Task("ANGLE")
         var d = CONFIGURATION.ToLower() == "release" ? "" : "debug/";
         var zd = CONFIGURATION.ToLower() == "release" ? "" : "d";
 
-        RunProcess (vcpkg, $"install angle:{triplet} --overlay-triplets=\"{tripletsRoot}\"");
+        RunProcess (vcpkg, $"install angle:{triplet} --overlay-triplets=\"{tripletsRoot}\" --debug");
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
