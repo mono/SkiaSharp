@@ -2,7 +2,7 @@ bool SKIP_ANGLE = Argument("skipAngle", false);
 string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
-DirectoryPath VCPKG_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/vcpkg"));
+DirectoryPath VCPKG_PATH = EnvironmentVariable("VCPKG_ROOT") ?? MakeAbsolute(ROOT_PATH.Combine("externals/vcpkg"));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/uwp"));
 
 #load "../../cake/native-shared.cake"
