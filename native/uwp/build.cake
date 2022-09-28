@@ -1,4 +1,4 @@
-bool SKIP_ANGLE = Argument ("skipAngle", false);
+bool SKIP_ANGLE = Argument("skipAngle", false);
 string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
@@ -102,12 +102,12 @@ Task("ANGLE")
     if (SKIP_ANGLE)
         return;
 
-    if (!DirectoryExists (VCPKG_PATH))
-        RunProcess ("git", $"clone --depth 1 https://github.com/microsoft/vcpkg.git --branch master --single-branch {VCPKG_PATH}");
+    if (!DirectoryExists(VCPKG_PATH))
+        RunProcess("git", $"clone --depth 1 https://github.com/microsoft/vcpkg.git --branch master --single-branch {VCPKG_PATH}");
 
-    var vcpkg = VCPKG_PATH.CombineWithFilePath ("vcpkg.exe");
-    if (!FileExists (vcpkg))
-        RunProcess (VCPKG_PATH.CombineWithFilePath ("bootstrap-vcpkg.bat"));
+    var vcpkg = VCPKG_PATH.CombineWithFilePath("vcpkg.exe");
+    if (!FileExists(vcpkg))
+        RunProcess(VCPKG_PATH.CombineWithFilePath("bootstrap-vcpkg.bat"));
 
     var platform_toolset = string.IsNullOrEmpty(VC_TOOLSET_VERSION) ? "" : $"v{VC_TOOLSET_VERSION.Replace(".", "")}";
     var toolset_suffix = string.IsNullOrEmpty(VC_TOOLSET_VERSION) ? "" : $"-{platform_toolset}";
@@ -122,18 +122,18 @@ Task("ANGLE")
         if (Skip(arch)) return;
 
         var triplet = $"{arch}-uwp{toolset_suffix}";
-        var tripletsRoot = MakeAbsolute ((DirectoryPath)"ANGLE/triplets");
+        var tripletsRoot = MakeAbsolute((DirectoryPath)"ANGLE/triplets");
 
         // make the versioned triplets
         if (!string.IsNullOrEmpty(VC_TOOLSET_VERSION)) {
-            var cmake = tripletsRoot.CombineWithFilePath ($"{triplet}.cmake");
-            if (!FileExists (cmake)) {
-                EnsureDirectoryExists (tripletsRoot);
-                var src = VCPKG_PATH.CombineWithFilePath ($"triplets/{arch}-uwp.cmake");
-                if (!FileExists (src))
-                    src = VCPKG_PATH.CombineWithFilePath ($"triplets/community/{arch}-uwp.cmake");
-                CopyFile (src, cmake);
-                System.IO.File.AppendAllLines (cmake.FullPath, new [] {
+            var cmake = tripletsRoot.CombineWithFilePath($"{triplet}.cmake");
+            if (!FileExists(cmake)) {
+                EnsureDirectoryExists(tripletsRoot);
+                var src = VCPKG_PATH.CombineWithFilePath($"triplets/{arch}-uwp.cmake");
+                if (!FileExists(src))
+                    src = VCPKG_PATH.CombineWithFilePath($"triplets/community/{arch}-uwp.cmake");
+                CopyFile(src, cmake);
+                System.IO.File.AppendAllLines(cmake.FullPath, new [] {
                     $"set(VCPKG_PLATFORM_TOOLSET \"{platform_toolset}\")",
                     $"set(VCPKG_DEP_INFO_OVERRIDE_VARS \"{platform_toolset}\")",
                 });
@@ -143,16 +143,21 @@ Task("ANGLE")
         var d = CONFIGURATION.ToLower() == "release" ? "" : "debug/";
         var zd = CONFIGURATION.ToLower() == "release" ? "" : "d";
 
-        RunProcess (vcpkg, $"install angle:{triplet} --overlay-triplets=\"{tripletsRoot}\" --debug");
+        RunProcess(vcpkg, $"install angle:{triplet} --overlay-triplets=\"{tripletsRoot}\" --debug");
+
+        RunProcess("cmd", "/c \"dir " + VCPKG_PATH.FullPath.Replace("/", "\\") + "\"");
+        RunProcess("cmd", "/c \"dir " + VCPKG_PATH.CombineWithFilePath($"installed").FullPath.Replace("/", "\\") + "\"");
+        RunProcess("cmd", "/c \"dir " + VCPKG_PATH.CombineWithFilePath($"installed/{triplet}").FullPath.Replace("/", "\\") + "\"");
+        RunProcess("cmd", "/c \"dir " + VCPKG_PATH.CombineWithFilePath($"installed/{triplet}/{d}bin").FullPath.Replace("/", "\\") + "\"");
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{triplet}/{d}bin/libEGL.dll"), outDir);
-        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{triplet}/{d}bin/libEGL.pdb"), outDir);
-        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{triplet}/{d}bin/libGLESv2.dll"), outDir);
-        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{triplet}/{d}bin/libGLESv2.pdb"), outDir);
-        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{triplet}/{d}bin/zlib{zd}1.dll"), outDir);
-        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath ($"installed/{triplet}/{d}bin/zlib{zd}.pdb"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath($"installed/{triplet}/{d}bin/libEGL.dll"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath($"installed/{triplet}/{d}bin/libEGL.pdb"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath($"installed/{triplet}/{d}bin/libGLESv2.dll"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath($"installed/{triplet}/{d}bin/libGLESv2.pdb"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath($"installed/{triplet}/{d}bin/zlib{zd}1.dll"), outDir);
+        CopyFileToDirectory(VCPKG_PATH.CombineWithFilePath($"installed/{triplet}/{d}bin/zlib{zd}.pdb"), outDir);
     }
 });
 
