@@ -166,9 +166,9 @@ Task ("libs")
     var netfx = $"./source/SkiaSharpSource{platform}-netfx.slnf";
     if (FileExists (net) || FileExists (netfx)) {
         if (FileExists (net) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "net"))
-            RunMSBuild (net, properties: new Dictionary<string, string> { { "BuildingForNet", "true" } });
+            RunMSBuild (net, properties: new Dictionary<string, string> { { "BuildingForDotNet", "true" } });
         if (FileExists (netfx) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "netfx"))
-            RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet", "false" } });
+            RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForDotNet", "false" } });
     } else {
         var slnf = $"./source/SkiaSharpSource{platform}.slnf";
         var sln = $"./source/SkiaSharpSource{platform}.sln";

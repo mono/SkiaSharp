@@ -21,8 +21,8 @@
     <!-- this is important for mono as it defaults to 'false' -->
     <SignAssembly>true</SignAssembly>
     <SkiaSharpBuildPropsImported>true</SkiaSharpBuildPropsImported>
-    <BuildingForNet Condition="'$(BuildingForNet)' == '' and $(IsWindows)">true</BuildingForNet>
-    <BuildingForNet Condition="'$(BuildingForNet)' == ''">false</BuildingForNet>
+    <BuildingForDotNet Condition="'$(BuildingForDotNet)' == '' and $(IsWindows)">true</BuildingForDotNet>
+    <BuildingForDotNet Condition="'$(BuildingForDotNet)' == ''">false</BuildingForDotNet>
     <MDocDocumentationDirectory>$(MSBuildThisFileDirectory)..\docs\SkiaSharpAPI</MDocDocumentationDirectory>
     <LangVersion>9.0</LangVersion>
     <LangVersion Condition="$(IsWindows)">10.0</LangVersion>
@@ -54,8 +54,8 @@
   <PropertyGroup>
     <AncientTargetFrameworks>netstandard1.3</AncientTargetFrameworks>
     <BasicTargetFrameworksWithoutAncient>netstandard2.0;netstandard2.1;net462;netcoreapp3.1;net5.0</BasicTargetFrameworksWithoutAncient>
-    <BasicTargetFrameworksWithoutAncient Condition="$(BuildingForNet)">$(BasicTargetFrameworksWithoutAncient);net$(DotNetBaseVersion)</BasicTargetFrameworksWithoutAncient>
-    <BasicTargetFrameworksWithoutAncient Condition="$(BuildingForNet) and '$(DotNetNextVersion)' != ''">$(BasicTargetFrameworksWithoutAncient);net$(DotNetNextVersion)</BasicTargetFrameworksWithoutAncient>
+    <BasicTargetFrameworksWithoutAncient Condition="$(BuildingForDotNet)">$(BasicTargetFrameworksWithoutAncient);net$(DotNetBaseVersion)</BasicTargetFrameworksWithoutAncient>
+    <BasicTargetFrameworksWithoutAncient Condition="$(BuildingForDotNet) and '$(DotNetNextVersion)' != ''">$(BasicTargetFrameworksWithoutAncient);net$(DotNetNextVersion)</BasicTargetFrameworksWithoutAncient>
     <BasicTargetFrameworks>$(AncientTargetFrameworks);$(BasicTargetFrameworksWithoutAncient)</BasicTargetFrameworks>
     <NetPlatformTargetFrameworks>net$(DotNetBaseVersion)-ios;net$(DotNetBaseVersion)-maccatalyst;net$(DotNetBaseVersion)-tvos;net$(DotNetBaseVersion)-macos;net$(DotNetBaseVersion)-android</NetPlatformTargetFrameworks>
     <NetPlatformTargetFrameworks Condition="$(IsNetTizenSupported)">$(NetPlatformTargetFrameworks);net$(DotNetBaseVersion)-tizen</NetPlatformTargetFrameworks>
@@ -70,7 +70,7 @@
   <!-- Base TFMs for the core parts -->
   <PropertyGroup>
     <AllTargetFrameworks>$(BasicTargetFrameworks)</AllTargetFrameworks>
-    <AllTargetFrameworks Condition="$(BuildingForNet)">$(AllTargetFrameworks);$(NetPlatformTargetFrameworks)</AllTargetFrameworks>
+    <AllTargetFrameworks Condition="$(BuildingForDotNet)">$(AllTargetFrameworks);$(NetPlatformTargetFrameworks)</AllTargetFrameworks>
   </PropertyGroup>
 
   <!-- .NET MAUI -->
