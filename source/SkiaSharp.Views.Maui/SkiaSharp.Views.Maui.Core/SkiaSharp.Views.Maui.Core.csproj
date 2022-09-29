@@ -8,7 +8,7 @@
     <Nullable>Enable</Nullable>
     <SignAssembly>false</SignAssembly>
     <DefineConstants>$(DefineConstants);__MAUI__</DefineConstants>
-    <PackagingPlatform Condition="$(TargetFramework.Contains('-windows'))">net$(TargetPlatformVersion)-windows</PackagingPlatform>
+    <PackagingPlatform Condition="$(TargetFramework.Contains('-windows'))">net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-windows</PackagingPlatform>
     <UseMauiCore>true</UseMauiCore>
     <AndroidGenerateResourceDesigner>false</AndroidGenerateResourceDesigner>
     <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>

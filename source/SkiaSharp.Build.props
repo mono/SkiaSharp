@@ -15,6 +15,8 @@
     <IsCI Condition="'$(IsCI)' == '' and ('$(CI)' == 'true' or '$(TF_BUILD)' == 'true')">true</IsCI>
     <IsCI Condition="'$(IsCI)' == ''">false</IsCI>
     <IsNetTizenSupported Condition="'$(IsNetTizenSupported)' == ''">true</IsNetTizenSupported>
+    <IsNetTVOSSupported Condition="'$(IsNetTVOSSupported)' == ''">true</IsNetTVOSSupported>
+    <IsNetMacOSSupported Condition="'$(IsNetMacOSSupported)' == ''">true</IsNetMacOSSupported>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -57,8 +59,10 @@
     <BasicTargetFrameworksWithoutAncient Condition="$(BuildingForDotNet)">$(BasicTargetFrameworksWithoutAncient);net$(DotNetBaseVersion)</BasicTargetFrameworksWithoutAncient>
     <BasicTargetFrameworksWithoutAncient Condition="$(BuildingForDotNet) and '$(DotNetNextVersion)' != ''">$(BasicTargetFrameworksWithoutAncient);net$(DotNetNextVersion)</BasicTargetFrameworksWithoutAncient>
     <BasicTargetFrameworks>$(AncientTargetFrameworks);$(BasicTargetFrameworksWithoutAncient)</BasicTargetFrameworks>
-    <NetPlatformTargetFrameworks>net$(DotNetBaseVersion)-ios;net$(DotNetBaseVersion)-maccatalyst;net$(DotNetBaseVersion)-tvos;net$(DotNetBaseVersion)-macos;net$(DotNetBaseVersion)-android</NetPlatformTargetFrameworks>
+    <NetPlatformTargetFrameworks>net$(DotNetBaseVersion)-ios;net$(DotNetBaseVersion)-maccatalyst;net$(DotNetBaseVersion)-android</NetPlatformTargetFrameworks>
     <NetPlatformTargetFrameworks Condition="$(IsNetTizenSupported)">$(NetPlatformTargetFrameworks);net$(DotNetBaseVersion)-tizen</NetPlatformTargetFrameworks>
+    <NetPlatformTargetFrameworks Condition="$(IsNetTVOSSupported)">$(NetPlatformTargetFrameworks);net$(DotNetBaseVersion)-tvos</NetPlatformTargetFrameworks>
+    <NetPlatformTargetFrameworks Condition="$(IsNetMacOSSupported)">$(NetPlatformTargetFrameworks);net$(DotNetBaseVersion)-macos</NetPlatformTargetFrameworks>
   </PropertyGroup>
 
   <!-- Special case for SkiaSharp.Benchmarks -->
