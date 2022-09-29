@@ -9,7 +9,7 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard2'))">
+  <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard2.0'))">
     <!-- macOS -->
     <None Include="..\..\output\native\osx\libHarfBuzzSharp*" Link="nuget\runtimes\osx\native\%(Filename)%(Extension)" />
     <!-- Windows -->
