@@ -368,14 +368,26 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
             artifactName: native
             emscripten:
-              - 2.0.5
-              - 2.0.6
-              - 2.0.9
-              - 2.0.11
-              - 2.0.12
-              - 2.0.23
-              - 3.1.7
-              - 3.1.12
+              - 2.0.6:
+                displayName: 2.0.6
+                version: 2.0.6
+                features: none
+              - 2.0.23:
+                displayName: 2.0.23
+                version: 2.0.23
+                features: none
+              - 3.1.7:
+                displayName: 3.1.7
+                version: 3.1.7
+                features: none
+              - 3.1.12:
+                displayName: 3.1.12
+                version: 3.1.12
+                features: st
+              - 3.1.12:
+                displayName: '3.1.12_SIMD'
+                version: 3.1.12
+                features: simd
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: managed

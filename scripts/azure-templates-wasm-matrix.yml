@@ -9,15 +9,15 @@ jobs:
   - ${{ each version in parameters.emscripten }}:
     - template: azure-templates-bootstrapper.yml
       parameters:
-        name: native_wasm_${{ replace(version, '.', '_') }}_linux
-        displayName: WASM (${{ version }})
+        name: native_wasm_${{ replace(version.displayName, '.', '_') }}_linux
+        displayName: WASM (${{ version.displayName }})
         buildExternals: ${{ parameters.buildExternals }}
         buildPipelineType: ${{ parameters.buildPipelineType }}
         vmImage: ${{ parameters.vmImage }}
         docker: scripts/Docker/wasm
         target: externals-wasm
-        dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version }}
-        additionalArgs: --emscriptenVersion=${{ version }}
+        dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version.version }}
+        additionalArgs: --emscriptenVersion=${{ version.version }} --emscriptenFeatures="${{ version.features }}"
         artifactName: ${{ parameters.artifactName }}
         postBuildSteps:
           - task: PublishBuildArtifacts@1
