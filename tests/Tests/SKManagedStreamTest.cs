@@ -147,9 +147,81 @@ namespace SkiaSharp.Tests
 			var actualReadSize = managedStream.Read(buffer, readSize);
 
 			Assert.Equal(expectedReadSize, actualReadSize);
+			Assert.Equal(finalPos, stream.Position);
 			Assert.Equal(finalPos, managedStream.Position);
 			Assert.Equal(data.Take(readSize), buffer.Take(actualReadSize));
 			Assert.All(buffer.Skip(actualReadSize), i => Assert.Equal(0, i));
+		}
+
+		[SkippableTheory]
+		[InlineData(1024, 0, 0, 0)]
+		[InlineData(1024, 1, 1, 1)]
+		[InlineData(1024, 10, 10, 10)]
+		[InlineData(1024, 100, 100, 100)]
+		[InlineData(1024, 1000, 1000, 1000)]
+		[InlineData(1024, 10000, 1024, 1024)]
+		public void SkipIsCorrect(int dataSize, int readSize, int finalPos, int expectedReadSize)
+		{
+			var data = new byte[dataSize];
+			for (var i = 0; i < data.Length; i++)
+			{
+				data[i] = (byte)(i % byte.MaxValue);
+			}
+
+			var stream = new MemoryStream(data);
+			var managedStream = new SKManagedStream(stream);
+
+			var actualReadSize = managedStream.Skip(readSize);
+
+			Assert.Equal(expectedReadSize, actualReadSize);
+			Assert.Equal(finalPos, stream.Position);
+			Assert.Equal(finalPos, managedStream.Position);
+		}
+
+		[SkippableTheory]
+		[InlineData(1024, 0, 0, 0)]
+		[InlineData(1024, 1, 1, 1)]
+		[InlineData(1024, 10, 10, 10)]
+		[InlineData(1024, 100, 100, 100)]
+		[InlineData(1024, 1000, 1000, 1000)]
+		[InlineData(1024, 10000, 1024, 1024)]
+		public void SkipNonSeekableIsCorrect(int dataSize, int readSize, int finalPos, int expectedReadSize)
+		{
+			var data = new byte[dataSize];
+			for (var i = 0; i < data.Length; i++)
+			{
+				data[i] = (byte)(i % byte.MaxValue);
+			}
+
+			var stream = new MemoryStream(data);
+			var nonSeekable = new NonSeekableReadOnlyStream(stream);
+			var managedStream = new SKManagedStream(nonSeekable);
+
+			var actualReadSize = managedStream.Skip(readSize);
+
+			Assert.Equal(expectedReadSize, actualReadSize);
+			Assert.Equal(finalPos, stream.Position);
+		}
+
+		[SkippableFact]
+		public void SkipOffsetChunkCorrectly()
+		{
+			var data = new byte[1024];
+			for (int i = 0; i < data.Length; i++)
+			{
+				data[i] = (byte)(i % byte.MaxValue);
+			}
+
+			var stream = new MemoryStream(data);
+			var skManagedStream = new SKManagedStream(stream);
+
+			var offset = 768;
+
+			skManagedStream.Position = offset;
+
+			var taken = skManagedStream.Skip(data.Length);
+
+			Assert.Equal(data.Length - offset, taken);
 		}
 
 		[SkippableFact]
