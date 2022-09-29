@@ -31,7 +31,7 @@
     <DotNetSdkManifestVersion>$([System.Text.RegularExpressions.Regex]::Match('$(MSBuildExtensionsPath)', '$(DotNetSdkManifestVersionRegex)'))</DotNetSdkManifestVersion>
     <DotNetSdkVersion Condition="'$(DotNetSdkManifestVersion)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(DotNetSdkManifestVersion)', '$(DotNetSdkVersionRegex)'))</DotNetSdkVersion>
     <DotNetBaseVersion>6.0</DotNetBaseVersion>
-    <DotNetNextVersion Condition="'$(DotNetSdkVersion)' != '' and $([MSBuild]::VersionGreaterThan($(DotNetSdkVersion), $(DotNetBaseVersion))">$(DotNetSdkVersion)</DotNetNextVersion>
+    <DotNetNextVersion Condition="'$(DotNetSdkVersion)' != '' and $([MSBuild]::VersionGreaterThan($(DotNetSdkVersion), $(DotNetBaseVersion)))">$(DotNetSdkVersion)</DotNetNextVersion>
   </PropertyGroup>
 
   <PropertyGroup>
