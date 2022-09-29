@@ -739,5 +739,20 @@ namespace SkiaSharp.Tests
 
 			Assert.NotNull(bitmap);
 		}
+
+		[Theory]
+		[InlineData("tomato.bmp")]
+		[InlineData("baboon.jpg")]
+		[InlineData("baboon.png")]
+		[InlineData("animated-heart.gif")]
+		public void CanDecodeImageStreams(string filename)
+		{
+			var path = Path.Combine(PathToImages, filename);
+
+			using var stream = File.OpenRead(path);
+			using var bitmap = SKBitmap.Decode(stream);
+
+			Assert.NotNull(bitmap);
+		}
 	}
 }
