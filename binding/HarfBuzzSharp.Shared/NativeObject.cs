@@ -60,18 +60,9 @@ namespace HarfBuzzSharp
 			GC.SuppressFinalize (this);
 		}
 
-		internal static int SizeOf<T> ()
-		{
-#if WINDOWS_UWP || NETSTANDARD || NET5_0_OR_GREATER
-			return Marshal.SizeOf<T> ();
-#else
-			return Marshal.SizeOf (typeof (T));
-#endif
-		}
-
 		internal static IntPtr StructureArrayToPtr<T> (IReadOnlyList<T> items)
 		{
-			var size = SizeOf<T> ();
+			var size = Marshal.SizeOf<T> ();
 			var memory = Marshal.AllocCoTaskMem (size * items.Count);
 			for (var i = 0; i < items.Count; i++) {
 				var ptr = new IntPtr (memory.ToInt64 () + (i * size));
