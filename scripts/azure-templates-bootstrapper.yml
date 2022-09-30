@@ -80,11 +80,11 @@ jobs:
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne('${{ parameters.packages }}', ''))
 
       # make sure mono/msbuild is the correct version
-      - ${{ if and(ne(variables['MONO_VERSION_LINUX'], ''), eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
+      - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
         - bash: ./scripts/install-mono.sh $(MONO_VERSION_LINUX)
           displayName: Install Mono and MSBuild
           retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables['MONO_VERSION_LINUX'], ''))
       - ${{ if endsWith(parameters.name, '_macos') }}:
         - bash: sudo ./scripts/select-xamarin.sh $(MONO_VERSION_MACOS)
           displayName: Switch to the latest Xamarin SDK
