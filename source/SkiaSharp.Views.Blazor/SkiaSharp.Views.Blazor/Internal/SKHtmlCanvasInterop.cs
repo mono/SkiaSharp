@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -90,6 +89,6 @@ namespace SkiaSharp.Views.Blazor.Internal
 
 		// Workaround for https://github.com/dotnet/runtime/issues/76077
 		[DllImport("libSkiaSharp", CallingConvention = CallingConvention.Cdecl)]
-		static extern JSObject InterceptGLObject();
+		static extern void InterceptGLObject();
 	}
 }
