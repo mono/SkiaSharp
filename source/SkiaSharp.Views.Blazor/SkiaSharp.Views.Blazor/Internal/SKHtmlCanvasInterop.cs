@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -44,6 +46,15 @@ namespace SkiaSharp.Views.Blazor.Internal
 			if (callbackReference != null)
 				throw new InvalidOperationException("Unable to initialize the same canvas more than once.");
 
+			try
+			{
+				InterceptGLObject();
+			}
+			catch
+			{
+				// no-op
+			}
+
 			callbackReference = DotNetObjectReference.Create(callbackHelper);
 
 			return Invoke<GLInfo>(InitGLSymbol, htmlCanvas, htmlElementId, callbackReference);
@@ -76,5 +87,9 @@ namespace SkiaSharp.Views.Blazor.Internal
 			Invoke(PutImageDataSymbol, htmlCanvas, intPtr.ToInt64(), rawSize.Width, rawSize.Height);
 
 		public record GLInfo(int ContextId, uint FboId, int Stencils, int Samples, int Depth);
+
+		// Workaround for https://github.com/dotnet/runtime/issues/76077
+		[DllImport("libSkiaSharp", CallingConvention = CallingConvention.Cdecl)]
+		static extern JSObject InterceptGLObject();
 	}
 }
