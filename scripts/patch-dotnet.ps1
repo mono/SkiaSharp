@@ -10,6 +10,7 @@ if (Test-Path $dotnetSdk) {
   foreach ($version in $versions) {
     $root = Join-Path $version "Sdks/Microsoft.NET.Sdk.WindowsDesktop/targets"
     if (Test-Path $root) {
+      dir $root
       Move-Item (Join-Path $root Microsoft.WinFx.props) (Join-Path $root Microsoft.WinFX.props)
       Move-Item (Join-Path $root Microsoft.WinFx.targets) (Join-Path $root Microsoft.WinFX.targets)
     }
