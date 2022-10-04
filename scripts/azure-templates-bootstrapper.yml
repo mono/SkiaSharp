@@ -186,7 +186,6 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
           - ${{ if endsWith(parameters.name, '_linux') }}:
-            - pwsh: ls -l /opt/hostedtoolcache/dotnet/sdk/6.0.401/Sdks/Microsoft.NET.Sdk.WindowsDesktop/targets/
             - pwsh: .\scripts\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
               displayName: Fix the Microsoft.WinFX.* file
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
