@@ -185,6 +185,10 @@ jobs:
             displayName: Install the preview version of .NET Core
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
+          - ${{ if endsWith(parameters.name, '_linux') }}:
+            - pwsh: .\scripts\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+              displayName: Fix the Microsoft.WinFX.* file
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # display dotnet info
           - pwsh: dotnet --info
             displayName: Display all the .NET information
