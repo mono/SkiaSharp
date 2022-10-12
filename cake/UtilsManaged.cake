@@ -244,6 +244,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     comparer.SearchPaths.AddRange(GetDotNetPacksSearchPaths());
     comparer.SearchPaths.AddRange(GetReferenceSearchPaths());
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
+    comparer.IgnoreResolutionErrors = true;
 
     await AddDep("OpenTK.GLControl", "NET20");
     await AddDep("Tizen.NET", "netstandard2.0");
