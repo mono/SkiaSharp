@@ -61,6 +61,8 @@ Task("libSkiaSharp")
         $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
         $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
+        $"  { (hasSimdEnabled ? ", '-msimd128'" : "") } " +
+        $"  { (hasThreadingEnabled ? ", '-pthread'" : "") } " +
         $"] " +
         // SIMD support is based on https://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/modules/canvaskit/compile.sh#L57
         $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } ] " +
@@ -115,6 +117,7 @@ Task("libHarfBuzzSharp")
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
         $"visibility_hidden=false " +
+        $"extra_cflags=[ { (hasSimdEnabled ? "'-msimd128', " : "") } { (hasThreadingEnabled ? "'-pthread'" : "") } ] " +
         $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } ] " +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
