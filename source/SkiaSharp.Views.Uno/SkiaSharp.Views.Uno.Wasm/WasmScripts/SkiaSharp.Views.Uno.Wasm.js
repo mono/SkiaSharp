@@ -6,6 +6,8 @@
         (function (UWP) {
 
             class SKXamlCanvas {
+                static buffers = [];
+
                 static invalidateCanvas(pData, canvasId, width, height) {
                     var htmlCanvas = document.getElementById(canvasId);
                     htmlCanvas.width = width;
@@ -15,11 +17,36 @@
                     if (!ctx)
                         return false;
 
-                    var buffer = new Uint8ClampedArray(Module.HEAPU8.buffer, pData, width * height * 4);
-                    var imageData = new ImageData(buffer, width, height);
-                    ctx.putImageData(imageData, 0, 0);
+                    var byteLength = width * height * 4;
+
+                    if (isSecureContext) {
+                        // In a secure context (e.g. with threading enabled), creating a view
+                        // from Module.HEAPU8.buffer is not supported, so we're making an
+                        // explicit copy of the wasm memory.
+                        var buffer = SKXamlCanvas.buffers[canvasId];
+
+                        if (!buffer || buffer.length != byteLength) {
+                            SKXamlCanvas.buffers[canvasId] = buffer = new Uint8ClampedArray(new ArrayBuffer(byteLength));
+                        }
+
+                        var slice = Module.HEAPU8.buffer.slice(pData, pData + byteLength);
+                        buffer.set(new Uint8ClampedArray(slice), 0);
+                        var imageData = new ImageData(buffer, width, height);
+                        ctx.putImageData(imageData, 0, 0);
+                    }
+                    else {
+                        var buffer = new Uint8ClampedArray(Module.HEAPU8.buffer, byteLength);
+                        var imageData = new ImageData(buffer, width, height);
+                        ctx.putImageData(imageData, 0, 0);
+                    }
 
                     return true;
+                }
+
+                static clearCanvas(canvasId) {
+                    if (isSecureContext) {
+                        delete SKXamlCanvas.buffers[canvasId];
+                    }
                 }
             }
 

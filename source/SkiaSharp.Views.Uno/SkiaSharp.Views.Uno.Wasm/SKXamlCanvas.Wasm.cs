@@ -90,6 +90,8 @@ namespace SkiaSharp.Views.UWP
 
 		private void FreeBitmap()
 		{
+			WebAssemblyRuntime.InvokeJS(SKXamlCanvasFullTypeName + $".clearCanvas(\"{this.GetHtmlId()}\");");
+
 			if (pixels != null)
 			{
 				pixelsHandle.Free();
