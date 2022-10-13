@@ -140,14 +140,22 @@
                     // make current
                     GL.makeContextCurrent(ctx);
 
+                    // Starting from .NET 7 the GLctx is defined in an inaccessible scope
+                    // when the current GL context changes. We need to pick it up from the
+                    // GL.currentContext instead.
+                    let currentGLctx = GL.currentContext && GL.currentContext.GLctx;
+
+                    if (!currentGLctx)
+                        throw `Failed to get current WebGL context`;
+
                     // read values
                     this.canvas = canvas;
                     var info = {
                         ctx: ctx,
-                        fbo: GLctx.getParameter(GLctx.FRAMEBUFFER_BINDING),
-                        stencil: GLctx.getParameter(GLctx.STENCIL_BITS),
-                        sample: 0, // TODO: GLctx.getParameter(GLctx.SAMPLES)
-                        depth: GLctx.getParameter(GLctx.DEPTH_BITS),
+                        fbo: currentGLctx.getParameter(currentGLctx.FRAMEBUFFER_BINDING),
+                        stencil: currentGLctx.getParameter(currentGLctx.STENCIL_BITS),
+                        sample: 0, // TODO: currentGLctx.getParameter(GLctx.SAMPLES)
+                        depth: currentGLctx.getParameter(currentGLctx.DEPTH_BITS),
                     };
 
                     // format as array for nicer parsing
