@@ -21,7 +21,7 @@ namespace SkiaSharp.Views.UWP
 #if HAS_UNO_WINUI
 		const string SKSwapChainPanelTypeFullName = "SkiaSharp.Views.Windows." + nameof(SKSwapChainPanel);
 #else
-		const string SKSwapChainPanelTypeFullName = "SkiaSharp.Views.UWP" + nameof(SKSwapChainPanel);
+		const string SKSwapChainPanelTypeFullName = "SkiaSharp.Views.UWP." + nameof(SKSwapChainPanel);
 #endif
 
 		private const int ResourceCacheBytes = 256 * 1024 * 1024; // 256 MB

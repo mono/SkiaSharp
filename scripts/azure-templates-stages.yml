@@ -388,6 +388,14 @@ stages:
                 displayName: '3.1.12_SIMD'
                 version: 3.1.12
                 features: simd
+              - 3.1.12:
+                displayName: '3.1.12_Threading'
+                version: 3.1.12
+                features: mt
+              - 3.1.12:
+                displayName: '3.1.12_Threading_SIMD'
+                version: 3.1.12
+                features: mt,simd
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: managed
