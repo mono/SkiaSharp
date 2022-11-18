@@ -9,6 +9,14 @@
     <Title>SkiaSharp Views &amp; Layers for Windows Presentation Foundation (WPF)</Title>
     <PackageTags>wpf</PackageTags>
   </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+    <PackageReference Include="OpenTK" Version="3.3.1" NoWarn="NU1701" />
+    <PackageReference Include="OpenTK.GLWpfControl" Version="3.3.0" NoWarn="NU1701" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+    <PackageReference Include="OpenTK" Version="4.3.0" NoWarn="NU1701" />
+    <PackageReference Include="OpenTK.GLWpfControl" Version="4.2.2" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\SkiaSharp.Views.Desktop.Common\SkiaSharp.Views.Desktop.Common.csproj" />
