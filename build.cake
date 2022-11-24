@@ -10,7 +10,7 @@
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
 #tool nuget:?package=mdoc&version=5.8.9
-#tool nuget:?package=xunit.runner.console&version=2.4.1
+#tool nuget:?package=xunit.runner.console&version=2.4.2
 #tool nuget:?package=vswhere&version=2.8.4
 
 using System.Linq;

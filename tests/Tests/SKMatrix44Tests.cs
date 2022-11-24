@@ -227,8 +227,8 @@ namespace SkiaSharp.Tests
 			var resultRotateValue = matrixRotate.MapPoint(new SKPoint(5, 25));
 
 			Assert.Equal(new SKPoint(0f, 0f), resultRotateZero);
-			Assert.Equal(0, resultRotateValue.X, PRECISION);
-			Assert.Equal(25, resultRotateValue.Y, PRECISION);
+			Assert.Equal((double)0, (double)resultRotateValue.X, PRECISION);
+			Assert.Equal((double)25, (double)resultRotateValue.Y, PRECISION);
 		}
 
 		[SkippableFact]
