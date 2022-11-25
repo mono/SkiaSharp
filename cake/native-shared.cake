@@ -101,6 +101,7 @@ bool Skip(string arch)
         case "armv7k":
             arch = "arm";
             break;
+        case "arm64":
         case "arm64_32":
         case "arm64-v8a":
             arch = "arm64";

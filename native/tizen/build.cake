@@ -15,6 +15,7 @@ Task("libSkiaSharp")
     .Does(() =>
 {
     Build("armel", "arm", "mobile-4.0-device.core");
+    Build("arm64", "arm64", "mobile-4.0-device.core");
     Build("i386", "x86", "mobile-4.0-emulator.core");
 
     void Build(string arch, string skiaArch, string rootstrap)
@@ -54,6 +55,7 @@ Task("libHarfBuzzSharp")
     .Does(() =>
 {
     Build("armel", "arm", "mobile-4.0-device.core");
+    Build("arm64", "arm64", "mobile-4.0-device.core");
     Build("i386", "x86", "mobile-4.0-emulator.core");
 
     void Build(string arch, string cliArch, string rootstrap)
