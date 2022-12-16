@@ -19,6 +19,7 @@ namespace SkiaSharp.Views.Blazor
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
 
+		private bool autoResize;
 		private GRContext? context;
 		private GRGlInterface? glInterface;
 		private GRBackendRenderTarget? renderTarget;
@@ -32,6 +33,26 @@ namespace SkiaSharp.Views.Blazor
 
 		[Inject]
 		IJSRuntime JS { get; set; } = null!;
+
+		/// <summary>
+		/// If true (default), the canvas will be automatically resized to fit the client width and height. 
+		/// </summary>
+		[Parameter]
+		public bool AutoResize
+		{
+			get => autoResize;
+			set
+			{
+				if (autoResize != value)
+				{
+					if (!autoResize && value) sizeWatcher.Start();
+					if (autoResize && !value) sizeWatcher.Stop();
+
+					autoResize = value;
+					Invalidate();
+				}
+			}
+		} = true;
 
 		[Parameter]
 		public Action<SKPaintGLSurfaceEventArgs>? OnPaintSurface { get; set; }
@@ -186,7 +207,7 @@ namespace SkiaSharp.Views.Blazor
 		public void Dispose()
 		{
 			dpiWatcher.Unsubscribe(OnDpiChanged);
-			sizeWatcher.Dispose();
+			sizeWatcher?.Dispose();
 			interop.Dispose();
 		}
 	}

@@ -15,6 +15,7 @@ namespace SkiaSharp.Views.Blazor
 		private DpiWatcherInterop dpiWatcher = null!;
 		private ElementReference htmlCanvas;
 
+		private bool autoResize;
 		private SKSizeI pixelSize;
 		private byte[]? pixels;
 		private GCHandle pixelsHandle;
@@ -57,6 +58,26 @@ namespace SkiaSharp.Views.Blazor
 			}
 		}
 
+		/// <summary>
+		/// If true (default), the canvas will be automatically resized to fit the client width and height. 
+		/// </summary>
+		[Parameter]
+		public bool AutoResize
+		{
+			get => autoResize;
+			set
+			{
+				if (autoResize != value)
+				{
+					if (!autoResize && value) sizeWatcher.Start();
+					if (autoResize && !value) sizeWatcher.Stop();
+
+					autoResize = value;
+					Invalidate();
+				}
+			}
+		} = true;
+
 		[Parameter(CaptureUnmatchedValues = true)]
 		public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
@@ -67,7 +88,7 @@ namespace SkiaSharp.Views.Blazor
 				interop = await SKHtmlCanvasInterop.ImportAsync(JS, htmlCanvas, OnRenderFrame);
 				interop.InitRaster();
 
-				sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
+				await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
 				dpiWatcher = await DpiWatcherInterop.ImportAsync(JS, OnDpiChanged);
 			}
 		}
@@ -167,7 +188,7 @@ namespace SkiaSharp.Views.Blazor
 		public void Dispose()
 		{
 			dpiWatcher.Unsubscribe(OnDpiChanged);
-			sizeWatcher.Dispose();
+			sizeWatcher?.Dispose();
 			interop.Dispose();
 
 			FreeBitmap();

@@ -17,11 +17,13 @@ namespace SkiaSharp.Views.Blazor.Internal
 
 		private DotNetObjectReference<FloatFloatActionHelper>? callbackReference;
 
+		/// <summary>
+		/// Imports the SizeWatcher script, but doesn't start observing.
+		/// </summary>
 		public static async Task<SizeWatcherInterop> ImportAsync(IJSRuntime js, ElementReference element, Action<SKSize> callback)
 		{
 			var interop = new SizeWatcherInterop(js, element, callback);
 			await interop.ImportAsync();
-			interop.Start();
 			return interop;
 		}
 
