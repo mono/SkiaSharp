@@ -30,10 +30,29 @@
     <LangVersion Condition="$(IsWindows)">10.0</LangVersion>
     <DotNetSdkManifestVersionRegex>\d+\.\d+\.\d+(-[a-z]+\.\d+)?</DotNetSdkManifestVersionRegex>
     <DotNetSdkVersionRegex>\d+\.\d+</DotNetSdkVersionRegex>
-    <DotNetSdkManifestVersion>$([System.Text.RegularExpressions.Regex]::Match('$(MSBuildExtensionsPath)', '$(DotNetSdkManifestVersionRegex)'))</DotNetSdkManifestVersion>
+    <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' == 'Core'">$([System.Text.RegularExpressions.Regex]::Match('$(MSBuildExtensionsPath)', '$(DotNetSdkManifestVersionRegex)'))</DotNetSdkManifestVersion>
+    <!-- TODO: find a way to detect the installed SDK version -->
+    <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' != 'Core'"></DotNetSdkManifestVersion>
     <DotNetSdkVersion Condition="'$(DotNetSdkManifestVersion)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(DotNetSdkManifestVersion)', '$(DotNetSdkVersionRegex)'))</DotNetSdkVersion>
     <DotNetBaseVersion>6.0</DotNetBaseVersion>
     <DotNetNextVersion Condition="'$(DotNetSdkVersion)' != '' and $([MSBuild]::VersionGreaterThan($(DotNetSdkVersion), $(DotNetBaseVersion)))">$(DotNetSdkVersion)</DotNetNextVersion>
+  </PropertyGroup>
+
+  <!-- Try determine which .NET workloads are installed for LOCAL builds -->
+  <PropertyGroup Condition="!$(IsCI)">
+    <DotNetWorkloadVersionRegex>\d+\.\d+\.\d+(-[a-z]+[\.\d+]+)?</DotNetWorkloadVersionRegex>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists('$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)\microsoft.net.sdk.macos\WorkloadManifest.json')">$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)\</DotNetWorkloadInstallLocation>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists('$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)\microsoft.net.sdk.macos\WorkloadManifest.json')">$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)\</DotNetWorkloadInstallLocation>
+    <DotNetWorkloadPacksInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' != ''">$(DotNetWorkloadInstallLocation)..\..\packs\</DotNetWorkloadPacksInstallLocation>
+    <DotNetTizenWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)samsung.net.sdk.tizen\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\samsung.net.sdk.tizen\WorkloadManifest.json')), $(DotNetWorkloadVersionRegex)))</DotNetTizenWorkloadInstalledVersion>
+    <DotNetTVOSWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.tvos\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.tvos\WorkloadManifest.json')), '$(DotNetWorkloadVersionRegex)'))</DotNetTVOSWorkloadInstalledVersion>
+    <DotNetMacOSWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.macos\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.macos\WorkloadManifest.json')), '$(DotNetWorkloadVersionRegex)'))</DotNetMacOSWorkloadInstalledVersion>
+    <DotNetTizenWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Samsung.Tizen.Sdk\$(DotNetTizenWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetTizenWorkloadIsInstalled>
+    <DotNetTVOSWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.tvOS.Sdk\$(DotNetMacOSWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetTVOSWorkloadIsInstalled>
+    <DotNetMacOSWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.macOS.Sdk\$(DotNetMacOSWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetMacOSWorkloadIsInstalled>
+    <IsNetTizenSupported Condition="'$(DotNetTizenWorkloadIsInstalled)' != 'true'">false</IsNetTizenSupported>
+    <IsNetTVOSSupported Condition="'$(DotNetTVOSWorkloadIsInstalled)' != 'true'">false</IsNetTVOSSupported>
+    <IsNetMacOSSupported Condition="'$(DotNetMacOSWorkloadIsInstalled)' != 'true'">false</IsNetMacOSSupported>
   </PropertyGroup>
 
   <PropertyGroup>

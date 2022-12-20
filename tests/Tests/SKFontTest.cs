@@ -240,7 +240,7 @@ namespace SkiaSharp.Tests
 			var textPath = font.GetTextPath(text, SKPoint.Empty);
 			var pathWidth = textPath.TightBounds.Width;
 
-			Assert.Equal(pathWidth, diff, 2);
+			Assert.Equal((double)pathWidth, (double)diff, 2);
 		}
 
 		[SkippableFact]
