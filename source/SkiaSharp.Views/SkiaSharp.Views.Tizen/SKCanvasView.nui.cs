@@ -1,4 +1,5 @@
-﻿using Tizen.NUI;
+﻿using System;
+using Tizen.NUI;
 
 namespace SkiaSharp.Views.Tizen.NUI
 {
@@ -53,8 +54,8 @@ namespace SkiaSharp.Views.Tizen.NUI
 					skiaCanvas.Scale((float)ScalingInfo.ScalingFactor);
 					skiaCanvas.Save();
 
-					canvasSize.Width = (int)ScalingInfo.FromPixel(width);
-					canvasSize.Height = (int)ScalingInfo.FromPixel(height);
+					canvasSize.Width = (int)Math.Round(ScalingInfo.FromPixel(width));
+					canvasSize.Height = (int)Math.Round(ScalingInfo.FromPixel(height));
 				}
 				else
 				{
