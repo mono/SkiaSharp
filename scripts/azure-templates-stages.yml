@@ -898,7 +898,7 @@ stages:
             name: native_checks_windows
             displayName: Run Code Checks
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/'))
+            condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: git-sync-deps
             installWindowsSdk: false
