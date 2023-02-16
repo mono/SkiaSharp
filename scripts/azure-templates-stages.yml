@@ -906,13 +906,7 @@ stages:
             installDotNet: false
             shouldPublish: false
             postBuildSteps:
-              - task: CredScan@2
-                displayName: Analyze source for credentials
-                condition: always()
-                inputs:
-                  toolMajorVersion: 'V2'
-                  suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
-              - task: PoliCheck@1
+              - task: PoliCheck@2
                 displayName: Run PoliCheck
                 condition: always()
                 inputs:
@@ -924,7 +918,7 @@ stages:
                 condition: always()
                 inputs:
                   GdnExportAllTools: false
-                  GdnExportGdnToolApiScan: true
+                  GdnExportGdnToolCredScan: true
                   GdnExportGdnToolPoliCheck: true
                   GdnExportOutputSuppressionFile: source.gdnsuppress
               - task: PublishSecurityAnalysisLogs@3
