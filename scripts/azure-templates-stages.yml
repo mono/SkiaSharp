@@ -906,6 +906,11 @@ stages:
             installDotNet: false
             shouldPublish: false
             postBuildSteps:
+              - task: CredScan@3
+                displayName: Analyze source for credentials
+                condition: always()
+                inputs:
+                  suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
               - task: PoliCheck@2
                 displayName: Run PoliCheck
                 condition: always()
@@ -923,6 +928,15 @@ stages:
                   GdnExportOutputSuppressionFile: source.gdnsuppress
               - task: PublishSecurityAnalysisLogs@3
                 displayName: Publish security analysis logs
+                condition: always()
+              - pwsh: |
+                  $tsaConfig = '$(System.DefaultWorkingDirectory)\build\automation\tsaoptions-v2.json'
+                  $tsaConfigJson = Get-Content $tsaConfig | ConvertFrom-Json
+                  $tsaConfigJson | Add-Member -Type NoteProperty -Name 'SuppressionFiles' -Value @("$(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress")
+                  $tsaConfigJson | Add-Member -Type NoteProperty -Name 'SuppressionSets' -Value @("default")
+                  $tsaConfigJson | ConvertTo-Json | Out-File $tsaConfig
+                  cat $tsaConfig
+                displayName: Update TSA suppressions
                 condition: always()
               - task: TSAUpload@2
                 displayName: Publish TSA logs
