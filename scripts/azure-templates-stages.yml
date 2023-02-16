@@ -911,61 +911,32 @@ stages:
                 condition: always()
                 inputs:
                   toolMajorVersion: 'V2'
+                  suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
               - task: PoliCheck@1
                 displayName: Run PoliCheck
                 condition: always()
                 inputs:
                   inputType: 'Basic'
                   targetType: 'F'
-                  optionsUEPATH: $(Build.SourcesDirectory)\scripts\PoliCheckExclusions.xml
-              - task: SdtReport@1
+                  optionsUEPATH: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
+              - task: SdtReport@2
                 displayName: Create security analysis report
                 condition: always()
                 inputs:
-                  AllTools: false
-                  APIScan: false
-                  BinSkim: false
-                  CodesignValidation: false
-                  CredScan: true
-                  FortifySCA: false
-                  FxCop: false
-                  ModernCop: false
-                  MSRD: false
-                  PoliCheck: true
-                  RoslynAnalyzers: false
-                  SDLNativeRules: false
-                  Semmle: false
-                  TSLint: false
-                  ToolLogsNotFoundAction: 'Standard'
+                  GdnExportAllTools: false
+                  GdnExportGdnToolApiScan: true
+                  GdnExportGdnToolPoliCheck: true
+                  GdnExportOutputSuppressionFile: source.gdnsuppress
               - task: PublishSecurityAnalysisLogs@3
                 displayName: Publish security analysis logs
                 condition: always()
-              - task: TSAUpload@1
+              - task: TSAUpload@2
                 displayName: Publish TSA logs
                 condition: always()
                 continueOnError: true
                 inputs:
-                  tsaVersion: 'TsaV2'
-                  codebase: 'NewOrUpdate'
-                  tsaEnvironment: 'PROD'
-                  codeBaseName: 'SkiaSharp_main'
-                  notificationAlias: 'xamacomd@microsoft.com'
-                  notifyAlwaysV2: false
-                  instanceUrlForTsaV2: 'DEVDIV'
-                  projectNameDEVDIV: 'DevDiv'
-                  areaPath: 'DevDiv\VS Client - Runtime SDKs\SkiaSharp'
-                  iterationPath: 'DevDiv\Future Backlog'
-                  uploadAPIScan: false
-                  uploadBinSkim: false
-                  uploadCredScan: true
-                  uploadFortifySCA: false
-                  uploadFxCop: false
-                  uploadModernCop: false
-                  uploadPoliCheck: true
-                  uploadPREfast: false
-                  uploadRoslyn: false
-                  uploadTSLint: false
-                  uploadAsync: true
+                  GdnPublishTsaOnboard: true
+                  GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
 
   - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
     - stage: finalize
