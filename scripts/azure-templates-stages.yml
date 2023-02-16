@@ -930,7 +930,7 @@ stages:
                 displayName: Publish security analysis logs
                 condition: always()
               - pwsh: |
-                  $tsaConfig = '$(System.DefaultWorkingDirectory)\build\automation\tsaoptions-v2.json'
+                  $tsaConfig = '$(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json'
                   $tsaConfigJson = Get-Content $tsaConfig | ConvertFrom-Json
                   $tsaConfigJson | Add-Member -Type NoteProperty -Name 'SuppressionFiles' -Value @("$(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress")
                   $tsaConfigJson | Add-Member -Type NoteProperty -Name 'SuppressionSets' -Value @("default")
