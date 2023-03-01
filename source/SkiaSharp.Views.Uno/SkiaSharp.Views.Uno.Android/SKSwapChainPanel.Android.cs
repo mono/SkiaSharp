@@ -31,6 +31,8 @@ namespace SkiaSharp.Views.UWP
 		partial void DoLoaded()
 		{
 			glTextureView = new SKGLTextureView(Context);
+			// Force the opacity to false for consistency with the other platforms
+			glTextureView.SetOpaque(false);
 			DoEnableRenderLoop(EnableRenderLoop);
 			glTextureView.PaintSurface += OnPaintSurface;
 			AddView(glTextureView);
