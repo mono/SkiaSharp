@@ -20,6 +20,9 @@ namespace SkiaSharp.Views.UWP
 		public SKXamlCanvas()
 		{
 			Initialize();
+#if MACOS
+			Opaque = false;
+#endif
 		}
 
 		partial void DoLoaded() =>
