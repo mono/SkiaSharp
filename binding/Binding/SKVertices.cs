@@ -56,20 +56,20 @@ namespace SkiaSharp
 			if (vertexOffset >= positions.Length)
 				throw new ArgumentException ("The vertex offset should be in bounds of vertex array.", nameof (vertexOffset));
 
-			if (vertexOffset + vertexCount >= positions.Length)
+			if (vertexOffset + vertexCount > positions.Length)
 				throw new ArgumentException ("The vertex count should be in bounds of vertex array.", nameof (vertexOffset));
 
 			if (indexOffset >= indices.Length)
 				throw new ArgumentException ("The index offset should be in bounds of index array.", nameof (vertexOffset));
 
-			if (indexOffset + indexCount >= indices.Length)
+			if (indexOffset + indexCount > indices.Length)
 				throw new ArgumentException ("The vertex count should be in bounds of vertex array.", nameof (vertexOffset));
 
 			fixed (SKPoint* p = positions)
 			fixed (SKPoint* t = texs)
 			fixed (SKColor* c = colors)
 			fixed (UInt16* i = indices) {
-				return GetObject (SkiaApi.sk_vertices_make_copy (vmode, vertexCount, p + vertexOffset, t + vertexOffset, (uint*)c + vertexOffset, indexCount, i + indexOffset));
+				return GetObject (SkiaApi.sk_vertices_make_copy (vmode, vertexCount, p + vertexOffset * sizeof(SKPoint), t + vertexOffset * sizeof(SKPoint), (uint*)c + vertexOffset * sizeof(uint), indexCount, i + indexOffset * sizeof(ushort)));
 			}
 		}
 
