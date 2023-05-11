@@ -376,10 +376,14 @@ stages:
                 displayName: 2.0.23
                 version: 2.0.23
                 features: none
+
+              # .NET 6
               - 3.1.7:
                 displayName: 3.1.7
                 version: 3.1.7
                 features: none
+
+              # .NET 7
               - 3.1.12:
                 displayName: 3.1.12
                 version: 3.1.12
@@ -395,6 +399,24 @@ stages:
               - 3.1.12:
                 displayName: '3.1.12_Threading_SIMD'
                 version: 3.1.12
+                features: mt,simd
+
+              # .NET 8 Preview 4
+              - 3.1.34:
+                displayName: 3.1.34
+                version: 3.1.34
+                features: st
+              - 3.1.34:
+                displayName: '3.1.34_SIMD'
+                version: 3.1.34
+                features: simd
+              - 3.1.34:
+                displayName: '3.1.34_Threading'
+                version: 3.1.34
+                features: mt
+              - 3.1.34:
+                displayName: '3.1.34_Threading_SIMD'
+                version: 3.1.34
                 features: mt,simd
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
