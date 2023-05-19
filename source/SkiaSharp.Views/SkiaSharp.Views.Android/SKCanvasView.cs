@@ -49,15 +49,15 @@ namespace SkiaSharp.Views.Android
 			{
 				using var a = Context.ObtainStyledAttributes(attrs, Resource.Styleable.SKCanvasView);
 
-				var N = a.IndexCount;
+				var N = a?.IndexCount ?? 0;
 				for (var i = 0; i < N; ++i)
 				{
-					var attr = a.GetIndex(i);
+					var attr = a?.GetIndex(i) ?? 0;
 					if (attr == Resource.Styleable.SKCanvasView_ignorePixelScaling)
-						IgnorePixelScaling = a.GetBoolean(attr, false);
+						IgnorePixelScaling = a?.GetBoolean(attr, false);
 				}
 
-				a.Recycle();
+				a?.Recycle();
 			}
 		}
 
