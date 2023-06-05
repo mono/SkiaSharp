@@ -1,6 +1,9 @@
 FROM amd64/debian:9
-RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list \
-    && sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
+RUN echo "deb http://snapshot.debian.org/archive/debian/20220622T000000Z stretch main" > /etc/apt/sources.list \
+    && echo "deb http://snapshot.debian.org/archive/debian-security/20220622T000000Z stretch/updates main" >> /etc/apt/sources.list \
+    && echo "deb http://snapshot.debian.org/archive/debian/20220622T000000Z stretch-updates main" >> /etc/apt/sources.list
+
+RUN cat /etc/apt/sources.list
 
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 3.1.412 | * ]

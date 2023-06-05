@@ -13,7 +13,6 @@ Task("libSkiaSharp")
 {
     if (VARIANT.ToLower() == "ios") {
         Build("iphonesimulator", "x86_64", "x64");
-        Build("iphoneos", "armv7", "arm");
         Build("iphoneos", "arm64", "arm64");
 
         CreateFatFramework(OUTPUT_PATH.Combine("ios/libSkiaSharp"));
