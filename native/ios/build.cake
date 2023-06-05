@@ -12,7 +12,6 @@ Task("libSkiaSharp")
     .Does(() =>
 {
     if (VARIANT.ToLower() == "ios") {
-        Build("iphonesimulator", "i386", "x86");
         Build("iphonesimulator", "x86_64", "x64");
         Build("iphoneos", "armv7", "arm");
         Build("iphoneos", "arm64", "arm64");
@@ -32,6 +31,7 @@ Task("libSkiaSharp")
         GnNinja($"{VARIANT}/{arch}", "skia modules/skottie",
             $"target_cpu='{skiaArch}' " +
             $"target_os='{VARIANT}' " +
+            $"min_ios_version='11.0' " +
             $"skia_use_icu=false " +
             $"skia_use_metal={(sdk == "macosx" ? "false" : "true")} " +
             $"skia_use_piex=true " +
@@ -58,9 +58,7 @@ Task("libHarfBuzzSharp")
     .Does(() =>
 {
     if (VARIANT.ToLower() == "ios") {
-        Build("iphonesimulator", "i386");
         Build("iphonesimulator", "x86_64");
-        Build("iphoneos", "armv7");
         Build("iphoneos", "arm64");
 
         CreateFatFramework(OUTPUT_PATH.Combine("ios/libHarfBuzzSharp"));
