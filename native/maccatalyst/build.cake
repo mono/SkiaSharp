@@ -8,6 +8,7 @@ Task("libSkiaSharp")
     .Does(() =>
 {
     RunCake("../ios/build.cake", "libSkiaSharp", new Dictionary<string, string> {
+        { "gnArgs", $"min_maccatalyst_version='13.1'" },
         { "variant", "maccatalyst" },
     });
 });

@@ -34,7 +34,6 @@ Task("libSkiaSharp")
             $"target_os='{VARIANT}' " +
             $"skia_use_icu=false " +
             $"skia_use_metal={(sdk == "macosx" ? "false" : "true")} " +
-            $"min_maccatalyst_version='13.1' " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +
@@ -43,7 +42,8 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] ");
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] " +
+            ADDITIONAL_GN_ARGS);
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch, platform: VARIANT);
 
