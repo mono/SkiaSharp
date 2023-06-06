@@ -56,7 +56,7 @@ RUN ln -s /usr/${TOOLCHAIN_ARCH}/include/c++/${TOOLCHAIN_VERSION}.* /usr/${TOOLC
 ARG FONTCONFIG_VERSION=2.11.0-6.7+b1
 RUN (mkdir -p /skia-utils/libfontconfig1-dev \
     && cd /skia-utils/libfontconfig1-dev \
-    && wget -O libfontconfig1-dev.deb http://ftp.nl.debian.org/debian/pool/main/f/fontconfig/libfontconfig1-dev_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && wget -O libfontconfig1-dev.deb http://archive.debian.org/debian/pool/main/f/fontconfig/libfontconfig1-dev_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
     && ar vx libfontconfig1-dev.deb \
     && tar -xJvf data.tar.xz \
     && rm libfontconfig1-dev.deb \
@@ -64,7 +64,7 @@ RUN (mkdir -p /skia-utils/libfontconfig1-dev \
     && cp -R usr/include/* /usr/${TOOLCHAIN_ARCH}/include/ )
 RUN (mkdir -p /skia-utils/libfontconfig1 \
     && cd /skia-utils/libfontconfig1 \
-    && wget -O libfontconfig1.deb http://ftp.nl.debian.org/debian/pool/main/f/fontconfig/libfontconfig1_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && wget -O libfontconfig1.deb http://archive.debian.org/debian/pool/main/f/fontconfig/libfontconfig1_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
     && ar vx libfontconfig1.deb \
     && tar -xJvf data.tar.xz \
     && rm libfontconfig1.deb \
