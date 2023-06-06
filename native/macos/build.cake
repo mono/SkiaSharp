@@ -20,7 +20,7 @@ Task("libSkiaSharp")
 
         var minVersion = skiaArch.ToLower() == "arm64"
             ? "11.0"
-            : "10.8";
+            : "10.9";
 
         GnNinja($"macos/{arch}", "skia modules/skottie",
             $"target_os='mac' " +
