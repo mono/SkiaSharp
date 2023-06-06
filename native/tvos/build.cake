@@ -21,6 +21,7 @@ Task("libSkiaSharp")
         GnNinja($"tvos/{arch}", "skia modules/skottie",
             $"target_os='tvos' " +
             $"target_cpu='{skiaArch}' " +
+            $"min_ios_version='9.0' " +
             $"skia_use_icu=false " +
             $"skia_use_metal=false " +
             $"skia_use_piex=true " +

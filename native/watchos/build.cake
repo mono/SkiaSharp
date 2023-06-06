@@ -22,6 +22,7 @@ Task("libSkiaSharp")
         GnNinja($"watchos/{arch}", "skia modules/skottie",
             $"target_os='watchos' " +
             $"target_cpu='{skiaArch}' " +
+            $"min_watchos_version='2.0' " +
             $"skia_enable_gpu=false " +
             $"skia_use_icu=false " +
             $"skia_use_metal=false " +
