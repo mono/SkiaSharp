@@ -234,6 +234,8 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x86
+            preBuildSteps:
+              - template: azure-templates-provisioning-profiles.yml
         - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
           parameters:
             name: native_android_x64_macos
