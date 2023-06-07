@@ -1,4 +1,6 @@
 FROM amd64/debian:9
+RUN echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list \
+    && echo "deb http://archive.debian.org/debian-security stretch/updates main" >> /etc/apt/sources.list
 
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 3.1.412 | * ]
@@ -24,7 +26,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 ARG DOTNET_SDK_VERSION=3.1.412
-
 RUN wget -O dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/$DOTNET_SDK_VERSION/dotnet-sdk-$DOTNET_SDK_VERSION-linux-x64.tar.gz \
     && dotnet_sha512='1ed0c1ab48723cef834906a55fb1889b29dd810cd2bc66cbd345a0baf8a2796045b5b7f4beef3c48bd56bef3ffed690b6fae4a5f017ad8687817b25a76fbd9be' \
     && echo "$dotnet_sha512  dotnet.tar.gz" | sha512sum -c - \
@@ -32,9 +33,7 @@ RUN wget -O dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/$DOTNET_SDK
     && tar -C /usr/share/dotnet -xzf dotnet.tar.gz \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm dotnet.tar.gz
-
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 1
-
 RUN dotnet help
 
 # toolchain (gcc/g++)
@@ -57,7 +56,7 @@ RUN ln -s /usr/${TOOLCHAIN_ARCH}/include/c++/${TOOLCHAIN_VERSION}.* /usr/${TOOLC
 ARG FONTCONFIG_VERSION=2.11.0-6.7+b1
 RUN (mkdir -p /skia-utils/libfontconfig1-dev \
     && cd /skia-utils/libfontconfig1-dev \
-    && wget -O libfontconfig1-dev.deb http://ftp.nl.debian.org/debian/pool/main/f/fontconfig/libfontconfig1-dev_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && wget -O libfontconfig1-dev.deb http://archive.debian.org/debian/pool/main/f/fontconfig/libfontconfig1-dev_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
     && ar vx libfontconfig1-dev.deb \
     && tar -xJvf data.tar.xz \
     && rm libfontconfig1-dev.deb \
@@ -65,7 +64,7 @@ RUN (mkdir -p /skia-utils/libfontconfig1-dev \
     && cp -R usr/include/* /usr/${TOOLCHAIN_ARCH}/include/ )
 RUN (mkdir -p /skia-utils/libfontconfig1 \
     && cd /skia-utils/libfontconfig1 \
-    && wget -O libfontconfig1.deb http://ftp.nl.debian.org/debian/pool/main/f/fontconfig/libfontconfig1_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && wget -O libfontconfig1.deb http://archive.debian.org/debian/pool/main/f/fontconfig/libfontconfig1_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
     && ar vx libfontconfig1.deb \
     && tar -xJvf data.tar.xz \
     && rm libfontconfig1.deb \
