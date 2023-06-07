@@ -20,10 +20,9 @@ namespace SkiaSharp.Views.UWP
 		public SKXamlCanvas()
 		{
 			Initialize();
-#if MACOS
-			Opaque = false;
-#endif
 		}
+
+		public override bool IsOpaque => false;
 
 		partial void DoLoaded() =>
 			drawable = new SKCGSurfaceFactory();
