@@ -43,7 +43,6 @@ Write-Host "Installing Visual Studio..."
 $exitCode = & "$temp\dd_vs_community.exe" --quiet --norestart --wait `
   --includeRecommended `
   --add Microsoft.VisualStudio.Workload.NetCrossPlat `
-  --add Microsoft.VisualStudio.Workload.NetCoreTools `
   --add Microsoft.VisualStudio.Workload.ManagedDesktop `
   --add Microsoft.VisualStudio.Workload.Universal `
   | Out-Null
@@ -53,6 +52,9 @@ Write-Host "Exit code: $exitCode"
 $vsLogs = 'output\logs\vs-logs'
 New-Item -ItemType Directory -Force -Path "$vsLogs" | Out-Null
 Get-ChildItem "$temp\dd_*" |
+  Where-Object { $_.CreationTime -gt $startTime } |
+  Copy-Item -Destination "$vsLogs"
+Get-ChildItem "$env:TEMP\dd_*" |
   Where-Object { $_.CreationTime -gt $startTime } |
   Copy-Item -Destination "$vsLogs"
 
