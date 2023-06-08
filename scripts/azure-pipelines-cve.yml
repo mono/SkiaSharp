@@ -35,20 +35,21 @@ parameters:
 strategy:
   matrix:
     windows:
-      pool: ${{ parameters.VM_IMAGE_WINDOWS }}
+      vmImage: ${{ parameters.VM_IMAGE_WINDOWS }}
     macos:
-      pool: ${{ parameters.VM_IMAGE_MAC }}
+      vmImage: ${{ parameters.VM_IMAGE_MAC }}
     linux:
-      pool: ${{ parameters.VM_IMAGE_LINUX }}
-  maxParallel: 3
-
-pool: $(pool)
+      vmImage: ${{ parameters.VM_IMAGE_LINUX }}
 
 resources:
   pipelines:
     - pipeline: SkiaSharp
       source: SkiaSharp
       trigger: none
+
+pool:
+  name: Azure Pipelines
+  vmImage: $(vmImage)
 
 steps:
 
