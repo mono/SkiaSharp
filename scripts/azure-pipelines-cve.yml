@@ -1,0 +1,30 @@
+trigger: none
+
+pr: none
+
+parameters:
+  - name: buildExternals
+    displayName: 'The specific native artifacts to use for this build.'
+    type: string
+    default: 'latest'
+
+pool:
+  name: Azure Pipelines
+  vmImage: ubuntu-20.04
+
+steps:
+  - pwsh: pip install cve-bin-tool
+    displayName: Install the CVE Binary Tool
+  - pwsh: |
+      
+      Copy-Item
+    displayName: Copy the binaries to be scanned
+  - pwsh: cve-bin-tool output/native/linux --nvd-api-key ${env:NVD_TOKEN}
+    displayName: Run the CVE Binary Tool
+    continueOnError: true
+  - pwsh: cve-bin-tool output/native/osx --nvd-api-key ${env:NVD_TOKEN}
+    displayName: Run the CVE Binary Tool
+    continueOnError: true
+  - pwsh: cve-bin-tool output/native/windows --nvd-api-key ${env:NVD_TOKEN}
+    displayName: Run the CVE Binary Tool
+    continueOnError: true
