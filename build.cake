@@ -941,6 +941,9 @@ Task ("clean-managed")
 Task ("----------------------------------")
     .Description ("--------------------------------------------------");
 
+Task ("Empty")
+    .Description ("This task does nothing.");
+
 Task ("Default")
     .Description ("Build all managed assemblies and external dependencies.")
     .IsDependentOn ("externals")
