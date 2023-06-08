@@ -19,12 +19,21 @@ resources:
       trigger: none
 
 steps:
+
+  - task: UsePythonVersion@0
+    displayName: Switch to the correct Python version
+    inputs:
+      versionSpec: '3.x'
+      architecture: 'x64'
+
+  - pwsh: pip install cve-bin-tool
+    displayName: Install the CVE Binary Tool
+
   - template: azure-templates-download-artifacts.yml
     parameters:
       sourceBuildId: ${{ parameters.buildId }}
       artifacts:
        - name: nuget-signed
-  - pwsh: pip install cve-bin-tool
-    displayName: Install the CVE Binary Tool
+
   - pwsh: cve-bin-tool output --nvd-api-key ${env:NVD_TOKEN}
     displayName: Run the CVE Binary Tool
