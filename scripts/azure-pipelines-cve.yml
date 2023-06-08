@@ -12,6 +12,11 @@ pool:
   name: Azure Pipelines
   vmImage: ubuntu-20.04
 
+resources:
+  pipelines:
+    - pipeline: SkiaSharp
+      source: SkiaSharp
+
 steps:
   - template: azure-templates-download-artifacts.yml
     parameters:
