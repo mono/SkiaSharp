@@ -1,6 +1,6 @@
 #addin nuget:?package=Cake.XCode&version=5.0.0
 
-void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, string platform = null)
+void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, string platform = null, Dictionary<string, string> properties = null)
 {
     var dir = project.GetDirectory();
 
@@ -20,6 +20,11 @@ void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, str
     };
     if (platform != null) {
         settings.BuildSettings["PLATFORM"] = platform;
+    }
+    if (properties != null) {
+        foreach (var prop in properties) {
+            settings.BuildSettings[prop.Key] = prop.Value;
+        }
     }
 
     XCodeBuild(settings);

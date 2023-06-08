@@ -4,6 +4,11 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/watcho
 #load "../../cake/native-shared.cake"
 #load "../../cake/xcode.cake"
 
+string GetDeploymentTarget(string arch)
+{
+    return "2.0";
+}
+
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnMacOs())
@@ -22,7 +27,7 @@ Task("libSkiaSharp")
         GnNinja($"watchos/{arch}", "skia modules/skottie",
             $"target_os='watchos' " +
             $"target_cpu='{skiaArch}' " +
-            $"min_watchos_version='2.0' " +
+            $"min_watchos_version='{GetDeploymentTarget(arch)}' " +
             $"skia_enable_gpu=false " +
             $"skia_use_icu=false " +
             $"skia_use_metal=false " +
@@ -36,7 +41,9 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] ");
 
-        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch);
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch, properties: new Dictionary<string, string> {
+            { "WATCHOS_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
+        });
 
         SafeCopy(
             $"libSkiaSharp/bin/{CONFIGURATION}/{sdk}/{arch}.xcarchive",
@@ -58,7 +65,9 @@ Task("libHarfBuzzSharp")
     {
         if (Skip(arch)) return;
 
-        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, arch);
+        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, arch, properties: new Dictionary<string, string> {
+            { "WATCHOS_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
+        });
 
         SafeCopy(
             $"libHarfBuzzSharp/bin/{CONFIGURATION}/{sdk}/{arch}.xcarchive",

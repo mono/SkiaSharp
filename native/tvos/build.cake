@@ -4,6 +4,11 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/tvos")
 #load "../../cake/native-shared.cake"
 #load "../../cake/xcode.cake"
 
+string GetDeploymentTarget(string arch)
+{
+    return "9.0";
+}
+
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnMacOs())
@@ -21,7 +26,7 @@ Task("libSkiaSharp")
         GnNinja($"tvos/{arch}", "skia modules/skottie",
             $"target_os='tvos' " +
             $"target_cpu='{skiaArch}' " +
-            $"min_ios_version='9.0' " +
+            $"min_ios_version='{GetDeploymentTarget(arch)}' " +
             $"skia_use_icu=false " +
             $"skia_use_metal=false " +
             $"skia_use_piex=true " +
@@ -34,7 +39,9 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] ");
 
-        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch);
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch, properties: new Dictionary<string, string> {
+            { "TVOS_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
+        });
 
         SafeCopy(
             $"libSkiaSharp/bin/{CONFIGURATION}/{sdk}/{arch}.xcarchive",
@@ -55,7 +62,9 @@ Task("libHarfBuzzSharp")
     {
         if (Skip(arch)) return;
 
-        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, arch);
+        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, arch, properties: new Dictionary<string, string> {
+            { "TVOS_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
+        });
 
         SafeCopy(
             $"libHarfBuzzSharp/bin/{CONFIGURATION}/{sdk}/{arch}.xcarchive",
