@@ -7,39 +7,15 @@ parameters:
     displayName: 'The specific build ID to scan.'
     type: string
     default: 'latest'
-  - name: VM_IMAGE_HOST
-    type: object
-    default:
-      pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-20.04
-  - name: VM_IMAGE_WINDOWS
-    type: object
-    default:
-      pool:
-        name: Azure Pipelines
-        vmImage: windows-2022
-  - name: VM_IMAGE_MAC
-    type: object
-    default:
-      pool:
-        name: Azure Pipelines
-        vmImage: macos-11
-  - name: VM_IMAGE_LINUX
-    type: object
-    default:
-      pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-20.04
 
 strategy:
   matrix:
     windows:
-      vmImage: ${{ parameters.VM_IMAGE_WINDOWS }}
+      vmImage: windows-latest
     macos:
-      vmImage: ${{ parameters.VM_IMAGE_MAC }}
+      vmImage: macos-latest
     linux:
-      vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+      vmImage: ubuntu-latest
 
 resources:
   pipelines:
