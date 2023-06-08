@@ -6,7 +6,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/osx"))
 
 string GetDeploymentTarget(string arch)
 {
-    switch (skiaArch.ToLower()) {
+    switch (arch.ToLower()) {
         case "arm64": return "11.0";
         default: return "10.8";
     }
