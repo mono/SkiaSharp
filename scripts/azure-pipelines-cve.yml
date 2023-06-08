@@ -1,4 +1,4 @@
-trigger: 
+trigger:
  - dev/actions
 
 pr: none
@@ -24,7 +24,7 @@ steps:
     parameters:
       sourceBuildId: ${{ parameters.buildId }}
       artifacts:
-       - name: managed
+       - name: nuget-signed
   - pwsh: pip install cve-bin-tool
     displayName: Install the CVE Binary Tool
   - pwsh: cve-bin-tool output --nvd-api-key ${env:NVD_TOKEN}
