@@ -49,7 +49,7 @@ steps:
        - name: nuget-signed
 
   - pwsh: |
-      foreach ($nupkg in (Get-ChildItem *.nupkg)) {
+      foreach ($nupkg in (Get-ChildItem output/**/*.nupkg)) {
         Expand-Archive $nupkg "output/temp-nuget/$($nupkg.Name)"
       }
     displayName: Extract all the packages
