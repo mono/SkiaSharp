@@ -49,6 +49,8 @@ steps:
        - name: nuget-signed
 
   - pwsh: |
+      ls -l
+      ls -l output
       foreach ($nupkg in (Get-ChildItem output/**/*.nupkg)) {
         $dest = "output/temp-nuget/$($nupkg.Name)"
         Write-Host "Extracting '$nupkg' to '$dest'..."
