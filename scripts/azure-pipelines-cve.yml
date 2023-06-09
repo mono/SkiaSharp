@@ -35,12 +35,12 @@ steps:
       versionSpec: '3.x'
       architecture: 'x64'
 
-  - pwsh: pip install cve-bin-tool
-    displayName: Install the CVE Binary Tool
+  # - pwsh: pip install cve-bin-tool
+  #   displayName: Install the CVE Binary Tool
 
-  - pwsh: cve-bin-tool --update now --nvd-api-key ${env:NVD_TOKEN}
-    displayName: Update the database
-    continueOnError: true
+  # - pwsh: cve-bin-tool --update now --nvd-api-key ${env:NVD_TOKEN}
+  #   displayName: Update the database
+  #   continueOnError: true
 
   - template: azure-templates-download-artifacts.yml
     parameters:
@@ -50,7 +50,9 @@ steps:
 
   - pwsh: |
       foreach ($nupkg in (Get-ChildItem output/**/*.nupkg)) {
-        Expand-Archive $nupkg "output/temp-nuget/$($nupkg.Name)"
+        $dest = "output/temp-nuget/$($nupkg.Name)"
+        Write-Host "Extracting '$nupkg' to '$dest'..."
+        Expand-Archive $nupkg $dest
       }
     displayName: Extract all the packages
 
