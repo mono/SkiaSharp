@@ -44,5 +44,11 @@ steps:
       artifacts:
        - name: nuget-signed
 
-  - pwsh: cve-bin-tool output --nvd-api-key ${env:NVD_TOKEN}
+  - pwsh: |
+      foreach ($nupkg in (Get-ChildItem *.nupkg)) {
+        Expand-Archive $nupkg "output/temp-nuget/$($nupkg.Name)"
+      }
+    displayName: Extract all the packages
+
+  - pwsh: cve-bin-tool output/temp-nuget --nvd-api-key ${env:NVD_TOKEN}
     displayName: Run the CVE Binary Tool
