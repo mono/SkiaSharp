@@ -1,6 +1,7 @@
 Param(
   [string] $SourceUrl,
   [string] $InstallDir,
+  [string] $Tizen = '<latest>',
   [boolean] $IsPreview = $true
 )
 
@@ -27,6 +28,6 @@ Write-Host "Installing .NET workloads..."
 
 Write-Host "Installing Tizen workloads..."
 Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile 'workload-install.ps1'
-./workload-install.ps1
+./workload-install.ps1 -Version "$Tizen"
 
 exit $LASTEXITCODE
