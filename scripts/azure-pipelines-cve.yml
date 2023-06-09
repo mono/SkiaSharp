@@ -49,13 +49,12 @@ steps:
        - name: nuget-signed
 
   - pwsh: |
-      ls -l
-      ls -l output
-      foreach ($nupkg in (Get-ChildItem output/**/*.nupkg)) {
-        $dest = "output/temp-nuget/$($nupkg.Name)"
+      foreach ($nupkg in (Get-ChildItem output/*.nupkg)) {
+        $dest = "output/temp-nuget/$($nupkg.Name.TrimEnd('.nupkg'))"
         Write-Host "Extracting '$nupkg' to '$dest'..."
         Expand-Archive $nupkg $dest
       }
+      ls -l output/temp-nuget
     displayName: Extract all the packages
 
   - pwsh: cve-bin-tool output/temp-nuget --nvd-api-key ${env:NVD_TOKEN}
