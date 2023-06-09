@@ -7,15 +7,12 @@ parameters:
     displayName: 'The specific build ID to scan.'
     type: string
     default: 'latest'
-
-strategy:
-  matrix:
-    Windows:
-      vmImage: windows-latest
-    macOS:
-      vmImage: macos-latest
-    Linux:
-      vmImage: ubuntu-latest
+  - name: VM_IMAGE_HOST
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: ubuntu-20.04
 
 resources:
   pipelines:
@@ -23,9 +20,7 @@ resources:
       source: SkiaSharp
       trigger: none
 
-pool:
-  name: Azure Pipelines
-  vmImage: $(vmImage)
+pool: ${{ parameters.VM_IMAGE_HOST }}
 
 steps:
 
@@ -54,7 +49,19 @@ steps:
         Write-Host "Extracting '$nupkg' to '$dest'..."
         Expand-Archive $nupkg $dest
       }
+      New-Item output\logs -Type Directory -Force | Out-Null
     displayName: Extract all the packages
 
-  - pwsh: cve-bin-tool output/temp-nuget --nvd-api-key ${env:NVD_TOKEN}
+  - pwsh: cve-bin-tool output/temp-nuget --nvd-api-key ${env:NVD_TOKEN} --format html,console --output-file output/logs/report.html
     displayName: Run the CVE Binary Tool
+
+  - pwsh: |
+      Write-Host "##vso[task.uploadsummary]output/logs/report.txt"
+    displayName: Upload the build summary
+
+  - task: PublishPipelineArtifact@1
+    condition: always()
+    displayName: Upload the final report
+    inputs:
+      targetPath: output/logs
+      publishLocation: 'pipeline'
