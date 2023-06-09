@@ -54,10 +54,11 @@ steps:
   - pwsh: |
       Write-Host "##vso[task.uploadsummary]output/logs/report.txt"
     displayName: Upload the build summary
+    condition: always()
 
   - task: PublishPipelineArtifact@1
-    condition: always()
     displayName: Upload the final report
+    condition: always()
     inputs:
       targetPath: output/logs
       publishLocation: 'pipeline'
