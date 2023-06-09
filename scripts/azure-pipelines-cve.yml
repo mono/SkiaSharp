@@ -7,12 +7,6 @@ parameters:
     displayName: 'The specific build ID to scan.'
     type: string
     default: 'latest'
-  - name: VM_IMAGE_HOST
-    type: object
-    default:
-      pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-20.04
 
 resources:
   pipelines:
@@ -20,7 +14,9 @@ resources:
       source: SkiaSharp
       trigger: none
 
-pool: ${{ parameters.VM_IMAGE_HOST }}
+pool:
+  name: Azure Pipelines
+  vmImage: ubuntu-20.04
 
 steps:
 
