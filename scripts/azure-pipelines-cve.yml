@@ -45,10 +45,10 @@ steps:
         Write-Host "Extracting '$nupkg' to '$dest'..."
         Expand-Archive $nupkg $dest
       }
-      New-Item output\logs -Type Directory -Force | Out-Null
+      New-Item output/logs -Type Directory -Force | Out-Null
     displayName: Extract all the packages
 
-  - pwsh: cve-bin-tool output/temp-nuget --nvd-api-key ${env:NVD_TOKEN} --format html,console --output-file output/logs/report.html
+  - pwsh: cve-bin-tool output/temp-nuget --nvd-api-key ${env:NVD_TOKEN} --format html,console --output-file output/logs/report.html --triage-input-file scripts/guardian/cve-triage.json
     displayName: Run the CVE Binary Tool
 
   - pwsh: |
