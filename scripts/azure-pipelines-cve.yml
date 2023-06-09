@@ -61,8 +61,8 @@ steps:
       publishLocation: 'pipeline'
 
   - pwsh: |
-      $content = (Get-Content output/logs/report.txt)
-      $content = '```' + "`r`n" + $content + "`r`n" + '```'
+      $content = (Get-Content output/logs/report.txt -Raw)
+      $content = '```' + [Environment]::NewLine + $content + [Environment]::NewLine + '```'
       $content | Set-Content output/logs/report.txt
       Write-Host "##vso[task.uploadsummary]$(Build.SourcesDirectory)/output/logs/report.txt"
     displayName: Upload the build summary
