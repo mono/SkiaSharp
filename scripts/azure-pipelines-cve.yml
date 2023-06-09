@@ -38,6 +38,10 @@ steps:
   - pwsh: pip install cve-bin-tool
     displayName: Install the CVE Binary Tool
 
+  - pwsh: cve-bin-tool --update now --nvd-api-key ${env:NVD_TOKEN}
+    displayName: Update the database
+    continueOnError: true
+
   - template: azure-templates-download-artifacts.yml
     parameters:
       sourceBuildId: ${{ parameters.buildId }}
