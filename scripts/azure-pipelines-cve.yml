@@ -48,11 +48,13 @@ steps:
       New-Item output/logs -Type Directory -Force | Out-Null
     displayName: Extract all the packages
 
-  - pwsh: cve-bin-tool output/temp-nuget --nvd-api-key ${env:NVD_TOKEN} --format html,console --output-file output/logs/report.html --triage-input-file scripts/guardian/cve-triage.json
+  - pwsh: |
+      cve-bin-tool output/temp-nuget --nvd-api-key ${env:NVD_TOKEN} --format html,console --output-file output/logs/report.html --triage-input-file scripts/guardian/cve-triage.json
+      Get-Content output/logs/report.txt | Write-Host
     displayName: Run the CVE Binary Tool
 
   - pwsh: |
-      Write-Host "##vso[task.uploadsummary]output/logs/report.txt"
+      Write-Host "##vso[task.uploadsummary]$(Build.SourcesDirectory)/output/logs/report.txt"
     displayName: Upload the build summary
     condition: always()
 
