@@ -49,7 +49,7 @@ steps:
     displayName: Extract all the packages
 
   - pwsh: |
-      cve-bin-tool output/temp-nuget --nvd-api-key ${env:NVD_TOKEN} --format html,console --output-file output/logs/report.html --triage-input-file scripts/guardian/cve-triage.json
+      cve-bin-tool output/temp-nuget --format html,console --output-file output/logs/report.html --triage-input-file scripts/guardian/cve-triage.json
       Get-Content output/logs/report.txt | Write-Host
     displayName: Run the CVE Binary Tool
 
