@@ -202,11 +202,11 @@ jobs:
                 condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
           # install workloads
           - ${{ if not(endsWith(parameters.name, '_linux')) }}:
-            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $true
+            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $true
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
               retryCountOnTaskFailure: 3
               displayName: Install the preview .NET Core workloads
-            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -IsPreview $false
+            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $false
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), eq(variables.DOTNET_VERSION_PREVIEW, ''))
               retryCountOnTaskFailure: 3
               displayName: Install the .NET Core workloads
