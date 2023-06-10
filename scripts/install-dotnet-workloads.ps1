@@ -18,7 +18,7 @@ if ($IsPreview) {
 
 Write-Host "Installing .NET workloads..."
 & dotnet workload install `
-  android ios tvos macos maccatalyst wasm-tools maui `
+  android ios tvos macos maccatalyst wasm-tools wasm-tools-net6 maui `
   --from-rollback-file $SourceUrl `
   --source https://api.nuget.org/v3/index.json `
   --source $feed1 `
