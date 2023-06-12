@@ -289,25 +289,24 @@ jobs:
           - pwsh: |
               dotnet tool restore
               ${{ parameters.initScript }}
-              .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} {
-                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
-              }
+              dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
             env:
               JavaSdkDirectory: $(JAVA_HOME)
               LLVM_HOME: $(LLVM_HOME)
               # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
               AppxSymbolPackageEnabled: false
             displayName: Run the bootstrapper for ${{ parameters.target }}
+            retryCountOnTaskFailure: ${{ parameters.retryCount }}
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - ${{ if not(endsWith(parameters.name, '_windows')) }}:
           - bash: |
               dotnet tool restore
               ${{ parameters.initScript }}
-              ./scripts/retry-command.sh ${{ parameters.retryCount }} \
-                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+              dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
             env:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
+            retryCountOnTaskFailure: ${{ parameters.retryCount }}
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
       - ${{ if ne(parameters.docker, '') }}:
         - task: Docker@2
@@ -322,10 +321,12 @@ jobs:
             echo dotnet tool restore > cmd.sh
             echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
             sed -i 's/--gnArgs=\" \"//' cmd.sh
-            docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash \
-              scripts/retry-command.sh ${{ parameters.retryCount }} \
-                /bin/bash /work/cmd.sh
+          displayName: Generate the script for the Docker image
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+        - bash: |
+            docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash /work/cmd.sh
           displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
+          retryCountOnTaskFailure: ${{ parameters.retryCount }}
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
 
