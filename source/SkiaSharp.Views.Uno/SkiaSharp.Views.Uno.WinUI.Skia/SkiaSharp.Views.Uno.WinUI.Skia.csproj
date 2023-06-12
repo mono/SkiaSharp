@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net7.0</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Uno.WinUI</PackagingGroup>
-    <PackagingLocation>uno-runtime\skia</PackagingLocation>
+    <PackagingLocation>uno-runtime\$(TargetFramework)\skia</PackagingLocation>
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);HAS_UNO_SKIA;WINUI</DefineConstants>  

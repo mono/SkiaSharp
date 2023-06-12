@@ -67,7 +67,7 @@ namespace SkiaSharp.Views.UWP
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
-			WebAssemblyRuntime.InvokeJS(SKXamlCanvasFullTypeName + $".invalidateCanvas({pixelsHandle.AddrOfPinnedObject()}, \"{this.GetHtmlId()}\", {info.Width}, {pixelHeight});");
+			NativeMethods.InvalidateCanvas(pixelsHandle.AddrOfPinnedObject(), this.GetHtmlId(), info.Width, pixelHeight);
 		}
 
 		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)
@@ -90,13 +90,36 @@ namespace SkiaSharp.Views.UWP
 
 		private void FreeBitmap()
 		{
-			WebAssemblyRuntime.InvokeJS(SKXamlCanvasFullTypeName + $".clearCanvas(\"{this.GetHtmlId()}\");");
+			NativeMethods.ClearCanvas(this.GetHtmlId());
 
 			if (pixels != null)
 			{
 				pixelsHandle.Free();
 				pixels = null;
 			}
+		}
+
+		private static partial class NativeMethods
+		{
+#if NET7_0_OR_GREATER
+			[System.Runtime.InteropServices.JavaScript.JSImport("globalThis." + SKXamlCanvasFullTypeName + ".invalidateCanvas")]
+			public static partial void InvalidateCanvas(IntPtr intPtr, string htmlId, int width, int height);
+#else
+			public static void InvalidateCanvas(IntPtr intPtr, string htmlId, int width, int height)
+			{
+				WebAssemblyRuntime.InvokeJS(SKXamlCanvasFullTypeName + $".invalidateCanvas({intPtr}, \"{htmlId}\", {width}, {height});");
+			}
+#endif
+
+#if NET7_0_OR_GREATER
+			[System.Runtime.InteropServices.JavaScript.JSImport("globalThis." + SKXamlCanvasFullTypeName + ".clearCanvas")]
+			public static partial void ClearCanvas(string htmlId);
+#else
+			public static void ClearCanvas(string htmlId)
+			{
+				WebAssemblyRuntime.InvokeJS(SKXamlCanvasFullTypeName + $".clearCanvas(\"{htmlId}\");");
+			}
+#endif
 		}
 	}
 }
