@@ -12,10 +12,10 @@ Task("libSkiaSharp")
     .Does(() =>
 {
     if (VARIANT.ToLower() == "ios") {
-        // Build("iphonesimulator", "i386", "x86");
+        Build("iphonesimulator", "i386", "x86");
         Build("iphonesimulator", "x86_64", "x64");
         Build("iphonesimulator", "arm64", "arm64");
-        // Build("iphoneos", "armv7", "arm");
+        Build("iphoneos", "armv7", "arm");
         Build("iphoneos", "arm64", "arm64");
         Build("iphoneos", "arm64", "arm64", "arm64e");
 
@@ -78,10 +78,10 @@ Task("libHarfBuzzSharp")
     .Does(() =>
 {
     if (VARIANT.ToLower() == "ios") {
-        // Build("iphonesimulator", "i386");
+        Build("iphonesimulator", "i386");
         Build("iphonesimulator", "x86_64");
         Build("iphonesimulator", "arm64");
-        // Build("iphoneos", "armv7");
+        Build("iphoneos", "armv7");
         Build("iphoneos", "arm64");
         Build("iphoneos", "arm64e");
 
