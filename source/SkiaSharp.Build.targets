@@ -187,11 +187,13 @@ internal partial class VersionConstants {
     <ItemGroup Condition=" '$(PackagingLocation)' == '' ">
       <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(PackagingPlatform)\$(TargetFileName)" />
       <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
+      <_CopyItems Include="$(TargetDir)$(TargetName).aar" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).aar" Condition=" Exists('$(TargetDir)$(TargetName).aar') " />
       <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).pdb" />
     </ItemGroup>
     <ItemGroup Condition=" '$(PackagingLocation)' != '' ">
       <_CopyItems Include="$(TargetPath)" Dest="nuget\$(PackagingLocation)\$(TargetFileName)" />
       <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\$(PackagingLocation)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
+      <_CopyItems Include="$(TargetDir)$(TargetName).aar" Dest="nuget\$(PackagingLocation)\$(TargetName).aar" Condition=" Exists('$(TargetDir)$(TargetName).aar') " />
       <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\$(PackagingLocation)\$(TargetName).pdb" />
     </ItemGroup>
     <ItemGroup>
