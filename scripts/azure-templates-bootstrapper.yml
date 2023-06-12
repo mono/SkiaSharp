@@ -329,15 +329,6 @@ jobs:
           retryCountOnTaskFailure: ${{ parameters.retryCount }}
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
-
-      - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-        - pwsh: Get-ChildItem -Recurse -Filter "project.assets.json" | Select-String "System.Drawing.Common/4.5.1" -List | Select Path
-          displayName: Get all "System.Drawing.Common/4.5.1"
-        - pwsh: Get-ChildItem -Recurse -Filter "project.assets.json" | Select-String "System.Drawing.Common/5.0.0" -List | Select Path
-          displayName: Get all "System.Drawing.Common/5.0.0"
-        - pwsh: Get-ChildItem -Recurse -Filter "project.assets.json" | Select-String "System.Drawing.Common/5.5.0" -List | Select Path
-          displayName: Get all "System.Drawing.Common/5.5.0"
-      
       # post-build steps
       - ${{ parameters.postBuildSteps }}
 
