@@ -166,9 +166,9 @@ namespace SkiaSharp.Views.Blazor
 
 		public void Dispose()
 		{
-			dpiWatcher.Unsubscribe(OnDpiChanged);
-			sizeWatcher.Dispose();
-			interop.Dispose();
+			dpiWatcher?.Unsubscribe(OnDpiChanged);
+			sizeWatcher?.Dispose();
+			interop?.Dispose();
 
 			FreeBitmap();
 		}
