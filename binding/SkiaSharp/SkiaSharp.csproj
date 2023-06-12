@@ -8,12 +8,6 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <CreatePackage>false</CreatePackage>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <CreatePackage>false</CreatePackage>
-  </PropertyGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard2.0'))">
     <!-- macOS -->
     <None Include="..\..\output\native\osx\libSkiaSharp*" Link="nuget\runtimes\osx\native\%(Filename)%(Extension)" />
