@@ -7,8 +7,6 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 string VARIANT = (BUILD_VARIANT ?? "ios").ToLower();
 string DEPLOYMENT_SDK = VARIANT == "maccatalyst" ? "[sdk=macosx*]" : "";
 
-DirectoryPath OUTPUT_VARIANT_PATH = OUTPUT_PATH.Combine(VARIANT);
-
 string GetDeploymentTarget(string arch)
 {
     switch (VARIANT) {
@@ -36,7 +34,7 @@ Task("libSkiaSharp")
         Build("macosx", "x86_64", "x64");
         Build("macosx", "arm64", "arm64");
 
-        CreateFatVersionedFramework(OUTPUT_VARIANT_PATH.Combine("libSkiaSharp"));
+        CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libSkiaSharp"));
     }
 
     void Build(string sdk, string arch, string skiaArch, string xcodeArch = null)
@@ -106,7 +104,7 @@ Task("libHarfBuzzSharp")
         Build("macosx", "x86_64");
         Build("macosx", "arm64");
 
-        CreateFatVersionedFramework(OUTPUT_VARIANT_PATH.Combine("libHarfBuzzSharp"));
+        CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libHarfBuzzSharp"));
     }
 
     void Build(string sdk, string arch)
