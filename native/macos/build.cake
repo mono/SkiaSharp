@@ -45,7 +45,6 @@ Task("libSkiaSharp")
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch, properties: new Dictionary<string, string> {
             { "MACOSX_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
-            { $"SKIA_PLATFORM", platform },
         });
 
         SafeCopy(
@@ -69,7 +68,6 @@ Task("libHarfBuzzSharp")
 
         RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", "macosx", arch, properties: new Dictionary<string, string> {
             { "MACOSX_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
-            { $"SKIA_PLATFORM", platform },
         });
 
         SafeCopy(
