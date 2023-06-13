@@ -5,7 +5,6 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 #load "../../cake/xcode.cake"
 
 string VARIANT = (BUILD_VARIANT ?? "ios").ToLower();
-string DEPLOYMENT_SDK = VARIANT == "maccatalyst" ? "[sdk=macosx*]" : "";
 
 string GetDeploymentTarget(string arch)
 {
@@ -43,8 +42,9 @@ Task("libSkiaSharp")
 
         xcodeArch = xcodeArch ?? arch;
         var isSim = sdk.EndsWith("simulator");
-        var platformSuffix = isSim ? "simulator" : "device";
-        var platform = VARIANT + platformSuffix;
+        var platform = VARIANT;
+        if (VARIANT == "ios")
+            platform += isSim ? "simulator" : "device";
 
         GnNinja($"{platform}/{xcodeArch}", "skia modules/skottie",
             $"target_cpu='{skiaArch}' " +
@@ -64,8 +64,9 @@ Task("libSkiaSharp")
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] " +
             ADDITIONAL_GN_ARGS);
 
-        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, xcodeArch, platform: platform, properties: new Dictionary<string, string> {
-            { $"IPHONEOS_DEPLOYMENT_TARGET{DEPLOYMENT_SDK}", GetDeploymentTarget(arch) },
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
+            { $"{VARIANT.ToUpper()}_DEPLOYMENT_TARGET_VERSION", GetDeploymentTarget(arch) },
+            { $"SKIA_PLATFORM", platform },
         });
 
         SafeCopy(
@@ -101,11 +102,13 @@ Task("libHarfBuzzSharp")
 
         xcodeArch = xcodeArch ?? arch;
         var isSim = sdk.EndsWith("simulator");
-        var platformSuffix = isSim ? "simulator" : "device";
-        var platform = VARIANT + platformSuffix;
+        var platform = VARIANT;
+        if (VARIANT == "ios")
+            platform += isSim ? "simulator" : "device";
 
-        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, xcodeArch, platform: platform, properties: new Dictionary<string, string> {
-            { $"IPHONEOS_DEPLOYMENT_TARGET{DEPLOYMENT_SDK}", GetDeploymentTarget(arch) },
+        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
+            { $"{VARIANT.ToUpper()}_DEPLOYMENT_TARGET_VERSION", GetDeploymentTarget(arch) },
+            { $"SKIA_PLATFORM", platform },
         });
 
         SafeCopy(

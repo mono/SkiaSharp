@@ -43,6 +43,7 @@ Task("libSkiaSharp")
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch, properties: new Dictionary<string, string> {
             { "WATCHOS_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
+            { $"SKIA_PLATFORM", platform },
         });
 
         SafeCopy(
@@ -67,6 +68,7 @@ Task("libHarfBuzzSharp")
 
         RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, arch, properties: new Dictionary<string, string> {
             { "WATCHOS_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
+            { $"SKIA_PLATFORM", platform },
         });
 
         SafeCopy(
