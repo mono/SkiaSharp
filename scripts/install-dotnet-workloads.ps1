@@ -1,6 +1,7 @@
 Param(
   [string] $SourceUrl,
   [string] $InstallDir,
+  [string] $Tizen = '<latest>',
   [boolean] $IsPreview = $true
 )
 
@@ -17,7 +18,7 @@ if ($IsPreview) {
 
 Write-Host "Installing .NET workloads..."
 & dotnet workload install `
-  android ios tvos macos maccatalyst wasm-tools maui `
+  android ios tvos macos maccatalyst wasm-tools wasm-tools-net6 maui `
   --from-rollback-file $SourceUrl `
   --source https://api.nuget.org/v3/index.json `
   --source $feed1 `
@@ -27,6 +28,6 @@ Write-Host "Installing .NET workloads..."
 
 Write-Host "Installing Tizen workloads..."
 Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile 'workload-install.ps1'
-./workload-install.ps1
+./workload-install.ps1 -Version "$Tizen"
 
 exit $LASTEXITCODE
