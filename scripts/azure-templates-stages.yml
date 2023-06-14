@@ -837,17 +837,17 @@ stages:
               - template: azure-templates-github-status.yml
                 parameters:
                   state: 'pending'
-            - task: DownloadBuildArtifacts@0
+            - task: DownloadBuildArtifacts@1
               displayName: Download the coverage_netcore_windows artifact
               inputs:
                 artifactName: coverage_netcore_windows
                 downloadPath: output
-            - task: DownloadBuildArtifacts@0
+            - task: DownloadBuildArtifacts@1
               displayName: Download the coverage_netcore_macos artifact
               inputs:
                 artifactName: coverage_netcore_macos
                 downloadPath: output
-            - task: DownloadBuildArtifacts@0
+            - task: DownloadBuildArtifacts@1
               displayName: Download the coverage_netcore_linux artifact
               inputs:
                 artifactName: coverage_netcore_linux
