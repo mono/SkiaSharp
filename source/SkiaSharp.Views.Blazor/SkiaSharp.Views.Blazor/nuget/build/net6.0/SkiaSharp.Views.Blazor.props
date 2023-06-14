@@ -6,8 +6,16 @@
     <_SkiaSharpViewsBlazorStaticAssetsRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\staticwebassets'))\</_SkiaSharpViewsBlazorStaticAssetsRoot>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!-- Workaround for https://github.com/dotnet/runtime/issues/76077 -->
+  <PropertyGroup>
+    <EmccExtraLDFlags>$(EmccExtraLDFlags) --js-library="$(MSBuildThisFileDirectory)\SkiaSharpGLInterop.js"</EmccExtraLDFlags>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))">
     <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\2.0.23\*.a" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))">
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\st\*.a" />
   </ItemGroup>
 
   <ItemGroup>

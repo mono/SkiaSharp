@@ -5,6 +5,12 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 string EMSCRIPTEN_VERSION = Argument("emscriptenVersion", EnvironmentVariable("EMSCRIPTEN_VERSION") ?? "").ToLower();
+string[] EMSCRIPTEN_FEATURES = 
+    Argument("emscriptenFeatures", EnvironmentVariable("EMSCRIPTEN_FEATURES") ?? "")
+    .ToLower()
+    .Split(",")
+    .Where(f => f != "none")
+    .ToArray();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
 string CC = Argument("cc", "emcc");
@@ -17,6 +23,8 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
+    bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd");
+    bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
 
     GnNinja($"wasm", "SkiaSharp",
         $"target_os='linux' " +
@@ -51,10 +59,13 @@ Task("libSkiaSharp")
         $"use_PIC=false " +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
-        $"  '-DSKNX_NO_SIMD', '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
+        $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
         $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
+        $"  { (hasSimdEnabled ? ", '-msimd128'" : "") } " +
+        $"  { (hasThreadingEnabled ? ", '-pthread'" : "") } " +
         $"] " +
-        $"extra_cflags_cc=[ '-frtti' ] " +
+        // SIMD support is based on https://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/modules/canvaskit/compile.sh#L57
+        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } ] " +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
 
@@ -88,6 +99,8 @@ Task("libSkiaSharp")
     var outDir = OUTPUT_PATH.Combine($"wasm");
     if (!string.IsNullOrEmpty(EMSCRIPTEN_VERSION))
         outDir = outDir.Combine("libSkiaSharp.a").Combine(EMSCRIPTEN_VERSION);
+    if (EMSCRIPTEN_FEATURES.Length != 0)
+        outDir = outDir.Combine(string.Join(",", EMSCRIPTEN_FEATURES));
     EnsureDirectoryExists(outDir);
     CopyFileToDirectory(a, outDir);
 });
@@ -96,17 +109,24 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
+    bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd");
+    bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
+
     GnNinja($"wasm", "HarfBuzzSharp",
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
         $"visibility_hidden=false " +
+        $"extra_cflags=[ { (hasSimdEnabled ? "'-msimd128', " : "") } { (hasThreadingEnabled ? "'-pthread'" : "") } ] " +
+        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } ] " +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
 
     var outDir = OUTPUT_PATH.Combine($"wasm");
     if (!string.IsNullOrEmpty(EMSCRIPTEN_VERSION))
         outDir = outDir.Combine("libHarfBuzzSharp.a").Combine(EMSCRIPTEN_VERSION);
+    if (EMSCRIPTEN_FEATURES.Length != 0)
+        outDir = outDir.Combine(string.Join(",", EMSCRIPTEN_FEATURES));
     EnsureDirectoryExists(outDir);
     var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a");
     CopyFileToDirectory(so, outDir);

@@ -69,9 +69,9 @@ namespace SkiaSharp.Tests
 				float h, s, l;
 				rgb.ToHsl(out h, out s, out l);
 
-				Assert.Equal(other.Item1, h, Precision);
-				Assert.Equal(other.Item2, s, Precision);
-				Assert.Equal(other.Item3, l, Precision);
+				Assert.Equal((double)other.Item1, (double)h, Precision);
+				Assert.Equal((double)other.Item2, (double)s, Precision);
+				Assert.Equal((double)other.Item3, (double)l, Precision);
 
 				// to RGB
 				SKColor back = SKColor.FromHsl(other.Item1, other.Item2, other.Item3);
@@ -107,9 +107,9 @@ namespace SkiaSharp.Tests
 				float h, s, v;
 				rgb.ToHsv(out h, out s, out v);
 
-				Assert.Equal(other.Item1, h, Precision);
-				Assert.Equal(other.Item2, s, Precision);
-				Assert.Equal(other.Item3, v, Precision);
+				Assert.Equal((double)other.Item1, (double)h, Precision);
+				Assert.Equal((double)other.Item2, (double)s, Precision);
+				Assert.Equal((double)other.Item3, (double)v, Precision);
 
 				// to RGB
 				SKColor back = SKColor.FromHsv(other.Item1, other.Item2, other.Item3);

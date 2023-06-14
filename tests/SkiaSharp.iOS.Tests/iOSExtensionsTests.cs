@@ -1,4 +1,6 @@
-﻿using Xunit;
+﻿using CoreGraphics;
+using Foundation;
+using Xunit;
 
 namespace SkiaSharp.Views.iOS.Tests
 {
@@ -62,6 +64,40 @@ namespace SkiaSharp.Views.iOS.Tests
 			using var uiImage = image.ToUIImage();
 
 			ValidateTestBitmap(uiImage, alpha);
+		}
+
+		[SkippableTheory]
+		[InlineData(0, 0, 0, 0)]
+		[InlineData(5, 5, 5, 5)]
+		[InlineData(1, 2, 3, 4)]
+		[InlineData(1, 1, 0, 0)]
+		[InlineData(0, 0, 1, 1)]
+		[InlineData(100, 100, 100, 100)]
+		public void SKRectToCGRect(int x, int y, int w, int h)
+		{
+			var initial = SKRect.Create(x, y, w, h);
+			var expected = new CGRect(x, y, w, h);
+
+			var actual = initial.ToRect();
+
+			Assert.Equal(expected, actual);
+		}
+
+		[SkippableTheory]
+		[InlineData(0, 0, 0, 0)]
+		[InlineData(5, 5, 5, 5)]
+		[InlineData(1, 2, 3, 4)]
+		[InlineData(1, 1, 0, 0)]
+		[InlineData(0, 0, 1, 1)]
+		[InlineData(100, 100, 100, 100)]
+		public void CGRectToSKRect(int x, int y, int w, int h)
+		{
+			var initial = new CGRect(x, y, w, h);
+			var expected = SKRect.Create(x, y, w, h);
+
+			var actual = initial.ToSKRect();
+
+			Assert.Equal(expected, actual);
 		}
 	}
 }

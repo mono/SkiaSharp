@@ -72,8 +72,8 @@ namespace SkiaSharp.Views.Tizen
 
 			if (IgnorePixelScaling)
 			{
-				canvasSize.Width = (int)ScalingInfo.FromPixel(geometry.Width);
-				canvasSize.Height = (int)ScalingInfo.FromPixel(geometry.Height);
+				canvasSize.Width = (int)Math.Round(ScalingInfo.FromPixel(geometry.Width));
+				canvasSize.Height = (int)Math.Round(ScalingInfo.FromPixel(geometry.Height));
 			}
 			else
 			{

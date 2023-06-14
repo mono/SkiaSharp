@@ -2,4 +2,19 @@
 
 ## SkiaSharp.HarfBuzz.dll
 
-> No changes.
+### Namespace SkiaSharp.HarfBuzz
+
+#### Type Changed: SkiaSharp.HarfBuzz.SKShaper+Result
+
+Added constructor:
+
+```csharp
+public SKShaper.Result (uint[] codepoints, uint[] clusters, SkiaSharp.SKPoint[] points, float width);
+```
+
+Added property:
+
+```csharp
+public float Width { get; }
+```
+
