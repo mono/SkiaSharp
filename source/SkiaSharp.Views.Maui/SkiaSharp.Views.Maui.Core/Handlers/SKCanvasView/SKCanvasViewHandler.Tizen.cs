@@ -1,8 +1,7 @@
-﻿using Microsoft.Maui;
-using Microsoft.Maui.Handlers;
-using Microsoft.Maui.Platform;
-using SkiaSharp.Views.Tizen;
+﻿using Microsoft.Maui.Handlers;
 using SkiaSharp.Views.Maui.Platform;
+using SkiaSharp.Views.Tizen.NUI;
+using ScalingInfo = SkiaSharp.Views.Tizen.ScalingInfo;
 
 namespace SkiaSharp.Views.Maui.Handlers
 {
@@ -11,7 +10,7 @@ namespace SkiaSharp.Views.Maui.Handlers
 		private SKSizeI lastCanvasSize;
 		private SKTouchHandler? touchHandler;
 
-		protected override SKCanvasView CreatePlatformView() => new SKCanvasView(PlatformParent);
+		protected override SKCanvasView CreatePlatformView() => new SKCanvasView();
 
 		protected override void ConnectHandler(SKCanvasView platformView)
 		{

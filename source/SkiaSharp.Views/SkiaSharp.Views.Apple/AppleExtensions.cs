@@ -45,7 +45,7 @@ namespace SkiaSharp.Views.Mac
 
 		public static CGRect ToRect(this SKRect rect)
 		{
-			return new CGRect(rect.Left, rect.Top, rect.Right, rect.Bottom);
+			return new CGRect(rect.Left, rect.Top, rect.Width, rect.Height);
 		}
 
 		// CGSize

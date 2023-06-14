@@ -368,13 +368,56 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
             artifactName: native
             emscripten:
-              - 2.0.5
-              - 2.0.6
-              - 2.0.9
-              - 2.0.11
-              - 2.0.12
-              - 2.0.23
-              - 3.1.7
+              - 2.0.6:
+                displayName: 2.0.6
+                version: 2.0.6
+                features: none
+              - 2.0.23:
+                displayName: 2.0.23
+                version: 2.0.23
+                features: none
+
+              # .NET 6
+              - 3.1.7:
+                displayName: 3.1.7
+                version: 3.1.7
+                features: none
+
+              # .NET 7
+              - 3.1.12:
+                displayName: 3.1.12
+                version: 3.1.12
+                features: st
+              - 3.1.12:
+                displayName: '3.1.12_SIMD'
+                version: 3.1.12
+                features: simd
+              - 3.1.12:
+                displayName: '3.1.12_Threading'
+                version: 3.1.12
+                features: mt
+              - 3.1.12:
+                displayName: '3.1.12_Threading_SIMD'
+                version: 3.1.12
+                features: mt,simd
+
+              # .NET 8 Preview 4
+              - 3.1.34:
+                displayName: 3.1.34
+                version: 3.1.34
+                features: st
+              - 3.1.34:
+                displayName: '3.1.34_SIMD'
+                version: 3.1.34
+                features: simd
+              - 3.1.34:
+                displayName: '3.1.34_Threading'
+                version: 3.1.34
+                features: mt
+              - 3.1.34:
+                displayName: '3.1.34_Threading_SIMD'
+                version: 3.1.34
+                features: mt,simd
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: managed
@@ -402,12 +445,12 @@ stages:
                 displayName: Delete the native folder
         - template: azure-templates-bootstrapper.yml # Build Managed .NET (Windows)
           parameters:
-            name: managed_net6_windows
+            name: managed_net_windows
             displayName: Managed .NET (Windows)
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: libs
-            additionalArgs: --skipExternals="all" --solutionType=net6
+            additionalArgs: --skipExternals="all" --solutionType=net
             installPreviewVs: true
             requiredArtifacts:
               - name: native
@@ -794,17 +837,17 @@ stages:
               - template: azure-templates-github-status.yml
                 parameters:
                   state: 'pending'
-            - task: DownloadBuildArtifacts@0
+            - task: DownloadBuildArtifacts@1
               displayName: Download the coverage_netcore_windows artifact
               inputs:
                 artifactName: coverage_netcore_windows
                 downloadPath: output
-            - task: DownloadBuildArtifacts@0
+            - task: DownloadBuildArtifacts@1
               displayName: Download the coverage_netcore_macos artifact
               inputs:
                 artifactName: coverage_netcore_macos
                 downloadPath: output
-            - task: DownloadBuildArtifacts@0
+            - task: DownloadBuildArtifacts@1
               displayName: Download the coverage_netcore_linux artifact
               inputs:
                 artifactName: coverage_netcore_linux
@@ -885,65 +928,45 @@ stages:
             installDotNet: false
             shouldPublish: false
             postBuildSteps:
-              - task: CredScan@2
+              - task: CredScan@3
                 displayName: Analyze source for credentials
                 condition: always()
                 inputs:
-                  toolMajorVersion: 'V2'
-              - task: PoliCheck@1
+                  suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
+              - task: PoliCheck@2
                 displayName: Run PoliCheck
                 condition: always()
                 inputs:
                   inputType: 'Basic'
                   targetType: 'F'
-              - task: SdtReport@1
+                  optionsUEPATH: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
+              - task: SdtReport@2
                 displayName: Create security analysis report
                 condition: always()
                 inputs:
-                  AllTools: false
-                  APIScan: false
-                  BinSkim: false
-                  CodesignValidation: false
-                  CredScan: true
-                  FortifySCA: false
-                  FxCop: false
-                  ModernCop: false
-                  MSRD: false
-                  PoliCheck: true
-                  RoslynAnalyzers: false
-                  SDLNativeRules: false
-                  Semmle: false
-                  TSLint: false
-                  ToolLogsNotFoundAction: 'Standard'
+                  GdnExportAllTools: false
+                  GdnExportGdnToolCredScan: true
+                  GdnExportGdnToolPoliCheck: true
+                  GdnExportOutputSuppressionFile: source.gdnsuppress
               - task: PublishSecurityAnalysisLogs@3
                 displayName: Publish security analysis logs
                 condition: always()
-              - task: TSAUpload@1
+              - pwsh: |
+                  $tsaConfig = '$(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json'
+                  $tsaConfigJson = Get-Content $tsaConfig | ConvertFrom-Json
+                  $tsaConfigJson | Add-Member -Type NoteProperty -Name 'SuppressionFiles' -Value @("$(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress")
+                  $tsaConfigJson | Add-Member -Type NoteProperty -Name 'SuppressionSets' -Value @("default")
+                  $tsaConfigJson | ConvertTo-Json | Out-File $tsaConfig
+                  cat $tsaConfig
+                displayName: Update TSA suppressions
+                condition: always()
+              - task: TSAUpload@2
                 displayName: Publish TSA logs
                 condition: always()
                 continueOnError: true
                 inputs:
-                  tsaVersion: 'TsaV2'
-                  codebase: 'NewOrUpdate'
-                  tsaEnvironment: 'PROD'
-                  codeBaseName: 'SkiaSharp_main'
-                  notificationAlias: 'xamacomd@microsoft.com'
-                  notifyAlwaysV2: false
-                  instanceUrlForTsaV2: 'DEVDIV'
-                  projectNameDEVDIV: 'DevDiv'
-                  areaPath: 'DevDiv\VS Client - Runtime SDKs\SkiaSharp'
-                  iterationPath: 'DevDiv\Future Backlog'
-                  uploadAPIScan: false
-                  uploadBinSkim: false
-                  uploadCredScan: true
-                  uploadFortifySCA: false
-                  uploadFxCop: false
-                  uploadModernCop: false
-                  uploadPoliCheck: true
-                  uploadPREfast: false
-                  uploadRoslyn: false
-                  uploadTSLint: false
-                  uploadAsync: true
+                  GdnPublishTsaOnboard: true
+                  GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
 
   - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
     - stage: finalize

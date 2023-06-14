@@ -1,7 +1,7 @@
 Param(
   [string] $Version,
   [string] $InstallDir,
-  [string] $FeedUrl = "https://dotnetbuilds.blob.core.windows.net/public"
+  [string] $FeedUrl = "https://dotnetcli.azureedge.net/dotnet"
 )
 
 $ErrorActionPreference = 'Stop'

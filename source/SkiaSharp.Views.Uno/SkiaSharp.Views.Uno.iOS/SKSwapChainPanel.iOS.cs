@@ -34,6 +34,8 @@ namespace SkiaSharp.Views.UWP
 		partial void DoLoaded()
 		{
 			glView = new SKGLView(Bounds);
+			// Force the opacity to false for consistency with the other platforms
+			glView.Opaque = false;
 			glView.PaintSurface += OnPaintSurface;
 			AddSubview(glView);
 		}

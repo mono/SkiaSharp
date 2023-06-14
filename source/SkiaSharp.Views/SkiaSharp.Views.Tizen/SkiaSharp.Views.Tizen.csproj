@@ -17,4 +17,8 @@
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.StartsWith('tizen')) == true">
+    <Compile Remove="**\*.nui.cs" />
+    <None Include="**\*.nui.cs" />
+  </ItemGroup>
 </Project>

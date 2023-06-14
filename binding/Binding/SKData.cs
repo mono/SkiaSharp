@@ -2,6 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {
@@ -103,7 +104,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 			if (stream.CanSeek) {
-				return Create (stream, stream.Length);
+				return Create (stream, stream.Length - stream.Position);
 			} else {
 				using var memory = new SKDynamicMemoryWStream ();
 				using (var managed = new SKManagedStream (stream)) {
