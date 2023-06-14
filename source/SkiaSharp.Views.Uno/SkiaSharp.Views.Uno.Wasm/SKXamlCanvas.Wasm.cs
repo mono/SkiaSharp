@@ -73,7 +73,7 @@ namespace SkiaSharp.Views.UWP
 		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)
 		{
 			var size = CreateSize(out unscaledSize, out dpi);
-			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Opaque);
+			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Unpremul);
 
 			if (pixels == null || pixelWidth != info.Width || pixelHeight != info.Height)
 			{
