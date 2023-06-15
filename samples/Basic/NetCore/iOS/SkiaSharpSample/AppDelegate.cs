@@ -14,7 +14,7 @@ public class AppDelegate : UIApplicationDelegate
 		Window = new UIWindow (UIScreen.MainScreen.Bounds);
 
 		// create the canvas view
-		var skiaView = new SKCanvasView
+		var skiaView = new SKCanvasView(UIScreen.MainScreen.Bounds)
 		{
 			BackgroundColor = UIColor.White,
 			IgnorePixelScaling = true,
