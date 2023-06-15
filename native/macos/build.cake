@@ -8,7 +8,7 @@ string GetDeploymentTarget(string arch)
 {
     switch (arch.ToLower()) {
         case "arm64": return "11.0";
-        default: return "10.8";
+        default: return "10.9";
     }
 }
 
