@@ -9,8 +9,8 @@ string VARIANT = (BUILD_VARIANT ?? "ios").ToLower();
 string GetDeploymentTarget(string arch)
 {
     switch (VARIANT) {
-        case "maccatalyst": return "13.0";
-        default: return "8.0";
+        case "maccatalyst": return "13.1";
+        default: return "11.0";
     }
 }
 
@@ -20,10 +20,8 @@ Task("libSkiaSharp")
     .Does(() =>
 {
     if (VARIANT == "ios") {
-        Build("iphonesimulator", "i386", "x86");
         Build("iphonesimulator", "x86_64", "x64");
         Build("iphonesimulator", "arm64", "arm64");
-        Build("iphoneos", "armv7", "arm");
         Build("iphoneos", "arm64", "arm64");
         Build("iphoneos", "arm64", "arm64", "arm64e");
 
@@ -80,10 +78,8 @@ Task("libHarfBuzzSharp")
     .Does(() =>
 {
     if (VARIANT == "ios") {
-        Build("iphonesimulator", "i386");
         Build("iphonesimulator", "x86_64");
         Build("iphonesimulator", "arm64");
-        Build("iphoneos", "armv7");
         Build("iphoneos", "arm64");
         Build("iphoneos", "arm64e");
 
