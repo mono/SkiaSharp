@@ -139,7 +139,7 @@ internal partial class VersionConstants {
   <Target Name="_SignAssembly"
           AfterTargets="$(_SignAssemblyAfterTargets)"
           Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
-    <!-- <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" /> -->
+    <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
   <!--

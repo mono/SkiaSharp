@@ -1,10 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0-ios</TargetFrameworks>
+    <TargetFrameworks>$(NetPlatformTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <!-- https://github.com/NuGet/Home/issues/5226 -->
     <PackageId>SkiaSharp.Views</PackageId>
-    <LangVersion>default</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
     <RootNamespace>SkiaSharp.Views.iOS</RootNamespace>
