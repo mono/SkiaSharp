@@ -25,7 +25,11 @@ Task("libSkiaSharp")
         Build("iphoneos", "arm64", "arm64");
         Build("iphoneos", "arm64", "arm64", "arm64e");
 
-        CreateFatFramework(OUTPUT_PATH.Combine("iosdevice/libSkiaSharp"));
+        SafeCopy(
+            $"libSkiaSharp/bin/{CONFIGURATION}/iossimulator/x64.xcarchive",
+            OUTPUT_PATH.Combine($"ios/libSkiaSharp/x64.xcarchive"));
+
+        CreateFatFramework(OUTPUT_PATH.Combine("ios/libSkiaSharp"));
         CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libSkiaSharp"));
     } else if (VARIANT == "maccatalyst") {
         Build("macosx", "x86_64", "x64");
@@ -41,8 +45,8 @@ Task("libSkiaSharp")
         xcodeArch = xcodeArch ?? arch;
         var isSim = sdk.EndsWith("simulator");
         var platform = VARIANT;
-        if (VARIANT == "ios")
-            platform += isSim ? "simulator" : "device";
+        if (VARIANT == "ios" && isSim)
+            platform += "simulator";
 
         GnNinja($"{platform}/{xcodeArch}", "skia modules/skottie",
             $"target_cpu='{skiaArch}' " +
@@ -83,7 +87,11 @@ Task("libHarfBuzzSharp")
         Build("iphoneos", "arm64");
         Build("iphoneos", "arm64e");
 
-        CreateFatFramework(OUTPUT_PATH.Combine("iosdevice/libHarfBuzzSharp"));
+        SafeCopy(
+            $"libHarfBuzzSharp/bin/{CONFIGURATION}/iossimulator/x64.xcarchive",
+            OUTPUT_PATH.Combine($"ios/libHarfBuzzSharp/x64.xcarchive"));
+
+        CreateFatFramework(OUTPUT_PATH.Combine("ios/libHarfBuzzSharp"));
         CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libHarfBuzzSharp"));
     } else if (VARIANT == "maccatalyst") {
         Build("macosx", "x86_64");
@@ -99,8 +107,8 @@ Task("libHarfBuzzSharp")
         xcodeArch = xcodeArch ?? arch;
         var isSim = sdk.EndsWith("simulator");
         var platform = VARIANT;
-        if (VARIANT == "ios")
-            platform += isSim ? "simulator" : "device";
+        if (VARIANT == "ios" && isSim)
+            platform += "simulator";
 
         RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
             { $"{VARIANT.ToUpper()}_DEPLOYMENT_TARGET_VERSION", GetDeploymentTarget(arch) },
