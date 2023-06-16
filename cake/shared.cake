@@ -95,3 +95,21 @@ string GetRegexValue(string regex, FilePath file)
         return "";
     }
 }
+
+void DeleteDir(DirectoryPath dir)
+{
+    if (DirectoryExists(dir))
+        DeleteDirectory(dir, new DeleteDirectorySettings { Recursive = true, Force = true });
+}
+
+void CleanDir(DirectoryPath dir)
+{
+    if (DirectoryExists(dir)) {
+        foreach (var d in GetSubDirectories(dir)) {
+            DeleteDir(d);
+        }
+        CleanDirectory(dir);
+    }
+
+    EnsureDirectoryExists(dir);
+}
