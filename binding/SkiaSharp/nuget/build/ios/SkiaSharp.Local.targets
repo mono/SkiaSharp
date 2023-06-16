@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <ItemGroup>
-        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\iossimulator\native\libSkiaSharp.framework" Kind="Framework" />
+    <ItemGroup Condition="'$(RuntimeIdentifier)' != ''">
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\iossimulator\native\libSkiaSharp.framework" Kind="Framework" Condition="$(RuntimeItentifier.StartsWith('iossimulator'))" />
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\ios\native\libSkiaSharp.framework" Kind="Framework" Condition="!$(RuntimeItentifier.StartsWith('iossimulator'))" />
     </ItemGroup>
 
 </Project>
