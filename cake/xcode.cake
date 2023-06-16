@@ -116,8 +116,7 @@ void CreateFatVersionedFramework(DirectoryPath archives)
 
 void SafeCopy(DirectoryPath src, DirectoryPath dst)
 {
-    EnsureDirectoryExists(dst);
-    DeleteDirectory(dst, new DeleteDirectorySettings { Recursive = true, Force = true });
+    DeleteDir(dst);
     RunProcess("cp", $"-R {src} {dst}");
 }
 

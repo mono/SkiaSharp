@@ -569,7 +569,7 @@ Task ("samples")
                     BuildSample (sln, false, dryrun);
                     // delete the built sample
                     if (!dryrun)
-                        CleanDirectories (sln.GetDirectory ().FullPath);
+                        CleanDir (sln.GetDirectory ().FullPath);
                 } else {
                     // skip as there is a platform variant
                     if (dryrun)
@@ -590,13 +590,7 @@ Task ("samples")
                     BuildSample (sln, useNetCore, dryrun);
                     // delete the built sample
                     if (!dryrun) {
-                        try {
-                            CleanDirectories (sln.GetDirectory ().FullPath);
-                        } catch {
-                            // Mac Catalyst sometimes holds onto files
-                            System.Threading.Thread.Sleep (10 * 1000);
-                            CleanDirectories (sln.GetDirectory ().FullPath);
-                        }
+                        CleanDir (sln.GetDirectory ().FullPath);
                     }
                 } else {
                     // skip this as this is not the correct platform
@@ -607,10 +601,10 @@ Task ("samples")
         }
     }
 
-    CleanDirectory ("./output/samples/");
-    DeleteDirectory ("./output/samples/", new DeleteDirectorySettings { Recursive = true, Force = true });
-    CleanDirectory ("./output/samples-preview/");
-    DeleteDirectory ("./output/samples-preview/", new DeleteDirectorySettings { Recursive = true, Force = true });
+    CleanDir ("./output/samples/");
+    DeleteDir ("./output/samples/");
+    CleanDir ("./output/samples-preview/");
+    DeleteDir ("./output/samples-preview/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -959,8 +953,7 @@ Task ("clean-managed")
 
     DeleteFiles ("./nuget/*.prerelease.nuspec");
 
-    if (DirectoryExists ("./output"))
-        DeleteDirectory ("./output", new DeleteDirectorySettings { Recursive = true, Force = true });
+    DeleteDir ("./output");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
