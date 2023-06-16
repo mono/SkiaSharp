@@ -119,6 +119,7 @@ void CreateFatVersionedFramework(DirectoryPath archives)
 
 void SafeCopy(DirectoryPath src, DirectoryPath dst)
 {
+    EnsureDirectoryExists(dst);
     DeleteDir(dst);
     RunProcess("cp", $"-R {src} {dst}");
 }
