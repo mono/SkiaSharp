@@ -6,8 +6,7 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
     var solutionProjectRegex = new Regex(@",\s*""(.*?\.\w{2}proj)"", ""(\{.*?\})""");
     var solutionFilterProjectRegex = new Regex(@"\s*""(.+)\.csproj"",?");
 
-    EnsureDirectoryExists(outputDirPath);
-    CleanDirectory(outputDirPath);
+    CleanDir (outputDirPath);
 
     var ignoreBinObj = new GlobberSettings {
         Predicate = fileSystemInfo => {
