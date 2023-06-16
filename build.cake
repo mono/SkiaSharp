@@ -589,8 +589,15 @@ Task ("samples")
                 if (shouldBuild) {
                     BuildSample (sln, useNetCore, dryrun);
                     // delete the built sample
-                    if (!dryrun)
-                        CleanDirectories (sln.GetDirectory ().FullPath);
+                    if (!dryrun) {
+                        try {
+                            CleanDirectories (sln.GetDirectory ().FullPath);
+                        } catch {
+                            // Mac Catalyst sometimes holds onto files
+                            System.Threading.Thread.Sleep (10 * 1000);
+                            CleanDirectories (sln.GetDirectory ().FullPath);
+                        }
+                    }
                 } else {
                     // skip this as this is not the correct platform
                     if (dryrun)
