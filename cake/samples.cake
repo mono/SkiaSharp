@@ -4,6 +4,7 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
     outputDirPath = MakeAbsolute(outputDirPath);
 
     var solutionProjectRegex = new Regex(@",\s*""(.*?\.\w{2}proj)"", ""(\{.*?\})""");
+    var solutionFilterProjectRegex = new Regex(@"\s*""(.+)\.csproj"",?");
 
     EnsureDirectoryExists(outputDirPath);
     CleanDirectory(outputDirPath);
@@ -62,6 +63,31 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                         }
                     }
                 }
+            }
+
+            // save the solution
+            EnsureDirectoryExists(dest.GetDirectory());
+            FileWriteLines(dest, lines.ToArray());
+        } else if (ext.Equals(".slnf", StringComparison.OrdinalIgnoreCase)) {
+            var lines = FileReadLines(file.FullPath).ToList();
+
+            // remove projects that aren't samples
+            for(var i = 0; i < lines.Count; i++) {
+                var line = lines [i];
+                var m = solutionFilterProjectRegex.Match(line);
+                if (!m.Success)
+                    continue;
+
+                // get the path of the project relative to the samples directory
+                var relProjectPath = (FilePath) m.Groups [1].Value.Replace("\\\\", "\\");
+                var absProjectPath = GetFullPath(file, relProjectPath);
+                var relSamplesPath = samplesDirPath.GetRelativePath(absProjectPath);
+                if (!relSamplesPath.FullPath.StartsWith(".."))
+                    continue;
+
+                Debug($"Removing the project '{relProjectPath}' for solution '{rel}'.");
+
+                lines.RemoveAt(i--);
             }
 
             // save the solution
