@@ -112,7 +112,6 @@ Task("libHarfBuzzSharp")
 
         RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
             { $"{VARIANT.ToUpper()}_DEPLOYMENT_TARGET_VERSION", GetDeploymentTarget(arch) },
-            { $"SKIA_PLATFORM", platform },
         });
 
         SafeCopy(
