@@ -23,8 +23,14 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd");
+    bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");
     bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
+    bool hasWasmEH = EMSCRIPTEN_FEATURES.Contains("_wasmeh");
+
+    var emscriptenFeaturesModifiers = 
+        EMSCRIPTEN_FEATURES
+        .Where(f => !f.StartsWith("_"))
+        .ToArray();
 
     GnNinja($"wasm", "SkiaSharp",
         $"target_os='linux' " +
@@ -65,7 +71,7 @@ Task("libSkiaSharp")
         $"  { (hasThreadingEnabled ? ", '-pthread'" : "") } " +
         $"] " +
         // SIMD support is based on https://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/modules/canvaskit/compile.sh#L57
-        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } ] " +
+        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
 
@@ -99,8 +105,8 @@ Task("libSkiaSharp")
     var outDir = OUTPUT_PATH.Combine($"wasm");
     if (!string.IsNullOrEmpty(EMSCRIPTEN_VERSION))
         outDir = outDir.Combine("libSkiaSharp.a").Combine(EMSCRIPTEN_VERSION);
-    if (EMSCRIPTEN_FEATURES.Length != 0)
-        outDir = outDir.Combine(string.Join(",", EMSCRIPTEN_FEATURES));
+    if (emscriptenFeaturesModifiers.Length != 0)
+        outDir = outDir.Combine(string.Join(",", emscriptenFeaturesModifiers));
     EnsureDirectoryExists(outDir);
     CopyFileToDirectory(a, outDir);
 });
@@ -109,8 +115,14 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd");
+    bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");;
     bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
+    bool hasWasmEH = EMSCRIPTEN_FEATURES.Contains("wasmeh");
+
+    var emscriptenFeaturesModifiers = 
+        EMSCRIPTEN_FEATURES
+        .Where(f => !f.StartsWith("_"))
+        .ToArray();
 
     GnNinja($"wasm", "HarfBuzzSharp",
         $"target_os='linux' " +
@@ -118,15 +130,15 @@ Task("libHarfBuzzSharp")
         $"is_static_skiasharp=true " +
         $"visibility_hidden=false " +
         $"extra_cflags=[ { (hasSimdEnabled ? "'-msimd128', " : "") } { (hasThreadingEnabled ? "'-pthread'" : "") } ] " +
-        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } ] " +
+        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
 
     var outDir = OUTPUT_PATH.Combine($"wasm");
     if (!string.IsNullOrEmpty(EMSCRIPTEN_VERSION))
         outDir = outDir.Combine("libHarfBuzzSharp.a").Combine(EMSCRIPTEN_VERSION);
-    if (EMSCRIPTEN_FEATURES.Length != 0)
-        outDir = outDir.Combine(string.Join(",", EMSCRIPTEN_FEATURES));
+    if (emscriptenFeaturesModifiers.Length != 0)
+        outDir = outDir.Combine(string.Join(",", emscriptenFeaturesModifiers));
     EnsureDirectoryExists(outDir);
     var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a");
     CopyFileToDirectory(so, outDir);
