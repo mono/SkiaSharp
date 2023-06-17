@@ -130,7 +130,7 @@ Task("libHarfBuzzSharp")
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
         $"visibility_hidden=false " +
-        $"extra_cflags=[ { (hasSimdEnabled ? "'-msimd128', " : "") } { (hasThreadingEnabled ? "'-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
+        $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
