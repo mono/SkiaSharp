@@ -2,8 +2,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <ItemGroup Condition="'$(RuntimeIdentifier)' != ''">
-        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\iossimulator\native\libSkiaSharp.framework" Kind="Framework" Condition="$(RuntimeItentifier.StartsWith('iossimulator'))" />
-        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\ios\native\libSkiaSharp.framework" Kind="Framework" Condition="!$(RuntimeItentifier.StartsWith('iossimulator'))" />
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\iossimulator\native\libSkiaSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('iossimulator'))" />
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\ios\native\libSkiaSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('iossimulator'))" />
     </ItemGroup>
 
 </Project>
