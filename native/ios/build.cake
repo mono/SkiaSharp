@@ -5,9 +5,6 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 #load "../../cake/xcode.cake"
 
 string VARIANT = (BUILD_VARIANT ?? "ios").ToLower();
-string DEPLOYMENT_SDK = VARIANT == "maccatalyst" ? "[sdk=macosx*]" : "";
-
-DirectoryPath OUTPUT_VARIANT_PATH = OUTPUT_PATH.Combine(VARIANT);
 
 string GetDeploymentTarget(string arch)
 {
@@ -24,24 +21,38 @@ Task("libSkiaSharp")
 {
     if (VARIANT == "ios") {
         Build("iphonesimulator", "x86_64", "x64");
+        Build("iphonesimulator", "arm64", "arm64");
         Build("iphoneos", "arm64", "arm64");
+        Build("iphoneos", "arm64", "arm64", "arm64e");
 
-        CreateFatFramework(OUTPUT_VARIANT_PATH.Combine("libSkiaSharp"));
+        SafeCopy(
+            $"libSkiaSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
+            OUTPUT_PATH.Combine($"ios/libSkiaSharp/x86_64.xcarchive"));
+
+        CreateFatFramework(OUTPUT_PATH.Combine("ios/libSkiaSharp"));
+        CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libSkiaSharp"));
     } else if (VARIANT == "maccatalyst") {
         Build("macosx", "x86_64", "x64");
         Build("macosx", "arm64", "arm64");
 
-        CreateFatVersionedFramework(OUTPUT_VARIANT_PATH.Combine("libSkiaSharp"));
+        CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libSkiaSharp"));
     }
 
-    void Build(string sdk, string arch, string skiaArch)
+    void Build(string sdk, string arch, string skiaArch, string xcodeArch = null)
     {
         if (Skip(arch)) return;
 
-        GnNinja($"{VARIANT}/{arch}", "skia modules/skottie",
+        xcodeArch = xcodeArch ?? arch;
+        var isSim = sdk.EndsWith("simulator");
+        var platform = VARIANT;
+        if (VARIANT == "ios" && isSim)
+            platform += "simulator";
+
+        GnNinja($"{platform}/{xcodeArch}", "skia modules/skottie",
             $"target_cpu='{skiaArch}' " +
             $"target_os='{VARIANT}' " +
             $"min_{VARIANT}_version='{GetDeploymentTarget(arch)}' " +
+            $"ios_use_simulator={(isSim ? "true" : "false")} " +
             $"skia_use_icu=false " +
             $"skia_use_metal={(sdk == "macosx" ? "false" : "true")} " +
             $"skia_use_piex=true " +
@@ -55,13 +66,14 @@ Task("libSkiaSharp")
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] " +
             ADDITIONAL_GN_ARGS);
 
-        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch, platform: VARIANT, properties: new Dictionary<string, string> {
-            { $"IPHONEOS_DEPLOYMENT_TARGET{DEPLOYMENT_SDK}", GetDeploymentTarget(arch) },
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
+            { $"{VARIANT.ToUpper()}_DEPLOYMENT_TARGET_VERSION", GetDeploymentTarget(arch) },
+            { $"SKIA_PLATFORM", platform },
         });
 
         SafeCopy(
-            $"libSkiaSharp/bin/{CONFIGURATION}/{sdk}/{arch}.xcarchive",
-            OUTPUT_PATH.Combine($"{VARIANT}/libSkiaSharp/{arch}.xcarchive"));
+            $"libSkiaSharp/bin/{CONFIGURATION}/{sdk}/{xcodeArch}.xcarchive",
+            OUTPUT_PATH.Combine($"{platform}/libSkiaSharp/{xcodeArch}.xcarchive"));
     }
 });
 
@@ -71,27 +83,40 @@ Task("libHarfBuzzSharp")
 {
     if (VARIANT == "ios") {
         Build("iphonesimulator", "x86_64");
+        Build("iphonesimulator", "arm64");
         Build("iphoneos", "arm64");
+        Build("iphoneos", "arm64e");
 
-        CreateFatFramework(OUTPUT_VARIANT_PATH.Combine("libHarfBuzzSharp"));
+        SafeCopy(
+            $"libHarfBuzzSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
+            OUTPUT_PATH.Combine($"ios/libHarfBuzzSharp/x86_64.xcarchive"));
+
+        CreateFatFramework(OUTPUT_PATH.Combine("ios/libHarfBuzzSharp"));
+        CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libHarfBuzzSharp"));
     } else if (VARIANT == "maccatalyst") {
         Build("macosx", "x86_64");
         Build("macosx", "arm64");
 
-        CreateFatVersionedFramework(OUTPUT_VARIANT_PATH.Combine("libHarfBuzzSharp"));
+        CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libHarfBuzzSharp"));
     }
 
-    void Build(string sdk, string arch)
+    void Build(string sdk, string arch, string xcodeArch = null)
     {
         if (Skip(arch)) return;
 
-        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, arch, platform: VARIANT, properties: new Dictionary<string, string> {
-            { $"IPHONEOS_DEPLOYMENT_TARGET{DEPLOYMENT_SDK}", GetDeploymentTarget(arch) },
+        xcodeArch = xcodeArch ?? arch;
+        var isSim = sdk.EndsWith("simulator");
+        var platform = VARIANT;
+        if (VARIANT == "ios" && isSim)
+            platform += "simulator";
+
+        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
+            { $"{VARIANT.ToUpper()}_DEPLOYMENT_TARGET_VERSION", GetDeploymentTarget(arch) },
         });
 
         SafeCopy(
-            $"libHarfBuzzSharp/bin/{CONFIGURATION}/{sdk}/{arch}.xcarchive",
-            OUTPUT_PATH.Combine($"{VARIANT}/libHarfBuzzSharp/{arch}.xcarchive"));
+            $"libHarfBuzzSharp/bin/{CONFIGURATION}/{sdk}/{xcodeArch}.xcarchive",
+            OUTPUT_PATH.Combine($"{platform}/libHarfBuzzSharp/{xcodeArch}.xcarchive"));
     }
 });
 

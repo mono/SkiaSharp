@@ -58,8 +58,9 @@
   <ItemGroup Condition="$(TargetFramework.Contains('-ios'))">
     <!-- iOS -->
     <None Include="..\..\output\native\ios\libSkiaSharp.framework\**" Link="nuget\runtimes\ios\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="nuget\build\ios\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-ios\SkiaSharp.targets" />
-    <None Include="nuget\build\ios\SkiaSharp.Local.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-ios\SkiaSharp.Local.targets" />
+    <None Include="..\..\output\native\iossimulator\libSkiaSharp.framework\**" Link="nuget\runtimes\iossimulator\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="nuget\build\ios\SkiaSharp.targets" Link="nuget\build\net6.0-ios\SkiaSharp.targets" />
+    <None Include="nuget\build\ios\SkiaSharp.Local.targets" Link="nuget\build\net6.0-ios\SkiaSharp.Local.targets" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
     <!-- Mac Catalyst -->
