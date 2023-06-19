@@ -43,21 +43,87 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 Task ("docs-download-output")
     .Does (async () =>
 {
-    EnsureDirectoryExists ("./output");
-    CleanDirectories ("./output");
+    CleanDir ("./output");
 
+    // download
     await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
     await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
 
+    // extract
     foreach (var id in TRACKED_NUGETS.Keys) {
         var version = GetVersion (id);
         var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
             ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
             : version;
         var name = $"{id}.{localNugetVersion}.nupkg";
-        CleanDirectories ($"./output/{id}");
+        CleanDir ($"./output/{id}");
         Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
     }
+
+    // TODO: this code is not great, but it helps test other things
+    //       so we can keep it but we probably need to do this better.
+
+    // // cleanup and merge
+    // foreach (var extracted in GetDirectories ("./output/*")) {
+    //     var id = extracted.GetDirectoryName ();
+    //     if (id == "nugets")
+    //         continue;
+
+    //     Debug ($"Cleaning NuGet artifacts for '{id}'...");
+
+    //     // cleanup
+    //     DeleteDir (extracted.Combine ("nuget/_rels"));
+    //     DeleteDir (extracted.Combine ("nuget/package"));
+    //     DeleteFile (extracted.CombineWithFilePath ("nuget/[Content_Types].xml"));
+    //     DeleteFile (extracted.CombineWithFilePath ($"nuget/{id}.nuspec"));
+
+    //     // this is always a duplicate
+    //     DeleteDir (extracted.Combine ("nuget/buildTransitive"));
+
+    //     // remove versions from the ends of TFMs
+    //     var tfmDirs =
+    //         GetDirectories (extracted + "/nuget/lib/*").Union (
+    //         GetDirectories (extracted + "/nuget/build/*"));
+    //     foreach (var lib in tfmDirs) {
+    //         var fullTfm = lib.GetDirectoryName ();
+    //         var tfm = fullTfm.Split ("-");
+    //         if (tfm.Length != 2)
+    //             continue;
+
+    //         Debug ($"Cleaning TFMs for '{id}/{fullTfm}'...");
+
+    //         var newTfm = tfm [0];
+    //         newTfm += "-";
+    //         foreach (var c in tfm [1]) {
+    //             if (char.IsDigit (c))
+    //                 break;
+    //             newTfm += c;
+    //         }
+    //         if (newTfm == fullTfm)
+    //             continue;
+
+    //         CopyDirectory (lib, lib.GetParent ().Combine (newTfm));
+    //         DeleteDir (lib);
+    //     }
+
+    //     // merge
+    //     var idx = id.IndexOf (".NativeAssets.");
+    //     if (idx != -1) {
+    //         var baseId = id.Substring (0, idx);
+
+    //         Debug ($"Merging NativeAssets for '{id}' into '{baseId}'...");
+
+    //         // merge targets
+    //         var buildDir = extracted.Combine ("nuget/build");
+    //         foreach (var targets in GetFiles ($"{buildDir}/*/{id}.targets")) {
+    //             MoveFile (targets, targets.GetDirectory ().CombineWithFilePath ($"{baseId}.targets"));
+    //         }
+
+    //         // merge directory
+    //         CopyDirectory (extracted, extracted.GetParent ().Combine (baseId));
+    //         DeleteDir (extracted);
+    //     }
+    // }
 });
 
 Task ("docs-api-diff")
