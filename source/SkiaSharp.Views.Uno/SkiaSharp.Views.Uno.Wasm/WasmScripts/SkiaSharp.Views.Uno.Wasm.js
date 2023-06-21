@@ -62,13 +62,13 @@
                 }
 
                 // JSObject
-                static createInstance(managedHandle, jsHandle) {
+                static createInstanceLegacy(managedHandle, jsHandle) {
                     SKSwapChainPanel.activeInstances[jsHandle] = new SKSwapChainPanel(managedHandle);
                 }
-                static getInstance(jsHandle) {
+                static getInstanceLegacy(jsHandle) {
                     return SKSwapChainPanel.activeInstances[jsHandle];
                 }
-                static destroyInstance(jsHandle) {
+                static destroyInstanceLegacy(jsHandle) {
                     delete SKSwapChainPanel.activeInstances[jsHandle];
                 }
 
