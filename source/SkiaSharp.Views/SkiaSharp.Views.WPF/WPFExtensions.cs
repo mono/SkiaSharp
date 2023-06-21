@@ -28,7 +28,7 @@ namespace SkiaSharp.Views.WPF
 
 		public static Rect ToRect(this SKRect rect)
 		{
-			return new Rect(rect.Left, rect.Top, rect.Right, rect.Bottom);
+			return new Rect(rect.Left, rect.Top, rect.Width, rect.Height);
 		}
 
 		// Size
