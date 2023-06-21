@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
 using Mono.Options;
+using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
 namespace WasmTestRunner
@@ -122,7 +123,7 @@ namespace WasmTestRunner
 
 			do
 			{
-				var pre = driver.FindElementsByTagName("PRE").Skip(index).ToArray();
+				var pre = driver.FindElements(By.TagName("PRE")).Skip(index).ToArray();
 				if (pre.Length > 0)
 				{
 					index += pre.Length;
@@ -132,12 +133,12 @@ namespace WasmTestRunner
 						Console.WriteLine(e.Text);
 				}
 
-				var resultsElement = driver.FindElementsById("results");
+				var resultsElement = driver.FindElements(By.Id("results"));
 				if (resultsElement.Count == 0)
 				{
-					if (driver.FindElementsByClassName("neterror").Count > 0)
+					if (driver.FindElements(By.ClassName("neterror")).Count > 0)
 					{
-						var errorCode = driver.FindElementsByClassName("error-code").FirstOrDefault()?.Text;
+						var errorCode = driver.FindElements(By.ClassName("error-code")).FirstOrDefault()?.Text;
 						throw new Exception($"There was an error loading the page: {errorCode}");
 					}
 

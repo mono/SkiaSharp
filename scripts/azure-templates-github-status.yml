@@ -6,6 +6,10 @@ parameters:
 
 steps:
   - pwsh: |
+      if ('$(Github.Token.Status)' -eq '') {
+        Write-Host "GitHub status token was empty. Skipping status updates."
+        return
+      }
       $state = 'pending'
       if ('${{ parameters.state }}') {
         $state = '${{ parameters.state }}'

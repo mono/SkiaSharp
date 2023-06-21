@@ -301,7 +301,7 @@ Task ("tests-android")
         // package the app
         FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
         RunMSBuild (csproj,
-            targets: new [] { "SignAndroidPackage" }, 
+            targets: new [] { "SignAndroidPackage" },
             properties: new Dictionary<string, string> {
                 { "BuildTestOnly", "true" },
             },
@@ -463,7 +463,7 @@ Task ("samples")
         { "xamarin.forms.windows", "x86" },
     };
 
-    void BuildSample (FilePath sln, bool dryrun)
+    void BuildSample (FilePath sln, bool useNetCore, bool dryrun)
     {
         var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
         var name = sln.GetFilenameWithoutExtension ();
@@ -484,11 +484,18 @@ Task ("samples")
             }
 
             if (dryrun) {
-                Information ($"    BUILD       {sln}");
+                if (useNetCore)
+                    Information ($"    BUILD  (DN) {sln}");
+                else
+                    Information ($"    BUILD  (FX) {sln}");
             } else {
                 Information ($"Building sample {sln} ({platform})...");
-                RunNuGetRestorePackagesConfig (sln);
-                RunMSBuild (sln, platform: buildPlatform);
+                if (useNetCore) {
+                    RunNetCoreBuild (sln);
+                } else {
+                    RunNuGetRestorePackagesConfig (sln);
+                    RunMSBuild (sln, platform: buildPlatform);
+                }
             }
         } else {
             if (dryrun) {
@@ -524,7 +531,11 @@ Task ("samples")
     var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
         ? "samples-preview"
         : "samples";
-    var solutions = GetFiles ($"./output/{actualSamples}/**/*.sln");
+    var solutions =
+        GetFiles ($"./output/{actualSamples}/**/*.sln").Union (
+        GetFiles ($"./output/{actualSamples}/**/*.slnf"))
+        .OrderBy (x => x.FullPath)
+        .ToArray ();
 
     Information ("Solutions found:");
     foreach (var sln in solutions) {
@@ -541,17 +552,24 @@ Task ("samples")
                 continue;
 
             var name = sln.GetFilenameWithoutExtension ();
+
+            // this is a IDE only solution
+            if (name.ToString ().EndsWith ("-vsmac"))
+                continue;
+
             var slnPlatform = name.GetExtension ();
 
             if (string.IsNullOrEmpty (slnPlatform)) {
                 // this is the main solution
-                var variants = GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln");
+                var variants =
+                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln").Union (
+                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf"));
                 if (!variants.Any ()) {
                     // there is no platform variant
-                    BuildSample (sln, dryrun);
+                    BuildSample (sln, false, dryrun);
                     // delete the built sample
                     if (!dryrun)
-                        CleanDirectories (sln.GetDirectory ().FullPath);
+                        CleanDir (sln.GetDirectory ().FullPath);
                 } else {
                     // skip as there is a platform variant
                     if (dryrun)
@@ -560,15 +578,20 @@ Task ("samples")
             } else {
                 // this is a platform variant
                 slnPlatform = slnPlatform.ToLower ();
+                var useNetCore = slnPlatform.EndsWith ("-net");
+                if (useNetCore)
+                    slnPlatform = slnPlatform.Substring (0, slnPlatform.Length - 4);
+
                 var shouldBuild =
                     (isLinux && slnPlatform == ".linux") ||
                     (isMac && slnPlatform == ".mac") ||
                     (isWin && slnPlatform == ".windows");
                 if (shouldBuild) {
-                    BuildSample (sln, dryrun);
+                    BuildSample (sln, useNetCore, dryrun);
                     // delete the built sample
-                    if (!dryrun)
-                        CleanDirectories (sln.GetDirectory ().FullPath);
+                    if (!dryrun) {
+                        CleanDir (sln.GetDirectory ().FullPath);
+                    }
                 } else {
                     // skip this as this is not the correct platform
                     if (dryrun)
@@ -578,10 +601,10 @@ Task ("samples")
         }
     }
 
-    CleanDirectory ("./output/samples/");
-    DeleteDirectory ("./output/samples/", new DeleteDirectorySettings { Recursive = true, Force = true });
-    CleanDirectory ("./output/samples-preview/");
-    DeleteDirectory ("./output/samples-preview/", new DeleteDirectorySettings { Recursive = true, Force = true });
+    CleanDir ("./output/samples/");
+    DeleteDir ("./output/samples/");
+    CleanDir ("./output/samples-preview/");
+    DeleteDir ("./output/samples-preview/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -930,8 +953,7 @@ Task ("clean-managed")
 
     DeleteFiles ("./nuget/*.prerelease.nuspec");
 
-    if (DirectoryExists ("./output"))
-        DeleteDirectory ("./output", new DeleteDirectorySettings { Recursive = true, Force = true });
+    DeleteDir ("./output");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

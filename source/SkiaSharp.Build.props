@@ -27,7 +27,7 @@
     <BuildingForDotNet Condition="'$(BuildingForDotNet)' == ''">false</BuildingForDotNet>
     <MDocDocumentationDirectory>$(MSBuildThisFileDirectory)..\docs\SkiaSharpAPI</MDocDocumentationDirectory>
     <LangVersion>9.0</LangVersion>
-    <LangVersion Condition="$(IsWindows)">10.0</LangVersion>
+    <LangVersion Condition="$(IsWindows) or $(BuildingForDotNet)">10.0</LangVersion>
     <DotNetSdkManifestVersionRegex>\d+\.\d+\.\d+(-[a-z]+\.\d+)?</DotNetSdkManifestVersionRegex>
     <DotNetSdkVersionRegex>\d+\.\d+</DotNetSdkVersionRegex>
     <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' == 'Core'">$([System.Text.RegularExpressions.Regex]::Match('$(MSBuildExtensionsPath)', '$(DotNetSdkManifestVersionRegex)'))</DotNetSdkManifestVersion>

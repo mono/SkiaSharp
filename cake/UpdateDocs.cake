@@ -43,8 +43,7 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 Task ("docs-download-output")
     .Does (async () =>
 {
-    EnsureDirectoryExists ("./output");
-    CleanDirectories ("./output");
+    CleanDir ("./output");
 
     await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
     await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
@@ -55,7 +54,7 @@ Task ("docs-download-output")
             ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
             : version;
         var name = $"{id}.{localNugetVersion}.nupkg";
-        CleanDirectories ($"./output/{id}");
+        CleanDir ($"./output/{id}");
         Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
     }
 });

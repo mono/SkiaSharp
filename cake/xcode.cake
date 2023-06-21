@@ -1,6 +1,6 @@
 #addin nuget:?package=Cake.XCode&version=5.0.0
 
-void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, string platform = null)
+void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, Dictionary<string, string> properties = null)
 {
     var dir = project.GetDirectory();
 
@@ -18,8 +18,10 @@ void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, str
             { "BUILD_LIBRARIES_FOR_DISTRIBUTION", "YES" },
         },
     };
-    if (platform != null) {
-        settings.BuildSettings["PLATFORM"] = platform;
+    if (properties != null) {
+        foreach (var prop in properties) {
+            settings.BuildSettings[prop.Key] = prop.Value;
+        }
     }
 
     XCodeBuild(settings);
@@ -115,7 +117,7 @@ void CreateFatVersionedFramework(DirectoryPath archives)
 void SafeCopy(DirectoryPath src, DirectoryPath dst)
 {
     EnsureDirectoryExists(dst);
-    DeleteDirectory(dst, new DeleteDirectorySettings { Recursive = true, Force = true });
+    DeleteDir(dst);
     RunProcess("cp", $"-R {src} {dst}");
 }
 
