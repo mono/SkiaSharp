@@ -80,8 +80,14 @@
     <None Include="nuget\build\macos\HarfBuzzSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-macos\HarfBuzzSharp.targets" />
     <None Include="nuget\build\macos\HarfBuzzSharp.Local.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-macos\HarfBuzzSharp.Local.targets" />
   </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <!-- Tizen -->
+    <None Include="..\..\output\native\tizen\armel\libHarfBuzzSharp.*" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\arm\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\tizen\i386\libHarfBuzzSharp.*" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\x86\%(Filename)%(Extension)" />
+    <None Include="nuget\build\tizen\HarfBuzzSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\HarfBuzzSharp.targets" />
+    <None Include="nuget\build\tizen\HarfBuzzSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\HarfBuzzSharp.Local.targets" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

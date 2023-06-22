@@ -265,7 +265,9 @@ internal partial class VersionConstants {
 
   <!-- Make sure we always build with a lower version of WinRT.Runtime.dll -->
   <ItemGroup>
-    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" RuntimeFrameworkVersion="10.0.19041.24" TargetingPackVersion="10.0.19041.24" />
+    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" RuntimeFrameworkVersion="10.0.19041.27" TargetingPackVersion="10.0.19041.27" />
   </ItemGroup>
+
+  <Import Project="SkiaSharp.Build.Override.targets" Condition="Exists('SkiaSharp.Build.Override.targets')" />
 
 </Project>

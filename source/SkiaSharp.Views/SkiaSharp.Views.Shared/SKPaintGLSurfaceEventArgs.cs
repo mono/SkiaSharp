@@ -1,5 +1,4 @@
-﻿#if !__WATCHOS__
-using System;
+﻿using System;
 using System.ComponentModel;
 
 #if HAS_UNO_WINUI
@@ -122,4 +121,3 @@ namespace SkiaSharp.Views.Blazor
 		public SKImageInfo RawInfo { get; private set; }
 	}
 }
-#endif

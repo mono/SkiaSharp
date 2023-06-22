@@ -10,19 +10,15 @@
     <DefineConstants>$(DefineConstants);WINUI</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Uno.WinUI" Version="4.0.8" />
+    <PackageReference Include="Uno.WinUI" Version="4.1.9" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="nuget\build\$(PackagingPlatform)\SkiaSharp.Views.Uno.WinUI.targets" 
-          Link="nuget\build\$(PackagingPlatform)\SkiaSharp.Views.Uno.WinUI.targets" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.UWP\UWPExtensions.cs" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WinUI\UWPExtensions.cs" />
     <Compile Include="..\SkiaSharp.Views.Uno.Reference\*.Reference.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\SkiaSharp.Views.Uno\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Uno.WinUI.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

@@ -162,21 +162,7 @@ Task ("libs")
         platform = ".Linux";
     }
 
-    var net = $"./source/SkiaSharpSource{platform}-net.slnf";
-    var netfx = $"./source/SkiaSharpSource{platform}-netfx.slnf";
-    if (FileExists (net) || FileExists (netfx)) {
-        if (FileExists (net) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "net"))
-            RunMSBuild (net, properties: new Dictionary<string, string> { { "BuildingForDotNet", "true" } });
-        if (FileExists (netfx) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "netfx"))
-            RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForDotNet", "false" } });
-    } else {
-        var slnf = $"./source/SkiaSharpSource{platform}.slnf";
-        var sln = $"./source/SkiaSharpSource{platform}.sln";
-        if (FileExists (slnf))
-            RunMSBuild (slnf);
-        else
-            RunMSBuild (sln);
-    }
+    RunNetCoreBuild ($"./source/SkiaSharpSource{platform}.slnf");
 
     // assemble the mdoc docs
     EnsureDirectoryExists ("./output/docs/mdoc/");

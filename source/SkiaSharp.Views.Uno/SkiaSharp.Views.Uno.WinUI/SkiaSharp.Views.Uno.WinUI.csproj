@@ -1,0 +1,90 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net6.0-android;net6.0-ios;net6.0-maccatalyst;net6.0-macos</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
+    <PackagingGroup>SkiaSharp.Views.Uno.WinUI</PackagingGroup>
+    <PackageId>SkiaSharp.Views.Uno.WinUI</PackageId>
+    <SignAssembly>false</SignAssembly>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Uno.WinUI" Version="4.1.9" />
+  </ItemGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);HAS_UNO;WINUI</DefineConstants>
+  </PropertyGroup>
+  <!-- Android -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\GLTextureView.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SKGLTextureView.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SKGLTextureViewRenderer.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SurfaceFactory.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-android'))">
+    <Compile Remove="**\Android\**\*.cs" />
+    <None Include="**\Android\**\*.cs" />
+    <Compile Remove="**\*.Android.cs" />
+    <None Include="**\*.Android.cs" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\GLTextureView.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SKGLTextureView.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SKGLTextureViewRenderer.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SurfaceFactory.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- macOS -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\macOS\SKGLView.cs" Link="Platform\macOS\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-macos'))">
+    <Compile Remove="**\macOS\**\*.cs" />
+    <None Include="**\macOS\**\*.cs" />
+    <Compile Remove="**\*.macOS.cs" />
+    <None Include="**\*.macOS.cs" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\macOS\SKGLView.cs" Link="Platform\macOS\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- iOS -->
+  <ItemGroup Condition="!$(TargetFramework.Contains('-ios'))">
+    <Compile Remove="**\iOS\**\*.cs" />
+    <None Include="**\iOS\**\*.cs" />
+    <Compile Remove="**\*.iOS.cs" />
+    <None Include="**\*.iOS.cs" />
+  </ItemGroup>
+  <!-- macOS -->
+  <ItemGroup Condition="!$(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Remove="**\MacCatalyst\**\*.cs" />
+    <None Include="**\MacCatalyst\**\*.cs" />
+    <Compile Remove="**\*.MacCatalyst.cs" />
+    <None Include="**\*.MacCatalyst.cs" />
+  </ItemGroup>
+  <!-- iOS / Mac Catalyst -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\iOS\SKGLView.cs" Link="Platform\iOS\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-ios')) and !$(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Remove="**\AppleiOS\**\*.cs" />
+    <None Include="**\AppleiOS\**\*.cs" />
+    <Compile Remove="**\*.AppleiOS.cs" />
+    <None Include="**\*.AppleiOS.cs" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\iOS\SKGLView.cs" Link="Platform\iOS\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- iOS / Mac Catalyst / macOS -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-macos'))">
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Apple\SKCGSurfaceFactory.cs" Link="Platform\Apple\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-ios')) and !$(TargetFramework.Contains('-maccatalyst')) and !$(TargetFramework.Contains('-macos'))">
+    <Compile Remove="**\Apple\**\*.cs" />
+    <None Include="**\Apple\**\*.cs" />
+    <Compile Remove="**\*.Apple.cs" />
+    <None Include="**\*.Apple.cs" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Apple\SKCGSurfaceFactory.cs" Link="Platform\Apple\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- Shared -->
+  <ItemGroup>
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WinUI\UWPExtensions.cs" Link="%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Uno.WinUI.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

@@ -22,9 +22,8 @@
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
-    <ProjectReference Include="..\..\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" />
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" />
   </ItemGroup>
-  <!-- local files -->
   <ItemGroup Condition="$(TargetFramework.Contains('-'))">
     <Compile Remove="**\Ref\**\*.cs" />
     <None Include="**\Ref\**\*.cs" />
@@ -54,29 +53,5 @@
     <None Include="**\Tizen\**\*.cs" />
     <Compile Remove="**\*.Tizen.cs" />
     <None Include="**\*.Tizen.cs" />
-  </ItemGroup>
-  <!-- forms files -->
-  <ItemGroup>
-    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Shared\SKPaintGLSurfaceEventArgs.cs" Link="Core\SKPaintGLSurfaceEventArgs.cs" />
-    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Shared\SKPaintSurfaceEventArgs.cs" Link="Core\SKPaintSurfaceEventArgs.cs" />
-    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Shared\SKTouchEventArgs.cs" Link="Core\SKTouchEventArgs.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
-    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.iOS\SKTouchHandler.cs" Link="Platform\iOS\SKTouchHandler.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="!$(TargetFramework.Contains('-ios')) and !$(TargetFramework.Contains('-maccatalyst'))">
-    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.iOS\SKTouchHandler.cs" Link="Platform\iOS\SKTouchHandler.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
-    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Android\SKTouchHandler.cs" Link="Platform\Android\SKTouchHandler.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="!$(TargetFramework.Contains('-android'))">
-    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Android\SKTouchHandler.cs" Link="Platform\Android\SKTouchHandler.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
-    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.UWP\SKTouchHandler.cs" Link="Platform\Windows\SKTouchHandler.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="!$(TargetFramework.Contains('-windows'))">
-    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.UWP\SKTouchHandler.cs" Link="Platform\Windows\SKTouchHandler.cs" />
   </ItemGroup>
 </Project>

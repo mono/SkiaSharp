@@ -146,7 +146,6 @@ void RunNetCoreBuild(
         }
     }
 
-    msb.Properties ["BuildingForDotNet"] = new [] { "true" };
     msb.Properties ["RestoreNoCache"] = new [] { "true" };
     msb.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
 

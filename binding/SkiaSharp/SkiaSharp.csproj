@@ -83,11 +83,10 @@
     <!-- Tizen -->
     <None Include="..\..\output\native\tizen\armel\libSkiaSharp.*" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\arm\%(Filename)%(Extension)" />
     <None Include="..\..\output\native\tizen\i386\libSkiaSharp.*" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\x86\%(Filename)%(Extension)" />
-    <None Include="nuget\build\tizen40\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\SkiaSharp.targets" />
-    <None Include="nuget\build\tizen40\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\SkiaSharp.Local.targets" />
+    <None Include="nuget\build\tizen\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\SkiaSharp.targets" />
+    <None Include="nuget\build\tizen\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\SkiaSharp.Local.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
