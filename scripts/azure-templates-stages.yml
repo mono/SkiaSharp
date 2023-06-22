@@ -332,29 +332,14 @@ stages:
         - native_linux
         - native_wasm
       jobs:
-        - template: azure-templates-bootstrapper.yml # Build Managed .NET Framework (Windows)
+        - template: azure-templates-bootstrapper.yml # Build Managed (Windows)
           parameters:
-            name: managed_netfx_windows
-            displayName: Managed .NET Framework (Windows)
+            name: managed_windows
+            displayName: Managed (Windows)
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: libs
-            additionalArgs: --skipExternals="all" --solutionType=netfx
-            installPreviewVs: true
-            requiredArtifacts:
-              - name: native
-            artifactName: managed
-            postBuildSteps:
-              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
-                displayName: Delete the native folder
-        - template: azure-templates-bootstrapper.yml # Build Managed .NET (Windows)
-          parameters:
-            name: managed_net_windows
-            displayName: Managed .NET (Windows)
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
-            target: libs
-            additionalArgs: --skipExternals="all" --solutionType=net
+            additionalArgs: --skipExternals="all"
             installPreviewVs: true
             requiredArtifacts:
               - name: native

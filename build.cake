@@ -39,7 +39,6 @@ var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
-var SOLUTION_TYPE = Argument ("solutionType", "").ToLower ().Trim ();
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
 
 var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
