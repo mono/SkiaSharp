@@ -32,6 +32,11 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
         <dependency id="SkiaSharp" version="1.0.0" />
         <dependency id="SkiaSharp.NativeAssets.WebAssembly" version="1.0.0" />
       </group>
+      <group targetFramework="net7.0">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+        <dependency id="SkiaSharp.NativeAssets.WebAssembly" version="1.0.0" />
+      </group>
       <group targetFramework="net6.0-ios13.6">
         <dependency id="Uno.WinUI" version="1.0.0" />
         <dependency id="SkiaSharp" version="1.0.0" />
@@ -53,6 +58,27 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
         <dependency id="SkiaSharp" version="1.0.0" />
         <dependency id="SkiaSharp.Views" version="1.0.0" />
       </group>
+      <group targetFramework="net7.0-ios13.6">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="net7.0-maccatalyst13.5">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="net7.0-macos12.1">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="net7.0-android30.0">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+      </group>
+      <group targetFramework="net7.0-windows10.0.18362.0">
+        <dependency id="Uno.WinUI" version="1.0.0" />
+        <dependency id="SkiaSharp" version="1.0.0" />
+        <dependency id="SkiaSharp.Views" version="1.0.0" />
+      </group>
     </dependencies>
 
   </metadata>
@@ -65,6 +91,7 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file src="lib/net7.0/SkiaSharp.Views.Windows.dll" />
     <file src="lib/net7.0/SkiaSharp.Views.Windows.pdb" />
     <file src="lib/net7.0/SkiaSharp.Views.Windows.xml" />
+    
     <file src="uno-runtime/netstandard2.0/webassembly/SkiaSharp.Views.Windows.dll" />
     <file src="uno-runtime/netstandard2.0/webassembly/SkiaSharp.Views.Windows.pdb" />
     <file src="uno-runtime/netstandard2.0/webassembly/SkiaSharp.Views.Windows.xml" />
@@ -77,6 +104,8 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file src="uno-runtime/net7.0/skia/SkiaSharp.Views.Windows.dll" />
     <file src="uno-runtime/net7.0/skia/SkiaSharp.Views.Windows.pdb" />
     <file src="uno-runtime/net7.0/skia/SkiaSharp.Views.Windows.xml" />
+
+    <!-- net6.0-* binaries -->
     <file src="lib/net6.0-android/SkiaSharp.Views.Windows.dll" target="lib/net6.0-android3.0/SkiaSharp.Views.Windows.dll"/>
     <file src="lib/net6.0-android/SkiaSharp.Views.Windows.pdb" target="lib/net6.0-android3.0/SkiaSharp.Views.Windows.pdb"/>
     <file src="lib/net6.0-android/SkiaSharp.Views.Windows.xml" target="lib/net6.0-android3.0/SkiaSharp.Views.Windows.xml"/>
@@ -89,13 +118,43 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file src="lib/net6.0-maccatalyst/SkiaSharp.Views.Windows.dll" target="lib/net6.0-maccatalyst13.5/SkiaSharp.Views.Windows.dll"/>
     <file src="lib/net6.0-maccatalyst/SkiaSharp.Views.Windows.pdb" target="lib/net6.0-maccatalyst13.5/SkiaSharp.Views.Windows.pdb"/>
     <file src="lib/net6.0-maccatalyst/SkiaSharp.Views.Windows.xml" target="lib/net6.0-maccatalyst13.5/SkiaSharp.Views.Windows.xml"/>
+
+    <!-- net7.0-* binaries -->
+    <!-- 
+    Note that the net6.0 binaries are redirected to net7.0, until https://github.com/dotnet/sdk/issues/30103
+    is fixed. At present time, the CI builds with net7.0, which makes net6.0 unuseable by actual net6.0 consumers
+    that build with a net6.0 SDK.
+
+    This workaround is also required because nuget resolution uses net7.0 in favor of
+    net6.0-android when the net7.0 SDK is installed, causing android to use WebAssembly
+    binaries, and fail at runtime.
+    -->
+    <file src="lib/net6.0-android/SkiaSharp.Views.Windows.dll" target="lib/net7.0-android3.0/SkiaSharp.Views.Windows.dll"/>
+    <file src="lib/net6.0-android/SkiaSharp.Views.Windows.pdb" target="lib/net7.0-android3.0/SkiaSharp.Views.Windows.pdb"/>
+    <file src="lib/net6.0-android/SkiaSharp.Views.Windows.xml" target="lib/net7.0-android3.0/SkiaSharp.Views.Windows.xml"/>
+    <file src="lib/net6.0-ios/SkiaSharp.Views.Windows.dll" target="lib/net7.0-ios13.6/SkiaSharp.Views.Windows.dll"/>
+    <file src="lib/net6.0-ios/SkiaSharp.Views.Windows.pdb" target="lib/net7.0-ios13.6/SkiaSharp.Views.Windows.pdb"/>
+    <file src="lib/net6.0-ios/SkiaSharp.Views.Windows.xml" target="lib/net7.0-ios13.6/SkiaSharp.Views.Windows.xml"/>
+    <file src="lib/net6.0-macos/SkiaSharp.Views.Windows.dll" target="lib/net7.0-macos12.1/SkiaSharp.Views.Windows.dll"/>
+    <file src="lib/net6.0-macos/SkiaSharp.Views.Windows.pdb" target="lib/net7.0-macos12.1/SkiaSharp.Views.Windows.pdb"/>
+    <file src="lib/net6.0-macos/SkiaSharp.Views.Windows.xml" target="lib/net7.0-macos12.1/SkiaSharp.Views.Windows.xml"/>
+    <file src="lib/net6.0-maccatalyst/SkiaSharp.Views.Windows.dll" target="lib/net7.0-maccatalyst13.5/SkiaSharp.Views.Windows.dll"/>
+    <file src="lib/net6.0-maccatalyst/SkiaSharp.Views.Windows.pdb" target="lib/net7.0-maccatalyst13.5/SkiaSharp.Views.Windows.pdb"/>
+    <file src="lib/net6.0-maccatalyst/SkiaSharp.Views.Windows.xml" target="lib/net7.0-maccatalyst13.5/SkiaSharp.Views.Windows.xml"/>
     
     <!-- Fallback to avoid netstandard2.0 to be used incorrectly and cause hard to troubleshoot build errors -->
     <file src="_._" target="lib/net6.0-windows10.0.18362.0/_._" />
+    
+    <!-- Fallback to avoid netstandard2.0 to be used incorrectly and cause hard to troubleshoot build errors -->
+    <file src="_._" target="lib/net7.0-windows10.0.18362.0/_._" />
 
-    <!-- the build bits -->
+    <!-- the netstandard2.0 build bits -->
     <file src="build/netstandard2.0/SkiaSharp.Views.Uno.WinUI.targets" />
     <file src="build/netstandard2.0/SkiaSharp.Views.Uno.WinUI.targets" target="buildTransitive/netstandard2.0/SkiaSharp.Views.Uno.WinUI.targets" />
+
+    <!-- the net7.0 build bits -->
+    <file src="build/net7.0/SkiaSharp.Views.Uno.WinUI.targets" />
+    <file src="build/net7.0/SkiaSharp.Views.Uno.WinUI.targets" target="buildTransitive/net7.0/SkiaSharp.Views.Uno.WinUI.targets" />
 
     <!-- legal -->
     <file src="LICENSE.txt" />
