@@ -100,85 +100,6 @@ stages:
             target: externals-tizen
             installWindowsSdk: false
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Win)
-          parameters:
-            name: native_uwp_angle_x86_windows
-            displayName: ANGLE x86
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
-            target: ANGLE
-            additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Win)
-          parameters:
-            name: native_uwp_angle_x64_windows
-            displayName: ANGLE x64
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
-            target: ANGLE
-            additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Win)
-          parameters:
-            name: native_uwp_angle_arm_windows
-            displayName: ANGLE arm
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
-            target: ANGLE
-            additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Win)
-          parameters:
-            name: native_uwp_angle_arm64_windows
-            displayName: ANGLE arm64
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
-            target: ANGLE
-            additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Win)
-          parameters:
-            name: native_uwp_x86_windows
-            displayName: UWP x86
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
-            target: externals-uwp
-            additionalArgs: --buildarch=x86 --skipAngle=true
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Win)
-          parameters:
-            name: native_uwp_x64_windows
-            displayName: UWP x64
-            buildExternals: ${{ parameters.buildExternals }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
-            target: externals-uwp
-            additionalArgs: --buildarch=x64 --skipAngle=true
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Win)
-          parameters:
-            name: native_uwp_arm_windows
-            displayName: UWP arm
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
-            target: externals-uwp
-            additionalArgs: --buildarch=arm --skipAngle=true
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Win)
-          parameters:
-            name: native_uwp_arm64_windows
-            displayName: UWP arm64
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
-            target: externals-uwp
-            additionalArgs: --buildarch=arm64 --skipAngle=true
-            artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Win)
           parameters:
             name: native_win32_x86_windows
@@ -296,15 +217,6 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-tvos
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
-          parameters:
-            name: native_watchos_macos
-            displayName: watchOS
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
-            target: externals-watchos
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
           parameters:

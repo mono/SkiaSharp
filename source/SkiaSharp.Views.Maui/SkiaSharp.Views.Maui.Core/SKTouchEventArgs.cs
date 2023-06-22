@@ -1,16 +1,8 @@
 ﻿using System;
 
-#if __MAUI__
 using Microsoft.Maui;
-#else
-using Xamarin.Forms;
-#endif
 
-#if __MAUI__
 namespace SkiaSharp.Views.Maui
-#else
-namespace SkiaSharp.Views.Forms
-#endif
 {
 	public class SKTouchEventArgs : EventArgs
 	{
