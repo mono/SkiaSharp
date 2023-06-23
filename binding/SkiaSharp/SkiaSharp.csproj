@@ -20,4 +20,9 @@
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
+  <Target Name="_IncludeDotNetInteractivePackageFiles" BeforeTargets="_GetPackageFiles">
+    <ItemGroup>
+      <None Include="..\..\source\SkiaSharp.DotNet.Interactive\bin\$(Configuration)\netstandard2.1\SkiaSharp.DotNet.Interactive.dll" PackagePath="interactive-extensions/dotnet/SkiaSharp.DotNet.Interactive.dll" Pack="true" />
+    </ItemGroup>
+  </Target>
 </Project>

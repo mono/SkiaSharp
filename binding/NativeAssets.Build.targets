@@ -27,6 +27,10 @@
     <ExcludeSymbolsFromPackage>false</ExcludeSymbolsFromPackage>
   </PropertyGroup>
 
+  <ItemGroup Condition="'$(IsWindowsNativeAssets)' == 'true'">
+    <None Include="@(NativeWindowsPackageFile)" Link="runtimes\%(RuntimeIdentifier)\native\%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <Target Name="_IncludeRuntimesPackageFiles" BeforeTargets="_GetPackageFiles" Condition="'$(IsWindowsNativeAssets)' == 'true'">
     <ItemGroup>
       <_CompletedNativeWindowsPackageFile
