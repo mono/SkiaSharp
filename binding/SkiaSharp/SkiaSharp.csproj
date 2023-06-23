@@ -9,9 +9,6 @@
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Android\SkiaSharp.NativeAssets.Android.csproj" Condition="$(TargetFramework.Contains('-android'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.iOS\SkiaSharp.NativeAssets.iOS.csproj" Condition="$(TargetFramework.Contains('-ios'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.MacCatalyst\SkiaSharp.NativeAssets.MacCatalyst.csproj" Condition="$(TargetFramework.Contains('-maccatalyst'))" />
@@ -19,5 +16,8 @@
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Tizen\SkiaSharp.NativeAssets.Tizen.csproj" Condition="$(TargetFramework.Contains('-tizen'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.tvOS\SkiaSharp.NativeAssets.tvOS.csproj" Condition="$(TargetFramework.Contains('-tvos'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Win32\SkiaSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.Contains('-windows')) or !$(TargetFramework.Contains('-'))" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

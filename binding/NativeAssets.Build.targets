@@ -12,4 +12,33 @@
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
   </PropertyGroup>
 
+  <Target Name="_IncludePlaceholders" AfterTargets="_IncludeAdditionalTfmSpecificPackageFilesPrepare">
+    <Touch Files="$(IntermediateOutputPath)_._" AlwaysCreate="True" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)_._" />
+      <TfmSpecificPackageFile Include="$(IntermediateOutputPath)_._" PackagePath="lib\$(NuGetShortFolderName)\_._" />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup Condition="'$(IsWindowsNativeAssets)' == 'true'">
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <IncludeSymbols>true</IncludeSymbols>
+    <BuildOutputTargetFolder>runtimes</BuildOutputTargetFolder>
+    <ExcludeSymbolsFromPackage>false</ExcludeSymbolsFromPackage>
+  </PropertyGroup>
+
+  <Target Name="_IncludeRuntimesPackageFiles" BeforeTargets="_GetPackageFiles" Condition="'$(IsWindowsNativeAssets)' == 'true'">
+    <ItemGroup>
+      <_CompletedNativeWindowsPackageFile
+          Include="@(NativeWindowsPackageFile)" 
+          TargetFramework="%(RuntimeIdentifier)"
+          TargetPath="native\%(Filename)%(Extension)" 
+          PackagePath="runtimes\%(RuntimeIdentifier)\native\%(Filename)%(Extension)" />
+      <_BuildOutputInPackage Remove="@(_BuildOutputInPackage)" />
+      <_BuildOutputInPackage Include="@(_CompletedNativeWindowsPackageFile)" Condition="'%(Extension)' != '.pdb'" />
+      <_TargetPathsToSymbols Remove="@(_TargetPathsToSymbols)" />
+      <_TargetPathsToSymbols Include="@(_CompletedNativeWindowsPackageFile)" Condition="'%(Extension)' == '.pdb'" />
+    </ItemGroup>
+  </Target>
+
 </Project>

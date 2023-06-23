@@ -7,29 +7,10 @@
         <_AppIsFullMac Condition=" '$(XamarinMacFrameworkRoot)' != '' and '$(TargetFrameworkIdentifier)' != 'Xamarin.Mac' and '$(UseXamMacFullFramework)' == 'True' and ('$(OutputType)' == 'Exe' or '$(IsAppExtension)' == 'True') ">True</_AppIsFullMac>
     </PropertyGroup>
 
-    <!-- handle the case where this is a Xamarin.Mac Full app/extension -->
-    <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' and '$(_AppIsFullMac)' == 'True' ">
-        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libHarfBuzzSharp*.dylib">
-            <Kind>Dynamic</Kind>
-            <Visible>False</Visible>
-        </NativeReference>
-    </ItemGroup>
-
     <!-- copy the native files to the output directory -->
-    <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' and '$(_AppIsFullMac)' != 'True' ">
+    <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' ">
 
-        <!-- Windows -->
-        <_NativeHarfBuzzSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x86\native\libHarfBuzzSharp*.dll">
-            <Dir>x86\</Dir>
-        </_NativeHarfBuzzSharpFile>
-        <_NativeHarfBuzzSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\libHarfBuzzSharp*.dll">
-            <Dir>x64\</Dir>
-        </_NativeHarfBuzzSharpFile>
-        <_NativeHarfBuzzSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-arm64\native\libHarfBuzzSharp*.dll">
-            <Dir>arm64\</Dir>
-        </_NativeHarfBuzzSharpFile>
-
-        <!-- Linux -->
+        <!-- glibc -->
         <_NativeHarfBuzzSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-x86\native\libHarfBuzzSharp*.so">
             <Dir>x86\</Dir>
         </_NativeHarfBuzzSharpFile>
@@ -43,7 +24,7 @@
             <Dir>arm64\</Dir>
         </_NativeHarfBuzzSharpFile>
 
-        <!-- Linux: Musl -->
+        <!-- Musl -->
         <_NativeHarfBuzzSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-musl-x86\native\libHarfBuzzSharp*.so">
             <Dir>musl-x86\</Dir>
         </_NativeHarfBuzzSharpFile>
@@ -56,9 +37,6 @@
         <_NativeHarfBuzzSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-musl-arm64\native\libHarfBuzzSharp*.so">
             <Dir>musl-arm64\</Dir>
         </_NativeHarfBuzzSharpFile>
-
-        <!-- macOS -->
-        <_NativeHarfBuzzSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libHarfBuzzSharp*.dylib" />
 
         <!-- include everything -->
         <Content Include="@(_NativeHarfBuzzSharpFile)">

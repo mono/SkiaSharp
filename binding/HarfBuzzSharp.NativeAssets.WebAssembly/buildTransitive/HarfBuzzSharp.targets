@@ -1,0 +1,13 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Choose>
+    <When Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+
+      <ItemGroup>
+        <Content Include="@(HarfBuzzSharpStaticLibrary)" Visible="false" />
+      </ItemGroup>
+
+    </When>
+  </Choose>
+
+</Project>

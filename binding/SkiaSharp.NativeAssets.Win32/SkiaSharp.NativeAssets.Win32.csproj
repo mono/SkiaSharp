@@ -3,11 +3,12 @@
     <TargetFrameworks>$(BasicTargetFrameworks);$(WindowsTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Win32</Title>
+    <IsWindowsNativeAssets>true</IsWindowsNativeAssets>
   </PropertyGroup>
   <ItemGroup>
-    <PackageFile Include="..\..\output\native\windows\x64\libSkiaSharp*" PackagePath="runtimes\win-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\windows\x86\libSkiaSharp*" PackagePath="runtimes\win-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\windows\arm64\libSkiaSharp*" PackagePath="runtimes\win-arm64\native\%(Filename)%(Extension)" />
+    <NativeWindowsPackageFile Include="..\..\output\native\windows\x64\libSkiaSharp*" RuntimeIdentifier="win-x64" />
+    <NativeWindowsPackageFile Include="..\..\output\native\windows\x86\libSkiaSharp*" RuntimeIdentifier="win-x86" />
+    <NativeWindowsPackageFile Include="..\..\output\native\windows\arm64\libSkiaSharp*" RuntimeIdentifier="win-arm64" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">

@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_IncludeAdditionalTfmSpecificPackageFiles</TargetsForTfmSpecificContentInPackage>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder Condition="'$(ExcludeSymbolsFromPackage)' != 'false'">$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,18 +20,13 @@
     </ItemGroup>
   </Target>
 
-  <!-- Generate the placeholders and add the xml docs -->
+  <!-- Add the xml docs -->
   <Target Name="_IncludeAdditionalTfmSpecificPackageFilesPrepare">
     <GetNuGetShortFolderName
       TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
       TargetPlatformMoniker="$(TargetPlatformMoniker)">
       <Output TaskParameter="NuGetShortFolderName" PropertyName="NuGetShortFolderName" />
     </GetNuGetShortFolderName>
-    <Touch Files="$(IntermediateOutputPath)_._" AlwaysCreate="True" Condition="'$(IncludeBuildOutput)' == 'false'" />
-    <ItemGroup Condition="'$(IncludeBuildOutput)' == 'false'">
-      <FileWrites Include="$(IntermediateOutputPath)_._" />
-      <TfmSpecificPackageFile Include="$(IntermediateOutputPath)_._" PackagePath="lib\$(NuGetShortFolderName)\_._" />
-    </ItemGroup>
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(MDocOutputPath)" PackagePath="lib\$(NuGetShortFolderName)\$(MDocOutputName)"
                               Exclude="@(DocumentationProjectOutputGroupOutput)" Condition="Exists('$(MDocOutputPath)')" />
