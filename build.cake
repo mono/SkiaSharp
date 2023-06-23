@@ -154,7 +154,7 @@ Task ("libs")
         platform = ".Linux";
     }
 
-    RunNetCoreBuild ($"./source/SkiaSharpSource{platform}.slnf");
+    RunDotNetBuild ($"./source/SkiaSharpSource{platform}.slnf");
 
     // assemble the mdoc docs
     EnsureDirectoryExists ("./output/docs/mdoc/");
@@ -465,7 +465,7 @@ Task ("samples")
             } else {
                 Information ($"Building sample {sln} ({platform})...");
                 if (useNetCore) {
-                    RunNetCoreBuild (sln);
+                    RunDotNetBuild (sln);
                 } else {
                     RunNuGetRestorePackagesConfig (sln);
                     RunMSBuild (sln, platform: buildPlatform);
@@ -596,164 +596,47 @@ Task ("nuget-normal")
     .Does (() =>
 {
     var platform = "";
-    if (!PACK_ALL_PLATFORMS) {
-        if (IsRunningOnWindows ()) {
-            platform = "windows";
-        } else if (IsRunningOnMacOs ()) {
-            platform = "macos";
-        } else if (IsRunningOnLinux ()) {
-            platform = "linux";
-        }
+    if (IsRunningOnWindows ()) {
+        platform = ".Windows";
+    } else if (IsRunningOnMacOs ()) {
+        platform = ".Mac";
+    } else if (IsRunningOnLinux ()) {
+        platform = ".Linux";
     }
 
-    void RemovePlatforms (XDocument xdoc)
-    {
-        var files = xdoc.Root
-            .Elements ("files")
-            .Elements ("file");
-        foreach (var file in files.ToArray ()) {
-            // remove the files that aren't available
-            var nuspecPlatform = file.Attribute ("platform");
-            if (!string.IsNullOrEmpty (nuspecPlatform?.Value)) {
-                nuspecPlatform.Remove ();
-                if (!string.IsNullOrEmpty (platform)) {
-                    // handle the platform builds
-                    if (!nuspecPlatform.Value.Split (',').Contains (platform)) {
-                        file.Remove ();
-                    }
-                }
-            }
-            // copy the src attribute and set it for the target if there is none already
-            if (string.IsNullOrEmpty (file.Attribute ("target")?.Value)) {
-                file.Add (new XAttribute ("target", file.Attribute ("src").Value));
-            }
-            // make sure all the paths have the correct slash
-            if (IsRunningOnWindows ()) {
-                file.Attribute ("src").Value = file.Attribute ("src").Value.Replace ("/", "\\");
-                file.Attribute ("target").Value = file.Attribute ("target").Value.Replace ("/", "\\");
-            }
-        }
-    }
+    RunDotNetPack ($"./source/SkiaSharpSource{platform}.slnf");
+return;
 
-    void SetVersion (XDocument xdoc, string suffix)
-    {
-        var metadata = xdoc.Root.Element ("metadata");
-        var id = metadata.Element ("id");
-        var version = metadata.Element ("version");
+    // foreach (var nuspec in GetFiles ("./nuget/*.nuspec")) {
+    //     var metadata = xdoc.Root.Element ("metadata");
+    //     var id = metadata.Element ("id").Value;
+    //     if (id.StartsWith ("_"))
+    //         continue;
+    //     var dir = id;
+    //     if (id.Contains(".NativeAssets.")) {
+    //         dir = id.Substring(0, id.IndexOf(".NativeAssets."));
+    //     }
 
-        // <version>
-        if (id != null && version != null) {
-            var v = GetVersion (id.Value);
-            if (!string.IsNullOrEmpty (v)) {
-                if (id.Value.StartsWith("SkiaSharp") || id.Value.StartsWith("HarfBuzzSharp"))
-                    v += suffix;
-                version.Value = v;
-            }
-        }
+    //     var preview = "";
+    //     if (!string.IsNullOrEmpty (FEATURE_NAME)) {
+    //         preview += $"-featurepreview-{FEATURE_NAME}";
+    //     } else {
+    //         preview += $"-{PREVIEW_LABEL}";
+    //     }
+    //     if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
+    //         preview += $".{BUILD_NUMBER}";
+    //     }
 
-        // <repository>
-        var repository = metadata.Element ("repository");
-        if (repository == null) {
-            repository = new XElement ("repository");
-            metadata.Add (repository);
-        }
-        repository.SetAttributeValue ("type", "git");
-        repository.SetAttributeValue ("url", GIT_URL);
-        repository.SetAttributeValue ("branch", GIT_BRANCH_NAME);
-        repository.SetAttributeValue ("commit", GIT_SHA);
+    //     if (!PREVIEW_ONLY_NUGETS.Contains (id)) {
+    //         SetVersion (xdoc, "");
+    //         xdoc.Save ($"{outDir}/{id}.nuspec");
+    //     }
 
-        // <version>
-        if (id != null && version != null) {
-            var v = GetVersion (id.Value);
-            if (!string.IsNullOrEmpty (v)) {
-                if (id.Value.StartsWith("SkiaSharp") || id.Value.StartsWith("HarfBuzzSharp"))
-                    v += suffix;
-                version.Value = v;
-            }
-        }
+    //     SetVersion (xdoc, $"{preview}");
+    //     xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
+    // }
 
-        // <dependency>
-        var dependencies = metadata
-            .Elements ("dependencies")
-            .Elements ("dependency");
-        var groupDependencies = metadata
-            .Elements ("dependencies")
-            .Elements ("group")
-            .Elements ("dependency");
-        foreach (var package in dependencies.Union (groupDependencies)) {
-            var depId = package.Attribute ("id");
-            var depVersion = package.Attribute ("version");
-            if (depId != null && depVersion != null) {
-                var v = GetVersion (depId.Value);
-                if (!string.IsNullOrEmpty (v)) {
-                    if (depId.Value.StartsWith("SkiaSharp") || depId.Value.StartsWith("HarfBuzzSharp"))
-                        v += suffix;
-                    depVersion.Value = v;
-                } else {
-                    v = GetVersion (depId.Value, "release");
-                    if (!string.IsNullOrEmpty (v))
-                        depVersion.Value = v;
-                }
-            }
-        }
-    }
-
-    DeleteFiles ("./output/*/nuget/*.nuspec");
-    foreach (var nuspec in GetFiles ("./nuget/*.nuspec")) {
-        var xdoc = XDocument.Load (nuspec.FullPath);
-        var metadata = xdoc.Root.Element ("metadata");
-        var id = metadata.Element ("id").Value;
-        if (id.StartsWith ("_"))
-            continue;
-        var dir = id;
-        if (id.Contains(".NativeAssets.")) {
-            dir = id.Substring(0, id.IndexOf(".NativeAssets."));
-        }
-
-        var preview = "";
-        if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-            preview += $"-featurepreview-{FEATURE_NAME}";
-        } else {
-            preview += $"-{PREVIEW_LABEL}";
-        }
-        if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
-            preview += $".{BUILD_NUMBER}";
-        }
-
-        RemovePlatforms (xdoc);
-
-        var outDir = $"./output/{dir}/nuget";
-        EnsureDirectoryExists (outDir);
-
-        if (!PREVIEW_ONLY_NUGETS.Contains (id)) {
-            SetVersion (xdoc, "");
-            xdoc.Save ($"{outDir}/{id}.nuspec");
-        }
-
-        SetVersion (xdoc, $"{preview}");
-        xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
-
-        // the placeholders
-        FileWriteText ($"{outDir}/_._", "");
-
-        // the legal
-        CopyFile ("./LICENSE.txt", $"{outDir}/LICENSE.txt");
-        CopyFile ("./External-Dependency-Info.txt", $"{outDir}/THIRD-PARTY-NOTICES.txt");
-    }
-
-    EnsureDirectoryExists ($"{OUTPUT_NUGETS_PATH}");
-    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
-    foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
-
-        string symbolsFormat = null;
-        // *.NativeAssets.* are special as they contain just native code
-        if (nuspec.FullPath.Contains(".NativeAssets."))
-            symbolsFormat = "symbols.nupkg";
-
-        PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, symbolsFormat: symbolsFormat);
-    }
-
-    // copy & move symbols to a special location to avoid signing
+    // move symbols to a special location to avoid signing
     EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
     DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);

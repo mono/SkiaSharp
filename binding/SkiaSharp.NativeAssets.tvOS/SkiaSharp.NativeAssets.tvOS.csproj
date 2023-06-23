@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(TFMCurrent)-tvos;$(TFMNext)-tvos</TargetFrameworks>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for tvOS</Title>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageFile Include="..\..\output\native\tvos\libSkiaSharp.framework\**" PackagePath="runtimes\tvos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" Exclude="buildTransitive\*.Local.*" />
+    </ItemGroup>
+  </Target>
+</Project>

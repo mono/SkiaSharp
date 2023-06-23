@@ -22,6 +22,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_SHA)</AssemblyVersionGitSha>
+    <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_COMMIT)</AssemblyVersionGitSha>
+    <AssemblyVersionGitBranch Condition=" '$(AssemblyVersionGitBranch)' == '' ">$(GIT_BRANCH_NAME)</AssemblyVersionGitBranch>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <SignAssembly>true</SignAssembly>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>

@@ -49,7 +49,6 @@ void RunMSBuild(
     string platform = "Any CPU",
     string platformTarget = null,
     bool restore = true,
-    bool bl = true,
     string[] targets = null,
     string configuration = null,
     Dictionary<string, string> properties = null)
@@ -114,17 +113,16 @@ void RunMSBuild(
     });
 }
 
-void RunNetCoreBuild(
+void RunDotNetBuild(
     FilePath solution,
-    bool bl = true,
     string[] targets = null,
     string configuration = null,
     Dictionary<string, string> properties = null)
 {
     EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
 
-    var c = new DotNetCoreBuildSettings();
-    var msb = new DotNetCoreMSBuildSettings();
+    var c = new DotNetBuildSettings();
+    var msb = new DotNetMSBuildSettings();
     c.MSBuildSettings = msb;
 
     c.Configuration = configuration ?? CONFIGURATION;
@@ -156,5 +154,46 @@ void RunNetCoreBuild(
     }
     c.Sources = GetNuGetSources();
     
-    DotNetCoreBuild(solution.FullPath, c);
+    DotNetBuild(solution.FullPath, c);
+}
+
+void RunDotNetPack(
+    FilePath solution,
+    DirectoryPath outputPath = null,
+    string configuration = null,
+    Dictionary<string, string> properties = null)
+{
+    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
+    var c = new DotNetPackSettings();
+    var msb = new DotNetMSBuildSettings();
+    c.MSBuildSettings = msb;
+
+    c.Configuration = configuration ?? CONFIGURATION;
+    c.Verbosity = (DotNetVerbosity)VERBOSITY;
+
+    var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
+    var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + ".pack.binlog");
+    msb.BinaryLogger = new MSBuildBinaryLoggerSettings {
+        Enabled = true,
+        FileName = blPath.FullPath,
+    };
+      
+    c.NoLogo = VERBOSITY == Verbosity.Minimal;
+    c.NoBuild = true;
+
+    c.IncludeSymbols = true;
+    c.SymbolPackageFormat = "symbols.nupkg";
+
+    c.OutputDirectory = outputPath ?? OUTPUT_NUGETS_PATH;
+
+    msb.Properties ["NoDefaultExcludes"] = new [] { "true" };
+
+    if (properties != null) {
+        foreach (var prop in properties) {
+            msb.Properties [prop.Key] = new [] { prop.Value };
+        }
+    }
+    
+    DotNetPack(solution.FullPath, c);
 }

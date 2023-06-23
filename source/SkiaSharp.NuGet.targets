@@ -1,0 +1,56 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_IncludeAdditionalTfmSpecificPackageFiles</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="@(PackageFile)" Link="%(PackagePath)" Pack="True" />
+  </ItemGroup>
+
+  <!-- Generate the README -->
+  <Target Name="_IncludeAdditionalPackageFiles"
+          BeforeTargets="_GetPackageFiles"
+          Condition="'$(PackageDescription)' != ''">
+    <WriteLinesToFile File="$(IntermediateOutputPath)$(PackageReadmeFile)" Lines="$(PackageDescription)" Overwrite="True" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)$(PackageReadmeFile)" />
+      <None Include="$(IntermediateOutputPath)$(PackageReadmeFile)" PackagePath="$(PackageReadmeFile)" Pack="True" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Generate the placeholders and add the xml docs -->
+  <Target Name="_IncludeAdditionalTfmSpecificPackageFilesPrepare">
+    <GetNuGetShortFolderName
+      TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
+      TargetPlatformMoniker="$(TargetPlatformMoniker)">
+      <Output TaskParameter="NuGetShortFolderName" PropertyName="NuGetShortFolderName" />
+    </GetNuGetShortFolderName>
+    <Touch Files="$(IntermediateOutputPath)_._" AlwaysCreate="True" Condition="'$(IncludeBuildOutput)' == 'false'" />
+    <ItemGroup Condition="'$(IncludeBuildOutput)' == 'false'">
+      <FileWrites Include="$(IntermediateOutputPath)_._" />
+      <TfmSpecificPackageFile Include="$(IntermediateOutputPath)_._" PackagePath="lib\$(NuGetShortFolderName)\_._" />
+    </ItemGroup>
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(MDocOutputPath)" PackagePath="lib\$(NuGetShortFolderName)\$(MDocOutputName)"
+                              Exclude="@(DocumentationProjectOutputGroupOutput)" Condition="Exists('$(MDocOutputPath)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_IncludeAdditionalTfmSpecificPackageFiles"
+          DependsOnTargets="_IncludeAdditionalTfmSpecificPackageFilesPrepare;IncludeAdditionalTfmSpecificPackageFiles" />
+
+  <!-- Set the package version properties -->
+  <Target Name="_IncludeAdditionalVersionInfo"
+          AfterTargets="_CollectAssemblyVersionInfo">
+    <PropertyGroup>
+      <Version>$(_VersionAssemblyMatch)</Version>
+      <FileVersion>$(_VersionFileMatch)</FileVersion>
+      <InformationalVersion>$(_VersionFileMatch)</InformationalVersion>
+      <InformationalVersion Condition="'$(AssemblyVersionGitSha)' != ''">$(_VersionFileMatch)+$(AssemblyVersionGitSha)</InformationalVersion>
+      <PackageVersion Condition="'$(VersionSuffix)' == ''">$(_VersionNuGetMatch)</PackageVersion>
+      <PackageVersion Condition="'$(VersionSuffix)' != ''">$(_VersionNuGetMatch)-$(VersionSuffix)</PackageVersion>
+    </PropertyGroup>
+  </Target>
+
+</Project>

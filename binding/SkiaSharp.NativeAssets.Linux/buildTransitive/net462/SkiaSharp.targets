@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
+    <PropertyGroup>
+        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
+        <_AppIsFullMac Condition=" '$(XamarinMacFrameworkRoot)' != '' and '$(TargetFrameworkIdentifier)' != 'Xamarin.Mac' and '$(UseXamMacFullFramework)' == 'True' and ('$(OutputType)' == 'Exe' or '$(IsAppExtension)' == 'True') ">True</_AppIsFullMac>
+    </PropertyGroup>
+
+    <!-- copy the native files to the output directory -->
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
+
+        <!-- glibc -->
+        <_NativeSkiaSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-x86\native\libSkiaSharp*.so">
+            <Dir>x86\</Dir>
+        </_NativeSkiaSharpFile>
+        <_NativeSkiaSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-x64\native\libSkiaSharp*.so">
+            <Dir>x64\</Dir>
+        </_NativeSkiaSharpFile>
+        <_NativeSkiaSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-arm\native\libSkiaSharp*.so">
+            <Dir>arm\</Dir>
+        </_NativeSkiaSharpFile>
+        <_NativeSkiaSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-arm64\native\libSkiaSharp*.so">
+            <Dir>arm64\</Dir>
+        </_NativeSkiaSharpFile>
+
+        <!-- Musl -->
+        <_NativeSkiaSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-musl-x86\native\libSkiaSharp*.so">
+            <Dir>musl-x86\</Dir>
+        </_NativeSkiaSharpFile>
+        <_NativeSkiaSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-musl-x64\native\libSkiaSharp*.so">
+            <Dir>musl-x64\</Dir>
+        </_NativeSkiaSharpFile>
+        <_NativeSkiaSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-musl-arm\native\libSkiaSharp*.so">
+            <Dir>musl-arm\</Dir>
+        </_NativeSkiaSharpFile>
+        <_NativeSkiaSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-musl-arm64\native\libSkiaSharp*.so">
+            <Dir>musl-arm64\</Dir>
+        </_NativeSkiaSharpFile>
+
+        <!-- include everything -->
+        <Content Include="@(_NativeSkiaSharpFile)">
+            <Link>%(Dir)%(Filename)%(Extension)</Link>
+            <Visible>False</Visible>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+
+    </ItemGroup>
+
+</Project>

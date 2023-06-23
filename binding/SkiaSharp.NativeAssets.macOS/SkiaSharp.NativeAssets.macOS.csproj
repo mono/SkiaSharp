@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(BasicTargetFrameworks);$(TFMCurrent)-macos;$(TFMNext)-macos</TargetFrameworks>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for macOS</Title>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageFile Include="..\..\output\native\osx\libSkiaSharp*" PackagePath="runtimes\osx\native\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
+      <TfmSpecificPackageFile Include="buildTransitive\macos\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" Exclude="buildTransitive\*.Local.*" />
+    </ItemGroup>
+    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+      <TfmSpecificPackageFile Include="buildTransitive\net462\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" Exclude="buildTransitive\*.Local.*" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(TFMCurrent)-android;$(TFMNext)-android</TargetFrameworks>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for Android</Title>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageFile Include="..\..\output\native\android\x86\libSkiaSharp*" PackagePath="runtimes\android-x86\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\android\x86_64\libSkiaSharp*" PackagePath="runtimes\android-x64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\android\armeabi-v7a\libSkiaSharp*" PackagePath="runtimes\android-arm\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\android\arm64-v8a\libSkiaSharp*" PackagePath="runtimes\android-arm64\native\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" Exclude="buildTransitive\*.Local.*" />
+    </ItemGroup>
+  </Target>
+</Project>

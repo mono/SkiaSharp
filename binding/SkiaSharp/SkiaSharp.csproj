@@ -8,85 +8,16 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard2.0'))">
-    <!-- macOS -->
-    <None Include="..\..\output\native\osx\libSkiaSharp*" Link="nuget\runtimes\osx\native\%(Filename)%(Extension)" />
-    <!-- Windows -->
-    <None Include="..\..\output\native\windows\x64\libSkiaSharp*" Link="nuget\runtimes\win-x64\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\windows\x86\libSkiaSharp*" Link="nuget\runtimes\win-x86\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\windows\arm64\libSkiaSharp*" Link="nuget\runtimes\win-arm64\native\%(Filename)%(Extension)" />
-    <!-- Windows: Nano Server -->
-    <None Include="..\..\output\native\nanoserver\x64\libSkiaSharp*" Link="nuget\runtimes\nanoserver-x64\native\%(Filename)%(Extension)" />
-    <!-- Linux -->
-    <None Include="..\..\output\native\linux\x64\libSkiaSharp*" Link="nuget\runtimes\linux-x64\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\linux\x86\libSkiaSharp*" Link="nuget\runtimes\linux-x86\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\linux\arm64\libSkiaSharp*" Link="nuget\runtimes\linux-arm64\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\linux\arm\libSkiaSharp*" Link="nuget\runtimes\linux-arm\native\%(Filename)%(Extension)" />
-    <!-- Linux: Musl -->
-    <None Include="..\..\output\native\alpine\x64\libSkiaSharp*" Link="nuget\runtimes\linux-musl-x64\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\alpine\x86\libSkiaSharp*" Link="nuget\runtimes\linux-musl-x86\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\alpine\arm64\libSkiaSharp*" Link="nuget\runtimes\linux-musl-arm64\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\alpine\arm\libSkiaSharp*" Link="nuget\runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
-    <!-- Linux: No Dependencies -->
-    <None Include="..\..\output\native\linuxnodeps\x64\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-x64\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\linuxnodeps\x86\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-x86\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\linuxnodeps\arm64\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-arm64\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\linuxnodeps\arm\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-arm\native\%(Filename)%(Extension)" />
-    <!-- Linux: Musl, No Dependencies -->
-    <None Include="..\..\output\native\alpinenodeps\x64\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-musl-x64\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\alpinenodeps\x86\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-musl-x86\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\alpinenodeps\arm64\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-musl-arm64\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\alpinenodeps\arm\libSkiaSharp*" Link="nuget\runtimes\linuxnodeps-musl-arm\native\%(Filename)%(Extension)" />
-    <!-- WASM -->
-    <None Include="..\..\output\native\wasm\**\libSkiaSharp*.a" Link="nuget\build\wasm\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="nuget\build\wasm\SkiaSharp.props" Link="nuget\build\wasm\SkiaSharp.props" />
-    <None Include="nuget\build\wasm\SkiaSharp.targets" Link="nuget\build\wasm\SkiaSharp.targets" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
-    <!-- .NET Framework -->
-    <None Include="nuget\build\net462\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
-    <!-- Android -->
-    <None Include="..\..\output\native\android\x86\libSkiaSharp*" Link="nuget\runtimes\android-x86\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\android\x86_64\libSkiaSharp*" Link="nuget\runtimes\android-x64\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\android\armeabi-v7a\libSkiaSharp*" Link="nuget\runtimes\android-arm\native\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\android\arm64-v8a\libSkiaSharp*" Link="nuget\runtimes\android-arm64\native\%(Filename)%(Extension)" />
-    <None Include="nuget\build\android\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-android\SkiaSharp.targets" />
-    <None Include="nuget\build\android\SkiaSharp.Local.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-android\SkiaSharp.Local.targets" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-ios'))">
-    <!-- iOS -->
-    <None Include="..\..\output\native\ios\libSkiaSharp.framework\**" Link="nuget\runtimes\ios\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\iossimulator\libSkiaSharp.framework\**" Link="nuget\runtimes\iossimulator\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="nuget\build\ios\SkiaSharp.targets" Link="nuget\build\net6.0-ios\SkiaSharp.targets" />
-    <None Include="nuget\build\ios\SkiaSharp.Local.targets" Link="nuget\build\net6.0-ios\SkiaSharp.Local.targets" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
-    <!-- Mac Catalyst -->
-    <None Include="nuget\build\maccatalyst\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-maccatalyst\SkiaSharp.targets" />
-    <None Include="nuget\build\maccatalyst\SkiaSharp.Local.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-maccatalyst\SkiaSharp.Local.targets" />
-    <None Include="..\..\output\native\maccatalyst\libSkiaSharp*.framework.zip" Link="nuget\runtimes\maccatalyst\native\%(Filename)%(Extension)" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
-    <!-- tvOS -->
-    <None Include="..\..\output\native\tvos\libSkiaSharp.framework\**" Link="nuget\runtimes\tvos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="nuget\build\tvos\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tvos\SkiaSharp.targets" />
-    <None Include="nuget\build\tvos\SkiaSharp.Local.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tvos\SkiaSharp.Local.targets" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
-    <!-- macOS -->
-    <None Include="nuget\build\macos\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-macos\SkiaSharp.targets" />
-    <None Include="nuget\build\macos\SkiaSharp.Local.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-macos\SkiaSharp.Local.targets" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
-    <!-- Tizen -->
-    <None Include="..\..\output\native\tizen\armel\libSkiaSharp.*" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\arm\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.*" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\x86\%(Filename)%(Extension)" />
-    <None Include="nuget\build\tizen\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\SkiaSharp.targets" />
-    <None Include="nuget\build\tizen\SkiaSharp.targets" Link="nuget\build\net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-tizen\SkiaSharp.Local.targets" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.Android\SkiaSharp.NativeAssets.Android.csproj" Condition="$(TargetFramework.Contains('-android'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.iOS\SkiaSharp.NativeAssets.iOS.csproj" Condition="$(TargetFramework.Contains('-ios'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.MacCatalyst\SkiaSharp.NativeAssets.MacCatalyst.csproj" Condition="$(TargetFramework.Contains('-maccatalyst'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.macOS\SkiaSharp.NativeAssets.macOS.csproj" Condition="$(TargetFramework.Contains('-macos')) or !$(TargetFramework.Contains('-'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.Tizen\SkiaSharp.NativeAssets.Tizen.csproj" Condition="$(TargetFramework.Contains('-tizen'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.tvOS\SkiaSharp.NativeAssets.tvOS.csproj" Condition="$(TargetFramework.Contains('-tvos'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.Win32\SkiaSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.Contains('-windows')) or !$(TargetFramework.Contains('-'))" />
   </ItemGroup>
 </Project>
