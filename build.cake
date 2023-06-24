@@ -58,9 +58,26 @@ var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? ""). Replace ("refs/heads/", "");
 var GIT_URL = Argument ("gitUrl", EnvironmentVariable ("GIT_URL") ?? "");
 
-var PREVIEW_NUGET_SUFFIX = string.IsNullOrEmpty (BUILD_NUMBER)
-    ? $"{PREVIEW_LABEL}"
-    : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
+var PREVIEW_NUGET_SUFFIX = "";
+if (!string.IsNullOrEmpty (FEATURE_NAME)) {
+    PREVIEW_NUGET_SUFFIX = $"featurepreview-{FEATURE_NAME}";
+} else {
+    PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}";
+}
+if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
+    PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
+}
+
+var CURRENT_PLATFORM = "";
+if (IsRunningOnWindows ()) {
+    CURRENT_PLATFORM = "Windows";
+} else if (IsRunningOnMacOs ()) {
+    CURRENT_PLATFORM = "Mac";
+} else if (IsRunningOnLinux ()) {
+    CURRENT_PLATFORM = "Linux";
+} else {
+    throw new Exception ("This script is not running on a known platform.");
+}
 
 var PREVIEW_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json");
 
@@ -145,16 +162,7 @@ Task ("libs")
     .Does (() =>
 {
     // build the managed libraries
-    var platform = "";
-    if (IsRunningOnWindows ()) {
-        platform = ".Windows";
-    } else if (IsRunningOnMacOs ()) {
-        platform = ".Mac";
-    } else if (IsRunningOnLinux ()) {
-        platform = ".Linux";
-    }
-
-    RunDotNetBuild ($"./source/SkiaSharpSource{platform}.slnf");
+    RunDotNetBuild ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf");
 
     // assemble the mdoc docs
     EnsureDirectoryExists ("./output/docs/mdoc/");
@@ -595,46 +603,9 @@ Task ("nuget-normal")
     .IsDependentOn ("libs")
     .Does (() =>
 {
-    var platform = "";
-    if (IsRunningOnWindows ()) {
-        platform = ".Windows";
-    } else if (IsRunningOnMacOs ()) {
-        platform = ".Mac";
-    } else if (IsRunningOnLinux ()) {
-        platform = ".Linux";
-    }
-
-    RunDotNetPack ($"./source/SkiaSharpSource{platform}.slnf");
-return;
-
-    // foreach (var nuspec in GetFiles ("./nuget/*.nuspec")) {
-    //     var metadata = xdoc.Root.Element ("metadata");
-    //     var id = metadata.Element ("id").Value;
-    //     if (id.StartsWith ("_"))
-    //         continue;
-    //     var dir = id;
-    //     if (id.Contains(".NativeAssets.")) {
-    //         dir = id.Substring(0, id.IndexOf(".NativeAssets."));
-    //     }
-
-    //     var preview = "";
-    //     if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-    //         preview += $"-featurepreview-{FEATURE_NAME}";
-    //     } else {
-    //         preview += $"-{PREVIEW_LABEL}";
-    //     }
-    //     if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
-    //         preview += $".{BUILD_NUMBER}";
-    //     }
-
-    //     if (!PREVIEW_ONLY_NUGETS.Contains (id)) {
-    //         SetVersion (xdoc, "");
-    //         xdoc.Save ($"{outDir}/{id}.nuspec");
-    //     }
-
-    //     SetVersion (xdoc, $"{preview}");
-    //     xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
-    // }
+    // pack the packages (stable and then preview versions)
+    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf");
+    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", versionSuffix: PREVIEW_NUGET_SUFFIX);
 
     // move symbols to a special location to avoid signing
     EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");

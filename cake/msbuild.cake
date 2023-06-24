@@ -161,7 +161,8 @@ void RunDotNetPack(
     FilePath solution,
     DirectoryPath outputPath = null,
     string configuration = null,
-    Dictionary<string, string> properties = null)
+    Dictionary<string, string> properties = null,
+    string versionSuffix = null)
 {
     EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
 
@@ -180,14 +181,28 @@ void RunDotNetPack(
     };
       
     c.NoLogo = VERBOSITY == Verbosity.Minimal;
-    c.NoBuild = true;
-
-    c.IncludeSymbols = true;
-    c.SymbolPackageFormat = "symbols.nupkg";
+    // c.NoBuild = true;
 
     c.OutputDirectory = outputPath ?? OUTPUT_NUGETS_PATH;
 
     msb.Properties ["NoDefaultExcludes"] = new [] { "true" };
+
+    if (!string.IsNullOrEmpty(GIT_SHA))
+        msb.Properties ["GIT_SHA"] = new [] { GIT_SHA };
+    if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))
+        msb.Properties ["GIT_BRANCH_NAME"] = new [] { GIT_BRANCH_NAME };
+    if (!string.IsNullOrEmpty(GIT_URL))
+        msb.Properties ["GIT_URL"] = new [] { GIT_URL };
+    if (!string.IsNullOrEmpty(BUILD_COUNTER))
+        msb.Properties ["BUILD_COUNTER"] = new [] { BUILD_COUNTER };
+    if (!string.IsNullOrEmpty(BUILD_NUMBER))
+        msb.Properties ["BUILD_NUMBER"] = new [] { BUILD_NUMBER };
+    if (!string.IsNullOrEmpty(FEATURE_NAME))
+        msb.Properties ["FEATURE_NAME"] = new [] { FEATURE_NAME };
+    if (!string.IsNullOrEmpty(PREVIEW_LABEL))
+        msb.Properties ["PREVIEW_LABEL"] = new [] { PREVIEW_LABEL };
+    if (!string.IsNullOrEmpty(versionSuffix))
+        msb.Properties ["VersionSuffix"] = new [] { versionSuffix };
 
     if (properties != null) {
         foreach (var prop in properties) {
