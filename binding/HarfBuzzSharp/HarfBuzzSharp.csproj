@@ -9,7 +9,7 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
     <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.Android\HarfBuzzSharp.NativeAssets.Android.csproj" Condition="$(TargetFramework.Contains('-android'))" />
     <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.iOS\HarfBuzzSharp.NativeAssets.iOS.csproj" Condition="$(TargetFramework.Contains('-ios'))" />
     <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.MacCatalyst\HarfBuzzSharp.NativeAssets.MacCatalyst.csproj" Condition="$(TargetFramework.Contains('-maccatalyst'))" />

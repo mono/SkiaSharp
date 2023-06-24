@@ -220,7 +220,7 @@ namespace SkiaSharp.Views.UWP
 			}
 #endif
 
-#if NETSTANDARD2_0 || !WINUI
+#if NETSTANDARD2_0 || NET6_0 || !WINUI
 			internal class SKSwapChainPanelJsInterop : Uno.Foundation.Interop.IJSObject, Uno.Foundation.Interop.IJSObjectMetadata
 			{
 				private static long handleCounter = 0L;

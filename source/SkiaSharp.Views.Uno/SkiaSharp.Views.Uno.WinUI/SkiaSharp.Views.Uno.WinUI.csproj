@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0-android;net6.0-ios;net6.0-maccatalyst;net6.0-macos</TargetFrameworks>
+    <TargetFrameworks>$(UnoTargetFrameworks)</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
     <PackagingGroup>SkiaSharp.Views.Uno.WinUI</PackagingGroup>
@@ -10,6 +10,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.WebAssembly\SkiaSharp.NativeAssets.WebAssembly.csproj" Condition="!$(TargetFramework.Contains('-'))" />
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" Condition="$(TargetFramework.Contains('-windows'))" />
+    <ProjectReference Include="..\SkiaSharp.Views.Uno.WinUI.Skia\SkiaSharp.Views.Uno.WinUI.Skia.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\SkiaSharp.Views.Uno.WinUI.Wasm\SkiaSharp.Views.Uno.WinUI.Wasm.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Uno.WinUI" Version="4.1.9" />
@@ -81,10 +85,43 @@
     <None Include="**\*.Apple.cs" />
     <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Apple\SKCGSurfaceFactory.cs" Link="Platform\Apple\%(Filename)%(Extension)" />
   </ItemGroup>
+  <!-- Reference -->
+  <ItemGroup Condition="!$(TargetFramework.Contains('-'))">
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-'))">
+    <Compile Remove="**\Reference\**\*.cs" />
+    <None Include="**\Reference\**\*.cs" />
+    <Compile Remove="**\*.Reference.cs" />
+    <None Include="**\*.Reference.cs" />
+  </ItemGroup>
   <!-- Shared -->
   <ItemGroup>
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WinUI\UWPExtensions.cs" Link="%(Filename)%(Extension)" />
     <Compile Include="..\SkiaSharp.Views.Uno.WinUI.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
+  <!-- Replace windows with just placeholders -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <Compile Remove="@(Compile)" />
+  </ItemGroup>
+  <Target Name="_UpdateWindowsPackageFiles" BeforeTargets="_GetPackageFiles">
+    <WriteLinesToFile File="$(IntermediateOutputPath)_._" Lines="$(PackageDescription)" Overwrite="True" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)_._" />
+      <_AssemblyOutputFiles Include="@(_BuildOutputInPackage->HasMetadata('TargetFramework'))" />
+      <_WindowsAssemblyOutputFiles Include="@(_AssemblyOutputFiles)" Condition="$([MSBuild]::ValueOrDefault('%(TargetFramework)', '').Contains('-windows'))" />
+      <_SymbolOutputFiles Include="@(_TargetPathsToSymbols->HasMetadata('TargetFramework'))" />
+      <_WindowsSymbolOutputFiles Include="@(_SymbolOutputFiles)" Condition="$([MSBuild]::ValueOrDefault('%(TargetFramework)', '').Contains('-windows'))" />
+      <_WindowsPlaceholders Include="@(_WindowsAssemblyOutputFiles->'$(IntermediateOutputPath)_._')" PackagePath="lib\%(TargetFramework)\_._" Condition="'%(Extension)' == '.dll'" />
+      <None Include="@(_WindowsPlaceholders)" Pack="True" />
+      <_BuildOutputInPackage Remove="@(_WindowsAssemblyOutputFiles)" />
+      <_TargetPathsToSymbols Remove="@(_WindowsSymbolOutputFiles)" />
+    </ItemGroup>
+  </Target>
+  <!-- Add the targets files -->
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup Condition="!$(TargetFramework.Contains('-'))">
+      <TfmSpecificPackageFile Include="buildTransitive\SkiaSharp.Views.Uno.WinUI.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+    </ItemGroup>
+  </Target>
 </Project>

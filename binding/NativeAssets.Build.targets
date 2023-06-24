@@ -12,6 +12,11 @@
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- legal -->
+    <None Include="$(MSBuildThisFileDirectory)..\External-Dependency-Info.txt" PackagePath="THIRD-PARTY-NOTICES.txt" Pack="True" Visible="False" />
+  </ItemGroup>
+
   <Target Name="_IncludePlaceholders" AfterTargets="_IncludeAdditionalTfmSpecificPackageFilesPrepare">
     <Touch Files="$(IntermediateOutputPath)_._" AlwaysCreate="True" />
     <ItemGroup>

@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net7.0</TargetFrameworks>
+    <TargetFrameworks>$(UnoTargetFrameworksReference)</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Uno.WinUI</PackagingGroup>
     <PackagingLocation>uno-runtime\$(TargetFramework)\webassembly</PackagingLocation>
-    <LangVersion>11.0</LangVersion>
     <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);__WASM__;WINUI</DefineConstants>

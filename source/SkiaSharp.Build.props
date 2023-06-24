@@ -89,14 +89,14 @@
     <AllTargetFrameworks>$(BasicTargetFrameworks);$(PlatformTargetFrameworks)</AllTargetFrameworks>
   </PropertyGroup>
 
-  <!-- Windows Desktop TFMs -->
+  <!-- Windows TFMs -->
   <PropertyGroup>
     <WindowsTargetFrameworksCurrent Condition="$(IsWindows)">$(TFMCurrent)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksCurrent>
     <WindowsTargetFrameworksNext Condition="$(IsWindows)">$(TFMNext)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksNext>
     <WindowsTargetFrameworks Condition="$(IsWindows)">$(WindowsTargetFrameworksCurrent);$(WindowsTargetFrameworksNext)</WindowsTargetFrameworks>
   </PropertyGroup>
 
-  <!-- Windows TFMs -->
+  <!-- Windows Desktop TFMs -->
   <PropertyGroup>
     <WindowsDesktopTargetFrameworksCurrent Condition="$(IsWindows)">$(TFMCurrent)-windows$(TFMWindowsVersion)</WindowsDesktopTargetFrameworksCurrent>
     <WindowsDesktopTargetFrameworksNext Condition="$(IsWindows)">$(TFMNext)-windows$(TFMWindowsVersion)</WindowsDesktopTargetFrameworksNext>
@@ -112,6 +112,14 @@
     <MauiTargetFrameworksNext Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksNext);$(TFMNext)-tizen</MauiTargetFrameworksNext>
     <MauiTargetFrameworksNext Condition="$(IsWindows)">$(MauiTargetFrameworksNext);$(TFMNext)-windows$(TFMWindowsVersion)</MauiTargetFrameworksNext>
     <MauiTargetFrameworks>$(MauiTargetFrameworksCurrent);$(MauiTargetFrameworksNext)</MauiTargetFrameworks>
+  </PropertyGroup>
+
+  <!-- Uno Platform -->
+  <PropertyGroup>
+    <UnoTargetFrameworksReference>netstandard2.0;$(TFMCurrent);$(TFMNext)</UnoTargetFrameworksReference>
+    <UnoTargetFrameworksCurrent>$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android;$(TFMCurrent)-macos</UnoTargetFrameworksCurrent>
+    <UnoTargetFrameworksNext>$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android;$(TFMNext)-macos</UnoTargetFrameworksNext>
+    <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksCurrent);$(UnoTargetFrameworksNext);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
