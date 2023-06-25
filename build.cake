@@ -119,6 +119,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "HarfBuzzSharp.NativeAssets.Win32",              new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                            new Version (1, 60, 0) },
     { "SkiaSharp.Skottie",                             new Version (1, 60, 0) },
+    { "SkiaSharp.SceneGraph",                          new Version (1, 60, 0) },
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 60, 0) },
 };
 

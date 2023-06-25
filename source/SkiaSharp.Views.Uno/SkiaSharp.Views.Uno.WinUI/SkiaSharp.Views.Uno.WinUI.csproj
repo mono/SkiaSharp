@@ -124,7 +124,7 @@
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="!$(TargetFramework.Contains('-'))">
       <!-- Add the targets files -->
-      <TfmSpecificPackageFile Include="buildTransitive\SkiaSharp.Views.Uno.WinUI.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+      <TfmSpecificPackageFile Include="nuget\buildTransitive\SkiaSharp.Views.Uno.WinUI.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
       <!-- Add the uni-runtime files -->
       <_UnoRuntimeOutputPackageFile Include="@(UnoRuntimeOutput->'%(RootDir)%(Directory)%(Filename)%(Extension)')" />
       <_UnoRuntimeOutputPackageFile Include="@(UnoRuntimeOutput->'%(RootDir)%(Directory)%(Filename).xml')" />
