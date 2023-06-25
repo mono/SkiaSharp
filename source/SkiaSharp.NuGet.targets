@@ -8,6 +8,9 @@
   <PropertyGroup>
     <PackageTags Condition="$(PackagingGroup.StartsWith('SkiaSharp'))">graphics;cross-platform;skiasharp;skia;$(PackageTags);ios;android;linux;windows;tvos;macos;tizen</PackageTags>
     <PackageTags Condition="$(PackagingGroup.StartsWith('HarfBuzzSharp'))">graphics;text;cross-platform;harfbuzzsharp;harfbuzz;$(PackageTags);ios;android;linux;windows;tvos;macos;tizen</PackageTags>
+    <PackageDescription Condition="'$(PackageNotes)' != ''">$(PackageDescription)
+
+$(PackageNotes)</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

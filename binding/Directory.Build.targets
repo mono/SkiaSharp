@@ -1,6 +1,6 @@
 <Project>
 
-  <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) or '$(TargetFramework)' == 'netstandard2.0' ">
+  <ItemGroup Condition=" ($(TargetFramework.StartsWith('net4')) or '$(TargetFramework)' == 'netstandard2.0') and (!$(MSBuildProjectName.Contains('.NativeAssets.'))) ">
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
 
@@ -13,15 +13,8 @@ It provides a comprehensive 2D API that can be used across mobile, server and de
     <PackageDescription Condition="'$(PackageDescription)' == ''">HarfBuzzSharp is a cross-platform OpenType text shaping engine for .NET platforms.</PackageDescription>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(PackageNotes)' != ''">
-    <PackageDescription>$(PackageDescription)
-
-$(PackageNotes)</PackageDescription>
-  </PropertyGroup>
-
   <Import Project="$(MSBuildThisFileDirectory)NativeAssets.Build.targets" Condition="$(MSBuildProjectName.Contains('.NativeAssets.'))" />
 
-  <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.NuGet.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.targets" />
 
 </Project>

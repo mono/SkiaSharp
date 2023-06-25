@@ -98,9 +98,7 @@
 
   <!-- Windows Desktop TFMs -->
   <PropertyGroup>
-    <WindowsDesktopTargetFrameworksCurrent Condition="$(IsWindows)">$(TFMCurrent)-windows$(TFMWindowsVersion)</WindowsDesktopTargetFrameworksCurrent>
-    <WindowsDesktopTargetFrameworksNext Condition="$(IsWindows)">$(TFMNext)-windows$(TFMWindowsVersion)</WindowsDesktopTargetFrameworksNext>
-    <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">net462;$(WindowsDesktopTargetFrameworksCurrent);$(WindowsDesktopTargetFrameworksNext)</WindowsDesktopTargetFrameworks>
+    <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">net462;$(WindowsTargetFrameworks)</WindowsDesktopTargetFrameworks>
   </PropertyGroup>
 
   <!-- .NET MAUI -->
@@ -192,5 +190,7 @@
     <Error Text="There appears to be a problem selecting the operating system. IsWindows='$(IsWindows)',  IsMacOS='$(IsMacOS)',  IsLinux='$(IsLinux)'"
            Condition=" !$(IsWindows) and !$(IsMacOS) and !$(IsLinux) " />
   </Target>
+
+  <Import Project="$(MSBuildThisFileDirectory)SkiaSharp.NuGet.props" />
 
 </Project>
