@@ -703,7 +703,7 @@ Task ("nuget-special")
         foreach (var packageVersion in versions) {
             // update the version
             var fn = id.StartsWith ("_NativeAssets.") ? "_NativeAssets" : id;
-            var xdoc = XDocument.Load ($"./nuget/{fn}.nuspec");
+            var xdoc = XDocument.Load ($"./scripts/nuget/{fn}.nuspec");
             var metadata = xdoc.Root.Element ("metadata");
             metadata.Element ("version").Value = packageVersion;
             metadata.Element ("id").Value = id;
@@ -779,8 +779,6 @@ Task ("clean-managed")
     DeleteFiles ("./source/*/*/project.lock.json");
     CleanDirectories ("./source/*/*/Generated Files");
     CleanDirectories ("./source/packages");
-
-    DeleteFiles ("./nuget/*.prerelease.nuspec");
 
     DeleteDir ("./output");
 });
