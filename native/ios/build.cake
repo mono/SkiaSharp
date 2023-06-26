@@ -1,8 +1,8 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-#load "../../../scripts/cake/native-shared.cake"
-#load "../../../scripts/cake/xcode.cake"
+#load "../../scripts/cake/native-shared.cake"
+#load "../../scripts/cake/xcode.cake"
 
 string VARIANT = (BUILD_VARIANT ?? "ios").ToLower();
 

@@ -27,8 +27,8 @@ using NuGet.Versioning;
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
-#load "../scripts/cake/shared.cake"
-#load "../scripts/cake/native-shared.cake"
+#load "./scripts/cake/shared.cake"
+#load "./scripts/cake/native-shared.cake"
 
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -134,11 +134,11 @@ Information($"    {"GIT_SHA".PadRight(30)} {{0}}", GIT_SHA);
 Information($"    {"GIT_BRANCH_NAME".PadRight(30)} {{0}}", GIT_BRANCH_NAME);
 Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
 
-#load "../scripts/cake/msbuild.cake"
-#load "../scripts/cake/UtilsManaged.cake"
-#load "../scripts/cake/externals.cake"
-#load "../scripts/cake/UpdateDocs.cake"
-#load "../scripts/cake/samples.cake"
+#load "./scripts/cake/msbuild.cake"
+#load "./scripts/cake/UtilsManaged.cake"
+#load "./scripts/cake/externals.cake"
+#load "./scripts/cake/UpdateDocs.cake"
+#load "./scripts/cake/samples.cake"
 
 Task ("__________________________________")
     .Description ("__________________________________________________");
@@ -296,7 +296,7 @@ Task ("tests-android")
             configuration: "Debug");
         // run the tests
         DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Android.Tests";
-        RunCake ("./../scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
+        RunCake ("./scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
             { "exclusive", "true" },
@@ -340,7 +340,7 @@ Task ("tests-ios")
             configuration: "Debug");
         // run the tests
         DirectoryPath results = "./output/logs/testlogs/SkiaSharp.iOS.Tests";
-        RunCake ("./../scripts/cake/xharness-ios.cake", "Default", new Dictionary<string, string> {
+        RunCake ("./scripts/cake/xharness-ios.cake", "Default", new Dictionary<string, string> {
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
             { "exclusive", "true" },
