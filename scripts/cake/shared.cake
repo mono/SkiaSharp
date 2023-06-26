@@ -82,7 +82,7 @@ IProcess RunAndReturnProcess(FilePath process, ProcessSettings settings)
 
 string GetVersion(string lib, string type = "nuget")
 {
-    return GetRegexValue($@"^{lib}\s*{type}\s*(.*)$", ROOT_PATH.CombineWithFilePath("VERSIONS.txt"));
+    return GetRegexValue($@"^{lib}\s*{type}\s*(.*)$", ROOT_PATH.CombineWithFilePath("scripts/VERSIONS.txt"));
 }
 
 string GetRegexValue(string regex, FilePath file)

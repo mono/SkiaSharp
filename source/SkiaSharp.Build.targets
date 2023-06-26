@@ -14,7 +14,7 @@
 
     <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' ">true</PublicSign>
     <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\$(KeyFileName)</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\scripts\$(KeyFileName)</AssemblyOriginatorKeyFile>
 
     <!--
       Suppress version attribute generation in Microsoft.NET.Sdk projects to avoid build failures
@@ -81,7 +81,7 @@
           BeforeTargets="InitializeSourceControlInformation;GenerateNuspec">
     <PropertyGroup>
       <_VersionSourceFile>$(IntermediateOutputPath)\$(AssemblyName).Version.cs</_VersionSourceFile>
-      <_VersionTxtFile>$(MSBuildThisFileDirectory)..\VERSIONS.txt</_VersionTxtFile>
+      <_VersionTxtFile>$(MSBuildThisFileDirectory)..\scripts\VERSIONS.txt</_VersionTxtFile>
     </PropertyGroup>
     <PropertyGroup>
       <_VersionTxtContents>$([System.IO.File]::ReadAllText($(_VersionTxtFile)))</_VersionTxtContents>
