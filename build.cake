@@ -597,8 +597,8 @@ Task ("nuget-normal")
     var props = new Dictionary<string, string> {
         { "BuildingInsideUnoSourceGenerator", "true" },
     };
-    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", properties: props);
-    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", versionSuffix: PREVIEW_NUGET_SUFFIX, properties: props);
+    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pack", properties: props);
+    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pre.pack", versionSuffix: PREVIEW_NUGET_SUFFIX, properties: props);
 
     // move symbols to a special location to avoid signing
     EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");

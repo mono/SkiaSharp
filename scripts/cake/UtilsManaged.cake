@@ -2,6 +2,7 @@
 void RunDotNetPack(
     FilePath solution,
     DirectoryPath outputPath = null,
+    string bl = ".pack",
     string configuration = null,
     Dictionary<string, string> properties = null,
     string versionSuffix = null)
@@ -16,7 +17,7 @@ void RunDotNetPack(
     c.Verbosity = (DotNetVerbosity)VERBOSITY;
 
     var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
-    var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + ".pack.binlog");
+    var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + bl + ".binlog");
     msb.BinaryLogger = new MSBuildBinaryLoggerSettings {
         Enabled = true,
         FileName = blPath.FullPath,
