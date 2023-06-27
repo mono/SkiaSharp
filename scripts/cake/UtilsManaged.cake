@@ -23,7 +23,7 @@ void RunDotNetPack(
     };
       
     c.NoLogo = VERBOSITY == Verbosity.Minimal;
-    // c.NoBuild = true;
+    c.NoBuild = true;
 
     c.OutputDirectory = outputPath ?? OUTPUT_NUGETS_PATH;
 

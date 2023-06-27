@@ -590,12 +590,15 @@ Task ("nuget")
 
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
-    .IsDependentOn ("externals")
+    .IsDependentOn ("libs")
     .Does (() =>
 {
     // pack the packages (stable and then preview versions)
-    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf");
-    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", versionSuffix: PREVIEW_NUGET_SUFFIX);
+    var props = new Dictionary<string, string> {
+        { "BuildingInsideUnoSourceGenerator", "true" },
+    };
+    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", properties: props);
+    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", versionSuffix: PREVIEW_NUGET_SUFFIX, properties: props);
 
     // move symbols to a special location to avoid signing
     EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
