@@ -2,7 +2,7 @@ Param(
   [string] $SourceUrl,
   [string] $InstallDir,
   [string] $Tizen = '<latest>',
-  [boolean] $IsPreview = $true
+  [boolean] $IsPreview = $false
 )
 
 $ErrorActionPreference = 'Stop'
@@ -16,9 +16,14 @@ if ($IsPreview) {
   $feed3 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json'
 }
 
+$Workloads = 'android','ios','tvos','macos','maccatalyst','wasm-tools','wasm-tools-net6','maui'
+if ($IsLinux) {
+  $Workloads = 'android','macos','wasm-tools','wasm-tools-net6'
+}
+
 Write-Host "Installing .NET workloads..."
 & dotnet workload install `
-  android ios tvos macos maccatalyst wasm-tools wasm-tools-net6 maui `
+  @Workloads `
   --from-rollback-file $SourceUrl `
   --source https://api.nuget.org/v3/index.json `
   --source $feed1 `
@@ -27,7 +32,12 @@ Write-Host "Installing .NET workloads..."
   --skip-sign-check
 
 Write-Host "Installing Tizen workloads..."
-Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile 'workload-install.ps1'
-./workload-install.ps1 -Version "$Tizen"
+if ($IsLinux -or $IsMacOS) {
+  Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.sh' -OutFile 'workload-install.sh'
+  bash workload-install.sh --version "$Tizen"
+} else {
+  Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile 'workload-install.ps1'
+  ./workload-install.ps1 -Version "$Tizen"
+}
 
 exit $LASTEXITCODE
