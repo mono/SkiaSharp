@@ -159,15 +159,7 @@ Task ("libs")
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    // build the managed libraries
     RunDotNetBuild ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf");
-
-    // assemble the mdoc docs
-    EnsureDirectoryExists ("./output/docs/mdoc/");
-    RunProcess (MDocPath, new ProcessSettings {
-        Arguments = $"assemble --out=\"./output/docs/mdoc/SkiaSharp\" \"{DOCS_PATH}\" --debug",
-    });
-    CopyFileToDirectory ("./docs/SkiaSharp.source", "./output/docs/mdoc/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -598,7 +590,7 @@ Task ("nuget")
 
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
-    .IsDependentOn ("libs")
+    .IsDependentOn ("externals")
     .Does (() =>
 {
     // pack the packages (stable and then preview versions)

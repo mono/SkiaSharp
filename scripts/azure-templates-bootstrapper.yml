@@ -24,7 +24,7 @@ parameters:
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installAndroidSdk: true                       # whether or not to install the Android SDK
   installTizenSdk: true                         # whether or not to install the Tizen SDK
-  installWindowsSdk: true                       # whether or not to install the Windows SDK
+  installWindowsSdk: false                      # whether or not to install the Windows SDK
   installPreviewVs: false                       # whether or not to install the preview VS
   installDotNet: true                           # whether or not to install the dotnet SDK
   installLlvm: true                             # whether or not to install the LLVM compiler
@@ -182,12 +182,11 @@ jobs:
             displayName: Display all the .NET information
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # install VS
-          - ${{ if endsWith(parameters.name, '_windows') }}:
-            - ${{ if eq(parameters.installPreviewVs, 'true') }}:
-              - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
-                displayName: Install Visual Studio
-                retryCountOnTaskFailure: 3
-                condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
+          - ${{ if eq(parameters.installPreviewVs, 'true') }}:
+            - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
+              displayName: Install Visual Studio $(VISUAL_STUDIO_VERSION)
+              retryCountOnTaskFailure: 3
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
           # install workloads
           - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $true
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))

@@ -55,7 +55,6 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x86
-            installWindowsSdk: false
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Win)
           parameters:
@@ -66,7 +65,6 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x64
-            installWindowsSdk: false
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Win)
           parameters:
@@ -77,7 +75,6 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm
-            installWindowsSdk: false
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Win)
           parameters:
@@ -88,7 +85,6 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm64
-            installWindowsSdk: false
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native Tizen (Win)
           parameters:
@@ -98,7 +94,6 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-tizen
-            installWindowsSdk: false
             artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Win)
           parameters:
@@ -340,7 +335,6 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: libs
             additionalArgs: --skipExternals="all"
-            installPreviewVs: true
             requiredArtifacts:
               - name: native
             artifactName: managed
@@ -394,8 +388,6 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: nuget
             additionalArgs: --skipExternals="all"
-            installWindowsSdk: false
-            installAndroidSdk: false
             requiredArtifacts:
               - name: native
             postBuildSteps:
@@ -501,8 +493,6 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: tests-netfx
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-            installPreviewVs: true
-            installWindowsSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_win32_x86_windows
@@ -523,7 +513,6 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-            installWindowsSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_win32_x86_windows
@@ -766,7 +755,6 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: samples
-            installPreviewVs: true
             requiredArtifacts:
               - name: nuget
                 dir: nugets
@@ -814,7 +802,6 @@ stages:
             condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/patch/'))
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: git-sync-deps
-            installWindowsSdk: false
             installAndroidSdk: false
             installDotNet: false
             shouldPublish: false
