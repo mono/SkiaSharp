@@ -380,7 +380,11 @@ stages:
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: package
       displayName: Package NuGets
-      dependsOn: managed
+      dependsOn:
+        - native_windows
+        - native_macos
+        - native_linux
+        - native_wasm
       jobs:
         - template: azure-templates-bootstrapper.yml # Package NuGets
           parameters:
@@ -389,12 +393,11 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: nuget
-            additionalArgs: --packall=true --skipbuild=true
+            additionalArgs: --skipExternals="all"
             installWindowsSdk: false
             installAndroidSdk: false
             installDotNet: false
             requiredArtifacts:
-              - name: managed
               - name: native
             postBuildSteps:
               - task: PublishBuildArtifacts@1

@@ -32,8 +32,6 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-var SKIP_BUILD = Argument ("skipbuild", false);
-var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
@@ -158,7 +156,6 @@ Task ("externals")
 
 Task ("libs")
     .Description ("Build all managed assemblies.")
-    .WithCriteria(!SKIP_BUILD)
     .IsDependentOn ("externals")
     .Does (() =>
 {
