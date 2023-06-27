@@ -75,15 +75,15 @@
   <!-- .NET Standard, .NET Framework and .NET -->
   <PropertyGroup>
     <BasicTargetFrameworks>netstandard2.0;netstandard2.1;net462;$(TFMCurrent);$(TFMNext)</BasicTargetFrameworks>
-    <PlatformTargetFrameworksCurrent>$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</PlatformTargetFrameworksCurrent>
-    <PlatformTargetFrameworksCurrent Condition="$(IsNetTizenSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tizen</PlatformTargetFrameworksCurrent>
-    <PlatformTargetFrameworksCurrent Condition="$(IsNetTVOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tvos</PlatformTargetFrameworksCurrent>
-    <PlatformTargetFrameworksCurrent Condition="$(IsNetMacOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-macos</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tizen</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tvos</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-macos</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="$(IsWindows)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-windows$(TFMWindowsVersion)</PlatformTargetFrameworksCurrent>
-    <PlatformTargetFrameworksNext>$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</PlatformTargetFrameworksNext>
-    <PlatformTargetFrameworksNext Condition="$(IsNetTizenSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tizen</PlatformTargetFrameworksNext>
-    <PlatformTargetFrameworksNext Condition="$(IsNetTVOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tvos</PlatformTargetFrameworksNext>
-    <PlatformTargetFrameworksNext Condition="$(IsNetMacOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-macos</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux)">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tizen</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tvos</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-macos</PlatformTargetFrameworksNext>
     <PlatformTargetFrameworksNext Condition="$(IsWindows)">$(PlatformTargetFrameworksNext);$(TFMNext)-windows$(TFMWindowsVersion)</PlatformTargetFrameworksNext>
     <PlatformTargetFrameworks>$(PlatformTargetFrameworksCurrent);$(PlatformTargetFrameworksNext)</PlatformTargetFrameworks>
     <AllTargetFrameworks>$(BasicTargetFrameworks);$(PlatformTargetFrameworks)</AllTargetFrameworks>
@@ -98,7 +98,8 @@
 
   <!-- Windows Desktop TFMs -->
   <PropertyGroup>
-    <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">net462;$(WindowsTargetFrameworks)</WindowsDesktopTargetFrameworks>
+    <WindowsDesktopTargetFrameworks>net462</WindowsDesktopTargetFrameworks>
+    <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">$(WindowsDesktopTargetFrameworks);$(WindowsTargetFrameworks)</WindowsDesktopTargetFrameworks>
   </PropertyGroup>
 
   <!-- .NET MAUI -->
@@ -115,8 +116,8 @@
   <!-- Uno Platform -->
   <PropertyGroup>
     <UnoTargetFrameworksReference>netstandard2.0;$(TFMCurrent);$(TFMNext)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworksCurrent>$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android;$(TFMCurrent)-macos</UnoTargetFrameworksCurrent>
-    <UnoTargetFrameworksNext>$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android;$(TFMNext)-macos</UnoTargetFrameworksNext>
+    <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android;$(TFMCurrent)-macos</UnoTargetFrameworksCurrent>
+    <UnoTargetFrameworksNext Condition="!$(IsLinux)">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android;$(TFMNext)-macos</UnoTargetFrameworksNext>
     <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksCurrent);$(UnoTargetFrameworksNext);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
   </PropertyGroup>
 

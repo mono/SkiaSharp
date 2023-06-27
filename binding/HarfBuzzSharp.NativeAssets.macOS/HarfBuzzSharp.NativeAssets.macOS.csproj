@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(BasicTargetFrameworks);$(TFMCurrent)-macos;$(TFMNext)-macos</TargetFrameworks>
+    <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition="!$(IsLinux)">$(TargetFrameworks);$(TFMCurrent)-macos;$(TFMNext)-macos</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for macOS</Title>
   </PropertyGroup>
