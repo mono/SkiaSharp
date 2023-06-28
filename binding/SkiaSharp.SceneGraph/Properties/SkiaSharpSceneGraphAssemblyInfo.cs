@@ -9,12 +9,6 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 [assembly: NeutralResourcesLanguage("en")]
 
-#if DEBUG
-[assembly: AssemblyConfiguration("Debug")]
-#else
-[assembly: AssemblyConfiguration("Release")]
-#endif
-
 [assembly: InternalsVisibleTo("SkiaSharp.Tests, PublicKey=" +
 	"002400000480000094000000060200000024000052534131000400000100010079159977d2d03a" +
 	"8e6bea7a2e74e8d1afcc93e8851974952bb480a12c9134474d04062447c37e0e68c080536fcf3c" +

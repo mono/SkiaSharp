@@ -48,12 +48,7 @@ $(PackageNotes)</PackageDescription>
   <Target Name="_IncludeAdditionalVersionInfo"
           AfterTargets="_CollectAssemblyVersionInfo">
     <PropertyGroup>
-      <Version>$(_VersionAssemblyMatch)</Version>
-      <FileVersion>$(_VersionFileMatch)</FileVersion>
-      <InformationalVersion>$(_VersionFileMatch)</InformationalVersion>
-      <InformationalVersion Condition="'$(AssemblyVersionGitSha)' != ''">$(_VersionFileMatch)+$(AssemblyVersionGitSha)</InformationalVersion>
-      <PackageVersion Condition="'$(VersionSuffix)' == ''">$(_VersionNuGetMatch)</PackageVersion>
-      <PackageVersion Condition="'$(VersionSuffix)' != ''">$(_VersionNuGetMatch)-$(VersionSuffix)</PackageVersion>
+      <PackageVersion>$(Version)</PackageVersion>
     </PropertyGroup>
   </Target>
 

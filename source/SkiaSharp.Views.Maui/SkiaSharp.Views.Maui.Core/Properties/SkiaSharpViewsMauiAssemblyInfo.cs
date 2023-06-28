@@ -9,12 +9,6 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 [assembly: NeutralResourcesLanguage("en")]
 
-#if DEBUG
-[assembly: AssemblyConfiguration("Debug")]
-#else
-[assembly: AssemblyConfiguration("Release")]
-#endif
-
 [assembly: InternalsVisibleTo("SkiaSharp.Views.Maui.Core")]
 [assembly: InternalsVisibleTo("SkiaSharp.Views.Maui.Controls")]
 [assembly: InternalsVisibleTo("SkiaSharp.Views.Maui.Controls.Compatibility")]

@@ -104,7 +104,9 @@ void RunMSBuild(
 
         if (properties != null) {
             foreach (var prop in properties) {
-                c.Properties [prop.Key] = new [] { prop.Value };
+                if (!string.IsNullOrEmpty(prop.Value)) {
+                    c.Properties [prop.Key] = new [] { prop.Value };
+                }
             }
         }
         // c.Properties ["RestoreSources"] = GetNuGetSources();
@@ -149,7 +151,9 @@ void RunDotNetBuild(
 
     if (properties != null) {
         foreach (var prop in properties) {
-            msb.Properties [prop.Key] = new [] { prop.Value };
+            if (!string.IsNullOrEmpty(prop.Value)) {
+                msb.Properties [prop.Key] = new [] { prop.Value };
+            }
         }
     }
     c.Sources = GetNuGetSources();

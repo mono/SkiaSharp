@@ -4,8 +4,7 @@ void RunDotNetPack(
     DirectoryPath outputPath = null,
     string bl = ".pack",
     string configuration = null,
-    Dictionary<string, string> properties = null,
-    string versionSuffix = null)
+    Dictionary<string, string> properties = null)
 {
     EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
 
@@ -30,26 +29,11 @@ void RunDotNetPack(
 
     msb.Properties ["NoDefaultExcludes"] = new [] { "true" };
 
-    if (!string.IsNullOrEmpty(GIT_SHA))
-        msb.Properties ["GIT_SHA"] = new [] { GIT_SHA };
-    if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))
-        msb.Properties ["GIT_BRANCH_NAME"] = new [] { GIT_BRANCH_NAME };
-    if (!string.IsNullOrEmpty(GIT_URL))
-        msb.Properties ["GIT_URL"] = new [] { GIT_URL };
-    if (!string.IsNullOrEmpty(BUILD_COUNTER))
-        msb.Properties ["BUILD_COUNTER"] = new [] { BUILD_COUNTER };
-    if (!string.IsNullOrEmpty(BUILD_NUMBER))
-        msb.Properties ["BUILD_NUMBER"] = new [] { BUILD_NUMBER };
-    if (!string.IsNullOrEmpty(FEATURE_NAME))
-        msb.Properties ["FEATURE_NAME"] = new [] { FEATURE_NAME };
-    if (!string.IsNullOrEmpty(PREVIEW_LABEL))
-        msb.Properties ["PREVIEW_LABEL"] = new [] { PREVIEW_LABEL };
-    if (!string.IsNullOrEmpty(versionSuffix))
-        msb.Properties ["VersionSuffix"] = new [] { versionSuffix };
-
     if (properties != null) {
         foreach (var prop in properties) {
-            msb.Properties [prop.Key] = new [] { prop.Value };
+            if (!string.IsNullOrEmpty(prop.Value)) {
+                msb.Properties [prop.Key] = new [] { prop.Value };
+            }
         }
     }
     

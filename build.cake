@@ -7,7 +7,6 @@
 #addin nuget:?package=Mono.Cecil&version=0.10.0
 #addin nuget:?package=Mono.ApiTools&version=5.14.0.2
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2
-#addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
 #tool nuget:?package=mdoc&version=5.8.9
 #tool nuget:?package=xunit.runner.console&version=2.4.2
@@ -32,6 +31,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+var SKIP_BUILD = Argument ("skipbuild", false);
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
@@ -65,6 +65,16 @@ if (!string.IsNullOrEmpty (FEATURE_NAME)) {
 if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
     PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
 }
+
+var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {
+    { "GIT_SHA", GIT_SHA },
+    { "GIT_BRANCH_NAME", GIT_BRANCH_NAME },
+    { "GIT_URL", GIT_URL },
+    { "BUILD_COUNTER", BUILD_COUNTER },
+    { "BUILD_NUMBER", BUILD_NUMBER },
+    { "FEATURE_NAME", FEATURE_NAME },
+    { "PREVIEW_LABEL", PREVIEW_LABEL },
+};
 
 var CURRENT_PLATFORM = "";
 if (IsRunningOnWindows ()) {
@@ -156,10 +166,11 @@ Task ("externals")
 
 Task ("libs")
     .Description ("Build all managed assemblies.")
+    .WithCriteria (!SKIP_BUILD)
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    RunDotNetBuild ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf");
+    RunDotNetBuild ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", properties: MSBUILD_VERSION_PROPERTIES);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -593,47 +604,22 @@ Task ("nuget-normal")
     .IsDependentOn ("libs")
     .Does (() =>
 {
-    // pack the packages (stable and then preview versions)
-    var props = new Dictionary<string, string> {
+    var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
     };
+
+    // pack stable
     RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pack", properties: props);
-    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pre.pack", versionSuffix: PREVIEW_NUGET_SUFFIX, properties: props);
+
+    // pack preview
+    props ["VersionSuffix"] = PREVIEW_NUGET_SUFFIX;
+    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pre.pack", properties: props);
 
     // move symbols to a special location to avoid signing
     EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
     DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
-
-    // setup validation options
-    var options = new Xamarin.Nuget.Validator.NugetValidatorOptions {
-        Copyright = "© Microsoft Corporation. All rights reserved.",
-        Author = "Microsoft",
-        Owner = "Microsoft",
-        NeedsProjectUrl = true,
-        NeedsLicenseUrl = true,
-        ValidateRequireLicenseAcceptance = true,
-        ValidPackageNamespace = new [] { "SkiaSharp", "HarfBuzzSharp" },
-    };
-
-    var nupkgFiles = GetFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
-
-    Information ("Found ({0}) Nuget's to validate", nupkgFiles.Count ());
-
-    foreach (var nupkgFile in nupkgFiles) {
-        Verbose ("Verifiying Metadata of {0}", nupkgFile.GetFilename ());
-
-        var result = Xamarin.Nuget.Validator.NugetValidator.Validate(MakeAbsolute(nupkgFile).FullPath, options);
-        if (!result.Success) {
-            Information ("Metadata validation failed for: {0} \n\n", nupkgFile.GetFilename ());
-            Information (string.Join("\n    ", result.ErrorMessages));
-            throw new Exception ($"Invalid Metadata for: {nupkgFile.GetFilename ()}");
-
-        } else {
-            Information ("Metadata validation passed for: {0}", nupkgFile.GetFilename ());
-        }
-    }
 });
 
 Task ("nuget-special")

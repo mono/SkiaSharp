@@ -22,7 +22,6 @@
     -->
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
 
@@ -85,8 +84,6 @@
     </PropertyGroup>
     <PropertyGroup>
       <_VersionTxtContents>$([System.IO.File]::ReadAllText($(_VersionTxtFile)))</_VersionTxtContents>
-      <_VersionGitSha Condition=" '$(AssemblyVersionGitSha)' != '' ">+$(AssemblyVersionGitSha)</_VersionGitSha>
-      <_VersionGitBranch Condition=" '$(AssemblyVersionGitBranch)' != '' ">+$(AssemblyVersionGitBranch)</_VersionGitBranch>
       <_VersionPackagingGroup>$(PackagingGroup.Split('.')[0])</_VersionPackagingGroup>
       <_VersionAssemblyPattern>^$(_VersionPackagingGroup)\s*assembly\s*(.*)$</_VersionAssemblyPattern>
       <_VersionFilePattern>^$(_VersionPackagingGroup)\s*file\s*(.*)$</_VersionFilePattern>
@@ -99,6 +96,15 @@
       <_VersionMilestoneMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionMilestonePattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionMilestoneMatch>
       <_VersionIncrementMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionIncrementPattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionIncrementMatch>
     </PropertyGroup>
+    <PropertyGroup>
+      <Version>$(_VersionNuGetMatch)</Version>
+      <Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
+      <Version Condition="'$(AssemblyVersionGitBranch)' != ''">$(Version)+$(AssemblyVersionGitBranch.Replace('/', '-').Replace('\', '-'))</Version>
+      <Version Condition="'$(AssemblyVersionGitSha)' != ''">$(Version).$(AssemblyVersionGitSha)</Version>
+      <InformationalVersion>$(Version)</InformationalVersion>
+      <AssemblyVersion>$(_VersionAssemblyMatch)</AssemblyVersion>
+      <FileVersion>$(_VersionFileMatch)</FileVersion>
+    </PropertyGroup>
   </Target>
   <Target Name="_GenerateAssemblyVersionInfo"
           BeforeTargets="GenerateAssemblyInfo"
@@ -107,9 +113,9 @@
     <PropertyGroup>
       <_VersionGeneratedContents>
 internal partial class VersionConstants {
-    public const string AssemblyVersion = "$(_VersionAssemblyMatch)"%3B
-    public const string AssemblyFileVersion = "$(_VersionFileMatch)"%3B
-    public const string AssemblyInformationalVersion = "$(_VersionFileMatch)$(_VersionGitSha)"%3B
+    public const string AssemblyVersion = "$(AssemblyVersion)"%3B
+    public const string AssemblyFileVersion = "$(FileVersion)"%3B
+    public const string AssemblyInformationalVersion = "$(InformationalVersion)"%3B
     public const string GitSha = "$(AssemblyVersionGitSha)"%3B
     public const string GitBranch = "$(AssemblyVersionGitBranch)"%3B
     public const int Milestone = 0$(_VersionMilestoneMatch)%3B
