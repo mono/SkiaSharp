@@ -2,9 +2,19 @@
 
     <!-- This file is exactly the same as IncludeNativeAssets.SkiaSharp.targets, but with a find-replace 'SkiaSharp' to 'HarfBuzzSharp' -->
 
+    <ItemGroup Condition="!$(TargetFramework.Contains('-'))">
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\osx\libHarfBuzzSharp.dylib" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+    
     <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'">
-        <Content Include="..\..\..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.dll" Condition="Exists('..\..\..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.dll')" Visible="False" />
-        <Content Include="..\..\..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.pdb" Condition="Exists('..\..\..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.pdb')" Visible="False"/>
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(Platform)\libHarfBuzzSharp.*" Visible="False" />
+    </ItemGroup>
+    
+    <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and ('$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU')">
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
     </ItemGroup>
     
     <ItemGroup Condition="$(TargetFramework.Contains('-ios')) and '$(RuntimeIdentifier)' != ''">

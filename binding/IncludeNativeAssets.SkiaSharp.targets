@@ -2,14 +2,19 @@
 
     <!-- This file is exactly the same as IncludeNativeAssets.HarfBuzzSharp.targets, but with a find-replace 'HarfBuzzSharp' to 'SkiaSharp' -->
 
+    <ItemGroup Condition="!$(TargetFramework.Contains('-'))">
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libSkiaSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\osx\libSkiaSharp.dylib" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+    
     <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'">
-        <Content Include="..\..\..\..\output\native\windows\$(Platform)\libSkiaSharp.*" Visible="False" />
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(Platform)\libSkiaSharp.*" Visible="False" />
     </ItemGroup>
     
     <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and ('$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU')">
-        <Content Include="..\..\..\..\output\native\windows\x64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
-        <Content Include="..\..\..\..\output\native\windows\x86\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
-        <Content Include="..\..\..\..\output\native\windows\arm64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
+        <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
     </ItemGroup>
     
     <ItemGroup Condition="$(TargetFramework.Contains('-ios')) and '$(RuntimeIdentifier)' != ''">
