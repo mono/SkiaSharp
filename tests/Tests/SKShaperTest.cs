@@ -45,7 +45,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			{
 				canvas.Clear(SKColors.White);
 
-				var shapedPath = paint.GetShapedTextPath(shaper, "متن", 100, 200);
+				using var shapedPath = paint.GetShapedTextPath(shaper, "متن", 100, 200);
 				canvas.DrawPath(shapedPath, paint);
 
 				canvas.Flush();
@@ -137,7 +137,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			var font = Path.Combine(PathToFonts, "segoeui.ttf");
 			using var tf = SKTypeface.FromFile(font);
 
-			using var bitmap = new SKBitmap(600, 200);
+			using var bitmap = new SKBitmap(600, 300);
 			using var canvas = new SKCanvas(bitmap);
 
 			canvas.Clear(SKColors.White);
@@ -150,29 +150,32 @@ namespace SkiaSharp.HarfBuzz.Tests
 			paint.TextAlign = align;
 
 			canvas.DrawShapedText("SkiaSharp", 300, 100, paint);
+			using var shapedPath = paint.GetShapedTextPath("SkiaSharp", 300, 200);
+			canvas.DrawPath(shapedPath, paint);
 
-			AssertTextAlign(bitmap, offset, 0);
+			AssertTextAlign(bitmap, offset, 100);
+			AssertTextAlign(bitmap, offset, 200);
 		}
 
 		private static void AssertTextAlign(SKBitmap bitmap, int x, int y)
 		{
 			// [S]kia[S]har[p]
 
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 6, y + 66));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 28, y + 87));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 28, y + 66));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 6, y + 87));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 6, y - 34));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 28, y - 13));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 28, y - 34));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 6, y - 13));
 
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 120, y + 66));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 142, y + 87));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 142, y + 66));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 120, y + 87));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 120, y - 34));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 142, y - 13));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 142, y - 34));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 120, y - 13));
 
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 246, y + 70));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 246, y + 113));
-			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 271, y + 83));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 83));
-			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 113));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 246, y - 30));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 246, y + 13));
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 271, y - 17));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y - 17));
+			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 13));
 		}
 	}
 }
