@@ -1,0 +1,65 @@
+<Project>
+
+    <!-- This file is exactly the same as IncludeNativeAssets.SkiaSharp.targets, but with a find-replace 'SkiaSharp' to 'HarfBuzzSharp' -->
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'">
+        <Content Include="..\..\..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.dll" Condition="Exists('..\..\..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.dll')" Visible="False" />
+        <Content Include="..\..\..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.pdb" Condition="Exists('..\..\..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.pdb')" Visible="False"/>
+    </ItemGroup>
+    
+    <ItemGroup Condition="$(TargetFramework.Contains('-ios')) and '$(RuntimeIdentifier)' != ''">
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\iossimulator\libHarfBuzzSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('iossimulator'))" />
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\ios\libHarfBuzzSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('iossimulator'))" />
+    </ItemGroup>
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\x86\libHarfBuzzSharp.so" Abi="x86" />
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\x86_64\libHarfBuzzSharp.so" Abi="x86_64" />
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\armeabi-v7a\libHarfBuzzSharp.so" Abi="armeabi-v7a" />
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\arm64-v8a\libHarfBuzzSharp.so" Abi="arm64-v8a" />
+    </ItemGroup>
+
+    <PropertyGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
+        <_HarfBuzzSharpExpandNativeReferencesStamp>$(IntermediateOutputPath)\HarfBuzzSharpExtract.stamp</_HarfBuzzSharpExpandNativeReferencesStamp>
+        <_HarfBuzzSharpExpandNativeReferencesPath>$(IntermediateOutputPath)\HarfBuzzSharpExtract\</_HarfBuzzSharpExpandNativeReferencesPath>
+    </PropertyGroup>
+    <Target Name="_HarfBuzzSharpExpandNativeReferencesFixes"
+            BeforeTargets="_ExpandNativeReferences"
+            Condition=" $(TargetFramework.Contains('-maccatalyst')) and '$(OS)' == 'Unix' "
+            Inputs="$(MSBuildThisFileFullPath)"
+            Outputs="$(_HarfBuzzSharpExpandNativeReferencesStamp)">
+        <RemoveDir Directories="$(_HarfBuzzSharpExpandNativeReferencesPath)" />
+        <MakeDir Directories="$(_HarfBuzzSharpExpandNativeReferencesPath)" />
+        <Exec Command="unzip -d $(_HarfBuzzSharpExpandNativeReferencesPath) $(MSBuildThisFileDirectory)..\output\native\maccatalyst\libHarfBuzzSharp.framework.zip" />
+        <ItemGroup>
+            <NativeReference Include="$(_HarfBuzzSharpExpandNativeReferencesPath)libHarfBuzzSharp.framework" Kind="Framework" />
+        </ItemGroup>
+        <Touch Files="$(_HarfBuzzSharpExpandNativeReferencesStamp)" AlwaysCreate="True" />
+        <ItemGroup>
+            <FileWrites Include="$(_HarfBuzzSharpExpandNativeReferencesPath)\**" />
+            <FileWrites Include="$(_HarfBuzzSharpExpandNativeReferencesStamp)" />
+        </ItemGroup>
+    </Target>
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\osx\libHarfBuzzSharp.dylib" Kind="Dynamic" />
+    </ItemGroup>
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
+        <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\i386\libHarfBuzzSharp.so">
+            <Visible>false</Visible>
+            <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
+            <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
+        </TizenTpkFiles>
+        <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\armel\libHarfBuzzSharp.so">
+            <Visible>false</Visible>
+            <TizenTpkSubDir>bin\runtimes\tizen-armel\native\</TizenTpkSubDir>
+            <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
+        </TizenTpkFiles>
+    </ItemGroup>
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libHarfBuzzSharp.framework" Kind="Framework" />
+    </ItemGroup>
+
+</Project>

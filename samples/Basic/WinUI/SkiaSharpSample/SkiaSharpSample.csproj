@@ -22,11 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\..\..\output\native\windows\$(Platform)\libSkiaSharp.dll" Condition="Exists('..\..\..\..\output\native\windows\$(Platform)\libSkiaSharp.dll')" Visible="False" />
-    <Content Include="..\..\..\..\output\native\windows\$(Platform)\libSkiaSharp.pdb" Condition="Exists('..\..\..\..\output\native\windows\$(Platform)\libSkiaSharp.pdb')" Visible="False" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="Images\LockScreenLogo.scale-200.png" />
     <Content Include="Images\SplashScreen.scale-200.png" />
     <Content Include="Images\Square150x150Logo.scale-200.png" />
@@ -35,5 +30,7 @@
     <Content Include="Images\StoreLogo.png" />
     <Content Include="Images\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
+
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
 
 </Project>

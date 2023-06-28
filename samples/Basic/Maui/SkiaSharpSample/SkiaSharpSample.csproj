@@ -13,6 +13,7 @@
   <PropertyGroup>
     <ApplicationTitle>SkiaSharp Sample</ApplicationTitle>
     <ApplicationId>com.companyname.SkiaSharpSample</ApplicationId>
+    <ApplicationIdGuid>AC63F9E5-DBE5-4F04-9EBC-2694661FE99B</ApplicationIdGuid>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
@@ -36,13 +37,6 @@
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
-    <None Include="..\..\..\..\output\native\windows\x64\libSkiaSharp.dll" Condition="Exists('..\..\..\..\output\native\windows\x64\libSkiaSharp.dll')">
-      <Link>libSkiaSharp.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets')" />
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
 
 </Project>

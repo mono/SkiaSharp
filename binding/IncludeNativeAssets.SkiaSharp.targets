@@ -1,0 +1,70 @@
+<Project>
+
+    <!-- This file is exactly the same as IncludeNativeAssets.HarfBuzzSharp.targets, but with a find-replace 'HarfBuzzSharp' to 'SkiaSharp' -->
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'">
+        <Content Include="..\..\..\..\output\native\windows\$(Platform)\libSkiaSharp.*" Visible="False" />
+    </ItemGroup>
+    
+    <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and ('$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU')">
+        <Content Include="..\..\..\..\output\native\windows\x64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
+        <Content Include="..\..\..\..\output\native\windows\x86\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
+        <Content Include="..\..\..\..\output\native\windows\arm64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
+    </ItemGroup>
+    
+    <ItemGroup Condition="$(TargetFramework.Contains('-ios')) and '$(RuntimeIdentifier)' != ''">
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\iossimulator\libSkiaSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('iossimulator'))" />
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\ios\libSkiaSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('iossimulator'))" />
+    </ItemGroup>
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\x86\libSkiaSharp.so" Abi="x86" />
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\x86_64\libSkiaSharp.so" Abi="x86_64" />
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\armeabi-v7a\libSkiaSharp.so" Abi="armeabi-v7a" />
+        <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\arm64-v8a\libSkiaSharp.so" Abi="arm64-v8a" />
+    </ItemGroup>
+
+    <PropertyGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
+        <_SkiaSharpExpandNativeReferencesStamp>$(IntermediateOutputPath)\SkiaSharpExtract.stamp</_SkiaSharpExpandNativeReferencesStamp>
+        <_SkiaSharpExpandNativeReferencesPath>$(IntermediateOutputPath)\SkiaSharpExtract\</_SkiaSharpExpandNativeReferencesPath>
+    </PropertyGroup>
+    <Target Name="_SkiaSharpExpandNativeReferencesFixes"
+            BeforeTargets="_ExpandNativeReferences"
+            Condition=" $(TargetFramework.Contains('-maccatalyst')) and '$(OS)' == 'Unix' "
+            Inputs="$(MSBuildThisFileFullPath)"
+            Outputs="$(_SkiaSharpExpandNativeReferencesStamp)">
+        <RemoveDir Directories="$(_SkiaSharpExpandNativeReferencesPath)" />
+        <MakeDir Directories="$(_SkiaSharpExpandNativeReferencesPath)" />
+        <Exec Command="unzip -d $(_SkiaSharpExpandNativeReferencesPath) $(MSBuildThisFileDirectory)..\output\native\maccatalyst\libSkiaSharp.framework.zip" />
+        <ItemGroup>
+            <NativeReference Include="$(_SkiaSharpExpandNativeReferencesPath)libSkiaSharp.framework" Kind="Framework" />
+        </ItemGroup>
+        <Touch Files="$(_SkiaSharpExpandNativeReferencesStamp)" AlwaysCreate="True" />
+        <ItemGroup>
+            <FileWrites Include="$(_SkiaSharpExpandNativeReferencesPath)\**" />
+            <FileWrites Include="$(_SkiaSharpExpandNativeReferencesStamp)" />
+        </ItemGroup>
+    </Target>
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\osx\libSkiaSharp.dylib" Kind="Dynamic" />
+    </ItemGroup>
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
+        <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\i386\libSkiaSharp.so">
+            <Visible>false</Visible>
+            <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
+            <TizenTpkFileName>libSkiaSharp.so</TizenTpkFileName>
+        </TizenTpkFiles>
+        <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\armel\libSkiaSharp.so">
+            <Visible>false</Visible>
+            <TizenTpkSubDir>bin\runtimes\tizen-armel\native\</TizenTpkSubDir>
+            <TizenTpkFileName>libSkiaSharp.so</TizenTpkFileName>
+        </TizenTpkFiles>
+    </ItemGroup>
+
+    <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libSkiaSharp.framework" Kind="Framework" />
+    </ItemGroup>
+
+</Project>
