@@ -631,30 +631,38 @@ Task ("nuget-special")
     DeleteFiles ($"{OUTPUT_SPECIAL_NUGETS_PATH}/*.nupkg");
 
     // get a list of all the version number variants
-    var versions = new List<string> ();
+    var versions = new Dictionary<string, string> ();
     if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
         var v = $"0.0.0-{PREVIEW_LABEL}";
         if (!string.IsNullOrEmpty (BUILD_COUNTER))
             v += $".{BUILD_COUNTER}";
-        versions.Add (v);
+        versions.Add ("pr", v);
     } else {
         if (!string.IsNullOrEmpty (GIT_SHA)) {
             var v = $"0.0.0-commit.{GIT_SHA}";
             if (!string.IsNullOrEmpty (BUILD_COUNTER))
                 v += $".{BUILD_COUNTER}";
-            versions.Add (v);
+            versions.Add ("commit", v);
         }
         if (!string.IsNullOrEmpty (GIT_BRANCH_NAME)) {
             var v = $"0.0.0-branch.{GIT_BRANCH_NAME.Replace ("/", ".")}";
             if (!string.IsNullOrEmpty (BUILD_COUNTER))
                 v += $".{BUILD_COUNTER}";
-            versions.Add (v);
+            versions.Add ("branch", v);
         }
+    }
+    Information ("Detected {0} versions to process:", versions.Count);
+    var max = 0;
+    foreach (var version in versions) {
+        if (version.Key.Length > max)
+            max = version.Key.Length + 1;
+    }
+    foreach (var version in versions) {
+        Information ("  - {0}" + " ".PadRight(max - version.Key.Length) + "=> {1}", version.Key, version.Value);
     }
 
     // get a list of all the nuspecs to pack
     var specials = new Dictionary<string, string> ();
-
     var nativePlatforms = GetDirectories ("./output/native/*")
         .Select (d => d.GetDirectoryName ())
         .ToArray ();
@@ -670,6 +678,15 @@ Task ("nuget-special")
         specials[$"_Symbols"] = $"nugets-symbols";
         specials[$"_SymbolsPreview"] = $"nugets-symbols";
     }
+    Information ("Detected {0} special artifacts to process:", specials.Count);
+    max = 0;
+    foreach (var special in specials) {
+        if (special.Key.Length > max)
+            max = special.Key.Length + 1;
+    }
+    foreach (var special in specials) {
+        Information ("  - {0}" + " ".PadRight(max - special.Key.Length) + "=> {1}", special.Key, special.Value);
+    }
 
     foreach (var pair in specials) {
         var id = pair.Key;
@@ -678,8 +695,9 @@ Task ("nuget-special")
 
         DeleteFiles ($"./output/{path}/*.nuspec");
 
-        foreach (var packageVersion in versions) {
+        foreach (var version in versions) {
             // update the version
+            var packageVersion = version.Value;
             var fn = id.StartsWith ("_NativeAssets.") ? "_NativeAssets" : id;
             var xdoc = XDocument.Load ($"./scripts/nuget/{fn}.nuspec");
             var metadata = xdoc.Root.Element ("metadata");
@@ -703,8 +721,16 @@ Task ("nuget-special")
                     new XAttribute ("target", $"tools/{platform}")));
             }
 
+            // save and pack
             xdoc.Save (nuspec);
-            PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
+            RunDotNetPack (
+                "./scripts/nuget/NuGet.csproj",
+                OUTPUT_SPECIAL_NUGETS_PATH,
+                bl: $".{id}.{version.Key}",
+                additionalArgs: "/restore",
+                properties: new Dictionary<string, string> {
+                    { "NuspecFile", MakeAbsolute(File(nuspec)).FullPath },
+                });
         }
 
         DeleteFiles ($"./output/{path}/*.nuspec");

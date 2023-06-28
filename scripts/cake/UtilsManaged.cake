@@ -4,6 +4,7 @@ void RunDotNetPack(
     DirectoryPath outputPath = null,
     string bl = ".pack",
     string configuration = null,
+    string additionalArgs = null,
     Dictionary<string, string> properties = null)
 {
     EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
@@ -36,6 +37,8 @@ void RunDotNetPack(
             }
         }
     }
+
+    c.ArgumentCustomization = args => args.Append(additionalArgs);
     
     DotNetPack(solution.FullPath, c);
 }
