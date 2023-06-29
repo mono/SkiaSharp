@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 using SkiaSharp;
 
@@ -8,6 +9,9 @@ namespace SkiaSharpSample
 	{
 		static void Main(string[] args)
 		{
+			Console.WriteLine("Hello World!");
+			Console.WriteLine("Your platform color type is " + SKImageInfo.PlatformColorType);
+
 			// crate a surface
 			var info = new SKImageInfo(256, 256);
 			using (var surface = SKSurface.Create(info))
