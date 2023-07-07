@@ -503,7 +503,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
+                  testResultsFiles: 'tests/SkiaSharp*.Tests/**/TestResults.xml'
                   testRunTitle: 'Windows .NET Framework Tests'
         - template: azure-templates-bootstrapper.yml # Tests|netcore (Windows)
           parameters:
@@ -523,32 +523,13 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
+                  testResultsFiles: 'tests/SkiaSharp*.Tests/**/TestResults.xml'
                   testRunTitle: 'Windows .NET Core Tests'
               - task: PublishBuildArtifacts@1
                 displayName: 'Publish the code coverage results'
                 inputs:
                   artifactName: coverage_netcore_windows
                   pathToPublish: 'output/coverage'
-        - template: azure-templates-bootstrapper.yml # Tests|netfx (macOS)
-          parameters:
-            name: tests_netfx_macos
-            displayName: macOS (.NET Framework)
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
-            target: tests-netfx
-            additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-            shouldPublish: false
-            requiredArtifacts:
-              - name: native_macos_macos
-            postBuildSteps:
-              - task: PublishTestResults@2
-                displayName: Publish the Mono test results
-                condition: always()
-                inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
-                  testRunTitle: 'macOS Mono Tests'
         - template: azure-templates-bootstrapper.yml # Tests|netcore (macOS)
           parameters:
             name: tests_netcore_macos
@@ -566,7 +547,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
+                  testResultsFiles: 'tests/SkiaSharp*.Tests/**/TestResults.xml'
                   testRunTitle: 'macOS .NET Core Tests'
               - task: PublishBuildArtifacts@1
                 displayName: 'Publish the code coverage results'
@@ -633,26 +614,6 @@ stages:
                 inputs:
                   artifactName: testlogs_ios
                   pathToPublish: 'output/logs/testlogs'
-        - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
-          parameters:
-            name: tests_netfx_linux
-            displayName: Linux (.NET Framework)
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
-            packages: $(MANAGED_LINUX_PACKAGES)
-            target: tests-netfx
-            additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-            shouldPublish: false
-            requiredArtifacts:
-              - name: native_linux_x64_linux
-            postBuildSteps:
-              - task: PublishTestResults@2
-                displayName: Publish the Mono test results
-                condition: always()
-                inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
-                  testRunTitle: 'Linux Mono Tests'
         - template: azure-templates-bootstrapper.yml # Tests|netcore (Linux)
           parameters:
             name: tests_netcore_linux
@@ -671,7 +632,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.NetCore.Tests/**/TestResults.xml'
+                  testResultsFiles: 'tests/SkiaSharp*.Tests/**/TestResults.xml'
                   testRunTitle: 'Linux .NET Core Tests'
               - task: PublishBuildArtifacts@1
                 displayName: 'Publish the code coverage results'

@@ -195,11 +195,11 @@ Task ("tests-netfx")
     {
         if (Skip(arch)) return;
 
-        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
+        RunMSBuild ("./tests/SkiaSharp.Tests.sln", platform: arch);
 
         // SkiaSharp.Tests.dll
         try {
-            RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
+            RunTests ($"./tests/SkiaSharp.Tests/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Tests.dll", arch == "x86");
         } catch {
             failedTests++;
         }
@@ -207,7 +207,7 @@ Task ("tests-netfx")
         // SkiaSharp.Vulkan.Tests.dll
         if (SUPPORT_VULKAN) {
             try {
-                RunTests ($"./tests/SkiaSharp.Vulkan.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
+                RunTests ($"./tests/SkiaSharp.Vulkan.Tests/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
             } catch {
                 failedTests++;
             }
@@ -217,14 +217,8 @@ Task ("tests-netfx")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    if (IsRunningOnWindows ()) {
-        RunDesktopTest ("x86");
-        RunDesktopTest ("x64");
-    } else if (IsRunningOnMacOs ()) {
-        RunDesktopTest ("AnyCPU");
-    } else if (IsRunningOnLinux ()) {
-        RunDesktopTest ("x64");
-    }
+    RunDesktopTest ("x86");
+    RunDesktopTest ("x64");
 
     if (failedTests > 0) {
         if (THROW_ON_TEST_FAILURE)
@@ -244,17 +238,17 @@ Task ("tests-netcore")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.NetCore.Tests.csproj
+    // SkiaSharp.Tests.csproj
     try {
-        RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
+        RunNetCoreTests ("./tests/SkiaSharp.Tests/SkiaSharp.Tests.csproj");
     } catch {
         failedTests++;
     }
 
-    // SkiaSharp.Vulkan.NetCore.Tests.csproj
+    // SkiaSharp.Vulkan.Tests.csproj
     if (SUPPORT_VULKAN) {
         try {
-            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.NetCore.Tests/SkiaSharp.Vulkan.NetCore.Tests.csproj");
+            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.Tests/SkiaSharp.Vulkan.Tests.csproj");
         } catch {
             failedTests++;
         }
