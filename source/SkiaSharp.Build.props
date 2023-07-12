@@ -48,7 +48,7 @@
   </PropertyGroup>
 
   <!-- Try determine which .NET workloads are installed for LOCAL builds -->
-  <PropertyGroup Condition="!$(IsCI) and '$(BuildEverything)' != 'true'">
+  <PropertyGroup Condition="!$(IsCI) and '$(BuildEverything)' != 'true' and false">
     <DotNetWorkloadVersionRegex>\d+\.\d+\.\d+(-[a-z]+[\.\d+]+)?</DotNetWorkloadVersionRegex>
     <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists('$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)\microsoft.net.sdk.macos\WorkloadManifest.json')">$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)\</DotNetWorkloadInstallLocation>
     <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists('$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)\microsoft.net.sdk.macos\WorkloadManifest.json')">$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)\</DotNetWorkloadInstallLocation>
