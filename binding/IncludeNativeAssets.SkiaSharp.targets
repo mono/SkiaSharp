@@ -55,6 +55,14 @@
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libSkiaSharp.framework" Kind="Framework" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\**\*.a" Visible="false" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+    <WasmShellEmccExportedRuntimeMethod Include="GL" />
+    <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
+  </ItemGroup>
+
   <PropertyGroup  Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true'">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
   </PropertyGroup>
