@@ -1,3 +1,3 @@
-namespace SkiaSharpSample.Skia.Gtk
+﻿namespace SkiaSharpSample.Skia.Wpf
 {
 }

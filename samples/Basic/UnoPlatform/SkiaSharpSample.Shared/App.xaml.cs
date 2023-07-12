@@ -39,8 +39,7 @@ namespace SkiaSharpSample
 		protected override void OnLaunched(LaunchActivatedEventArgs args)
 		{
 #if NET6_0_OR_GREATER && WINDOWS
-            _window = new Window();
-            //_window.Activate();
+			_window = new Window();
 #else
 			_window = Window.Current;
 #endif
@@ -76,6 +75,7 @@ namespace SkiaSharpSample
 					// parameter
 					rootFrame.Navigate(typeof(MainPage), args.Arguments);
 				}
+				
 				// Ensure the current window is active
 				_window.Activate();
 			}
@@ -114,11 +114,11 @@ namespace SkiaSharpSample
 			var factory = LoggerFactory.Create(builder =>
 			{
 #if __WASM__
-                builder.AddProvider(new global::Uno.Extensions.Logging.WebAssembly.WebAssemblyConsoleLoggerProvider());
+				builder.AddProvider(new global::Uno.Extensions.Logging.WebAssembly.WebAssemblyConsoleLoggerProvider());
 #elif __IOS__
-                builder.AddProvider(new global::Uno.Extensions.Logging.OSLogLoggerProvider());
+				builder.AddProvider(new global::Uno.Extensions.Logging.OSLogLoggerProvider());
 #elif NETFX_CORE
-                builder.AddDebug();
+				builder.AddDebug();
 #else
 				builder.AddConsole();
 #endif
@@ -161,9 +161,7 @@ namespace SkiaSharpSample
 
 			global::Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory = factory;
 
-#if HAS_UNO
 			global::Uno.UI.Adapter.Microsoft.Extensions.Logging.LoggingAdapter.Initialize();
-#endif
 		}
 	}
 }
