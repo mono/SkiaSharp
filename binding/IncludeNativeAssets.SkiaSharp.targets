@@ -30,27 +30,9 @@
     <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\arm64-v8a\libSkiaSharp.so" Abi="arm64-v8a" />
   </ItemGroup>
 
-  <PropertyGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
-    <_SkiaSharpExpandNativeReferencesStamp>$(IntermediateOutputPath)\SkiaSharpExtract.stamp</_SkiaSharpExpandNativeReferencesStamp>
-    <_SkiaSharpExpandNativeReferencesPath>$(IntermediateOutputPath)\SkiaSharpExtract\</_SkiaSharpExpandNativeReferencesPath>
-  </PropertyGroup>
-  <Target Name="_SkiaSharpExpandNativeReferencesFixes"
-          BeforeTargets="_ExpandNativeReferences"
-          Condition=" $(TargetFramework.Contains('-maccatalyst')) and '$(OS)' == 'Unix' "
-          Inputs="$(MSBuildThisFileFullPath)"
-          Outputs="$(_SkiaSharpExpandNativeReferencesStamp)">
-    <RemoveDir Directories="$(_SkiaSharpExpandNativeReferencesPath)" />
-    <MakeDir Directories="$(_SkiaSharpExpandNativeReferencesPath)" />
-    <Exec Command="unzip -d $(_SkiaSharpExpandNativeReferencesPath) $(MSBuildThisFileDirectory)..\output\native\maccatalyst\libSkiaSharp.framework.zip" />
-    <ItemGroup>
-      <NativeReference Include="$(_SkiaSharpExpandNativeReferencesPath)libSkiaSharp.framework" Kind="Framework" />
-    </ItemGroup>
-    <Touch Files="$(_SkiaSharpExpandNativeReferencesStamp)" AlwaysCreate="True" />
-    <ItemGroup>
-      <FileWrites Include="$(_SkiaSharpExpandNativeReferencesPath)\**" />
-      <FileWrites Include="$(_SkiaSharpExpandNativeReferencesStamp)" />
-    </ItemGroup>
-  </Target>
+  <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
+    <ResolvedFileToPublish Include="$(MSBuildThisFileDirectory)..\output\native\maccatalyst\libSkiaSharp.framework.zip" PublishFolderType="CompressedAppleFramework" />
+  </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\osx\libSkiaSharp.dylib" Kind="Dynamic" />

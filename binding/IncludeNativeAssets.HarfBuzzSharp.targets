@@ -30,27 +30,9 @@
     <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\arm64-v8a\libHarfBuzzSharp.so" Abi="arm64-v8a" />
   </ItemGroup>
 
-  <PropertyGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
-    <_HarfBuzzSharpExpandNativeReferencesStamp>$(IntermediateOutputPath)\HarfBuzzSharpExtract.stamp</_HarfBuzzSharpExpandNativeReferencesStamp>
-    <_HarfBuzzSharpExpandNativeReferencesPath>$(IntermediateOutputPath)\HarfBuzzSharpExtract\</_HarfBuzzSharpExpandNativeReferencesPath>
-  </PropertyGroup>
-  <Target Name="_HarfBuzzSharpExpandNativeReferencesFixes"
-          BeforeTargets="_ExpandNativeReferences"
-          Condition=" $(TargetFramework.Contains('-maccatalyst')) and '$(OS)' == 'Unix' "
-          Inputs="$(MSBuildThisFileFullPath)"
-          Outputs="$(_HarfBuzzSharpExpandNativeReferencesStamp)">
-    <RemoveDir Directories="$(_HarfBuzzSharpExpandNativeReferencesPath)" />
-    <MakeDir Directories="$(_HarfBuzzSharpExpandNativeReferencesPath)" />
-    <Exec Command="unzip -d $(_HarfBuzzSharpExpandNativeReferencesPath) $(MSBuildThisFileDirectory)..\output\native\maccatalyst\libHarfBuzzSharp.framework.zip" />
-    <ItemGroup>
-      <NativeReference Include="$(_HarfBuzzSharpExpandNativeReferencesPath)libHarfBuzzSharp.framework" Kind="Framework" />
-    </ItemGroup>
-    <Touch Files="$(_HarfBuzzSharpExpandNativeReferencesStamp)" AlwaysCreate="True" />
-    <ItemGroup>
-      <FileWrites Include="$(_HarfBuzzSharpExpandNativeReferencesPath)\**" />
-      <FileWrites Include="$(_HarfBuzzSharpExpandNativeReferencesStamp)" />
-    </ItemGroup>
-  </Target>
+  <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
+    <ResolvedFileToPublish Include="$(MSBuildThisFileDirectory)..\output\native\maccatalyst\libHarfBuzzSharp.framework.zip" PublishFolderType="CompressedAppleFramework" />
+  </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\osx\libHarfBuzzSharp.dylib" Kind="Dynamic" />
