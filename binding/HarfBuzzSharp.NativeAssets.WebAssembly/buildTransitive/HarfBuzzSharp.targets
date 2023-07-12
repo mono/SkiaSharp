@@ -1,13 +1,18 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Choose>
-    <When Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+  <!-- If this is an UNO Platform app -->
+  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+    <Content Include="@(HarfBuzzSharpStaticLibrary)" Visible="false" />
+  </ItemGroup>
 
-      <ItemGroup>
-        <Content Include="@(HarfBuzzSharpStaticLibrary)" Visible="false" />
-      </ItemGroup>
-
-    </When>
-  </Choose>
+  <!-- If this is a ASP.NET Blazor web assembly app -->
+  <PropertyGroup  Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true'">
+    <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(TargetFrameworkVersion)' != ''">
+    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
+    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.12\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
+    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.34\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
+  </ItemGroup>
 
 </Project>
