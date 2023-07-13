@@ -19,7 +19,7 @@
     <ProjectReference Include="..\SkiaSharp.Views.Uno.WinUI.Wasm\SkiaSharp.Views.Uno.WinUI.Wasm.csproj" Condition="!$(TargetFramework.Contains('-'))" ReferenceOutputAssembly="False" OutputItemType="UnoRuntimeOutput" UnoRuntimeType="webassembly" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Uno.WinUI" Version="4.9.26" />
+    <PackageReference Include="Uno.WinUI" Version="4.9.26" Condition="!$(TargetFramework.Contains('-windows'))" />
   </ItemGroup>
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);HAS_UNO;WINUI</DefineConstants>
