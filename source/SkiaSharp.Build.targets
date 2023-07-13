@@ -3,13 +3,13 @@
   <Import Project="$(MSBuildThisFileDirectory)SkiaSharp.NuGet.targets" />
 
   <PropertyGroup>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and Exists('/Library/Frameworks/Mono.framework/Versions/Current/bin/mono') ">/Library/Frameworks/Mono.framework/Versions/Current/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and Exists('/usr/local/bin/mono') ">/usr/local/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and Exists('/usr/bin/mono') ">/usr/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" !$(IsWindows) and Exists('/Library/Frameworks/Mono.framework/Versions/Current/bin/mono') ">/Library/Frameworks/Mono.framework/Versions/Current/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" !$(IsWindows) and Exists('/usr/local/bin/mono') ">/usr/local/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" !$(IsWindows) and Exists('/usr/bin/mono') ">/usr/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" !$(IsWindows) and '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
 
-    <_SnExePath Condition=" '$(OS)' == 'Windows_NT' and '$(_SnExePath)' == '' and Exists('$(SDK40ToolsPath)sn.exe') ">$(SDK40ToolsPath)sn.exe</_SnExePath>
-    <_SnExePath Condition=" '$(OS)' == 'Windows_NT' and '$(_SnExePath)' == '' and Exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe') ">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe</_SnExePath>
+    <_SnExePath Condition=" $(IsWindows) and '$(_SnExePath)' == '' and Exists('$(SDK40ToolsPath)sn.exe') ">$(SDK40ToolsPath)sn.exe</_SnExePath>
+    <_SnExePath Condition=" $(IsWindows) and '$(_SnExePath)' == '' and Exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe') ">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe</_SnExePath>
     <_SnExePath Condition=" '$(_SnExePath)' == '' ">sn</_SnExePath>
 
     <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' ">true</PublicSign>
@@ -46,7 +46,7 @@
     <PackagingPlatform Condition=" '$(PackagingPlatform)' == '' ">$(TargetFramework)</PackagingPlatform>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+  <ItemGroup Condition=" $(IsWindows) and '$(Configuration)' == 'Release' ">
     <PackageReference Include="mdoc" Version="5.8.9" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
@@ -186,7 +186,7 @@ internal partial class VersionConstants {
     This runs during the build phase.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' ">
+  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' ">
     <MDocGenerateDocsAfterTargets>
       CoreCompile
     </MDocGenerateDocsAfterTargets>
@@ -203,7 +203,7 @@ internal partial class VersionConstants {
       <_MDocInputs Include="$(MDocDocumentationDirectory)\**\*" />
     </ItemGroup>
   </Target>
-  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' "
+  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' "
           AfterTargets="$(MDocGenerateDocsAfterTargets)" DependsOnTargets="_MDocGenerateDocsDep"
           Inputs="@(_MDocInputs)" Outputs="$(MDocIntermediateOutputPath)$(MDocOutputName)">
     <MakeDir Condition=" '$(_ShouldGenerateDocs)' == 'true' "

@@ -128,7 +128,7 @@ void RunDotNetBuild(
     c.MSBuildSettings = msb;
 
     c.Configuration = configuration ?? CONFIGURATION;
-    c.Verbosity = (DotNetVerbosity)VERBOSITY;
+    c.Verbosity = DotNetVerbosity.Minimal;
 
     var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
     var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + ".binlog");
@@ -136,8 +136,6 @@ void RunDotNetBuild(
         Enabled = true,
         FileName = blPath.FullPath,
     };
-      
-    c.NoLogo = VERBOSITY == Verbosity.Minimal;
 
     if (targets?.Length > 0) {
         msb.Targets.Clear();
