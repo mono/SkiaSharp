@@ -419,28 +419,7 @@ Task ("samples")
     var isMac = IsRunningOnMacOs ();
     var isWin = IsRunningOnWindows ();
 
-    var buildMatrix = new Dictionary<string, bool> {
-        { "android", isMac || isWin },
-        { "gtk", isLinux || isMac },
-        { "ios", isMac },
-        { "macos", isMac },
-        { "tvos", isMac },
-        { "winui", isWin },
-        { "wapproj", isWin },
-        { "msix", isWin },
-        { "wpf", isWin },
-    };
-
-    var platformMatrix = new Dictionary<string, string> {
-        { "ios", "iPhone" },
-        { "tvos", "iPhoneSimulator" },
-        { "winui", "x64" },
-        { "wapproj", "x64" },
-        { "xamarin.forms.mac", "iPhone" },
-        { "xamarin.forms.windows", "x86" },
-    };
-
-    void BuildSample (FilePath sln, bool useNetCore, bool dryrun)
+    void BuildSample (FilePath sln, bool dryrun)
     {
         var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
         var name = sln.GetFilenameWithoutExtension ();
@@ -449,37 +428,11 @@ Task ("samples")
             slnPlatform = slnPlatform.ToLower ();
         }
 
-        if (!buildMatrix.ContainsKey (platform) || buildMatrix [platform]) {
-            string buildPlatform = null;
-            if (!string.IsNullOrEmpty (slnPlatform)) {
-                if (platformMatrix.ContainsKey (platform + slnPlatform)) {
-                    buildPlatform = platformMatrix [platform + slnPlatform];
-                }
-            }
-            if (string.IsNullOrEmpty (buildPlatform) && platformMatrix.ContainsKey (platform)) {
-                buildPlatform = platformMatrix [platform];
-            }
-
-            if (dryrun) {
-                if (useNetCore)
-                    Information ($"    BUILD  (DN) {sln}");
-                else
-                    Information ($"    BUILD  (FX) {sln}");
-            } else {
-                Information ($"Building sample {sln} ({platform})...");
-                if (useNetCore) {
-                    RunDotNetBuild (sln);
-                } else {
-                    RunNuGetRestorePackagesConfig (sln);
-                    RunMSBuild (sln, platform: buildPlatform);
-                }
-            }
+        if (dryrun) {
+            Information ($"    BUILD       {sln}");
         } else {
-            if (dryrun) {
-                Information ($"    SKIP   (NS) {sln} (not supported)");
-            } else {
-                Information ($"Skipping sample {sln} ({platform})...");
-            }
+            Information ($"Building sample {sln} ({platform})...");
+            RunDotNetBuild (sln);
         }
     }
 
@@ -529,13 +482,7 @@ Task ("samples")
                 continue;
 
             var name = sln.GetFilenameWithoutExtension ();
-
-            // this is a IDE only solution
-            if (name.ToString ().EndsWith ("-vsmac"))
-                continue;
-
             var slnPlatform = name.GetExtension ();
-
             if (string.IsNullOrEmpty (slnPlatform)) {
                 // this is the main solution
                 var variants =
@@ -543,7 +490,7 @@ Task ("samples")
                     GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf"));
                 if (!variants.Any ()) {
                     // there is no platform variant
-                    BuildSample (sln, false, dryrun);
+                    BuildSample (sln, dryrun);
                     // delete the built sample
                     if (!dryrun)
                         CleanDir (sln.GetDirectory ().FullPath);
@@ -555,16 +502,9 @@ Task ("samples")
             } else {
                 // this is a platform variant
                 slnPlatform = slnPlatform.ToLower ();
-                var useNetCore = slnPlatform.EndsWith ("-net");
-                if (useNetCore)
-                    slnPlatform = slnPlatform.Substring (0, slnPlatform.Length - 4);
-
-                var shouldBuild =
-                    (isLinux && slnPlatform == ".linux") ||
-                    (isMac && slnPlatform == ".mac") ||
-                    (isWin && slnPlatform == ".windows");
-                if (shouldBuild) {
-                    BuildSample (sln, useNetCore, dryrun);
+                if (slnPlatform == ($".{CURRENT_PLATFORM.ToLower ()}")) {
+                    // this is the correct platform variant
+                    BuildSample (sln, dryrun);
                     // delete the built sample
                     if (!dryrun) {
                         CleanDir (sln.GetDirectory ().FullPath);
@@ -645,7 +585,7 @@ Task ("nuget-special")
             versions.Add ("branch", v);
         }
     }
-    Information ("Detected {0} versions to process:", versions.Count);
+    Information ("Detected {0} special versions to process:", versions.Count);
     var max = 0;
     foreach (var version in versions) {
         if (version.Key.Length > max)
@@ -714,6 +654,13 @@ Task ("nuget-special")
                     new XAttribute ("src", $"**"),
                     new XAttribute ("target", $"tools/{platform}")));
             }
+            // add the readme
+            {
+                var files = xdoc.Root.Element ("files");
+                files.Add (new XElement ("file",
+                    new XAttribute ("src", MakeAbsolute(File("./scripts/nuget/README.md")).FullPath),
+                    new XAttribute ("target", $"README.md")));
+            }
 
             // save and pack
             xdoc.Save (nuspec);
@@ -721,7 +668,7 @@ Task ("nuget-special")
                 "./scripts/nuget/NuGet.csproj",
                 OUTPUT_SPECIAL_NUGETS_PATH,
                 bl: $".{id}.{version.Key}",
-                additionalArgs: "/restore",
+                additionalArgs: "/restore /nologo",
                 properties: new Dictionary<string, string> {
                     { "NuspecFile", MakeAbsolute(File(nuspec)).FullPath },
                 });

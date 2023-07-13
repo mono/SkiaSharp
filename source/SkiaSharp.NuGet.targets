@@ -6,6 +6,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <GetPackageVersionDependsOn>$(GetPackageVersionDependsOn);CollectAssemblyVersionInfo</GetPackageVersionDependsOn>
+    <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);CollectAssemblyVersionInfo</GenerateNuspecDependsOn>
+    <CollectAssemblyVersionInfoDependsOn>$(CollectAssemblyVersionInfoDependsOn);_IncludeAdditionalVersionInfo</CollectAssemblyVersionInfoDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <PackageTags Condition="$(PackagingGroup.StartsWith('SkiaSharp'))">graphics;cross-platform;skiasharp;skia;$(PackageTags);ios;android;linux;windows;tvos;macos;tizen</PackageTags>
     <PackageTags Condition="$(PackagingGroup.StartsWith('HarfBuzzSharp'))">graphics;text;cross-platform;harfbuzzsharp;harfbuzz;$(PackageTags);ios;android;linux;windows;tvos;macos;tizen</PackageTags>
     <PackageDescription Condition="'$(PackageNotes)' != ''">$(PackageDescription)
@@ -45,8 +51,7 @@ $(PackageNotes)</PackageDescription>
           DependsOnTargets="_IncludeAdditionalTfmSpecificPackageFilesPrepare;IncludeAdditionalTfmSpecificPackageFiles" />
 
   <!-- Set the package version properties -->
-  <Target Name="_IncludeAdditionalVersionInfo"
-          AfterTargets="_CollectAssemblyVersionInfo">
+  <Target Name="_IncludeAdditionalVersionInfo">
     <PropertyGroup>
       <PackageVersion>$(Version)</PackageVersion>
     </PropertyGroup>

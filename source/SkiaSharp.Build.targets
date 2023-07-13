@@ -25,6 +25,8 @@
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
 
+    <NoWarn>$(NoWarn);CS0436;CS8632;CA1416;CA1422;CS0109;BI1234;CS0618</NoWarn>
+
     <!--
       Ignore this message:
         Warning VSX1000
@@ -75,9 +77,13 @@
     Generate the assembly versioning attributes from the VERSIONS.txt file.
     ===================================================================================================================
   -->
-  <Target Name="_CollectAssemblyVersionInfo"
-          Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' "
-          BeforeTargets="InitializeSourceControlInformation;GenerateNuspec">
+  <Target Name="_BeforeInitializeSourceControlInformation"
+          DependsOnTargets="CollectAssemblyVersionInfo"
+          BeforeTargets="InitializeSourceControlInformation" />
+  <Target Name="CollectAssemblyVersionInfo"
+          DependsOnTargets="_CollectAssemblyVersionInfoPrepare;$(CollectAssemblyVersionInfoDependsOn)" />
+  <Target Name="_CollectAssemblyVersionInfoPrepare"
+          Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
     <PropertyGroup>
       <_VersionSourceFile>$(IntermediateOutputPath)\$(AssemblyName).Version.cs</_VersionSourceFile>
       <_VersionTxtFile>$(MSBuildThisFileDirectory)..\scripts\VERSIONS.txt</_VersionTxtFile>
@@ -106,9 +112,10 @@
       <FileVersion>$(_VersionFileMatch)</FileVersion>
     </PropertyGroup>
   </Target>
+  <Target Name="_BeforeGenerateAssemblyInfo"
+          BeforeTargets="GenerateAssemblyInfo" />
   <Target Name="_GenerateAssemblyVersionInfo"
-          BeforeTargets="GenerateAssemblyInfo"
-          DependsOnTargets="_CollectAssemblyVersionInfo"
+          DependsOnTargets="CollectAssemblyVersionInfo"
           Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
     <PropertyGroup>
       <_VersionGeneratedContents>
