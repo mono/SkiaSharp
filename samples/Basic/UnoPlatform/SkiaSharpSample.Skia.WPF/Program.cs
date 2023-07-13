@@ -1,3 +1,1 @@
-﻿namespace SkiaSharpSample.Skia.Wpf
-{
-}
+﻿namespace SkiaSharpSample.Skia.Wpf;
