@@ -1,8 +1,11 @@
-﻿using SKFormsView = SkiaSharp.Views.Maui.Controls.SKCanvasView;
+﻿using System;
+
+using SKFormsView = SkiaSharp.Views.Maui.Controls.SKCanvasView;
 using SKNativeView = SkiaSharp.Views.iOS.SKCanvasView;
 
 namespace SkiaSharp.Views.Maui.Controls.Compatibility
 {
+	[Obsolete("View renderers are obsolete in .NET MAUI. Use the handlers instead.")]
 	public class SKCanvasViewRenderer : SKCanvasViewRendererBase<SKFormsView, SKNativeView>
 	{
 		public SKCanvasViewRenderer()

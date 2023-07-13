@@ -26,13 +26,13 @@ using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Windows.SKPaintSurfaceEven
 using WVisibility = Microsoft.UI.Xaml.Visibility;
 #elif __TIZEN__
 using Microsoft.Maui.Controls.Compatibility.Platform.Tizen;
-using TForms = Microsoft.Maui.Controls.Compatibility.Forms;
-using SKNativeView = SkiaSharp.Views.Tizen.SKCanvasView;
+using SKNativeView = SkiaSharp.Views.Tizen.NUI.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintSurfaceEventArgs;
 #endif
 
 namespace SkiaSharp.Views.Maui.Controls.Compatibility
 {
+	[Obsolete("View renderers are obsolete in .NET MAUI. Use the handlers instead.")]
 	public abstract class SKCanvasViewRendererBase<TFormsView, TNativeView> : ViewRenderer<TFormsView, TNativeView>
 		where TFormsView : SKFormsView
 		where TNativeView : SKNativeView
@@ -114,7 +114,7 @@ namespace SkiaSharp.Views.Maui.Controls.Compatibility
 #elif __TIZEN__
 		protected virtual TNativeView CreateNativeControl()
 		{
-			TNativeView ret = (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { TForms.NativeParent });
+			TNativeView ret = (TNativeView)Activator.CreateInstance(typeof(TNativeView));
 			return ret;
 		}
 #elif __IOS__

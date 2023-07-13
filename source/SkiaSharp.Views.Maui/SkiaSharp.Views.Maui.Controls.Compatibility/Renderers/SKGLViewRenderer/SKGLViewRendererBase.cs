@@ -1,4 +1,4 @@
-﻿#if !WINDOWS && !__MACCATALYST__ && !NETSTANDARD
+﻿#if !WINDOWS && !__MACCATALYST__ && !NETSTANDARD && !__TIZEN__
 using System;
 using System.ComponentModel;
 
@@ -19,12 +19,13 @@ using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.iOS.SKPaintGLSurfaceEven
 #elif __TIZEN__
 using Microsoft.Maui.Controls.Compatibility.Platform.Tizen;
 using TForms = Microsoft.Maui.Controls.Compatibility.Forms;
-using SKNativeView = SkiaSharp.Views.Tizen.SKGLSurfaceView;
+using SKNativeView = SkiaSharp.Views.Tizen.NUI.SKGLSurfaceView;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs;
 #endif
 
 namespace SkiaSharp.Views.Maui.Controls.Compatibility
 {
+	[Obsolete("View renderers are obsolete in .NET MAUI. Use the handlers instead.")]
 	public abstract class SKGLViewRendererBase<TFormsView, TNativeView> : ViewRenderer<TFormsView, TNativeView>
 		where TFormsView : SKFormsView
 		where TNativeView : SKNativeView

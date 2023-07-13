@@ -1,4 +1,5 @@
-﻿using Android.Content;
+﻿using System;
+using Android.Content;
 using Android.Opengl;
 
 using SKFormsView = SkiaSharp.Views.Maui.Controls.SKGLView;
@@ -6,6 +7,7 @@ using SKNativeView = SkiaSharp.Views.Android.SKGLTextureView;
 
 namespace SkiaSharp.Views.Maui.Controls.Compatibility
 {
+	[Obsolete("View renderers are obsolete in .NET MAUI. Use the handlers instead.")]
 	public class SKGLViewRenderer : SKGLViewRendererBase<SKFormsView, SKNativeView>
 	{
 		public SKGLViewRenderer(Context context)

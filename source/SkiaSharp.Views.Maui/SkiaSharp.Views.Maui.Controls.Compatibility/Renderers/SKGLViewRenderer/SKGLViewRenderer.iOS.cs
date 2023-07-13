@@ -8,6 +8,7 @@ using SKNativeView = SkiaSharp.Views.iOS.SKGLView;
 
 namespace SkiaSharp.Views.Maui.Controls.Compatibility
 {
+	[Obsolete("View renderers are obsolete in .NET MAUI. Use the handlers instead.")]
 	public class SKGLViewRenderer : SKGLViewRendererBase<SKFormsView, SKNativeView>
 	{
 		private CADisplayLink displayLink;

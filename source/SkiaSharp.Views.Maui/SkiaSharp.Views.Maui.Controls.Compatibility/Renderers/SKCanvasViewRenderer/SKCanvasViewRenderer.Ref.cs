@@ -1,10 +1,13 @@
-﻿namespace SkiaSharp.Views.Forms
+﻿using System;
+
+namespace SkiaSharp.Views.Maui.Controls.Compatibility
 {
+	[Obsolete("View renderers are obsolete in .NET MAUI. Use the handlers instead.")]
 	internal class SKCanvasViewRenderer
 	{
 		public SKCanvasViewRenderer()
 		{
-			throw new System.PlatformNotSupportedException("SKCanvasView is not yet supported on this platform.");
+			throw new PlatformNotSupportedException("SKCanvasView is not yet supported on this platform.");
 		}
 	}
 }

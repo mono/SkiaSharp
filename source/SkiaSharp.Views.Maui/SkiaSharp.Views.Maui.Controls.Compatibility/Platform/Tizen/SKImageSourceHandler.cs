@@ -3,8 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Compatibility.Platform.Tizen;
-
-using ElmImage = ElmSharp.Image;
+using Tizen.NUI.BaseComponents;
 
 namespace SkiaSharp.Views.Maui.Controls.Compatibility
 {
@@ -12,7 +11,7 @@ namespace SkiaSharp.Views.Maui.Controls.Compatibility
 	{
 		private StreamImageSourceHandler handler = new StreamImageSourceHandler();
 
-		public Task<bool> LoadImageAsync(ElmImage image, ImageSource imageSource, CancellationToken cancelationToken = default(CancellationToken))
+		public Task<bool> LoadImageAsync(ImageView image, ImageSource imageSource, CancellationToken cancelationToken = default(CancellationToken))
 		{
 			ImageSource newSource = null;
 
