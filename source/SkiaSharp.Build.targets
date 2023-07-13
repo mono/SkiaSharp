@@ -111,7 +111,8 @@
     </PropertyGroup>
   </Target>
   <Target Name="_BeforeGenerateAssemblyInfo"
-          BeforeTargets="GenerateAssemblyInfo" />
+          BeforeTargets="GenerateAssemblyInfo"
+          DependsOnTargets="_GenerateAssemblyVersionInfo" />
   <Target Name="_GenerateAssemblyVersionInfo"
           DependsOnTargets="CollectAssemblyVersionInfo"
           Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
