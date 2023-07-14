@@ -112,7 +112,7 @@
 
   <!-- Uno Platform -->
   <PropertyGroup>
-    <UnoTargetFrameworksReference>netstandard2.0;$(TFMCurrent);$(TFMNext)</UnoTargetFrameworksReference>
+    <UnoTargetFrameworksReference>$(TFMCurrent);$(TFMNext)</UnoTargetFrameworksReference>
     <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android;$(TFMCurrent)-macos</UnoTargetFrameworksCurrent>
     <UnoTargetFrameworksNext Condition="!$(IsLinux)">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android;$(TFMNext)-macos</UnoTargetFrameworksNext>
     <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksCurrent);$(UnoTargetFrameworksNext);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
