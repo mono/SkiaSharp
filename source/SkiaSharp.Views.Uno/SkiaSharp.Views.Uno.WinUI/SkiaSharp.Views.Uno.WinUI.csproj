@@ -10,6 +10,9 @@
     <Title>SkiaSharp for Uno Platform</Title>
     <PackageDescription>SkiaSharp for Uno Platform is a set of views that can be used to draw on the screen.</PackageDescription>
     <PackageTags>uno;uno platform;winui</PackageTags>
+    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
@@ -20,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Uno.WinUI" Version="4.9.26" Condition="!$(TargetFramework.Contains('-windows'))" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.1" PrivateAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
   </ItemGroup>
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);HAS_UNO;WINUI</DefineConstants>
