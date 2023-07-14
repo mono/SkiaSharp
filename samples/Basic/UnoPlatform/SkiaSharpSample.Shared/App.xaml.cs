@@ -38,7 +38,7 @@ namespace SkiaSharpSample
 		/// <param name="args">Details about the launch request and process.</param>
 		protected override void OnLaunched(LaunchActivatedEventArgs args)
 		{
-#if NET6_0_OR_GREATER && WINDOWS
+#if !HAS_UNO
 			_window = new Window();
 #else
 			_window = Window.Current;
