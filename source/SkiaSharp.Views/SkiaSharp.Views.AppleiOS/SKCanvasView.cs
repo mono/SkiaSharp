@@ -86,39 +86,37 @@ namespace SkiaSharp.Views.iOS
 				return;
 
 			// create the skia context
-			using (var surface = drawable.CreateSurface(Bounds, ContentScaleFactor, out var info))
+			using var surface = drawable.CreateSurface(Bounds, ContentScaleFactor, out var info);
+
+			if (info.Width == 0 || info.Height == 0)
 			{
-				if (info.Width == 0 || info.Height == 0)
-				{
-					CanvasSize = SKSize.Empty;
-					return;
-				}
+				CanvasSize = SKSize.Empty;
+				return;
+			}
 
-				var userVisibleSize = IgnorePixelScaling
-					? new SKSizeI((int)Bounds.Width, (int)Bounds.Height)
-					: info.Size;
+			var userVisibleSize = IgnorePixelScaling
+				? new SKSizeI((int)Bounds.Width, (int)Bounds.Height)
+				: info.Size;
 
-				CanvasSize = userVisibleSize;
+			CanvasSize = userVisibleSize;
 
-				if (IgnorePixelScaling)
-				{
-					var skiaCanvas = surface.Canvas;
-					skiaCanvas.Scale((float)ContentScaleFactor);
-					skiaCanvas.Save();
-				}
+			if (IgnorePixelScaling)
+			{
+				var skiaCanvas = surface.Canvas;
+				skiaCanvas.Scale((float)ContentScaleFactor);
+				skiaCanvas.Save();
+			}
 
-				using (var ctx = UIGraphics.GetCurrentContext())
-				{
-					// draw on the image using SKiaSharp
-					OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
+			using var ctx = UIGraphics.GetCurrentContext();
+
+			// draw on the image using SKiaSharp
+			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 #pragma warning disable CS0618 // Type or member is obsolete
-					DrawInSurface(surface, info);
+			DrawInSurface(surface, info);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-					// draw the surface to the context
-					drawable.DrawSurface(ctx, Bounds, info, surface);
-				}
-			}
+			// draw the surface to the context
+			drawable.DrawSurface(ctx, Bounds, info, surface);
 		}
 
 		public override void WillMoveToWindow(UIWindow window)

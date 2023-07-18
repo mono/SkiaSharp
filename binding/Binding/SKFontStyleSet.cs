@@ -25,12 +25,11 @@ namespace SkiaSharp
 
 		public string GetStyleName (int index)
 		{
-			using (var str = new SKString ()) {
-				SkiaApi.sk_fontstyleset_get_style (Handle, index, IntPtr.Zero, str.Handle);
-				GC.KeepAlive(this);
-				return (string)str;
-			}
-		}
+			using var str = new SKString();
+			SkiaApi.sk_fontstyleset_get_style(Handle, index, IntPtr.Zero, str.Handle);
+			GC.KeepAlive(this);
+			return (string)str;
+        }
 
 		public SKTypeface CreateTypeface (int index)
 		{

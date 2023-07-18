@@ -44,10 +44,9 @@ namespace SkiaSharp
 
 		public string GetFamilyName (int index)
 		{
-			using (var str = new SKString ()) {
-				SkiaApi.sk_fontmgr_get_family_name (Handle, index, str.Handle);
-				return (string)str;
-			}
+			using var str = new SKString();
+			SkiaApi.sk_fontmgr_get_family_name(Handle, index, str.Handle);
+			return (string)str;
 		}
 
 		public string[] GetFontFamilies () => FontFamilies.ToArray ();

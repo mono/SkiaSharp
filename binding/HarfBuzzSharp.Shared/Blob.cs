@@ -78,13 +78,13 @@ namespace HarfBuzzSharp
 		{
 			// TODO: check to see if we can avoid the second copy (the ToArray)
 
-			using (var ms = new MemoryStream ()) {
-				stream.CopyTo (ms);
-				var data = ms.ToArray ();
+			using var ms = new MemoryStream();
+			stream.CopyTo(ms);
+			var data = ms.ToArray();
 
-				fixed (byte* dataPtr = data) {
-					return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () => ms.Dispose ());
-				}
+			fixed (byte* dataPtr = data)
+			{
+				return new Blob((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () => ms.Dispose());
 			}
 		}
 

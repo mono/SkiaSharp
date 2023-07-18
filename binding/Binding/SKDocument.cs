@@ -145,37 +145,37 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			using (var title = SKString.Create (metadata.Title))
-			using (var author = SKString.Create (metadata.Author))
-			using (var subject = SKString.Create (metadata.Subject))
-			using (var keywords = SKString.Create (metadata.Keywords))
-			using (var creator = SKString.Create (metadata.Creator))
-			using (var producer = SKString.Create (metadata.Producer)) {
-				var cmetadata = new SKDocumentPdfMetadataInternal {
-					fTitle = title?.Handle ?? IntPtr.Zero,
-					fAuthor = author?.Handle ?? IntPtr.Zero,
-					fSubject = subject?.Handle ?? IntPtr.Zero,
-					fKeywords = keywords?.Handle ?? IntPtr.Zero,
-					fCreator = creator?.Handle ?? IntPtr.Zero,
-					fProducer = producer?.Handle ?? IntPtr.Zero,
-					fRasterDPI = metadata.RasterDpi,
-					fPDFA = metadata.PdfA ? (byte)1 : (byte)0,
-					fEncodingQuality = metadata.EncodingQuality,
-				};
+			using var title = SKString.Create (metadata.Title);
+			using var author = SKString.Create (metadata.Author);
+			using var subject = SKString.Create (metadata.Subject);
+			using var keywords = SKString.Create (metadata.Keywords);
+			using var creator = SKString.Create (metadata.Creator);
+			using var producer = SKString.Create (metadata.Producer);
 
-				SKTimeDateTimeInternal creation;
-				if (metadata.Creation != null) {
-					creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
-					cmetadata.fCreation = &creation;
-				}
-				SKTimeDateTimeInternal modified;
-				if (metadata.Modified != null) {
-					modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
-					cmetadata.fModified = &modified;
-				}
+			var cmetadata = new SKDocumentPdfMetadataInternal {
+				fTitle = title?.Handle ?? IntPtr.Zero,
+				fAuthor = author?.Handle ?? IntPtr.Zero,
+				fSubject = subject?.Handle ?? IntPtr.Zero,
+				fKeywords = keywords?.Handle ?? IntPtr.Zero,
+				fCreator = creator?.Handle ?? IntPtr.Zero,
+				fProducer = producer?.Handle ?? IntPtr.Zero,
+				fRasterDPI = metadata.RasterDpi,
+				fPDFA = metadata.PdfA ? (byte)1 : (byte)0,
+				fEncodingQuality = metadata.EncodingQuality,
+			};
 
-				return Referenced (GetObject (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, &cmetadata)), stream);
+			SKTimeDateTimeInternal creation;
+			if (metadata.Creation != null) {
+				creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
+				cmetadata.fCreation = &creation;
 			}
+			SKTimeDateTimeInternal modified;
+			if (metadata.Modified != null) {
+				modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
+				cmetadata.fModified = &modified;
+			}
+
+			return Referenced (GetObject (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, &cmetadata)), stream);
 		}
 
 		internal static SKDocument GetObject (IntPtr handle) =>
