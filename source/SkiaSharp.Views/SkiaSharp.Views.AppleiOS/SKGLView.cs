@@ -20,7 +20,6 @@ namespace SkiaSharp.Views.iOS
 {
 	[DesignTimeVisible(true)]
 #if HAS_UNO
-	[Register("Uno_" + nameof(SKGLView))]
 	internal class SKGLView
 #else
 	[Register(nameof(SKGLView))]
