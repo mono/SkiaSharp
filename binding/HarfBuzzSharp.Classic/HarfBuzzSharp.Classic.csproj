@@ -42,8 +42,10 @@
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'tizen40'">
     <!-- Tizen -->
-    <None Include="..\..\output\native\tizen\armel\libHarfBuzzSharp.*" Link="nuget\build\$(TargetFramework)\arm\%(Filename)%(Extension)" />
-    <None Include="..\..\output\native\tizen\i386\libHarfBuzzSharp.*" Link="nuget\build\$(TargetFramework)\x86\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\tizen\armel\libHarfBuzzSharp.*" Link="nuget\runtimes\tizen-armel\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\tizen\arm64\libHarfBuzzSharp.*" Link="nuget\runtimes\tizen-arm64\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\tizen\i386\libHarfBuzzSharp.*" Link="nuget\runtimes\tizen-x86\%(Filename)%(Extension)" />
+    <None Include="..\..\output\native\tizen\i386\libHarfBuzzSharp.*" Link="nuget\runtimes\linux-x86\%(Filename)%(Extension)" />
     <None Include="..\HarfBuzzSharp\nuget\build\tizen40\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('uap10'))">

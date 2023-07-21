@@ -41,8 +41,10 @@
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'tizen40'">
     <!-- Tizen -->
-    <None Include="..\..\output\native\tizen\armel\libSkiaSharp.*" Link="nuget\build\$(TargetFramework)\arm\libSkiaSharp.so" />
-    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.*" Link="nuget\build\$(TargetFramework)\x86\libSkiaSharp.so" />
+    <None Include="..\..\output\native\tizen\armel\libSkiaSharp.*" Link="nuget\runtimes\tizen-armel\libSkiaSharp.so" />
+    <None Include="..\..\output\native\tizen\arm64\libSkiaSharp.*" Link="nuget\runtimes\tizen-arm64\libSkiaSharp.so" />
+    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.*" Link="nuget\runtimes\tizen-x86\libSkiaSharp.so" />
+    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.*" Link="nuget\runtimes\linux-x86\libSkiaSharp.so" />
     <None Include="..\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('uap10'))">

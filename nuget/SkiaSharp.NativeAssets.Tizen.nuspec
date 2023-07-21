@@ -30,6 +30,8 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <dependencies>
       <group targetFramework="tizen40">
       </group>
+      <group targetFramework="net6.0-tizen7.0">
+      </group>
     </dependencies>
 
   </metadata>
@@ -40,11 +42,14 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
     <file src="build/tizen40/SkiaSharp.targets" target="buildTransitive/tizen40/SkiaSharp.NativeAssets.Tizen.targets" />
 
     <!-- libSkiaSharp.dll and other native files -->
-    <file src="build/tizen40/arm/libSkiaSharp.so" />
-    <file src="build/tizen40/x86/libSkiaSharp.so" />
+    <file src="runtimes/linux-x86/native/libSkiaSharp.so" />
+    <file src="runtimes/tizen-x86/native/libSkiaSharp.so" />
+    <file src="runtimes/tizen-armel/native/libSkiaSharp.so" />
+    <file src="runtimes/tizen-arm64/native/libSkiaSharp.so" />
 
     <!-- placeholders -->
     <file src="_._" target="lib/tizen40/_._" />
+    <file src="_._" target="lib/net6.0-tizen7.0/_._" />
 
     <!-- legal -->
     <file src="LICENSE.txt" />
