@@ -191,9 +191,12 @@ Task ("tests-netfx")
 {
     var failedTests = 0;
 
-    void RunDesktopTest (string arch)
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+
+    foreach ( var arch in new [] { "x86", "x64" })
     {
-        if (Skip(arch)) return;
+        if (Skip(arch)) continue;
 
         RunMSBuild ("./tests/SkiaSharp.Tests.sln", platform: arch);
 
@@ -214,17 +217,11 @@ Task ("tests-netfx")
         }
     }
 
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    RunDesktopTest ("x86");
-    RunDesktopTest ("x64");
-
     if (failedTests > 0) {
         if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
+            throw new Exception ($"There were {failedTests} failed test runs.");
         else
-            Warning ($"There were {failedTests} failed tests.");
+            Warning ($"There were {failedTests} failed test runs.");
     }
 });
 
@@ -256,9 +253,9 @@ Task ("tests-netcore")
 
     if (failedTests > 0) {
         if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
+            throw new Exception ($"There were {failedTests} failed test runs.");
         else
-            Warning ($"There were {failedTests} failed tests.");
+            Warning ($"There were {failedTests} failed test runs.");
     }
     if (COVERAGE) {
         RunCodeCoverage ("./tests/**/Coverage/**/*.xml", "./output/coverage");
@@ -303,9 +300,9 @@ Task ("tests-android")
 
     if (failedTests > 0) {
         if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
+            throw new Exception ($"There were {failedTests} failed test runs.");
         else
-            Warning ($"There were {failedTests} failed tests.");
+            Warning ($"There were {failedTests} failed test runs.");
     }
 });
 
@@ -346,9 +343,9 @@ Task ("tests-ios")
 
     if (failedTests > 0) {
         if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
+            throw new Exception ($"There were {failedTests} failed test runs.");
         else
-            Warning ($"There were {failedTests} failed tests.");
+            Warning ($"There were {failedTests} failed test runs.");
     }
 });
 
@@ -382,9 +379,9 @@ Task ("tests-wasm")
 
     if (failedTests > 0) {
         if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
+            throw new Exception ($"There were {failedTests} failed test runs.");
         else
-            Warning ($"There were {failedTests} failed tests.");
+            Warning ($"There were {failedTests} failed test runs.");
     }
 });
 

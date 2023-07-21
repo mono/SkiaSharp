@@ -42,29 +42,6 @@ void RunDotNetPack(
     DotNetPack(solution.FullPath, c);
 }
 
-void PackageNuGet(FilePath nuspecPath, DirectoryPath outputPath, bool allowDefaultExcludes = false, string symbolsFormat = null)
-{
-    EnsureDirectoryExists(outputPath);
-    var settings = new NuGetPackSettings {
-        OutputDirectory = MakeAbsolute(outputPath),
-        BasePath = nuspecPath.GetDirectory(),
-        Properties = new Dictionary<string, string> {
-            // NU5048: The 'PackageIconUrl'/'iconUrl' element is deprecated. Consider using the 'PackageIcon'/'icon' element instead.
-            // NU5105: The package version 'xxx' uses SemVer 2.0.0 or components of SemVer 1.0.0 that are not supported on legacy clients.
-            // NU5125: The 'licenseUrl' element will be deprecated. Consider using the 'license' element instead.
-            { "NoWarn", "NU5048,NU5105,NU5125" }
-        },
-    };
-    if (allowDefaultExcludes) {
-        settings.ArgumentCustomization = args => args.Append("-NoDefaultExcludes");
-    }
-    if (!string.IsNullOrEmpty(symbolsFormat)) {
-        settings.Symbols = true;
-        settings.SymbolPackageFormat = symbolsFormat;
-    }
-    NuGetPack(nuspecPath, settings);
-}
-
 void RunTests(FilePath testAssembly, bool is32)
 {
     var dir = testAssembly.GetDirectory();
@@ -101,6 +78,8 @@ void RunNetCoreTests(FilePath testAssembly)
         WorkingDirectory = dir,
         Verbosity = DotNetCoreVerbosity.Normal,
         ArgumentCustomization = args => {
+            args = args
+                .Append("/p:Platform=\"AnyCPU\"");
             if (COVERAGE)
                 args = args
                     .Append("/p:CollectCoverage=true")
