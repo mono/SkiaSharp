@@ -59,10 +59,8 @@ namespace SkiaSharp.Views.WPF
 
 		public static WriteableBitmap ToWriteableBitmap(this SKPicture picture, SKSizeI dimensions)
 		{
-			using (var image = SKImage.FromPicture(picture, dimensions))
-			{
-				return image.ToWriteableBitmap();
-			}
+			using var image = SKImage.FromPicture(picture, dimensions);
+			return image.ToWriteableBitmap();
 		}
 
 		public static WriteableBitmap ToWriteableBitmap(this SKImage skiaImage)
@@ -86,21 +84,17 @@ namespace SkiaSharp.Views.WPF
 
 		public static WriteableBitmap ToWriteableBitmap(this SKBitmap skiaBitmap)
 		{
-			using (var pixmap = skiaBitmap.PeekPixels())
-			using (var image = SKImage.FromPixels(pixmap))
-			{
-				var wb = image.ToWriteableBitmap();
-				GC.KeepAlive(skiaBitmap);
-				return wb;
-			}
+			using var pixmap = skiaBitmap.PeekPixels();
+			using var image = SKImage.FromPixels(pixmap);
+			var wb = image.ToWriteableBitmap();
+			GC.KeepAlive(skiaBitmap);
+			return wb;
 		}
 
 		public static WriteableBitmap ToWriteableBitmap(this SKPixmap pixmap)
 		{
-			using (var image = SKImage.FromPixels(pixmap))
-			{
-				return image.ToWriteableBitmap();
-			}
+			using var image = SKImage.FromPixels(pixmap);
+			return image.ToWriteableBitmap();
 		}
 
 		public static SKBitmap ToSKBitmap(this BitmapSource bitmap)
@@ -144,10 +138,8 @@ namespace SkiaSharp.Views.WPF
 				// we have to copy the pixels into a format that we understand
 				// and then into a desired format
 				// TODO: we can still do a bit more for other cases where the color types are the same
-				using (var tempImage = bitmap.ToSKImage())
-				{
-					tempImage.ReadPixels(pixmap, 0, 0);
-				}
+				using var tempImage = bitmap.ToSKImage();
+				tempImage.ReadPixels(pixmap, 0, 0);
 			}
 		}
 	}

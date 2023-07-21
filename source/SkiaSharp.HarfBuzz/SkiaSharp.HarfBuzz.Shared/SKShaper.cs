@@ -102,27 +102,26 @@ namespace SkiaSharp.HarfBuzz
 				return new Result();
 			}
 
-			using (var buffer = new Buffer())
+			using var buffer = new Buffer();
+
+			switch (paint.TextEncoding)
 			{
-				switch (paint.TextEncoding)
-				{
-					case SKTextEncoding.Utf8:
-						buffer.AddUtf8(text);
-						break;
-					case SKTextEncoding.Utf16:
-						buffer.AddUtf16(text);
-						break;
-					case SKTextEncoding.Utf32:
-						buffer.AddUtf32(text);
-						break;
-					default:
-						throw new NotSupportedException("TextEncoding of type GlyphId is not supported.");
-				}
-
-				buffer.GuessSegmentProperties();
-
-				return Shape(buffer, xOffset, yOffset, paint);
+				case SKTextEncoding.Utf8:
+					buffer.AddUtf8(text);
+					break;
+				case SKTextEncoding.Utf16:
+					buffer.AddUtf16(text);
+					break;
+				case SKTextEncoding.Utf32:
+					buffer.AddUtf32(text);
+					break;
+				default:
+					throw new NotSupportedException("TextEncoding of type GlyphId is not supported.");
 			}
+
+			buffer.GuessSegmentProperties();
+
+			return Shape(buffer, xOffset, yOffset, paint);
 		}
 
 		public class Result

@@ -107,13 +107,11 @@ namespace SkiaSharp.Views.UWP
 
 		public static WriteableBitmap ToWriteableBitmap(this SKBitmap skiaBitmap)
 		{
-			using (var pixmap = skiaBitmap.PeekPixels())
-			using (var image = SKImage.FromPixels(pixmap))
-			{
-				var wb = image.ToWriteableBitmap();
-				GC.KeepAlive(skiaBitmap);
-				return wb;
-			}
+			using var pixmap = skiaBitmap.PeekPixels();
+			using var image = SKImage.FromPixels(pixmap);
+			var wb = image.ToWriteableBitmap();
+			GC.KeepAlive(skiaBitmap);
+			return wb;
 		}
 
 		public static WriteableBitmap ToWriteableBitmap(this SKPixmap pixmap)
@@ -156,10 +154,8 @@ namespace SkiaSharp.Views.UWP
 
 			if (pixmap.ColorType == SKImageInfo.PlatformColorType)
 			{
-				using (var image = SKImage.FromPixels(pixmap.Info, bitmap.GetPixels()))
-				{
-					return image.ReadPixels(pixmap, 0, 0);
-				}
+				using var image = SKImage.FromPixels(pixmap.Info, bitmap.GetPixels());
+				return image.ReadPixels(pixmap, 0, 0);
 			}
 			else
 			{
