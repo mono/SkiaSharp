@@ -18,14 +18,14 @@ namespace SkiaSharp.Views.tvOS
 namespace SkiaSharp.Views.iOS
 #endif
 {
-	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]
 #if HAS_UNO
-	internal
+	internal class SKGLView
 #else
-	public
+	[Register(nameof(SKGLView))]
+	public class SKGLView 
 #endif
-	class SKGLView : GLKView, IGLKViewDelegate, IComponent
+	: GLKView, IGLKViewDelegate, IComponent
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
