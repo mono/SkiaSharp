@@ -102,13 +102,11 @@ namespace SkiaSharp.Views.Mac
 
 		public static void ToSKPixmap(this CGImage cgImage, SKPixmap pixmap)
 		{
-			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
-			using (var context = new CGBitmapContext(pixmap.GetPixels(), pixmap.Width, pixmap.Height, 8, pixmap.RowBytes, colorSpace, CGBitmapFlags.PremultipliedLast | CGBitmapFlags.ByteOrder32Big))
-			{
-				CGRect rect = new CGRect(0, 0, cgImage.Width, cgImage.Height);
-				context.ClearRect(rect);
-				context.DrawImage(rect, cgImage);
-			}
+			using var colorSpace = CGColorSpace.CreateDeviceRGB();
+			using var context = new CGBitmapContext(pixmap.GetPixels(), pixmap.Width, pixmap.Height, 8, pixmap.RowBytes, colorSpace, CGBitmapFlags.PremultipliedLast | CGBitmapFlags.ByteOrder32Big);
+			CGRect rect = new CGRect(0, 0, cgImage.Width, cgImage.Height);
+			context.ClearRect(rect);
+			context.DrawImage(rect, cgImage);
 		}
 
 		public static SKImage ToSKImage(this CGImage cgImage)
@@ -189,11 +187,9 @@ namespace SkiaSharp.Views.Mac
 
 		public static void ToSKPixmap(this CIImage ciImage, SKPixmap pixmap)
 		{
-			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
-			using (var context = new CIContext(null))
-			{
-				context.RenderToBitmap(ciImage, pixmap.GetPixels(), pixmap.RowBytes, ciImage.Extent, (int)CIFormat.kRGBA8, colorSpace);
-			}
+			using var colorSpace = CGColorSpace.CreateDeviceRGB();
+			using var context = new CIContext(null);
+			context.RenderToBitmap(ciImage, pixmap.GetPixels(), pixmap.RowBytes, ciImage.Extent, (int)CIFormat.kRGBA8, colorSpace);
 		}
 
 		public static SKImage ToSKImage(this CIImage ciImage)
