@@ -316,16 +316,15 @@ namespace HarfBuzzSharp
 				end = Length;
 
 			using var buffer = MemoryPool<byte>.Shared.Rent ();
-			using var pinned = buffer.Memory.Pin();
+			using var pinned = buffer.Memory.Pin ();
 
 			var bufferSize = buffer.Memory.Length;
 			var currentPosition = (uint)start;
-			var builder = new StringBuilder(bufferSize);
+			var builder = new StringBuilder (bufferSize);
 
-			while (currentPosition < end)
-			{
+			while (currentPosition < end) {
 				uint consumed;
-				currentPosition += HarfBuzzApi.hb_buffer_serialize_glyphs(
+				currentPosition += HarfBuzzApi.hb_buffer_serialize_glyphs (
 					Handle,
 					(uint)currentPosition,
 					(uint)end,
@@ -336,10 +335,10 @@ namespace HarfBuzzSharp
 					format,
 					flags);
 
-				builder.Append(Marshal.PtrToStringAnsi((IntPtr)pinned.Pointer, (int)consumed));
+				builder.Append (Marshal.PtrToStringAnsi ((IntPtr)pinned.Pointer, (int)consumed));
 			}
 
-			return builder.ToString();
+			return builder.ToString ();
 		}
 
 		public void DeserializeGlyphs (string data) =>

@@ -44,9 +44,9 @@ namespace SkiaSharp
 
 		public SKStreamAsset ToMemoryStream ()
 		{
-			using var native = new SKDynamicMemoryWStream();
-			CopyTo(native);
-			return native.DetachAsStream();
+			using var native = new SKDynamicMemoryWStream ();
+			CopyTo (native);
+			return native.DetachAsStream ();
 		}
 
 		protected override void Dispose (bool disposing) =>

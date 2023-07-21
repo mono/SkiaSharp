@@ -485,12 +485,11 @@ namespace SkiaSharp
 			if (IsTextureBacked) {
 				var info = new SKImageInfo (Width, Height, ColorType, AlphaType, ColorSpace);
 				using var temp = new SKBitmap (info);
-				using var pixmap = temp.PeekPixels();
-				if (pixmap != null && ReadPixels(pixmap, 0, 0))
-				{
-					return serializer.Encode(pixmap);
+				using var pixmap = temp.PeekPixels ();
+				if (pixmap != null && ReadPixels (pixmap, 0, 0)) {
+					return serializer.Encode (pixmap);
 				}
-            }
+			}
 
 			// some error
 			return null;

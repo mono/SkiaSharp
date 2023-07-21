@@ -90,11 +90,11 @@ namespace SkiaSharp
 
 		protected virtual SKPicture OnSnapshot ()
 		{
-			using var recorder = new SKPictureRecorder();
-			var canvas = recorder.BeginRecording(Bounds);
-			Draw(canvas, 0, 0);
-			return recorder.EndRecording();
-        }
+			using var recorder = new SKPictureRecorder ();
+			var canvas = recorder.BeginRecording (Bounds);
+			Draw (canvas, 0, 0);
+			return recorder.EndRecording ();
+		}
 
 		[MonoPInvokeCallback (typeof (SKManagedDrawableDrawProxyDelegate))]
 		private static void DrawInternal (IntPtr d, void* context, IntPtr canvas)
