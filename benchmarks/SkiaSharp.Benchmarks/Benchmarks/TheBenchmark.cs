@@ -7,14 +7,12 @@ using BenchmarkDotNet.Jobs;
 
 namespace SkiaSharp.Benchmarks;
 
-[EtwProfiler]
+// [EtwProfiler]
 // [NativeMemoryProfiler]
 [MemoryDiagnoser]
-// [SimpleJob(RuntimeMoniker.Mono)]
-// [SimpleJob(RuntimeMoniker.Net472)]
-// [SimpleJob(RuntimeMoniker.NetCoreApp31)]
-[SimpleJob(RuntimeMoniker.Net60)]
-public class Benchmark
+[SimpleJob(RuntimeMoniker.Net472)]
+[SimpleJob(RuntimeMoniker.Net70)]
+public class TheBenchmark
 {
 	[GlobalSetup]
 	public void GlobalSetup()
@@ -22,8 +20,14 @@ public class Benchmark
 
 	}
 
+	[Benchmark(Baseline = true)]
+	public void TheBaseline()
+	{
+
+	}
+
 	[Benchmark]
-	public void TheBenchmark()
+	public void TheNew()
 	{
 
 	}
