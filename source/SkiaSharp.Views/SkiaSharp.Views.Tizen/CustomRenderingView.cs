@@ -1,10 +1,8 @@
-﻿using System;
-using ElmSharp;
-using SkiaSharp.Views.Tizen.Interop;
+﻿using SkiaSharp.Views.Tizen.Interop;
 
 namespace SkiaSharp.Views.Tizen
 {
-	public abstract class CustomRenderingView : Widget
+    public abstract class CustomRenderingView : Widget
 	{
 		private readonly Evas.ImagePixelsSetCallback redrawCallback;
 
@@ -24,7 +22,7 @@ namespace SkiaSharp.Views.Tizen
 
 		public RenderingMode RenderingMode
 		{
-			get { return renderingMode; }
+			get => renderingMode;
 			set
 			{
 				if (renderingMode != value)

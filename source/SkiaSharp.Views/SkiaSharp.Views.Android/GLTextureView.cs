@@ -146,8 +146,8 @@ namespace SkiaSharp.Views.Android
 
 		public Rendermode RenderMode
 		{
-			get { return glThread.GetRenderMode(); }
-			set { glThread.SetRenderMode(value); }
+			get => glThread.GetRenderMode();
+			set => glThread.SetRenderMode(value);
 		}
 
 		public void RequestRender()

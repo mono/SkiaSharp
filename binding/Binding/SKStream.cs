@@ -9,14 +9,10 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
-		
-		public bool IsAtEnd {
-			get {
-				return SkiaApi.sk_stream_is_at_end (Handle);
-			}
-		}
 
-		public SByte ReadSByte ()
+        public bool IsAtEnd => SkiaApi.sk_stream_is_at_end(Handle);
+
+        public SByte ReadSByte ()
 		{
 			if (ReadSByte (out var buffer))
 				return buffer;
@@ -163,34 +159,18 @@ namespace SkiaSharp
 
 		internal SKStream Duplicate () => GetObject (SkiaApi.sk_stream_duplicate (Handle));
 
-		public bool HasPosition {
-			get {
-				return SkiaApi.sk_stream_has_position (Handle);
-			}
+        public bool HasPosition => SkiaApi.sk_stream_has_position(Handle);
+
+        public int Position {
+			get => (int)SkiaApi.sk_stream_get_position (Handle);
+			set => Seek (value);
 		}
 
-		public int Position {
-			get {
-				return (int)SkiaApi.sk_stream_get_position (Handle);
-			}
-			set { 
-				Seek (value);
-			}
-		}
+        public bool HasLength => SkiaApi.sk_stream_has_length(Handle);
 
-		public bool HasLength {
-			get {
-				return SkiaApi.sk_stream_has_length (Handle);
-			}
-		}
+        public int Length => (int)SkiaApi.sk_stream_get_length(Handle);
 
-		public int Length {
-			get {
-				return (int)SkiaApi.sk_stream_get_length (Handle);
-			}
-		}
-
-		internal static SKStream GetObject (IntPtr handle) =>
+        internal static SKStream GetObject (IntPtr handle) =>
 			GetOrAddObject<SKStream> (handle, (h, o) => new SKStreamImplementation (h, o));
 	}
 
@@ -376,14 +356,10 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
-		
-		public virtual int BytesWritten {
-			get {
-				return (int)SkiaApi.sk_wstream_bytes_written (Handle);
-			}
-		}
 
-		public virtual bool Write (byte[] buffer, int size)
+        public virtual int BytesWritten => (int)SkiaApi.sk_wstream_bytes_written(Handle);
+
+        public virtual bool Write (byte[] buffer, int size)
 		{
 			fixed (byte* b = buffer) {
 				return SkiaApi.sk_wstream_write (Handle, (void*)b, (IntPtr)size);
