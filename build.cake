@@ -198,11 +198,11 @@ Task ("tests-netfx")
     {
         if (Skip(arch)) continue;
 
-        RunMSBuild ("./tests/SkiaSharp.Tests.sln", platform: arch);
+        RunMSBuild ("./tests/SkiaSharp.Tests.Console.sln", platform: arch);
 
         // SkiaSharp.Tests.dll
         try {
-            RunTests ($"./tests/SkiaSharp.Tests/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Tests.dll", arch == "x86");
+            RunTests ($"./tests/SkiaSharp.Tests.Console/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Tests.dll", arch == "x86");
         } catch {
             failedTests++;
         }
@@ -210,7 +210,7 @@ Task ("tests-netfx")
         // SkiaSharp.Vulkan.Tests.dll
         if (SUPPORT_VULKAN) {
             try {
-                RunTests ($"./tests/SkiaSharp.Vulkan.Tests/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
+                RunTests ($"./tests/SkiaSharp.Vulkan.Tests.Console/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
             } catch {
                 failedTests++;
             }
@@ -235,17 +235,17 @@ Task ("tests-netcore")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.Tests.csproj
+    // SkiaSharp.Tests.Console.csproj
     try {
-        RunNetCoreTests ("./tests/SkiaSharp.Tests/SkiaSharp.Tests.csproj");
+        RunNetCoreTests ("./tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj");
     } catch {
         failedTests++;
     }
 
-    // SkiaSharp.Vulkan.Tests.csproj
+    // SkiaSharp.Vulkan.Tests.Console.csproj
     if (SUPPORT_VULKAN) {
         try {
-            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.Tests/SkiaSharp.Vulkan.Tests.csproj");
+            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj");
         } catch {
             failedTests++;
         }
@@ -272,12 +272,12 @@ Task ("tests-android")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.Android.Tests.csproj
+    // SkiaSharp.Tests.Android.csproj
     try {
         // build the solution to copy all the files
-        RunMSBuild ("./tests/SkiaSharp.Android.Tests.sln", configuration: "Debug");
+        RunMSBuild ("./tests/SkiaSharp.Tests.Android.sln", configuration: "Debug");
         // package the app
-        FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
+        FilePath csproj = "./tests/SkiaSharp.Tests.Android/SkiaSharp.Tests.Android.csproj";
         RunMSBuild (csproj,
             targets: new [] { "SignAndroidPackage" },
             properties: new Dictionary<string, string> {
@@ -286,7 +286,7 @@ Task ("tests-android")
             platform: "AnyCPU",
             configuration: "Debug");
         // run the tests
-        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Android.Tests";
+        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Tests.Android";
         RunCake ("./scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
@@ -316,12 +316,12 @@ Task ("tests-ios")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.iOS.Tests.csproj
+    // SkiaSharp.Tests.iOS.csproj
     try {
         // build the solution to copy all the files
-        RunMSBuild ("./tests/SkiaSharp.iOS.Tests.sln", configuration: "Debug");
+        RunMSBuild ("./tests/SkiaSharp.Tests.iOS.sln", configuration: "Debug");
         // package the app
-        FilePath csproj = "./tests/SkiaSharp.iOS.Tests/SkiaSharp.iOS.Tests.csproj";
+        FilePath csproj = "./tests/SkiaSharp.Tests.iOS/SkiaSharp.Tests.iOS.csproj";
         RunMSBuild (csproj,
             properties: new Dictionary<string, string> {
                 { "BuildIpa", "true" },
@@ -330,7 +330,7 @@ Task ("tests-ios")
             platform: "iPhoneSimulator",
             configuration: "Debug");
         // run the tests
-        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.iOS.Tests";
+        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Tests.iOS";
         RunCake ("./scripts/cake/xharness-ios.cake", "Default", new Dictionary<string, string> {
             { "project", MakeAbsolute(csproj).FullPath },
             { "configuration", "Debug" },
@@ -356,10 +356,10 @@ Task ("tests-wasm")
 {
     var failedTests = 0;
 
-    RunMSBuild ("./tests/SkiaSharp.Wasm.Tests.sln");
+    RunMSBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
 
-    var pubDir = "./tests/SkiaSharp.Wasm.Tests/bin/publish/";
-    RunNetCorePublish("./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj", pubDir);
+    var pubDir = "./tests/SkiaSharp.Tests.Wasm/bin/publish/";
+    RunNetCorePublish("./tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj", pubDir);
     IProcess serverProc = null;
     try {
         serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
@@ -367,7 +367,7 @@ Task ("tests-wasm")
             WorkingDirectory = pubDir,
         });
         DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj",
-            "--output=\"./tests/SkiaSharp.Wasm.Tests/TestResults/\" " +
+            "--output=\"./tests/SkiaSharp.Tests.Wasm/TestResults/\" " +
             (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
             "--verbose " +
             "\"http://127.0.0.1:8000/\" ");
