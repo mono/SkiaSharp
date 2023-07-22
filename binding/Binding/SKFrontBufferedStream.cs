@@ -49,8 +49,8 @@ namespace SkiaSharp
 
 		public override long Position
 		{
-			get { return currentOffset; }
-			set { Seek(value, SeekOrigin.Begin); }
+			readonly get => currentOffset;
+			set => Seek(value, SeekOrigin.Begin);
 		}
 
 		public override void Flush()

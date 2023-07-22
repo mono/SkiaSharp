@@ -36,23 +36,15 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_pathmeasure_destroy (Handle);
 
-		// properties
+        // properties
 
-		public float Length {
-			get {
-				return SkiaApi.sk_pathmeasure_get_length (Handle);
-			}
-		}
+        public float Length => SkiaApi.sk_pathmeasure_get_length(Handle);
 
-		public bool IsClosed {
-			get {
-				return SkiaApi.sk_pathmeasure_is_closed (Handle);
-			}
-		}
+        public bool IsClosed => SkiaApi.sk_pathmeasure_is_closed(Handle);
 
-		// SetPath
+        // SetPath
 
-		public void SetPath (SKPath path) =>
+        public void SetPath (SKPath path) =>
 			SetPath (path, false);
 
 		public void SetPath (SKPath path, bool forceClosed)

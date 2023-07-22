@@ -29,14 +29,14 @@ namespace SkiaSharp.Views.Forms
 
 		public bool HasRenderLoop
 		{
-			get { return (bool)GetValue(HasRenderLoopProperty); }
-			set { SetValue(HasRenderLoopProperty, value); }
+			get => (bool)GetValue(HasRenderLoopProperty);
+			set => SetValue(HasRenderLoopProperty, value);
 		}
 
 		public bool EnableTouchEvents
 		{
-			get { return (bool)GetValue(EnableTouchEventsProperty); }
-			set { SetValue(EnableTouchEventsProperty, value); }
+			get => (bool)GetValue(EnableTouchEventsProperty);
+			set => SetValue(EnableTouchEventsProperty, value);
 		}
 
 		// the user can subscribe to repaint

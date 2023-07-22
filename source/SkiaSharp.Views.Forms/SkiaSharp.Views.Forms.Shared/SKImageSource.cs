@@ -19,8 +19,8 @@ namespace SkiaSharp.Views.Forms
 
 		public SKImage Image
 		{
-			get { return (SKImage)GetValue(ImageProperty); }
-			set { SetValue(ImageProperty, value); }
+			get => (SKImage)GetValue(ImageProperty);
+			set => SetValue(ImageProperty, value);
 		}
 
 		public override Task<bool> Cancel()
@@ -55,8 +55,8 @@ namespace SkiaSharp.Views.Forms
 
 		public SKBitmap Bitmap
 		{
-			get { return (SKBitmap)GetValue(BitmapProperty); }
-			set { SetValue(BitmapProperty, value); }
+			get => (SKBitmap)GetValue(BitmapProperty);
+			set => SetValue(BitmapProperty, value);
 		}
 
 		public override Task<bool> Cancel()
@@ -91,8 +91,8 @@ namespace SkiaSharp.Views.Forms
 
 		public SKPixmap Pixmap
 		{
-			get { return (SKPixmap)GetValue(PixmapProperty); }
-			set { SetValue(PixmapProperty, value); }
+			get => (SKPixmap)GetValue(PixmapProperty);
+			set => SetValue(PixmapProperty, value);
 		}
 
 		public override Task<bool> Cancel()
@@ -129,14 +129,14 @@ namespace SkiaSharp.Views.Forms
 
 		public SKPicture Picture
 		{
-			get { return (SKPicture)GetValue(PictureProperty); }
-			set { SetValue(PictureProperty, value); }
+			get => (SKPicture)GetValue(PictureProperty);
+			set => SetValue(PictureProperty, value);
 		}
 
 		public SKSizeI Dimensions
 		{
-			get { return (SKSizeI)GetValue(DimensionsProperty); }
-			set { SetValue(DimensionsProperty, value); }
+			get => (SKSizeI)GetValue(DimensionsProperty);
+			set => SetValue(DimensionsProperty, value);
 		}
 
 		public override Task<bool> Cancel()

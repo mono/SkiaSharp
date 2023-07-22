@@ -116,7 +116,7 @@ namespace SkiaSharp.Views.iOS
 
 		public override CGRect Frame
 		{
-			get { return base.Frame; }
+			get => base.Frame;
 			set
 			{
 				base.Frame = value;

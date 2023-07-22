@@ -329,41 +329,25 @@ namespace SkiaSharp
 			}
 		}
 
-		public int Width {
-			get { return Info.Width; }
-		}
+        public int Width => Info.Width;
 
-		public int Height {
-			get { return Info.Height; }
-		}
+        public int Height => Info.Height;
 
-		public SKColorType ColorType {
-			get { return Info.ColorType; }
-		}
+        public SKColorType ColorType => Info.ColorType;
 
-		public SKAlphaType AlphaType {
-			get { return Info.AlphaType; }
-		}
+        public SKAlphaType AlphaType => Info.AlphaType;
 
-		public SKColorSpace ColorSpace {
-			get { return Info.ColorSpace; }
-		}
+        public SKColorSpace ColorSpace => Info.ColorSpace;
 
-		public int BytesPerPixel {
-			get { return Info.BytesPerPixel; }
-		}
+        public int BytesPerPixel => Info.BytesPerPixel;
 
-		public int RowBytes {
-			get { return (int)SkiaApi.sk_bitmap_get_row_bytes (Handle); }
-		}
+        public int RowBytes => (int)SkiaApi.sk_bitmap_get_row_bytes(Handle);
 
-		public int ByteCount {
-			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
-		}
+        public int ByteCount => (int)SkiaApi.sk_bitmap_get_byte_count(Handle);
 
-		// *Pixels*
+        // *Pixels*
 
-		public IntPtr GetPixels () =>
+        public IntPtr GetPixels () =>
 			GetPixels (out _);
 
 		public ReadOnlySpan<byte> GetPixelSpan ()
@@ -443,23 +427,15 @@ namespace SkiaSharp
 			}
 		}
 
-		public bool IsEmpty {
-			get { return Info.IsEmpty; }
-		}
+        public bool IsEmpty => Info.IsEmpty;
 
-		public bool IsNull {
-			get { return SkiaApi.sk_bitmap_is_null (Handle); }
-		}
+        public bool IsNull => SkiaApi.sk_bitmap_is_null(Handle);
 
-		public bool DrawsNothing {
-			get { return IsEmpty || IsNull; }
-		}
+        public bool DrawsNothing => IsEmpty || IsNull;
 
-		public bool IsImmutable {
-			get { return SkiaApi.sk_bitmap_is_immutable (Handle); }
-		}
+        public bool IsImmutable => SkiaApi.sk_bitmap_is_immutable(Handle);
 
-		[Obsolete]
+        [Obsolete]
 		public bool IsVolatile {
 			get => false;
 			set { }

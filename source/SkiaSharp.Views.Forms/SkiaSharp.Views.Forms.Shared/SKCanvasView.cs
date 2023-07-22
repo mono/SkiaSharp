@@ -51,14 +51,14 @@ namespace SkiaSharp.Views.Forms
 
 		public bool IgnorePixelScaling
 		{
-			get { return (bool)GetValue(IgnorePixelScalingProperty); }
-			set { SetValue(IgnorePixelScalingProperty, value); }
+			get => (bool)GetValue(IgnorePixelScalingProperty);
+			set => SetValue(IgnorePixelScalingProperty, value);
 		}
 
 		public bool EnableTouchEvents
 		{
-			get { return (bool)GetValue(EnableTouchEventsProperty); }
-			set { SetValue(EnableTouchEventsProperty, value); }
+			get => (bool)GetValue(EnableTouchEventsProperty);
+			set => SetValue(EnableTouchEventsProperty, value);
 		}
 
 		// the user asks to repaint
