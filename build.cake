@@ -270,8 +270,6 @@ Task ("tests-android")
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    var failedTests = 0;
-
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
@@ -304,8 +302,6 @@ Task ("tests-ios")
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    var failedTests = 0;
-
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
@@ -337,8 +333,6 @@ Task ("tests-wasm")
     .IsDependentOn ("externals-wasm")
     .Does (() =>
 {
-    var failedTests = 0;
-
     RunMSBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
 
     var pubDir = "./tests/SkiaSharp.Tests.Wasm/bin/publish/";

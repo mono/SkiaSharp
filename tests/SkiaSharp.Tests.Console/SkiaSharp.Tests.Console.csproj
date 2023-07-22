@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFrameworks>net7.0</TargetFrameworks>
     <TargetFrameworks>$(TargetFrameworks);net472</TargetFrameworks>
@@ -10,6 +11,7 @@
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.2" />
     <PackageReference Include="xunit" Version="2.4.2" />
@@ -19,6 +21,7 @@
     <PackageReference Include="coverlet.msbuild" Version="6.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" Condition="$(TargetFramework.StartsWith('net4'))" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
@@ -26,13 +29,17 @@
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="PlatformUtils\LibraryLoader.cs" />
   </ItemGroup>
+
   <ItemGroup>
     <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
+
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+
 </Project>
