@@ -231,6 +231,14 @@ Task ("tests-netcore")
     .IsDependentOn ("externals")
     .Does (() =>
 {
+    if (IsRunningOnLinux ()) {
+        try {
+            RunProcess ("dpkg", "-s libfontconfig1 ttf-ancient-fonts ttf-mscorefonts-installer", out var _);
+        } catch {
+            Warning ("Running tests on Linux requires that FontConfig and various font packages are installed. Run the `./scripts/install-linux-test-requirements.sh` script file.");
+        }
+    }
+
     var failedTests = 0;
 
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");

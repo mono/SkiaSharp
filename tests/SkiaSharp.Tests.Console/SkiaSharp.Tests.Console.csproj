@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net7.0</TargetFrameworks>
-    <TargetFrameworks>$(TargetFrameworks);net472</TargetFrameworks>
+    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net472</TargetFrameworks>
     <DefineConstants>$(DefineConstants);USE_LIBRARY_LOADER</DefineConstants>
     <DefineConstants Condition="$(TargetFramework.StartsWith('net4'))">$(DefineConstants);SYSTEM_DRAWING</DefineConstants>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
