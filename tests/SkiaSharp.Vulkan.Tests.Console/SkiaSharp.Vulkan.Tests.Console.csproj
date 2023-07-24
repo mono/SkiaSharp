@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net7.0;net472</TargetFrameworks>
-    <DefineConstants>$(DefineConstants);USE_LIBRARY_LOADER</DefineConstants>
-    <DefineConstants Condition="$(TargetFramework.StartsWith('net4'))">$(DefineConstants);SYSTEM_DRAWING</DefineConstants>
-    <RootNamespace>SkiaSharp.Tests</RootNamespace>
-    <AssemblyName>SkiaSharp.Tests</AssemblyName>
+    <TargetFrameworks>net7.0</TargetFrameworks>
+    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net472</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Vulkan.Tests</RootNamespace>
+    <AssemblyName>SkiaSharp.Vulkan.Tests</AssemblyName>
+    <SignAssembly>false</SignAssembly>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <Platforms>AnyCPU;x64;x86</Platforms>
@@ -15,19 +15,21 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" />
     <PackageReference Include="XunitXml.TestLogger" Version="3.0.78" />
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+    <PackageReference Include="SharpVk" Version="0.4.2" />
+    <PackageReference Include="SharpVk.Glfw" Version="0.4.1" />
     <PackageReference Include="coverlet.msbuild" Version="6.0.0" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" Condition="$(TargetFramework.StartsWith('net4'))" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
-    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.SharpVk\SkiaSharp.Vulkan.SharpVk.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Tests.Console\SkiaSharp.Tests.Console.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
-    <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="PlatformUtils\LibraryLoader.cs" />
+    <Compile Include="..\VulkanTests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />

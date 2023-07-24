@@ -18,11 +18,11 @@ namespace SkiaSharp.Views.tvOS
 namespace SkiaSharp.Views.iOS
 #endif
 {
-	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]
 #if HAS_UNO
 	internal
 #else
+	[Register(nameof(SKGLView))]
 	public
 #endif
 	class SKGLView : GLKView, IGLKViewDelegate, IComponent

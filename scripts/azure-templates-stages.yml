@@ -492,11 +492,12 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: tests-netfx
-            additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native_win32_x86_windows
               - name: native_win32_x64_windows
+              - name: native_win32_arm64_windows
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the .NET Framework test results
@@ -512,11 +513,12 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: tests-netcore
-            additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native_win32_x86_windows
               - name: native_win32_x64_windows
+              - name: native_win32_arm64_windows
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
@@ -537,7 +539,7 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-netcore
-            additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native_macos_macos
@@ -554,6 +556,32 @@ stages:
                 inputs:
                   artifactName: coverage_netcore_macos
                   pathToPublish: 'output/coverage'
+        - template: azure-templates-bootstrapper.yml # Tests|netcore (Linux)
+          parameters:
+            name: tests_netcore_linux
+            displayName: Linux (.NET Core)
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            packages: $(MANAGED_LINUX_PACKAGES)
+            target: tests-netcore
+            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native_linux_x64_linux
+              - name: native_linux_arm64_linux
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the .NET Core test results
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'tests/SkiaSharp*.Tests/**/TestResults.xml'
+                  testRunTitle: 'Linux .NET Core Tests'
+              - task: PublishBuildArtifacts@1
+                displayName: 'Publish the code coverage results'
+                inputs:
+                  artifactName: coverage_netcore_linux
+                  pathToPublish: 'output/coverage'
         - template: azure-templates-bootstrapper.yml # Tests|android (macOS)
           parameters:
             name: tests_android_macos
@@ -561,7 +589,7 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-android
-            additionalArgs: --device=android-emulator-64_30 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --device=android-emulator-64_30 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native_android_x86_macos
@@ -579,7 +607,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Android.Tests/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.Android/**/TestResults.xml'
                   testRunTitle: 'Android Tests'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
@@ -594,7 +622,7 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-ios
-            additionalArgs: --device=ios-simulator-64 --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --device=ios-simulator-64 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native_ios_macos
@@ -606,7 +634,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.iOS.Tests/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.iOS/**/TestResults.xml'
                   testRunTitle: 'iOS Tests'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
@@ -614,31 +642,6 @@ stages:
                 inputs:
                   artifactName: testlogs_ios
                   pathToPublish: 'output/logs/testlogs'
-        - template: azure-templates-bootstrapper.yml # Tests|netcore (Linux)
-          parameters:
-            name: tests_netcore_linux
-            displayName: Linux (.NET Core)
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
-            packages: $(MANAGED_LINUX_PACKAGES)
-            target: tests-netcore
-            additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=$(ENABLE_CODE_COVERAGE)
-            shouldPublish: false
-            requiredArtifacts:
-              - name: native_linux_x64_linux
-            postBuildSteps:
-              - task: PublishTestResults@2
-                displayName: Publish the .NET Core test results
-                condition: always()
-                inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.Tests/**/TestResults.xml'
-                  testRunTitle: 'Linux .NET Core Tests'
-              - task: PublishBuildArtifacts@1
-                displayName: 'Publish the code coverage results'
-                inputs:
-                  artifactName: coverage_netcore_linux
-                  pathToPublish: 'output/coverage'
         - template: azure-templates-bootstrapper.yml # Tests [WASM] (Linux)
           parameters:
             name: tests_wasm_linux
@@ -647,7 +650,7 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
-            additionalArgs: --skipExternals="all" --throwOnTestFailure=$(THROW_ON_TEST_FAILURE) --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
+            additionalArgs: --skipExternals="all" --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
             shouldPublish: false
             requiredArtifacts:
               - name: native_wasm_linux

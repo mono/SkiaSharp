@@ -34,7 +34,7 @@ var SKIP_EXTERNALS = Argument ("skipexternals", "")
 var SKIP_BUILD = Argument ("skipbuild", false);
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
-var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
+var THROW_ON_FIRST_TEST_FAILURE = Argument ("throwOnFirstTestFailure", false);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
@@ -191,40 +191,38 @@ Task ("tests-netfx")
 {
     var failedTests = 0;
 
-    void RunDesktopTest (string arch)
-    {
-        if (Skip(arch)) return;
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-        RunMSBuild ("./tests/SkiaSharp.Tests.sln", platform: arch);
+    foreach ( var arch in new [] { "x86", "x64" })
+    {
+        if (Skip(arch)) continue;
+
+        RunMSBuild ("./tests/SkiaSharp.Tests.Console.sln", platform: arch);
 
         // SkiaSharp.Tests.dll
         try {
-            RunTests ($"./tests/SkiaSharp.Tests/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Tests.dll", arch == "x86");
+            RunTests ($"./tests/SkiaSharp.Tests.Console/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Tests.dll", arch == "x86");
         } catch {
             failedTests++;
+            if (THROW_ON_FIRST_TEST_FAILURE)
+                throw;
         }
 
         // SkiaSharp.Vulkan.Tests.dll
         if (SUPPORT_VULKAN) {
             try {
-                RunTests ($"./tests/SkiaSharp.Vulkan.Tests/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
+                RunTests ($"./tests/SkiaSharp.Vulkan.Tests.Console/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
             } catch {
                 failedTests++;
+                if (THROW_ON_FIRST_TEST_FAILURE)
+                    throw;
             }
         }
     }
 
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    RunDesktopTest ("x86");
-    RunDesktopTest ("x64");
-
     if (failedTests > 0) {
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
+        throw new Exception ($"There were {failedTests} failed test runs.");
     }
 });
 
@@ -233,33 +231,43 @@ Task ("tests-netcore")
     .IsDependentOn ("externals")
     .Does (() =>
 {
+    if (IsRunningOnLinux ()) {
+        try {
+            RunProcess ("dpkg", "-s libfontconfig1 ttf-ancient-fonts ttf-mscorefonts-installer", out var _);
+        } catch {
+            Warning ("Running tests on Linux requires that FontConfig and various font packages are installed. Run the `./scripts/install-linux-test-requirements.sh` script file.");
+        }
+    }
+
     var failedTests = 0;
 
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.Tests.csproj
+    // SkiaSharp.Tests.Console.csproj
     try {
-        RunNetCoreTests ("./tests/SkiaSharp.Tests/SkiaSharp.Tests.csproj");
+        RunNetCoreTests ("./tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj");
     } catch {
         failedTests++;
+        if (THROW_ON_FIRST_TEST_FAILURE)
+            throw;
     }
 
-    // SkiaSharp.Vulkan.Tests.csproj
+    // SkiaSharp.Vulkan.Tests.Console.csproj
     if (SUPPORT_VULKAN) {
         try {
-            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.Tests/SkiaSharp.Vulkan.Tests.csproj");
+            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj");
         } catch {
             failedTests++;
+            if (THROW_ON_FIRST_TEST_FAILURE)
+                throw;
         }
     }
 
     if (failedTests > 0) {
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
+        throw new Exception ($"There were {failedTests} failed test runs.");
     }
+
     if (COVERAGE) {
         RunCodeCoverage ("./tests/**/Coverage/**/*.xml", "./output/coverage");
     }
@@ -270,43 +278,31 @@ Task ("tests-android")
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    var failedTests = 0;
-
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.Android.Tests.csproj
-    try {
-        // build the solution to copy all the files
-        RunMSBuild ("./tests/SkiaSharp.Android.Tests.sln", configuration: "Debug");
-        // package the app
-        FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
-        RunMSBuild (csproj,
-            targets: new [] { "SignAndroidPackage" },
-            properties: new Dictionary<string, string> {
-                { "BuildTestOnly", "true" },
-            },
-            platform: "AnyCPU",
-            configuration: "Debug");
-        // run the tests
-        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Android.Tests";
-        RunCake ("./scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
-            { "project", MakeAbsolute(csproj).FullPath },
-            { "configuration", "Debug" },
-            { "exclusive", "true" },
-            { "results", MakeAbsolute(results).FullPath },
-            { "verbosity", "diagnostic" },
-        });
-    } catch {
-        failedTests++;
-    }
+    // build the solution to copy all the files
+    RunMSBuild ("./tests/SkiaSharp.Tests.Android.sln", configuration: "Debug");
 
-    if (failedTests > 0) {
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
-    }
+    // package the app
+    FilePath csproj = "./tests/SkiaSharp.Tests.Android/SkiaSharp.Tests.Android.csproj";
+    RunMSBuild (csproj,
+        targets: new [] { "SignAndroidPackage" },
+        properties: new Dictionary<string, string> {
+            { "BuildTestOnly", "true" },
+        },
+        platform: "AnyCPU",
+        configuration: "Debug");
+
+    // run the tests
+    DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Tests.Android";
+    RunCake ("./scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
+        { "project", MakeAbsolute(csproj).FullPath },
+        { "configuration", "Debug" },
+        { "exclusive", "true" },
+        { "results", MakeAbsolute(results).FullPath },
+        { "verbosity", "diagnostic" },
+    });
 });
 
 Task ("tests-ios")
@@ -314,42 +310,30 @@ Task ("tests-ios")
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    var failedTests = 0;
-
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.iOS.Tests.csproj
-    try {
-        // build the solution to copy all the files
-        RunMSBuild ("./tests/SkiaSharp.iOS.Tests.sln", configuration: "Debug");
-        // package the app
-        FilePath csproj = "./tests/SkiaSharp.iOS.Tests/SkiaSharp.iOS.Tests.csproj";
-        RunMSBuild (csproj,
-            properties: new Dictionary<string, string> {
-                { "BuildIpa", "true" },
-                { "BuildTestOnly", "true" },
-            },
-            platform: "iPhoneSimulator",
-            configuration: "Debug");
-        // run the tests
-        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.iOS.Tests";
-        RunCake ("./scripts/cake/xharness-ios.cake", "Default", new Dictionary<string, string> {
-            { "project", MakeAbsolute(csproj).FullPath },
-            { "configuration", "Debug" },
-            { "exclusive", "true" },
-            { "results", MakeAbsolute(results).FullPath },
-        });
-    } catch {
-        failedTests++;
-    }
+    // build the solution to copy all the files
+    RunMSBuild ("./tests/SkiaSharp.Tests.iOS.sln", configuration: "Debug");
 
-    if (failedTests > 0) {
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
-    }
+    // package the app
+    FilePath csproj = "./tests/SkiaSharp.Tests.iOS/SkiaSharp.Tests.iOS.csproj";
+    RunMSBuild (csproj,
+        properties: new Dictionary<string, string> {
+            { "BuildIpa", "true" },
+            { "BuildTestOnly", "true" },
+        },
+        platform: "iPhoneSimulator",
+        configuration: "Debug");
+
+    // run the tests
+    DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Tests.iOS";
+    RunCake ("./scripts/cake/xharness-ios.cake", "Default", new Dictionary<string, string> {
+        { "project", MakeAbsolute(csproj).FullPath },
+        { "configuration", "Debug" },
+        { "exclusive", "true" },
+        { "results", MakeAbsolute(results).FullPath },
+    });
 });
 
 Task ("tests-wasm")
@@ -357,12 +341,10 @@ Task ("tests-wasm")
     .IsDependentOn ("externals-wasm")
     .Does (() =>
 {
-    var failedTests = 0;
+    RunMSBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
 
-    RunMSBuild ("./tests/SkiaSharp.Wasm.Tests.sln");
-
-    var pubDir = "./tests/SkiaSharp.Wasm.Tests/bin/publish/";
-    RunNetCorePublish("./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj", pubDir);
+    var pubDir = "./tests/SkiaSharp.Tests.Wasm/bin/publish/";
+    RunNetCorePublish("./tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj", pubDir);
     IProcess serverProc = null;
     try {
         serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
@@ -370,21 +352,12 @@ Task ("tests-wasm")
             WorkingDirectory = pubDir,
         });
         DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj",
-            "--output=\"./tests/SkiaSharp.Wasm.Tests/TestResults/\" " +
+            "--output=\"./tests/SkiaSharp.Tests.Wasm/TestResults/\" " +
             (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
             "--verbose " +
             "\"http://127.0.0.1:8000/\" ");
-    } catch {
-        failedTests++;
     } finally {
         serverProc?.Kill();
-    }
-
-    if (failedTests > 0) {
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
     }
 });
 
