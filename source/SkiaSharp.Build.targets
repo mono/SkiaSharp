@@ -15,6 +15,7 @@
     <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' ">true</PublicSign>
     <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\scripts\$(KeyFileName)</AssemblyOriginatorKeyFile>
+    <StrongNamerKeyFile>$(AssemblyOriginatorKeyFile)</StrongNamerKeyFile>
 
     <!--
       Suppress version attribute generation in Microsoft.NET.Sdk projects to avoid build failures

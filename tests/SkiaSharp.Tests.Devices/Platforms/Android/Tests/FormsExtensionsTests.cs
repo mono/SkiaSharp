@@ -1,10 +1,11 @@
 ﻿using System.Threading.Tasks;
-using SkiaSharp.Views.iOS.Tests;
+using Android.App;
+using SkiaSharp.Views.Android.Tests;
 using Xunit;
 
-namespace SkiaSharp.Views.Forms.Tests
+namespace SkiaSharp.Views.Maui.Controls.Compatibility.Tests
 {
-	public class SKImageSourceHandlerTests : iOSTests
+	public class SKImageSourceHandlerTests : AndroidTests
 	{
 		private readonly SKImageSourceHandler handler;
 
@@ -25,9 +26,11 @@ namespace SkiaSharp.Views.Forms.Tests
 
 			var source = (SKImageImageSource)image;
 
-			using var uiImage = await handler.LoadImageAsync(source);
+			using var androidBitmap = await handler.LoadImageAsync(source, Application.Context);
 
-			ValidateTestBitmap(uiImage, alpha);
+			ValidateTestBitmap(androidBitmap, alpha);
+
+			androidBitmap.Recycle();
 		}
 
 		[SkippableTheory]
@@ -41,9 +44,11 @@ namespace SkiaSharp.Views.Forms.Tests
 
 			var source = (SKBitmapImageSource)bitmap;
 
-			using var uiImage = await handler.LoadImageAsync(source);
+			using var androidBitmap = await handler.LoadImageAsync(source, Application.Context);
 
-			ValidateTestBitmap(uiImage, alpha);
+			ValidateTestBitmap(androidBitmap, alpha);
+
+			androidBitmap.Recycle();
 		}
 
 		[SkippableTheory]
@@ -58,9 +63,11 @@ namespace SkiaSharp.Views.Forms.Tests
 
 			var source = (SKPixmapImageSource)pixmap;
 
-			using var uiImage = await handler.LoadImageAsync(source);
+			using var androidBitmap = await handler.LoadImageAsync(source, Application.Context);
 
-			ValidateTestBitmap(uiImage, alpha);
+			ValidateTestBitmap(androidBitmap, alpha);
+
+			androidBitmap.Recycle();
 		}
 
 		[SkippableTheory]
@@ -76,9 +83,11 @@ namespace SkiaSharp.Views.Forms.Tests
 
 			var source = (SKImageImageSource)image;
 
-			using var uiImage = await handler.LoadImageAsync(source);
+			using var androidBitmap = await handler.LoadImageAsync(source, Application.Context);
 
-			ValidateTestBitmap(uiImage, alpha);
+			ValidateTestBitmap(androidBitmap, alpha);
+
+			androidBitmap.Recycle();
 		}
 	}
 }

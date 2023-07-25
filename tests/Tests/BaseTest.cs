@@ -30,7 +30,7 @@ namespace SkiaSharp.Tests
 		{
 			// the the base paths
 #if __ANDROID__ || __IOS__
-			PathToAssembly = Xamarin.Essentials.FileSystem.CacheDirectory;
+			PathToAssembly = Microsoft.Maui.Storage.FileSystem.CacheDirectory;
 #else
 			PathToAssembly = Directory.GetCurrentDirectory();
 #endif

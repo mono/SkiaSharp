@@ -1,0 +1,70 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net7.0-ios;net7.0-maccatalyst;net7.0-android</TargetFrameworks>
+    <TargetFrameworks>$(TargetFrameworks);net7.0-tizen</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
+    <AssemblyName>SkiaSharp.Tests</AssemblyName>
+    <RootNamespace>SkiaSharp.Tests</RootNamespace>
+    <SignAssembly>true</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_LOADER</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ApplicationTitle>SkiaSharp Tests</ApplicationTitle>
+    <ApplicationId>com.companyname.SkiaSharpTests</ApplicationId>
+    <ApplicationIdGuid>AC63F9E5-DBE5-4F04-9EBC-2694661FE99B</ApplicationIdGuid>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">14.2</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">14.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tizen'))">6.5</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <MauiIcon Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
+    <MauiSplashScreen Include="Resources\skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Core\SkiaSharp.Views.Maui.Core.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls.Compatibility\SkiaSharp.Views.Maui.Controls.Compatibility.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.skippablefact" Version="1.4.13" />
+    <PackageReference Include="Validation" Version="2.4.22" />
+    <PackageReference Include="StrongNamer" Version="0.2.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" Exclude="..\Tests\GlContexts\*\*;..\Tests\PlatformUtils\*\*" />
+    <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="PlatformUtils\LibraryLoader.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\Content\**\*" Link="Content\%(RecursiveDir)%(FileName)%(Extension)" />
+  </ItemGroup>
+
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+  <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+
+</Project>
