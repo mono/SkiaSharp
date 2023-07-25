@@ -16,10 +16,12 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.WebAssembly\SkiaSharp.NativeAssets.WebAssembly.csproj" Condition="!$(TargetFramework.Contains('-'))" />
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" Condition="$(TargetFramework.Contains('-windows'))" />
     <ProjectReference Include="..\SkiaSharp.Views.Uno.WinUI.Skia\SkiaSharp.Views.Uno.WinUI.Skia.csproj" Condition="!$(TargetFramework.Contains('-'))" ReferenceOutputAssembly="False" OutputItemType="UnoRuntimeOutput" UnoRuntimeType="skia" />
     <ProjectReference Include="..\SkiaSharp.Views.Uno.WinUI.Wasm\SkiaSharp.Views.Uno.WinUI.Wasm.csproj" Condition="!$(TargetFramework.Contains('-'))" ReferenceOutputAssembly="False" OutputItemType="UnoRuntimeOutput" UnoRuntimeType="webassembly" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.WebAssembly\SkiaSharp.NativeAssets.WebAssembly.csproj" Condition="!$(TargetFramework.Contains('-'))" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Uno.WinUI" Version="4.9.26" Condition="!$(TargetFramework.Contains('-windows'))" />
@@ -125,7 +127,7 @@
       <_TargetPathsToSymbols Remove="@(_WindowsSymbolOutputFiles)" />
     </ItemGroup>
   </Target>
-  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles" DependsOnTargets="ResolveProjectReferences">
     <ItemGroup Condition="!$(TargetFramework.Contains('-'))">
       <!-- Add the targets files -->
       <TfmSpecificPackageFile Include="nuget\buildTransitive\SkiaSharp.Views.Uno.WinUI.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />

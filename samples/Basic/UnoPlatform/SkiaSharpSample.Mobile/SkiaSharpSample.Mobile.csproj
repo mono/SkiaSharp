@@ -7,6 +7,10 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <AndroidEnableMultiDex>True</AndroidEnableMultiDex>
     <IsUnoHead>true</IsUnoHead>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">14.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">14.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-macos'))">11.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup>

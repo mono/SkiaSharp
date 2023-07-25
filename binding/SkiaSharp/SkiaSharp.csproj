@@ -8,7 +8,7 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(_IsPacking)' == 'true'">
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Android\SkiaSharp.NativeAssets.Android.csproj" Condition="$(TargetFramework.Contains('-android'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.iOS\SkiaSharp.NativeAssets.iOS.csproj" Condition="$(TargetFramework.Contains('-ios'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.MacCatalyst\SkiaSharp.NativeAssets.MacCatalyst.csproj" Condition="$(TargetFramework.Contains('-maccatalyst'))" />

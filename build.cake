@@ -513,6 +513,7 @@ Task ("nuget-normal")
 {
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
+        { "BuildProjectReferences", "false" },
     };
 
     // pack stable

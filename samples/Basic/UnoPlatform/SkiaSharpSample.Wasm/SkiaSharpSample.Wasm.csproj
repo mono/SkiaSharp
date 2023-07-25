@@ -17,11 +17,6 @@
     <WasmShellMonoRuntimeExecutionMode>Interpreter</WasmShellMonoRuntimeExecutionMode>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <!-- Use FullAOT for local builds only for faster CI builds -->
-    <WasmShellMonoRuntimeExecutionMode Condition="'$(CI)' == 'true' or '$(BUILD_BUILDID)' != ''">FullAOT</WasmShellMonoRuntimeExecutionMode>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
