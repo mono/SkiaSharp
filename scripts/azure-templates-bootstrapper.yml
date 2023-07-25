@@ -29,6 +29,7 @@ parameters:
   installDotNet: true                           # whether or not to install the dotnet SDK
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
+  installNinja: false                           # whether or not to install the ninja build system
   artifactName: ''                              # the name of the artifact to merge this run into
   tools: []                                     # any additional .net global tools
 
@@ -214,6 +215,11 @@ jobs:
         - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
           displayName: Switch to the latest Xcode
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+        - ${{ if eq(parameters.installNinja, 'true') }}:
+          - ${{ if endsWith(parameters.name, '_macos') }}:
+            - bash: sudo ./scripts/install-ninja.sh
+              displayName: Install ninja
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
