@@ -29,5 +29,8 @@ namespace SkiaSharp.Tests
 		public string PathRoot { get; protected set; }
 		public string PathToFonts => Path.Combine(PathRoot, "Content", "fonts");
 		public string PathToImages => Path.Combine(PathRoot, "Content", "images");
+
+		public virtual GlContext CreateGlContext() =>
+			throw new PlatformNotSupportedException();
 	}
 }

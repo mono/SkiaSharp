@@ -145,22 +145,7 @@ namespace SkiaSharp.Tests
 		{
 			try
 			{
-				if (IsLinux)
-				{
-					return new GlxContext();
-				}
-				else if (IsMac)
-				{
-					return new CglContext();
-				}
-				else if (IsWindows)
-				{
-					return new WglContext();
-				}
-				else
-				{
-					throw new PlatformNotSupportedException();
-				}
+				return TestConfig.Current.CreateGlContext();
 			}
 			catch (Exception ex)
 			{
