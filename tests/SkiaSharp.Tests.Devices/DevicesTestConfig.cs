@@ -21,6 +21,5 @@
 #error Missing platform variation
 #endif
 		}
-
 	}
 }
