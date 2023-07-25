@@ -217,7 +217,7 @@ jobs:
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - ${{ if eq(parameters.installNinja, 'true') }}:
           - ${{ if endsWith(parameters.name, '_macos') }}:
-            - bash: sudo ./scripts/install-ninja.sh
+            - bash: ./scripts/install-ninja.sh
               displayName: Install ninja
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
