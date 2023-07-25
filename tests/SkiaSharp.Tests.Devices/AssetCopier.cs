@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 			var imagesRoot = BaseTest.PathToImages;
 
 			var assembly = typeof(AssetCopier).Assembly;
-			var prefix = assembly.GetName().Name + ".Content.";
+			var prefix = "SkiaSharp.Tests.Content.";
 			var fontsPrefix = "fonts.";
 			var imagesPrefix = "images.";
 
@@ -35,8 +35,7 @@ namespace SkiaSharp.Tests
 					root = imagesRoot;
 				}
 
-				if (!Directory.Exists(root))
-					Directory.CreateDirectory(root);
+				Directory.CreateDirectory(root);
 
 				using var stream = assembly.GetManifestResourceStream(name);
 				using var dest = File.Create(Path.Combine(root, filename));

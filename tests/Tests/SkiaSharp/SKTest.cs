@@ -145,7 +145,6 @@ namespace SkiaSharp.Tests
 		{
 			try
 			{
-#if !__ANDROID__ && !__IOS__
 				if (IsLinux)
 				{
 					return new GlxContext();
@@ -159,7 +158,6 @@ namespace SkiaSharp.Tests
 					return new WglContext();
 				}
 				else
-#endif
 				{
 					throw new PlatformNotSupportedException();
 				}

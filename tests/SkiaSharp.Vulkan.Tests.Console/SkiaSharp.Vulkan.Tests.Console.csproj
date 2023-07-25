@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFrameworks>net7.0</TargetFrameworks>
     <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net472</TargetFrameworks>
@@ -9,6 +10,7 @@
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.2" />
     <PackageReference Include="xunit" Version="2.4.2" />
@@ -19,6 +21,7 @@
     <PackageReference Include="SharpVk.Glfw" Version="0.4.1" />
     <PackageReference Include="coverlet.msbuild" Version="6.0.0" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
@@ -28,12 +31,16 @@
     <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.SharpVk\SkiaSharp.Vulkan.SharpVk.csproj" />
     <ProjectReference Include="..\SkiaSharp.Tests.Console\SkiaSharp.Tests.Console.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\VulkanTests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
+
   <ItemGroup>
     <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
+
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+
 </Project>
