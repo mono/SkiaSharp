@@ -445,7 +445,8 @@ Task ("samples")
         Information ("    " + sln);
     }
 
-    foreach (var dryrun in new [] { true, false }) {
+    var firstLoop = true;
+    foreach (var dryrun in new [] { true, true, false }) {
         if (dryrun)
             Information ("Sample builds:");
 
@@ -469,7 +470,7 @@ Task ("samples")
                         CleanDir (sln.GetDirectory ().FullPath);
                 } else {
                     // skip as there is a platform variant
-                    if (dryrun)
+                    if (dryrun && firstLoop)
                         Information ($"    SKIP   (PS) {sln} (has platform specific)");
                 }
             } else {
@@ -484,11 +485,13 @@ Task ("samples")
                     }
                 } else {
                     // skip this as this is not the correct platform
-                    if (dryrun)
+                    if (dryrun && firstLoop)
                         Information ($"    SKIP   (AP) {sln} (has alternate platform)");
                 }
             }
         }
+
+        firstLoop = false;
     }
 
     CleanDir ("./output/samples/");
