@@ -119,6 +119,7 @@ void RunDotNetBuild(
     FilePath solution,
     string[] targets = null,
     string configuration = null,
+    string platform = null,
     Dictionary<string, string> properties = null)
 {
     EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
@@ -142,6 +143,10 @@ void RunDotNetBuild(
         foreach (var target in targets) {
             msb.Targets.Add(target);
         }
+    }
+
+    if (!string.IsNullOrEmpty(platform)) {
+        msb.Properties ["Platform"] = new [] { $"\"{platform}\"" };
     }
 
     msb.Properties ["RestoreNoCache"] = new [] { "true" };

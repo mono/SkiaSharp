@@ -62,20 +62,18 @@ void RunTests(FilePath testAssembly, bool is32)
     XUnit2(new [] { testAssembly }, settings);
 }
 
-void RunNetCoreTests(FilePath testAssembly)
+void RunDotNetTest(
+    FilePath testProject,
+    DirectoryPath output,
+    string configuration = null)
 {
-    var dir = testAssembly.GetDirectory();
-    var buildSettings = new DotNetCoreBuildSettings {
-        Configuration = CONFIGURATION,
-        WorkingDirectory = dir,
-    };
-    DotNetCoreBuild(testAssembly.GetFilename().ToString(), buildSettings);
-    var settings = new DotNetCoreTestSettings {
-        Configuration = CONFIGURATION,
+    var dir = testProject.GetDirectory();
+    var settings = new DotNetTestSettings {
+        Configuration = configuration ?? CONFIGURATION,
         NoBuild = true,
-        TestAdapterPath = ".",
         Loggers = new [] { "xunit" },
         WorkingDirectory = dir,
+        ResultsDirectory = output,
         Verbosity = DotNetCoreVerbosity.Normal,
         ArgumentCustomization = args => {
             args = args
@@ -93,12 +91,12 @@ void RunNetCoreTests(FilePath testAssembly)
     if (!string.IsNullOrEmpty(filter)) {
         settings.Filter = filter;
     }
-    DotNetCoreTest(testAssembly.GetFilename().ToString(), settings);
+    DotNetTest(MakeAbsolute(testProject).FullPath, settings);
 }
 
 void RunDotNetPublish(
     FilePath testProject,
-    string output = null,
+    DirectoryPath output = null,
     string configuration = null,
     string framework = null,
     string runtime = null)

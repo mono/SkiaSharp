@@ -642,6 +642,33 @@ stages:
                 inputs:
                   artifactName: testlogs_ios
                   pathToPublish: 'output/logs/testlogs'
+        - template: azure-templates-bootstrapper.yml # Tests|maccatalyst (macOS)
+          parameters:
+            name: tests_maccatalyst_macos
+            displayName: Mac Catalyst (macOS)
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            target: tests-maccatalyst
+            additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native_maccatalyst_macos
+            preBuildSteps:
+              - template: azure-templates-provisioning-profiles.yml
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the iOMac CatalystS test results
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/**/TestResults.xml'
+                  testRunTitle: 'Mac Catalyst Tests'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the test logs
+                condition: always()
+                inputs:
+                  artifactName: testlogs_maccatalyst
+                  pathToPublish: 'output/logs/testlogs'
         - template: azure-templates-bootstrapper.yml # Tests [WASM] (Linux)
           parameters:
             name: tests_wasm_linux

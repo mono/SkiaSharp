@@ -134,6 +134,9 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
 var PREVIEW_ONLY_NUGETS = new List<string> {
 };
 
+var DATE_TIME_NOW = DateTime.Now;
+var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_hhmmss");
+
 Information("Source Control:");
 Information($"    {"PREVIEW_LABEL".PadRight(30)} {{0}}", PREVIEW_LABEL);
 Information($"    {"FEATURE_NAME".PadRight(30)} {{0}}", FEATURE_NAME);
@@ -182,7 +185,8 @@ Task ("tests")
     .IsDependentOn ("tests-netfx")
     .IsDependentOn ("tests-netcore")
     .IsDependentOn ("tests-android")
-    .IsDependentOn ("tests-ios");
+    .IsDependentOn ("tests-ios")
+    .IsDependentOn ("tests-maccatalyst");
 
 Task ("tests-netfx")
     .Description ("Run all Full .NET Framework tests.")
@@ -190,30 +194,28 @@ Task ("tests-netfx")
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    var failedTests = 0;
-
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    foreach ( var arch in new [] { "x86", "x64" })
-    {
+    var failedTests = 0;
+
+    foreach ( var arch in new [] { "x86", "x64" }) {
         if (Skip(arch)) continue;
 
-        RunMSBuild ("./tests/SkiaSharp.Tests.Console.sln", platform: arch);
+        var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
+        if (SUPPORT_VULKAN)
+            testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
+        foreach (var testAssembly in testAssemblies) {
+            // build
+            var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
+            RunDotNetBuild (csproj, platform: arch);
 
-        // SkiaSharp.Tests.dll
-        try {
-            RunTests ($"./tests/SkiaSharp.Tests.Console/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Tests.dll", arch == "x86");
-        } catch {
-            failedTests++;
-            if (THROW_ON_FIRST_TEST_FAILURE)
-                throw;
-        }
-
-        // SkiaSharp.Vulkan.Tests.dll
-        if (SUPPORT_VULKAN) {
+            // test
+            DirectoryPath results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}";
+            EnsureDirectoryExists (results);
             try {
-                RunTests ($"./tests/SkiaSharp.Vulkan.Tests.Console/bin/{arch}/{CONFIGURATION}/net472/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
+                var assName = testAssembly.Replace (".Console", "");
+                RunTests ($"./tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/net472/{assName}.dll", arch == "x86");
             } catch {
                 failedTests++;
                 if (THROW_ON_FIRST_TEST_FAILURE)
@@ -240,24 +242,22 @@ Task ("tests-netcore")
         }
     }
 
-    var failedTests = 0;
-
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.Tests.Console.csproj
-    try {
-        RunNetCoreTests ("./tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj");
-    } catch {
-        failedTests++;
-        if (THROW_ON_FIRST_TEST_FAILURE)
-            throw;
-    }
+    var failedTests = 0;
 
-    // SkiaSharp.Vulkan.Tests.Console.csproj
-    if (SUPPORT_VULKAN) {
+    var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
+    if (SUPPORT_VULKAN)
+        testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
+    foreach (var testAssembly in testAssemblies) {
+        // build
+        var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
+        RunDotNetBuild (csproj);
+
+        // test
         try {
-            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj");
+            RunDotNetTest (csproj, $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}");
         } catch {
             failedTests++;
             if (THROW_ON_FIRST_TEST_FAILURE)
@@ -270,7 +270,7 @@ Task ("tests-netcore")
     }
 
     if (COVERAGE) {
-        RunCodeCoverage ("./tests/**/Coverage/**/*.xml", "./output/coverage");
+        RunCodeCoverage ("./output/logs/testlogs/**/Coverage/**/*.xml", "./output/coverage");
     }
 });
 
@@ -297,11 +297,10 @@ Task ("tests-android")
         });
 
     // run the tests
-    DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Tests.Devices.Android";
+    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
     RunCake ("./scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
         { "app", MakeAbsolute (app).FullPath },
         { "results", MakeAbsolute (results).FullPath },
-        { "exclusive", "true" },
     });
 });
 
@@ -328,11 +327,41 @@ Task ("tests-ios")
         });
 
     // run the tests
-    DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS";
-    RunCake ("./scripts/cake/xharness-ios.cake", "Default", new Dictionary<string, string> {
+    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/{DATE_TIME_STR}";
+    RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {
         { "app", MakeAbsolute (app).FullPath },
         { "results", MakeAbsolute (results).FullPath },
-        { "exclusive", "true" },
+    });
+});
+
+Task ("tests-maccatalyst")
+    .Description ("Run all Mac Catalyst tests.")
+    .IsDependentOn ("externals")
+    .Does (() =>
+{
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+
+    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
+    var configuration = "Debug";
+    var tfm = "net7.0-maccatalyst";
+    var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
+    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
+
+    // package the app
+    RunDotNetBuild (csproj,
+        configuration: configuration,
+        properties: new Dictionary<string, string> {
+            { "TargetFramework", tfm },
+            { "RuntimeIdentifier", rid },
+        });
+
+    // run the tests
+    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";
+    RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {
+        { "app", MakeAbsolute (app).FullPath },
+        { "results", MakeAbsolute (results).FullPath },
+        { "device", "maccatalyst" },
     });
 });
 

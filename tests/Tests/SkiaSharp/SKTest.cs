@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -11,6 +14,11 @@ namespace SkiaSharp.Tests
 		protected const int PRECISION = 4;
 
 		private static readonly Random random = new Random();
+
+		private static int nextPtr = 1000;
+
+		protected static IntPtr GetNextPtr() =>
+			(IntPtr)Interlocked.Increment(ref nextPtr);
 
 		protected static Stream CreateTestStream(int length = 1024)
 		{
