@@ -96,11 +96,18 @@ void RunNetCoreTests(FilePath testAssembly)
     DotNetCoreTest(testAssembly.GetFilename().ToString(), settings);
 }
 
-void RunNetCorePublish(FilePath testProject, DirectoryPath output)
+void RunDotNetPublish(
+    FilePath testProject,
+    string output = null,
+    string configuration = null,
+    string framework = null,
+    string runtime = null)
 {
     var dir = testProject.GetDirectory();
     var settings = new DotNetCorePublishSettings {
-        Configuration = CONFIGURATION,
+        Configuration = configuration ?? CONFIGURATION,
+        Framework = framework,
+        Runtime = runtime,
         NoBuild = true,
         WorkingDirectory = dir,
         OutputDirectory = output,

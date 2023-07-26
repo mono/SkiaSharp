@@ -7,6 +7,20 @@ namespace SkiaSharp.Tests
 	public class SKStreamTest : SKTest
 	{
 		[SkippableFact]
+		public void CanWriteTextToStream()
+		{
+			using (var stream = new SKDynamicMemoryWStream())
+			{
+				Assert.NotNull(stream);
+				Assert.Equal(0, stream.BytesWritten);
+
+				stream.WriteText("Hello");
+
+				Assert.Equal(5, stream.BytesWritten);
+			}
+		}
+
+		[SkippableFact]
 		public void SupportsNonASCIICharactersInPath()
 		{
 			var path = Path.Combine(PathToImages, "上田雅美.jpg");

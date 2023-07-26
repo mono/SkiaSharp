@@ -1,28 +1,24 @@
 #addin nuget:?package=Cake.Android.Adb&version=3.2.0
 #addin nuget:?package=Cake.Android.AvdManager&version=2.2.0
 
-DirectoryPath ROOT_PATH = MakeAbsolute(Directory(".."));
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 
 #load "shared.cake"
 
-// required
-FilePath PROJECT = Argument("project", EnvironmentVariable("ANDROID_TEST_PROJECT") ?? "");
-string TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-64_30");
-string DEVICE_NAME = Argument("skin", EnvironmentVariable("ANDROID_TEST_SKIN") ?? "Nexus 5X");
-
-// optional
 var TEST_APP = Argument("app", EnvironmentVariable("ANDROID_TEST_APP") ?? "");
-var TEST_APP_PACKAGE_NAME = Argument("package", EnvironmentVariable("ANDROID_TEST_APP_PACKAGE_NAME") ?? "");
-var TEST_APP_INSTRUMENTATION = Argument("instrumentation", EnvironmentVariable("ANDROID_TEST_APP_INSTRUMENTATION") ?? "");
 var TEST_RESULTS = Argument("results", EnvironmentVariable("ANDROID_TEST_RESULTS") ?? "");
+var TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-64_34");
+var TEST_APP_PACKAGE_NAME = Argument("package", EnvironmentVariable("ANDROID_TEST_APP_PACKAGE_NAME") ?? "");
+var TEST_APP_INSTRUMENTATION = Argument("instrumentation", EnvironmentVariable("ANDROID_TEST_APP_INSTRUMENTATION") ?? "devicerunners.xharness.maui.XHarnessInstrumentation");
 
 // other
-string ANDROID_AVD = "DEVICE_TESTS_EMULATOR";
-string DEVICE_ID = "";
-string DEVICE_ARCH = "";
+var ANDROID_AVD = "DEVICE_TESTS_EMULATOR";
+var DEVICE_NAME = Argument("skin", EnvironmentVariable("ANDROID_TEST_SKIN") ?? "Nexus 5X");
+var DEVICE_ID = "";
+var DEVICE_ARCH = "";
 
 // set up env
-var ANDROID_SDK_ROOT = Argument("android", EnvironmentVariable("ANDROID_SDK_ROOT") ?? EnvironmentVariable("ANDROID_SDK_ROOT"));
+var ANDROID_SDK_ROOT = Argument("android", EnvironmentVariable("ANDROID_SDK_ROOT") ?? EnvironmentVariable("ANDROID_SDK_HOME"));
 if (string.IsNullOrEmpty(ANDROID_SDK_ROOT)) {
     throw new Exception("Environment variable 'ANDROID_SDK_ROOT' must be set to the Android SDK root.");
 }
@@ -34,8 +30,6 @@ System.Environment.SetEnvironmentVariable("PATH",
     EnvironmentVariable("PATH"));
 
 Information("Android SDK Root: {0}", ANDROID_SDK_ROOT);
-Information("Project File: {0}", PROJECT);
-Information("Build Configuration: {0}", CONFIGURATION);
 Information("PATH: {0}", EnvironmentVariable("PATH"));
 
 var bat = IsRunningOnWindows() ? ".bat" : "";
@@ -64,7 +58,7 @@ Setup(context =>
     {
         var working = TEST_DEVICE.Trim().ToLower();
         var emulator = true;
-        var api = 30;
+        var api = 34;
         // version
         if (working.IndexOf("_") is int idx && idx > 0) {
             api = int.Parse(working.Substring(idx + 1));
@@ -86,12 +80,14 @@ Setup(context =>
             else
                 DEVICE_ARCH = "armeabi-v7a";
         } else if (parts[2] == "64") {
-            if (emulator)
+            if (RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64)
+                DEVICE_ARCH = "arm64-v8a";
+            else if (emulator)
                 DEVICE_ARCH = "x86_64";
             else
                 DEVICE_ARCH = "arm64-v8a";
         }
-        DEVICE_ID = $"system-images;android-{api};google_apis_playstore;{DEVICE_ARCH}";
+        DEVICE_ID = $"system-images;android-{api};google_apis;{DEVICE_ARCH}";
 
         // we are not using a virtual device, so quit
         if (!emulator)
@@ -149,16 +145,7 @@ Task("Default")
     .Does(() =>
 {
     if (string.IsNullOrEmpty(TEST_APP)) {
-        if (string.IsNullOrEmpty(PROJECT.FullPath))
-            throw new Exception("If no app was specified, an app must be provided.");
-        var binDir = PROJECT.GetDirectory().Combine("bin").Combine(CONFIGURATION).FullPath;
-        var apps = GetFiles(binDir + "/*-Signed.apk");
-        if (apps.Any()) {
-            TEST_APP = apps.FirstOrDefault().FullPath;
-        } else {
-            apps = GetFiles(binDir + "/*.apk");
-            TEST_APP = apps.First().FullPath;
-        }
+        throw new Exception("A path to a test app is required.");
     }
     if (string.IsNullOrEmpty(TEST_APP_PACKAGE_NAME)) {
         var appFile = (FilePath)TEST_APP;
@@ -183,7 +170,6 @@ Task("Default")
         $"--app=\"{TEST_APP}\" " +
         $"--package-name=\"{TEST_APP_PACKAGE_NAME}\" " +
         $"--instrumentation=\"{TEST_APP_INSTRUMENTATION}\" " +
-        $"--device-arch=\"{DEVICE_ARCH}\" " +
         $"--output-directory=\"{TEST_RESULTS}\" " +
         $"--verbosity=\"Debug\" ");
 

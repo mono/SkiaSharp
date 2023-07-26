@@ -186,6 +186,7 @@ Task ("tests")
 
 Task ("tests-netfx")
     .Description ("Run all Full .NET Framework tests.")
+    .WithCriteria (IsRunningOnWindows ())
     .IsDependentOn ("externals")
     .Does (() =>
 {
@@ -281,27 +282,26 @@ Task ("tests-android")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // build the solution to copy all the files
-    RunMSBuild ("./tests/SkiaSharp.Tests.Android.sln", configuration: "Debug");
+    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
+    var configuration = "Release";
+    var tfm = "net7.0-android";
+    var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
+    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
 
-    // package the app
-    FilePath csproj = "./tests/SkiaSharp.Tests.Android/SkiaSharp.Tests.Android.csproj";
-    RunMSBuild (csproj,
-        targets: new [] { "SignAndroidPackage" },
+    // build the app
+    RunDotNetBuild (csproj,
+        configuration: configuration,
         properties: new Dictionary<string, string> {
-            { "BuildTestOnly", "true" },
-        },
-        platform: "AnyCPU",
-        configuration: "Debug");
+            { "TargetFramework", tfm },
+            { "RuntimeIdentifier", rid },
+        });
 
     // run the tests
-    DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Tests.Android";
+    DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Tests.Devices.Android";
     RunCake ("./scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
-        { "project", MakeAbsolute(csproj).FullPath },
-        { "configuration", "Debug" },
+        { "app", MakeAbsolute (app).FullPath },
+        { "results", MakeAbsolute (results).FullPath },
         { "exclusive", "true" },
-        { "results", MakeAbsolute(results).FullPath },
-        { "verbosity", "diagnostic" },
     });
 });
 
@@ -313,26 +313,26 @@ Task ("tests-ios")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // build the solution to copy all the files
-    RunMSBuild ("./tests/SkiaSharp.Tests.iOS.sln", configuration: "Debug");
+    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
+    var configuration = "Debug";
+    var tfm = "net7.0-ios";
+    var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
+    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 
     // package the app
-    FilePath csproj = "./tests/SkiaSharp.Tests.iOS/SkiaSharp.Tests.iOS.csproj";
-    RunMSBuild (csproj,
+    RunDotNetBuild (csproj,
+        configuration: configuration,
         properties: new Dictionary<string, string> {
-            { "BuildIpa", "true" },
-            { "BuildTestOnly", "true" },
-        },
-        platform: "iPhoneSimulator",
-        configuration: "Debug");
+            { "TargetFramework", tfm },
+            { "RuntimeIdentifier", rid },
+        });
 
     // run the tests
-    DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Tests.iOS";
+    DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS";
     RunCake ("./scripts/cake/xharness-ios.cake", "Default", new Dictionary<string, string> {
-        { "project", MakeAbsolute(csproj).FullPath },
-        { "configuration", "Debug" },
+        { "app", MakeAbsolute (app).FullPath },
+        { "results", MakeAbsolute (results).FullPath },
         { "exclusive", "true" },
-        { "results", MakeAbsolute(results).FullPath },
     });
 });
 
@@ -344,7 +344,7 @@ Task ("tests-wasm")
     RunMSBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
 
     var pubDir = "./tests/SkiaSharp.Tests.Wasm/bin/publish/";
-    RunNetCorePublish("./tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj", pubDir);
+    RunDotNetPublish("./tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj", pubDir);
     IProcess serverProc = null;
     try {
         serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {

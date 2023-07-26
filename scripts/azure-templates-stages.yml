@@ -589,7 +589,7 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-android
-            additionalArgs: --device=android-emulator-64_30 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --device=android-emulator-64_34 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native_android_x86_macos
@@ -599,15 +599,15 @@ stages:
             preBuildSteps:
               - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
                 displayName: Install the Android emulator
-              - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-30;google_apis_playstore;x86_64"
-                displayName: Install the Android API 30 emulator image
+              - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-34;google_apis;x86_64"
+                displayName: Install the Android API 34 emulator image
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the Android test results
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.Android/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.Devices.Android/**/TestResults.xml'
                   testRunTitle: 'Android Tests'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
@@ -634,7 +634,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.iOS/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/**/TestResults.xml'
                   testRunTitle: 'iOS Tests'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
