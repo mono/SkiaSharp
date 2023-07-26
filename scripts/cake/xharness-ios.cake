@@ -6,8 +6,6 @@ var TEST_APP = Argument("app", EnvironmentVariable("IOS_TEST_APP"));
 var TEST_RESULTS = Argument("results", EnvironmentVariable("IOS_TEST_RESULTS") ?? "");
 var TEST_DEVICE = Argument("device", EnvironmentVariable("IOS_TEST_DEVICE") ?? "ios-simulator-64");
 
-Information("Project File: {0}", PROJECT);
-
 Task("Default")
     .Does(() =>
 {
