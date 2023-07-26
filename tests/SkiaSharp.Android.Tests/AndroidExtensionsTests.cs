@@ -4,6 +4,12 @@ namespace SkiaSharp.Views.Android.Tests
 {
 	public class AndroidExtensionsTests : AndroidTests
 	{
+		[SkippableFact]
+		public void TestThisThing()
+		{
+			Assert.True(false);
+		}
+
 		[SkippableTheory]
 		[InlineData(0)]
 		[InlineData(10)]
