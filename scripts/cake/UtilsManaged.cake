@@ -274,34 +274,16 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
     comparer.IgnoreResolutionErrors = true;
 
+    Verbose ($"Adding dependencies...");
     await AddDep("OpenTK.GLControl", "NET20");
-    await AddDep("Tizen.NET", "netstandard2.0");
-    await AddDep("Xamarin.Forms", "netstandard2.0");
-    await AddDep("Xamarin.Forms", "MonoAndroid90");
-    await AddDep("Xamarin.Forms", "Xamarin.iOS10");
-    await AddDep("Xamarin.Forms", "Xamarin.Mac");
-    await AddDep("Xamarin.Forms", "tizen40");
-    await AddDep("Xamarin.Forms", "uap10.0.16299");
-    await AddDep("Xamarin.Forms.Platform.WPF", "net461");
-    await AddDep("Xamarin.Forms.Platform.GTK", "net45");
     await AddDep("GtkSharp", "netstandard2.0");
     await AddDep("GdkSharp", "netstandard2.0");
     await AddDep("GLibSharp", "netstandard2.0");
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");
-    await AddDep("Uno.UI", "netstandard2.0");
-    await AddDep("Uno.UI", "MonoAndroid10.0");
-    await AddDep("Uno.UI", "xamarinios10");
-    await AddDep("Uno.UI", "xamarinmac20");
-    await AddDep("Uno.UI", "UAP");
     await AddDep("Microsoft.WindowsAppSDK", "net5.0-windows10.0.18362.0");
     await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
     await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
-
-    await AddDep("OpenTK.GLControl", "NET40", "reference");
-    await AddDep("Xamarin.Forms", "Xamarin.iOS10", "reference");
-    await AddDep("Xamarin.Forms", "Xamarin.Mac", "reference");
-    await AddDep("Xamarin.Forms", "uap10.0", "reference");
 
     Verbose("Added search paths:");
     foreach (var path in comparer.SearchPaths) {
@@ -314,6 +296,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     async Task AddDep(string id, string platform, string type = "release")
     {
         var version = GetVersion(id, type);
+        Verbose ($"    Adding dependency {id} version {version}...");
         var root = await comparer.ExtractCachedPackageAsync(id, version);
         comparer.SearchPaths.Add(System.IO.Path.Combine(root, "lib", platform));
     }
