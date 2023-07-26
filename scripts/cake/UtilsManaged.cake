@@ -204,38 +204,6 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
     }
 }
 
-string[] GetReferenceSearchPaths()
-{
-    var refs = new List<string>();
-
-    if (IsRunningOnWindows()) {
-        var vs =
-            VS_INSTALL ??
-            VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin" }) ??
-            VSWhereLatest(new VSWhereLatestSettings { Requires = "Component.Xamarin", IncludePrerelease = true });
-        var referenceAssemblies = $"{vs}/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
-        var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-
-        refs.AddRange(GetDirectories("./output/docs/temp/*").Select(d => d.FullPath));
-        refs.Add($"{referenceAssemblies}/MonoTouch/v1.0");
-        refs.Add($"{referenceAssemblies}/MonoAndroid/v1.0");
-        refs.Add($"{referenceAssemblies}/MonoAndroid/v9.0");
-        refs.Add($"{referenceAssemblies}/Xamarin.iOS/v1.0");
-        refs.Add($"{referenceAssemblies}/Xamarin.TVOS/v1.0");
-        refs.Add($"{referenceAssemblies}/Xamarin.WatchOS/v1.0");
-        refs.Add($"{referenceAssemblies}/Xamarin.Mac/v2.0");
-        refs.Add($"{pf}/Windows Kits/10/UnionMetadata/Facade");
-        refs.Add($"{pf}/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0");
-        refs.Add($"{pf}/Windows Kits/10/References/Windows.Foundation.FoundationContract/1.0.0.0");
-        refs.Add($"{pf}/GtkSharp/2.12/lib/gtk-sharp-2.0");
-        refs.Add($"{vs}/Common7/IDE/PublicAssemblies");
-    } else {
-        // TODO
-    }
-
-    return refs.ToArray();
-}
-
 string[] GetDotNetPacksSearchPaths()
 {
     var refs = new List<string>();
@@ -270,7 +238,6 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
 {
     var comparer = new NuGetDiff();
     comparer.SearchPaths.AddRange(GetDotNetPacksSearchPaths());
-    comparer.SearchPaths.AddRange(GetReferenceSearchPaths());
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
     comparer.IgnoreResolutionErrors = true;
 
