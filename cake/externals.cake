@@ -21,6 +21,9 @@ foreach (var cake in GetFiles("native/*/build.cake"))
 Task("externals-osx")
     .IsDependentOn("externals-macos");
 
+Task("externals-nano")
+    .IsDependentOn("externals-nanoserver");
+
 Task("externals-catalyst")
     .IsDependentOn("externals-maccatalyst");
 
@@ -78,6 +81,9 @@ bool ShouldBuildExternal(string platform)
             break;
         case "win":
             platform = "windows";
+            break;
+        case "nano":
+            platform = "nanoserver";
             break;
     }
 

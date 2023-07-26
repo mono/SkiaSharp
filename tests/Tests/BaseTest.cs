@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp.Tests
 {
@@ -7,6 +8,7 @@ namespace SkiaSharp.Tests
 	{
 		protected const string CategoryKey = "Category";
 
+		protected const string ApiCategory = "API";
 		protected const string GpuCategory = "GPU";
 		protected const string MatchCharacterCategory = "MatchCharacter";
 

@@ -41,7 +41,7 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
     <EntryPointProjectUniqueName>..\SkiaSharpSample\SkiaSharpSample.csproj</EntryPointProjectUniqueName>
-    <AssetTargetFallback>net5.0-windows$(TargetPlatformVersion);$(AssetTargetFallback)</AssetTargetFallback>
+    <AssetTargetFallback>net6.0-windows$(TargetPlatformVersion);$(AssetTargetFallback)</AssetTargetFallback>
   </PropertyGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -64,9 +64,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="[1.0.0-preview3]">
-      <IncludeAssets>build</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.1.5" IncludeAssets="build" />
   </ItemGroup>
   <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
 </Project>

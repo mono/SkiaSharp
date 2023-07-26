@@ -133,42 +133,42 @@ namespace SkiaSharp
 				return false;
 			}
 
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
 			// clean up string
-			hexString = hexString.Trim ().ToUpperInvariant ();
-			if (hexString[0] == '#')
-				hexString = hexString.Substring (1);
+			var hexSpan = hexString.AsSpan ().Trim ().TrimStart ('#');
 
-			var len = hexString.Length;
+			var len = hexSpan.Length;
 			if (len == 3 || len == 4) {
 				byte a;
 				// parse [A]
 				if (len == 4) {
-					if (!byte.TryParse (string.Concat (hexString[len - 4], hexString[len - 4]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a)) {
+					if (!byte.TryParse (hexSpan.Slice (0, 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a)) {
 						// error
 						color = SKColor.Empty;
 						return false;
 					}
+					a = (byte)(a << 4 | a);
 				} else {
 					a = 255;
 				}
 
 				// parse RGB
-				if (!byte.TryParse (string.Concat (hexString[len - 3], hexString[len - 3]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var r) ||
-					!byte.TryParse (string.Concat (hexString[len - 2], hexString[len - 2]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var g) ||
-					!byte.TryParse (string.Concat (hexString[len - 1], hexString[len - 1]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b)) {
+				if (!byte.TryParse (hexSpan.Slice (len - 3, 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var r) ||
+					!byte.TryParse (hexSpan.Slice (len - 2, 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var g) ||
+					!byte.TryParse (hexSpan.Slice (len - 1, 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b)) {
 					// error
 					color = SKColor.Empty;
 					return false;
 				}
 
 				// success
-				color = new SKColor (r, g, b, a);
+				color = new SKColor ((byte)(r << 4 | r), (byte)(g << 4 | g), (byte)(b << 4 | b), a);
 				return true;
 			}
 
 			if (len == 6 || len == 8) {
 				// parse [AA]RRGGBB
-				if (!uint.TryParse (hexString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number)) {
+				if (!uint.TryParse (hexSpan, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number)) {
 					// error
 					color = SKColor.Empty;
 					return false;
@@ -183,6 +183,57 @@ namespace SkiaSharp
 				}
 				return true;
 			}
+#else
+			// clean up string
+			hexString = hexString.Trim ();
+			var startIndex = hexString[0] == '#' ? 1 : 0;
+
+			var len = hexString.Length - startIndex;
+			if (len == 3 || len == 4) {
+				byte a;
+				// parse [A]
+				if (len == 4) {
+					if (!byte.TryParse (string.Concat (new string (hexString[len - 4 + startIndex], 2)), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a)) {
+						// error
+						color = SKColor.Empty;
+						return false;
+					}
+				} else {
+					a = 255;
+				}
+
+				// parse RGB
+				if (!byte.TryParse (new string (hexString[len - 3 + startIndex], 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var r) ||
+					!byte.TryParse (new string (hexString[len - 2 + startIndex], 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var g) ||
+					!byte.TryParse (new string (hexString[len - 1 + startIndex], 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b)) {
+					// error
+					color = SKColor.Empty;
+					return false;
+				}
+
+				// success
+				color = new SKColor (r, g, b, a);
+				return true;
+			}
+
+			if (len == 6 || len == 8) {
+				// parse [AA]RRGGBB
+				if (!uint.TryParse (hexString.Substring (startIndex), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number)) {
+					// error
+					color = SKColor.Empty;
+					return false;
+				}
+
+				// success
+				color = (SKColor)number;
+
+				// alpha was not provided, so use 255
+				if (len == 6) {
+					color = color.WithAlpha (255);
+				}
+				return true;
+			}
+#endif
 
 			// error
 			color = SKColor.Empty;

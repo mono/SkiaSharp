@@ -1,4 +1,4 @@
-﻿#if !__WATCHOS__
+﻿#if !__WATCHOS__ && !__MACCATALYST__
 
 using System;
 using System.ComponentModel;
@@ -8,7 +8,9 @@ using GLKit;
 using OpenGLES;
 using SkiaSharp.Views.GlesInterop;
 
-#if HAS_UNO
+#if HAS_UNO_WINUI
+namespace SkiaSharp.Views.Windows
+#elif HAS_UNO
 namespace SkiaSharp.Views.UWP
 #elif __TVOS__
 namespace SkiaSharp.Views.tvOS
@@ -16,11 +18,11 @@ namespace SkiaSharp.Views.tvOS
 namespace SkiaSharp.Views.iOS
 #endif
 {
-	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]
 #if HAS_UNO
 	internal
 #else
+	[Register(nameof(SKGLView))]
 	public
 #endif
 	class SKGLView : GLKView, IGLKViewDelegate, IComponent

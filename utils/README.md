@@ -12,11 +12,8 @@ This can be run with:
 
 ```pwsh
 dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libSkiaSharp.json --skia externals/skia --output binding/Binding/SkiaApi.generated.cs
-```
-
-Or:
-
-```pwsh
+dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libSkiaSharp.Skottie.json --skia externals/skia --output binding/SkiaSharp.Skottie/SkottieApi.generated.cs
+dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libSkiaSharp.SceneGraph.json --skia externals/skia --output binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs
 dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libHarfBuzzSharp.json --skia externals/skia/third_party/externals/harfbuzz --output binding/HarfBuzzSharp.Shared/HarfBuzzApi.generated.cs
 ```
 

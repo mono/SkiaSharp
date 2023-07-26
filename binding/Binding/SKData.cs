@@ -1,9 +1,8 @@
-﻿﻿using System;
-using System.Runtime.InteropServices;
+﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
-using System.ComponentModel;
-using System.Buffers;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {
@@ -16,7 +15,7 @@ namespace SkiaSharp
 
 		private static readonly SKData empty;
 
-		static SKData()
+		static SKData ()
 		{
 			empty = new SKDataStatic (SkiaApi.sk_data_new_empty ());
 		}
@@ -53,7 +52,7 @@ namespace SkiaSharp
 		{
 			if (!PlatformConfiguration.Is64Bit && length > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
-			return GetObject (SkiaApi.sk_data_new_with_copy ((void*)bytes, (IntPtr) length));
+			return GetObject (SkiaApi.sk_data_new_with_copy ((void*)bytes, (IntPtr)length));
 		}
 
 		public static SKData CreateCopy (byte[] bytes) =>
@@ -75,10 +74,8 @@ namespace SkiaSharp
 
 		// Create
 
-		public static SKData Create (int size)
-		{
-			return GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
-		}
+		public static SKData Create (int size) =>
+			GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr)size));
 
 		public static SKData Create (long size) =>
 			GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr)size));
@@ -87,8 +84,8 @@ namespace SkiaSharp
 		{
 			if (!PlatformConfiguration.Is64Bit && size > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (size), "The size exceeds the size of pointers.");
-				
-			return GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
+
+			return GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr)size));
 		}
 
 		public static SKData Create (string filename)
@@ -107,7 +104,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 			if (stream.CanSeek) {
-				return Create (stream, stream.Length);
+				return Create (stream, stream.Length - stream.Position);
 			} else {
 				using var memory = new SKDynamicMemoryWStream ();
 				using (var managed = new SKManagedStream (stream)) {
@@ -157,7 +154,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
+			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
 		}
 
 		public static SKData Create (SKStream stream, ulong length)
@@ -165,7 +162,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
+			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
 		}
 
 		public static SKData Create (SKStream stream, long length)
@@ -173,7 +170,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
+			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
 		}
 
 		public static SKData Create (IntPtr address, int length)
@@ -211,7 +208,7 @@ namespace SkiaSharp
 				if (offset > UInt32.MaxValue)
 					throw new ArgumentOutOfRangeException (nameof (offset), "The offset exceeds the size of pointers.");
 			}
-			return GetObject (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
+			return GetObject (SkiaApi.sk_data_new_subset (Handle, (IntPtr)offset, (IntPtr)length));
 		}
 
 		// ToArray
@@ -279,7 +276,7 @@ namespace SkiaSharp
 			private readonly bool disposeHost;
 
 			public unsafe SKDataStream (SKData host, bool disposeHost = false)
-				: base((byte *) host.Data, host.Size)
+				: base ((byte*)host.Data, host.Size, host.Size, FileAccess.ReadWrite)
 			{
 				this.host = host;
 				this.disposeHost = disposeHost;
@@ -301,10 +298,11 @@ namespace SkiaSharp
 		private sealed class SKDataStatic : SKData
 		{
 			internal SKDataStatic (IntPtr x)
-				: base (x, true)
+				: base (x, false)
 			{
-				IgnorePublicDispose = true;
 			}
+
+			protected override void Dispose (bool disposing) { }
 		}
 	}
 }

@@ -85,7 +85,7 @@ public class SKCanvasLayer : CoreAnimation.CALayer, CoreAnimation.ICAMediaTiming
 #### New Type: SkiaSharp.Views.tvOS.SKCanvasView
 
 ```csharp
-public class SKCanvasView : UIKit.UIView, CoreAnimation.ICALayerDelegate, Foundation.INSCoding, Foundation.INSObjectProtocol, ObjCRuntime.INativeObject, System.Collections.IEnumerable, System.ComponentModel.IComponent, System.IDisposable, System.IEquatable<Foundation.NSObject>, UIKit.IUIAccessibilityIdentification, UIKit.IUIAppearance, UIKit.IUIAppearanceContainer, UIKit.IUICoordinateSpace, UIKit.IUIDynamicItem, UIKit.IUIFocusEnvironment, UIKit.IUIFocusItem, UIKit.IUIFocusItemContainer, UIKit.IUITraitEnvironment, UIKit.IUIUserActivityRestoring {
+public class SKCanvasView : UIKit.UIView, CoreAnimation.ICALayerDelegate, Foundation.INSCoding, Foundation.INSObjectProtocol, ObjCRuntime.INativeObject, System.Collections.IEnumerable, System.ComponentModel.IComponent, System.IDisposable, System.IEquatable<Foundation.NSObject>, UIKit.IUIAccessibilityIdentification, UIKit.IUIAppearance, UIKit.IUIAppearanceContainer, UIKit.IUICoordinateSpace, UIKit.IUIDynamicItem, UIKit.IUIFocusEnvironment, UIKit.IUIFocusItem, UIKit.IUIFocusItemContainer, UIKit.IUIResponderStandardEditActions, UIKit.IUITraitEnvironment, UIKit.IUIUserActivityRestoring {
 	// constructors
 	public SKCanvasView ();
 	public SKCanvasView (CoreGraphics.CGRect frame);
@@ -125,7 +125,7 @@ public class SKGLLayer : CoreAnimation.CAEAGLLayer, CoreAnimation.ICAMediaTiming
 #### New Type: SkiaSharp.Views.tvOS.SKGLView
 
 ```csharp
-public class SKGLView : GLKit.GLKView, CoreAnimation.ICALayerDelegate, Foundation.INSCoding, Foundation.INSObjectProtocol, GLKit.IGLKViewDelegate, ObjCRuntime.INativeObject, System.Collections.IEnumerable, System.ComponentModel.IComponent, System.IDisposable, System.IEquatable<Foundation.NSObject>, UIKit.IUIAccessibilityIdentification, UIKit.IUIAppearance, UIKit.IUIAppearanceContainer, UIKit.IUICoordinateSpace, UIKit.IUIDynamicItem, UIKit.IUIFocusEnvironment, UIKit.IUIFocusItem, UIKit.IUIFocusItemContainer, UIKit.IUITraitEnvironment, UIKit.IUIUserActivityRestoring {
+public class SKGLView : GLKit.GLKView, CoreAnimation.ICALayerDelegate, Foundation.INSCoding, Foundation.INSObjectProtocol, GLKit.IGLKViewDelegate, ObjCRuntime.INativeObject, System.Collections.IEnumerable, System.ComponentModel.IComponent, System.IDisposable, System.IEquatable<Foundation.NSObject>, UIKit.IUIAccessibilityIdentification, UIKit.IUIAppearance, UIKit.IUIAppearanceContainer, UIKit.IUICoordinateSpace, UIKit.IUIDynamicItem, UIKit.IUIFocusEnvironment, UIKit.IUIFocusItem, UIKit.IUIFocusItemContainer, UIKit.IUIResponderStandardEditActions, UIKit.IUITraitEnvironment, UIKit.IUIUserActivityRestoring {
 	// constructors
 	public SKGLView ();
 	public SKGLView (CoreGraphics.CGRect frame);

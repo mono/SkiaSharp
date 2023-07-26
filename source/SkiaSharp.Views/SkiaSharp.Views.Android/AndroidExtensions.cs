@@ -131,12 +131,10 @@ namespace SkiaSharp.Views.Android
 
 		public static Bitmap ToBitmap(this SKBitmap skiaBitmap)
 		{
-			using (var pixmap = skiaBitmap.PeekPixels())
-			{
-				var bmp = pixmap.ToBitmap();
-				GC.KeepAlive(skiaBitmap);
-				return bmp;
-			}
+			using var pixmap = skiaBitmap.PeekPixels();
+			var bmp = pixmap.ToBitmap();
+			GC.KeepAlive(skiaBitmap);
+			return bmp;
 		}
 
 		public static Bitmap ToBitmap(this SKImage skiaImage)
@@ -189,11 +187,9 @@ namespace SkiaSharp.Views.Android
 
 		public static Bitmap ToBitmap(this SKPixmap skiaPixmap)
 		{
-			using (var image = SKImage.FromPixels(skiaPixmap))
-			{
-				var bmp = image.ToBitmap();
-				return bmp;
-			}
+			using var image = SKImage.FromPixels(skiaPixmap);
+			var bmp = image.ToBitmap();
+			return bmp;
 		}
 
 		public static Bitmap ToBitmap(this SKPicture skiaPicture, SKSizeI dimensions)

@@ -11,7 +11,7 @@
 Removed method:
 
 ```csharp
-[Obsolete ("Use Flush() instead.")]
+[Obsolete]
 public void Flush (GRContextFlushBits flagsBitfield);
 ```
 
@@ -52,7 +52,7 @@ Modified fields:
 Removed method:
 
 ```csharp
-[Obsolete ("Use CreateNativeGlInterface() or CreateDefaultInterface() instead.")]
+[Obsolete]
 public static GRGlInterface CreateNativeInterface ();
 ```
 
@@ -83,7 +83,7 @@ Modified fields:
 Removed methods:
 
 ```csharp
-[Obsolete ("Use SKPixmap.ReadPixels instead.")]
+[Obsolete]
 public bool CopyPixelsTo (IntPtr dst, int dstSize, int dstRowBytes, bool preserveDstPad);
 public void LockPixels ();
 public void UnlockPixels ();
@@ -95,34 +95,34 @@ public void UnlockPixels ();
 Removed methods:
 
 ```csharp
-[Obsolete ("Use ClipPath(SKPath, SKClipOperation, bool) instead.")]
+[Obsolete]
 public void ClipPath (SKPath path, SKRegionOperation operation, bool antialias);
 
-[Obsolete ("Use ClipRect(SKRect, SKClipOperation, bool) instead.")]
+[Obsolete]
 public void ClipRect (SKRect rect, SKRegionOperation operation, bool antialias);
 
-[Obsolete ("Use DrawColor(SKColor, SKBlendMode) instead.")]
+[Obsolete]
 public void DrawColor (SKColor color, SKXferMode mode);
 
-[Obsolete ("Use DrawPositionedText instead.")]
+[Obsolete]
 public void DrawText (string text, SKPoint[] points, SKPaint paint);
 
-[Obsolete ("Use DrawPositionedText instead.")]
+[Obsolete]
 public void DrawText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint);
 
-[Obsolete ("Use DrawTextOnPath instead.")]
+[Obsolete]
 public void DrawText (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint);
 
-[Obsolete ("Use DrawTextOnPath instead.")]
+[Obsolete]
 public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint);
 
-[Obsolete ("Use DrawTextOnPath instead.")]
+[Obsolete]
 public void DrawText (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint);
 
-[Obsolete ("Use GetLocalClipBounds instead.")]
+[Obsolete]
 public bool GetClipBounds (ref SKRect bounds);
 
-[Obsolete ("Use GetDeviceClipBounds instead.")]
+[Obsolete]
 public bool GetClipDeviceBounds (ref SKRectI bounds);
 ```
 
@@ -132,10 +132,10 @@ public bool GetClipDeviceBounds (ref SKRectI bounds);
 Removed methods:
 
 ```csharp
-[Obsolete ("Use CreateBlendMode(SKColor, SKBlendMode) instead.")]
+[Obsolete]
 public static SKColorFilter CreateBlendMode (SKColor c, SKXferMode mode);
 
-[Obsolete ("Use CreateBlendMode(SKColor, SKBlendMode) instead.")]
+[Obsolete]
 public static SKColorFilter CreateXferMode (SKColor c, SKXferMode mode);
 ```
 
@@ -145,10 +145,10 @@ public static SKColorFilter CreateXferMode (SKColor c, SKXferMode mode);
 Removed methods:
 
 ```csharp
-[Obsolete ("Use SKColorSpacePrimaries.ToXyzD50 instead.")]
+[Obsolete]
 public static SKMatrix44 ConvertPrimariesToXyzD50 (SKColorSpacePrimaries primaries);
 
-[Obsolete ("Use SKColorSpacePrimaries.ToXyzD50(SKMatrix44) instead.")]
+[Obsolete]
 public static bool ConvertPrimariesToXyzD50 (SKColorSpacePrimaries primaries, SKMatrix44 toXyzD50);
 ```
 
@@ -158,7 +158,7 @@ public static bool ConvertPrimariesToXyzD50 (SKColorSpacePrimaries primaries, SK
 Removed method:
 
 ```csharp
-[Obsolete ("Not supported.")]
+[Obsolete]
 public static SKData FromMallocMemory (IntPtr bytes, ulong length);
 ```
 
@@ -177,13 +177,13 @@ public void CopyTo (SKWStream dst);
 Removed methods:
 
 ```csharp
-[Obsolete ("Use Encode(SKEncodedImageFormat, int) instead.")]
+[Obsolete]
 public SKData Encode (SKImageEncodeFormat format, int quality);
 
-[Obsolete ("Use FromEncodedData instead.")]
+[Obsolete]
 public static SKImage FromData (SKData data);
 
-[Obsolete ("Use FromEncodedData instead.")]
+[Obsolete]
 public static SKImage FromData (SKData data, SKRectI subset);
 ```
 
@@ -193,7 +193,7 @@ public static SKImage FromData (SKData data, SKRectI subset);
 Removed method:
 
 ```csharp
-[Obsolete ("Use CreateDisplacementMapEffect instead.")]
+[Obsolete]
 public static SKImageFilter CreateCompose (SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input, SKImageFilter.CropRect cropRect);
 ```
 
@@ -223,7 +223,7 @@ Modified base type:
 Removed method:
 
 ```csharp
-[Obsolete ("Use MapPoint instead.")]
+[Obsolete]
 public SKPoint MapXY (float x, float y);
 ```
 
@@ -233,13 +233,13 @@ public SKPoint MapXY (float x, float y);
 Removed methods:
 
 ```csharp
-[Obsolete ("Use AddPath(SKPath, SKPathAddMode) instead.")]
+[Obsolete]
 public void AddPath (SKPath other, SKPath.AddMode mode);
 
-[Obsolete ("Use AddPath(SKPath, ref SKMatrix, SKPathAddMode) instead.")]
+[Obsolete]
 public void AddPath (SKPath other, ref SKMatrix matrix, SKPath.AddMode mode);
 
-[Obsolete ("Use AddPath(SKPath, float, float, SKPathAddMode) instead.")]
+[Obsolete]
 public void AddPath (SKPath other, float dx, float dy, SKPath.AddMode mode);
 ```
 
@@ -249,7 +249,7 @@ public void AddPath (SKPath other, float dx, float dy, SKPath.AddMode mode);
 Removed method:
 
 ```csharp
-[Obsolete ("Use Create1DPath(SKPath, float, float, SKPath1DPathEffectStyle) instead.")]
+[Obsolete]
 public static SKPathEffect Create1DPath (SKPath path, float advance, float phase, SkPath1DPathEffectStyle style);
 ```
 
@@ -259,7 +259,7 @@ public static SKPathEffect Create1DPath (SKPath path, float advance, float phase
 Removed method:
 
 ```csharp
-[Obsolete ("Use GetMatrix(float, out SKMatrix, SKPathMeasureMatrixFlags) instead.")]
+[Obsolete]
 public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasure.MatrixFlags flags);
 ```
 
@@ -269,7 +269,7 @@ public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasure.Matrix
 Removed method:
 
 ```csharp
-[Obsolete ("Use CreateCompose(SKShader, SKShader, SKBlendMode) instead.")]
+[Obsolete]
 public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKXferMode mode);
 ```
 

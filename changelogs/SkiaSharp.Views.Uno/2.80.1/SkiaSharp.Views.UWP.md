@@ -45,7 +45,7 @@ public class SKPaintGLSurfaceEventArgs : System.EventArgs {
 	// constructors
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget);
 
-	[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
+	[Obsolete]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
@@ -54,7 +54,7 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 	public SkiaSharp.SKColorType ColorType { get; }
 	public SkiaSharp.GRSurfaceOrigin Origin { get; }
 
-	[Obsolete ("Use BackendRenderTarget instead.")]
+	[Obsolete]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 	public SkiaSharp.SKSurface Surface { get; }
 }
@@ -75,7 +75,7 @@ public class SKPaintSurfaceEventArgs : System.EventArgs {
 #### New Type: SkiaSharp.Views.UWP.SKXamlCanvas
 
 ```csharp
-public class SKXamlCanvas : Windows.UI.Xaml.FrameworkElement, System.Collections.IEnumerable, System.IDisposable, Uno.UI.DataBinding.IWeakReferenceProvider, Windows.UI.Composition.IAnimationObject, Windows.UI.Xaml.DependencyObject, Windows.UI.Xaml.IDataContextProvider, Windows.UI.Xaml.IDependencyObjectStoreProvider, Windows.UI.Xaml.IFrameworkElement, Windows.UI.Xaml.ILayoutConstraints, Windows.UI.Xaml.IUIElement {
+public class SKXamlCanvas : Windows.UI.Xaml.FrameworkElement, System.Collections.IEnumerable, Uno.UI.DataBinding.IWeakReferenceProvider, Windows.UI.Composition.IAnimationObject, Windows.UI.Composition.IVisualElement, Windows.UI.Xaml.DependencyObject, Windows.UI.Xaml.IDataContextProvider, Windows.UI.Xaml.IDependencyObjectParse, Windows.UI.Xaml.IDependencyObjectStoreProvider, Windows.UI.Xaml.ILayoutConstraints {
 	// constructors
 	public SKXamlCanvas ();
 	// properties

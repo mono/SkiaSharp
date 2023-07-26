@@ -115,10 +115,10 @@ namespace SkiaSharp
 			var queue = backendContext.Queue;
 
 			if (options == null) {
-				return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)device.Handle, (void*)queue.Handle));
+				return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)(IntPtr)device.Handle, (void*)(IntPtr)queue.Handle));
 			} else {
 				var opts = options.ToNative ();
-				return GetObject (SkiaApi.gr_direct_context_make_metal_with_options ((void*)device.Handle, (void*)queue.Handle, &opts));
+				return GetObject (SkiaApi.gr_direct_context_make_metal_with_options ((void*)(IntPtr)device.Handle, (void*)(IntPtr)queue.Handle, &opts));
 			}
 		}
 

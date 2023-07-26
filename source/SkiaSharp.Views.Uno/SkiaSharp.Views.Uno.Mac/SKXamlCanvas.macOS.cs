@@ -1,9 +1,17 @@
 ﻿using AppKit;
 using CoreGraphics;
 using SkiaSharp.Views.Mac;
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
 using Windows.UI.Xaml;
+#endif
 
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public partial class SKXamlCanvas
 	{
@@ -13,6 +21,8 @@ namespace SkiaSharp.Views.UWP
 		{
 			Initialize();
 		}
+
+		public override bool IsOpaque => false;
 
 		partial void DoLoaded() =>
 			drawable = new SKCGSurfaceFactory();

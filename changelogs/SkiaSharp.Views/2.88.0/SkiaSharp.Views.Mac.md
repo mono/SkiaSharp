@@ -6,39 +6,43 @@
 
 ### Namespace SkiaSharp.Views.Mac
 
-#### New Type: SkiaSharp.Views.Mac.SKMetalView
+#### Type Changed: SkiaSharp.Views.Mac.SKPaintGLSurfaceEventArgs
 
-```csharp
-public class SKMetalView : MetalKit.MTKView, AppKit.INSAccessibility, AppKit.INSAccessibilityElementProtocol, AppKit.INSAppearanceCustomization, AppKit.INSDraggingDestination, AppKit.INSTouchBarProvider, AppKit.INSUserInterfaceItemIdentification, CoreAnimation.ICALayerDelegate, Foundation.INSCoding, Foundation.INSObjectProtocol, MetalKit.IMTKViewDelegate, ObjCRuntime.INativeObject, System.ComponentModel.IComponent, System.IDisposable, System.IEquatable<Foundation.NSObject> {
-	// constructors
-	public SKMetalView ();
-	public SKMetalView (CoreGraphics.CGRect frame);
-	public SKMetalView (IntPtr p);
-	public SKMetalView (CoreGraphics.CGRect frame, Metal.IMTLDevice device);
-	// properties
-	public SkiaSharp.SKSize CanvasSize { get; }
-	public SkiaSharp.GRContext GRContext { get; }
-	// events
-	public event System.EventHandler<SKPaintMetalSurfaceEventArgs> PaintSurface;
-	// methods
-	public override void AwakeFromNib ();
-	protected virtual void OnPaintSurface (SKPaintMetalSurfaceEventArgs e);
-}
+Obsoleted constructors:
+
+```diff
+ [Obsolete ()]
+ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
 ```
 
-#### New Type: SkiaSharp.Views.Mac.SKPaintMetalSurfaceEventArgs
+Added constructors:
 
 ```csharp
-public class SKPaintMetalSurfaceEventArgs : System.EventArgs {
-	// constructors
-	public SKPaintMetalSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget);
-	public SKPaintMetalSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType);
-	// properties
-	public SkiaSharp.GRBackendRenderTarget BackendRenderTarget { get; }
-	public SkiaSharp.SKColorType ColorType { get; }
-	public SkiaSharp.GRSurfaceOrigin Origin { get; }
-	public SkiaSharp.SKSurface Surface { get; }
-}
+public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info);
+public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
 ```
+
+Added properties:
+
+```csharp
+public SkiaSharp.SKImageInfo Info { get; }
+public SkiaSharp.SKImageInfo RawInfo { get; }
+```
+
+
+#### Type Changed: SkiaSharp.Views.Mac.SKPaintSurfaceEventArgs
+
+Added constructor:
+
+```csharp
+public SKPaintSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
+```
+
+Added property:
+
+```csharp
+public SkiaSharp.SKImageInfo RawInfo { get; }
+```
+
 
 

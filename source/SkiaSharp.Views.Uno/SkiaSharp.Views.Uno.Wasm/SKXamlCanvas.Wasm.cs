@@ -2,13 +2,27 @@
 using System.Runtime.InteropServices;
 using Uno.Foundation;
 using Uno.UI.Runtime.WebAssembly;
+#if WINUI
+using Microsoft.UI.Xaml;
+#else
 using Windows.UI.Xaml;
+#endif
 
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	[HtmlElement("canvas")]
 	public partial class SKXamlCanvas
 	{
+#if HAS_UNO_WINUI
+		const string SKXamlCanvasFullTypeName = "SkiaSharp.Views.Windows." + nameof(SKXamlCanvas);
+#else
+		const string SKXamlCanvasFullTypeName = "SkiaSharp.Views.UWP." + nameof(SKXamlCanvas);
+#endif
+
 		private byte[] pixels;
 		private GCHandle pixelsHandle;
 		private int pixelWidth;
@@ -53,13 +67,13 @@ namespace SkiaSharp.Views.UWP
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
-			WebAssemblyRuntime.InvokeJS($"SkiaSharp.Views.UWP.SKXamlCanvas.invalidateCanvas({pixelsHandle.AddrOfPinnedObject()}, \"{this.GetHtmlId()}\", {info.Width}, {pixelHeight});");
+			NativeMethods.InvalidateCanvas(pixelsHandle.AddrOfPinnedObject(), this.GetHtmlId(), info.Width, pixelHeight);
 		}
 
 		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)
 		{
 			var size = CreateSize(out unscaledSize, out dpi);
-			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Opaque);
+			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Unpremul);
 
 			if (pixels == null || pixelWidth != info.Width || pixelHeight != info.Height)
 			{
@@ -76,11 +90,36 @@ namespace SkiaSharp.Views.UWP
 
 		private void FreeBitmap()
 		{
+			NativeMethods.ClearCanvas(this.GetHtmlId());
+
 			if (pixels != null)
 			{
 				pixelsHandle.Free();
 				pixels = null;
 			}
+		}
+
+		private static partial class NativeMethods
+		{
+#if NET7_0_OR_GREATER
+			[System.Runtime.InteropServices.JavaScript.JSImport("globalThis." + SKXamlCanvasFullTypeName + ".invalidateCanvas")]
+			public static partial void InvalidateCanvas(IntPtr intPtr, string htmlId, int width, int height);
+#else
+			public static void InvalidateCanvas(IntPtr intPtr, string htmlId, int width, int height)
+			{
+				WebAssemblyRuntime.InvokeJS(SKXamlCanvasFullTypeName + $".invalidateCanvas({intPtr}, \"{htmlId}\", {width}, {height});");
+			}
+#endif
+
+#if NET7_0_OR_GREATER
+			[System.Runtime.InteropServices.JavaScript.JSImport("globalThis." + SKXamlCanvasFullTypeName + ".clearCanvas")]
+			public static partial void ClearCanvas(string htmlId);
+#else
+			public static void ClearCanvas(string htmlId)
+			{
+				WebAssemblyRuntime.InvokeJS(SKXamlCanvasFullTypeName + $".clearCanvas(\"{htmlId}\");");
+			}
+#endif
 		}
 	}
 }

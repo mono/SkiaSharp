@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CppAst;
 
@@ -9,6 +11,11 @@ namespace SkiaSharpGenerator
 {
 	public abstract class BaseTool
 	{
+		private static readonly string[] keywords =
+		{
+			"out", "in", "var", "ref"
+		};
+
 		protected readonly Dictionary<string, TypeMapping> typeMappings = new Dictionary<string, TypeMapping>();
 		protected readonly Dictionary<string, FunctionMapping> functionMappings = new Dictionary<string, FunctionMapping>();
 		protected readonly Dictionary<string, bool> skiaTypes = new Dictionary<string, bool>();
@@ -175,11 +182,13 @@ namespace SkiaSharpGenerator
 
 			using var configJson = File.OpenRead(configPath);
 
-			return await JsonSerializer.DeserializeAsync<Config>(configJson, new JsonSerializerOptions
+			var config = await JsonSerializer.DeserializeAsync<Config>(configJson, new JsonSerializerOptions
 			{
 				AllowTrailingCommas = true,
 				ReadCommentHandling = JsonCommentHandling.Skip,
 			});
+
+			return config ?? throw new InvalidOperationException("Unable to parse json config file.");
 		}
 
 		protected string GetType(CppType type)
@@ -196,21 +205,21 @@ namespace SkiaSharpGenerator
 				if (!isStruct)
 					return noPointers + pointers.Substring(1);
 				if (typeMappings.TryGetValue(noPointers, out var map))
-					return (map.CsType ?? Utils.CleanName(noPointers)) + pointers;
+					return (map.CsType ?? CleanName(noPointers)) + pointers;
 			}
 			else
 			{
 				if (typeMappings.TryGetValue(typeName, out var map))
-					return map.CsType ?? Utils.CleanName(typeName);
+					return map.CsType ?? CleanName(typeName);
 				if (typeMappings.TryGetValue(noPointers, out map))
-					return (map.CsType ?? Utils.CleanName(noPointers)) + pointers;
+					return (map.CsType ?? CleanName(noPointers)) + pointers;
 				if (functionMappings.TryGetValue(typeName, out var funcMap))
-					return funcMap.CsType ?? Utils.CleanName(typeName);
+					return funcMap.CsType ?? CleanName(typeName);
 				if (functionMappings.TryGetValue(noPointers, out funcMap))
-					return (funcMap.CsType ?? Utils.CleanName(noPointers)) + pointers;
+					return (funcMap.CsType ?? CleanName(noPointers)) + pointers;
 			}
 
-			return Utils.CleanName(typeName);
+			return CleanName(typeName);
 		}
 
 		protected static string GetCppType(CppType type)
@@ -225,10 +234,125 @@ namespace SkiaSharpGenerator
 			while ((start = typeName.IndexOf("[")) != -1)
 			{
 				var end = typeName.IndexOf("]");
-				typeName = typeName.Substring(0, start) + "*" + typeName.Substring(end + 1);
+				typeName = typeName[..start] + "*" + typeName[(end + 1)..];
 			}
 
 			return typeName;
 		}
+
+		protected string CleanName(string type)
+		{
+			var prefix = "";
+			var suffix = "";
+
+			type = type.TrimStart('_');
+
+			if (type.EndsWith("_t"))
+				type = type[0..^2];
+
+			if (type.EndsWith("_proc") || type.EndsWith("_func"))
+			{
+				type = type[0..^5];
+				suffix = "ProxyDelegate";
+			}
+
+			foreach (var ns in config.Namespaces)
+			{
+				var nsPrefix = ns.Key;
+				if (type.StartsWith(nsPrefix))
+				{
+					var mapping = ns.Value;
+					if (mapping.Prefix != null)
+					{
+						prefix = mapping.Prefix;
+						type = type[nsPrefix.Length..];
+					}
+				}
+			}
+
+			string[] parts;
+
+			if (type.Any(c => char.IsLower(c)) && type.Any(c => char.IsUpper(c)))
+			{
+				// there is a mix of cases, so split on the uppercase, then underscores
+				parts = Regex.Split(type, @"(?<!^)(?=[A-Z])");
+				parts = parts.SelectMany(p => p.Split('_')).ToArray();
+
+				// remove the initial "f" prefix
+				if (parts[0] == "f" && char.IsUpper(parts[1][0]))
+					parts = parts[1..];
+			}
+			else
+			{
+				// this is either an fully uppercase enum or lowercase type
+				parts = type.ToLowerInvariant().Split('_');
+			}
+
+			for (var i = 0; i < parts.Length; i++)
+			{
+				var part = parts[i];
+				parts[i] = part[0].ToString().ToUpperInvariant() + part[1..];
+			}
+
+			return prefix + string.Concat(parts) + suffix;
+		}
+
+		protected string CleanEnumFieldName(string fieldName, string cppEnumName)
+		{
+			if (cppEnumName.EndsWith("_t"))
+				cppEnumName = cppEnumName[..^2];
+
+			fieldName = RemovePrefixSuffix(fieldName, cppEnumName);
+
+			// special case for "flags" name and "flag" member
+			if (cppEnumName.EndsWith("_flags"))
+				fieldName = RemovePrefixSuffix(fieldName, cppEnumName[..^1]);
+
+			// special case for bad skia enum fields
+			var lower = fieldName.ToLowerInvariant();
+			var indexOfSplitter = lower.IndexOf("_sk_");
+			if (indexOfSplitter == -1)
+				indexOfSplitter = lower.IndexOf("_gr_");
+			if (indexOfSplitter != -1)
+				fieldName = fieldName[0..indexOfSplitter];
+
+			return CleanName(fieldName);
+
+			static string RemovePrefixSuffix(string member, string type)
+			{
+				if (member.ToLowerInvariant().EndsWith("_" + type.ToLowerInvariant()))
+					member = member[..^(type.Length + 1)];
+
+				if (member.ToLowerInvariant().StartsWith(type.ToLowerInvariant() + "_"))
+					member = member[(type.Length + 1)..];
+
+				return member;
+			}
+		}
+
+		protected bool IncludeNamespace(string name)
+		{
+			foreach (var ns in config.Namespaces)
+			{
+				if (name.StartsWith(ns.Key) && ns.Value.Exclude == true)
+					return false;
+			}
+
+			return true;
+		}
+
+		protected string GetNamespace(string name)
+		{
+			foreach (var ns in config.Namespaces)
+			{
+				if (name.StartsWith(ns.Key) && !string.IsNullOrWhiteSpace(ns.Value.CsName))
+					return $"{config.Namespace}.{ns.Value.CsName}";
+			}
+
+			return config.Namespace;
+		}
+
+		protected static string SafeName(string name) =>
+			keywords.Contains(name) ? "@" + name : name;
 	}
 }

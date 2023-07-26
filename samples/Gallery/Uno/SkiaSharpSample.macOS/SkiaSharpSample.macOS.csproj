@@ -31,6 +31,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <LinkMode>Full</LinkMode>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -42,19 +43,30 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Essentials" Version="1.5.1" />
-    <PackageReference Include="Uno.UI" Version="3.7.6" />
-    <PackageReference Include="Uno.UI.RemoteControl" Version="3.7.6" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI" Version="4.0.8" />
+    <PackageReference Include="Uno.UI.RemoteControl" Version="4.0.8" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Uno.UI.Adapter.Microsoft.Extensions.Logging" Version="4.0.8" />
+    <PackageReference Include="Uno.Core.Extensions.Logging.Singleton" Version="4.0.1" />
+    <PackageReference Include="Uno.Core.Extensions.Logging" Version="4.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.OSX\HarfBuzzSharp.OSX.csproj">
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.Classic\HarfBuzzSharp.Classic.csproj">
       <Project>{bc6753cf-0be7-4a2b-a793-7ef715cd3799}</Project>
-      <Name>HarfBuzzSharp.OSX</Name>
+      <Name>HarfBuzzSharp.Classic</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.OSX\SkiaSharp.OSX.csproj">
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Classic\SkiaSharp.Classic.csproj">
       <Project>{816e7ec5-91af-4bce-acb7-52725ee475b8}</Project>
-      <Name>SkiaSharp.OSX</Name>
+      <Name>SkiaSharp.Classic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.SceneGraph.Classic\SkiaSharp.SceneGraph.Classic.csproj">
+      <Project>{74a027d9-90f4-487e-afc5-6aa96f3406a9}</Project>
+      <Name>SkiaSharp.SceneGraph.Classic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Skottie.Classic\SkiaSharp.Skottie.Classic.csproj">
+      <Project>{63f51f9f-e67d-47e3-9861-99a91927c166}</Project>
+      <Name>SkiaSharp.Skottie.Classic</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj">
       <Project>{731bccc9-4e61-4410-aaf2-897d7e1e88ad}</Project>

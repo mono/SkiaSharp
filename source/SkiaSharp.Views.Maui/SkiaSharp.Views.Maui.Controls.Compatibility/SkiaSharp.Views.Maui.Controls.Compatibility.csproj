@@ -1,16 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net6.0-ios;net6.0-maccatalyst;net6.0-android</TargetFrameworks>
-    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net6.0-windows10.0.19041</TargetFrameworks>
+    <TargetFrameworks>$(MauiTargetFrameworks)</TargetFrameworks>
     <TargetPlatformMinVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</TargetPlatformMinVersion>
     <PackagingGroup>SkiaSharp.Views.Maui.Controls.Compatibility</PackagingGroup>
     <RootNamespace>SkiaSharp.Views.Maui.Controls.Compatibility</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Maui.Controls.Compatibility</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <DefineConstants>$(DefineConstants);__MAUI__</DefineConstants>
-    <PackagingPlatform Condition="$(TargetFramework.Contains('-windows'))">net6.0-windows</PackagingPlatform>
+    <PackagingPlatform Condition="$(TargetFramework.Contains('-windows'))">net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-windows</PackagingPlatform>
     <UseMaui>true</UseMaui>
     <AndroidGenerateResourceDesigner>false</AndroidGenerateResourceDesigner>
+    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
@@ -33,8 +35,12 @@
     <Compile Remove="**\*.Windows.cs" />
     <None Include="**\*.Windows.cs" />
   </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-tizen'))">
+    <Compile Remove="**\*.Tizen.cs" />
+    <None Include="**\*.Tizen.cs" />
+  </ItemGroup>
   <!-- forms files -->
-  <ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-tizen'))">
     <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Native.Shared\SKCanvasViewRendererBase.cs" Link="SKCanvasViewRendererBase.cs" />
     <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Native.Shared\SKGLViewRendererBase.cs" Link="SKGLViewRendererBase.cs" />
   </ItemGroup>

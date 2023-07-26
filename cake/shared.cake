@@ -42,7 +42,7 @@ void RunCake(FilePath cake, string target = null, Dictionary<string, string> arg
         cmd += $@" --{arg.Key}=""{arg.Value}""";
     }
 
-    DotNetCoreTool(cmd);
+    DotNetTool(cmd);
 }
 
 void RunProcess(FilePath process, string args = "")
@@ -94,4 +94,22 @@ string GetRegexValue(string regex, FilePath file)
     } catch {
         return "";
     }
+}
+
+void DeleteDir(DirectoryPath dir)
+{
+    if (DirectoryExists(dir))
+        DeleteDirectory(dir, new DeleteDirectorySettings { Recursive = true, Force = true });
+}
+
+void CleanDir(DirectoryPath dir)
+{
+    if (DirectoryExists(dir)) {
+        foreach (var d in GetSubDirectories(dir)) {
+            DeleteDir(d);
+        }
+        CleanDirectory(dir);
+    }
+
+    EnsureDirectoryExists(dir);
 }

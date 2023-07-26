@@ -157,6 +157,8 @@ namespace SkiaSharp.Views.Blazor
 
 		private void OnSizeChanged(SKSize newSize)
 		{
+			if ((int)(canvasSize.Width * dpi) == newSize.Width && (int)(canvasSize.Height * dpi) == newSize.Height)
+				return;
 			canvasSize = newSize;
 
 			Invalidate();
@@ -164,9 +166,9 @@ namespace SkiaSharp.Views.Blazor
 
 		public void Dispose()
 		{
-			dpiWatcher.Unsubscribe(OnDpiChanged);
-			sizeWatcher.Dispose();
-			interop.Dispose();
+			dpiWatcher?.Unsubscribe(OnDpiChanged);
+			sizeWatcher?.Dispose();
+			interop?.Dispose();
 
 			FreeBitmap();
 		}

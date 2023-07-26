@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {

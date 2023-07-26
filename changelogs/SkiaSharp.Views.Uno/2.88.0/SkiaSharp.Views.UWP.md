@@ -6,39 +6,42 @@
 
 ### Namespace SkiaSharp.Views.UWP
 
-#### Type Changed: SkiaSharp.Views.UWP.GlobalStaticResources
+#### Type Changed: SkiaSharp.Views.UWP.SKPaintGLSurfaceEventArgs
 
-Obsoleted methods:
+Obsoleted constructors:
 
 ```diff
  [Obsolete ()]
- public static object FindResource (string name);
+ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
 ```
 
-Added methods:
+Added constructors:
 
 ```csharp
-public static void RegisterDefaultStyles ();
-public static void RegisterResourceDictionariesBySource ();
+public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info);
+public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
+```
+
+Added properties:
+
+```csharp
+public SkiaSharp.SKImageInfo Info { get; }
+public SkiaSharp.SKImageInfo RawInfo { get; }
 ```
 
 
-#### Type Changed: SkiaSharp.Views.UWP.SKSwapChainPanel
+#### Type Changed: SkiaSharp.Views.UWP.SKPaintSurfaceEventArgs
+
+Added constructor:
+
+```csharp
+public SKPaintSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
+```
 
 Added property:
 
 ```csharp
-public static bool RaiseOnUnsupported { get; set; }
-```
-
-
-#### Type Changed: SkiaSharp.Views.UWP.SKXamlCanvas
-
-Modified base type:
-
-```diff
--Windows.UI.Xaml.FrameworkElement
-+Windows.UI.Xaml.Controls.Canvas
+public SkiaSharp.SKImageInfo RawInfo { get; }
 ```
 
 

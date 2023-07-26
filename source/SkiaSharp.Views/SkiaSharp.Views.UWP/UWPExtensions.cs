@@ -2,13 +2,13 @@
 using Windows.Foundation;
 using Windows.UI;
 
-#if WINDOWS
+#if WINDOWS || WINUI
 using Microsoft.UI.Xaml.Media.Imaging;
 #else
 using Windows.UI.Xaml.Media.Imaging;
 #endif
 
-#if WINDOWS
+#if WINDOWS || WINUI
 namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
@@ -75,7 +75,7 @@ namespace SkiaSharp.Views.UWP
 		{
 			using (var image = SKImage.FromPicture(picture, dimensions))
 			{
-				return image.ToWriteableBitmap();
+				return image?.ToWriteableBitmap();
 			}
 		}
 
@@ -107,13 +107,11 @@ namespace SkiaSharp.Views.UWP
 
 		public static WriteableBitmap ToWriteableBitmap(this SKBitmap skiaBitmap)
 		{
-			using (var pixmap = skiaBitmap.PeekPixels())
-			using (var image = SKImage.FromPixels(pixmap))
-			{
-				var wb = image.ToWriteableBitmap();
-				GC.KeepAlive(skiaBitmap);
-				return wb;
-			}
+			using var pixmap = skiaBitmap.PeekPixels();
+			using var image = SKImage.FromPixels(pixmap);
+			var wb = image.ToWriteableBitmap();
+			GC.KeepAlive(skiaBitmap);
+			return wb;
 		}
 
 		public static WriteableBitmap ToWriteableBitmap(this SKPixmap pixmap)
@@ -156,10 +154,8 @@ namespace SkiaSharp.Views.UWP
 
 			if (pixmap.ColorType == SKImageInfo.PlatformColorType)
 			{
-				using (var image = SKImage.FromPixels(pixmap.Info, bitmap.GetPixels()))
-				{
-					return image.ReadPixels(pixmap, 0, 0);
-				}
+				using var image = SKImage.FromPixels(pixmap.Info, bitmap.GetPixels());
+				return image.ReadPixels(pixmap, 0, 0);
 			}
 			else
 			{

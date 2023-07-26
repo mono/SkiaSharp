@@ -1,9 +1,19 @@
-﻿using CoreAnimation;
+﻿#if !__MACCATALYST__
+using CoreAnimation;
 using Foundation;
+#if WINUI
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+#else
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+#endif
 
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public partial class SKSwapChainPanel : FrameworkElement
 	{
@@ -24,6 +34,8 @@ namespace SkiaSharp.Views.UWP
 		partial void DoLoaded()
 		{
 			glView = new SKGLView(Bounds);
+			// Force the opacity to false for consistency with the other platforms
+			glView.Opaque = false;
 			glView.PaintSurface += OnPaintSurface;
 			AddSubview(glView);
 		}
@@ -75,7 +87,13 @@ namespace SkiaSharp.Views.UWP
 				if (glView == null || !EnableRenderLoop)
 					DoEnableRenderLoop(false);
 			});
+
+#if NET6_0_OR_GREATER
+			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Default);
+#else
 			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoop.NSDefaultRunLoopMode);
+#endif
 		}
 	}
 }
+#endif

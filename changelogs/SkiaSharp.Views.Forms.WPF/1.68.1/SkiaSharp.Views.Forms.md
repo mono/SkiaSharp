@@ -70,7 +70,7 @@ public sealed class SKBitmapImageSource : Xamarin.Forms.ImageSource, System.Comp
 #### New Type: SkiaSharp.Views.Forms.SKCanvasView
 
 ```csharp
-public class SKCanvasView : Xamarin.Forms.View, ISKCanvasViewController, System.ComponentModel.INotifyPropertyChanged, Xamarin.Forms.IAnimatable, Xamarin.Forms.IElementController, Xamarin.Forms.ITabStopElement, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController, Xamarin.Forms.Internals.IDynamicResourceHandler, Xamarin.Forms.Internals.IGestureController, Xamarin.Forms.Internals.INameScope, Xamarin.Forms.Internals.INavigationProxy {
+public class SKCanvasView : Xamarin.Forms.View, ISKCanvasViewController, System.ComponentModel.INotifyPropertyChanged, Xamarin.Forms.IAnimatable, Xamarin.Forms.IElementController, Xamarin.Forms.IGestureRecognizers, Xamarin.Forms.ITabStopElement, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController, Xamarin.Forms.Internals.IDynamicResourceHandler, Xamarin.Forms.Internals.IGestureController, Xamarin.Forms.Internals.INameScope, Xamarin.Forms.Internals.INavigationProxy {
 	// constructors
 	public SKCanvasView ();
 	// fields
@@ -117,7 +117,7 @@ public abstract class SKCanvasViewRendererBase`2 : Xamarin.Forms.Platform.WPF.Vi
 #### New Type: SkiaSharp.Views.Forms.SKGLView
 
 ```csharp
-public class SKGLView : Xamarin.Forms.View, System.ComponentModel.INotifyPropertyChanged, Xamarin.Forms.IAnimatable, Xamarin.Forms.IElementController, Xamarin.Forms.ITabStopElement, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController, Xamarin.Forms.Internals.IDynamicResourceHandler, Xamarin.Forms.Internals.IGestureController, Xamarin.Forms.Internals.INameScope, Xamarin.Forms.Internals.INavigationProxy {
+public class SKGLView : Xamarin.Forms.View, System.ComponentModel.INotifyPropertyChanged, Xamarin.Forms.IAnimatable, Xamarin.Forms.IElementController, Xamarin.Forms.IGestureRecognizers, Xamarin.Forms.ITabStopElement, Xamarin.Forms.IViewController, Xamarin.Forms.IVisualElementController, Xamarin.Forms.Internals.IDynamicResourceHandler, Xamarin.Forms.Internals.IGestureController, Xamarin.Forms.Internals.INameScope, Xamarin.Forms.Internals.INavigationProxy {
 	// constructors
 	public SKGLView ();
 	// fields
@@ -171,7 +171,7 @@ public abstract class SKGLViewRendererBase`2 : Xamarin.Forms.Platform.WPF.ViewRe
 #### New Type: SkiaSharp.Views.Forms.SKHostedGLControl
 
 ```csharp
-public class SKHostedGLControl : System.Windows.Forms.Integration.WindowsFormsHost, System.ComponentModel.ISupportInitialize, System.IDisposable, System.Windows.IFrameworkInputElement, System.Windows.IInputElement, System.Windows.Interop.IKeyboardInputSink, System.Windows.Interop.IWin32Window, System.Windows.Markup.IQueryAmbient, System.Windows.Media.Animation.IAnimatable {
+public class SKHostedGLControl : System.Windows.Forms.Integration.WindowsFormsHost, System.ComponentModel.ISupportInitialize, System.IDisposable, System.Windows.IFrameworkInputElement, System.Windows.IInputElement, System.Windows.Interop.IWin32Window, System.Windows.Markup.IQueryAmbient, System.Windows.Media.Animation.IAnimatable {
 	// constructors
 	public SKHostedGLControl ();
 	public SKHostedGLControl (OpenTK.Graphics.GraphicsMode mode);
@@ -236,7 +236,7 @@ public class SKPaintGLSurfaceEventArgs : System.EventArgs {
 	// constructors
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget);
 
-	[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
+	[Obsolete]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType);
 	// properties
@@ -244,7 +244,7 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 	public SkiaSharp.SKColorType ColorType { get; }
 	public SkiaSharp.GRSurfaceOrigin Origin { get; }
 
-	[Obsolete ("Use BackendRenderTarget instead.")]
+	[Obsolete]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 	public SkiaSharp.SKSurface Surface { get; }
 }

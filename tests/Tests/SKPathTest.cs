@@ -275,16 +275,16 @@ namespace SkiaSharp.Tests
 				path.RCubicTo(-34.64102137842175f, 19.9999998f, 0f, 40f, 0f, 40f);
 
 				var bounds = path.Bounds;
-				Assert.Equal(-34.641022f, bounds.Left, Precision);
-				Assert.Equal(-25.814698f, bounds.Top, Precision);
-				Assert.Equal(-6.215782e-07f, bounds.Right, Precision);
-				Assert.Equal(14.185303f, bounds.Bottom, Precision);
+				Assert.Equal((double)-34.641022f, (double)bounds.Left, Precision);
+				Assert.Equal((double)-25.814698f, (double)bounds.Top, Precision);
+				Assert.Equal((double)-6.215782e-07f, (double)bounds.Right, Precision);
+				Assert.Equal((double)14.185303f, (double)bounds.Bottom, Precision);
 
 				var tightBounds = path.TightBounds;
-				Assert.Equal(-15.396009f, tightBounds.Left, Precision);
-				Assert.Equal(-25.814698f, tightBounds.Top, Precision);
-				Assert.Equal(0f, tightBounds.Right, Precision);
-				Assert.Equal(14.185303f, tightBounds.Bottom, Precision);
+				Assert.Equal((double)-15.396009f, (double)tightBounds.Left, Precision);
+				Assert.Equal((double)-25.814698f, (double)tightBounds.Top, Precision);
+				Assert.Equal((double)0f, (double)tightBounds.Right, Precision);
+				Assert.Equal((double)14.185303f, (double)tightBounds.Bottom, Precision);
 			}
 		}
 
@@ -327,8 +327,8 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(rect.Left, bounds.Left);
 			Assert.Equal(rect.Top, bounds.Top);
-			Assert.Equal(rect.Right, bounds.Right, Precision);
-			Assert.Equal(rect.Bottom, bounds.Bottom, Precision);
+			Assert.Equal((double)rect.Right, (double)bounds.Right, Precision);
+			Assert.Equal((double)rect.Bottom, (double)bounds.Bottom, Precision);
 		}
 
 		[SkippableFact]

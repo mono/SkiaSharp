@@ -1,9 +1,9 @@
 <Project>
 
-  <!-- HACK: Do not copy the native bootstrap files -->
-  <Target Name="_RemoveWasdkBootstrapDll" BeforeTargets="ResolveReferences">
+  <!-- HACK: the new IDE seems to not like Analyzers in AdditionalFiles -->
+  <Target Name="After_InjectAdditionalFiles" AfterTargets="_InjectAdditionalFiles">
     <ItemGroup>
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)%(Extension)' == 'Microsoft.WindowsAppRuntime.Bootstrap.dll'" />
+      <AdditionalFiles Remove="@(AdditionalFiles)" Condition="'%(Extension)' == '.dll'" />
     </ItemGroup>
   </Target>
 

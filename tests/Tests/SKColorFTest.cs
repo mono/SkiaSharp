@@ -117,9 +117,9 @@ namespace SkiaSharp.Tests
 		{
 			rgb.ToHsl(out var h, out var s, out var l);
 
-			Assert.Equal(other.Item1, h, Precision);
-			Assert.Equal(other.Item2, s, Precision);
-			Assert.Equal(other.Item3, l, Precision);
+			Assert.Equal((double)other.Item1, (double)h, Precision);
+			Assert.Equal((double)other.Item2, (double)s, Precision);
+			Assert.Equal((double)other.Item3, (double)l, Precision);
 		}
 
 		[SkippableTheory]
@@ -128,10 +128,10 @@ namespace SkiaSharp.Tests
 		{
 			var back = SKColorF.FromHsl(other.Item1, other.Item2, other.Item3);
 
-			Assert.Equal(rgb.Red, back.Red, Precision);
-			Assert.Equal(rgb.Green, back.Green, Precision);
-			Assert.Equal(rgb.Blue, back.Blue, Precision);
-			Assert.Equal(rgb.Alpha, back.Alpha, Precision);
+			Assert.Equal((double)rgb.Red, (double)back.Red, Precision);
+			Assert.Equal((double)rgb.Green, (double)back.Green, Precision);
+			Assert.Equal((double)rgb.Blue, (double)back.Blue, Precision);
+			Assert.Equal((double)rgb.Alpha, (double)back.Alpha, Precision);
 		}
 
 		public static IEnumerable<object[]> GetColorRgbToHsvData()
@@ -152,9 +152,9 @@ namespace SkiaSharp.Tests
 		{
 			rgb.ToHsv(out var h, out var s, out var v);
 
-			Assert.Equal(other.Item1, h, Precision);
-			Assert.Equal(other.Item2, s, Precision);
-			Assert.Equal(other.Item3, v, Precision);
+			Assert.Equal((double)other.Item1, (double)h, Precision);
+			Assert.Equal((double)other.Item2, (double)s, Precision);
+			Assert.Equal((double)other.Item3, (double)v, Precision);
 		}
 
 		[SkippableTheory]
@@ -163,10 +163,10 @@ namespace SkiaSharp.Tests
 		{
 			var back = SKColorF.FromHsv(other.Item1, other.Item2, other.Item3);
 
-			Assert.Equal(rgb.Red, back.Red, Precision);
-			Assert.Equal(rgb.Green, back.Green, Precision);
-			Assert.Equal(rgb.Blue, back.Blue, Precision);
-			Assert.Equal(rgb.Alpha, back.Alpha, Precision);
+			Assert.Equal((double)rgb.Red, (double)back.Red, Precision);
+			Assert.Equal((double)rgb.Green, (double)back.Green, Precision);
+			Assert.Equal((double)rgb.Blue, (double)back.Blue, Precision);
+			Assert.Equal((double)rgb.Alpha, (double)back.Alpha, Precision);
 		}
 
 		public static IEnumerable<object[]> GetClampData()

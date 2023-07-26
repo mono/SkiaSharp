@@ -96,13 +96,13 @@ public SKColorSpaceType Type { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use CreateRgb (SKColorSpaceRenderTargetGamma, SKColorSpaceGamut) instead.")]
+ [Obsolete ()]
  public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut, SKColorSpaceFlags flags);
- [Obsolete ("Use CreateRgb (SKColorSpaceRenderTargetGamma, SKMatrix44) instead.")]
+ [Obsolete ()]
  public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKMatrix44 toXyzD50, SKColorSpaceFlags flags);
- [Obsolete ("Use CreateRgb (SKColorSpaceTransferFn, SKColorSpaceGamut) instead.")]
+ [Obsolete ()]
  public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut, SKColorSpaceFlags flags);
- [Obsolete ("Use CreateRgb (SKColorSpaceTransferFn, SKMatrix44) instead.")]
+ [Obsolete ()]
  public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKMatrix44 toXyzD50, SKColorSpaceFlags flags);
 ```
 

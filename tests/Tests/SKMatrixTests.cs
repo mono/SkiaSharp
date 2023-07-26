@@ -235,8 +235,8 @@ namespace SkiaSharp.Tests
 			var matrix = SKMatrix.CreateRotationDegrees(90);
 			var newPoint = matrix.MapPoint(point);
 
-			Assert.Equal(10, newPoint.X, PRECISION);
-			Assert.Equal(40, newPoint.Y, PRECISION);
+			Assert.Equal((double)10, (double)newPoint.X, PRECISION);
+			Assert.Equal((double)40, (double)newPoint.Y, PRECISION);
 		}
 
 		[Obsolete]

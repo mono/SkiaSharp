@@ -373,7 +373,7 @@ namespace SkiaSharp
 		public static SKSurface Create (GRRecordingContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props, out CoreAnimation.ICAMetalDrawable drawable)
 		{
 			void* drawablePtr;
-			var surface = GetObject (SkiaApi.sk_surface_new_metal_layer (context.Handle, (void*)layer.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero, &drawablePtr));
+			var surface = GetObject (SkiaApi.sk_surface_new_metal_layer (context.Handle, (void*)(IntPtr)layer.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero, &drawablePtr));
 			drawable = ObjCRuntime.Runtime.GetINativeObject<CoreAnimation.ICAMetalDrawable> ((IntPtr)drawablePtr, true);
 			return surface;
 		}
@@ -385,7 +385,7 @@ namespace SkiaSharp
 			Create (context, view, origin, sampleCount, colorType, colorspace, null);
 
 		public static SKSurface Create (GRRecordingContext context, MetalKit.MTKView view, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props) =>
-			GetObject (SkiaApi.sk_surface_new_metal_view (context.Handle, (void*)view.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			GetObject (SkiaApi.sk_surface_new_metal_view (context.Handle, (void*)(IntPtr)view.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 
 #endif
 

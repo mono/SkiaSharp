@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0-ios;net6.0-maccatalyst;net6.0-tvos;net6.0-macos;net6.0-android</TargetFrameworks>
+    <TargetFrameworks>$(NetPlatformTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <!-- https://github.com/NuGet/Home/issues/5226 -->
     <PackageId>SkiaSharp.Views</PackageId>
@@ -20,6 +20,10 @@
   <PropertyGroup Condition="$(TargetFramework.Contains('-android'))">
     <RootNamespace>SkiaSharp.Views.Android</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <RootNamespace>SkiaSharp.Views.Tizen</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
@@ -42,6 +46,8 @@
     <!-- Android -->
     <None Include="..\SkiaSharp.Views.Android\**\*.cs" Link="Platform\Android\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="..\SkiaSharp.Views.Android\Resources\*\*" Link="Platform\Android\Resources\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Tizen -->
+    <None Include="..\SkiaSharp.Views.Tizen\**\*.cs" Link="Platform\Tizen\%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- local platforms -->
     <Compile Remove="Platform\**" />
     <None Include="Platform\**\*.cs" />
@@ -71,6 +77,11 @@
     <Compile Include="..\SkiaSharp.Views.Android\**\*.cs" Link="Platform\Android\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="Platform\Android\**\*.cs" />
     <AndroidResource Include="..\SkiaSharp.Views.Android\Resources\*\*" Link="Platform\Android\Resources\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <!-- Tizen -->
+    <Compile Include="..\SkiaSharp.Views.Tizen\**\*.cs" Link="Platform\Tizen\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="Platform\Tizen\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="..\*\bin\**;..\*\obj\**" />

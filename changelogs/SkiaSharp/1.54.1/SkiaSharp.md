@@ -18,7 +18,7 @@ public void Flush (GRContextFlushBits flagsBitfield);
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use CreateNativeGlInterface() or CreateDefaultInterface() instead. This method will be removed in the next release.")]
+ [Obsolete ()]
  public static GRGlInterface CreateNativeInterface ();
 ```
 

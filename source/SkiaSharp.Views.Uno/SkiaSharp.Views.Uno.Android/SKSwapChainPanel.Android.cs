@@ -1,8 +1,17 @@
 ﻿using Android.Opengl;
+#if WINUI
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+#else
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+#endif
 
+#if WINDOWS || WINUI
+namespace SkiaSharp.Views.Windows
+#else
 namespace SkiaSharp.Views.UWP
+#endif
 {
 	public partial class SKSwapChainPanel : FrameworkElement
 	{
@@ -22,6 +31,8 @@ namespace SkiaSharp.Views.UWP
 		partial void DoLoaded()
 		{
 			glTextureView = new SKGLTextureView(Context);
+			// Force the opacity to false for consistency with the other platforms
+			glTextureView.SetOpaque(false);
 			DoEnableRenderLoop(EnableRenderLoop);
 			glTextureView.PaintSurface += OnPaintSurface;
 			AddView(glTextureView);

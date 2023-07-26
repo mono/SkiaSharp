@@ -9,7 +9,7 @@
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use SKPixmap.Encode instead.")]
+ [Obsolete ()]
  public bool Encode (SKWStream dst, SKEncodedImageFormat format, int quality);
 ```
 
@@ -29,7 +29,7 @@ public void DrawRoundRect (SKRoundRect rect, SKPaint paint);
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use AddRoundRect instead.")]
+ [Obsolete ()]
  public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir);
 ```
 

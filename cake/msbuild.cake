@@ -59,7 +59,11 @@ void RunMSBuild(
     MSBuild(solution, c => {
         c.Configuration = configuration ?? CONFIGURATION;
         c.Verbosity = VERBOSITY;
-        c.MaxCpuCount = 0;
+
+        if (IsRunningOnWindows())
+            c.MaxCpuCount = 0;
+        else
+            c.MaxCpuCount = 1;
 
         var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
         var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + ".binlog");
@@ -108,4 +112,50 @@ void RunMSBuild(
         var sep = IsRunningOnWindows() ? ";" : "%3B";
         c.ArgumentCustomization = args => args.Append($"/p:RestoreSources=\"{string.Join(sep, GetNuGetSources())}\"");
     });
+}
+
+void RunNetCoreBuild(
+    FilePath solution,
+    bool bl = true,
+    string[] targets = null,
+    string configuration = null,
+    Dictionary<string, string> properties = null)
+{
+    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
+    var c = new DotNetCoreBuildSettings();
+    var msb = new DotNetCoreMSBuildSettings();
+    c.MSBuildSettings = msb;
+
+    c.Configuration = configuration ?? CONFIGURATION;
+    c.Verbosity = (DotNetVerbosity)VERBOSITY;
+
+    var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
+    var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + ".binlog");
+    msb.BinaryLogger = new MSBuildBinaryLoggerSettings {
+        Enabled = true,
+        FileName = blPath.FullPath,
+    };
+      
+    c.NoLogo = VERBOSITY == Verbosity.Minimal;
+
+    if (targets?.Length > 0) {
+        msb.Targets.Clear();
+        foreach (var target in targets) {
+            msb.Targets.Add(target);
+        }
+    }
+
+    msb.Properties ["BuildingForDotNet"] = new [] { "true" };
+    msb.Properties ["RestoreNoCache"] = new [] { "true" };
+    msb.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
+
+    if (properties != null) {
+        foreach (var prop in properties) {
+            msb.Properties [prop.Key] = new [] { prop.Value };
+        }
+    }
+    c.Sources = GetNuGetSources();
+    
+    DotNetCoreBuild(solution.FullPath, c);
 }

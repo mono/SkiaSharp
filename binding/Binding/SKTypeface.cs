@@ -76,9 +76,13 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			var tf = GetObject (SkiaApi.sk_typeface_create_from_name (familyName, style.Handle));
-			tf?.PreventPublicDisposal ();
-			return tf;
+			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull:true);
+			fixed (byte* familyNamePointer = familyNameUtf8ByteList)
+			{
+				var tf = GetObject (SkiaApi.sk_typeface_create_from_name (new IntPtr (familyNamePointer), style.Handle));
+				tf?.PreventPublicDisposal ();
+				return tf;
+			}
 		}
 
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
@@ -458,10 +462,11 @@ namespace SkiaSharp
 		private sealed class SKTypefaceStatic : SKTypeface
 		{
 			internal SKTypefaceStatic (IntPtr x)
-				: base (x, true)
+				: base (x, false)
 			{
-				IgnorePublicDispose = true;
 			}
+
+			protected override void Dispose (bool disposing) { }
 		}
 	}
 }
