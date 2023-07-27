@@ -76,8 +76,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StreamIsCollectedEvenWhenNotProperlyDisposed()
 		{
-			VerifyImmediateFinalizers();
-
 			var handle = DoWork();
 
 			CollectGarbage();
@@ -365,8 +363,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{
-			VerifyImmediateFinalizers();
-
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
 
 			DoWork(out var codecH, out var streamH);
@@ -404,11 +400,14 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
 		[SkippableFact]
 		public void StreamCanBeDuplicatedButTheOriginalCannotBeRead()
 		{
-			VerifySupportsExceptionsInDelegates();
-
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
 			var stream = new SKManagedStream(dotnet, true);
 			Assert.Equal(1, stream.ReadByte());
@@ -424,11 +423,14 @@ namespace SkiaSharp.Tests
 			Assert.Throws<InvalidOperationException>(() => stream.ReadByte());
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
 		[SkippableFact]
 		public void StreamCanBeForkedButTheOriginalCannotBeRead()
 		{
-			VerifySupportsExceptionsInDelegates();
-
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
 			var stream = new SKManagedStream(dotnet, true);
 			Assert.Equal(1, stream.ReadByte());
@@ -442,11 +444,14 @@ namespace SkiaSharp.Tests
 			Assert.Throws<InvalidOperationException>(() => stream.ReadByte());
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
 		[SkippableFact]
 		public void StreamCannotBeDuplicatedMultipleTimes()
 		{
-			VerifySupportsExceptionsInDelegates();
-
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
 			var stream = new SKManagedStream(dotnet, true);
 			Assert.Equal(1, stream.ReadByte());
@@ -458,11 +463,14 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, dupe.ReadByte());
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
 		[SkippableFact]
 		public void StreamCanBeDuplicatedMultipleTimesIfTheChildIsDestroyed()
 		{
-			VerifySupportsExceptionsInDelegates();
-
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
 			var stream = new SKManagedStream(dotnet, true);
 			Assert.Equal(1, stream.ReadByte());
@@ -481,11 +489,14 @@ namespace SkiaSharp.Tests
 			Assert.Throws<InvalidOperationException>(() => stream.Duplicate());
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
 		[SkippableFact]
 		public void FullOwnershipIsTransferredToTheChildIfTheParentIsDisposed()
 		{
-			VerifySupportsExceptionsInDelegates();
-
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
 			var stream = new SKManagedStream(dotnet, true);
 			Assert.Equal(1, stream.ReadByte());
@@ -511,11 +522,14 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
 		[SkippableFact]
 		public void DuplicateStreamIsCollected()
 		{
-			VerifySupportsExceptionsInDelegates();
-
 			var handle = DoWork();
 
 			CollectGarbage();
@@ -545,11 +559,14 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // Exceptions cannot be thrown in native delegates on non-Windows platforms
 		[SkippableFact]
 		public void MiddleDuplicateCanBeRemoved()
 		{
-			VerifySupportsExceptionsInDelegates();
-
 			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
 			var stream = new SKManagedStream(dotnet, true);
 			Assert.Equal(1, stream.ReadByte());

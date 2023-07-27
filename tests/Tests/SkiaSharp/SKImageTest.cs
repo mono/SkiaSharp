@@ -574,8 +574,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void DataCreatedByImageExpiresAfterFinalizers()
 		{
-			VerifyImmediateFinalizers();
-
 			var bitmap = CreateTestBitmap();
 			var image = SKImage.FromBitmap(bitmap);
 

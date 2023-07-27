@@ -47,8 +47,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StreamIsCollectedEvenWhenNotProperlyDisposed()
 		{
-			VerifyImmediateFinalizers();
-
 			var handle = DoWork();
 
 			CollectGarbage();
@@ -111,8 +109,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void StreamIsReferencedAndNotDisposedPrematurely()
 		{
-			VerifyImmediateFinalizers();
-
 			DoWork(out var docH, out var streamH);
 
 			CollectGarbage();

@@ -21,8 +21,6 @@ namespace SkiaSharp.Tests
 		public bool IsUnix => PlatformConfiguration.IsUnix;
 		public bool IsWindows => PlatformConfiguration.IsWindows;
 
-		public bool IsRuntimeMono => Type.GetType("Mono.Runtime") != null;
-
 		public string[] UnicodeFontFamilies { get; protected set; }
 		public string DefaultFontFamily { get; protected set; }
 

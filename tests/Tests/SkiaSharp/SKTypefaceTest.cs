@@ -355,8 +355,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StreamIsAccessableFromNativeType()
 		{
-			VerifyImmediateFinalizers();
-
 			var paint = CreatePaint(out var typefaceHandle);
 
 			CollectGarbage();
@@ -425,8 +423,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{
-			VerifyImmediateFinalizers();
-
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 
 			DoWork(out var typefaceH, out var streamH);

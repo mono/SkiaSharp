@@ -160,17 +160,5 @@ namespace SkiaSharp.Tests
 				throw new SkipException($"Unable to create GL context: {ex.Message}");
 			}
 		}
-
-		protected static void VerifyImmediateFinalizers()
-		{
-			if (IsRuntimeMono)
-				throw new SkipException("Mono does not guarantee finalizers are invoked immediately.");
-		}
-
-		protected static void VerifySupportsExceptionsInDelegates()
-		{
-			if (!IsWindows)
-				throw new SkipException("Exceptions cannot be thrown in native delegates on non-Windows platforms.");
-		}
 	}
 }

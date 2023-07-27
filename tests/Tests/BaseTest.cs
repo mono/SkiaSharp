@@ -9,8 +9,6 @@ namespace SkiaSharp.Tests
 		protected static bool IsUnix = TestConfig.Current.IsUnix;
 		protected static bool IsWindows = TestConfig.Current.IsWindows;
 
-		protected static bool IsRuntimeMono => TestConfig.Current.IsRuntimeMono;
-
 		protected static string[] UnicodeFontFamilies => TestConfig.Current.UnicodeFontFamilies;
 		protected static string DefaultFontFamily => TestConfig.Current.DefaultFontFamily;
 

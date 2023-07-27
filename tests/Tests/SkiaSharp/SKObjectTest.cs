@@ -40,8 +40,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void SameHandleReturnsSameReferenceAndReleasesObject()
 		{
-			VerifyImmediateFinalizers();
-
 			var handle = GetNextPtr();
 			TestConstruction(handle);
 
@@ -80,8 +78,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ObjectsWithTheSameHandleButDoNotOwnTheirHandlesAreCreatedAndCollectedCorrectly()
 		{
-			VerifyImmediateFinalizers();
-
 			var handle = GetNextPtr();
 
 			Construct(handle);
