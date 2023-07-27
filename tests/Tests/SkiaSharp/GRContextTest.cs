@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class GRContextTest : SKTest
 	{
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CreateDefaultContextIsValid()
 		{
@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void AbandonContextIsAbandoned()
 		{
@@ -36,7 +36,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CreateDefaultContextWithOptionsIsValid()
 		{
@@ -53,9 +53,15 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ToGlSizedFormat()
 		{
+			var obsolete = new[] {
+				GRPixelConfig.Sbgra8888,
+				GRPixelConfig.RgbaFloat,
+				GRPixelConfig.RgFloat,
+			};
+
 			foreach (GRPixelConfig value in Enum.GetValues(typeof(GRPixelConfig)))
 			{
-				if (IsEnumValueDeprected(value))
+				if (Array.IndexOf(obsolete, value) != -1)
 					Assert.Throws<ArgumentOutOfRangeException>(() => value.ToGlSizedFormat());
 				else if (value == GRPixelConfig.Unknown)
 					Assert.Equal(0u, value.ToGlSizedFormat());
@@ -64,7 +70,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CreateSpecificContextIsValid()
 		{
@@ -81,7 +87,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CreateSpecificContextWithOptionsIsValid()
 		{
@@ -98,7 +104,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(grContext);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void GpuSurfaceIsCreated()
 		{
@@ -117,7 +123,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void GpuSurfaceReferencesSameContext()
 		{
@@ -131,7 +137,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(grContext, surface.Context);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void GpuSurfaceCanMakeAnotherSurface()
 		{

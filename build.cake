@@ -33,7 +33,6 @@ var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 var SKIP_BUILD = Argument ("skipbuild", false);
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
-var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var THROW_ON_FIRST_TEST_FAILURE = Argument ("throwOnFirstTestFailure", false);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);

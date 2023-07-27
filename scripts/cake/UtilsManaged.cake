@@ -1,3 +1,19 @@
+var skipTestOnPlatform = "";
+if (IsRunningOnWindows ()) {
+    skipTestOnPlatform = "Windows";
+} else if (IsRunningOnMacOs ()) {
+    skipTestOnPlatform = "macOS";
+} else if (IsRunningOnLinux ()) {
+    skipTestOnPlatform = "Linux";
+} else {
+    throw new Exception ("This script is not running on a known platform.");
+}
+
+var UNSUPPORTED_TESTS = new Dictionary<string, string>
+{
+    { "FailingOn", skipTestOnPlatform },
+    { "SkipOn", skipTestOnPlatform },
+};
 
 void RunDotNetPack(
     FilePath solution,
@@ -55,9 +71,8 @@ void RunTests(FilePath testAssembly, bool is32)
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append("-verbose"),
     };
-    var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
-    foreach (var trait in traits) {
-        settings.ExcludeTrait(trait.Name, trait.Value);
+    foreach (var trait in UNSUPPORTED_TESTS) {
+        settings.ExcludeTrait(trait.Key, trait.Value);
     }
     XUnit2(new [] { testAssembly }, settings);
 }
@@ -67,6 +82,7 @@ void RunDotNetTest(
     DirectoryPath output,
     string configuration = null)
 {
+    output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
@@ -82,12 +98,11 @@ void RunDotNetTest(
                 args = args
                     .Append("/p:CollectCoverage=true")
                     .Append("/p:CoverletOutputFormat=cobertura")
-                    .Append("/p:CoverletOutput=Coverage/");
+                    .Append($"/p:CoverletOutput={output.Combine("Coverage").FullPath}/");
             return args;
         },
     };
-    var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
-    var filter = string.Join("&", traits.Select(t => $"{t.Name}!={t.Value}"));
+    var filter = string.Join("&", UNSUPPORTED_TESTS.Select(t => $"{t.Key}!={t.Value}"));
     if (!string.IsNullOrEmpty(filter)) {
         settings.Filter = filter;
     }
@@ -130,19 +145,6 @@ void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
     var xml = $"{output}/Cobertura.xml";
     var root = FindRegexMatchGroupsInFile(xml, @"<source>(.*)<\/source>", 0)[1].Value;
     ReplaceTextInFiles(xml, root, "");
-}
-
-IEnumerable<(string Name, string Value)> CreateTraitsDictionary(string args)
-{
-    if (!string.IsNullOrEmpty(args)) {
-        var traits = args.Split(';');
-        foreach (var trait in traits) {
-            var kv = trait.Split('=');
-            if (kv.Length != 2)
-                continue;
-            yield return (kv[0], kv[1]);
-        }
-    }
 }
 
 void DecompressArchive(FilePath archive, DirectoryPath outputDir)

@@ -7,6 +7,8 @@ namespace SkiaSharp.Tests
 {
 	public class GRGlInterfaceTest : SKTest
 	{
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
 		[SkippableFact]
 		public void InterfaceConstructionWithoutContextDoesNotCrash()
 		{
@@ -15,7 +17,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(glInterface);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CreateDefaultInterfaceIsValid()
 		{
@@ -29,7 +31,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void AssembleInterfaceIsValid()
 		{

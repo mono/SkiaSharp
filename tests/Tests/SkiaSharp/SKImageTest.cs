@@ -595,7 +595,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void RasterImageIsValidAlways()
 		{
@@ -610,7 +610,7 @@ namespace SkiaSharp.Tests
 			Assert.True(image.IsValid(grContext));
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void TextureImageIsValidOnContext()
 		{
@@ -624,7 +624,7 @@ namespace SkiaSharp.Tests
 			Assert.True(texture.IsValid(grContext));
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void RasterImageCanBecomeTexture()
 		{
@@ -642,7 +642,7 @@ namespace SkiaSharp.Tests
 			Assert.True(texture.IsTextureBacked);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void TextureImageCanBecomeRaster()
 		{
@@ -660,7 +660,7 @@ namespace SkiaSharp.Tests
 			Assert.False(raster.IsLazyGenerated);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void DecodingWithDataAndDrawingOnGPUCreatesCorrectImage()
 		{
@@ -696,7 +696,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void DecodingWithBitmapAndDrawingOnGPUCreatesCorrectImage()
 		{
@@ -732,7 +732,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void DecodingWithPathAndDrawingOnGPUCreatesCorrectImage()
 		{

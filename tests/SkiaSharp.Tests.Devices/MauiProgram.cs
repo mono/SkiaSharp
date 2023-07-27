@@ -26,7 +26,9 @@ namespace SkiaSharp.Tests
 				.ConfigureUITesting()
 				.UseXHarnessTestRunner(conf => conf
 					.AddTestAssemblies(testAssemblies)
-					.AddXunit())
+					.AddXunit()
+					.SkipCategory(Traits.FailingOn.Key, Traits.FailingOn.Values.GetCurrent())
+					.SkipCategory(Traits.SkipOn.Key, Traits.SkipOn.Values.GetCurrent()))
 				.UseVisualTestRunner(conf => conf
 					.AddTestAssemblies(testAssemblies)
 					.AddXunit());

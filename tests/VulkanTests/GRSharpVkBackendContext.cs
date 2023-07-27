@@ -4,7 +4,7 @@ namespace SkiaSharp.Vulkan.Tests
 {
 	public class SharpVkBackendContextTest : VKTest
 	{
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void VkGpuSurfaceIsCreatedSharpVkTypes()
 		{
@@ -31,7 +31,7 @@ namespace SkiaSharp.Vulkan.Tests
 			Assert.NotEqual(0, (long)baseType.VkPhysicalDeviceFeatures);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void PropertyIsSetAndUnset()
 		{

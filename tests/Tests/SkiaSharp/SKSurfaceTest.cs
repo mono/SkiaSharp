@@ -329,7 +329,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CanConvertFromPointerToDescToTextureWithNewInfo()
 		{
@@ -372,7 +372,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CanConvertFromPointerToDescToTexture()
 		{
@@ -413,7 +413,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(GRPixelConfig.Rgba8888.ToGlSizedFormat(), newInfo.Format);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void GpuBackendSurfaceIsCreated()
 		{
@@ -429,7 +429,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void GpuTextureSurfaceIsCreatedWithDesc()
 		{
@@ -445,7 +445,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void GpuTextureSurfaceCanBeReadWithDesc()
 		{
@@ -475,7 +475,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void GpuTextureSurfaceIsCreatedWithOldDesc()
 		{
@@ -491,7 +491,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void GpuTextureSurfaceCanBeReadWithOldDesc()
 		{
@@ -519,7 +519,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void GpuTextureSurfaceIsCreated()
 		{
@@ -534,7 +534,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void GpuTextureSurfaceCanBeRead()
 		{

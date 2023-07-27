@@ -5,7 +5,7 @@ namespace SkiaSharp.Vulkan.Tests
 {
 	public class GRContextTest : VKTest
 	{
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CreateVkContextIsValid()
 		{
@@ -28,7 +28,7 @@ namespace SkiaSharp.Vulkan.Tests
 			Assert.NotNull(grContext);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CreateVkContextWithOptionsIsValid()
 		{

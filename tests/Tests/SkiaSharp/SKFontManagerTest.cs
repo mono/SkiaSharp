@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKFontManagerTest : SKTest
 	{
-		[Trait(CategoryKey, MatchCharacterCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[SkippableFact]
 		public void TestFontManagerMatchCharacter()
 		{
@@ -67,11 +67,12 @@ namespace SkiaSharp.Tests
 			Assert.Equal((int)SKFontStyleWeight.Bold, tf.FontWeight);
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // iOS does not support matching typefaces
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not support matching typefaces
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // macOS does not support matching typefaces
 		[SkippableFact]
 		public void TestMatchTypeface()
 		{
-			VerifySupportsMatchingTypefaces();
-
 			var fonts = SKFontManager.Default;
 
 			var normal = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Normal);
@@ -85,12 +86,14 @@ namespace SkiaSharp.Tests
 			Assert.Equal(normal.FamilyName, bold.FamilyName);
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // iOS does not support matching typefaces
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not support matching typefaces
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // macOS does not support matching typefaces
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Android does not support matching typefaces from a typeface that was loaded from a stream
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)] // Linux does not support matching typefaces from a typeface that was loaded from a stream
 		[SkippableFact]
 		public void TestMatchTypefaceFromStream()
 		{
-			VerifySupportsMatchingTypefaces();
-			VerifySupportsMatchingTypefacesFromStreams();
-
 			var fonts = SKFontManager.Default;
 
 			var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
@@ -255,12 +258,13 @@ namespace SkiaSharp.Tests
 			Assert.NotSame(tf1, tf2);
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // macOS does not support matching typefaces
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not support matching typefaces
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // macOS does not support matching typefaces
 		[Obsolete]
 		[SkippableFact]
 		public unsafe void FromTypefaceReturnsSameObject()
 		{
-			VerifySupportsMatchingTypefaces();
-
 			var fonts = SKFontManager.Default;
 
 			var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
@@ -310,12 +314,14 @@ namespace SkiaSharp.Tests
 			Assert.Same(tf1, tf2);
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.Android)]
+		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.iOS)]
+		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.Linux)]
+		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.MacCatalyst)]
+		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.macOS)]
 		[SkippableFact]
 		public unsafe void GCStillCollectsTypeface()
 		{
-			if (!IsWindows)
-				throw new SkipException("Test designed for Windows.");
-
 			var handle = DoWork();
 
 			CollectGarbage();

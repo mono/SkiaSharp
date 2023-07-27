@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKCanvasTest : SKTest
 	{
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CanvasCanRestoreOnGpu()
 		{

@@ -4,12 +4,6 @@ namespace SkiaSharp.Tests
 {
 	public abstract class BaseTest
 	{
-		protected const string CategoryKey = "Category";
-
-		protected const string ApiCategory = "API";
-		protected const string GpuCategory = "GPU";
-		protected const string MatchCharacterCategory = "MatchCharacter";
-
 		protected static bool IsLinux = TestConfig.Current.IsLinux;
 		protected static bool IsMac = TestConfig.Current.IsMac;
 		protected static bool IsUnix = TestConfig.Current.IsUnix;

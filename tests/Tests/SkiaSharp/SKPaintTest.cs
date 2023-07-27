@@ -350,7 +350,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(text.Length, paint.GetGlyphs(text).Length);
 		}
 
-		[Trait(CategoryKey, MatchCharacterCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[SkippableFact]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
@@ -381,7 +381,7 @@ namespace SkiaSharp.Tests
 			Assert.True(paint.ContainsGlyphs(text));
 		}
 
-		[Trait(CategoryKey, MatchCharacterCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[SkippableFact]
 		public void ContainsUnicodeTextIsCorrect()
 		{

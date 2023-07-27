@@ -223,7 +223,7 @@ namespace SkiaSharp.Tests
 			Assert.True(typeface.GetGlyphs(text).Length > 0);
 		}
 
-		[Trait(CategoryKey, MatchCharacterCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[SkippableFact]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
@@ -242,7 +242,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(CategoryKey, MatchCharacterCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[SkippableFact]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharactersObsolete()
 		{
@@ -258,12 +258,10 @@ namespace SkiaSharp.Tests
 			Assert.True(typeface.GetGlyphs(text, SKEncoding.Utf32).Length > 0);
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not release the data when the typeface is disposed
 		[SkippableFact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheTypefaceWasFinished()
 		{
-			if (IsMac)
-				throw new SkipException("macOS does not release the data when the typeface is disposed.");
-
 			var path = Path.Combine(PathToFonts, "Distortable.ttf");
 			var bytes = File.ReadAllBytes(path);
 
@@ -499,12 +497,13 @@ namespace SkiaSharp.Tests
 			Assert.NotSame(tf1, tf2);
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // macOS does not support matching typefaces
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not support matching typefaces
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // macOS does not support matching typefaces
 		[Obsolete]
 		[SkippableFact]
 		public unsafe void FromTypefaceReturnsSameObject()
 		{
-			VerifySupportsMatchingTypefaces();
-
 			var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
 
 			var tf1 = SKTypeface.FromTypeface(tf, SKTypefaceStyle.Normal);
@@ -549,12 +548,14 @@ namespace SkiaSharp.Tests
 			Assert.False(tf1.IsDisposed);
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.Android)]
+		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.iOS)]
+		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.Linux)]
+		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.MacCatalyst)]
+		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.macOS)]
 		[SkippableFact]
 		public unsafe void GCStillCollectsTypeface()
 		{
-			if (!IsWindows)
-				throw new SkipException("Test designed for Windows.");
-
 			var handle = DoWork();
 
 			CollectGarbage();

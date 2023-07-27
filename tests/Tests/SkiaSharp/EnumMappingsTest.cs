@@ -23,6 +23,12 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void GRPixelConfigMappingsToSKColorType()
 		{
+			var obsolete = new[] {
+				GRPixelConfig.Sbgra8888,
+				GRPixelConfig.RgbaFloat,
+				GRPixelConfig.RgFloat,
+			};
+
 			foreach (GRPixelConfig value in Enum.GetValues(typeof(GRPixelConfig)))
 			{
 				var colortype = value switch
@@ -56,7 +62,7 @@ namespace SkiaSharp.Tests
 					_ => SKColorType.Unknown,
 				};
 
-				if (IsEnumValueDeprected(value))
+				if (Array.IndexOf(obsolete, value) != -1)
 					Assert.Throws<ArgumentOutOfRangeException>(() => value.ToColorType());
 				else
 					Assert.Equal(colortype, value.ToColorType());

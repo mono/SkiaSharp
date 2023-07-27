@@ -42,7 +42,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(dump.Lines);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CanGetMemoryDumpOnGpuSurface()
 		{
@@ -60,7 +60,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(dump.Lines);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CanGetMemoryDumpOnGpuImages()
 		{
@@ -83,7 +83,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(dump.Lines);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CanGetMemoryDumpOnGpuImagesAfterPurge()
 		{
@@ -107,7 +107,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(dump.Lines);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void CanGetMemoryDumpOnGpuImagesAfterPurgeUnlocked()
 		{

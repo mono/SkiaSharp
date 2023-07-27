@@ -172,28 +172,5 @@ namespace SkiaSharp.Tests
 			if (!IsWindows)
 				throw new SkipException("Exceptions cannot be thrown in native delegates on non-Windows platforms.");
 		}
-
-		protected static void VerifySupportsMatchingTypefaces()
-		{
-			if (IsMac)
-				throw new SkipException("macOS does not support matching typefaces.");
-		}
-
-		protected static void VerifySupportsMatchingTypefacesFromStreams()
-		{
-			if (IsLinux)
-				throw new SkipException("Linux does not support matching typefaces from a typeface that was loaded from a stream.");
-		}
-
-		protected static bool IsEnumValueDeprected<T>(T value)
-			where T : struct
-		{
-			var enumType = typeof(T);
-			var enumValue = enumType.GetMember(value.ToString()).FirstOrDefault();
-
-			var obsoleteAttribute = enumValue.GetCustomAttributes(typeof(ObsoleteAttribute), false).FirstOrDefault() as ObsoleteAttribute;
-
-			return obsoleteAttribute?.IsError == true;
-		}
 	}
 }

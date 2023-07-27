@@ -356,7 +356,7 @@ namespace SkiaSharp.Tests
 			effect.Test(surface, info, expected, preTestCallback);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableTheory]
 		[MemberData(nameof(ShadersUniformTestCaseData))]
 		public void ShadersWithUniformRunOnGpu(string src, Dictionary<string, object> uniforms, SKColor[] expected, Action<SKCanvas, SKPaint> preTestCallback = null)
@@ -390,7 +390,7 @@ namespace SkiaSharp.Tests
 			effect.Test(surface, info, expected, preTestCallback);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableTheory]
 		[MemberData(nameof(ShadersChildrenTestCaseData))]
 		public void ShadersWithChildrenRunOnGpu(string src, Dictionary<string, SKShader> children, SKColor[] expected, Action<SKCanvas, SKPaint> preTestCallback = null)
@@ -720,7 +720,7 @@ half4 main() { return half4(0); }";
 			Assert.Equal(new byte[] { 0, 0, 192, 64, 0, 0, 16, 65 }, data);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableTheory]
 		[InlineData(1.05f, 1.5f, 0xFF000000, 0xFFE98404)]
 		[InlineData(1.26f, 1.35f, 0xFF000000, 0xFF000000)]
@@ -783,7 +783,7 @@ half4 main(float2 p) {
 			Assert.Equal(shirtColor, actual[230 * info.Width + 300]);
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void ColorFiltersRunOnGpu()
 		{

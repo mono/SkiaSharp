@@ -5,7 +5,7 @@ namespace SkiaSharp.Vulkan.Tests
 {
 	public class SKSurfaceTest : VKTest
 	{
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void VkGpuSurfaceIsCreated()
 		{
@@ -37,7 +37,7 @@ namespace SkiaSharp.Vulkan.Tests
 			canvas.Flush();
 		}
 
-		[Trait(CategoryKey, GpuCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
 		public void VkGpuSurfaceIsCreatedSharpVkTypes()
 		{
