@@ -544,11 +544,11 @@ namespace SkiaSharp.Tests
 			Assert.False(tf1.IsDisposed);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.Android)]
-		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.iOS)]
-		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.Linux)]
-		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.MacCatalyst)]
-		[Trait(Traits.SkipOn.Key, Traits.RunOn.Values.macOS)]
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)]
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)]
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)]
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)]
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)]
 		[SkippableFact]
 		public unsafe void GCStillCollectsTypeface()
 		{

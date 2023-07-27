@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp.Tests
 {
@@ -35,6 +35,7 @@ namespace SkiaSharp.Tests
 
 				public static string GetCurrent()
 				{
+#if NET5_0_OR_GREATER
 					if (OperatingSystem.IsAndroid())
 						return Android;
 					if (OperatingSystem.IsIOS())
@@ -53,6 +54,14 @@ namespace SkiaSharp.Tests
 						return watchOS;
 					if (OperatingSystem.IsWindows())
 						return Windows;
+#else
+					if (PlatformConfiguration.IsLinux)
+						return Linux;
+					if (PlatformConfiguration.IsMac)
+						return macOS;
+					if (PlatformConfiguration.IsWindows)
+						return Windows;
+#endif
 					throw new InvalidOperationException("Unable to detect the current operating system.");
 				}
 			}
@@ -76,6 +85,7 @@ namespace SkiaSharp.Tests
 
 				public static string GetCurrent()
 				{
+#if NET5_0_OR_GREATER
 					if (OperatingSystem.IsAndroid())
 						return Android;
 					if (OperatingSystem.IsIOS())
@@ -94,47 +104,15 @@ namespace SkiaSharp.Tests
 						return watchOS;
 					if (OperatingSystem.IsWindows())
 						return Windows;
+#else
+					if (PlatformConfiguration.IsLinux)
+						return Linux;
+					if (PlatformConfiguration.IsMac)
+						return macOS;
+					if (PlatformConfiguration.IsWindows)
+						return Windows;
+#endif
 					throw new InvalidOperationException("Unable to detect the current operating system.");
-				}
-			}
-		}
-
-		public static class RunOn
-		{
-			public const string Key = "RunOn";
-
-			public static class Values
-			{
-				public const string Android = "Android";
-				public const string iOS = "iOS";
-				public const string Linux = "Linux";
-				public const string MacCatalyst = "MacCatalyst";
-				public const string macOS = "macOS";
-				public const string Tizen = "Tizen";
-				public const string tvOS = "tvOS";
-				public const string watchOS = "watchOS";
-				public const string Windows = "Windows";
-
-				public static IEnumerable<string> GetOthers()
-				{
-					if (!OperatingSystem.IsAndroid())
-						yield return Android;
-					if (!OperatingSystem.IsIOS())
-						yield return iOS;
-					if (!OperatingSystem.IsLinux())
-						yield return Linux;
-					if (!OperatingSystem.IsMacCatalyst())
-						yield return MacCatalyst;
-					if (!OperatingSystem.IsMacOS())
-						yield return macOS;
-					if (!OperatingSystem.IsOSPlatform("Tizen"))
-						yield return Tizen;
-					if (!OperatingSystem.IsTvOS())
-						yield return tvOS;
-					if (!OperatingSystem.IsWatchOS())
-						yield return watchOS;
-					if (!OperatingSystem.IsWindows())
-						yield return Windows;
 				}
 			}
 		}
