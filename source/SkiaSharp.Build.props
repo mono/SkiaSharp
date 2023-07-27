@@ -107,14 +107,17 @@
 
   <!-- .NET MAUI -->
   <PropertyGroup>
-    <MauiTargetFrameworksCurrent>$(TFMCurrent);$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</MauiTargetFrameworksCurrent>
-    <MauiTargetFrameworksCurrent Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksCurrent);$(TFMCurrent)-tizen</MauiTargetFrameworksCurrent>
-    <MauiTargetFrameworksCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksCurrent);$(TFMCurrent)-windows$(TFMWindowsVersion)</MauiTargetFrameworksCurrent>
+    <MauiTargetFrameworksPlatformCurrent>$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksPlatformCurrent Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-tizen</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksPlatformCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-windows$(TFMWindowsVersion)</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksCurrent>$(TFMCurrent);$(MauiTargetFrameworksPlatformCurrent)</MauiTargetFrameworksCurrent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMNext)' != ''">
-    <MauiTargetFrameworksNext>$(TFMNext);$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</MauiTargetFrameworksNext>
-    <MauiTargetFrameworksNext Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksNext);$(TFMNext)-tizen</MauiTargetFrameworksNext>
-    <MauiTargetFrameworksNext Condition="$(IsWindows)">$(MauiTargetFrameworksNext);$(TFMNext)-windows$(TFMWindowsVersion)</MauiTargetFrameworksNext>
+    <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
+    <MauiTargetFrameworksPlatformNext>$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</MauiTargetFrameworksPlatformNext>
+    <MauiTargetFrameworksPlatformNext Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksPlatformNext);$(TFMNext)-tizen</MauiTargetFrameworksPlatformNext>
+    <MauiTargetFrameworksPlatformNext Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformNext);$(TFMNext)-windows$(TFMWindowsVersion)</MauiTargetFrameworksPlatformNext>
+    <MauiTargetFrameworksNext>$(TFMNext);$(MauiTargetFrameworksPlatformNext)</MauiTargetFrameworksNext>
   </PropertyGroup>
   <PropertyGroup>
     <MauiTargetFrameworks>$(MauiTargetFrameworksCurrent);$(MauiTargetFrameworksNext)</MauiTargetFrameworks>

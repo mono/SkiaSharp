@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace SkiaSharp.Tests
 {
@@ -34,12 +35,19 @@ namespace SkiaSharp.Tests
 					filename = filename.Substring(imagesPrefix.Length);
 					root = imagesRoot;
 				}
+				else
+				{
+					Console.WriteLine($"Unable to figure out where to put '{name}'.");
+				}
 
-				Directory.CreateDirectory(root);
+				if (!string.IsNullOrWhiteSpace(root))
+				{
+					Directory.CreateDirectory(root);
 
-				using var stream = assembly.GetManifestResourceStream(name);
-				using var dest = File.Create(Path.Combine(root, filename));
-				stream.CopyTo(dest);
+					using var stream = assembly.GetManifestResourceStream(name);
+					using var dest = File.Create(Path.Combine(root, filename));
+					stream.CopyTo(dest);
+				}
 			}
 		}
 	}
