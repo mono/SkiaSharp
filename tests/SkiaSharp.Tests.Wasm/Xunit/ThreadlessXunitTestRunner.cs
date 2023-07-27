@@ -13,7 +13,7 @@ namespace SkiaSharp.Tests
 	{
 		public bool Run(string assemblyFileName, IEnumerable<string> excludedTraits)
 		{
-			WebAssembly.Runtime.InvokeJS($"if (document) document.body.innerHTML = ''");
+			WebAssembly.Window.Eval($"if (document) document.body.innerHTML = ''");
 
 			Log("Starting tests...");
 
@@ -105,7 +105,7 @@ namespace SkiaSharp.Tests
 			if (!string.IsNullOrEmpty(color))
 				style += $"color: {color};";
 
-			WebAssembly.Runtime.InvokeJS($"if (document) document.body.innerHTML += '<pre {ele} style=\"{style}\">{contents.Replace("\n", "<br/>")}</pre>'");
+			WebAssembly.Window.Eval($"if (document) document.body.innerHTML += '<pre {ele} style=\"{style}\">{contents.Replace("\n", "<br/>")}</pre>'");
 		}
 
 		private void ParseEqualSeparatedArgument(Dictionary<string, List<string>> targetDictionary, string argument)

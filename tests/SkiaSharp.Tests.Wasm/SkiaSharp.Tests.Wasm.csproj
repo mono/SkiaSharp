@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <WasmShellExtraEmccFlags Include="-s ASSERTIONS=1" />
+    <Content Include="..\..\output\native\wasm\libSkiaSharp.a\3.1.12\st\libSkiaSharp.*" Visible="false" />
+    <Content Include="..\..\output\native\wasm\libHarfBuzzSharp.a\3.1.12\st\libHarfBuzzSharp.*" Visible="false" />
     <LinkerDescriptor Include="LinkerConfig.xml" />
   </ItemGroup>
 
@@ -30,8 +32,5 @@
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
-
-  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
-  <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
 
 </Project>
