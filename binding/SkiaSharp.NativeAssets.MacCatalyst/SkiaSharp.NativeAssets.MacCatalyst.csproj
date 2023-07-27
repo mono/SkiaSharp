@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent)-maccatalyst;$(TFMNext)-maccatalyst</TargetFrameworks>
+    <TargetFrameworks>$(TFMCurrent)-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-maccatalyst</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Mac Catalyst</Title>
   </PropertyGroup>

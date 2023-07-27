@@ -16,9 +16,9 @@ if ($IsPreview) {
   $feed3 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json'
 }
 
-$Workloads = 'android','ios','tvos','macos','maccatalyst','wasm-tools','wasm-tools-net6','maui'
+$Workloads = 'android','ios','tvos','macos','maccatalyst','wasm-tools','wasm-tools-net7','maui'
 if ($IsLinux) {
-  $Workloads = 'android','macos','wasm-tools','wasm-tools-net6'
+  $Workloads = 'android','macos','wasm-tools','wasm-tools-net7'
 }
 
 Write-Host "Installing .NET workloads..."

@@ -42,8 +42,8 @@
     <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' == 'Core'">$([System.Text.RegularExpressions.Regex]::Match('$(MSBuildExtensionsPath)', '$(DotNetSdkManifestVersionRegex)'))</DotNetSdkManifestVersion>
     <!-- TODO: find a way to detect the installed SDK version -->
     <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' != 'Core'"></DotNetSdkManifestVersion>
-    <TFMCurrent>net6.0</TFMCurrent>
-    <TFMNext>net7.0</TFMNext>
+    <TFMCurrent>net7.0</TFMCurrent>
+    <TFMNext></TFMNext>
     <TFMWindowsVersion>10.0.19041.0</TFMWindowsVersion>
   </PropertyGroup>
 
@@ -71,17 +71,23 @@
 
   <!-- .NET Standard, .NET Framework and .NET -->
   <PropertyGroup>
-    <BasicTargetFrameworks>netstandard2.0;netstandard2.1;net462;$(TFMCurrent);$(TFMNext)</BasicTargetFrameworks>
+    <BasicTargetFrameworksCurrent>netstandard2.0;netstandard2.1;net462;$(TFMCurrent)</BasicTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tizen</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tvos</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-macos</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="$(IsWindows)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-windows$(TFMWindowsVersion)</PlatformTargetFrameworksCurrent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TFMNext)' != ''">
+    <BasicTargetFrameworksNext>$(TFMNext)</BasicTargetFrameworksNext>
     <PlatformTargetFrameworksNext Condition="!$(IsLinux)">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</PlatformTargetFrameworksNext>
     <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tizen</PlatformTargetFrameworksNext>
     <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tvos</PlatformTargetFrameworksNext>
     <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-macos</PlatformTargetFrameworksNext>
     <PlatformTargetFrameworksNext Condition="$(IsWindows)">$(PlatformTargetFrameworksNext);$(TFMNext)-windows$(TFMWindowsVersion)</PlatformTargetFrameworksNext>
+  </PropertyGroup>
+  <PropertyGroup>
+    <BasicTargetFrameworks>$(BasicTargetFrameworksCurrent);$(BasicTargetFrameworksNext)</BasicTargetFrameworks>
     <PlatformTargetFrameworks>$(PlatformTargetFrameworksCurrent);$(PlatformTargetFrameworksNext)</PlatformTargetFrameworks>
     <AllTargetFrameworks>$(BasicTargetFrameworks);$(PlatformTargetFrameworks)</AllTargetFrameworks>
   </PropertyGroup>
@@ -89,7 +95,7 @@
   <!-- Windows TFMs -->
   <PropertyGroup>
     <WindowsTargetFrameworksCurrent Condition="$(IsWindows)">$(TFMCurrent)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksCurrent>
-    <WindowsTargetFrameworksNext Condition="$(IsWindows)">$(TFMNext)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksNext>
+    <WindowsTargetFrameworksNext Condition="$(IsWindows) and '$(TFMNext)' != ''">$(TFMNext)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksNext>
     <WindowsTargetFrameworks Condition="$(IsWindows)">$(WindowsTargetFrameworksCurrent);$(WindowsTargetFrameworksNext)</WindowsTargetFrameworks>
   </PropertyGroup>
 
@@ -104,17 +110,22 @@
     <MauiTargetFrameworksCurrent>$(TFMCurrent);$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</MauiTargetFrameworksCurrent>
     <MauiTargetFrameworksCurrent Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksCurrent);$(TFMCurrent)-tizen</MauiTargetFrameworksCurrent>
     <MauiTargetFrameworksCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksCurrent);$(TFMCurrent)-windows$(TFMWindowsVersion)</MauiTargetFrameworksCurrent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TFMNext)' != ''">
     <MauiTargetFrameworksNext>$(TFMNext);$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</MauiTargetFrameworksNext>
     <MauiTargetFrameworksNext Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksNext);$(TFMNext)-tizen</MauiTargetFrameworksNext>
     <MauiTargetFrameworksNext Condition="$(IsWindows)">$(MauiTargetFrameworksNext);$(TFMNext)-windows$(TFMWindowsVersion)</MauiTargetFrameworksNext>
+  </PropertyGroup>
+  <PropertyGroup>
     <MauiTargetFrameworks>$(MauiTargetFrameworksCurrent);$(MauiTargetFrameworksNext)</MauiTargetFrameworks>
   </PropertyGroup>
 
   <!-- Uno Platform -->
   <PropertyGroup>
-    <UnoTargetFrameworksReference>$(TFMCurrent);$(TFMNext)</UnoTargetFrameworksReference>
+    <UnoTargetFrameworksReference>$(TFMCurrent)</UnoTargetFrameworksReference>
+    <UnoTargetFrameworksReference Condition="'$(TFMNext)' != ''">$(UnoTargetFrameworksReference);$(TFMNext)</UnoTargetFrameworksReference>
     <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android;$(TFMCurrent)-macos</UnoTargetFrameworksCurrent>
-    <UnoTargetFrameworksNext Condition="!$(IsLinux)">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android;$(TFMNext)-macos</UnoTargetFrameworksNext>
+    <UnoTargetFrameworksNext Condition="!$(IsLinux) and '$(TFMNext)' != ''">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android;$(TFMNext)-macos</UnoTargetFrameworksNext>
     <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksCurrent);$(UnoTargetFrameworksNext);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
   </PropertyGroup>
 
@@ -132,7 +143,7 @@
     <DefineConstants>$(DefineConstants);THROW_OBJECT_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(TFMCurrent)' or '$(TargetFramework)' == '$(TFMNext)' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(TFMCurrent)' or ('$(TargetFramework)' == '$(TFMNext)' and '$(TFMNext)' != '') ">
     <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
   </PropertyGroup>
 

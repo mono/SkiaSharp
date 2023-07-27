@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent)-tvos;$(TFMNext)-tvos</TargetFrameworks>
+    <TargetFrameworks>$(TFMCurrent)-tvos</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-tvos</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for tvOS</Title>
   </PropertyGroup>

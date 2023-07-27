@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent)-tizen;$(TFMNext)-tizen</TargetFrameworks>
+    <TargetFrameworks>$(TFMCurrent)-tizen</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-tizen</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Tizen</Title>
   </PropertyGroup>
