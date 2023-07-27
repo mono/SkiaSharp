@@ -43,6 +43,9 @@ namespace SkiaSharp.Tests
 			Assert.Same(colorspace, image.PeekPixels().ColorSpace);
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void ImageInfoColorSpaceIsReferencedCorrectly()
 		{
@@ -126,6 +129,9 @@ namespace SkiaSharp.Tests
 			GC.KeepAlive(colorspace);
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void ColorSpaceIsNotDisposedPrematurely()
 		{

@@ -73,6 +73,9 @@ namespace SkiaSharp.Tests
 			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void StreamIsCollectedEvenWhenNotProperlyDisposed()
 		{
@@ -360,6 +363,9 @@ namespace SkiaSharp.Tests
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{

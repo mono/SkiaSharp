@@ -571,6 +571,9 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, result.GetReferenceCount());
 		}
 
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
+		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void DataCreatedByImageExpiresAfterFinalizers()
 		{
