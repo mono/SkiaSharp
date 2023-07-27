@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using SkiaSharp.Tests;
 
 namespace SkiaSharp.Vulkan.Tests
 {
