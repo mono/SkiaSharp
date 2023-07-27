@@ -367,7 +367,7 @@ Task ("tests-wasm")
     .IsDependentOn ("externals-wasm")
     .Does (() =>
 {
-    RunMSBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
+    RunDotNetBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
 
     var pubDir = "./tests/SkiaSharp.Tests.Wasm/bin/publish/";
     RunDotNetPublish("./tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj", pubDir);
