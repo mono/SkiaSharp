@@ -90,7 +90,7 @@ void RunDotNetTest(
         Loggers = new [] { "xunit" },
         WorkingDirectory = dir,
         ResultsDirectory = output,
-        Verbosity = DotNetCoreVerbosity.Normal,
+        Verbosity = DotNetVerbosity.Normal,
         ArgumentCustomization = args => {
             args = args
                 .Append("/p:Platform=\"AnyCPU\"");
@@ -117,7 +117,7 @@ void RunDotNetPublish(
     string runtime = null)
 {
     var dir = testProject.GetDirectory();
-    var settings = new DotNetCorePublishSettings {
+    var settings = new DotNetPublishSettings {
         Configuration = configuration ?? CONFIGURATION,
         Framework = framework,
         Runtime = runtime,
@@ -125,7 +125,7 @@ void RunDotNetPublish(
         WorkingDirectory = dir,
         OutputDirectory = output,
     };
-    DotNetCorePublish(testProject.GetFilename().ToString(), settings);
+    DotNetPublish(testProject.GetFilename().ToString(), settings);
 }
 
 void RunCodeCoverage(string testResultsGlob, DirectoryPath output)

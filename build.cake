@@ -377,7 +377,7 @@ Task ("tests-wasm")
             Arguments = "server.py",
             WorkingDirectory = pubDir,
         });
-        DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj",
+        DotNetRun("./utils/WasmTestRunner/WasmTestRunner.csproj",
             "--output=\"./tests/SkiaSharp.Tests.Wasm/TestResults/\" " +
             (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
             "--verbose " +
