@@ -504,7 +504,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.Tests/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs'
                   testRunTitle: 'Windows .NET Framework Tests'
         - template: azure-templates-bootstrapper.yml # Tests|netcore (Windows)
           parameters:
@@ -525,7 +525,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.Tests/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs'
                   testRunTitle: 'Windows .NET Core Tests'
               - task: PublishBuildArtifacts@1
                 displayName: 'Publish the code coverage results'
@@ -549,7 +549,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.Tests/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs'
                   testRunTitle: 'macOS .NET Core Tests'
               - task: PublishBuildArtifacts@1
                 displayName: 'Publish the code coverage results'
@@ -575,7 +575,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.Tests/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs'
                   testRunTitle: 'Linux .NET Core Tests'
               - task: PublishBuildArtifacts@1
                 displayName: 'Publish the code coverage results'
@@ -607,7 +607,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.Devices.Android/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs'
                   testRunTitle: 'Android Tests'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
@@ -634,7 +634,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs'
                   testRunTitle: 'iOS Tests'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
@@ -661,7 +661,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Mac Catalyst Tests'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
@@ -689,7 +689,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'tests/SkiaSharp*.Wasm.Tests/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs'
                   testRunTitle: 'Linux WASM Tests'
         # TODO: add tests for linux alpine
         # TODO: add tests for linux no dependencies
