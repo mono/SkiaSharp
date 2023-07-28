@@ -376,7 +376,7 @@ Task ("tests-wasm")
             WorkingDirectory = "./tests/SkiaSharp.Tests.Wasm/bin/Release/net7.0/dist",
         });
         DotNetRun ("./utils/WasmTestRunner/WasmTestRunner.csproj",
-            "--output=\"./tests/SkiaSharp.Tests.Wasm/TestResults/\" " +
+            $"--output=\"./output/logs/testlogs/SkiaSharp.Tests.Wasm/{DATE_TIME_STR}/\" " +
             (string.IsNullOrEmpty (CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
             "--verbose " +
             "\"http://127.0.0.1:8000/\" ");
