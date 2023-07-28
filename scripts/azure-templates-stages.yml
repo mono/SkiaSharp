@@ -504,8 +504,14 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs'
+                  testResultsFiles: 'output/logs/testlogs/**/*.xml'
                   testRunTitle: 'Windows .NET Framework Tests'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the test logs
+                condition: always()
+                inputs:
+                  artifactName: testlogs_netfx_windows
+                  pathToPublish: 'output/logs/testlogs'
         - template: azure-templates-bootstrapper.yml # Tests|netcore (Windows)
           parameters:
             name: tests_netcore_windows
@@ -525,8 +531,14 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs'
+                  testResultsFiles: 'output/logs/testlogs/**/*.xml'
                   testRunTitle: 'Windows .NET Core Tests'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the test logs
+                condition: always()
+                inputs:
+                  artifactName: testlogs_netcore_windows
+                  pathToPublish: 'output/logs/testlogs'
               - task: PublishBuildArtifacts@1
                 displayName: 'Publish the code coverage results'
                 inputs:
@@ -549,8 +561,14 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs'
+                  testResultsFiles: 'output/logs/testlogs/**/*.xml'
                   testRunTitle: 'macOS .NET Core Tests'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the test logs
+                condition: always()
+                inputs:
+                  artifactName: testlogs_netcore_macos
+                  pathToPublish: 'output/logs/testlogs'
               - task: PublishBuildArtifacts@1
                 displayName: 'Publish the code coverage results'
                 inputs:
@@ -575,8 +593,14 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs'
+                  testResultsFiles: 'output/logs/testlogs/**/*.xml'
                   testRunTitle: 'Linux .NET Core Tests'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the test logs
+                condition: always()
+                inputs:
+                  artifactName: testlogs_netcore_linux
+                  pathToPublish: 'output/logs/testlogs'
               - task: PublishBuildArtifacts@1
                 displayName: 'Publish the code coverage results'
                 inputs:
@@ -607,7 +631,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs'
+                  testResultsFiles: 'output/logs/testlogs/**/*.xml'
                   testRunTitle: 'Android Tests'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
@@ -634,7 +658,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs'
+                  testResultsFiles: 'output/logs/testlogs/**/*.xml'
                   testRunTitle: 'iOS Tests'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
@@ -661,7 +685,7 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFiles: 'output/logs/testlogs/**/*.xml'
                   testRunTitle: 'Mac Catalyst Tests'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
@@ -689,8 +713,14 @@ stages:
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs'
+                  testResultsFiles: 'output/logs/testlogs/**/*.xml'
                   testRunTitle: 'Linux WASM Tests'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the test logs
+                condition: always()
+                inputs:
+                  artifactName: testlogs_wasm
+                  pathToPublish: 'output/logs/testlogs'
         # TODO: add tests for linux alpine
         # TODO: add tests for linux no dependencies
         # TODO: add tests for windows nano server
