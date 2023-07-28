@@ -369,21 +369,19 @@ Task ("tests-wasm")
 {
     RunDotNetBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
 
-    var pubDir = "./tests/SkiaSharp.Tests.Wasm/bin/publish/";
-    RunDotNetPublish("./tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj", pubDir);
     IProcess serverProc = null;
     try {
-        serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
-            Arguments = "server.py",
-            WorkingDirectory = pubDir,
+        serverProc = RunAndReturnProcess (PYTHON_EXE, new ProcessSettings {
+            Arguments = MakeAbsolute (File ("./tests/SkiaSharp.Tests.Wasm/server.py")).FullPath,
+            WorkingDirectory = "./tests/SkiaSharp.Tests.Wasm/bin/Release/net7.0/dist",
         });
-        DotNetRun("./utils/WasmTestRunner/WasmTestRunner.csproj",
+        DotNetRun ("./utils/WasmTestRunner/WasmTestRunner.csproj",
             "--output=\"./tests/SkiaSharp.Tests.Wasm/TestResults/\" " +
-            (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
+            (string.IsNullOrEmpty (CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
             "--verbose " +
             "\"http://127.0.0.1:8000/\" ");
     } finally {
-        serverProc?.Kill();
+        serverProc?.Kill ();
     }
 });
 
