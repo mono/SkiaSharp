@@ -44,6 +44,10 @@ namespace SkiaSharp.Tests
 				.ToList();
 			foreach (var o in staticChildren)
 				aliveObjects.Remove(o);
+#if DEBUG
+			foreach (var o in aliveObjects)
+				Console.WriteLine($"Found an alive object {o} that was created at: {HandleDictionary.stackTraces[o.Handle]}");
+#endif
 			Assert.Empty(aliveObjects);
 
 #if THROW_OBJECT_EXCEPTIONS
