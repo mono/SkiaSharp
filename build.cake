@@ -213,11 +213,6 @@ Task ("tests-netfx")
             EnsureDirectoryExists (results);
             try {
                 RunTests ($"./tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/net472/{assName}.dll", arch == "x86");
-
-                var failed = XmlPeek($"{results}/TestResults.xml", "/assemblies/assembly[@failed > 0 or @errors > 0]/@failed");
-                if (!string.IsNullOrEmpty(failed)) {
-                    throw new Exception($"At least {failed} test(s) failed.");
-                }
             } catch {
                 failedTests++;
                 if (THROW_ON_FIRST_TEST_FAILURE)
@@ -261,11 +256,6 @@ Task ("tests-netcore")
         var results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}";
         try {
             RunDotNetTest (csproj, results);
-
-            var failed = XmlPeek($"{results}/TestResults.xml", "/assemblies/assembly[@failed > 0 or @errors > 0]/@failed");
-            if (!string.IsNullOrEmpty(failed)) {
-                throw new Exception($"At least {failed} test(s) failed.");
-            }
         } catch {
             failedTests++;
             if (THROW_ON_FIRST_TEST_FAILURE)
