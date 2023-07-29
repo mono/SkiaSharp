@@ -195,17 +195,14 @@ namespace SkiaSharp.Tests
 		// Produces a 2x2 bitmap shader, with opaque colors:
 		// [ Red,  Lime  ]
 		// [ Blue, White ]
-		private static SKShader RedGreenBlueWhiteShader
+		private static SKShader GetRedGreenBlueWhiteShader()
 		{
-			get
-			{
-				using var bmp = new SKBitmap(new SKImageInfo(2, 2, SKColorType.Rgba8888));
-				bmp.SetPixel(0, 0, 0xFFFF0000);
-				bmp.SetPixel(1, 0, 0xFF00FF00);
-				bmp.SetPixel(0, 1, 0xFF0000FF);
-				bmp.SetPixel(1, 1, 0xFFFFFFFF);
-				return bmp.ToShader();
-			}
+			using var bmp = new SKBitmap(new SKImageInfo(2, 2, SKColorType.Rgba8888));
+			bmp.SetPixel(0, 0, 0xFFFF0000);
+			bmp.SetPixel(1, 0, 0xFF00FF00);
+			bmp.SetPixel(0, 1, 0xFF0000FF);
+			bmp.SetPixel(1, 1, 0xFFFFFFFF);
+			return bmp.ToShader();
 		}
 
 		public static IEnumerable<object[]> ShadersChildrenTestCaseData
@@ -216,7 +213,7 @@ namespace SkiaSharp.Tests
 				yield return new object[]
 				{
 					"uniform shader child; half4 main() { return sample(child); }",
-					new Dictionary<string, SKShader>
+					new Dictionary<string, Func<SKShader>>
 					{
 						{ "child",  null },
 					},
@@ -227,9 +224,9 @@ namespace SkiaSharp.Tests
 				yield return new object[]
 				{
 					"uniform shader child; half4 main() { return sample(child); }",
-					new Dictionary<string, SKShader>
+					new Dictionary<string, Func<SKShader>>
 					{
-						{ "child",  RedGreenBlueWhiteShader },
+						{ "child",  new Func<SKShader>(GetRedGreenBlueWhiteShader) },
 					},
 					new SKColor[] { 0xFF0000FF, 0xFF00FF00, 0xFFFF0000, 0xFFFFFFFF },
 					null,
@@ -238,9 +235,9 @@ namespace SkiaSharp.Tests
 				yield return new object[]
 				{
 					"uniform shader child; half4 main(float2 p) { return sample(child, p.yx); }",
-					new Dictionary<string, SKShader>
+					new Dictionary<string, Func<SKShader>>
 					{
-						{ "child",  RedGreenBlueWhiteShader },
+						{ "child",  new Func<SKShader>(GetRedGreenBlueWhiteShader) },
 					},
 					new SKColor[] { 0xFF0000FF, 0xFFFF0000, 0xFF00FF00, 0xFFFFFFFF },
 					null,
@@ -249,9 +246,9 @@ namespace SkiaSharp.Tests
 				yield return new object[]
 				{
 					"uniform shader child; half4 main() { return sample(child, float3x3(0, 1, 0, 1, 0, 0, 0, 0, 1)); }",
-					new Dictionary<string, SKShader>
+					new Dictionary<string, Func<SKShader>>
 					{
-						{ "child",  RedGreenBlueWhiteShader },
+						{ "child",  new Func<SKShader>(GetRedGreenBlueWhiteShader) },
 					},
 					new SKColor[] { 0xFF0000FF, 0xFFFF0000, 0xFF00FF00, 0xFFFFFFFF },
 					null,
@@ -260,9 +257,9 @@ namespace SkiaSharp.Tests
 				yield return new object[]
 				{
 					"in shader child; half4 main() { return sample(child); }",
-					new Dictionary<string, SKShader>
+					new Dictionary<string, Func<SKShader>>
 					{
-						{ "child",  RedGreenBlueWhiteShader },
+						{ "child",  new Func<SKShader>(GetRedGreenBlueWhiteShader) },
 					},
 					new SKColor[] { 0xFF0000FF, 0xFF00FF00, 0xFFFF0000, 0xFFFFFFFF },
 					null,
@@ -378,13 +375,16 @@ namespace SkiaSharp.Tests
 
 		[SkippableTheory(Skip = "Shaders are not yet supported on raster surfaces.")]
 		[MemberData(nameof(ShadersChildrenTestCaseData))]
-		public void ShadersWithChildrenRunOnRaster(string src, Dictionary<string, SKShader> children, SKColor[] expected, Action<SKCanvas, SKPaint> preTestCallback = null)
+		public void ShadersWithChildrenRunOnRaster(string src, Dictionary<string, Func<SKShader>> getChildren, SKColor[] expected, Action<SKCanvas, SKPaint> preTestCallback = null)
 		{
 			var info = new SKImageInfo(2, 2);
 			using var surface = SKSurface.Create(info);
 
 			using var effect = new TestEffect(src);
 
+			var children = new Dictionary<string, SKShader>();
+			foreach (var get in getChildren)
+				children.Add(get.Key, get.Value?.Invoke());
 			effect.SetChildren(children);
 
 			effect.Test(surface, info, expected, preTestCallback);
@@ -393,7 +393,7 @@ namespace SkiaSharp.Tests
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableTheory]
 		[MemberData(nameof(ShadersChildrenTestCaseData))]
-		public void ShadersWithChildrenRunOnGpu(string src, Dictionary<string, SKShader> children, SKColor[] expected, Action<SKCanvas, SKPaint> preTestCallback = null)
+		public void ShadersWithChildrenRunOnGpu(string src, Dictionary<string, Func<SKShader>> getChildren, SKColor[] expected, Action<SKCanvas, SKPaint> preTestCallback = null)
 		{
 			using var ctx = CreateGlContext();
 			ctx.MakeCurrent();
@@ -405,6 +405,9 @@ namespace SkiaSharp.Tests
 
 			using var effect = new TestEffect(src);
 
+			var children = new Dictionary<string, SKShader>();
+			foreach (var get in getChildren)
+				children.Add(get.Key, get.Value?.Invoke());
 			effect.SetChildren(children);
 
 			effect.Test(surface, info, expected, preTestCallback);
