@@ -54,11 +54,11 @@ void RunDotNetPack(
     }
 
     c.ArgumentCustomization = args => args.Append(additionalArgs);
-    
+
     DotNetPack(solution.FullPath, c);
 }
 
-void RunTests(FilePath testAssembly, bool is32)
+void RunTests(FilePath testAssembly, DirectoryPath output, bool is32)
 {
     var dir = testAssembly.GetDirectory();
     var settings = new XUnit2Settings {
@@ -67,7 +67,7 @@ void RunTests(FilePath testAssembly, bool is32)
         UseX86 = is32,
         NoAppDomain = true,
         Parallelism = ParallelismOption.All,
-        OutputDirectory = dir,
+        OutputDirectory = MakeAbsolute(output).FullPath,
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append("-verbose"),
     };
@@ -80,7 +80,8 @@ void RunTests(FilePath testAssembly, bool is32)
 void RunDotNetTest(
     FilePath testProject,
     DirectoryPath output,
-    string configuration = null)
+    string configuration = null,
+    Dictionary<string, string> properties = null)
 {
     output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
@@ -99,6 +100,14 @@ void RunDotNetTest(
                     .Append("/p:CollectCoverage=true")
                     .Append("/p:CoverletOutputFormat=cobertura")
                     .Append($"/p:CoverletOutput={output.Combine("Coverage").FullPath}/");
+            if (properties != null) {
+                foreach (var prop in properties) {
+                    if (!string.IsNullOrEmpty(prop.Value)) {
+                        args = args
+                            .Append($"/p:{prop.Key}={prop.Value}");
+                    }
+                }
+            }
             return args;
         },
     };

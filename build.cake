@@ -199,20 +199,23 @@ Task ("tests-netfx")
     foreach ( var arch in new [] { "x86", "x64" }) {
         if (Skip(arch)) continue;
 
+        var tfm = "net472";
         var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
         if (SUPPORT_VULKAN)
             testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
         foreach (var testAssembly in testAssemblies) {
             // build
             var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
-            RunDotNetBuild (csproj, platform: arch);
+            RunDotNetBuild (csproj, platform: arch, properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm }
+            });
 
             // test
-            DirectoryPath results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}";
+            DirectoryPath results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}-{arch}";
             var assName = testAssembly.Replace (".Console", "");
             EnsureDirectoryExists (results);
             try {
-                RunTests ($"./tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/net472/{assName}.dll", arch == "x86");
+                RunTests ($"./tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/{tfm}/{assName}.dll", results, arch == "x86");
             } catch {
                 failedTests++;
                 if (THROW_ON_FIRST_TEST_FAILURE)
@@ -244,18 +247,23 @@ Task ("tests-netcore")
 
     var failedTests = 0;
 
+    var tfm = "net7.0";
     var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
     if (SUPPORT_VULKAN)
         testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
     foreach (var testAssembly in testAssemblies) {
         // build
         var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
-        RunDotNetBuild (csproj);
+        RunDotNetBuild (csproj, properties: new Dictionary<string, string> {
+            { "TargetFramework", tfm }
+        });
 
         // test
-        var results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}";
+        var results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}";
         try {
-            RunDotNetTest (csproj, results);
+            RunDotNetTest (csproj, results, properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm }
+            });
         } catch {
             failedTests++;
             if (THROW_ON_FIRST_TEST_FAILURE)
