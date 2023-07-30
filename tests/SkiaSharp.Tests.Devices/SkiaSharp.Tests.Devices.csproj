@@ -1,0 +1,81 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks Condition="'$(TFMNext)' == ''">$(MauiTargetFrameworksPlatformCurrent)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(MauiTargetFrameworksPlatformNext)</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
+    <AssemblyName>SkiaSharp.Tests.Devices</AssemblyName>
+    <RootNamespace>SkiaSharp.Tests</RootNamespace>
+    <SignAssembly>false</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ApplicationTitle>SkiaSharp Tests</ApplicationTitle>
+    <ApplicationId>com.companyname.SkiaSharpTests</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">14.2</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">14.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tizen'))">6.5</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.skippablefact" Version="1.4.13" />
+    <PackageReference Include="Validation" Version="2.4.22" />
+    <PackageReference Include="DeviceRunners.VisualRunners.Maui" Version="0.1.0-preview.1" />
+    <PackageReference Include="DeviceRunners.VisualRunners.Xunit" Version="0.1.0-preview.1" />
+    <PackageReference Include="DeviceRunners.XHarness.Maui" Version="0.1.0-preview.1" />
+    <PackageReference Include="DeviceRunners.XHarness.Xunit" Version="0.1.0-preview.1" />
+    <PackageReference Include="DeviceRunners.UITesting.Maui" Version="0.1.0-preview.1" />
+    <PackageReference Include="DeviceRunners.UITesting.Xunit" Version="0.1.0-preview.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Core\SkiaSharp.Views.Maui.Core.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls.Compatibility\SkiaSharp.Views.Maui.Controls.Compatibility.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Tests\SkiaSharp.Tests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MauiIcon Include="Resources\AppIcon\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
+    <MauiSplashScreen Include="Resources\Splash\skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\Content\**" Exclude="..\Content\.DS_Store" Link="Content\%(RecursiveDir)%(FileName)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Tests\**" />
+    <None Include="Tests\**" />
+    <Compile Include="Tests\Apple\**\*.cs;Tests\iOS\**\*.cs" Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-tvos'))" />
+    <Compile Include="Tests\Apple\**\*.cs;Tests\macOS\**\*.cs" Condition="$(TargetFramework.Contains('-macos'))" />
+    <Compile Include="Tests\Android\**\*.cs" Condition="$(TargetFramework.Contains('-android'))" />
+    <Compile Include="Tests\Tizen\**\*.cs" Condition="$(TargetFramework.Contains('-tizen'))" />
+    <Compile Include="Tests\Windows\**\*.cs" Condition="$(TargetFramework.Contains('-windows'))" />
+  </ItemGroup>
+
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+  <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+
+</Project>

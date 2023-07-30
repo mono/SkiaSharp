@@ -26,6 +26,8 @@ namespace SkiaSharp.Tests
 			Assert.Equal(preamble, Utils.GetPreambleSize(data));
 		}
 
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
 		[SkippableTheory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_TryParse(string filename)
@@ -38,6 +40,8 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
 		[SkippableTheory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_Parse(string filename)

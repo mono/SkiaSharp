@@ -4,7 +4,7 @@ namespace SkiaSharp
 {
 	internal partial class SkottieApi
 	{
-#if __IOS__ || __TVOS__ || __WATCHOS__
+#if __IOS__ || __TVOS__
 		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #else
 		private const string SKIA = "libSkiaSharp";

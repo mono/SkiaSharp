@@ -24,11 +24,12 @@ parameters:
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installAndroidSdk: true                       # whether or not to install the Android SDK
   installTizenSdk: true                         # whether or not to install the Tizen SDK
-  installWindowsSdk: true                       # whether or not to install the Windows SDK
+  installWindowsSdk: false                      # whether or not to install the Windows SDK
   installPreviewVs: false                       # whether or not to install the preview VS
   installDotNet: true                           # whether or not to install the dotnet SDK
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
+  installNinja: false                           # whether or not to install the ninja build system
   artifactName: ''                              # the name of the artifact to merge this run into
   tools: []                                     # any additional .net global tools
 
@@ -78,18 +79,6 @@ jobs:
           displayName: Install additional package dependencies
           retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne('${{ parameters.packages }}', ''))
-
-      # make sure mono/msbuild is the correct version
-      - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
-        - bash: ./scripts/install-mono.sh $(MONO_VERSION_LINUX)
-          displayName: Install Mono and MSBuild
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables['MONO_VERSION_LINUX'], ''))
-      - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: sudo ./scripts/select-xamarin.sh $(MONO_VERSION_MACOS)
-          displayName: Switch to the latest Xamarin SDK
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install extra bits for the native builds
       - ${{ if startsWith(parameters.name, 'native_') }}:
@@ -165,7 +154,7 @@ jobs:
         - ${{ if eq(parameters.installDotNet, 'true') }}:
           - ${{ if endsWith(parameters.name, '_macos') }}:
             - pwsh: Remove-Item "$env:AGENT_TOOLSDIRECTORY/dotnet" -Recurse -Force -ErrorAction SilentlyContinue
-              displayName: Cleanup existing versions of .NET Core
+              displayName: Cleanup existing versions of .NET
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           - task: UseDotNet@2
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
@@ -173,7 +162,7 @@ jobs:
               packageType: 'sdk'
               version: 3.1.x
             retryCountOnTaskFailure: 3
-            displayName: Install .NET Core 3.1.x
+            displayName: Install .NET 3.1.x
           - task: UseDotNet@2
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             inputs:
@@ -182,7 +171,7 @@ jobs:
             retryCountOnTaskFailure: 3
             displayName: Install .NET 7.0.x
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-            displayName: Install the preview version of .NET Core
+            displayName: Install the preview version of .NET
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
           - ${{ if endsWith(parameters.name, '_linux') }}:
@@ -194,40 +183,35 @@ jobs:
             displayName: Display all the .NET information
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # install VS
-          - ${{ if endsWith(parameters.name, '_windows') }}:
-            - ${{ if eq(parameters.installPreviewVs, 'true') }}:
-              - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
-                displayName: Install Visual Studio
-                retryCountOnTaskFailure: 3
-                condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
+          - ${{ if eq(parameters.installPreviewVs, 'true') }}:
+            - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
+              displayName: Install Visual Studio $(VISUAL_STUDIO_VERSION)
+              retryCountOnTaskFailure: 3
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
           # install workloads
-          - ${{ if not(endsWith(parameters.name, '_linux')) }}:
-            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $true
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
-              retryCountOnTaskFailure: 3
-              displayName: Install the preview .NET Core workloads
-            - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $false
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), eq(variables.DOTNET_VERSION_PREVIEW, ''))
-              retryCountOnTaskFailure: 3
-              displayName: Install the .NET Core workloads
-
-      # select the correct/latest version of Visual Studio
-      - ${{ if endsWith(parameters.name, '_windows') }}:
-        - pwsh: .\scripts\select-vs.ps1
-          displayName: Select Visual Studio
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-
-      # install nuget
-      - ${{ if endsWith(parameters.name, '_windows') }}:
-        - pwsh: .\scripts\install-nuget.ps1
-          displayName: Install NuGet
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $true
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
+            retryCountOnTaskFailure: 3
+            displayName: Install the preview .NET workloads
+          - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $false
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), eq(variables.DOTNET_VERSION_PREVIEW, ''))
+            retryCountOnTaskFailure: 3
+            displayName: Install the .NET workloads
 
       # install the mac tools
       - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
-          displayName: Switch to the latest Xcode
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+        - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+          - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
+            displayName: Switch to the latest Xcode
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - ${{ if eq(parameters.installNinja, 'true') }}:
+            - bash: ./scripts/install-ninja.sh
+              displayName: Install ninja
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+        - ${{ if startsWith(parameters.name, 'native_') }}:
+          - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION_NATIVE)
+            displayName: Switch to the latest Xcode
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
@@ -238,6 +222,10 @@ jobs:
 
       # install the Windows tools
       - ${{ if endsWith(parameters.name, '_windows') }}:
+        # select the correct/latest version of Visual Studio
+        - pwsh: .\scripts\select-vs.ps1
+          displayName: Select Visual Studio
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install the older Windows SDKs
           - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
@@ -258,7 +246,7 @@ jobs:
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
-      # install any .NET Core global tools
+      # install any .NET global tools
       - ${{ each tool in parameters.tools }}:
         - pwsh: dotnet tool install -g ${{ tool }}
           displayName: Install ${{ tool }}

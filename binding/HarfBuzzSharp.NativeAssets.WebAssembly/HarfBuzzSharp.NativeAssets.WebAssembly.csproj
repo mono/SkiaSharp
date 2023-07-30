@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
+    <PackagingGroup>HarfBuzzSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for Web Assembly (WASM)</Title>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageFile Include="..\..\output\native\wasm\**\libHarfBuzzSharp*.a" PackagePath="buildTransitive\netstandard1.0" />
+    <PackageFile Include="buildTransitive\HarfBuzzSharp.props" PackagePath="buildTransitive\netstandard1.0\$(PackageId).props" />
+    <PackageFile Include="buildTransitive\HarfBuzzSharp.targets" PackagePath="buildTransitive\netstandard1.0\$(PackageId).targets" />
+  </ItemGroup>
+</Project>

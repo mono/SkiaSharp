@@ -1,4 +1,5 @@
-﻿using Microsoft.Maui.Controls;
+﻿using Microsoft.Maui;
+using Microsoft.Maui.Controls;
 
 namespace SkiaSharpSample
 {
@@ -7,8 +8,13 @@ namespace SkiaSharpSample
 		public App()
 		{
 			InitializeComponent();
-
-			MainPage = new MainPage();
 		}
+
+		protected override Window CreateWindow(IActivationState activationState) =>
+			new Window
+			{
+				Title = "SkiaSharp Sample",
+				Page = new MainPage()
+			};
 	}
 }

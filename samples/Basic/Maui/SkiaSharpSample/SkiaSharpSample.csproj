@@ -1,21 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0-ios;net6.0-maccatalyst;net6.0-android</TargetFrameworks>
-    <TargetFrameworks>$(TargetFrameworks);net6.0-tizen</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net6.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>net7.0-ios;net7.0-maccatalyst;net7.0-android</TargetFrameworks>
+    <TargetFrameworks>$(TargetFrameworks);net7.0-tizen</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
-    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
-    <RootNamespace>SkiaSharpSample</RootNamespace>
-    <ApplicationTitle>SkiaSharpSample</ApplicationTitle>
+    <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ApplicationTitle>SkiaSharp Sample</ApplicationTitle>
     <ApplicationId>com.companyname.SkiaSharpSample</ApplicationId>
-    <ApplicationIdGuid>69157F47-E4B3-4267-82FE-04460C520A8F</ApplicationIdGuid>
+    <ApplicationIdGuid>AC63F9E5-DBE5-4F04-9EBC-2694661FE99B</ApplicationIdGuid>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <LangVersion>10.0</LangVersion>
-    <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">14.2</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">14.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
@@ -29,23 +32,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!--<Reference Include="..\..\..\..\binding\SkiaSharp\bin\Debug\netstandard2.0\SkiaSharp.dll" />
-    <Reference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls.Compatibility\bin\Debug\net6.0-windows10.0.19041.0\SkiaSharp.Views.Maui.Controls.Compatibility.dll" />
-    <Reference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\bin\Debug\net6.0-windows10.0.19041.0\SkiaSharp.Views.Maui.Controls.dll" />
-    <Reference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Core\bin\Debug\net6.0-windows10.0.19041.0\SkiaSharp.Views.Maui.Core.dll" />
-    <Reference Include="..\..\..\..\source\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI\bin\Debug\net6.0-windows10.0.18362.0\SkiaSharp.Views.Windows.dll" />-->
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls.Compatibility\SkiaSharp.Views.Maui.Controls.Compatibility.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
-    <None Include="..\..\..\..\output\native\windows\x64\libSkiaSharp.dll" Condition="Exists('..\..\..\..\output\native\windows\x64\libSkiaSharp.dll')">
-      <Link>libSkiaSharp.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\$(TargetFramework)\SkiaSharp.Local.targets')" />
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
 
 </Project>

@@ -6,7 +6,7 @@ parameters:
   - name: buildExternals
     displayName: 'The specific native artifacts to use for this build.'
     type: string
-    default: 'latest'
+    default: '8127036'
   - name: VM_IMAGE_HOST
     type: object
     default:
@@ -20,6 +20,12 @@ parameters:
         name: Azure Pipelines
         vmImage: windows-2022
   - name: VM_IMAGE_MAC
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: macos-13
+  - name: VM_IMAGE_MAC_NATIVE
     type: object
     default:
       pool:
@@ -56,6 +62,6 @@ stages:
       VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
-      VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC }}
+      VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
       VM_IMAGE_LINUX: ${{ parameters.VM_IMAGE_LINUX }}
       VM_IMAGE_LINUX_NATIVE: ${{ parameters.VM_IMAGE_LINUX }}

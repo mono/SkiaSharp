@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>SkiaSharp.Tests</RootNamespace>
+    <AssemblyName>SkiaSharp.Tests</AssemblyName>
+    <WasmShellILLinkerEnabled>true</WasmShellILLinkerEnabled>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <WasmShellExtraEmccFlags Include="-s ASSERTIONS=1" />
+    <Content Include="..\..\output\native\wasm\libSkiaSharp.a\3.1.12\st\libSkiaSharp.*" Visible="false" />
+    <Content Include="..\..\output\native\wasm\libHarfBuzzSharp.a\3.1.12\st\libHarfBuzzSharp.*" Visible="false" />
+    <LinkerDescriptor Include="LinkerConfig.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="7.0.27" />
+    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="7.0.27" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.utility" Version="2.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+  </ItemGroup>
+
+</Project>

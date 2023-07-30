@@ -30,6 +30,12 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
+        vmImage: macos-13
+  - name: VM_IMAGE_MAC_NATIVE
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
         vmImage: macos-12
   - name: VM_IMAGE_LINUX
     type: object
@@ -58,6 +64,6 @@ stages:
       VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
-      VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC }}
+      VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
       VM_IMAGE_LINUX: ${{ parameters.VM_IMAGE_LINUX }}
       VM_IMAGE_LINUX_NATIVE: ${{ parameters.VM_IMAGE_LINUX }}
