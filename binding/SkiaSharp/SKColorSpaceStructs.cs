@@ -208,6 +208,12 @@ namespace SkiaSharp
 
 		public static readonly SKColorSpaceXyz Empty;
 
+		public readonly static SKColorSpaceXyz Identity =
+			new SKColorSpaceXyz(
+				1, 0, 0,
+				0, 1, 0,
+				0, 0, 1);
+
 		public SKColorSpaceXyz (float value)
 		{
 			fM00 = value;

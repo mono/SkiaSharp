@@ -44,6 +44,8 @@ namespace SkiaSharp
 			set => SkiaApi.sk_path_set_filltype (Handle, value);
 		}
 
+		public SKPathConvexity Convexity => IsConvex ? SKPathConvexity.Convex : SKPathConvexity.Concave;
+
 		public bool IsConvex => SkiaApi.sk_path_is_convex (Handle);
 
 		public bool IsConcave => !IsConvex;

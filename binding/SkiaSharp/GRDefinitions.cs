@@ -105,8 +105,7 @@ namespace SkiaSharp
 	public static partial class SkiaExtensions
 	{
 		public static uint ToGlSizedFormat (this SKColorType colorType) =>
-			colorType switch
-			{
+			colorType switch {
 				SKColorType.Unknown => 0,
 				SKColorType.Alpha8 => GRGlSizedFormat.ALPHA8,
 				SKColorType.Gray8 => GRGlSizedFormat.LUMINANCE8,
@@ -126,6 +125,8 @@ namespace SkiaSharp
 				SKColorType.Rg88 => GRGlSizedFormat.RG8,
 				SKColorType.Rgb101010x => 0,
 				SKColorType.RgbaF32 => 0,
+				SKColorType.Bgra1010102 => 0,
+				SKColorType.Bgr101010x => 0,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
 			};
 	}

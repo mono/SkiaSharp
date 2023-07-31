@@ -72,7 +72,8 @@ namespace SkiaSharp.Tests
 				canvas.Clear(SKColors.White);
 				using (var builder = new SKTextBlobBuilder())
 				{
-					builder.AddRun(paint, 0, 0, glyphs);
+					var run = builder.AllocateRun(paint.GetFont(), glyphs.Length, 0, 0);
+					run.SetGlyphs(glyphs);
 					canvas.DrawText(builder.Build(), 150, 175, paint);
 				}
 
@@ -185,30 +186,6 @@ namespace SkiaSharp.Tests
 			using (var paint = new SKPaint())
 			{
 				canvas.DrawText("", 150, 175, paint);
-			}
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void CanDrawNullPointerZeroLengthText()
-		{
-			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
-			using (var canvas = new SKCanvas(bmp))
-			using (var paint = new SKPaint())
-			{
-				canvas.DrawText(IntPtr.Zero, 0, 150, 175, paint);
-			}
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void ThrowsOnDrawNullPointerText()
-		{
-			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
-			using (var canvas = new SKCanvas(bmp))
-			using (var paint = new SKPaint())
-			{
-				Assert.Throws<ArgumentNullException>(() => canvas.DrawText(IntPtr.Zero, 123, 150, 175, paint));
 			}
 		}
 
@@ -432,49 +409,6 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Obsolete]
-		[SkippableFact]
-		public void SvgCanvasSavesFileUsingWriter()
-		{
-			var stream = new MemoryStream();
-
-			using (var wstream = new SKManagedWStream(stream))
-			using (var writer = new SKXmlStreamWriter(wstream))
-			using (var svg = SKSvgCanvas.Create(SKRect.Create(100, 100), writer))
-			{
-				var paint = new SKPaint
-				{
-					Color = SKColors.Red,
-					Style = SKPaintStyle.Fill
-				};
-				svg.DrawRect(SKRect.Create(10, 10, 80, 80), paint);
-			}
-
-			stream.Position = 0;
-
-			using (var reader = new StreamReader(stream))
-			{
-				var xml = reader.ReadToEnd();
-				var xdoc = XDocument.Parse(xml);
-
-				var svg = xdoc.Root;
-				var ns = svg.Name.Namespace;
-
-				Assert.Equal(ns + "svg", svg.Name);
-				Assert.Equal("100", svg.Attribute("width")?.Value);
-				Assert.Equal("100", svg.Attribute("height")?.Value);
-
-				var rect = svg.Element(ns + "rect");
-				Assert.Equal(ns + "rect", rect.Name);
-				Assert.Equal("red", rect.Attribute("fill")?.Value);
-				Assert.Null(rect.Attribute("stroke")?.Value);
-				Assert.Equal("10", rect.Attribute("x")?.Value);
-				Assert.Equal("10", rect.Attribute("y")?.Value);
-				Assert.Equal("80", rect.Attribute("width")?.Value);
-				Assert.Equal("80", rect.Attribute("height")?.Value);
-			}
-		}
-
 		[SkippableTheory]
 		[InlineData(SKTextAlign.Left, 300)]
 		[InlineData(SKTextAlign.Center, 162)]
@@ -524,7 +458,8 @@ namespace SkiaSharp.Tests
 
 			var glyphs = paint.GetGlyphs("SkiaSharp");
 			using var blobBuilder = new SKTextBlobBuilder();
-			blobBuilder.AddRun(paint, 0, 0, glyphs);
+			var run = blobBuilder.AllocateRun(paint.GetFont(), glyphs.Length, 0, 0);
+			run.SetGlyphs(glyphs);
 			using var blob = blobBuilder.Build();
 
 			canvas.DrawText(blob, 300, 100, paint);
@@ -562,7 +497,7 @@ namespace SkiaSharp.Tests
 			}
 
 			using var blobBuilder = new SKTextBlobBuilder();
-			var run = blobBuilder.AllocateHorizontalRun(paint, glyphs.Length, 0);
+			var run = blobBuilder.AllocateHorizontalRun(paint.GetFont(), glyphs.Length, 0);
 			run.SetGlyphs(glyphs);
 			run.SetPositions(positions);
 			using var blob = blobBuilder.Build();
@@ -602,7 +537,7 @@ namespace SkiaSharp.Tests
 			}
 
 			using var blobBuilder = new SKTextBlobBuilder();
-			var run = blobBuilder.AllocatePositionedRun(paint, glyphs.Length);
+			var run = blobBuilder.AllocatePositionedRun(paint.GetFont(), glyphs.Length);
 			run.SetGlyphs(glyphs);
 			run.SetPositions(positions);
 			using var blob = blobBuilder.Build();
@@ -642,10 +577,11 @@ namespace SkiaSharp.Tests
 			}
 
 			using var blobBuilder = new SKTextBlobBuilder();
-			var run = blobBuilder.AllocatePositionedRun(paint, glyphs.Length);
+			var run = blobBuilder.AllocatePositionedRun(paint.GetFont(), glyphs.Length);
 			run.SetGlyphs(glyphs);
 			run.SetPositions(positions);
-			blobBuilder.AddRun(paint, 0, 100, glyphs);
+			var run2 = blobBuilder.AllocateRun(paint.GetFont(), glyphs.Length, 0, 100);
+			run2.SetGlyphs(glyphs);
 			using var blob = blobBuilder.Build();
 
 			canvas.DrawText(blob, 300, 100, paint);

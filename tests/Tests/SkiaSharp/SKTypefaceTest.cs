@@ -241,23 +241,6 @@ namespace SkiaSharp.Tests
 			Assert.DoesNotContain((ushort)0, glyphs);
 		}
 
-		[Obsolete]
-		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
-		[SkippableFact]
-		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharactersObsolete()
-		{
-			const string text = "🚀";
-			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
-
-			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
-			Assert.NotNull(typeface);
-
-			Assert.True(typeface.CountGlyphs(text) > 0);
-			Assert.True(typeface.CountGlyphs(text, SKEncoding.Utf32) > 0);
-			Assert.True(typeface.GetGlyphs(text).Length > 0);
-			Assert.True(typeface.GetGlyphs(text, SKEncoding.Utf32).Length > 0);
-		}
-
 		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not release the data when the typeface is disposed
 		[SkippableFact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheTypefaceWasFinished()
@@ -497,22 +480,6 @@ namespace SkiaSharp.Tests
 			using var tf2 = SKTypeface.FromData(data);
 
 			Assert.NotSame(tf1, tf2);
-		}
-
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // macOS does not support matching typefaces
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not support matching typefaces
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // macOS does not support matching typefaces
-		[Obsolete]
-		[SkippableFact]
-		public unsafe void FromTypefaceReturnsSameObject()
-		{
-			var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
-
-			var tf1 = SKTypeface.FromTypeface(tf, SKTypefaceStyle.Normal);
-			var tf2 = SKTypeface.FromTypeface(tf, SKTypefaceStyle.Normal);
-
-			Assert.Same(tf, tf1);
-			Assert.Same(tf1, tf2);
 		}
 
 		[SkippableFact]

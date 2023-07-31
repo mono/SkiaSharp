@@ -145,14 +145,14 @@ internal partial class VersionConstants {
     Sign the assembly using sn.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
+  <PropertyGroup Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true'">
     <_SignAssemblyAfterTargets>
       CoreCompile
     </_SignAssemblyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssembly"
           AfterTargets="$(_SignAssemblyAfterTargets)"
-          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
+          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
