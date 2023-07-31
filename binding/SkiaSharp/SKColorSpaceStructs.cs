@@ -3,94 +3,6 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	[EditorBrowsable (EditorBrowsableState.Never)]
-	[Obsolete ("Use SKColorSpaceTransferFn instead.")]
-	public enum SKColorSpaceRenderTargetGamma
-	{
-		Linear = 0,
-		Srgb = 1,
-	}
-
-	[EditorBrowsable (EditorBrowsableState.Never)]
-	[Obsolete ("Use SKColorSpaceXyz instead.")]
-	public enum SKColorSpaceGamut
-	{
-		AdobeRgb = 1,
-		Dcip3D65 = 2,
-		Rec2020 = 3,
-		Srgb = 0,
-	}
-
-	[EditorBrowsable (EditorBrowsableState.Never)]
-	[Obsolete]
-	public enum SKColorSpaceType
-	{
-		Cmyk = 1,
-		Gray = 2,
-		Rgb = 0,
-	}
-
-	[EditorBrowsable (EditorBrowsableState.Never)]
-	[Obsolete ("Use SKColorSpaceTransferFn instead.")]
-	public enum SKNamedGamma
-	{
-		Linear = 0,
-		Srgb = 1,
-		TwoDotTwoCurve = 2,
-		NonStandard = 3,
-	}
-
-	public partial class SkiaExtensions
-	{
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public static SKColorSpaceTransferFn ToColorSpaceTransferFn (this SKColorSpaceRenderTargetGamma gamma) =>
-			gamma switch
-			{
-				SKColorSpaceRenderTargetGamma.Linear => SKColorSpaceTransferFn.Linear,
-				SKColorSpaceRenderTargetGamma.Srgb => SKColorSpaceTransferFn.Srgb,
-				_ => throw new ArgumentOutOfRangeException (nameof (gamma)),
-			};
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public static SKColorSpaceTransferFn ToColorSpaceTransferFn (this SKNamedGamma gamma) =>
-			gamma switch
-			{
-				SKNamedGamma.Linear => SKColorSpaceTransferFn.Linear,
-				SKNamedGamma.Srgb => SKColorSpaceTransferFn.Srgb,
-				SKNamedGamma.TwoDotTwoCurve => SKColorSpaceTransferFn.TwoDotTwo,
-				SKNamedGamma.NonStandard => SKColorSpaceTransferFn.Empty,
-				_ => throw new ArgumentOutOfRangeException (nameof (gamma)),
-			};
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public static SKColorSpaceXyz ToColorSpaceXyz (this SKColorSpaceGamut gamut) =>
-			gamut switch
-			{
-				SKColorSpaceGamut.AdobeRgb => SKColorSpaceXyz.AdobeRgb,
-				SKColorSpaceGamut.Dcip3D65 => SKColorSpaceXyz.Dcip3,
-				SKColorSpaceGamut.Rec2020 => SKColorSpaceXyz.Rec2020,
-				SKColorSpaceGamut.Srgb => SKColorSpaceXyz.Srgb,
-				_ => throw new ArgumentOutOfRangeException (nameof (gamut)),
-			};
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public static SKColorSpaceXyz ToColorSpaceXyz (this SKMatrix44 matrix)
-		{
-			if (matrix == null)
-				throw new ArgumentNullException (nameof (matrix));
-
-			var values = matrix.ToRowMajor ();
-			return new SKColorSpaceXyz (
-				values[0], values[1], values[2],
-				values[4], values[5], values[6],
-				values[8], values[9], values[10]);
-		}
-	}
-
 	public unsafe partial struct SKColorSpacePrimaries
 	{
 		public static readonly SKColorSpacePrimaries Empty;
@@ -126,24 +38,6 @@ namespace SkiaSharp
 
 		public readonly float[] Values =>
 			new[] { fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY };
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use ToColorSpaceXyz() instead.")]
-		public readonly SKMatrix44 ToXyzD50 () =>
-			ToMatrix44 ();
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use ToColorSpaceXyz(out SKColorSpaceXyz) instead.")]
-		public readonly bool ToXyzD50 (SKMatrix44 toXyzD50)
-		{
-			if (toXyzD50 == null)
-				throw new ArgumentNullException (nameof (toXyzD50));
-
-			var xyz = ToMatrix44 ();
-			if (xyz != null)
-				toXyzD50.SetColumnMajor (xyz.ToColumnMajor ());
-			return xyz != null;
-		}
 
 		internal readonly SKMatrix44 ToMatrix44 () =>
 			ToMatrix44 (out var toXYZ) ? toXYZ : null;
@@ -288,9 +182,6 @@ namespace SkiaSharp
 			}
 		}
 
-		[Obsolete ("Use DisplayP3 instead.")]
-		public static SKColorSpaceXyz Dcip3 => DisplayP3;
-
 		public static SKColorSpaceXyz DisplayP3 {
 			get {
 				SKColorSpaceXyz xyz;
@@ -316,6 +207,12 @@ namespace SkiaSharp
 		}
 
 		public static readonly SKColorSpaceXyz Empty;
+
+		public readonly static SKColorSpaceXyz Identity =
+			new SKColorSpaceXyz(
+				1, 0, 0,
+				0, 1, 0,
+				0, 0, 1);
 
 		public SKColorSpaceXyz (float value)
 		{

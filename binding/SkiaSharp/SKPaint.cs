@@ -69,13 +69,6 @@ namespace SkiaSharp
 			set => SkiaApi.sk_paint_set_dither (Handle, value);
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public bool IsVerticalText {
-			get => false;
-			set { }
-		}
-
 		public bool IsLinearText {
 			get => GetFont ().LinearMetrics;
 			set => GetFont ().LinearMetrics = value;
@@ -112,13 +105,6 @@ namespace SkiaSharp
 		public bool FakeBoldText {
 			get => GetFont ().Embolden;
 			set => GetFont ().Embolden = value;
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public bool DeviceKerningEnabled {
-			get => false;
-			set { }
 		}
 
 		public bool IsStroke {
@@ -248,11 +234,6 @@ namespace SkiaSharp
 
 		public float GetFontMetrics (out SKFontMetrics metrics) =>
 			GetFont ().GetFontMetrics (out metrics);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use GetFontMetrics (out SKFontMetrics) instead.")]
-		public float GetFontMetrics (out SKFontMetrics metrics, float scale) =>
-			GetFontMetrics (out metrics);
 
 		// Clone
 

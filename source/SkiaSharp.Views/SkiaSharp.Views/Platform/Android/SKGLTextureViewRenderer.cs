@@ -40,12 +40,6 @@ namespace SkiaSharp.Views.Android
 		{
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
-		protected virtual void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
-		{
-		}
-
 		public void OnDrawFrame(IGL10 gl)
 		{
 			GLES10.GlClear(GLES10.GlColorBufferBit | GLES10.GlDepthBufferBit | GLES10.GlStencilBufferBit);
@@ -94,11 +88,8 @@ namespace SkiaSharp.Views.Android
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
-#pragma warning disable CS0618 // Type or member is obsolete
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
 				OnPaintSurface(e);
-				OnDrawFrame(e.Surface, e.RenderTarget);
-#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			// flush the SkiaSharp contents to GL

@@ -26,10 +26,6 @@ namespace SkiaSharp.Views.Mac
 			NeedsDisplayOnBoundsChange = true;
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete("Use PaintSurface instead.")]
-		public ISKGLLayerDelegate SKDelegate { get; set; }
-
 		public SKSize CanvasSize => lastSize;
 
 		public GRContext GRContext => context;
@@ -39,12 +35,6 @@ namespace SkiaSharp.Views.Mac
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
-		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
-		{
 		}
 
 		public override void DrawInCGLContext(CGLContext glContext, CGLPixelFormat pixelFormat, double timeInterval, ref CVTimeStamp timeStamp)
@@ -96,12 +86,8 @@ namespace SkiaSharp.Views.Mac
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
-#pragma warning disable CS0618 // Type or member is obsolete
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
 				OnPaintSurface(e);
-				DrawInSurface(e.Surface, e.RenderTarget);
-				SKDelegate?.DrawInSurface(e.Surface, e.RenderTarget);
-#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			// flush the SkiaSharp context to the GL context

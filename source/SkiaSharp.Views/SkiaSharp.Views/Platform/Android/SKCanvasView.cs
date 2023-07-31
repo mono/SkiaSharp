@@ -111,9 +111,6 @@ namespace SkiaSharp.Views.Android
 
 			// draw using SkiaSharp
 			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
-#pragma warning disable CS0618 // Type or member is obsolete
-			OnDraw(surface, info);
-#pragma warning restore CS0618 // Type or member is obsolete
 
 			// draw the surface to the view
 			surfaceFactory.DrawSurface(surface, canvas);
@@ -132,12 +129,6 @@ namespace SkiaSharp.Views.Android
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
-		}
-
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
-		protected virtual void OnDraw(SKSurface surface, SKImageInfo info)
-		{
 		}
 
 		protected override void OnDetachedFromWindow()

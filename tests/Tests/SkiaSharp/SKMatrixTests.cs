@@ -238,20 +238,5 @@ namespace SkiaSharp.Tests
 			Assert.Equal((double)10, (double)newPoint.X, PRECISION);
 			Assert.Equal((double)40, (double)newPoint.Y, PRECISION);
 		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void SetScaleTranslateWorksCorrectly()
-		{
-			var tempMatrix = SKMatrix.MakeIdentity();
-
-			tempMatrix.Values = new float[] { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
-
-			SKMatrix.RotateDegrees(ref tempMatrix, 0);
-
-			tempMatrix.SetScaleTranslate(1.2f, 1.0f, 0, 0);
-
-			Assert.Equal(1.2f, tempMatrix.Values[0]);
-		}
 	}
 }

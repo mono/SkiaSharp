@@ -21,10 +21,6 @@ namespace SkiaSharp.Views.Android
 	{
 		private SKGLTextureViewRenderer renderer;
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		private ISKRenderer skRenderer;
-
 		public SKGLTextureView(Context context)
 			: base(context)
 		{
@@ -57,20 +53,6 @@ namespace SkiaSharp.Views.Android
 			PaintSurface?.Invoke(this, e);
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete("Use PaintSurface instead.")]
-		public virtual void SetRenderer(ISKRenderer renderer)
-		{
-			skRenderer = renderer;
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete("Use SKGLTextureView.PaintSurface instead.")]
-		public interface ISKRenderer
-		{
-			void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget);
-		}
-
 		private class InternalRenderer : SKGLTextureViewRenderer
 		{
 			private readonly SKGLTextureView textureView;
@@ -83,13 +65,6 @@ namespace SkiaSharp.Views.Android
 			protected override void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 			{
 				textureView.OnPaintSurface(e);
-			}
-
-			[EditorBrowsable (EditorBrowsableState.Never)]
-			[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
-			protected override void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
-			{
-				textureView.skRenderer?.OnDrawFrame(surface, renderTarget);
 			}
 		}
 	}

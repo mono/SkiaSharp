@@ -73,14 +73,6 @@ namespace SkiaSharp
 
 		// CreatePdf
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
-		public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi)
-		{
-			metadata.RasterDpi = dpi;
-			return CreatePdf (stream, metadata);
-		}
-
 		public static SKDocument CreatePdf (string path)
 		{
 			if (path == null) {

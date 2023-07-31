@@ -20,44 +20,6 @@ namespace SkiaSharp
 			base.DisposeNative ();
 		}
 
-		// Create
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateGl() instead.")]
-		public static GRContext Create (GRBackend backend) =>
-			backend switch
-			{
-				GRBackend.Metal => throw new NotSupportedException (),
-				GRBackend.OpenGL => CreateGl (),
-				GRBackend.Vulkan => throw new NotSupportedException (),
-				GRBackend.Dawn => throw new NotSupportedException (),
-				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
-			};
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateGl(GRGlInterface) instead.")]
-		public static GRContext Create (GRBackend backend, GRGlInterface backendContext) =>
-			backend switch
-			{
-				GRBackend.Metal => throw new NotSupportedException (),
-				GRBackend.OpenGL => CreateGl (backendContext),
-				GRBackend.Vulkan => throw new NotSupportedException (),
-				GRBackend.Dawn => throw new NotSupportedException (),
-				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
-			};
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateGl(GRGlInterface) instead.")]
-		public static GRContext Create (GRBackend backend, IntPtr backendContext) =>
-			backend switch
-			{
-				GRBackend.Metal => throw new NotSupportedException (),
-				GRBackend.OpenGL => GetObject (SkiaApi.gr_direct_context_make_gl (backendContext)),
-				GRBackend.Vulkan => throw new NotSupportedException (),
-				GRBackend.Dawn => throw new NotSupportedException (),
-				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
-			};
-
 		// CreateGl
 
 		public static GRContext CreateGl () =>
@@ -138,19 +100,6 @@ namespace SkiaSharp
 				SkiaApi.gr_direct_context_abandon_context (Handle);
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use GetResourceCacheLimit() instead.")]
-		public void GetResourceCacheLimits (out int maxResources, out long maxResourceBytes)
-		{
-			maxResources = -1;
-			maxResourceBytes = GetResourceCacheLimit ();
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use SetResourceCacheLimit(long) instead.")]
-		public void SetResourceCacheLimits (int maxResources, long maxResourceBytes) =>
-			SetResourceCacheLimit (maxResourceBytes);
-
 		public long GetResourceCacheLimit () =>
 			(long)SkiaApi.gr_direct_context_get_resource_cache_limit (Handle);
 
@@ -190,10 +139,6 @@ namespace SkiaSharp
 
 		public new int GetMaxSurfaceSampleCount (SKColorType colorType) =>
 			base.GetMaxSurfaceSampleCount (colorType);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi) => 0;
 
 		public void DumpMemoryStatistics (SKTraceMemoryDump dump) =>
 			SkiaApi.gr_direct_context_dump_memory_statistics (Handle, dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));

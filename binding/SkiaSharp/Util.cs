@@ -156,11 +156,6 @@ namespace SkiaSharp
 
 		// GetEncodedText
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use GetEncodedText(string, SKTextEncoding) instead.")]
-		public static byte[] GetEncodedText (string text, SKEncoding encoding) =>
-			GetEncodedText (text.AsSpan (), encoding.ToTextEncoding ());
-
 		public static byte[] GetEncodedText (string text, SKTextEncoding encoding) =>
 			GetEncodedText (text.AsSpan (), encoding);
 

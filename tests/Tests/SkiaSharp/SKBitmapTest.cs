@@ -377,9 +377,11 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Obsolete]
-		[SkippableFact]
-		public void BitmapResizesObsolete()
+		[SkippableTheory]
+		[InlineData(SKFilterQuality.Low)]
+		[InlineData(SKFilterQuality.Medium)]
+		[InlineData(SKFilterQuality.High)]
+		public void BitmapResizes(SKFilterQuality quality)
 		{
 			var srcInfo = new SKImageInfo(200, 200);
 			var dstInfo = new SKImageInfo(100, 100);
@@ -396,32 +398,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
 			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
 
-			var dstBmp = srcBmp.Resize(dstInfo, SKBitmapResizeMethod.Mitchell);
-			Assert.NotNull(dstBmp);
-
-			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
-			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
-		}
-
-		[SkippableFact]
-		public void BitmapResizes()
-		{
-			var srcInfo = new SKImageInfo(200, 200);
-			var dstInfo = new SKImageInfo(100, 100);
-
-			var srcBmp = new SKBitmap(srcInfo);
-
-			using (var canvas = new SKCanvas(srcBmp))
-			using (var paint = new SKPaint { Color = SKColors.Green })
-			{
-				canvas.Clear(SKColors.Blue);
-				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
-			}
-
-			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
-			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
-
-			var dstBmp = srcBmp.Resize(dstInfo, SKFilterQuality.High);
+			var dstBmp = srcBmp.Resize(dstInfo, quality);
 			Assert.NotNull(dstBmp);
 
 			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));

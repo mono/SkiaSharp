@@ -28,17 +28,5 @@ namespace SkiaSharp
 
 			return SKObject.Referenced (SKCanvas.GetObject (SkiaApi.sk_svgcanvas_create_with_stream (&bounds, stream.Handle)), stream);
 		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Create(SKRect, Stream) instead.")]
-		public static SKCanvas Create (SKRect bounds, SKXmlWriter writer)
-		{
-			if (writer == null)
-				throw new ArgumentNullException (nameof (writer));
-
-			var canvas = SKCanvas.GetObject (SkiaApi.sk_svgcanvas_create_with_writer (&bounds, writer.Handle));
-			writer.RevokeOwnership (canvas);
-			return SKObject.Referenced (canvas, writer);
-		}
 	}
 }

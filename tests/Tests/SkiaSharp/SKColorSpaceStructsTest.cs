@@ -176,7 +176,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void NamedGamutIsCorrect()
 		{
-			var csxyz = SKColorSpaceXyz.Dcip3;
+			var csxyz = SKColorSpaceXyz.DisplayP3;
 
 			var values = new float[] {
 				0.515102f, 0.291965f, 0.157153f,

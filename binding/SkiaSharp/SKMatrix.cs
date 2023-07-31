@@ -237,110 +237,6 @@ namespace SkiaSharp
 			};
 		}
 
-		// Make*
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateIdentity() instead.")]
-		public static SKMatrix MakeIdentity () =>
-			CreateIdentity ();
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateScale(float, float) instead.")]
-		public static SKMatrix MakeScale (float sx, float sy) =>
-			CreateScale (sx, sy);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateScale(float, float, float, float) instead.")]
-		public static SKMatrix MakeScale (float sx, float sy, float pivotX, float pivotY) =>
-			CreateScale (sx, sy, pivotX, pivotY);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateTranslation(float, float) instead.")]
-		public static SKMatrix MakeTranslation (float dx, float dy) =>
-			CreateTranslation (dx, dy);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRotation(float) instead.")]
-		public static SKMatrix MakeRotation (float radians) =>
-			CreateRotation (radians);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRotation(float, float, float) instead.")]
-		public static SKMatrix MakeRotation (float radians, float pivotx, float pivoty) =>
-			CreateRotation (radians, pivotx, pivoty);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRotationDegrees(float) instead.")]
-		public static SKMatrix MakeRotationDegrees (float degrees) =>
-			CreateRotationDegrees (degrees);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRotationDegrees(float, float, float) instead.")]
-		public static SKMatrix MakeRotationDegrees (float degrees, float pivotx, float pivoty) =>
-			CreateRotationDegrees (degrees, pivotx, pivoty);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateSkew(float, float) instead.")]
-		public static SKMatrix MakeSkew (float sx, float sy) =>
-			CreateSkew (sx, sy);
-
-		// Set*
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateScaleTranslation(float, float, float, float) instead.")]
-		public void SetScaleTranslate (float sx, float sy, float tx, float ty)
-		{
-			scaleX = sx;
-			skewX = 0;
-			transX = tx;
-
-			skewY = 0;
-			scaleY = sy;
-			transY = ty;
-
-			persp0 = 0;
-			persp1 = 0;
-			persp2 = 1;
-		}
-
-		// Rotate
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRotation(float, float, float) instead.")]
-		public static void Rotate (ref SKMatrix matrix, float radians, float pivotx, float pivoty)
-		{
-			var sin = (float)Math.Sin (radians);
-			var cos = (float)Math.Cos (radians);
-			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRotationDegrees(float, float, float) instead.")]
-		public static void RotateDegrees (ref SKMatrix matrix, float degrees, float pivotx, float pivoty)
-		{
-			var sin = (float)Math.Sin (degrees * DegreesToRadians);
-			var cos = (float)Math.Cos (degrees * DegreesToRadians);
-			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRotation(float) instead.")]
-		public static void Rotate (ref SKMatrix matrix, float radians)
-		{
-			var sin = (float)Math.Sin (radians);
-			var cos = (float)Math.Cos (radians);
-			SetSinCos (ref matrix, sin, cos);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateRotationDegrees(float) instead.")]
-		public static void RotateDegrees (ref SKMatrix matrix, float degrees)
-		{
-			var sin = (float)Math.Sin (degrees * DegreesToRadians);
-			var cos = (float)Math.Cos (degrees * DegreesToRadians);
-			SetSinCos (ref matrix, sin, cos);
-		}
-
 		// Invert
 
 		public readonly bool IsInvertible {
@@ -406,44 +302,6 @@ namespace SkiaSharp
 			}
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use PreConcat(SKMatrix) instead.")]
-		public static void PreConcat (ref SKMatrix target, SKMatrix matrix)
-		{
-			fixed (SKMatrix* t = &target) {
-				SkiaApi.sk_matrix_pre_concat (t, &matrix);
-			}
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use PreConcat(SKMatrix) instead.")]
-		public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix)
-		{
-			fixed (SKMatrix* t = &target)
-			fixed (SKMatrix* m = &matrix) {
-				SkiaApi.sk_matrix_pre_concat (t, m);
-			}
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use PostConcat(SKMatrix) instead.")]
-		public static void PostConcat (ref SKMatrix target, SKMatrix matrix)
-		{
-			fixed (SKMatrix* t = &target) {
-				SkiaApi.sk_matrix_post_concat (t, &matrix);
-			}
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use PostConcat(SKMatrix) instead.")]
-		public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix)
-		{
-			fixed (SKMatrix* t = &target)
-			fixed (SKMatrix* m = &matrix) {
-				SkiaApi.sk_matrix_post_concat (t, m);
-			}
-		}
-
 		// MapRect
 
 		public readonly SKRect MapRect (SKRect source)
@@ -453,17 +311,6 @@ namespace SkiaSharp
 				SkiaApi.sk_matrix_map_rect (m, &dest, &source);
 			}
 			return dest;
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use MapRect(SKRect) instead.")]
-		public static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
-		{
-			fixed (SKMatrix* m = &matrix)
-			fixed (SKRect* d = &dest)
-			fixed (SKRect* s = &source) {
-				SkiaApi.sk_matrix_map_rect (m, d, s);
-			}
 		}
 
 		// MapPoints

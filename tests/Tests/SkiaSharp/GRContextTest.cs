@@ -49,21 +49,20 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(grContext);
 		}
 
-		[Obsolete]
 		[SkippableFact]
 		public void ToGlSizedFormat()
 		{
-			var obsolete = new[] {
-				GRPixelConfig.Sbgra8888,
-				GRPixelConfig.RgbaFloat,
-				GRPixelConfig.RgFloat,
+			var unknowns = new[] {
+				SKColorType.Unknown,
+				SKColorType.Rgb101010x,
+				SKColorType.RgbaF32,
+				SKColorType.Bgra1010102,
+				SKColorType.Bgr101010x
 			};
 
-			foreach (GRPixelConfig value in Enum.GetValues(typeof(GRPixelConfig)))
+			foreach (SKColorType value in Enum.GetValues(typeof(SKColorType)))
 			{
-				if (Array.IndexOf(obsolete, value) != -1)
-					Assert.Throws<ArgumentOutOfRangeException>(() => value.ToGlSizedFormat());
-				else if (value == GRPixelConfig.Unknown)
+				if (Array.IndexOf(unknowns, value) != -1)
 					Assert.Equal(0u, value.ToGlSizedFormat());
 				else
 					Assert.NotEqual(0u, value.ToGlSizedFormat());

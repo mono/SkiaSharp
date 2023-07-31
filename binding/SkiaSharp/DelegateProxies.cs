@@ -16,10 +16,6 @@ namespace SkiaSharp
 
 	public delegate void SKSurfaceReleaseDelegate (IntPtr address, object context);
 
-	[EditorBrowsable (EditorBrowsableState.Never)]
-	[Obsolete ("Use GRGlGetProcedureAddressDelegate instead.")]
-	public delegate IntPtr GRGlGetProcDelegate (object context, string name);
-
 	public delegate IntPtr GRGlGetProcedureAddressDelegate (string name);
 
 	public delegate IntPtr GRVkGetProcedureAddressDelegate (string name, IntPtr instance, IntPtr device);
