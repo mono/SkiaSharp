@@ -5,15 +5,21 @@ namespace SkiaSharp.HarfBuzz
 	public static class CanvasExtensions
 	{
 		public static void DrawShapedText(this SKCanvas canvas, string text, SKPoint p, SKFont font, SKPaint paint) =>
-			canvas.DrawShapedText(text, p.X, p.Y, font, paint);
+			canvas.DrawShapedText(text, p.X, p.Y, SKTextAlign.Left, font, paint);
 
-		public static void DrawShapedText(this SKCanvas canvas, string text, float x, float y, SKFont font, SKPaint paint)
+		public static void DrawShapedText(this SKCanvas canvas, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
+			canvas.DrawShapedText(text, p.X, p.Y, textAlign, font, paint);
+
+		public static void DrawShapedText(this SKCanvas canvas, string text, float x, float y, SKFont font, SKPaint paint) =>
+			canvas.DrawShapedText(text, x, y, SKTextAlign.Left, font, paint);
+
+		public static void DrawShapedText(this SKCanvas canvas, string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{
 			if (string.IsNullOrEmpty(text))
 				return;
 
 			using var shaper = new SKShaper(font.Typeface);
-			canvas.DrawShapedText(shaper, text, x, y, font, paint);
+			canvas.DrawShapedText(shaper, text, x, y, textAlign, font, paint);
 		}
 
 		public static void DrawShapedText(this SKCanvas canvas, SKShaper shaper, string text, SKPoint p, SKFont font, SKPaint paint) =>
@@ -60,7 +66,8 @@ namespace SkiaSharp.HarfBuzz
 
 			// adjust alignment
 			var xOffset = 0f;
-			if (textAlign != SKTextAlign.Left) {
+			if (textAlign != SKTextAlign.Left)
+			{
 				var width = result.Width;
 				if (textAlign == SKTextAlign.Center)
 					width *= 0.5f;

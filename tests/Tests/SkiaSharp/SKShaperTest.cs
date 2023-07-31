@@ -125,7 +125,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			font.Typeface = tf;
 			font.Size = 64;
 
-			canvas.DrawShapedText("SkiaSharp", 300, 100, font, paint);
+			canvas.DrawShapedText("SkiaSharp", 300, 100, align, font, paint);
 
 			AssertTextAlign(bitmap, offset, 0);
 		}

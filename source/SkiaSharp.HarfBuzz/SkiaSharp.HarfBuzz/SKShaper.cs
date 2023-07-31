@@ -103,7 +103,7 @@ namespace SkiaSharp.HarfBuzz
 			}
 
 			using var buffer = new Buffer();
-			buffer.AddUtf16(text);
+			buffer.AddUtf8(text);
 
 			buffer.GuessSegmentProperties();
 

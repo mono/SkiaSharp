@@ -167,7 +167,7 @@ namespace SkiaSharp.Tests
 			var text16 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf16);
 			var width16 = font.MeasureText(text16, SKTextEncoding.Utf16);
 
-			var text32 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf16);
+			var text32 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf32);
 			var width32 = font.MeasureText(text32, SKTextEncoding.Utf32);
 
 			Assert.True(width8 > 0);
@@ -197,7 +197,7 @@ namespace SkiaSharp.Tests
 			var text16 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf16);
 			var width16 = font.MeasureText(text16, SKTextEncoding.Utf16, out var bounds16);
 
-			var text32 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf16);
+			var text32 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf32);
 			var width32 = font.MeasureText(text32, SKTextEncoding.Utf32, out var bounds32);
 
 			Assert.True(width8 > 0);
