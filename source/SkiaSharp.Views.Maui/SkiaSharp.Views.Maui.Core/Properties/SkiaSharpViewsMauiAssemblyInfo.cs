@@ -11,4 +11,3 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SkiaSharp.Views.Maui.Core")]
 [assembly: InternalsVisibleTo("SkiaSharp.Views.Maui.Controls")]
-[assembly: InternalsVisibleTo("SkiaSharp.Views.Maui.Controls.Compatibility")]

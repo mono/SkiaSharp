@@ -110,9 +110,7 @@ namespace SkiaSharp.Views.Tizen
 					using (new SKAutoCanvasRestore(canvas, true))
 					{
 						// draw using SkiaSharp
-#pragma warning disable CS0612 // Type or member is obsolete
-						OnDrawFrame(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo));
-#pragma warning restore CS0612 // Type or member is obsolete
+						OnDrawFrame(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType));
 					}
 
 					// flush the SkiaSharp contents to GL

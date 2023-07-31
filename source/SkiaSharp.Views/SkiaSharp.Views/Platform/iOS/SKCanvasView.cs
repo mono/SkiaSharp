@@ -109,9 +109,6 @@ namespace SkiaSharp.Views.iOS
 
 			// draw on the image using SKiaSharp
 			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
-#pragma warning disable CS0618 // Type or member is obsolete
-			DrawInSurface(surface, info);
-#pragma warning restore CS0618 // Type or member is obsolete
 
 			// draw the surface to the context
 			drawable.DrawSurface(ctx, Bounds, info, surface);
@@ -136,12 +133,6 @@ namespace SkiaSharp.Views.iOS
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
-		}
-
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
-		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
-		{
 		}
 
 		public override void LayoutSubviews()

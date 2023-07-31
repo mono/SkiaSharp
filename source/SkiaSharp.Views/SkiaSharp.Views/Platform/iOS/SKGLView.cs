@@ -148,11 +148,8 @@ namespace SkiaSharp.Views.iOS
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
-#pragma warning disable CS0618 // Type or member is obsolete
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType, glInfo);
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
 				OnPaintSurface(e);
-				DrawInSurface(e.Surface, e.RenderTarget);
-#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			// flush the SkiaSharp contents to GL
@@ -165,12 +162,6 @@ namespace SkiaSharp.Views.iOS
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
-		}
-
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
-		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
-		{
 		}
 
 		public override CGRect Frame

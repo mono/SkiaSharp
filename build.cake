@@ -110,7 +110,6 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.WinUI",                         new Version (1, 60, 0) },
     { "SkiaSharp.Views.Maui.Core",                     new Version (1, 60, 0) },
     { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 60, 0) },
-    { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (1, 60, 0) },
     { "SkiaSharp.Views.Blazor",                        new Version (1, 60, 0) },
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Android",            new Version (1, 0, 0) },

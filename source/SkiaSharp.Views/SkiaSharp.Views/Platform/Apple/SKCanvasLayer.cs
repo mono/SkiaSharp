@@ -24,10 +24,6 @@ namespace SkiaSharp.Views.Mac
 			NeedsDisplayOnBoundsChange = true;
 		}
 
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[Obsolete("Use PaintSurface instead.")]
-		public ISKCanvasLayerDelegate SKDelegate { get; set; }
-
 		public SKSize CanvasSize { get; private set; }
 
 		public bool IgnorePixelScaling
@@ -68,10 +64,6 @@ namespace SkiaSharp.Views.Mac
 
 			// draw on the image using SKiaSharp
 			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
-#pragma warning disable CS0618 // Type or member is obsolete
-			DrawInSurface(surface, info);
-			SKDelegate?.DrawInSurface(surface, info);
-#pragma warning restore CS0618 // Type or member is obsolete
 
 			// draw the surface to the context
 			drawable.DrawSurface(ctx, Bounds, info, surface);
@@ -82,12 +74,6 @@ namespace SkiaSharp.Views.Mac
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
-		}
-
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
-		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
-		{
 		}
 
 		protected override void Dispose(bool disposing)
