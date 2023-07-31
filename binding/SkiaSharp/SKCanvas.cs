@@ -578,17 +578,16 @@ namespace SkiaSharp
 
 		// DrawText
 
-		public void DrawText (string text, SKPoint p, SKPaint paint)
-		{
-			DrawText (text, p.X, p.Y, paint);
-		}
+		public void DrawText (string text, SKPoint p, SKFont font, SKPaint paint) =>
+			DrawText (text, p, SKTextAlign.Left, font, paint);
 
-		public void DrawText (string text, float x, float y, SKPaint paint)
-		{
-			DrawText (text, x, y, paint.GetFont (), paint);
-		}
+		public void DrawText (string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
+			DrawText (text, p.X, p.Y, textAlign, font, paint);
 
-		public void DrawText (string text, float x, float y, SKFont font, SKPaint paint)
+		public void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>
+			DrawText (text, x, y, SKTextAlign.Left, font, paint);
+
+		public void DrawText (string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -597,9 +596,9 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			if (paint.TextAlign != SKTextAlign.Left) {
+			if (textAlign != SKTextAlign.Left) {
 				var width = font.MeasureText (text);
-				if (paint.TextAlign == SKTextAlign.Center)
+				if (textAlign == SKTextAlign.Center)
 					width *= 0.5f;
 				x -= width;
 			}
@@ -613,25 +612,22 @@ namespace SkiaSharp
 
 		// DrawTextOnPath
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint)
-		{
-			DrawTextOnPath (text, path, offset, true, paint);
-		}
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKFont font, SKPaint paint) =>
+			DrawTextOnPath (text, path, offset, true, SKTextAlign.Left, font, paint);
 
-		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
-		{
-			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, paint);
-		}
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
+			DrawTextOnPath (text, path, offset, true, textAlign, font, paint);
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKPaint paint)
-		{
-			if (paint == null)
-				throw new ArgumentNullException (nameof (paint));
+		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint) =>
+			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, SKTextAlign.Left, font, paint);
 
-			DrawTextOnPath (text, path, offset, warpGlyphs, paint.GetFont (), paint);
-		}
+		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
+			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, textAlign, font, paint);
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKFont font, SKPaint paint)
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKFont font, SKPaint paint) =>
+			DrawTextOnPath (text, path, offset, warpGlyphs, SKTextAlign.Left, font, paint);
+
+		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -643,10 +639,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 
 			if (warpGlyphs) {
-				using var textPath = font.GetTextPathOnPath (text, path, paint.TextAlign, offset);
+				using var textPath = font.GetTextPathOnPath (text, path, textAlign, offset);
 				DrawPath (textPath, paint);
 			} else {
-				using var blob = SKTextBlob.CreatePathPositioned (text, font, path, paint.TextAlign, offset);
+				using var blob = SKTextBlob.CreatePathPositioned (text, font, path, textAlign, offset);
 				if (blob != null)
 					DrawText (blob, 0, 0, paint);
 			}

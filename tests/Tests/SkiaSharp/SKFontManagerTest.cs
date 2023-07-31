@@ -150,9 +150,9 @@ namespace SkiaSharp.Tests
 		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
 		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
-		public void StreamIsAccessableFromNativeType()
+		public void StreamIsAccessibleFromNativeType()
 		{
-			var paint = CreatePaint(out var typefaceHandle);
+			var paint = CreateFont(out var typefaceHandle);
 
 			CollectGarbage();
 
@@ -164,7 +164,7 @@ namespace SkiaSharp.Tests
 			Assert.True(tf.TryGetTableTags(out var tags));
 			Assert.NotEmpty(tags);
 
-			SKPaint CreatePaint(out IntPtr handle)
+			SKFont CreateFont(out IntPtr handle)
 			{
 				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
 				var dotnet = new MemoryStream(bytes);
@@ -173,7 +173,7 @@ namespace SkiaSharp.Tests
 				var typeface = SKFontManager.Default.CreateTypeface(stream);
 				handle = typeface.Handle;
 
-				return new SKPaint
+				return new SKFont
 				{
 					Typeface = typeface
 				};

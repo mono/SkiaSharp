@@ -451,54 +451,6 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void AlphaMaskIsApplied()
-		{
-			var srcInfo = new SKImageInfo(4, 4);
-			var srcBmp = new SKBitmap(srcInfo);
-			srcBmp.Erase(SKColors.Red);
-			var pixels = srcBmp.Pixels;
-
-			foreach (var pixel in pixels)
-			{
-				Assert.Equal(255, pixel.Alpha);
-			}
-
-			var maskBuffer = new byte[]
-			{
-				128, 127, 126, 125,
-				101, 102, 103, 104,
-				96, 95, 94, 93,
-				72, 73, 74, 75
-			};
-			var bounds = new SKRectI(0, 0, 4, 4);
-			uint rowBytes = 4;
-			var format = SKMaskFormat.A8;
-			var mask = SKMask.Create(maskBuffer, bounds, rowBytes, format);
-
-			srcBmp.InstallMaskPixels(mask);
-
-			pixels = srcBmp.Pixels;
-			Assert.Equal(128, pixels[0].Alpha);
-			Assert.Equal(127, pixels[1].Alpha);
-			Assert.Equal(126, pixels[2].Alpha);
-			Assert.Equal(125, pixels[3].Alpha);
-			Assert.Equal(101, pixels[4].Alpha);
-			Assert.Equal(102, pixels[5].Alpha);
-			Assert.Equal(103, pixels[6].Alpha);
-			Assert.Equal(104, pixels[7].Alpha);
-			Assert.Equal(96, pixels[8].Alpha);
-			Assert.Equal(95, pixels[9].Alpha);
-			Assert.Equal(94, pixels[10].Alpha);
-			Assert.Equal(93, pixels[11].Alpha);
-			Assert.Equal(72, pixels[12].Alpha);
-			Assert.Equal(73, pixels[13].Alpha);
-			Assert.Equal(74, pixels[14].Alpha);
-			Assert.Equal(75, pixels[15].Alpha);
-
-			mask.FreeImage();
-		}
-
-		[SkippableFact]
 		public void SwizzleRedBlueTest()
 		{
 			var info = new SKImageInfo(1, 1);

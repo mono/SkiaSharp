@@ -46,12 +46,12 @@ namespace SkiaSharp.Tests
 			using (var bmp = new SKBitmap(info))
 			using (var canvas = new SKCanvas(bmp))
 			using (var paint = new SKPaint())
+			using (var font = new SKFont())
 			{
-				paint.TextSize = 50;
-				paint.TextAlign = align;
+				font.Size = 50;
 
 				canvas.Clear(SKColors.White);
-				canvas.DrawText(text, 150, 175, paint);
+				canvas.DrawText(text, 150, 175, align, font, paint);
 
 				textPixels = bmp.Bytes;
 			}
@@ -60,19 +60,18 @@ namespace SkiaSharp.Tests
 			using (var bmp = new SKBitmap(info))
 			using (var canvas = new SKCanvas(bmp))
 			using (var paint = new SKPaint())
+			using (var font = new SKFont())
 			{
 				ushort[] glyphs;
-				using (var glyphsp = new SKPaint())
+				using (var glyphsp = new SKFont())
 					glyphs = glyphsp.GetGlyphs(text);
 
-				paint.TextSize = 50;
-				paint.TextAlign = align;
-				paint.TextEncoding = SKTextEncoding.GlyphId;
+				font.Size = 50;
 
 				canvas.Clear(SKColors.White);
 				using (var builder = new SKTextBlobBuilder())
 				{
-					var run = builder.AllocateRun(paint.GetFont(), glyphs.Length, 0, 0);
+					var run = builder.AllocateRun(font, glyphs.Length, 0, 0);
 					run.SetGlyphs(glyphs);
 					canvas.DrawText(builder.Build(), 150, 175, paint);
 				}
@@ -173,8 +172,9 @@ namespace SkiaSharp.Tests
 			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
 			using (var canvas = new SKCanvas(bmp))
 			using (var paint = new SKPaint())
+			using (var font = new SKFont())
 			{
-				canvas.DrawText("text", 150, 175, paint);
+				canvas.DrawText("text", 150, 175, font, paint);
 			}
 		}
 
@@ -184,8 +184,9 @@ namespace SkiaSharp.Tests
 			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
 			using (var canvas = new SKCanvas(bmp))
 			using (var paint = new SKPaint())
+			using (var font = new SKFont())
 			{
-				canvas.DrawText("", 150, 175, paint);
+				canvas.DrawText("", 150, 175, font, paint);
 			}
 		}
 
@@ -415,8 +416,8 @@ namespace SkiaSharp.Tests
 		[InlineData(SKTextAlign.Right, 23)]
 		public void TextAlignMovesTextPosition(SKTextAlign align, int offset)
 		{
-			var font = Path.Combine(PathToFonts, "segoeui.ttf");
-			using var tf = SKTypeface.FromFile(font);
+			var fontFile = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
 
 			using var bitmap = new SKBitmap(600, 200);
 			using var canvas = new SKCanvas(bitmap);
@@ -424,13 +425,14 @@ namespace SkiaSharp.Tests
 			canvas.Clear(SKColors.White);
 
 			using var paint = new SKPaint();
-			paint.Typeface = tf;
 			paint.IsAntialias = true;
-			paint.TextSize = 64;
 			paint.Color = SKColors.Black;
-			paint.TextAlign = align;
 
-			canvas.DrawText("SkiaSharp", 300, 100, paint);
+			using var font = new SKFont();
+			font.Typeface = tf;
+			font.Size = 64;
+
+			canvas.DrawText("SkiaSharp", 300, 100, align, font, paint);
 
 			AssertTextAlign(bitmap, offset, 0);
 		}
@@ -441,8 +443,8 @@ namespace SkiaSharp.Tests
 		//[InlineData(SKTextAlign.Right, 23)]
 		public void TextAlignMovesTextBlobPosition(SKTextAlign align, int offset)
 		{
-			var font = Path.Combine(PathToFonts, "segoeui.ttf");
-			using var tf = SKTypeface.FromFile(font);
+			var fontFile = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
 
 			using var bitmap = new SKBitmap(600, 200);
 			using var canvas = new SKCanvas(bitmap);
@@ -450,15 +452,16 @@ namespace SkiaSharp.Tests
 			canvas.Clear(SKColors.White);
 
 			using var paint = new SKPaint();
-			paint.Typeface = tf;
 			paint.IsAntialias = true;
-			paint.TextSize = 64;
 			paint.Color = SKColors.Black;
-			paint.TextAlign = align;
 
-			var glyphs = paint.GetGlyphs("SkiaSharp");
+			using var font = new SKFont();
+			font.Typeface = tf;
+			font.Size = 64;
+
+			var glyphs = font.GetGlyphs("SkiaSharp");
 			using var blobBuilder = new SKTextBlobBuilder();
-			var run = blobBuilder.AllocateRun(paint.GetFont(), glyphs.Length, 0, 0);
+			var run = blobBuilder.AllocateRun(font, glyphs.Length, 0, 0);
 			run.SetGlyphs(glyphs);
 			using var blob = blobBuilder.Build();
 
@@ -473,8 +476,8 @@ namespace SkiaSharp.Tests
 		[InlineData(SKTextAlign.Right, 300)]
 		public void TextAlignMovesHorizontalTextBlobPosition(SKTextAlign align, int offset)
 		{
-			var font = Path.Combine(PathToFonts, "segoeui.ttf");
-			using var tf = SKTypeface.FromFile(font);
+			var fontFile = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
 
 			using var bitmap = new SKBitmap(600, 200);
 			using var canvas = new SKCanvas(bitmap);
@@ -482,14 +485,15 @@ namespace SkiaSharp.Tests
 			canvas.Clear(SKColors.White);
 
 			using var paint = new SKPaint();
-			paint.Typeface = tf;
 			paint.IsAntialias = true;
-			paint.TextSize = 64;
 			paint.Color = SKColors.Black;
-			paint.TextAlign = align;
 
-			var glyphs = paint.GetGlyphs("SkiaSharp");
-			var widths = paint.GetGlyphWidths("SkiaSharp");
+			using var font = new SKFont();
+			font.Typeface = tf;
+			font.Size = 64;
+
+			var glyphs = font.GetGlyphs("SkiaSharp");
+			var widths = font.GetGlyphWidths("SkiaSharp");
 			var positions = new float[widths.Length];
 			for (var i = 1; i < positions.Length; i++)
 			{
@@ -497,7 +501,7 @@ namespace SkiaSharp.Tests
 			}
 
 			using var blobBuilder = new SKTextBlobBuilder();
-			var run = blobBuilder.AllocateHorizontalRun(paint.GetFont(), glyphs.Length, 0);
+			var run = blobBuilder.AllocateHorizontalRun(font, glyphs.Length, 0);
 			run.SetGlyphs(glyphs);
 			run.SetPositions(positions);
 			using var blob = blobBuilder.Build();
@@ -513,8 +517,8 @@ namespace SkiaSharp.Tests
 		[InlineData(SKTextAlign.Right, 300)]
 		public void TextAlignMovesPositionedTextBlobPosition(SKTextAlign align, int offset)
 		{
-			var font = Path.Combine(PathToFonts, "segoeui.ttf");
-			using var tf = SKTypeface.FromFile(font);
+			var fontFile = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
 
 			using var bitmap = new SKBitmap(600, 200);
 			using var canvas = new SKCanvas(bitmap);
@@ -522,14 +526,15 @@ namespace SkiaSharp.Tests
 			canvas.Clear(SKColors.White);
 
 			using var paint = new SKPaint();
-			paint.Typeface = tf;
 			paint.IsAntialias = true;
-			paint.TextSize = 64;
 			paint.Color = SKColors.Black;
-			paint.TextAlign = align;
 
-			var glyphs = paint.GetGlyphs("SkiaSharp");
-			var widths = paint.GetGlyphWidths("SkiaSharp");
+			using var font = new SKFont();
+			font.Typeface = tf;
+			font.Size = 64;
+
+			var glyphs = font.GetGlyphs("SkiaSharp");
+			var widths = font.GetGlyphWidths("SkiaSharp");
 			var positions = new SKPoint[widths.Length];
 			for (var i = 1; i < positions.Length; i++)
 			{
@@ -537,7 +542,7 @@ namespace SkiaSharp.Tests
 			}
 
 			using var blobBuilder = new SKTextBlobBuilder();
-			var run = blobBuilder.AllocatePositionedRun(paint.GetFont(), glyphs.Length);
+			var run = blobBuilder.AllocatePositionedRun(font, glyphs.Length);
 			run.SetGlyphs(glyphs);
 			run.SetPositions(positions);
 			using var blob = blobBuilder.Build();
@@ -553,8 +558,8 @@ namespace SkiaSharp.Tests
 		//[InlineData(SKTextAlign.Right, 300, 23)]
 		public void TextAlignMovesMixedTextBlobPosition(SKTextAlign align, int offsetPositioned, int offsetDefault)
 		{
-			var font = Path.Combine(PathToFonts, "segoeui.ttf");
-			using var tf = SKTypeface.FromFile(font);
+			var fontFile = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
 
 			using var bitmap = new SKBitmap(600, 300);
 			using var canvas = new SKCanvas(bitmap);
@@ -562,14 +567,15 @@ namespace SkiaSharp.Tests
 			canvas.Clear(SKColors.White);
 
 			using var paint = new SKPaint();
-			paint.Typeface = tf;
 			paint.IsAntialias = true;
-			paint.TextSize = 64;
 			paint.Color = SKColors.Black;
-			paint.TextAlign = align;
 
-			var glyphs = paint.GetGlyphs("SkiaSharp");
-			var widths = paint.GetGlyphWidths("SkiaSharp");
+			using var font = new SKFont();
+			font.Typeface = tf;
+			font.Size = 64;
+
+			var glyphs = font.GetGlyphs("SkiaSharp");
+			var widths = font.GetGlyphWidths("SkiaSharp");
 			var positions = new SKPoint[widths.Length];
 			for (var i = 1; i < positions.Length; i++)
 			{
@@ -577,10 +583,10 @@ namespace SkiaSharp.Tests
 			}
 
 			using var blobBuilder = new SKTextBlobBuilder();
-			var run = blobBuilder.AllocatePositionedRun(paint.GetFont(), glyphs.Length);
+			var run = blobBuilder.AllocatePositionedRun(font, glyphs.Length);
 			run.SetGlyphs(glyphs);
 			run.SetPositions(positions);
-			var run2 = blobBuilder.AllocateRun(paint.GetFont(), glyphs.Length, 0, 100);
+			var run2 = blobBuilder.AllocateRun(font, glyphs.Length, 0, 100);
 			run2.SetGlyphs(glyphs);
 			using var blob = blobBuilder.Build();
 

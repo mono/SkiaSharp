@@ -16,11 +16,12 @@ namespace SkiaSharp.HarfBuzz.Tests
 			using (var canvas = new SKCanvas(bitmap))
 			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
-			using (var paint = new SKPaint { IsAntialias = true, TextSize = 64, Typeface = tf })
+			using (var paint = new SKPaint { IsAntialias = true })
+			using (var font = new SKFont { Size = 64, Typeface = tf })
 			{
 				canvas.Clear(SKColors.White);
 
-				canvas.DrawShapedText(shaper, "متن", 100, 200, paint);
+				canvas.DrawShapedText(shaper, "متن", 100, 200, font, paint);
 
 				canvas.Flush();
 
@@ -43,9 +44,9 @@ namespace SkiaSharp.HarfBuzz.Tests
 
 			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
-			using (var paint = new SKPaint { IsAntialias = true, TextSize = 64, Typeface = tf })
+			using (var font = new SKFont { Size = 64, Typeface = tf })
 			{
-				var result = shaper.Shape("متن", 100, 200, paint);
+				var result = shaper.Shape("متن", 100, 200, font);
 
 				Assert.Equal(clusters, result.Clusters);
 				Assert.Equal(codepoints, result.Codepoints);
@@ -62,9 +63,9 @@ namespace SkiaSharp.HarfBuzz.Tests
 
 			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
-			using (var paint = new SKPaint { IsAntialias = true, TextSize = 64, Typeface = tf })
+			using (var font = new SKFont { Size = 64, Typeface = tf })
 			{
-				var result = shaper.Shape("متن", paint);
+				var result = shaper.Shape("متن", font);
 
 				Assert.Equal(clusters, result.Clusters);
 				Assert.Equal(codepoints, result.Codepoints);
@@ -108,8 +109,8 @@ namespace SkiaSharp.HarfBuzz.Tests
 		[InlineData(SKTextAlign.Right, 23)]
 		public void TextAlignMovesTextPosition(SKTextAlign align, int offset)
 		{
-			var font = Path.Combine(PathToFonts, "segoeui.ttf");
-			using var tf = SKTypeface.FromFile(font);
+			var fontFile = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
 
 			using var bitmap = new SKBitmap(600, 200);
 			using var canvas = new SKCanvas(bitmap);
@@ -117,13 +118,14 @@ namespace SkiaSharp.HarfBuzz.Tests
 			canvas.Clear(SKColors.White);
 
 			using var paint = new SKPaint();
-			paint.Typeface = tf;
 			paint.IsAntialias = true;
-			paint.TextSize = 64;
 			paint.Color = SKColors.Black;
-			paint.TextAlign = align;
 
-			canvas.DrawShapedText("SkiaSharp", 300, 100, paint);
+			using var font = new SKFont();
+			font.Typeface = tf;
+			font.Size = 64;
+
+			canvas.DrawShapedText("SkiaSharp", 300, 100, font, paint);
 
 			AssertTextAlign(bitmap, offset, 0);
 		}

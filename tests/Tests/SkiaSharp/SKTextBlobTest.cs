@@ -20,8 +20,7 @@ namespace SkiaSharp.Tests
 		public void TestExplicitBounds()
 		{
 			var builder = new SKTextBlobBuilder();
-			var font = new SKPaint();
-			font.TextEncoding = SKTextEncoding.GlyphId;
+			var font = new SKFont();
 
 			{
 				var blob = builder.Build();
@@ -30,21 +29,21 @@ namespace SkiaSharp.Tests
 
 			{
 				var r1 = SKRect.Create(10, 10, 20, 20);
-				builder.AllocateRun(font.GetFont(), 16, 0, 0, r1);
+				builder.AllocateRun(font, 16, 0, 0, r1);
 				var blob = builder.Build();
 				Assert.Equal(r1, blob.Bounds);
 			}
 
 			{
 				var r1 = SKRect.Create(10, 10, 20, 20);
-				builder.AllocateHorizontalRun(font.GetFont(), 16, 0, r1);
+				builder.AllocateHorizontalRun(font, 16, 0, r1);
 				var blob = builder.Build();
 				Assert.Equal(r1, blob.Bounds);
 			}
 
 			{
 				var r1 = SKRect.Create(10, 10, 20, 20);
-				builder.AllocatePositionedRun(font.GetFont(), 16, r1);
+				builder.AllocatePositionedRun(font, 16, r1);
 				var blob = builder.Build();
 				Assert.Equal(r1, blob.Bounds);
 			}
@@ -54,9 +53,9 @@ namespace SkiaSharp.Tests
 				var r2 = SKRect.Create(15, 20, 50, 50);
 				var r3 = SKRect.Create(0, 5, 10, 5);
 
-				builder.AllocateRun(font.GetFont(), 16, 0, 0, r1);
-				builder.AllocateHorizontalRun(font.GetFont(), 16, 0, r2);
-				builder.AllocatePositionedRun(font.GetFont(), 16, r3);
+				builder.AllocateRun(font, 16, 0, 0, r1);
+				builder.AllocateHorizontalRun(font, 16, 0, r2);
+				builder.AllocatePositionedRun(font, 16, r3);
 
 				var blob = builder.Build();
 				Assert.Equal(SKRect.Create(0, 5, 65, 65), blob.Bounds);
@@ -73,14 +72,13 @@ namespace SkiaSharp.Tests
 		{
 			var builder = new SKTextBlobBuilder();
 
-			var font = new SKPaint();
-			font.TextSize = 0;
+			var font = new SKFont();
+			font.Size = 0;
 
 			var txt = "BOOO";
 			var glyphs = font.GetGlyphs(txt);
 
-			font.TextEncoding = SKTextEncoding.GlyphId;
-			builder.AddPositionedRun(glyphs, font.GetFont(), new SKPoint[glyphs.Length]);
+			builder.AddPositionedRun(glyphs, font, new SKPoint[glyphs.Length]);
 
 			var blob = builder.Build();
 			Assert.True(blob.Bounds.IsEmpty);
@@ -89,11 +87,10 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void TestPositionedRunIsBothPointsAndFloats()
 		{
-			var font = new SKPaint();
-			font.TextEncoding = SKTextEncoding.GlyphId;
+			var font = new SKFont();
 
 			var builder = new SKTextBlobBuilder();
-			var run = builder.AllocatePositionedRun(font.GetFont(), 3);
+			var run = builder.AllocatePositionedRun(font, 3);
 
 			var positions = new[] { new SKPoint(1, 2), new SKPoint(3, 4), new SKPoint(5, 6) };
 			var positionsRaw = new float[] { 1, 2, 3, 4, 5, 6 };

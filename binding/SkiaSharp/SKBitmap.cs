@@ -617,13 +617,6 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_install_pixels_with_pixmap (Handle, pixmap.Handle);
 		}
 
-		// InstallMaskPixels
-
-		public bool InstallMaskPixels (SKMask mask)
-		{
-			return SkiaApi.sk_bitmap_install_mask_pixels (Handle, &mask);
-		}
-
 		// NotifyPixelsChanged
 
 		public void NotifyPixelsChanged ()

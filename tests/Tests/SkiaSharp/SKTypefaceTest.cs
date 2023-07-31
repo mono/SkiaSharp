@@ -308,19 +308,19 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void ManagedStreamIsAccessableFromNativeType()
+		public void ManagedStreamIsAccessibleFromNativeType()
 		{
-			var paint = CreatePaint();
+			var font = CreateFont();
 
 			CollectGarbage();
 
-			var tf = paint.Typeface;
+			var tf = font.Typeface;
 
 			Assert.Equal("Roboto2", tf.FamilyName);
 			Assert.True(tf.TryGetTableTags(out var tags));
 			Assert.NotEmpty(tags);
 
-			SKPaint CreatePaint()
+			SKFont CreateFont()
 			{
 				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
 				var dotnet = new MemoryStream(bytes);
@@ -328,7 +328,7 @@ namespace SkiaSharp.Tests
 
 				var typeface = SKTypeface.FromStream(stream);
 
-				return new SKPaint
+				return new SKFont
 				{
 					Typeface = typeface
 				};
@@ -339,21 +339,21 @@ namespace SkiaSharp.Tests
 		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
 		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
-		public void StreamIsAccessableFromNativeType()
+		public void StreamIsAccessibleFromNativeType()
 		{
-			var paint = CreatePaint(out var typefaceHandle);
+			var font = CreateFont(out var typefaceHandle);
 
 			CollectGarbage();
 
 			Assert.False(SKObject.GetInstance<SKTypeface>(typefaceHandle, out _));
 
-			var tf = paint.Typeface;
+			var tf = font.Typeface;
 
 			Assert.Equal("Roboto2", tf.FamilyName);
 			Assert.True(tf.TryGetTableTags(out var tags));
 			Assert.NotEmpty(tags);
 
-			SKPaint CreatePaint(out IntPtr handle)
+			SKFont CreateFont(out IntPtr handle)
 			{
 				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
 				var dotnet = new MemoryStream(bytes);
@@ -362,7 +362,7 @@ namespace SkiaSharp.Tests
 				var typeface = SKTypeface.FromStream(stream);
 				handle = typeface.Handle;
 
-				return new SKPaint
+				return new SKFont
 				{
 					Typeface = typeface
 				};

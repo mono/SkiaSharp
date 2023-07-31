@@ -278,26 +278,29 @@ namespace SkiaSharp.Tests
 		{
 			using (var document = CreateDocument(out var handle))
 			{
-				var paintList = new List<SKPaint>();
+				var paintList = new List<(SKFont Font, SKPaint Paint)>();
 
 				for (var index = 0; index < 10; index++)
 				{
 					var fontStream = File.OpenRead(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
 					var typeface = SKTypeface.FromStream(fontStream);
 
-					var paint = new SKPaint
+					var font = new SKFont
 					{
 						Typeface = typeface
 					};
-					paintList.Add(paint);
+					var paint = new SKPaint
+					{
+					};
+					paintList.Add((font, paint));
 				}
 
 				using (var pageCanvas = document.BeginPage(792, 842))
 				{
-					foreach (var paint in paintList)
+					foreach (var pair in paintList)
 					{
 						for (var i = 0; i < 100; i++)
-							pageCanvas.DrawText("Text", 0, 5 * i, paint);
+							pageCanvas.DrawText("Text", 0, 5 * i, pair.Font, pair.Paint);
 					}
 
 					document.EndPage();
