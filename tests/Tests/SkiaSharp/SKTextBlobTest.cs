@@ -17,6 +17,21 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void TextRunsAllocateTextSpan()
+		{
+			var font = new SKFont();
+
+			using var builder = new SKTextBlobBuilder();
+
+			var run = builder.AllocateTextRun(font, 100, 0, 0, 50);
+			Assert.Equal(100, run.GetGlyphSpan().Length);
+			Assert.Equal(50, run.GetTextSpan().Length);
+
+			using var blob = builder.Build();
+			Assert.NotNull(blob);
+		}
+
+		[SkippableFact]
 		public void TestExplicitBounds()
 		{
 			var builder = new SKTextBlobBuilder();

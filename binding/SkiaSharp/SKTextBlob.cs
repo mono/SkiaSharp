@@ -404,6 +404,20 @@ namespace SkiaSharp
 			return new SKRunBuffer (runbuffer, count);
 		}
 
+		public SKTextRunBuffer AllocateTextRun (SKFont font, int count, float x, float y, int textByteCount, SKRect? bounds = null)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run (Handle, font.Handle, count, x, y, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run (Handle, font.Handle, count, x, y, null, &runbuffer);
+
+			return new SKTextRunBuffer (runbuffer, count, textByteCount);
+		}
+
 		// AllocateHorizontalRun
 
 		public SKHorizontalRunBuffer AllocateHorizontalRun (SKFont font, int count, float y, SKRect? bounds = null)
@@ -418,6 +432,20 @@ namespace SkiaSharp
 				SkiaApi.sk_textblob_builder_alloc_run_pos_h (Handle, font.Handle, count, y, null, &runbuffer);
 
 			return new SKHorizontalRunBuffer (runbuffer, count);
+		}
+
+		public SKHorizontalTextRunBuffer AllocateHorizontalTextRun (SKFont font, int count, float y, int textByteCount, SKRect? bounds = null)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_pos_h (Handle, font.Handle, count, y, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_pos_h (Handle, font.Handle, count, y, null, &runbuffer);
+
+			return new SKHorizontalTextRunBuffer (runbuffer, count, textByteCount);
 		}
 
 		// AllocatePositionedRun
@@ -436,6 +464,20 @@ namespace SkiaSharp
 			return new SKPositionedRunBuffer (runbuffer, count);
 		}
 
+		public SKPositionedTextRunBuffer AllocatePositionedTextRun (SKFont font, int count, int textByteCount, SKRect? bounds = null)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_pos (Handle, font.Handle, count, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_pos (Handle, font.Handle, count, null, &runbuffer);
+
+			return new SKPositionedTextRunBuffer (runbuffer, count, textByteCount);
+		}
+
 		// AllocateRotationScaleRun
 
 		public SKRotationScaleRunBuffer AllocateRotationScaleRun (SKFont font, int count)
@@ -447,6 +489,17 @@ namespace SkiaSharp
 			SkiaApi.sk_textblob_builder_alloc_run_rsxform (Handle, font.Handle, count, &runbuffer);
 
 			return new SKRotationScaleRunBuffer (runbuffer, count);
+		}
+
+		public SKRotationScaleTextRunBuffer AllocateRotationScaleTextRun (SKFont font, int count, int textByteCount)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			SkiaApi.sk_textblob_builder_alloc_run_rsxform (Handle, font.Handle, count, &runbuffer);
+
+			return new SKRotationScaleTextRunBuffer (runbuffer, count, textByteCount);
 		}
 	}
 }
