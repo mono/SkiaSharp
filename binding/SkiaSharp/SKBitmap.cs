@@ -4,38 +4,6 @@ using System.IO;
 
 namespace SkiaSharp
 {
-	[EditorBrowsable (EditorBrowsableState.Never)]
-	[Obsolete]
-	public enum SKBitmapResizeMethod
-	{
-		Box,
-		Triangle,
-		Lanczos3,
-		Hamming,
-		Mitchell
-	}
-
-	public static partial class SkiaExtensions
-	{
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public static SKFilterQuality ToFilterQuality (this SKBitmapResizeMethod method)
-		{
-			switch (method) {
-				case SKBitmapResizeMethod.Box:
-				case SKBitmapResizeMethod.Triangle:
-					return SKFilterQuality.Low;
-				case SKBitmapResizeMethod.Lanczos3:
-					return SKFilterQuality.Medium;
-				case SKBitmapResizeMethod.Hamming:
-				case SKBitmapResizeMethod.Mitchell:
-					return SKFilterQuality.High;
-				default:
-					return SKFilterQuality.Medium;
-			}
-		}
-	}
-
 	// TODO: keep in mind SKBitmap may be going away (according to Google)
 	// TODO: `ComputeIsOpaque` may be useful
 	// TODO: `GenerationID` may be useful
@@ -87,26 +55,12 @@ namespace SkiaSharp
 			}
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo, SKBitmapAllocFlags) instead.")]
-		public SKBitmap (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags)
-			: this (info, SKBitmapAllocFlags.None)
-		{
-		}
-
 		public SKBitmap (SKImageInfo info, SKBitmapAllocFlags flags)
 			: this ()
 		{
 			if (!TryAllocPixels (info, flags)) {
 				throw new Exception (UnableToAllocatePixelsMessage);
 			}
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo) instead.")]
-		public SKBitmap (SKImageInfo info, SKColorTable ctable)
-			: this (info, SKBitmapAllocFlags.None)
-		{
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -160,37 +114,12 @@ namespace SkiaSharp
 			SkiaApi.sk_bitmap_erase_rect (Handle, (uint)color, &rect);
 		}
 
-		// GetAddr*
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public byte GetAddr8 (int x, int y) => *SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public UInt16 GetAddr16 (int x, int y) => *SkiaApi.sk_bitmap_get_addr_16 (Handle, x, y);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public UInt32 GetAddr32 (int x, int y) => *SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use GetAddress instead.")]
-		public IntPtr GetAddr (int x, int y) => GetAddress (x, y);
-
 		// GetAddress
 
 		public IntPtr GetAddress (int x, int y) =>
 			(IntPtr)SkiaApi.sk_bitmap_get_addr (Handle, x, y);
 
 		// Pixels (color)
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixel(int, int) instead.")]
-		public SKPMColor GetIndex8Color (int x, int y)
-		{
-			return (SKPMColor)GetPixel (x, y);
-		}
 
 		public SKColor GetPixel (int x, int y)
 		{
@@ -366,9 +295,9 @@ namespace SkiaSharp
 		public IntPtr GetPixels () =>
 			GetPixels (out _);
 
-		public ReadOnlySpan<byte> GetPixelSpan ()
+		public Span<byte> GetPixelSpan ()
 		{
-			return new ReadOnlySpan<byte> ((void*)GetPixels (out var length), (int)length);
+			return new Span<byte> ((void*)GetPixels (out var length), (int)length);
 		}
 
 		public IntPtr GetPixels (out IntPtr length)
@@ -381,22 +310,6 @@ namespace SkiaSharp
 		public void SetPixels (IntPtr pixels)
 		{
 			SkiaApi.sk_bitmap_set_pixels (Handle, (void*)pixels);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported. Use SetPixels(IntPtr) instead.")]
-		public void SetPixels (IntPtr pixels, SKColorTable ct)
-		{
-			SetPixels (pixels);
-		}
-
-		// SetColorTable
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported.")]
-		public void SetColorTable (SKColorTable ct)
-		{
-			// no-op due to unsupperted action
 		}
 
 		// more properties
@@ -458,16 +371,6 @@ namespace SkiaSharp
 		public bool IsImmutable {
 			get { return SkiaApi.sk_bitmap_is_immutable (Handle); }
 		}
-
-		[Obsolete]
-		public bool IsVolatile {
-			get => false;
-			set { }
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported.")]
-		public SKColorTable ColorTable => null;
 
 		// DecodeBounds
 
@@ -694,20 +597,6 @@ namespace SkiaSharp
 			return InstallPixels (info, pixels, rowBytes, null, null);
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int) instead.")]
-		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable)
-		{
-			return InstallPixels (info, pixels, rowBytes, null, null);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int, SKBitmapReleaseDelegate, object) instead.")]
-		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context)
-		{
-			return InstallPixels (info, pixels, rowBytes, releaseProc, context);
-		}
-
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc)
 		{
 			return InstallPixels (info, pixels, rowBytes, releaseProc, null);
@@ -768,21 +657,6 @@ namespace SkiaSharp
 		}
 
 		// Resize
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Resize(SKImageInfo, SKFilterQuality) instead.")]
-		public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method) =>
-			Resize (info, method.ToFilterQuality ());
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
-		public bool Resize (SKBitmap dst, SKBitmapResizeMethod method) =>
-			ScalePixels (dst, method.ToFilterQuality ());
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
-		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method) =>
-			src.ScalePixels (dst, method.ToFilterQuality ());
 
 		public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality)
 		{

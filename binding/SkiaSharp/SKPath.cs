@@ -44,12 +44,6 @@ namespace SkiaSharp
 			set => SkiaApi.sk_path_set_filltype (Handle, value);
 		}
 
-		public SKPathConvexity Convexity {
-			get => IsConvex ? SKPathConvexity.Convex : SKPathConvexity.Concave;
-			[Obsolete]
-			set { }
-		}
-
 		public bool IsConvex => SkiaApi.sk_path_is_convex (Handle);
 
 		public bool IsConcave => !IsConvex;
@@ -375,11 +369,6 @@ namespace SkiaSharp
 		public void AddRoundRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise) =>
 			SkiaApi.sk_path_add_rounded_rect (Handle, &rect, rx, ry, dir);
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use AddRoundRect instead.")]
-		public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise) =>
-			AddRoundRect (rect, rx, ry, dir);
-
 		public void AddCircle (float x, float y, float radius, SKPathDirection dir = SKPathDirection.Clockwise) =>
 			SkiaApi.sk_path_add_circle (Handle, x, y, radius, dir);
 
@@ -527,11 +516,6 @@ namespace SkiaSharp
 
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_iter_destroy (Handle);
-
-			[EditorBrowsable (EditorBrowsableState.Never)]
-			[Obsolete ("Use Next(SKPoint[]) instead.")]
-			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates, bool exact) =>
-				Next (points);
 
 			public SKPathVerb Next (SKPoint[] points) =>
 				Next (new Span<SKPoint> (points));

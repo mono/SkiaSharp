@@ -15,13 +15,6 @@ namespace HarfBuzzSharp
 		{
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate) instead.")]
-		public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
-			: this (data, (int)length, mode, () => releaseDelegate?.Invoke (userData))
-		{
-		}
-
 		public Blob (IntPtr data, int length, MemoryMode mode)
 			: this (data, length, mode, null)
 		{
@@ -57,11 +50,11 @@ namespace HarfBuzzSharp
 			return new UnmanagedMemoryStream ((byte*)dataPtr, length);
 		}
 
-		public unsafe ReadOnlySpan<byte> AsSpan ()
+		public unsafe Span<byte> AsSpan ()
 		{
 			uint length;
 			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, &length);
-			return new ReadOnlySpan<byte> (dataPtr, (int)length);
+			return new Span<byte> (dataPtr, (int)length);
 		}
 
 		public static Blob FromFile (string fileName)

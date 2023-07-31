@@ -29,13 +29,6 @@ namespace SkiaSharp
 		{
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKPixmap(SKImageInfo, IntPtr, int) instead.")]
-		public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable)
-			: this (info, addr, info.RowBytes)
-		{
-		}
-
 		public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes)
 			: this (IntPtr.Zero, true)
 		{
@@ -65,13 +58,6 @@ namespace SkiaSharp
 		{
 			SkiaApi.sk_pixmap_reset (Handle);
 			pixelSource = null;
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported. Use Reset(SKImageInfo, IntPtr, int) instead.")]
-		public void Reset (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable)
-		{
-			Reset (info, addr, rowBytes);
 		}
 
 		public void Reset (SKImageInfo info, IntPtr addr, int rowBytes)
@@ -124,8 +110,8 @@ namespace SkiaSharp
 		public IntPtr GetPixels (int x, int y) =>
 			(IntPtr)SkiaApi.sk_pixmap_get_pixels_with_xy (Handle, x, y);
 
-		public ReadOnlySpan<byte> GetPixelSpan () =>
-			new ReadOnlySpan<byte> (SkiaApi.sk_pixmap_get_pixels (Handle), BytesSize);
+		public Span<byte> GetPixelSpan () =>
+			new Span<byte> (SkiaApi.sk_pixmap_get_pixels (Handle), BytesSize);
 
 		public unsafe Span<T> GetPixelSpan<T> ()
 			where T : unmanaged
@@ -155,26 +141,6 @@ namespace SkiaSharp
 			return SkiaApi.sk_pixmap_get_pixel_color (Handle, x, y);
 		}
 
-		// ColorTable
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported.")]
-		public SKColorTable ColorTable => null;
-
-		// Resize
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use ScalePixels(SKPixmap, SKFilterQuality) instead.")]
-		public static bool Resize (SKPixmap dst, SKPixmap src, SKBitmapResizeMethod method)
-		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-
-			return src.ScalePixels (dst, method.ToFilterQuality ());
-		}
-
 		// ScalePixels
 
 		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality)
@@ -186,11 +152,6 @@ namespace SkiaSharp
 		}
 
 		// ReadPixels
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use ReadPixels(SKImageInfo, IntPtr, int, int, int) instead.")]
-		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SKTransferFunctionBehavior behavior) =>
-			ReadPixels (dstInfo, dstPixels, dstRowBytes, srcX, srcY);
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
@@ -233,30 +194,6 @@ namespace SkiaSharp
 			return SkiaApi.sk_pixmap_encode_image (dst.Handle, Handle, encoder, quality);
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Encode(SKWStream, SKEncodedImageFormat, int) instead.")]
-		public static bool Encode (SKWStream dst, SKBitmap src, SKEncodedImageFormat format, int quality)
-		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-
-			return src.Encode (dst, format, quality);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Encode(SKWStream, SKEncodedImageFormat, int) instead.")]
-		public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality)
-		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-
-			return src.Encode (dst, encoder, quality);
-		}
-
 		// Encode (webp)
 
 		public SKData Encode (SKWebpEncoderOptions options)
@@ -281,18 +218,6 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (dst));
 
 			return SkiaApi.sk_webpencoder_encode (dst.Handle, Handle, &options);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Encode(SKWStream, SKWebpEncoderOptions) instead.")]
-		public static bool Encode (SKWStream dst, SKPixmap src, SKWebpEncoderOptions options)
-		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-
-			return src.Encode (dst, options);
 		}
 
 		// Encode (jpeg)
@@ -321,18 +246,6 @@ namespace SkiaSharp
 			return SkiaApi.sk_jpegencoder_encode (dst.Handle, Handle, &options);
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Encode(SKWStream, SKJpegEncoderOptions) instead.")]
-		public static bool Encode (SKWStream dst, SKPixmap src, SKJpegEncoderOptions options)
-		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-
-			return src.Encode (dst, options);
-		}
-
 		// Encode (png)
 
 		public SKData Encode (SKPngEncoderOptions options)
@@ -357,18 +270,6 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (dst));
 
 			return SkiaApi.sk_pngencoder_encode (dst.Handle, Handle, &options);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use Encode(SKWStream, SKPngEncoderOptions) instead.")]
-		public static bool Encode (SKWStream dst, SKPixmap src, SKPngEncoderOptions options)
-		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-
-			return src.Encode (dst, options);
 		}
 
 		// ExtractSubset

@@ -82,11 +82,6 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_image_new_raster_copy (&nInfo, (void*)pixels, (IntPtr)rowBytes));
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("The Index8 color type and color table is no longer supported. Use FromPixelCopy(SKImageInfo, IntPtr, int) instead.")]
-		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable) =>
-			FromPixelCopy (info, pixels, rowBytes);
-
 		public static SKImage FromPixelCopy (SKPixmap pixmap)
 		{
 			if (pixmap == null)
@@ -107,16 +102,6 @@ namespace SkiaSharp
 		}
 
 		// create a new image around existing pixel data
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromPixels (SKImageInfo, SKData, int) instead.")]
-		public static SKImage FromPixelData (SKImageInfo info, SKData data, int rowBytes)
-		{
-			if (data == null)
-				throw new ArgumentNullException (nameof (data));
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject (SkiaApi.sk_image_new_raster_data (&cinfo, data.Handle, (IntPtr)rowBytes));
-		}
 
 		public static SKImage FromPixels (SKImageInfo info, SKData data) =>
 			FromPixels (info, data, info.RowBytes);
@@ -258,67 +243,6 @@ namespace SkiaSharp
 
 		// create a new image from a GPU texture
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
-		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc)
-		{
-			return FromTexture (context, desc, SKAlphaType.Premul, null, null);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
-		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha)
-		{
-			return FromTexture (context, desc, alpha, null, null);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate) instead.")]
-		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc)
-		{
-			return FromTexture (context, desc, alpha, releaseProc, null);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.")]
-		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
-		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
-
-			var texture = new GRBackendTexture (desc);
-			return FromTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null, releaseProc, releaseContext);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
-		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc)
-		{
-			return FromTexture (context, desc, SKAlphaType.Premul, null, null);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
-		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
-		{
-			return FromTexture (context, desc, alpha, null, null);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate) instead.")]
-		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc)
-		{
-			return FromTexture (context, desc, alpha, releaseProc, null);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.")]
-		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
-		{
-			var texture = new GRBackendTexture (desc);
-			return FromTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null, releaseProc, releaseContext);
-		}
-
 		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, SKColorType colorType) =>
 			FromTexture ((GRRecordingContext)context, texture, colorType);
 
@@ -365,36 +289,6 @@ namespace SkiaSharp
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageTextureReleaseDelegateProxy, out _, out var ctx);
 			return GetObject (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType.ToNative (), alpha, cs, proxy, (void*)ctx));
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
-		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc)
-		{
-			return FromAdoptedTexture (context, desc, SKAlphaType.Premul);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
-		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha)
-		{
-			var texture = new GRBackendTexture (desc);
-			return FromAdoptedTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
-		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc)
-		{
-			return FromAdoptedTexture (context, desc, SKAlphaType.Premul);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
-		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
-		{
-			var texture = new GRBackendTexture (desc);
-			return FromAdoptedTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null);
 		}
 
 		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, SKColorType colorType) =>
@@ -454,46 +348,6 @@ namespace SkiaSharp
 
 		public SKData Encode () =>
 			SKData.GetObject (SkiaApi.sk_image_encode (Handle));
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public SKData Encode (SKPixelSerializer serializer)
-		{
-			if (serializer == null)
-				throw new ArgumentNullException (nameof (serializer));
-
-			// try old data
-			var encoded = EncodedData;
-			if (encoded != null) {
-				if (serializer.UseEncodedData (encoded.Data, (ulong)encoded.Size)) {
-					return encoded;
-				} else {
-					encoded.Dispose ();
-					encoded = null;
-				}
-			}
-
-			// get new data (raster)
-			if (!IsTextureBacked) {
-				using (var pixmap = PeekPixels ()) {
-					return serializer.Encode (pixmap);
-				}
-			}
-
-			// get new data (texture / gpu)
-			// this involves a copy from gpu to cpu first
-			if (IsTextureBacked) {
-				var info = new SKImageInfo (Width, Height, ColorType, AlphaType, ColorSpace);
-				using var temp = new SKBitmap (info);
-				using var pixmap = temp.PeekPixels ();
-				if (pixmap != null && ReadPixels (pixmap, 0, 0)) {
-					return serializer.Encode (pixmap);
-				}
-			}
-
-			// some error
-			return null;
-		}
 
 		public SKData Encode (SKEncodedImageFormat format, int quality)
 		{
@@ -642,11 +496,6 @@ namespace SkiaSharp
 		// ToTextureImage
 
 		public SKImage ToTextureImage (GRContext context) =>
-			ToTextureImage (context, false);
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use ToTextureImage(GRContext) instead.")]
-		public SKImage ToTextureImage (GRContext context, SKColorSpace colorspace) =>
 			ToTextureImage (context, false);
 
 		public SKImage ToTextureImage (GRContext context, bool mipmapped)

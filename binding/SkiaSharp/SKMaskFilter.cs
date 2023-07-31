@@ -3,18 +3,6 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	[EditorBrowsable (EditorBrowsableState.Never)]
-	[Flags]
-	[Obsolete]
-	public enum SKBlurMaskFilterFlags
-	{
-		None = 0x00,
-		IgnoreTransform = 0x01,
-		HighQuality = 0x02,
-		All = IgnoreTransform | HighQuality,
-	}
-
-
 	// TODO: `getFormat`
 	// TODO: `computeFastBounds`
 
@@ -49,34 +37,6 @@ namespace SkiaSharp
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, bool respectCTM)
 		{
 			return GetObject (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, respectCTM));
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateBlur(SKBlurStyle, float) instead.")]
-		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKBlurMaskFilterFlags flags)
-		{
-			return CreateBlur (blurStyle, sigma, true);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateBlur(SKBlurStyle, float) instead.")]
-		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder)
-		{
-			return CreateBlur (blurStyle, sigma, true);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateBlur(SKBlurStyle, float) instead.")]
-		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, SKBlurMaskFilterFlags flags)
-		{
-			return CreateBlur (blurStyle, sigma, true);
-		}
-
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete ("Use CreateBlur(SKBlurStyle, float, bool) instead.")]
-		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, bool respectCTM)
-		{
-			return CreateBlur (blurStyle, sigma, respectCTM);
 		}
 
 		public static SKMaskFilter CreateTable (byte[] table)

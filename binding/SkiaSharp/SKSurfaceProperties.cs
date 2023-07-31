@@ -10,13 +10,6 @@ namespace SkiaSharp
 		{
 		}
 
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		[Obsolete]
-		public SKSurfaceProperties (SKSurfaceProps props)
-			: this (props.Flags, props.PixelGeometry)
-		{
-		}
-
 		public SKSurfaceProperties (SKPixelGeometry pixelGeometry)
 			: this ((uint)0, pixelGeometry)
 		{
