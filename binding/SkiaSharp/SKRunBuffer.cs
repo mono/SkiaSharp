@@ -114,18 +114,4 @@ namespace SkiaSharp
 		public void SetPositions (ReadOnlySpan<SKPoint> positions) =>
 			positions.CopyTo (GetPositionSpan ());
 	}
-
-	public sealed unsafe class SKRotationScaleTextRunBuffer : SKTextRunBuffer
-	{
-		internal SKRotationScaleTextRunBuffer (SKRunBufferInternal buffer, int count, int textSize)
-			: base (buffer, count, textSize)
-		{
-		}
-
-		public Span<SKRotationScaleMatrix> GetRotationScaleSpan () =>
-			new Span<SKRotationScaleMatrix> (internalBuffer.pos, Size);
-
-		public void SetRotationScale (ReadOnlySpan<SKRotationScaleMatrix> positions) =>
-			positions.CopyTo (GetRotationScaleSpan ());
-	}
 }

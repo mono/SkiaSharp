@@ -490,16 +490,5 @@ namespace SkiaSharp
 
 			return new SKRotationScaleRunBuffer (runbuffer, count);
 		}
-
-		public SKRotationScaleTextRunBuffer AllocateRotationScaleTextRun (SKFont font, int count, int textByteCount)
-		{
-			if (font == null)
-				throw new ArgumentNullException (nameof (font));
-
-			SKRunBufferInternal runbuffer;
-			SkiaApi.sk_textblob_builder_alloc_run_rsxform (Handle, font.Handle, count, &runbuffer);
-
-			return new SKRotationScaleTextRunBuffer (runbuffer, count, textByteCount);
-		}
 	}
 }
