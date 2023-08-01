@@ -411,9 +411,9 @@ namespace SkiaSharp
 
 			SKRunBufferInternal runbuffer;
 			if (bounds is SKRect b)
-				SkiaApi.sk_textblob_builder_alloc_run (Handle, font.Handle, count, x, y, &b, &runbuffer);
+				SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, &b, &runbuffer);
 			else
-				SkiaApi.sk_textblob_builder_alloc_run (Handle, font.Handle, count, x, y, null, &runbuffer);
+				SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, null, &runbuffer);
 
 			return new SKTextRunBuffer (runbuffer, count, textByteCount);
 		}
@@ -441,9 +441,9 @@ namespace SkiaSharp
 
 			SKRunBufferInternal runbuffer;
 			if (bounds is SKRect b)
-				SkiaApi.sk_textblob_builder_alloc_run_pos_h (Handle, font.Handle, count, y, &b, &runbuffer);
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, &b, &runbuffer);
 			else
-				SkiaApi.sk_textblob_builder_alloc_run_pos_h (Handle, font.Handle, count, y, null, &runbuffer);
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, null, &runbuffer);
 
 			return new SKHorizontalTextRunBuffer (runbuffer, count, textByteCount);
 		}
@@ -471,9 +471,9 @@ namespace SkiaSharp
 
 			SKRunBufferInternal runbuffer;
 			if (bounds is SKRect b)
-				SkiaApi.sk_textblob_builder_alloc_run_pos (Handle, font.Handle, count, &b, &runbuffer);
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, &b, &runbuffer);
 			else
-				SkiaApi.sk_textblob_builder_alloc_run_pos (Handle, font.Handle, count, null, &runbuffer);
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, null, &runbuffer);
 
 			return new SKPositionedTextRunBuffer (runbuffer, count, textByteCount);
 		}
