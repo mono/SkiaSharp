@@ -342,7 +342,7 @@ namespace SkiaSharp.Tests
 				? GetGlyphBytes(text)
 				: StringUtilities.GetEncodedText(text, encoding);
 
-			var read = font.BreakText(bytes, SKTextEncoding.GlyphId, 50.0f, out var measured);
+			var read = font.BreakText(bytes, encoding, 50.0f, out var measured);
 			Assert.Equal(expectedRead, read);
 			Assert.True(measured > 0);
 
@@ -384,14 +384,8 @@ namespace SkiaSharp.Tests
 		{
 			var font = new SKFont();
 
-			Assert.Equal(1, font.BreakText(StringUtilities.GetEncodedText("ä", SKTextEncoding.Utf8), SKTextEncoding.Utf8, 50.0f));
-			Assert.Equal(1, font.BreakText(StringUtilities.GetEncodedText("ä", SKTextEncoding.Utf8), SKTextEncoding.Utf8, 50.0f));
-
-			Assert.Equal(1, font.BreakText(StringUtilities.GetEncodedText("ä", SKTextEncoding.Utf16), SKTextEncoding.Utf16, 50.0f));
-			Assert.Equal(1, font.BreakText(StringUtilities.GetEncodedText("ä", SKTextEncoding.Utf16), SKTextEncoding.Utf16, 50.0f));
-
-			Assert.Equal(1, font.BreakText(StringUtilities.GetEncodedText("ä", SKTextEncoding.Utf32), SKTextEncoding.Utf32, 50.0f));
-			Assert.Equal(1, font.BreakText(StringUtilities.GetEncodedText("ä", SKTextEncoding.Utf32), SKTextEncoding.Utf32, 50.0f));
+			Assert.Equal(1, font.BreakText("ä", 50.0f));
+			Assert.Equal(1, font.BreakText("ä", 50.0f));
 		}
 
 		[SkippableTheory]
