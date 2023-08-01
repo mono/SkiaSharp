@@ -17,6 +17,23 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void NonGlyphTextEncodingDoesNotThrow()
+		{
+			using var paint = new SKPaint { TextEncoding = SKTextEncoding.Utf16 };
+
+			using var builder = new SKTextBlobBuilder();
+
+			var run = builder.AllocateTextRun(paint.GetFont(), 100, 0, 0, 50);
+			Assert.Equal(100, run.GetGlyphSpan().Length);
+			Assert.Equal(50, run.GetTextSpan().Length);
+
+			using var blob = builder.Build();
+			Assert.NotNull(blob);
+
+			Assert.Equal(SKTextEncoding.Utf16, paint.TextEncoding);
+		}
+
+		[SkippableFact]
 		public void TestExplicitBounds()
 		{
 			var builder = new SKTextBlobBuilder();

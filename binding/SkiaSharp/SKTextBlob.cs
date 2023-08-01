@@ -404,6 +404,20 @@ namespace SkiaSharp
 			return new SKRunBuffer (runbuffer, count);
 		}
 
+		public SKTextRunBuffer AllocateTextRun (SKFont font, int count, float x, float y, int textByteCount, SKRect? bounds = null)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, null, &runbuffer);
+
+			return new SKTextRunBuffer (runbuffer, count, textByteCount);
+		}
+
 		// AllocateHorizontalRun
 
 		public SKHorizontalRunBuffer AllocateHorizontalRun (SKFont font, int count, float y, SKRect? bounds = null)
@@ -420,6 +434,20 @@ namespace SkiaSharp
 			return new SKHorizontalRunBuffer (runbuffer, count);
 		}
 
+		public SKHorizontalTextRunBuffer AllocateHorizontalTextRun (SKFont font, int count, float y, int textByteCount, SKRect? bounds = null)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, null, &runbuffer);
+
+			return new SKHorizontalTextRunBuffer (runbuffer, count, textByteCount);
+		}
+
 		// AllocatePositionedRun
 
 		public SKPositionedRunBuffer AllocatePositionedRun (SKFont font, int count, SKRect? bounds = null)
@@ -434,6 +462,20 @@ namespace SkiaSharp
 				SkiaApi.sk_textblob_builder_alloc_run_pos (Handle, font.Handle, count, null, &runbuffer);
 
 			return new SKPositionedRunBuffer (runbuffer, count);
+		}
+
+		public SKPositionedTextRunBuffer AllocatePositionedTextRun (SKFont font, int count, int textByteCount, SKRect? bounds = null)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, null, &runbuffer);
+
+			return new SKPositionedTextRunBuffer (runbuffer, count, textByteCount);
 		}
 
 		// AllocateRotationScaleRun
