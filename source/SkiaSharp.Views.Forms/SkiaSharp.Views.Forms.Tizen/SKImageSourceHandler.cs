@@ -25,7 +25,7 @@ namespace SkiaSharp.Views.Forms
 {
 	public sealed class SKImageSourceHandler : IImageSourceHandler
 	{
-		private StreamImageSourceHandler handler = new StreamImageSourceHandler();
+		private readonly StreamImageSourceHandler handler = new StreamImageSourceHandler();
 
 		public Task<bool> LoadImageAsync(ElmImage image, ImageSource imageSource, CancellationToken cancelationToken = default(CancellationToken))
 		{

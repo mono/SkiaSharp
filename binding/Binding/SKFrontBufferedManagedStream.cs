@@ -1,13 +1,9 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.IO;
-
-namespace SkiaSharp
+﻿namespace SkiaSharp
 {
-	public class SKFrontBufferedManagedStream : SKAbstractManagedStream
+    public class SKFrontBufferedManagedStream : SKAbstractManagedStream
 	{
 		private SKStream stream;
-		private bool disposeStream;
+		private readonly bool disposeStream;
 
 		private readonly bool hasLength;
 		private readonly int streamLength;

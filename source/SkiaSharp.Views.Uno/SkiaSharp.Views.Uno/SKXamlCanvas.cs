@@ -30,7 +30,7 @@ namespace SkiaSharp.Views.UWP
 				typeof(SKXamlCanvas),
 				new PropertyMetadata(Visibility.Visible, OnVisibilityChanged));
 
-		private static bool designMode = DesignMode.DesignModeEnabled;
+		private static readonly bool designMode = DesignMode.DesignModeEnabled;
 
 		private bool ignorePixelScaling;
 		private bool isVisible = true;

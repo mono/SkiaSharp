@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
-using System.Threading;
-
-namespace SkiaSharp
+﻿namespace SkiaSharp
 {
-	public abstract class SKObject : SKNativeObject
+    public abstract class SKObject : SKNativeObject
 	{
 		private readonly object locker = new object ();
 
@@ -227,7 +222,7 @@ namespace SkiaSharp
 	{
 		internal bool fromFinalizer = false;
 
-		private int isDisposed = 0;
+		private readonly int isDisposed = 0;
 
 		internal SKNativeObject (IntPtr handle)
 			: this (handle, true)

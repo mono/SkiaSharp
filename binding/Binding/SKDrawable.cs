@@ -1,14 +1,10 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Threading;
-
-namespace SkiaSharp
+﻿namespace SkiaSharp
 {
-	public unsafe class SKDrawable : SKObject, ISKReferenceCounted
+    public unsafe class SKDrawable : SKObject, ISKReferenceCounted
 	{
 		private static readonly SKManagedDrawableDelegates delegates;
 
-		private int fromNative;
+		private readonly int fromNative;
 
 		static SKDrawable ()
 		{

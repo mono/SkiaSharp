@@ -1,14 +1,10 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Threading;
-
-namespace SkiaSharp
+﻿namespace SkiaSharp
 {
-	public unsafe abstract class SKAbstractManagedWStream : SKWStream
+    public unsafe abstract class SKAbstractManagedWStream : SKWStream
 	{
 		private static readonly SKManagedWStreamDelegates delegates;
 
-		private int fromNative;
+		private readonly int fromNative;
 
 		static SKAbstractManagedWStream ()
 		{
