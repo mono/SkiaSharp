@@ -24,11 +24,11 @@ namespace SkiaSharp.HarfBuzz
 			if (string.IsNullOrEmpty(text))
 				return;
 
-			if (canvas == null)
+			if (canvas is null)
 				throw new ArgumentNullException(nameof(canvas));
-			if (shaper == null)
+			if (shaper is null)
 				throw new ArgumentNullException(nameof(shaper));
-			if (paint == null)
+			if (paint is null)
 				throw new ArgumentNullException(nameof(paint));
 
 			using var font = paint.ToFont();
