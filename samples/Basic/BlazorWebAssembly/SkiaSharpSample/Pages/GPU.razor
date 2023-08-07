@@ -32,9 +32,11 @@
         {
             IsAntialias = true,
             StrokeWidth = 5f,
-            StrokeCap = SKStrokeCap.Round,
-            TextAlign = SKTextAlign.Center,
-            TextSize = 24,
+            StrokeCap = SKStrokeCap.Round
+        };
+        using var font = new SKFont
+        {
+            Size = 24
         };
 
         var surfaceSize = e.Info.Size;
@@ -44,7 +46,7 @@
         var fps = GetCurrentFPS();
 
         // draw the fps counter
-        canvas.DrawText($"{fps:0.00}fps", surfaceSize.Width / 2, surfaceSize.Height - 10f, paint);
+        canvas.DrawText($"{fps:0.00}fps", surfaceSize.Width / 2, surfaceSize.Height - 10f, SKTextAlign.Center, font, paint);
 
         // draw the clock
         canvas.RotateDegrees(-90f, center.X, center.Y);
