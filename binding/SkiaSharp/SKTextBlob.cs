@@ -482,13 +482,30 @@ namespace SkiaSharp
 
 		// AllocateRotationScaleRun
 
-		public SKRotationScaleRunBuffer AllocateRotationScaleRun (SKFont font, int count)
+		public SKRotationScaleRunBuffer AllocateRotationScaleRun (SKFont font, int count, SKRect? bounds = null)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
 			SKRunBufferInternal runbuffer;
-			SkiaApi.sk_textblob_builder_alloc_run_rsxform (Handle, font.Handle, count, &runbuffer);
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_rsxform (Handle, font.Handle, count, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_rsxform (Handle, font.Handle, count, null, &runbuffer);
+
+			return new SKRotationScaleRunBuffer (runbuffer, count);
+		}
+
+		public SKRotationScaleRunBuffer AllocateRotationScaleTextRun (SKFont font, int count, int textByteCount, SKRect? bounds = null)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_text_rsxform (Handle, font.Handle, count, textByteCount, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_text_rsxform (Handle, font.Handle, count, textByteCount, null, &runbuffer);
 
 			return new SKRotationScaleRunBuffer (runbuffer, count);
 		}

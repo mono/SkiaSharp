@@ -40,12 +40,6 @@ namespace SkiaSharp
 		public static int SetFontCacheCountLimit (int count) =>
 			SkiaApi.sk_graphics_set_font_cache_count_limit (count);
 
-		public static int GetFontCachePointSizeLimit () =>
-			SkiaApi.sk_graphics_get_font_cache_point_size_limit ();
-
-		public static int SetFontCachePointSizeLimit (int count) =>
-			SkiaApi.sk_graphics_set_font_cache_point_size_limit (count);
-
 		// resource cache
 
 		public static long GetResourceCacheTotalBytesUsed () =>

@@ -92,6 +92,12 @@ namespace SkiaSharp
 			new SKPoint (pt.X - sz.X, pt.Y - sz.Y);
 		public static SKPoint operator - (SKPoint pt, SKPoint sz) =>
 			new SKPoint (pt.X - sz.X, pt.Y - sz.Y);
+
+		public static implicit operator Vector2 (SKPoint point) =>
+			new Vector2 (point.x, point.y);
+
+		public static implicit operator SKPoint (Vector2 vector) =>
+			new SKPoint (vector.X, vector.Y);
 	}
 
 	public partial struct SKPointI
@@ -213,6 +219,9 @@ namespace SkiaSharp
 			new SKSizeI (p.X, p.Y);
 		public static implicit operator SKPoint (SKPointI p) =>
 			new SKPoint (p.X, p.Y);
+
+		public static implicit operator Vector2 (SKPointI point) =>
+			new Vector2 (point.x, point.y);
 	}
 
 	public partial struct SKPoint3
@@ -239,6 +248,12 @@ namespace SkiaSharp
 
 		public static SKPoint3 operator - (SKPoint3 pt, SKPoint3 sz) =>
 			new SKPoint3 (pt.X - sz.X, pt.Y - sz.Y, pt.Z - sz.Z);
+
+		public static implicit operator Vector3 (SKPoint3 point) =>
+			new Vector3 (point.x, point.y, point.z);
+
+		public static implicit operator SKPoint3 (Vector3 vector) =>
+			new SKPoint3 (vector.X, vector.Y, vector.Z);
 	}
 
 	public partial struct SKSize

@@ -81,18 +81,6 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKTypeface MatchTypeface (SKTypeface face, SKFontStyle style)
-		{
-			if (face == null)
-				throw new ArgumentNullException (nameof (face));
-			if (style == null)
-				throw new ArgumentNullException (nameof (style));
-
-			var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_face_style (Handle, face.Handle, style.Handle));
-			tf?.PreventPublicDisposal ();
-			return tf;
-		}
-
 		public SKTypeface CreateTypeface (string path, int index = 0)
 		{
 			if (path == null)

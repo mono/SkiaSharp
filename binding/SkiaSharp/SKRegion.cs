@@ -164,7 +164,7 @@ namespace SkiaSharp
 		public bool SetRect (SKRectI rect) =>
 			SkiaApi.sk_region_set_rect (Handle, &rect);
 
-		public bool SetRects (SKRectI[] rects)
+		public bool SetRects (ReadOnlySpan<SKRectI> rects)
 		{
 			if (rects == null)
 				throw new ArgumentNullException (nameof (rects));

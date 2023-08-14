@@ -439,8 +439,6 @@ namespace SkiaSharp
 			if (info.AlphaType == SKAlphaType.Unpremul) {
 				info.AlphaType = SKAlphaType.Premul;
 			}
-			// for backwards compatibility, remove the colorspace
-			info.ColorSpace = null;
 			return Decode (codec, info);
 		}
 
@@ -619,13 +617,6 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_install_pixels_with_pixmap (Handle, pixmap.Handle);
 		}
 
-		// InstallMaskPixels
-
-		public bool InstallMaskPixels (SKMask mask)
-		{
-			return SkiaApi.sk_bitmap_install_mask_pixels (Handle, &mask);
-		}
-
 		// NotifyPixelsChanged
 
 		public void NotifyPixelsChanged ()
@@ -660,13 +651,21 @@ namespace SkiaSharp
 
 		// Resize
 
-		public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality)
+		[Obsolete ("Use Resize(SKImageInfo info, SKSamplingOptions sampling) instead.")]
+		public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality) =>
+			Resize (info, quality.ToSamplingOptions ());
+
+		[Obsolete ("Use Resize(SKSizeI size, SKSamplingOptions sampling) instead.")]
+		public SKBitmap Resize (SKSizeI size, SKFilterQuality quality) =>
+			Resize (size, quality.ToSamplingOptions ());
+
+		public SKBitmap Resize (SKImageInfo info, SKSamplingOptions sampling)
 		{
 			if (info.IsEmpty)
 				return null;
 
 			var dst = new SKBitmap (info);
-			if (ScalePixels (dst, quality)) {
+			if (ScalePixels (dst, sampling)) {
 				return dst;
 			} else {
 				dst.Dispose ();
@@ -674,30 +673,38 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKBitmap Resize (SKSizeI size, SKFilterQuality quality) =>
-			Resize (Info.WithSize (size), quality);
+		public SKBitmap Resize (SKSizeI size, SKSamplingOptions sampling) =>
+			Resize (Info.WithSize (size), sampling);
 
 		// ScalePixels
 
-		public bool ScalePixels (SKBitmap destination, SKFilterQuality quality)
+		[Obsolete ("Use ScalePixels(SKBitmap destination, SKSamplingOptions sampling) instead.")]
+		public bool ScalePixels (SKBitmap destination, SKFilterQuality quality) =>
+			ScalePixels (destination, quality.ToSamplingOptions ());
+
+		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.")]
+		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality) =>
+			ScalePixels (destination, quality.ToSamplingOptions ());
+
+		public bool ScalePixels (SKBitmap destination, SKSamplingOptions sampling)
 		{
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
 
 			using (var dstPix = destination.PeekPixels ()) {
-				return ScalePixels (dstPix, quality);
+				return ScalePixels (dstPix, sampling);
 			}
 		}
 
-		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality)
+		public bool ScalePixels (SKPixmap destination, SKSamplingOptions sampling)
 		{
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
 
 			using (var srcPix = PeekPixels ()) {
-				return srcPix.ScalePixels (destination, quality);
+				return srcPix.ScalePixels (destination, sampling);
 			}
 		}
 
@@ -751,12 +758,20 @@ namespace SkiaSharp
 		// ToShader
 
 		public SKShader ToShader () =>
-			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
-
+			ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, SKSamplingOptions.Default, null);
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy) =>
-			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, null));
+			ToShader (tmx, tmy, SKSamplingOptions.Default, null);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) =>
+			ToShader (tmx, tmy, sampling, null);
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
-			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &localMatrix));
+			ToShader (tmx, tmy, SKSamplingOptions.Default, &localMatrix);
+
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) =>
+			ToShader (tmx, tmy, sampling, &localMatrix);
+
+		private SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix* localMatrix) =>
+			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &sampling, localMatrix));
 	}
 }

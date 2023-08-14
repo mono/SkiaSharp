@@ -325,15 +325,19 @@ namespace SkiaSharp
 			return rect;
 		}
 
-		public void Transform (SKMatrix matrix) =>
-			SkiaApi.sk_path_transform (Handle, &matrix);
+		public void Transform (in SKMatrix matrix)
+		{
+			fixed (SKMatrix* m = &matrix)
+				SkiaApi.sk_path_transform (Handle, m);
+		}
 
-		public void Transform (SKMatrix matrix, SKPath destination)
+		public void Transform (in SKMatrix matrix, SKPath destination)
 		{
 			if (destination == null)
 				throw new ArgumentNullException (nameof (destination));
 
-			SkiaApi.sk_path_transform_to_dest (Handle, &matrix, destination.Handle);
+			fixed (SKMatrix* m = &matrix)
+				SkiaApi.sk_path_transform_to_dest (Handle, m, destination.Handle);
 		}
 
 		public void AddPath (SKPath other, float dx, float dy, SKPathAddMode mode = SKPathAddMode.Append)
@@ -344,14 +348,13 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_path_offset (Handle, other.Handle, dx, dy, mode);
 		}
 
-		public void AddPath (SKPath other, ref SKMatrix matrix, SKPathAddMode mode = SKPathAddMode.Append)
+		public void AddPath (SKPath other, in SKMatrix matrix, SKPathAddMode mode = SKPathAddMode.Append)
 		{
 			if (other == null)
 				throw new ArgumentNullException (nameof (other));
 
-			fixed (SKMatrix* m = &matrix) {
+			fixed (SKMatrix* m = &matrix)
 				SkiaApi.sk_path_add_path_matrix (Handle, other.Handle, m, mode);
-			}
 		}
 
 		public void AddPath (SKPath other, SKPathAddMode mode = SKPathAddMode.Append)
