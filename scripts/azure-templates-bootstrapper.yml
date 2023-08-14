@@ -83,10 +83,6 @@ jobs:
       # install extra bits for the native builds
       - ${{ if startsWith(parameters.name, 'native_') }}:
         # switch to the correct Python version
-        - pwsh: .\scripts\install-python.ps1
-          displayName: Install Python
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - task: UsePythonVersion@0
           displayName: Switch to the correct Python version
           retryCountOnTaskFailure: 3
@@ -94,6 +90,11 @@ jobs:
           inputs:
             versionSpec: '3.x'
             architecture: 'x64'
+        # install ninja
+        - pwsh: .\scripts\install-ninja.ps1
+          displayName: Install Ninja
+          retryCountOnTaskFailure: 3
+          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
           - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
@@ -120,6 +121,12 @@ jobs:
 
       # install extra bits for the managed builds
       - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+        # install ninja
+        - ${{ if eq(parameters.installNinja, 'true') }}:
+          - pwsh: .\scripts\install-ninja.ps1
+            displayName: Install Ninja
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         # install the bits needed for Android on macOS and Windows
         - ${{ if and(eq(parameters.installAndroidSdk, 'true'), not(endsWith(parameters.name, '_linux'))) }}:
           # install the correct version of the JDK for .NET 6
@@ -204,10 +211,6 @@ jobs:
           - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
             displayName: Switch to the latest Xcode
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - ${{ if eq(parameters.installNinja, 'true') }}:
-            - bash: ./scripts/install-ninja.sh
-              displayName: Install ninja
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - ${{ if startsWith(parameters.name, 'native_') }}:
           - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION_NATIVE)
             displayName: Switch to the latest Xcode

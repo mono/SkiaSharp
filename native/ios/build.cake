@@ -53,8 +53,9 @@ Task("libSkiaSharp")
             $"target_os='{VARIANT}' " +
             $"min_{VARIANT}_version='{GetDeploymentTarget(arch)}' " +
             $"ios_use_simulator={(isSim ? "true" : "false")} " +
+            $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
-            $"skia_use_metal={(sdk == "macosx" ? "false" : "true")} " +
+            $"skia_use_metal=true " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +

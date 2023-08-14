@@ -221,7 +221,6 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-tizen
-            condition: false # TODO: TIZEN INSTALL BUGS
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_linux

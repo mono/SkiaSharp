@@ -14,7 +14,6 @@ DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia/thi
 
 var EXE_EXTENSION = IsRunningOnWindows() ? ".exe" : "";
 var GN_EXE = Argument("gn", EnvironmentVariable("GN_EXE") ?? SKIA_PATH.CombineWithFilePath($"bin/gn{EXE_EXTENSION}").FullPath);
-var NINJA_EXE = Argument("ninja", EnvironmentVariable("NINJA_EXE") ?? DEPOT_PATH.CombineWithFilePath($"ninja{EXE_EXTENSION}").FullPath);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -74,8 +73,8 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
     });
 
     // build native skia
-    RunProcess(NINJA_EXE, new ProcessSettings {
-        Arguments = $"-C out/{outDir} {target}",
+    RunProcess(PYTHON_EXE, new ProcessSettings {
+        Arguments = DEPOT_PATH.CombineWithFilePath("ninja.py").FullPath + $" -C out/{outDir} {target}",
         WorkingDirectory = SKIA_PATH.FullPath,
     });
 }
@@ -90,6 +89,7 @@ bool Skip(string arch)
     switch (arch) {
         case "win32":
         case "i386":
+        case "i586":
             arch = "x86";
             break;
         case "x86_64":
@@ -103,6 +103,7 @@ bool Skip(string arch)
             break;
         case "arm64_32":
         case "arm64-v8a":
+        case "aarch64":
             arch = "arm64";
             break;
     }

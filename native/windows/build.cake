@@ -40,6 +40,7 @@ Task("libSkiaSharp")
             $"target_cpu='{skiaArch}' " +
             $"skia_enable_fontmgr_win_gdi=false " +
             $"skia_use_dng_sdk=true " +
+            $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +

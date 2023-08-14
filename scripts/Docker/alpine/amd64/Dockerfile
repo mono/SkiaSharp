@@ -26,6 +26,6 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 1
 
 RUN dotnet help
 
-ENV GN_EXE=/usr/share/gn/out/gn NINJA_EXE=ninja
+ENV GN_EXE=/usr/share/gn/out/gn
 
 WORKDIR /work
