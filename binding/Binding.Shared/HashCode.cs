@@ -1,6 +1,8 @@
 ﻿// Partial code copied from:
 // https://github.com/dotnet/runtime/blob/6072e4d3a7a2a1493f514cdf4be75a3d56580e84/src/libraries/System.Private.CoreLib/src/System/HashCode.cs
 
+#nullable disable
+
 using System;
 using System.Runtime.CompilerServices;
 

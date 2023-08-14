@@ -1,4 +1,7 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
+using System.IO;
 
 namespace SkiaSharp
 {
