@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -135,6 +136,17 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void CanMeasureBadUnicodeText()
+		{
+			var font = new SKFont();
+
+			var width = font.MeasureText("\ud83c", out var rect);
+
+			Assert.Equal(0, width);
+			Assert.Equal(SKRect.Empty, rect);
+		}
+
+		[SkippableFact]
 		public void MeasureTextMeasuresTheText()
 		{
 			var font = new SKFont();
@@ -142,6 +154,25 @@ namespace SkiaSharp.Tests
 			var width = font.MeasureText("Hello World!");
 
 			Assert.True(width > 0);
+		}
+
+		[SkippableFact]
+		public void MeasureTextMeasuresTheTextForBytes()
+		{
+			var font = new SKFont();
+
+			var text8 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf8);
+			var width8 = font.MeasureText(text8, SKTextEncoding.Utf8);
+
+			var text16 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf16);
+			var width16 = font.MeasureText(text16, SKTextEncoding.Utf16);
+
+			var text32 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf32);
+			var width32 = font.MeasureText(text32, SKTextEncoding.Utf32);
+
+			Assert.True(width8 > 0);
+			Assert.Equal(width8, width16);
+			Assert.Equal(width8, width32);
 		}
 
 		[SkippableFact]
@@ -153,6 +184,29 @@ namespace SkiaSharp.Tests
 
 			Assert.True(width > 0);
 			Assert.NotEqual(SKRect.Empty, bounds);
+		}
+
+		[SkippableFact]
+		public void MeasureTextReturnsTheBoundsForBytes()
+		{
+			var font = new SKFont();
+
+			var text8 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf8);
+			var width8 = font.MeasureText(text8, SKTextEncoding.Utf8, out var bounds8);
+
+			var text16 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf16);
+			var width16 = font.MeasureText(text16, SKTextEncoding.Utf16, out var bounds16);
+
+			var text32 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf32);
+			var width32 = font.MeasureText(text32, SKTextEncoding.Utf32, out var bounds32);
+
+			Assert.True(width8 > 0);
+			Assert.Equal(width8, width16);
+			Assert.Equal(width8, width32);
+
+			Assert.NotEqual(SKRect.Empty, bounds8);
+			Assert.Equal(bounds8, bounds16);
+			Assert.Equal(bounds8, bounds32);
 		}
 
 		[SkippableFact]
@@ -181,11 +235,27 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void MeasureTextSucceedsForEmtptyString()
+		public void MeasureTextSucceedsForEmptyString()
 		{
 			var font = new SKFont();
 
 			Assert.Equal(0, font.MeasureText(""));
+		}
+
+		[SkippableFact]
+		public void MeasureTextSucceedsForNullPointerZeroLength()
+		{
+			var font = new SKFont();
+
+			Assert.Equal(0, font.MeasureText(IntPtr.Zero, 0, SKTextEncoding.Utf16));
+		}
+
+		[SkippableFact]
+		public void MeasureTextThrowsForNullPointer()
+		{
+			var font = new SKFont();
+
+			Assert.Throws<ArgumentNullException>(() => font.MeasureText(IntPtr.Zero, 123, SKTextEncoding.Utf16));
 		}
 
 		[SkippableFact]
@@ -244,7 +314,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void GetTextPathSucceedsForEmtptyString()
+		public void GetTextPathSucceedsForEmptyString()
 		{
 			var font = new SKFont();
 
@@ -252,6 +322,156 @@ namespace SkiaSharp.Tests
 
 			Assert.NotNull(path);
 			Assert.Equal(0, path.PointCount);
+		}
+
+		[SkippableTheory]
+		[InlineData(SKTextEncoding.Utf8, "ä", 2)]
+		[InlineData(SKTextEncoding.Utf8, "a", 1)]
+		[InlineData(SKTextEncoding.Utf16, "ä", 2)]
+		[InlineData(SKTextEncoding.Utf16, "a", 2)]
+		[InlineData(SKTextEncoding.Utf32, "ä", 4)]
+		[InlineData(SKTextEncoding.Utf32, "a", 4)]
+		[InlineData(SKTextEncoding.GlyphId, "ä", 2)]
+		[InlineData(SKTextEncoding.GlyphId, "a", 2)]
+		public void BreakTextReturnsTheCorrectNumberOfBytes(SKTextEncoding encoding, string text, int expectedRead)
+		{
+			var font = new SKFont();
+
+			// get bytes
+			var bytes = encoding == SKTextEncoding.GlyphId
+				? GetGlyphBytes(text)
+				: StringUtilities.GetEncodedText(text, encoding);
+
+			var read = font.BreakText(bytes, encoding, 50.0f, out var measured);
+			Assert.Equal(expectedRead, read);
+			Assert.True(measured > 0);
+
+			byte[] GetGlyphBytes(string text)
+			{
+				var glyphs = font.GetGlyphs(text);
+				var bytes = new byte[Buffer.ByteLength(glyphs)];
+				Buffer.BlockCopy(glyphs, 0, bytes, 0, bytes.Length);
+				return bytes;
+			}
+		}
+
+		[SkippableFact]
+		public void BreakTextSucceedsForEmptyString()
+		{
+			var font = new SKFont();
+
+			Assert.Equal(0, font.BreakText("", 50.0f));
+		}
+
+		[SkippableFact]
+		public void BreakTextSucceedsForNullPointerZeroLength()
+		{
+			var font = new SKFont();
+
+			Assert.Equal(0, font.BreakText(IntPtr.Zero, 0, SKTextEncoding.Utf8, 50.0f));
+		}
+
+		[SkippableFact]
+		public void BreakTextThrowsForNullPointer()
+		{
+			var font = new SKFont();
+
+			Assert.Throws<ArgumentNullException>(() => font.BreakText(IntPtr.Zero, 123, SKTextEncoding.Utf8, 50.0f));
+		}
+
+		[SkippableFact]
+		public void BreakTextReturnsTheCorrectNumberOfCharacters()
+		{
+			var font = new SKFont();
+
+			Assert.Equal(1, font.BreakText("ä", 50.0f));
+			Assert.Equal(1, font.BreakText("ä", 50.0f));
+		}
+
+		[SkippableTheory]
+		[InlineData(-1)]
+		[InlineData(1 << 17)]
+		public void BreakTextWidthIsEqualToMeasureTextWidth(int textSize)
+		{
+			var font = new SKFont();
+
+			if (textSize >= 0)
+				font.Size = textSize;
+
+			var text =
+				"The ultimate measure of a man is not where he stands in moments of comfort " +
+				"and convenience, but where he stands at times of challenge and controversy.";
+			var length = text.Length;
+
+			var width = font.MeasureText(text);
+
+			var length2 = font.BreakText(text, width, out var mm);
+
+			Assert.Equal(length, length2);
+			Assert.Equal(width, mm);
+		}
+
+		[SkippableTheory]
+		[InlineData(-1)]
+		[InlineData(1 << 17)]
+		public void BreakTextHandlesLongText(int textSize)
+		{
+			var font = new SKFont();
+
+			if (textSize >= 0)
+				font.Size = textSize;
+
+			var text = string.Concat(Enumerable.Repeat('a', 1024));
+
+			var width = font.MeasureText(text);
+
+			var length = font.BreakText(text, width, out var mm);
+
+			Assert.Equal(1024, length);
+			Assert.Equal(width, mm);
+		}
+
+		[SkippableTheory]
+		[InlineData(-1)]
+		[InlineData(0)]
+		[InlineData(1 << 17)]
+		public void BreakTextHasCorrectLogic(int textSize)
+		{
+			var font = new SKFont();
+
+			if (textSize >= 0)
+				font.Size = textSize;
+
+			var text = "sdfkljAKLDFJKEWkldfjlk#$%&sdfs.dsj";
+			var length = text.Length;
+			var width = font.MeasureText(text);
+
+			var mm = 0f;
+			var nn = 0L;
+			var step = Math.Max(width / 10f, 1f);
+			for (float w = 0; w <= width; w += step)
+			{
+				var n = font.BreakText(text, w, out var m);
+
+				Assert.True(n <= length);
+				Assert.True(m <= width);
+
+				if (n == 0)
+				{
+					Assert.Equal(0, m);
+				}
+				else if (n == nn)
+				{
+					Assert.Equal(mm, m);
+				}
+				else
+				{
+					Assert.True(n > nn);
+					Assert.True(m > mm);
+				}
+				nn = n;
+				mm = m;
+			}
 		}
 	}
 }

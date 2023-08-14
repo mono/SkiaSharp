@@ -1,4 +1,6 @@
 ﻿using System;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests
 {
@@ -15,6 +17,24 @@ namespace SkiaSharp.Tests
 		public static string PathRoot => TestConfig.Current.PathRoot;
 		public static string PathToFonts => TestConfig.Current.PathToFonts;
 		public static string PathToImages => TestConfig.Current.PathToImages;
+
+		private readonly ITestOutputHelper _output;
+
+		public BaseTest()
+		{
+		}
+
+		public BaseTest(ITestOutputHelper output)
+		{
+			_output = output;
+		}
+
+		protected void WriteOutput(string message)
+		{
+			Assert.True(_output is not null, "Output writer was null, you should be using the constructor that accepts an ITestOutputHelper.");
+
+			_output.WriteLine(message);
+		}
 
 		public static void CollectGarbage()
 		{

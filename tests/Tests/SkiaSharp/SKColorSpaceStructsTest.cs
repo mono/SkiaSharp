@@ -31,26 +31,7 @@ namespace SkiaSharp.Tests
 
 			var xyz = csp.ToColorSpaceXyz();
 
-			AssertSimilar(SKColorSpaceXyz.Srgb.Values, xyz.Values, PRECISION);
-		}
-
-		[SkippableFact]
-		public void PrimariesToMatrix44()
-		{
-			var primaries = new float[] {
-				0.64f, 0.33f,
-				0.30f, 0.60f,
-				0.15f, 0.06f,
-				0.3127f, 0.3290f
-			};
-			var csp = new SKColorSpacePrimaries(primaries);
-
-			var matrix44 = csp.ToMatrix44();
-			Assert.NotNull(matrix44);
-
-			var srgb44 = SKColorSpaceXyz.Srgb.ToMatrix44();
-
-			AssertSimilar(srgb44.ToRowMajor(), matrix44.ToRowMajor(), PRECISION);
+			AssertSimilar(SKColorSpaceXyz.Srgb.Values, xyz.Values, 3);
 		}
 
 		// SKColorSpaceTransferFn
@@ -149,28 +130,6 @@ namespace SkiaSharp.Tests
 			var concat = SKColorSpaceXyz.Concat(a, b);
 
 			Assert.Equal(expected, concat);
-		}
-
-		[SkippableFact]
-		public void XyzToMatrix44IsCorrect()
-		{
-			var values44 = new float[] {
-				1, 2, 3, 0,
-				4, 5, 6, 0,
-				7, 8, 9, 0,
-				0, 0, 0, 1
-			};
-			var values = new float[] {
-				1, 2, 3,
-				4, 5, 6,
-				7, 8, 9
-			};
-
-			var csxyz = new SKColorSpaceXyz(values);
-
-			var matrix44 = csxyz.ToMatrix44();
-
-			Assert.Equal(values44, matrix44.ToRowMajor());
 		}
 
 		[SkippableFact]

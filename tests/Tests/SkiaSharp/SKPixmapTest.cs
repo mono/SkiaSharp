@@ -35,7 +35,7 @@ namespace SkiaSharp.Tests
 			var srcPix = srcBmp.PeekPixels();
 			var dstPix = dstBmp.PeekPixels();
 
-			Assert.True(srcPix.ScalePixels(dstPix, SKFilterQuality.High));
+			Assert.True(srcPix.ScalePixels(dstPix, new SKSamplingOptions(SKCubicResampler.Mitchell)));
 
 			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
@@ -254,7 +254,7 @@ namespace SkiaSharp.Tests
 		[SkippableTheory]
 		[InlineData(0x00000000, 0)]
 		[InlineData(0xFF000000, 0)]
-		[InlineData(0xFFFF0000, 53)]
+		[InlineData(0xFFFF0000, 54)]
 		[InlineData(0xFF00FF00, 182)]
 		[InlineData(0xFF0000FF, 18)]
 		[InlineData(0xFFFFFFFF, 255)]

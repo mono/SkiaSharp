@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -76,7 +77,7 @@ namespace SkiaSharp.Tests
 			};
 
 			var rowMajorMatrix = SKMatrix44.FromRowMajor(rowMajor);
-			rowMajorMatrix.Transpose();
+			rowMajorMatrix = rowMajorMatrix.Transpose();
 			var colMajorMatrix = rowMajorMatrix.ToRowMajor();
 
 			Assert.Equal(colMajor, colMajorMatrix);
@@ -160,7 +161,7 @@ namespace SkiaSharp.Tests
 			var matrix44 = SKMatrix44.CreateRotationDegrees(0, 0, 1, 45);
 			var matrix = SKMatrix.CreateRotationDegrees(45);
 
-			Assert.Equal(matrix.Values, matrix44.Matrix.Values);
+			AssertSimilar(matrix.Values, matrix44.Matrix.Values, 6);
 		}
 
 		[SkippableFact]
@@ -181,6 +182,61 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(matrix.Values, matrix44.Matrix.Values);
 		}
+
+#if NET5_0_OR_GREATER
+
+		[SkippableFact]
+		public void IndicesAreCorrectOnIdentity()
+		{
+			var skm = SKMatrix44.CreateIdentity();
+			var m4x4 = Matrix4x4.Identity;
+
+			for (var row = 0; row < 4; row++)
+			{
+				for (var col = 0; col < 4; col++)
+				{
+					var sk = skm[row, col];
+					var m = m4x4[row, col];
+					Assert.Equal(m, sk);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void IndicesAreCorrectOnTranslate()
+		{
+			var skm = SKMatrix44.CreateTranslation(10, 20, 30);
+			var m4x4 = Matrix4x4.CreateTranslation(10, 20, 30);
+
+			for (var row = 0; row < 4; row++)
+			{
+				for (var col = 0; col < 4; col++)
+				{
+					var sk = skm[row, col];
+					var m = m4x4[row, col];
+					Assert.Equal(m, sk);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void IndicesAreCorrectOnScale()
+		{
+			var skm = SKMatrix44.CreateScale(10, 20, 30);
+			var m4x4 = Matrix4x4.CreateScale(10, 20, 30);
+
+			for (var row = 0; row < 4; row++)
+			{
+				for (var col = 0; col < 4; col++)
+				{
+					var sk = skm[row, col];
+					var m = m4x4[row, col];
+					Assert.Equal(m, sk);
+				}
+			}
+		}
+
+#endif
 
 		[SkippableFact]
 		public void TranslationMapsScalars()
@@ -232,24 +288,95 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void MapsPointsBulk()
+		public void IdentityIsCorrectLayout()
 		{
-			var rnd = new Random();
+			var matrix = SKMatrix44.Identity;
+			var rect = SKRectI.Create(25, 25, 50, 50);
 
-			var matrixTranslate = SKMatrix44.CreateTranslation(10, 25, 0);
+			using var bmp = DrawMatrixBitmap(rect, matrix);
 
-			// generate some points
-			var points = new SKPoint[1000];
-			var results = new SKPoint[points.Length];
-			for (var i = 0; i < points.Length; i++)
-			{
-				points[i] = new SKPoint(rnd.Next(1000) / 10f, rnd.Next(1000) / 10f);
-				results[i] = new SKPoint(points[i].X + 10, points[i].Y + 25);
-			}
+			AssertMatrixBitmap(bmp, rect);
+		}
 
-			var actualResults = matrixTranslate.MapPoints(points);
+		[SkippableTheory]
+		[InlineData(0, 0, 0)]
+		[InlineData(10, 0, 0)]
+		[InlineData(-10, 0, 0)]
+		[InlineData(0, 10, 0)]
+		[InlineData(0, -10, 0)]
+		[InlineData(0, 0, 10)]
+		[InlineData(0, 0, -10)]
+		[InlineData(10, 10, 0)]
+		[InlineData(-10, -10, 0)]
+		public void TranslationIsCorrectLayout(int x, int y, int z)
+		{
+			var matrix = SKMatrix44.CreateTranslation(x, y, z);
 
-			Assert.Equal(results, actualResults);
+			using var bmp = DrawMatrixBitmap(SKRectI.Create(25, 25, 50, 50), matrix);
+
+			AssertMatrixBitmap(bmp, SKRectI.Create(25 + x, 25 + y, 50, 50));
+		}
+
+		[SkippableTheory]
+		[InlineData(1, 1, 1)]
+		[InlineData(2, 1, 1)]
+		[InlineData(1, 2, 1)]
+		[InlineData(1, 1, 2)]
+		[InlineData(2, 2, 1)]
+		public void ScaleIsCorrectLayoutWithOriginCenter(int x, int y, int z)
+		{
+			var matrix = SKMatrix44.CreateScale(x, y, z, 50, 50, 50);
+
+			const int s = 30;
+			const int o = 35;
+
+			using var bmp = DrawMatrixBitmap(SKRectI.Create(o, o, s, s), matrix);
+
+			AssertMatrixBitmap(bmp, SKRectI.Create(o - ((s * x) - s) / 2, o - ((s * y) - s) / 2, s * x, s * y));
+		}
+
+		[SkippableTheory]
+		[InlineData(1, 1, 1)]
+		[InlineData(2, 1, 1)]
+		[InlineData(1, 2, 1)]
+		[InlineData(1, 1, 2)]
+		[InlineData(2, 2, 1)]
+		public void ScaleIsCorrectLayoutWithOriginTopLeft(int x, int y, int z)
+		{
+			var matrix = SKMatrix44.CreateScale(x, y, z);
+
+			using var bmp = DrawMatrixBitmap(SKRectI.Create(30, 30, 10, 10), matrix);
+
+			AssertMatrixBitmap(bmp, SKRectI.Create(30 * x, 30 * y, 10 * x, 10 * y));
+		}
+
+		private static SKBitmap DrawMatrixBitmap(SKRect rect, SKMatrix44 matrix)
+		{
+			var bmp = new SKBitmap(100, 100);
+			using var canvas = new SKCanvas(bmp);
+
+			canvas.Clear(SKColors.Red);
+			canvas.SetMatrix(matrix);
+
+			using var paint = new SKPaint { Color = SKColors.Green };
+			canvas.DrawRect(rect, paint);
+
+			return bmp;
+		}
+
+		private static void AssertMatrixBitmap(SKBitmap bmp, SKRectI rect)
+		{
+			// edges
+			Assert.Equal(SKColors.Red, bmp.GetPixel(0, 0));
+			Assert.Equal(SKColors.Red, bmp.GetPixel(99, 0));
+			Assert.Equal(SKColors.Red, bmp.GetPixel(99, 99));
+			Assert.Equal(SKColors.Red, bmp.GetPixel(99, 0));
+
+			// bounds of rect
+			Assert.Equal(SKColors.Green, bmp.GetPixel(rect.Left, rect.Top));
+			Assert.Equal(SKColors.Green, bmp.GetPixel(rect.Right - 1, rect.Top));
+			Assert.Equal(SKColors.Green, bmp.GetPixel(rect.Right - 1, rect.Bottom - 1));
+			Assert.Equal(SKColors.Green, bmp.GetPixel(rect.Left, rect.Bottom - 1));
 		}
 	}
 }

@@ -67,42 +67,6 @@ namespace SkiaSharp.Tests
 			Assert.Equal((int)SKFontStyleWeight.Bold, tf.FontWeight);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // iOS does not support matching typefaces
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not support matching typefaces
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // macOS does not support matching typefaces
-		[SkippableFact]
-		public void TestMatchTypeface()
-		{
-			var fonts = SKFontManager.Default;
-
-			var normal = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Normal);
-			Assert.NotNull(normal);
-			Assert.Equal((int)SKFontStyleWeight.Normal, normal.FontWeight);
-
-			var bold = fonts.MatchTypeface(normal, SKFontStyle.Bold);
-			Assert.NotNull(bold);
-			Assert.Equal((int)SKFontStyleWeight.Bold, bold.FontWeight);
-
-			Assert.Equal(normal.FamilyName, bold.FamilyName);
-		}
-
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // iOS does not support matching typefaces
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not support matching typefaces
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // macOS does not support matching typefaces
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Android does not support matching typefaces from a typeface that was loaded from a stream
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)] // Linux does not support matching typefaces from a typeface that was loaded from a stream
-		[SkippableFact]
-		public void TestMatchTypefaceFromStream()
-		{
-			var fonts = SKFontManager.Default;
-
-			var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
-			Assert.Equal("Roboto2", typeface.FamilyName);
-
-			var match = fonts.MatchTypeface(typeface, SKFontStyle.Bold);
-			Assert.NotNull(match);
-		}
-
 		[SkippableFact]
 		public void NullWithMissingFile()
 		{
@@ -150,9 +114,9 @@ namespace SkiaSharp.Tests
 		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
 		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
-		public void StreamIsAccessableFromNativeType()
+		public void StreamIsAccessibleFromNativeType()
 		{
-			var paint = CreatePaint(out var typefaceHandle);
+			var paint = CreateFont(out var typefaceHandle);
 
 			CollectGarbage();
 
@@ -164,7 +128,7 @@ namespace SkiaSharp.Tests
 			Assert.True(tf.TryGetTableTags(out var tags));
 			Assert.NotEmpty(tags);
 
-			SKPaint CreatePaint(out IntPtr handle)
+			SKFont CreateFont(out IntPtr handle)
 			{
 				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
 				var dotnet = new MemoryStream(bytes);
@@ -173,7 +137,7 @@ namespace SkiaSharp.Tests
 				var typeface = SKFontManager.Default.CreateTypeface(stream);
 				handle = typeface.Handle;
 
-				return new SKPaint
+				return new SKFont
 				{
 					Typeface = typeface
 				};
@@ -257,24 +221,6 @@ namespace SkiaSharp.Tests
 			using var tf2 = fonts.CreateTypeface(data);
 
 			Assert.NotSame(tf1, tf2);
-		}
-
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // macOS does not support matching typefaces
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not support matching typefaces
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // macOS does not support matching typefaces
-		[Obsolete]
-		[SkippableFact]
-		public unsafe void FromTypefaceReturnsSameObject()
-		{
-			var fonts = SKFontManager.Default;
-
-			var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
-
-			var tf1 = fonts.MatchTypeface(tf, SKFontStyle.Normal);
-			var tf2 = fonts.MatchTypeface(tf, SKFontStyle.Normal);
-
-			Assert.Same(tf, tf1);
-			Assert.Same(tf1, tf2);
 		}
 
 		[SkippableFact]

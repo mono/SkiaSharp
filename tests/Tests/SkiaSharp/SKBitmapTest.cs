@@ -35,6 +35,9 @@ namespace SkiaSharp.Tests
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyToSucceeds(SKColorType colorType)
 		{
+			if (colorType == SKColorType.Bgr101010xXR)
+				throw new SkipException("The Bgr101010xXR does not support getting pixel colors.");
+
 			var alphaType = colorType.GetAlphaType();
 
 			using var bmp = CreateTestBitmap();
@@ -66,6 +69,9 @@ namespace SkiaSharp.Tests
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyWithAlphaToSucceeds(SKColorType colorType)
 		{
+			if (colorType == SKColorType.Bgr101010xXR)
+				throw new SkipException("The Bgr101010xXR does not support getting pixel colors.");
+
 			var alphaType = colorType.GetAlphaType();
 
 			using var bmp = CreateTestBitmap(170);
@@ -103,6 +109,11 @@ namespace SkiaSharp.Tests
 				{
 					// rounding
 					Assert.Equal((SKColor)0xA9000000, color);
+				}
+				else if (colorType == SKColorType.Srgba8888)
+				{
+					// SRGB processing
+					Assert.Equal((SKColor)0xAAFE0000, color);
 				}
 				else
 				{
@@ -377,11 +388,19 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+
+		public static IEnumerable<object[]> GetSamplingData()
+		{
+			yield return new object[] { new SKSamplingOptions(SKFilterMode.Nearest, SKMipmapMode.None) };
+			yield return new object[] { new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None) };
+			yield return new object[] { new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear) };
+			yield return new object[] { new SKSamplingOptions(SKCubicResampler.CatmullRom) };
+			yield return new object[] { new SKSamplingOptions(SKCubicResampler.Mitchell) };
+		}
+
 		[SkippableTheory]
-		[InlineData(SKFilterQuality.Low)]
-		[InlineData(SKFilterQuality.Medium)]
-		[InlineData(SKFilterQuality.High)]
-		public void BitmapResizes(SKFilterQuality quality)
+		[MemberData(nameof(GetSamplingData))]
+		public void BitmapResizes(SKSamplingOptions sampling)
 		{
 			var srcInfo = new SKImageInfo(200, 200);
 			var dstInfo = new SKImageInfo(100, 100);
@@ -398,7 +417,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
 			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
 
-			var dstBmp = srcBmp.Resize(dstInfo, quality);
+			var dstBmp = srcBmp.Resize(dstInfo, sampling);
 			Assert.NotNull(dstBmp);
 
 			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
@@ -420,7 +439,7 @@ namespace SkiaSharp.Tests
 			newInfo.Width = width;
 			newInfo.Height = hight;
 
-			using var newBitmap = bitmap.Resize(newInfo, SKFilterQuality.High);
+			using var newBitmap = bitmap.Resize(newInfo, new SKSamplingOptions(SKCubicResampler.Mitchell));
 
 			Assert.Null(newBitmap);
 		}
@@ -444,58 +463,10 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
 			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
 
-			Assert.True(srcBmp.ScalePixels(dstBmp, SKFilterQuality.High));
+			Assert.True(srcBmp.ScalePixels(dstBmp, new SKSamplingOptions(SKCubicResampler.Mitchell)));
 
 			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
-		}
-
-		[SkippableFact]
-		public void AlphaMaskIsApplied()
-		{
-			var srcInfo = new SKImageInfo(4, 4);
-			var srcBmp = new SKBitmap(srcInfo);
-			srcBmp.Erase(SKColors.Red);
-			var pixels = srcBmp.Pixels;
-
-			foreach (var pixel in pixels)
-			{
-				Assert.Equal(255, pixel.Alpha);
-			}
-
-			var maskBuffer = new byte[]
-			{
-				128, 127, 126, 125,
-				101, 102, 103, 104,
-				96, 95, 94, 93,
-				72, 73, 74, 75
-			};
-			var bounds = new SKRectI(0, 0, 4, 4);
-			uint rowBytes = 4;
-			var format = SKMaskFormat.A8;
-			var mask = SKMask.Create(maskBuffer, bounds, rowBytes, format);
-
-			srcBmp.InstallMaskPixels(mask);
-
-			pixels = srcBmp.Pixels;
-			Assert.Equal(128, pixels[0].Alpha);
-			Assert.Equal(127, pixels[1].Alpha);
-			Assert.Equal(126, pixels[2].Alpha);
-			Assert.Equal(125, pixels[3].Alpha);
-			Assert.Equal(101, pixels[4].Alpha);
-			Assert.Equal(102, pixels[5].Alpha);
-			Assert.Equal(103, pixels[6].Alpha);
-			Assert.Equal(104, pixels[7].Alpha);
-			Assert.Equal(96, pixels[8].Alpha);
-			Assert.Equal(95, pixels[9].Alpha);
-			Assert.Equal(94, pixels[10].Alpha);
-			Assert.Equal(93, pixels[11].Alpha);
-			Assert.Equal(72, pixels[12].Alpha);
-			Assert.Equal(73, pixels[13].Alpha);
-			Assert.Equal(74, pixels[14].Alpha);
-			Assert.Equal(75, pixels[15].Alpha);
-
-			mask.FreeImage();
 		}
 
 		[SkippableFact]

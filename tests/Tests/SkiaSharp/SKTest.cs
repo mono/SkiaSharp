@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests
 {
@@ -16,6 +17,15 @@ namespace SkiaSharp.Tests
 		private static readonly Random random = new Random();
 
 		private static int nextPtr = 1000;
+
+		protected SKTest()
+		{
+		}
+
+		protected SKTest(ITestOutputHelper output)
+			: base(output)
+		{
+		}
 
 		protected static IntPtr GetNextPtr() =>
 			(IntPtr)Interlocked.Increment(ref nextPtr);
@@ -67,6 +77,41 @@ namespace SkiaSharp.Tests
 			using var data = image.Encode();
 
 			data.SaveTo(stream);
+		}
+
+		protected void WriteOutput(SKSurface surface, string message = null)
+		{
+			using var image = surface.Snapshot();
+			WriteOutput(image, message);
+		}
+
+		protected void WriteOutput(SKBitmap bmp, string message = null)
+		{
+			using var image = SKImage.FromBitmap(bmp);
+			WriteOutput(image, message);
+		}
+
+		protected void WriteOutput(SKImage img, string message = null)
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(img.Width, img.Height));
+			var canvas = surface.Canvas;
+
+			canvas.Clear(SKColors.Transparent);
+			canvas.DrawImage(img, 0, 0);
+			canvas.Flush();
+
+			using var snap = surface.Snapshot();
+			using var data = snap.Encode();
+
+			var base64 = Convert.ToBase64String(data.ToArray());
+
+			WriteOutput("--------------------------------------------------");
+			if (!string.IsNullOrEmpty(message))
+				WriteOutput(message);
+			WriteOutput($"Size: [{img.Width}, {img.Height}]");
+			WriteOutput("Base 64 Image: (decode using https://base64-to-image.com/)");
+			WriteOutput(base64);
+			WriteOutput("--------------------------------------------------");
 		}
 
 		protected static SKBitmap CreateTestBitmap(byte alpha = 255)
@@ -140,11 +185,15 @@ namespace SkiaSharp.Tests
 
 		protected static void AssertSimilar(ReadOnlySpan<float> expected, ReadOnlySpan<float> actual, int precision = PRECISION)
 		{
+			var pow = Math.Pow(10, precision);
+
 			var eTrimmed = expected.ToArray()
-				.Select(v => (int)(v * precision) / precision);
+				.Select(v => (int)(v * pow) / pow)
+				.ToArray();
 
 			var aTrimmed = actual.ToArray()
-				.Select(v => (int)(v * precision) / precision);
+				.Select(v => (int)(v * pow) / pow)
+				.ToArray();
 
 			Assert.Equal(eTrimmed, aTrimmed);
 		}

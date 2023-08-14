@@ -64,7 +64,7 @@ namespace SkiaSharp.Tests
 				var bitmap = SKBitmap.Decode(fileName);
 				var scaledBitmap = new SKBitmap(60, 40, bitmap.ColorType, bitmap.AlphaType);
 
-				bitmap.ScalePixels(scaledBitmap, SKFilterQuality.High);
+				bitmap.ScalePixels(scaledBitmap, new SKSamplingOptions(SKCubicResampler.Mitchell));
 
 				var image = SKImage.FromBitmap(scaledBitmap);
 				var data = image.Encode(SKEncodedImageFormat.Png, 80);
