@@ -72,52 +72,42 @@ namespace SkiaSharp
 		// CreateImage
 
 		public static SKShader CreateImage (SKImage src) =>
-			CreateImage (src, SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+			src?.ToShader () ?? throw new ArgumentNullException (nameof (src));
 
-		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy)
-		{
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
+		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy) =>
+			src?.ToShader (tmx, tmy) ?? throw new ArgumentNullException (nameof (src));
 
-			return src.ToShader (tmx, tmy);
-		}
+		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) =>
+			src?.ToShader (tmx, tmy, sampling) ?? throw new ArgumentNullException (nameof (src));
 
-		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix)
-		{
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
+		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
+			src?.ToShader (tmx, tmy, localMatrix) ?? throw new ArgumentNullException (nameof (src));
 
-			return src.ToShader (tmx, tmy, localMatrix);
-		}
+		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) =>
+			src?.ToShader (tmx, tmy, sampling, localMatrix) ?? throw new ArgumentNullException (nameof (src));
 
 		// CreatePicture
 
 		public static SKShader CreatePicture (SKPicture src) =>
-			CreatePicture (src, SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+			src?.ToShader () ?? throw new ArgumentNullException (nameof (src));
 
-		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy)
-		{
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
+		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy) =>
+			src?.ToShader (tmx, tmy) ?? throw new ArgumentNullException (nameof (src));
 
-			return src.ToShader (tmx, tmy);
-		}
+		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode) =>
+			src?.ToShader (tmx, tmy, filterMode) ?? throw new ArgumentNullException (nameof (src));
 
-		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile)
-		{
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
+		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile) =>
+			src?.ToShader (tmx, tmy, tile) ?? throw new ArgumentNullException (nameof (src));
 
-			return src.ToShader (tmx, tmy, tile);
-		}
+		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode, SKRect tile) =>
+			src?.ToShader (tmx, tmy, filterMode, tile) ?? throw new ArgumentNullException (nameof (src));
 
-		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile)
-		{
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
+		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile) =>
+			src?.ToShader (tmx, tmy, localMatrix, tile) ?? throw new ArgumentNullException (nameof (src));
 
-			return src.ToShader (tmx, tmy, localMatrix, tile);
-		}
+		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode, SKMatrix localMatrix, SKRect tile) =>
+			src?.ToShader (tmx, tmy, filterMode, localMatrix, tile) ?? throw new ArgumentNullException (nameof (src));
 
 		// CreateLinearGradient
 
@@ -392,11 +382,6 @@ namespace SkiaSharp
 		public static SKShader CreatePerlinNoiseFractalNoise (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKSizeI tileSize) =>
 			GetObject (SkiaApi.sk_shader_new_perlin_noise_fractal_noise (baseFrequencyX, baseFrequencyY, numOctaves, seed, &tileSize));
 
-		// CreatePerlinNoiseImprovedNoise
-
-		public static SKShader CreatePerlinNoiseImprovedNoise (float baseFrequencyX, float baseFrequencyY, int numOctaves, float z) =>
-			GetObject (SkiaApi.sk_shader_new_perlin_noise_improved_noise (baseFrequencyX, baseFrequencyY, numOctaves, z));
-
 		// CreatePerlinNoiseTurbulence
 
 		public static SKShader CreatePerlinNoiseTurbulence (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed) =>
@@ -421,18 +406,6 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (shaderB));
 
 			return GetObject (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle));
-		}
-
-		// CreateLerp
-
-		public static SKShader CreateLerp (float weight, SKShader dst, SKShader src)
-		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-
-			return GetObject (SkiaApi.sk_shader_new_lerp (weight, dst.Handle, src.Handle));
 		}
 
 		// CreateColorFilter

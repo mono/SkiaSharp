@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.IO;
 
 namespace SkiaSharp
@@ -9,7 +8,7 @@ namespace SkiaSharp
 		private const string UnableToCreateInstanceMessage = "Unable to create a new SKPixmap instance.";
 
 		// this is not meant to be anything but a GC reference to keep the actual pixel data alive
-		internal SKObject pixelSource;
+		internal SKObject? pixelSource;
 
 		internal SKPixmap (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -94,7 +93,8 @@ namespace SkiaSharp
 
 		public SKAlphaType AlphaType => Info.AlphaType;
 
-		public SKColorSpace ColorSpace => Info.ColorSpace;
+		public SKColorSpace? ColorSpace =>
+			SKColorSpace.GetObject (SkiaApi.sk_pixmap_get_colorspace (Handle));
 
 		public int BytesPerPixel => Info.BytesPerPixel;
 
@@ -105,13 +105,13 @@ namespace SkiaSharp
 		// pixels
 
 		public IntPtr GetPixels () =>
-			(IntPtr)SkiaApi.sk_pixmap_get_pixels (Handle);
+			(IntPtr)SkiaApi.sk_pixmap_get_writable_addr (Handle);
 
 		public IntPtr GetPixels (int x, int y) =>
-			(IntPtr)SkiaApi.sk_pixmap_get_pixels_with_xy (Handle, x, y);
+			(IntPtr)SkiaApi.sk_pixmap_get_writeable_addr_with_xy (Handle, x, y);
 
 		public Span<byte> GetPixelSpan () =>
-			new Span<byte> (SkiaApi.sk_pixmap_get_pixels (Handle), BytesSize);
+			new Span<byte> (SkiaApi.sk_pixmap_get_writable_addr (Handle), BytesSize);
 
 		public unsafe Span<T> GetPixelSpan<T> ()
 			where T : unmanaged
@@ -136,19 +136,32 @@ namespace SkiaSharp
 			return new Span<T> (SkiaApi.sk_pixmap_get_writable_addr (Handle), info.Width * info.Height);
 		}
 
-		public SKColor GetPixelColor (int x, int y)
+		public SKColor GetPixelColor (int x, int y) =>
+			SkiaApi.sk_pixmap_get_pixel_color (Handle, x, y);
+
+		public SKColorF GetPixelColorF (int x, int y)
 		{
-			return SkiaApi.sk_pixmap_get_pixel_color (Handle, x, y);
+			SKColorF color;
+			SkiaApi.sk_pixmap_get_pixel_color4f (Handle, x, y, &color);
+			return color;
 		}
+
+		public float GetPixelAlpha (int x, int y) =>
+			SkiaApi.sk_pixmap_get_pixel_alphaf (Handle, x, y);
 
 		// ScalePixels
 
-		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality)
-		{
-			if (destination == null)
-				throw new ArgumentNullException (nameof (destination));
+		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.")]
+		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality) =>
+			ScalePixels (destination, quality.ToSamplingOptions ());
 
-			return SkiaApi.sk_pixmap_scale_pixels (Handle, destination.Handle, quality);
+		public bool ScalePixels (SKPixmap destination) =>
+			ScalePixels (destination, SKSamplingOptions.Default);
+
+		public bool ScalePixels (SKPixmap destination, SKSamplingOptions sampling)
+		{
+			_ = destination ?? throw new ArgumentNullException (nameof (destination));
+			return SkiaApi.sk_pixmap_scale_pixels (Handle, destination.Handle, &sampling);
 		}
 
 		// ReadPixels
@@ -170,7 +183,7 @@ namespace SkiaSharp
 
 		// Encode
 
-		public SKData Encode (SKEncodedImageFormat encoder, int quality)
+		public SKData? Encode (SKEncodedImageFormat encoder, int quality)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
 			var result = Encode (stream, encoder, quality);
@@ -179,24 +192,27 @@ namespace SkiaSharp
 
 		public bool Encode (Stream dst, SKEncodedImageFormat encoder, int quality)
 		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-
+			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 			using var wrapped = new SKManagedWStream (dst);
 			return Encode (wrapped, encoder, quality);
 		}
 
-		public bool Encode (SKWStream dst, SKEncodedImageFormat encoder, int quality)
-		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-
-			return SkiaApi.sk_pixmap_encode_image (dst.Handle, Handle, encoder, quality);
-		}
+		public bool Encode (SKWStream dst, SKEncodedImageFormat encoder, int quality) =>
+			encoder switch {
+				SKEncodedImageFormat.Jpeg =>
+					Encode (dst, new SKJpegEncoderOptions (quality)),
+				SKEncodedImageFormat.Png =>
+					Encode (dst, new SKPngEncoderOptions ()),
+				SKEncodedImageFormat.Webp when quality == 100 =>
+					Encode (dst, new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossless, 75)),
+				SKEncodedImageFormat.Webp =>
+					Encode (dst, new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossy, quality)),
+				_ => false,
+			};
 
 		// Encode (webp)
 
-		public SKData Encode (SKWebpEncoderOptions options)
+		public SKData? Encode (SKWebpEncoderOptions options)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
 			var result = Encode (stream, options);
@@ -205,24 +221,20 @@ namespace SkiaSharp
 
 		public bool Encode (Stream dst, SKWebpEncoderOptions options)
 		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-
+			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 			using var wrapped = new SKManagedWStream (dst);
 			return Encode (wrapped, options);
 		}
 
 		public bool Encode (SKWStream dst, SKWebpEncoderOptions options)
 		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-
+			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 			return SkiaApi.sk_webpencoder_encode (dst.Handle, Handle, &options);
 		}
 
 		// Encode (jpeg)
 
-		public SKData Encode (SKJpegEncoderOptions options)
+		public SKData? Encode (SKJpegEncoderOptions options)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
 			var result = Encode (stream, options);
@@ -231,24 +243,20 @@ namespace SkiaSharp
 
 		public bool Encode (Stream dst, SKJpegEncoderOptions options)
 		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-
+			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 			using var wrapped = new SKManagedWStream (dst);
 			return Encode (wrapped, options);
 		}
 
 		public bool Encode (SKWStream dst, SKJpegEncoderOptions options)
 		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-
+			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 			return SkiaApi.sk_jpegencoder_encode (dst.Handle, Handle, &options);
 		}
 
 		// Encode (png)
 
-		public SKData Encode (SKPngEncoderOptions options)
+		public SKData? Encode (SKPngEncoderOptions options)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
 			var result = Encode (stream, options);
@@ -257,24 +265,20 @@ namespace SkiaSharp
 
 		public bool Encode (Stream dst, SKPngEncoderOptions options)
 		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-
+			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 			using var wrapped = new SKManagedWStream (dst);
 			return Encode (wrapped, options);
 		}
 
 		public bool Encode (SKWStream dst, SKPngEncoderOptions options)
 		{
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-
+			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 			return SkiaApi.sk_pngencoder_encode (dst.Handle, Handle, &options);
 		}
 
 		// ExtractSubset
 
-		public SKPixmap ExtractSubset (SKRectI subset)
+		public SKPixmap? ExtractSubset (SKRectI subset)
 		{
 			var result = new SKPixmap ();
 			if (!ExtractSubset (result, subset)) {
@@ -286,9 +290,7 @@ namespace SkiaSharp
 
 		public bool ExtractSubset (SKPixmap result, SKRectI subset)
 		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-
+			_ = result ?? throw new ArgumentNullException (nameof (result));
 			return SkiaApi.sk_pixmap_extract_subset (Handle, result.Handle, &subset);
 		}
 
@@ -301,29 +303,25 @@ namespace SkiaSharp
 			SkiaApi.sk_pixmap_erase_color (Handle, (uint)color, &subset);
 
 		public bool Erase (SKColorF color) =>
-			Erase (color, null, Rect);
+			Erase (color, Rect);
 
 		public bool Erase (SKColorF color, SKRectI subset) =>
-			Erase (color, null, subset);
+			SkiaApi.sk_pixmap_erase_color4f (Handle, &color, &subset);
 
-		public bool Erase (SKColorF color, SKColorSpace colorspace, SKRectI subset) =>
-			SkiaApi.sk_pixmap_erase_color4f (Handle, &color, colorspace?.Handle ?? IntPtr.Zero, &subset);
+		// ComputeIsOpaque
+
+		public bool ComputeIsOpaque () =>
+			SkiaApi.sk_pixmap_compute_is_opaque (Handle);
 
 		// With*
 
-		public SKPixmap WithColorType (SKColorType newColorType)
-		{
-			return new SKPixmap (Info.WithColorType (newColorType), GetPixels (), RowBytes);
-		}
+		public SKPixmap WithColorType (SKColorType newColorType) =>
+			new SKPixmap (Info.WithColorType (newColorType), GetPixels (), RowBytes);
 
-		public SKPixmap WithColorSpace (SKColorSpace newColorSpace)
-		{
-			return new SKPixmap (Info.WithColorSpace (newColorSpace), GetPixels (), RowBytes);
-		}
+		public SKPixmap WithColorSpace (SKColorSpace newColorSpace) =>
+			new SKPixmap (Info.WithColorSpace (newColorSpace), GetPixels (), RowBytes);
 
-		public SKPixmap WithAlphaType (SKAlphaType newAlphaType)
-		{
-			return new SKPixmap (Info.WithAlphaType (newAlphaType), GetPixels (), RowBytes);
-		}
+		public SKPixmap WithAlphaType (SKAlphaType newAlphaType) =>
+			new SKPixmap (Info.WithAlphaType (newAlphaType), GetPixels (), RowBytes);
 	}
 }

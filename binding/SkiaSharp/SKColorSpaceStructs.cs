@@ -41,20 +41,6 @@ namespace SkiaSharp
 		public readonly float[] Values =>
 			new[] { fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY };
 
-		internal readonly SKMatrix44 ToMatrix44 () =>
-			ToMatrix44 (out var toXYZ) ? toXYZ : null;
-
-		internal readonly bool ToMatrix44 (out SKMatrix44 toXyzD50)
-		{
-			if (!ToColorSpaceXyz (out var xyz)) {
-				toXyzD50 = null;
-				return false;
-			}
-
-			toXyzD50 = xyz.ToMatrix44 ();
-			return true;
-		}
-
 		public readonly bool ToColorSpaceXyz (out SKColorSpaceXyz toXyzD50)
 		{
 			fixed (SKColorSpacePrimaries* t = &this)
@@ -331,13 +317,6 @@ namespace SkiaSharp
 			SKColorSpaceXyz result;
 			SkiaApi.sk_colorspace_xyz_concat (&a, &b, &result);
 			return result;
-		}
-
-		internal readonly SKMatrix44 ToMatrix44 ()
-		{
-			var matrix = new SKMatrix44 ();
-			matrix.Set3x3RowMajor (Values);
-			return matrix;
 		}
 	}
 

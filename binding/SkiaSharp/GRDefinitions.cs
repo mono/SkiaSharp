@@ -38,12 +38,16 @@ namespace SkiaSharp
 	{
 		public GRGlFramebufferInfo (uint fboId)
 		{
+			fProtected = default;
+
 			fFBOID = fboId;
 			fFormat = 0;
 		}
 
 		public GRGlFramebufferInfo (uint fboId, uint format)
 		{
+			fProtected = default;
+
 			fFBOID = fboId;
 			fFormat = format;
 		}
@@ -53,6 +57,8 @@ namespace SkiaSharp
 	{
 		public GRGlTextureInfo (uint target, uint id)
 		{
+			fProtected = default;
+
 			fTarget = target;
 			fID = id;
 			fFormat = 0;
@@ -60,6 +66,8 @@ namespace SkiaSharp
 
 		public GRGlTextureInfo (uint target, uint id, uint format)
 		{
+			fProtected = default;
+
 			fTarget = target;
 			fID = id;
 			fFormat = format;
@@ -129,7 +137,10 @@ namespace SkiaSharp
 				SKColorType.RgbaF32 => 0,
 				SKColorType.Bgra1010102 => 0,
 				SKColorType.Bgr101010x => 0,
-				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
+				SKColorType.Bgr101010xXR => 0,
+				SKColorType.Srgba8888 => GRGlSizedFormat.SRGB8_ALPHA8,
+				SKColorType.R8Unorm => GRGlSizedFormat.R8,
+				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),
 			};
 	}
 

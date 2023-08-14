@@ -294,15 +294,6 @@ namespace SkiaSharp
 			}
 		}
 
-		public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second)
-		{
-			fixed (SKMatrix* t = &target)
-			fixed (SKMatrix* f = &first)
-			fixed (SKMatrix* s = &second) {
-				SkiaApi.sk_matrix_concat (t, f, s);
-			}
-		}
-
 		// MapRect
 
 		public readonly SKRect MapRect (SKRect source)

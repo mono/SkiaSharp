@@ -24,7 +24,7 @@ namespace SkiaSharp
 				GRBackend.Vulkan => GRBackendNative.Vulkan,
 				GRBackend.Dawn => GRBackendNative.Dawn,
 				GRBackend.Direct3D => GRBackendNative.Direct3D,
-				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
+				_ => throw new ArgumentOutOfRangeException (nameof (backend), $"Unknown backend: '{backend}'"),
 			};
 
 		internal static GRBackend FromNative (this GRBackendNative backend) =>
@@ -35,7 +35,7 @@ namespace SkiaSharp
 				GRBackendNative.Vulkan => GRBackend.Vulkan,
 				GRBackendNative.Dawn => GRBackend.Dawn,
 				GRBackendNative.Direct3D => GRBackend.Direct3D,
-				_ => throw new ArgumentOutOfRangeException (nameof (backend)),
+				_ => throw new ArgumentOutOfRangeException (nameof (backend), $"Unknown backend: '{backend}'"),
 			};
 
 		internal static SKColorTypeNative ToNative (this SKColorType colorType) =>
@@ -62,7 +62,10 @@ namespace SkiaSharp
 				SKColorType.Rgba16161616 => SKColorTypeNative.R16g16b16a16Unorm,
 				SKColorType.Bgra1010102 => SKColorTypeNative.Bgra1010102,
 				SKColorType.Bgr101010x => SKColorTypeNative.Bgr101010x,
-				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
+				SKColorType.Bgr101010xXR => SKColorTypeNative.Bgr101010xXr,
+				SKColorType.Srgba8888 => SKColorTypeNative.Srgba8888,
+				SKColorType.R8Unorm => SKColorTypeNative.R8Unorm,
+				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),
 			};
 
 		internal static SKColorType FromNative (this SKColorTypeNative colorType) =>
@@ -89,7 +92,10 @@ namespace SkiaSharp
 				SKColorTypeNative.R16g16b16a16Unorm => SKColorType.Rgba16161616,
 				SKColorTypeNative.Bgra1010102 => SKColorType.Bgra1010102,
 				SKColorTypeNative.Bgr101010x => SKColorType.Bgr101010x,
-				_ => throw new ArgumentOutOfRangeException (nameof (colorType)),
+				SKColorTypeNative.Bgr101010xXr => SKColorType.Bgr101010xXR,
+				SKColorTypeNative.Srgba8888 => SKColorType.Srgba8888,
+				SKColorTypeNative.R8Unorm => SKColorType.R8Unorm,
+				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),
 			};
 	}
 }

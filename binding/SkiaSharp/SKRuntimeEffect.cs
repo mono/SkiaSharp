@@ -17,23 +17,60 @@ namespace SkiaSharp
 		{
 		}
 
-		// Create
+		// Create*
 
-		public static SKRuntimeEffect Create (string sksl, out string errors)
+		public static SKRuntimeEffect CreateShader (string sksl, out string errors)
 		{
 			using var s = new SKString (sksl);
 			using var errorString = new SKString ();
-			var effect = GetObject (SkiaApi.sk_runtimeeffect_make (s.Handle, errorString.Handle));
+			var effect = GetObject (SkiaApi.sk_runtimeeffect_make_for_shader (s.Handle, errorString.Handle));
 			errors = errorString?.ToString ();
 			if (errors?.Length == 0)
 				errors = null;
 			return effect;
 		}
 
+		public static SKRuntimeEffect CreateColorFilter (string sksl, out string errors)
+		{
+			using var s = new SKString (sksl);
+			using var errorString = new SKString ();
+			var effect = GetObject (SkiaApi.sk_runtimeeffect_make_for_color_filter (s.Handle, errorString.Handle));
+			errors = errorString?.ToString ();
+			if (errors?.Length == 0)
+				errors = null;
+			return effect;
+		}
+
+		// Build*
+
+		public static SKRuntimeShaderBuilder BuildShader (string sksl)
+		{
+			var effect = CreateShader (sksl, out var errors);
+			ValidateResult (effect, errors);
+			return new SKRuntimeShaderBuilder (effect);
+		}
+
+		public static SKRuntimeColorFilterBuilder BuildColorFilter (string sksl)
+		{
+			var effect = CreateColorFilter (sksl, out var errors);
+			ValidateResult (effect, errors);
+			return new SKRuntimeColorFilterBuilder (effect);
+		}
+
+		private static void ValidateResult (SKRuntimeEffect effect, string errors)
+		{
+			if (effect is null) {
+				if (string.IsNullOrEmpty (errors))
+					throw new SKRuntimeEffectBuilderException ($"Failed to compile the runtime effect. There was an unknown error.");
+				else
+					throw new SKRuntimeEffectBuilderException ($"Failed to compile the runtime effect. There was an error: {errors}");
+			}
+		}
+
 		// properties
 
 		public int UniformSize =>
-			(int)SkiaApi.sk_runtimeeffect_get_uniform_size (Handle);
+			(int)SkiaApi.sk_runtimeeffect_get_uniform_byte_size (Handle);
 
 		public IReadOnlyList<string> Children =>
 			children ??= GetChildrenNames ().ToArray ();
@@ -45,7 +82,7 @@ namespace SkiaSharp
 
 		private IEnumerable<string> GetChildrenNames ()
 		{
-			var count = (int)SkiaApi.sk_runtimeeffect_get_children_count (Handle);
+			var count = (int)SkiaApi.sk_runtimeeffect_get_children_size (Handle);
 			using var str = new SKString ();
 			for (var i = 0; i < count; i++) {
 				SkiaApi.sk_runtimeeffect_get_child_name (Handle, i, str.Handle);
@@ -55,7 +92,7 @@ namespace SkiaSharp
 
 		private IEnumerable<string> GetUniformNames ()
 		{
-			var count = (int)SkiaApi.sk_runtimeeffect_get_uniforms_count (Handle);
+			var count = (int)SkiaApi.sk_runtimeeffect_get_uniforms_size (Handle);
 			using var str = new SKString ();
 			for (var i = 0; i < count; i++) {
 				SkiaApi.sk_runtimeeffect_get_uniform_name (Handle, i, str.Handle);
@@ -65,25 +102,25 @@ namespace SkiaSharp
 
 		// ToShader
 
-		public SKShader ToShader (bool isOpaque) =>
-			ToShader (isOpaque, null, null, null);
+		public SKShader ToShader () =>
+			ToShader (null, null, null);
 
-		public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms) =>
-			ToShader (isOpaque, uniforms.ToData (), null, null);
+		public SKShader ToShader (SKRuntimeEffectUniforms uniforms) =>
+			ToShader (uniforms.ToData (), null, null);
 
-		public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children) =>
-			ToShader (isOpaque, uniforms.ToData (), children.ToArray (), null);
+		public SKShader ToShader (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children) =>
+			ToShader (uniforms.ToData (), children.ToArray (), null);
 
-		public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKMatrix localMatrix) =>
-			ToShader (isOpaque, uniforms.ToData (), children.ToArray (), &localMatrix);
+		public SKShader ToShader (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKMatrix localMatrix) =>
+			ToShader (uniforms.ToData (), children.ToArray (), &localMatrix);
 
-		private SKShader ToShader (bool isOpaque, SKData uniforms, SKShader[] children, SKMatrix* localMatrix)
+		private SKShader ToShader (SKData uniforms, SKObject[] children, SKMatrix* localMatrix)
 		{
 			var uniformsHandle = uniforms?.Handle ?? IntPtr.Zero;
 			using var childrenHandles = Utils.RentHandlesArray (children, true);
 
 			fixed (IntPtr* ch = childrenHandles) {
-				return SKShader.GetObject (SkiaApi.sk_runtimeeffect_make_shader (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length, localMatrix, isOpaque));
+				return SKShader.GetObject (SkiaApi.sk_runtimeeffect_make_shader (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length, localMatrix));
 			}
 		}
 
@@ -101,7 +138,7 @@ namespace SkiaSharp
 		public SKColorFilter ToColorFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children) =>
 			ToColorFilter (uniforms.ToData (), children.ToArray ());
 
-		private SKColorFilter ToColorFilter (SKData uniforms, SKShader[] children)
+		private SKColorFilter ToColorFilter (SKData uniforms, SKObject[] children)
 		{
 			var uniformsHandle = uniforms?.Handle ?? IntPtr.Zero;
 			using var childrenHandles = Utils.RentHandlesArray (children, true);
@@ -117,17 +154,48 @@ namespace SkiaSharp
 			GetOrAddObject (handle, (h, o) => new SKRuntimeEffect (h, o));
 	}
 
-	public unsafe class SKRuntimeEffectUniforms : IEnumerable<string>
+	public unsafe class SKRuntimeEffectUniforms : IEnumerable<string>, IDisposable
 	{
-		internal struct Variable
+		internal readonly struct Variable
 		{
-			public int Index { get; set; }
+			public Variable (int index, string name, SKRuntimeEffectUniformNative uniform)
+			{
+				Index = index;
+				Name = name;
+				Offset = (int)uniform.fOffset;
+				Type = uniform.fType;
+				Count = uniform.fCount;
+				Flags = uniform.fFlags;
+			}
 
-			public string Name { get; set; }
+			public int Index { get; }
 
-			public int Offset { get; set; }
+			public string Name { get; }
 
-			public int Size { get; set; }
+			public int Offset { get; }
+
+			public SKRuntimeEffectUniformTypeNative Type { get; }
+
+			public int Count { get; }
+
+			public SKRuntimeEffectUniformFlagsNative Flags { get; }
+
+			public int ElementSize => Type switch {
+				SKRuntimeEffectUniformTypeNative.Float => sizeof (float),
+				SKRuntimeEffectUniformTypeNative.Float2 => sizeof (float) * 2,
+				SKRuntimeEffectUniformTypeNative.Float3 => sizeof (float) * 3,
+				SKRuntimeEffectUniformTypeNative.Float4 => sizeof (float) * 4,
+				SKRuntimeEffectUniformTypeNative.Float2x2 => sizeof (float) * 2 * 2,
+				SKRuntimeEffectUniformTypeNative.Float3x3 => sizeof (float) * 3 * 3,
+				SKRuntimeEffectUniformTypeNative.Float4x4 => sizeof (float) * 4 * 4,
+				SKRuntimeEffectUniformTypeNative.Int => sizeof (int),
+				SKRuntimeEffectUniformTypeNative.Int2 => sizeof (int) * 2,
+				SKRuntimeEffectUniformTypeNative.Int3 => sizeof (int) * 3,
+				SKRuntimeEffectUniformTypeNative.Int4 => sizeof (int) * 4,
+				_ => throw new ArgumentOutOfRangeException (nameof (Type), $"Unknown variable type: '{Type}'"),
+			};
+
+			public int Size => ElementSize * Count;
 		}
 
 		private readonly string[] names;
@@ -147,13 +215,9 @@ namespace SkiaSharp
 
 			for (var i = 0; i < names.Length; i++) {
 				var name = names[i];
-				var uniform = SkiaApi.sk_runtimeeffect_get_uniform_from_index (effect.Handle, i);
-				uniforms[name] = new Variable {
-					Index = i,
-					Name = name,
-					Offset = (int)SkiaApi.sk_runtimeeffect_uniform_get_offset (uniform),
-					Size = (int)SkiaApi.sk_runtimeeffect_uniform_get_size_in_bytes (uniform),
-				};
+				SKRuntimeEffectUniformNative uniform;
+				SkiaApi.sk_runtimeeffect_get_uniform_from_index (effect.Handle, i, &uniform);
+				uniforms[name] = new Variable (i, name, uniform);
 			}
 		}
 
@@ -165,6 +229,9 @@ namespace SkiaSharp
 
 		public int Count =>
 			names.Length;
+
+		public int Size =>
+			(int)data.Size;
 
 		public void Reset ()
 		{
@@ -189,18 +256,14 @@ namespace SkiaSharp
 				throw new ArgumentOutOfRangeException (name, $"Variable was not found for name: '{name}'.");
 
 			var uniform = uniforms[name];
+
+			// validate the types first
+			if (!ValidateTypes (value.Type, uniform.Type, uniform.Flags.HasFlag (SKRuntimeEffectUniformFlagsNative.Array), uniform.Count))
+				throw new ArgumentOutOfRangeException (nameof (value), $"Unable to write a '{value.Type}' value to a '{uniform.Type}' uniform.");
+
 			var slice = data.Span.Slice (uniform.Offset, uniform.Size);
 
-			if (value.IsEmpty) {
-				slice.Fill (0);
-				return;
-			}
-
-			if (value.Size != uniform.Size)
-				throw new ArgumentException ($"Value size of {value.Size} does not match uniform size of {uniform.Size}.", nameof (value));
-
-			// TODO: either check or convert data types - for example int and float are both 4 bytes, but not the same byte[] value
-
+			// validate the sizes and then write
 			value.WriteTo (slice);
 		}
 
@@ -217,20 +280,57 @@ namespace SkiaSharp
 
 		public IEnumerator<string> GetEnumerator () =>
 			((IEnumerable<string>)names).GetEnumerator ();
+
+		public void Dispose () =>
+			data.Dispose ();
+
+		private bool ValidateTypes (SKRuntimeEffectUniform.DataType valueType, SKRuntimeEffectUniformTypeNative uniformType, bool isArray, int arraySize) =>
+			valueType switch {
+				SKRuntimeEffectUniform.DataType.Float => uniformType switch {
+					SKRuntimeEffectUniformTypeNative.Float when !isArray => true,
+					_ => false,
+				},
+				SKRuntimeEffectUniform.DataType.FloatArray => uniformType switch {
+					SKRuntimeEffectUniformTypeNative.Float when isArray => true,
+					SKRuntimeEffectUniformTypeNative.Float2 => true,
+					SKRuntimeEffectUniformTypeNative.Float3 => true,
+					SKRuntimeEffectUniformTypeNative.Float4 => true,
+					SKRuntimeEffectUniformTypeNative.Float2x2 => true,
+					SKRuntimeEffectUniformTypeNative.Float3x3 => true,
+					SKRuntimeEffectUniformTypeNative.Float4x4 => true,
+					_ => false,
+				},
+				SKRuntimeEffectUniform.DataType.Int32 => uniformType switch {
+					SKRuntimeEffectUniformTypeNative.Int when !isArray => true,
+					_ => false,
+				},
+				SKRuntimeEffectUniform.DataType.Int32Array => uniformType switch {
+					SKRuntimeEffectUniformTypeNative.Int when isArray => true,
+					SKRuntimeEffectUniformTypeNative.Int2 => true,
+					SKRuntimeEffectUniformTypeNative.Int3 => true,
+					SKRuntimeEffectUniformTypeNative.Int4 => true,
+					_ => false,
+				},
+				SKRuntimeEffectUniform.DataType.Color => uniformType switch {
+					SKRuntimeEffectUniformTypeNative.Float3 => true,
+					SKRuntimeEffectUniformTypeNative.Float4 => true,
+					_ => false,
+				},
+				_ => false,
+			};
 	}
 
-	public class SKRuntimeEffectChildren : IEnumerable<string>
+	public class SKRuntimeEffectChildren : IEnumerable<string>, IDisposable
 	{
 		private readonly string[] names;
-		private readonly SKShader[] children;
+		private readonly SKObject[] children;
 
 		public SKRuntimeEffectChildren (SKRuntimeEffect effect)
 		{
-			if (effect == null)
-				throw new ArgumentNullException (nameof (effect));
+			_ = effect ?? throw new ArgumentNullException (nameof (effect));
 
 			names = effect.Children.ToArray ();
-			children = new SKShader[names.Length];
+			children = new SKObject[names.Length];
 		}
 
 		public IReadOnlyList<string> Names =>
@@ -245,21 +345,21 @@ namespace SkiaSharp
 		public bool Contains (string name) =>
 			Array.IndexOf (names, name) != -1;
 
-		public SKShader this[string name] {
+		public SKRuntimeEffectChild? this[string name] {
 			set => Add (name, value);
 		}
 
-		public void Add (string name, SKShader value)
+		public void Add (string name, SKRuntimeEffectChild? value)
 		{
 			var index = Array.IndexOf (names, name);
 
 			if (index == -1)
 				throw new ArgumentOutOfRangeException (name, $"Variable was not found for name: '{name}'.");
 
-			children[index] = value;
+			children[index] = value?.Value;
 		}
 
-		public SKShader[] ToArray () =>
+		public SKObject[] ToArray () =>
 			children.ToArray ();
 
 		IEnumerator IEnumerable.GetEnumerator () =>
@@ -267,51 +367,71 @@ namespace SkiaSharp
 
 		public IEnumerator<string> GetEnumerator () =>
 			((IEnumerable<string>)names).GetEnumerator ();
+
+		public void Dispose ()
+		{
+		}
 	}
 
 	public unsafe readonly ref struct SKRuntimeEffectUniform
 	{
-		private enum DataType
+		internal enum DataType
 		{
 			Empty,
 
 			Float,
-			FloatArray
+			FloatArray,
+			Int32,
+			Int32Array,
+			Color,
 		}
 
 		public static SKRuntimeEffectUniform Empty => default;
 
 		// fields
 
-		private readonly DataType type;
-		private readonly int size;
-
 		private readonly float floatValue;
-
 		private readonly ReadOnlySpan<float> floatArray;
+
+		private readonly int intValue;
+		private readonly ReadOnlySpan<int> intArray;
+
+		private readonly SKColorF colorValue;
 
 		// ctor
 
 		private SKRuntimeEffectUniform (
-			DataType type, int size,
+			DataType type,
+			int size,
 			float floatValue = default,
-			ReadOnlySpan<float> floatArray = default)
+			ReadOnlySpan<float> floatArray = default,
+			int intValue = default,
+			ReadOnlySpan<int> intArray = default,
+			SKColorF colorValue = default)
 		{
-			this.type = type;
-			this.size = size;
+			Type = type;
+			Size = size;
 
 			this.floatValue = floatValue;
-
 			this.floatArray = floatArray;
+
+			this.intValue = intValue;
+			this.intArray = intArray;
+
+			this.colorValue = colorValue;
 		}
 
 		// properties
 
-		public bool IsEmpty => type == DataType.Empty;
+		public bool IsEmpty => Type == DataType.Empty;
 
-		public int Size => size;
+		public int Size { get; }
+
+		internal DataType Type { get; }
 
 		// converters
+
+		// float
 
 		public static implicit operator SKRuntimeEffectUniform (float value) =>
 			new SKRuntimeEffectUniform (DataType.Float, sizeof (float), floatValue: value);
@@ -322,6 +442,37 @@ namespace SkiaSharp
 
 		public static implicit operator SKRuntimeEffectUniform (ReadOnlySpan<float> value) =>
 			new SKRuntimeEffectUniform (DataType.FloatArray, sizeof (float) * value.Length, floatArray: value);
+
+		public static implicit operator SKRuntimeEffectUniform (SKPoint value) => (ReadOnlySpan<float>)new[] { value.X, value.Y };
+
+		public static implicit operator SKRuntimeEffectUniform (SKSize value) => (ReadOnlySpan<float>)new[] { value.Width, value.Height };
+
+		public static implicit operator SKRuntimeEffectUniform (SKPoint3 value) => (ReadOnlySpan<float>)new[] { value.X, value.Y, value.Z };
+
+		// int
+
+		public static implicit operator SKRuntimeEffectUniform (int value) =>
+			new SKRuntimeEffectUniform (DataType.Int32, sizeof (int), intValue: value);
+
+		public static implicit operator SKRuntimeEffectUniform (int[] value) => (ReadOnlySpan<int>)value;
+
+		public static implicit operator SKRuntimeEffectUniform (Span<int> value) => (ReadOnlySpan<int>)value;
+
+		public static implicit operator SKRuntimeEffectUniform (ReadOnlySpan<int> value) =>
+			new SKRuntimeEffectUniform (DataType.Int32Array, sizeof (int) * value.Length, intArray: value);
+
+		public static implicit operator SKRuntimeEffectUniform (SKPointI value) => (ReadOnlySpan<int>)new[] { value.X, value.Y };
+
+		public static implicit operator SKRuntimeEffectUniform (SKSizeI value) => (ReadOnlySpan<int>)new[] { value.Width, value.Height };
+
+		// color
+
+		public static implicit operator SKRuntimeEffectUniform (SKColor value) => (SKColorF)value;
+
+		public static implicit operator SKRuntimeEffectUniform (SKColorF value) =>
+			new SKRuntimeEffectUniform (DataType.Color, sizeof (float) * 4, colorValue: value);
+
+		// float matrix
 
 		public static implicit operator SKRuntimeEffectUniform (float[][] value)
 		{
@@ -338,20 +489,142 @@ namespace SkiaSharp
 
 		public void WriteTo (Span<byte> data)
 		{
-			switch (type) {
-				case DataType.Float:
+			switch (Type) {
+				// float
+				case DataType.Float when data.Length == sizeof (float):
 					fixed (void* v = &floatValue)
-						new ReadOnlySpan<byte> (v, size).CopyTo (data);
+						new ReadOnlySpan<byte> (v, Size).CopyTo (data);
+					break;
+				case DataType.Float:
+					throw new ArgumentOutOfRangeException (nameof (Type), $"Unknown float data type length: {data.Length}");
+
+				// float array
+				case DataType.FloatArray when data.Length == sizeof (int) * floatArray.Length:
+					fixed (void* v = floatArray)
+						new ReadOnlySpan<byte> (v, Size).CopyTo (data);
 					break;
 				case DataType.FloatArray:
-					fixed (void* v = floatArray)
-						new ReadOnlySpan<byte> (v, size).CopyTo (data);
+					throw new ArgumentOutOfRangeException (nameof (Type), $"Unknown float array data type length: {data.Length}");
+
+				// int
+				case DataType.Int32 when data.Length == sizeof (int):
+					fixed (void* v = &intValue)
+						new ReadOnlySpan<byte> (v, Size).CopyTo (data);
 					break;
+				case DataType.Int32:
+					throw new ArgumentOutOfRangeException (nameof (Type), $"Unknown int data type length: {data.Length}");
+
+				// int array
+				case DataType.Int32Array when data.Length == sizeof (int) * intArray.Length:
+					fixed (void* v = intArray)
+						new ReadOnlySpan<byte> (v, Size).CopyTo (data);
+					break;
+				case DataType.Int32Array:
+					throw new ArgumentOutOfRangeException (nameof (Type), $"Unknown int array data type length: {data.Length}");
+
+				// colors
+				case DataType.Color when data.Length == sizeof (float) * 3:
+					void* vc3 = stackalloc[] { colorValue.Red, colorValue.Green, colorValue.Blue };
+					new ReadOnlySpan<byte> (vc3, data.Length).CopyTo (data);
+					break;
+				case DataType.Color when data.Length == sizeof (float) * 4:
+					void* vc4 = stackalloc[] { colorValue.Red, colorValue.Green, colorValue.Blue, colorValue.Alpha };
+					new ReadOnlySpan<byte> (vc4, data.Length).CopyTo (data);
+					break;
+				case DataType.Color:
+					throw new ArgumentOutOfRangeException (nameof (Type), $"Unknown color data type length: {data.Length}");
+
+				// empty
 				case DataType.Empty:
-				default:
 					data.Fill (0);
 					break;
+
+				// error
+				default:
+					throw new ArgumentOutOfRangeException (nameof (Type), $"Unknown data type: '{Type}'");
 			}
 		}
+	}
+
+	public unsafe readonly struct SKRuntimeEffectChild
+	{
+		private readonly SKObject value;
+
+		public SKRuntimeEffectChild (SKShader shader)
+		{
+			value = shader;
+		}
+
+		public SKRuntimeEffectChild (SKColorFilter colorFilter)
+		{
+			value = colorFilter;
+		}
+
+		public SKObject Value => value;
+
+		public SKShader Shader => value as SKShader;
+
+		public SKColorFilter ColorFilter => value as SKColorFilter;
+
+		public static implicit operator SKRuntimeEffectChild (SKShader shader) => new (shader);
+
+		public static implicit operator SKRuntimeEffectChild (SKColorFilter colorFilter) => new (colorFilter);
+	}
+
+	public class SKRuntimeEffectBuilderException : ApplicationException
+	{
+		public SKRuntimeEffectBuilderException (string message)
+			: base (message)
+		{
+		}
+	}
+
+	public class SKRuntimeEffectBuilder : IDisposable
+	{
+		public SKRuntimeEffectBuilder (SKRuntimeEffect effect)
+		{
+			Effect = effect;
+
+			Uniforms = new SKRuntimeEffectUniforms (effect);
+			Children = new SKRuntimeEffectChildren (effect);
+		}
+
+		public SKRuntimeEffect Effect { get; }
+
+		public SKRuntimeEffectUniforms Uniforms { get; }
+
+		public SKRuntimeEffectChildren Children { get; }
+
+		public void Dispose ()
+		{
+			Uniforms.Dispose ();
+			Children.Dispose ();
+			Effect.Dispose ();
+		}
+	}
+
+	public class SKRuntimeShaderBuilder : SKRuntimeEffectBuilder
+	{
+		public SKRuntimeShaderBuilder (SKRuntimeEffect effect)
+			: base (effect)
+		{
+		}
+
+		public SKShader Build () =>
+			Effect.ToShader (Uniforms, Children);
+
+		public SKShader Build (SKMatrix localMatrix) =>
+			Effect.ToShader (Uniforms, Children, localMatrix);
+	}
+
+	public class SKRuntimeColorFilterBuilder : SKRuntimeEffectBuilder
+	{
+		public SKRuntimeColorFilterBuilder (SKRuntimeEffect effect)
+			: base (effect)
+		{
+		}
+
+		public SKColorFilter Build () =>
+			Effect.ToColorFilter (Uniforms, Children);
 	}
 }

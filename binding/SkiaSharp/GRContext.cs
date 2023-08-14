@@ -90,9 +90,9 @@ namespace SkiaSharp
 
 		//
 
-		public new GRBackend Backend => base.Backend;
+		public override GRBackend Backend => base.Backend;
 
-		public bool IsAbandoned => SkiaApi.gr_direct_context_is_abandoned (Handle);
+		public override bool IsAbandoned => SkiaApi.gr_direct_context_is_abandoned (Handle);
 
 		public void AbandonContext (bool releaseResources = false)
 		{
