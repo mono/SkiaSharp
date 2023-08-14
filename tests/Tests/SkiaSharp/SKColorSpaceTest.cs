@@ -218,13 +218,12 @@ namespace SkiaSharp.Tests
 
 			var toXYZ = new[]
 			{
-				0.60974f, 0.20528f, 0.14919f, 0f,
-				0.31111f, 0.62567f, 0.06322f, 0f,
-				0.01947f, 0.06087f, 0.74457f, 0f,
-				0f, 0f, 0f, 1f,
+				0.60974f, 0.20528f, 0.14919f,
+				0.31111f, 0.62567f, 0.06322f,
+				0.01947f, 0.06087f, 0.74457f,
 			};
 			Assert.True(colorspace.ToColorSpaceXyz(out var xyz));
-			AssertMatrix(toXYZ, xyz.ToMatrix44());
+			AssertSimilar(toXYZ, xyz.Values);
 		}
 
 		[SkippableFact]

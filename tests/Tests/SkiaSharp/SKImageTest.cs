@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Xunit;
@@ -329,8 +330,18 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
-		public void CanScalePixels()
+		public static IEnumerable<object[]> GetSamplingData()
+		{
+			yield return new object[] { new SKSamplingOptions(SKFilterMode.Nearest, SKMipmapMode.None) };
+			yield return new object[] { new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None) };
+			yield return new object[] { new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear) };
+			yield return new object[] { new SKSamplingOptions(SKCubicResampler.CatmullRom) };
+			yield return new object[] { new SKSamplingOptions(SKCubicResampler.Mitchell) };
+		}
+
+		[SkippableTheory]
+		[MemberData(nameof(GetSamplingData))]
+		public void CanScalePixels(SKSamplingOptions sampling)
 		{
 			var srcInfo = new SKImageInfo(200, 200);
 			var dstInfo = new SKImageInfo(100, 100);
@@ -351,7 +362,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Green, srcPix.GetPixelColor(75, 75));
 			Assert.Equal(SKColors.Blue, srcPix.GetPixelColor(175, 175));
 
-			Assert.True(srcImage.ScalePixels(dstPix, SKFilterQuality.High));
+			Assert.True(srcImage.ScalePixels(dstPix, sampling));
 
 			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));

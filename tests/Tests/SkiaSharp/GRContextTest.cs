@@ -57,7 +57,8 @@ namespace SkiaSharp.Tests
 				SKColorType.Rgb101010x,
 				SKColorType.RgbaF32,
 				SKColorType.Bgra1010102,
-				SKColorType.Bgr101010x
+				SKColorType.Bgr101010x,
+				SKColorType.Bgr101010xXR
 			};
 
 			foreach (SKColorType value in Enum.GetValues(typeof(SKColorType)))
