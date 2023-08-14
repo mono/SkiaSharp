@@ -47,16 +47,6 @@ Task ("docs-download-output")
 
     await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
     await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
-
-    foreach (var id in TRACKED_NUGETS.Keys) {
-        var version = GetVersion (id);
-        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
-            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
-            : version;
-        var name = $"{id}.{localNugetVersion}.nupkg";
-        CleanDir ($"./output/{id}");
-        Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
-    }
 });
 
 Task ("docs-api-diff")
@@ -194,8 +184,23 @@ Task ("docs-update-frameworks")
 {
     // clear the temp dir
     var docsTempPath = "./output/docs/temp";
+    var docsTempPathFrameowrks = "./output/docs/temp/frameworks";
+    var docsTempPathNuGets = "./output/docs/temp/nugets";
     EnsureDirectoryExists (docsTempPath);
     CleanDirectories (docsTempPath);
+    EnsureDirectoryExists (docsTempPathNuGets);
+    EnsureDirectoryExists (docsTempPathFrameowrks);
+
+    // extract nugets that were built/downloaded
+    foreach (var id in TRACKED_NUGETS.Keys) {
+        var version = GetVersion (id);
+        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
+            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
+            : version;
+        var name = $"{id}.{localNugetVersion}.nupkg";
+        CleanDir ($"{docsTempPathNuGets}/{id}");
+        Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"{docsTempPathNuGets}/{id}");
+    }
 
     // get a comparer that will download the nugets
     Information ($"Creating comparer...");
@@ -232,7 +237,7 @@ Task ("docs-update-frameworks")
             Information ($"Downloading '{id}' version '{version}'...");
             // get the path to the nuget contents
             var packagePath = version.Value == dev
-                ? $"./output/{id}/nuget"
+                ? $"{docsTempPathNuGets}/{id}"
                 : await comparer.ExtractCachedPackageAsync (id, version.Value);
 
             var dirs =
@@ -264,7 +269,7 @@ Task ("docs-update-frameworks")
                 }
 
                 // copy the assemblies for the tool
-                var o = $"{docsTempPath}/{moniker}";
+                var o = $"{docsTempPathFrameowrks}/{moniker}";
                 EnsureDirectoryExists (o);
                 CopyFiles ($"{path}/*.dll", o);
             }
@@ -273,7 +278,7 @@ Task ("docs-update-frameworks")
     monikers.Sort ();
 
     // save the frameworks.xml
-    var fwxml = $"{docsTempPath}/frameworks.xml";
+    var fwxml = $"{docsTempPathFrameowrks}/frameworks.xml";
     var xdoc = new XDocument (xFrameworks);
     xdoc.Save (fwxml);
 
@@ -289,7 +294,7 @@ Task ("docs-update-frameworks")
     var fw = MakeAbsolute ((FilePath) fwxml);
     RunProcess (MDocPath, new ProcessSettings {
         Arguments = $"update --debug --delete --out=\"{DOCS_PATH}\" --lang=DocId --frameworks={fw} {refArgs}",
-        WorkingDirectory = docsTempPath
+        WorkingDirectory = docsTempPathFrameowrks
     });
 
     // clean up after working
