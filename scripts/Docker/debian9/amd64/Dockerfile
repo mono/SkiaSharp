@@ -1,34 +1,36 @@
-FROM amd64/debian:9
-RUN echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list \
-    && echo "deb http://archive.debian.org/debian-security stretch/updates main" >> /etc/apt/sources.list
-
-RUN cat /etc/apt/sources.list
+FROM amd64/debian:10
 
 # Arguments:
-#   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 3.1.412 | * ]
+#   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 7.0 | * ]
 #   CLANG_VERSION        - the version of clang/llvm tools                  [ 12 | * ]
-#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 6 | * ]
+#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 8 | * ]
 
-ARG CLANG_VERSION=12
-ARG TOOLCHAIN_VERSION=6
 RUN apt-get update \
     && apt-get install -y apt-transport-https curl wget python python3 git make dirmngr gnupg \
-    && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
-    && echo "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-${CLANG_VERSION} main" | tee /etc/apt/sources.list.d/llvm.list \
-    && apt-get update \
-    && apt-get install -y libfontconfig1-dev gcc-${TOOLCHAIN_VERSION} g++-${TOOLCHAIN_VERSION} clang-${CLANG_VERSION} \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y libfontconfig1-dev ninja-build
 
-ARG DOTNET_SDK_VERSION=3.1.412
-RUN wget -O dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/$DOTNET_SDK_VERSION/dotnet-sdk-$DOTNET_SDK_VERSION-linux-x64.tar.gz \
-    && dotnet_sha512='1ed0c1ab48723cef834906a55fb1889b29dd810cd2bc66cbd345a0baf8a2796045b5b7f4beef3c48bd56bef3ffed690b6fae4a5f017ad8687817b25a76fbd9be' \
-    && echo "$dotnet_sha512  dotnet.tar.gz" | sha512sum -c - \
-    && mkdir -p /usr/share/dotnet \
-    && tar -C /usr/share/dotnet -xzf dotnet.tar.gz \
-    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
-    && rm dotnet.tar.gz
+ARG TOOLCHAIN_VERSION=8
+RUN apt-get update \
+    && apt-get install -y gcc-${TOOLCHAIN_VERSION} g++-${TOOLCHAIN_VERSION}
+RUN gcc-${TOOLCHAIN_VERSION} --version
+
+ARG CLANG_VERSION=12
+RUN curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
+    && echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-${CLANG_VERSION} main" | tee /etc/apt/sources.list.d/llvm.list \
+    && apt-get update \
+    && apt-get install -y clang-${CLANG_VERSION}
+RUN clang-${CLANG_VERSION} --version
+
+ARG DOTNET_SDK_VERSION=7.0
+RUN wget https://packages.microsoft.com/config/debian/10/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
+    && dpkg -i packages-microsoft-prod.deb \
+    && rm packages-microsoft-prod.deb \
+    && apt-get update \
+    && apt-get install -y dotnet-sdk-${DOTNET_SDK_VERSION}
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 1
-RUN dotnet help
+RUN dotnet --version
+
+RUN rm -rf /var/lib/apt/lists/*
 
 ENV CC=clang-${CLANG_VERSION} CXX=clang++-${CLANG_VERSION}
 

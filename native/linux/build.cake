@@ -63,7 +63,8 @@ Task("libSkiaSharp")
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
             $"target_cpu='{arch}' " +
-            $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
+            $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
+            $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +

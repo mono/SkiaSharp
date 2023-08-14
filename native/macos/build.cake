@@ -8,7 +8,7 @@ string GetDeploymentTarget(string arch)
 {
     switch (arch.ToLower()) {
         case "arm64": return "11.0";
-        default: return "10.9";
+        default: return "10.13";
     }
 }
 
@@ -30,6 +30,7 @@ Task("libSkiaSharp")
             $"target_os='mac' " +
             $"target_cpu='{skiaArch}' " +
             $"min_macos_version='{GetDeploymentTarget(arch)}' " +
+            $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_metal=true " +
             $"skia_use_piex=true " +
