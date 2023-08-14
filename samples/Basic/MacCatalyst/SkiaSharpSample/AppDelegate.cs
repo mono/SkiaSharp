@@ -42,15 +42,17 @@ public class AppDelegate : UIApplicationDelegate
 		canvas.Clear(SKColors.White);
 
 		// draw some text
-		var paint = new SKPaint
+		using var paint = new SKPaint
 		{
 			Color = SKColors.Black,
 			IsAntialias = true,
-			Style = SKPaintStyle.Fill,
-			TextAlign = SKTextAlign.Center,
-			TextSize = 24
+			Style = SKPaintStyle.Fill
 		};
-		var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + paint.TextSize) / 2);
-		canvas.DrawText("SkiaSharp", coord, paint);
+		using var font = new SKFont
+		{
+			Size = 24
+		};
+		var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
+		canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
 	}
 }
