@@ -1,4 +1,6 @@
-﻿namespace HarfBuzzSharp
+﻿#nullable disable
+
+namespace HarfBuzzSharp
 {
 	public partial struct Script
 	{

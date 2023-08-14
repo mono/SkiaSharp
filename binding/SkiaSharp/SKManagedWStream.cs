@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable disable
+
+using System;
 using System.Buffers;
 using System.IO;
 using System.Runtime.InteropServices;
