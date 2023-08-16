@@ -1,7 +1,7 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-#load "../../cake/shared.cake"
+#load "../../scripts/cake/shared.cake"
 
 Task("libSkiaSharp")
     .WithCriteria(IsRunningOnMacOs())

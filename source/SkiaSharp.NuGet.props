@@ -1,0 +1,37 @@
+<Project>
+
+  <PropertyGroup>
+    
+    <!-- package -->
+    <PackageProjectUrl>https://go.microsoft.com/fwlink/?linkid=868515</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReleaseNotes>Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release notes.</PackageReleaseNotes>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- source -->
+    <RepositoryUrl>https://go.microsoft.com/fwlink/?linkid=868515</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryBranch>$(AssemblyVersionGitBranch)</RepositoryBranch>
+    <RepositoryCommit>$(AssemblyVersionGitSha)</RepositoryCommit>
+
+    <!-- legal -->
+    <Authors>Microsoft</Authors>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+
+    <NoWarn>$(NoWarn);NU5125;NU5048</NoWarn>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <!-- legal -->
+    <None Include="$(MSBuildThisFileDirectory)..\images\nuget.png" PackagePath="icon.png" Pack="True" Visible="False" />
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE.txt" PackagePath="LICENSE.txt" Pack="True" Visible="False" />
+
+  </ItemGroup>
+
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles" />
+
+</Project>

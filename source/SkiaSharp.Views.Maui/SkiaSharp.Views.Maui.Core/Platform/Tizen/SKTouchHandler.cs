@@ -3,11 +3,7 @@ using System;
 using Tizen.NUI;
 using NView = Tizen.NUI.BaseComponents.View;
 
-#if __MAUI__
 namespace SkiaSharp.Views.Maui.Platform
-#else
-namespace SkiaSharp.Views.Forms
-#endif
 {
 	internal class SKTouchHandler
 	{

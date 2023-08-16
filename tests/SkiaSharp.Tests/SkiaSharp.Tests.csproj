@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net7.0</TargetFrameworks>
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_LOADER</DefineConstants>
+    <RootNamespace>SkiaSharp.Tests</RootNamespace>
+    <AssemblyName>SkiaSharp.Tests</AssemblyName>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Tests\**\*.cs" Exclude="..\Tests\SkiaSharp\GlContexts\*\**" Link="%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="Utils\LibraryLoader.cs" />
+  </ItemGroup>
+
+</Project>

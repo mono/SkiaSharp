@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for Linux</Title>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- glibc -->
+    <PackageFile Include="..\..\output\native\linux\x64\libSkiaSharp*" PackagePath="runtimes\linux-x64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linux\x86\libSkiaSharp*" PackagePath="runtimes\linux-x86\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linux\arm64\libSkiaSharp*" PackagePath="runtimes\linux-arm64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linux\arm\libSkiaSharp*" PackagePath="runtimes\linux-arm\native\%(Filename)%(Extension)" />
+    <!-- Musl -->
+    <PackageFile Include="..\..\output\native\alpine\x64\libSkiaSharp*" PackageFile="runtimes\linux-musl-x64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpine\x86\libSkiaSharp*" PackageFile="runtimes\linux-musl-x86\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpine\arm64\libSkiaSharp*" PackageFile="runtimes\linux-musl-arm64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpine\arm\libSkiaSharp*" PackageFile="runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+    </ItemGroup>
+  </Target>
+</Project>
