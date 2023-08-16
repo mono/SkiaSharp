@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+    <ItemGroup Condition="'$(IsHotRestartBuild)' == 'true' and '$(RuntimeIdentifier)' != ''">
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\iossimulator\native\libHarfBuzzSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('iossimulator'))" />
+        <NativeReference Include="$(MSBuildThisFileDirectory)..\..\runtimes\ios\native\libHarfBuzzSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('iossimulator'))" />
+    </ItemGroup>
+
 </Project>
