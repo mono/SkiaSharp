@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+
+  <!-- Workaround for https://github.com/dotnet/runtime/issues/76077 -->
+  <PropertyGroup>
+    <EmccExtraLDFlags>$(EmccExtraLDFlags) --js-library="$(MSBuildThisFileDirectory)\SkiaSharpGLInterop.js"</EmccExtraLDFlags>
+  </PropertyGroup>
+
+  <Import Project="msbuild.build.SkiaSharp.Views.Blazor.props" />
+
+</Project>

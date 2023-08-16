@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(TFMCurrent)-tvos</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-tvos</TargetFrameworks>
+    <PackagingGroup>HarfBuzzSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for tvOS</Title>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageFile Include="..\..\output\native\tvos\libHarfBuzzSharp.framework\**" PackagePath="runtimes\tvos\native\libHarfBuzzSharp.framework" />
+  </ItemGroup>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\HarfBuzzSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+    </ItemGroup>
+  </Target>
+</Project>

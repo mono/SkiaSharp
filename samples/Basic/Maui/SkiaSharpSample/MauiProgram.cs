@@ -11,8 +11,8 @@ namespace SkiaSharpSample
 		public static MauiApp CreateMauiApp() =>
 			MauiApp
 				.CreateBuilder()
-				.UseSkiaSharp(true)
 				.UseMauiApp<App>()
+				.UseSkiaSharp()
 				.Build();
 	}
 }

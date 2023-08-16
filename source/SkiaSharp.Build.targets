@@ -1,31 +1,28 @@
 <Project>
 
-  <PropertyGroup>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and Exists('/Library/Frameworks/Mono.framework/Versions/Current/bin/mono') ">/Library/Frameworks/Mono.framework/Versions/Current/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and Exists('/usr/local/bin/mono') ">/usr/local/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and Exists('/usr/bin/mono') ">/usr/bin/mono</_ManagedExeLauncher>
-    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' and '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
+  <Import Project="$(MSBuildThisFileDirectory)SkiaSharp.NuGet.targets" />
 
-    <_SnExePath Condition=" '$(OS)' == 'Windows_NT' and '$(_SnExePath)' == '' and Exists('$(SDK40ToolsPath)sn.exe') ">$(SDK40ToolsPath)sn.exe</_SnExePath>
-    <_SnExePath Condition=" '$(OS)' == 'Windows_NT' and '$(_SnExePath)' == '' and Exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe') ">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe</_SnExePath>
+  <PropertyGroup>
+    <_ManagedExeLauncher Condition=" !$(IsWindows) and Exists('/Library/Frameworks/Mono.framework/Versions/Current/bin/mono') ">/Library/Frameworks/Mono.framework/Versions/Current/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" !$(IsWindows) and Exists('/usr/local/bin/mono') ">/usr/local/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" !$(IsWindows) and Exists('/usr/bin/mono') ">/usr/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" !$(IsWindows) and '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
+
+    <_SnExePath Condition=" $(IsWindows) and '$(_SnExePath)' == '' and Exists('$(SDK40ToolsPath)sn.exe') ">$(SDK40ToolsPath)sn.exe</_SnExePath>
+    <_SnExePath Condition=" $(IsWindows) and '$(_SnExePath)' == '' and Exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe') ">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe</_SnExePath>
     <_SnExePath Condition=" '$(_SnExePath)' == '' ">sn</_SnExePath>
 
     <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' ">true</PublicSign>
     <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\$(KeyFileName)</AssemblyOriginatorKeyFile>
-
-    <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_SHA)</AssemblyVersionGitSha>
-    <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_COMMIT)</AssemblyVersionGitSha>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\scripts\$(KeyFileName)</AssemblyOriginatorKeyFile>
+    <StrongNamerKeyFile>$(AssemblyOriginatorKeyFile)</StrongNamerKeyFile>
 
     <!--
       Suppress version attribute generation in Microsoft.NET.Sdk projects to avoid build failures
       when two sets of attributes are emitted.
     -->
-    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
 
@@ -50,7 +47,7 @@
     <PackagingPlatform Condition=" '$(PackagingPlatform)' == '' ">$(TargetFramework)</PackagingPlatform>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+  <ItemGroup Condition=" $(IsWindows) and '$(Configuration)' == 'Release' ">
     <PackageReference Include="mdoc" Version="5.8.9" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
@@ -74,43 +71,60 @@
 
   <!--
     ===================================================================================================================
-    _GenerateAssemblyVersionInfo
+    _CollectAssemblyVersionInfo & _GenerateAssemblyVersionInfo
 
     Generate the assembly versioning attributes from the VERSIONS.txt file.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
-    <_GenerateAssemblyVersionInfoBeforeTargets>
-      CoreCompile
-    </_GenerateAssemblyVersionInfoBeforeTargets>
-  </PropertyGroup>
-  <Target Name="_GenerateAssemblyVersionInfo" BeforeTargets="$(_GenerateAssemblyVersionInfoBeforeTargets)" Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
+  <Target Name="_BeforeInitializeSourceControlInformation"
+          DependsOnTargets="CollectAssemblyVersionInfo"
+          BeforeTargets="InitializeSourceControlInformation" />
+  <Target Name="CollectAssemblyVersionInfo"
+          DependsOnTargets="_CollectAssemblyVersionInfoPrepare;$(CollectAssemblyVersionInfoDependsOn)" />
+  <Target Name="_CollectAssemblyVersionInfoPrepare"
+          Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
     <PropertyGroup>
       <_VersionSourceFile>$(IntermediateOutputPath)\$(AssemblyName).Version.cs</_VersionSourceFile>
-      <_VersionTxtFile>$(MSBuildThisFileDirectory)..\VERSIONS.txt</_VersionTxtFile>
+      <_VersionTxtFile>$(MSBuildThisFileDirectory)..\scripts\VERSIONS.txt</_VersionTxtFile>
     </PropertyGroup>
     <PropertyGroup>
       <_VersionTxtContents>$([System.IO.File]::ReadAllText($(_VersionTxtFile)))</_VersionTxtContents>
-      <_VersionGitSha Condition=" '$(AssemblyVersionGitSha)' != '' ">-$(AssemblyVersionGitSha)</_VersionGitSha>
       <_VersionPackagingGroup>$(PackagingGroup.Split('.')[0])</_VersionPackagingGroup>
       <_VersionAssemblyPattern>^$(_VersionPackagingGroup)\s*assembly\s*(.*)$</_VersionAssemblyPattern>
       <_VersionFilePattern>^$(_VersionPackagingGroup)\s*file\s*(.*)$</_VersionFilePattern>
+      <_VersionNuGetPattern>^$(_VersionPackagingGroup)\s*nuget\s*(.*)$</_VersionNuGetPattern>
       <_VersionMilestonePattern>^lib$(_VersionPackagingGroup)\s*milestone\s*(.*)$</_VersionMilestonePattern>
       <_VersionIncrementPattern>^lib$(_VersionPackagingGroup)\s*increment\s*(.*)$</_VersionIncrementPattern>
       <_VersionAssemblyMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionAssemblyPattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionAssemblyMatch>
       <_VersionFileMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionFilePattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionFileMatch>
+      <_VersionNuGetMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionNuGetPattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionNuGetMatch>
       <_VersionMilestoneMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionMilestonePattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionMilestoneMatch>
       <_VersionIncrementMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionIncrementPattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionIncrementMatch>
+    </PropertyGroup>
+    <PropertyGroup>
+      <Version>$(_VersionNuGetMatch)</Version>
+      <Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
+      <Version Condition="'$(AssemblyVersionGitBranch)' != ''">$(Version)+$(AssemblyVersionGitBranch.Replace('/', '-').Replace('\', '-'))</Version>
+      <Version Condition="'$(AssemblyVersionGitSha)' != ''">$(Version).$(AssemblyVersionGitSha)</Version>
+      <InformationalVersion>$(Version)</InformationalVersion>
+      <AssemblyVersion>$(_VersionAssemblyMatch)</AssemblyVersion>
+      <FileVersion>$(_VersionFileMatch)</FileVersion>
+    </PropertyGroup>
+  </Target>
+  <Target Name="_BeforeGenerateAssemblyInfo"
+          BeforeTargets="GenerateAssemblyInfo"
+          DependsOnTargets="_GenerateAssemblyVersionInfo" />
+  <Target Name="_GenerateAssemblyVersionInfo"
+          DependsOnTargets="CollectAssemblyVersionInfo"
+          Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
+    <PropertyGroup>
       <_VersionGeneratedContents>
-[assembly: System.Reflection.AssemblyVersion("$(_VersionAssemblyMatch)")]
-[assembly: System.Reflection.AssemblyFileVersion("$(_VersionFileMatch)")]
-[assembly: System.Reflection.AssemblyInformationalVersion("$(_VersionFileMatch)$(_VersionGitSha)")]
-
 internal partial class VersionConstants {
-    public const string AssemblyVersion = "$(_VersionAssemblyMatch)"%3B
-    public const string AssemblyFileVersion = "$(_VersionFileMatch)"%3B
-    public const string AssemblyInformationalVersion = "$(_VersionFileMatch)$(_VersionGitSha)"%3B
-    public const string GitSha = "$(_VersionGitSha)"%3B
+    public const string AssemblyVersion = "$(AssemblyVersion)"%3B
+    public const string AssemblyFileVersion = "$(FileVersion)"%3B
+    public const string AssemblyInformationalVersion = "$(InformationalVersion)"%3B
+    public const string GitSha = "$(AssemblyVersionGitSha)"%3B
+    public const string GitBranch = "$(AssemblyVersionGitBranch)"%3B
     public const int Milestone = 0$(_VersionMilestoneMatch)%3B
     public const int Increment = 0$(_VersionIncrementMatch)%3B
 }
@@ -131,14 +145,14 @@ internal partial class VersionConstants {
     Sign the assembly using sn.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
+  <PropertyGroup Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true'">
     <_SignAssemblyAfterTargets>
       CoreCompile
     </_SignAssemblyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssembly"
           AfterTargets="$(_SignAssemblyAfterTargets)"
-          Condition=" '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' ">
+          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
@@ -149,15 +163,15 @@ internal partial class VersionConstants {
     Verify that the output assembly is signed correctly for release.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+  <PropertyGroup Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
     <_SignAssemblyVerifyAfterTargets>
       Build
     </_SignAssemblyVerifyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssemblyVerify"
           AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
-          Condition=" '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
-    <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" />
+          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+    <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" StandardOutputImportance="Normal" />
   </Target>
 
   <!--
@@ -173,52 +187,13 @@ internal partial class VersionConstants {
 
   <!--
     ===================================================================================================================
-    _CopyToOutputDirectory
-
-    Copy the project output into the root output folder.
-    ===================================================================================================================
-  -->
-  <PropertyGroup Condition=" '$(SkipCopyToOutputDirectory)' != 'true' and '$(TargetPath)' != '' ">
-    <_CopyToOutputDirectoryAfterTargets>
-      Build
-    </_CopyToOutputDirectoryAfterTargets>
-  </PropertyGroup>
-  <Target Name="_CopyToOutputDirectoryDep" DependsOnTargets="$(_CopyToOutputDirectoryDependsOn)">
-    <ItemGroup Condition=" '$(PackagingLocation)' == '' ">
-      <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(PackagingPlatform)\$(TargetFileName)" />
-      <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
-      <_CopyItems Include="$(TargetDir)$(TargetName).aar" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).aar" Condition=" Exists('$(TargetDir)$(TargetName).aar') " />
-      <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).pdb" />
-    </ItemGroup>
-    <ItemGroup Condition=" '$(PackagingLocation)' != '' ">
-      <_CopyItems Include="$(TargetPath)" Dest="nuget\$(PackagingLocation)\$(TargetFileName)" />
-      <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\$(PackagingLocation)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
-      <_CopyItems Include="$(TargetDir)$(TargetName).aar" Dest="nuget\$(PackagingLocation)\$(TargetName).aar" Condition=" Exists('$(TargetDir)$(TargetName).aar') " />
-      <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\$(PackagingLocation)\$(TargetName).pdb" />
-    </ItemGroup>
-    <ItemGroup>
-      <_CopyItems Include="@(_NoneWithTargetPath)" Condition=" '%(_NoneWithTargetPath.Extension)' != '.cs' " Dest="%(_NoneWithTargetPath.TargetPath)" />
-    </ItemGroup>
-  </Target>
-  <Target Name="_CopyToOutputDirectory" Condition=" '$(SkipCopyToOutputDirectory)' != 'true' and '$(TargetPath)' != '' "
-          AfterTargets="$(_CopyToOutputDirectoryAfterTargets)" DependsOnTargets="_CopyToOutputDirectoryDep"
-          Inputs="@(_CopyItems)" Outputs="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(PackagingGroup)\%(Dest)')">
-    <Copy Condition=" '@(_CopyItems)' != '' "
-          SourceFiles="@(_CopyItems)"
-          DestinationFiles="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(PackagingGroup)\%(Dest)')"
-          ContinueOnError="false"
-          Retries="3" />
-  </Target>
-
-  <!--
-    ===================================================================================================================
     MDocGenerateDocs
 
     Generated the XML documentation file using mdoc.
     This runs during the build phase.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' ">
+  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' ">
     <MDocGenerateDocsAfterTargets>
       CoreCompile
     </MDocGenerateDocsAfterTargets>
@@ -235,9 +210,9 @@ internal partial class VersionConstants {
       <_MDocInputs Include="$(MDocDocumentationDirectory)\**\*" />
     </ItemGroup>
   </Target>
-  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and '$(Configuration)' == 'Release' "
+  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' "
           AfterTargets="$(MDocGenerateDocsAfterTargets)" DependsOnTargets="_MDocGenerateDocsDep"
-          Inputs="@(_MDocInputs)" Outputs="$(MDocOutputPath)">
+          Inputs="@(_MDocInputs)" Outputs="$(MDocIntermediateOutputPath)$(MDocOutputName)">
     <MakeDir Condition=" '$(_ShouldGenerateDocs)' == 'true' "
              Directories="$(MDocIntermediateOutputPath)" />
     <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
@@ -265,7 +240,13 @@ internal partial class VersionConstants {
 
   <!-- Make sure we always build with a lower version of WinRT.Runtime.dll -->
   <ItemGroup>
-    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" RuntimeFrameworkVersion="10.0.19041.24" TargetingPackVersion="10.0.19041.24" />
+    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" RuntimeFrameworkVersion="10.0.19041.27" TargetingPackVersion="10.0.19041.27" />
   </ItemGroup>
+
+  <Import Project="SkiaSharp.Build.Override.targets" Condition="Exists('SkiaSharp.Build.Override.targets')" />
+
+  <PropertyGroup>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == '' and '$(TargetFramework)' == ''">net0.0-invalid</TargetFrameworks>
+  </PropertyGroup>
 
 </Project>

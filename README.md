@@ -4,7 +4,6 @@
 [![HarfBuzzSharp](https://img.shields.io/nuget/vpre/HarfBuzzSharp.svg?cacheSeconds=3600&label=HarfBuzzSharp%20nuget)](https://www.nuget.org/packages/HarfBuzzSharp)
 
 [![SkiaSharp.Views](https://img.shields.io/nuget/vpre/SkiaSharp.Views.svg?cacheSeconds=3600&label=SkiaSharp.Views%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views)
-[![SkiaSharp.Views.Forms](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Forms.svg?cacheSeconds=3600&label=SkiaSharp.Views.Forms%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Forms)
 [![SkiaSharp.Views.Maui.Controls](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Maui.Controls.svg?cacheSeconds=3600&label=SkiaSharp.Views.Maui.Controls%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls)
 [![SkiaSharp.Views.Uno](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Uno.svg?cacheSeconds=3600&label=SkiaSharp.Views.Uno%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Uno) 
 
@@ -29,14 +28,12 @@ SkiaSharp provides cross-platform bindings for:
  - Android
  - iOS
  - tvOS
- - watchOS
  - macOS
  - Mac Catalyst
  - WinUI 3 (Windows App SDK / Uno Platform)
  - Windows Classic Desktop (Windows.Forms / WPF)
- - Windows UWP (Desktop / Mobile / Xbox / HoloLens)
  - Web Assembly (WASM)
- - Uno Platform (iOS / macOS / Android / WebAssembly / UWP)
+ - Uno Platform (iOS / macOS / Android / WebAssembly)
 
 The [API Documentation](https://docs.microsoft.com/en-us/dotnet/api/SkiaSharp/) is
 available on the web to browse.

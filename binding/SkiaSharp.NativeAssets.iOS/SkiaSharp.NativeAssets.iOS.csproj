@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(TFMCurrent)-ios</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-ios</TargetFrameworks>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for iOS</Title>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageFile Include="..\..\output\native\ios\libSkiaSharp.framework\**" PackagePath="runtimes\ios\native\libSkiaSharp.framework" />
+    <PackageFile Include="..\..\output\native\iossimulator\libSkiaSharp.framework\**" PackagePath="runtimes\iossimulator\native\libSkiaSharp.framework" />
+  </ItemGroup>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+    </ItemGroup>
+  </Target>
+</Project>

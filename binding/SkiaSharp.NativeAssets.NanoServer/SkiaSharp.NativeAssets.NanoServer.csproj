@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(BasicTargetFrameworks);$(WindowsTargetFrameworks)</TargetFrameworks>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for Windows Nano Server</Title>
+    <PackageNotes>This variation of the Windows native assets includes the build of libSkiaSharp.dll that does not make use of the typeface subsetting when creating XPS documents (CreateFontPackage from FONTSUB.dll).</PackageNotes>
+    <IsWindowsNativeAssets>true</IsWindowsNativeAssets>
+  </PropertyGroup>
+  <ItemGroup>
+    <NativeWindowsPackageFile Include="..\..\output\native\nanoserver\x64\libSkiaSharp*" RuntimeIdentifier="win-x64" />
+  </ItemGroup>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+    </ItemGroup>
+  </Target>
+</Project>
