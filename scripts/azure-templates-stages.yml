@@ -613,7 +613,7 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-android
-            additionalArgs: --device=android-emulator-64_34 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native_android_x86_macos
@@ -623,8 +623,8 @@ stages:
             preBuildSteps:
               - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
                 displayName: Install the Android emulator
-              - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-34;google_apis;x86_64"
-                displayName: Install the Android API 34 emulator image
+              - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
+                displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the Android test results
@@ -632,12 +632,12 @@ stages:
                 inputs:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
-                  testRunTitle: 'Android Tests'
+                  testRunTitle: 'Android Tests (API $(ANDROID_TEST_DEVICE_VERSION))'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
                 condition: always()
                 inputs:
-                  artifactName: testlogs_android
+                  artifactName: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
                   pathToPublish: 'output/logs/testlogs'
         - template: azure-templates-bootstrapper.yml # Tests|ios (macOS)
           parameters:
@@ -646,7 +646,7 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: tests-ios
-            additionalArgs: --device=ios-simulator-64 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native_ios_macos
@@ -659,12 +659,12 @@ stages:
                 inputs:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
-                  testRunTitle: 'iOS Tests'
+                  testRunTitle: 'iOS Tests (v$(IOS_TEST_DEVICE_VERSION))'
               - task: PublishBuildArtifacts@1
                 displayName: Publish the test logs
                 condition: always()
                 inputs:
-                  artifactName: testlogs_ios
+                  artifactName: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
                   pathToPublish: 'output/logs/testlogs'
         - template: azure-templates-bootstrapper.yml # Tests|maccatalyst (macOS)
           parameters:

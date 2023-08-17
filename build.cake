@@ -203,11 +203,14 @@ Task ("tests-netfx")
         if (SUPPORT_VULKAN)
             testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
         foreach (var testAssembly in testAssemblies) {
-            // build
             var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
-            RunDotNetBuild (csproj, platform: arch, properties: new Dictionary<string, string> {
-                { "TargetFramework", tfm }
-            });
+
+            // build
+            if (!SKIP_BUILD) {
+                RunDotNetBuild (csproj, platform: arch, properties: new Dictionary<string, string> {
+                    { "TargetFramework", tfm }
+                });
+            }
 
             // test
             DirectoryPath results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}-{arch}";
@@ -251,11 +254,14 @@ Task ("tests-netcore")
     if (SUPPORT_VULKAN)
         testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
     foreach (var testAssembly in testAssemblies) {
-        // build
         var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
-        RunDotNetBuild (csproj, properties: new Dictionary<string, string> {
-            { "TargetFramework", tfm }
-        });
+
+        // build
+        if (!SKIP_BUILD) {
+            RunDotNetBuild (csproj, properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm }
+            });
+        }
 
         // test
         var results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}";
@@ -294,12 +300,14 @@ Task ("tests-android")
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
 
     // build the app
-    RunDotNetBuild (csproj,
-        configuration: configuration,
-        properties: new Dictionary<string, string> {
-            { "TargetFramework", tfm },
-            { "RuntimeIdentifier", rid },
-        });
+    if (!SKIP_BUILD) {
+        RunDotNetBuild (csproj,
+            configuration: configuration,
+            properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm },
+                { "RuntimeIdentifier", rid },
+            });
+    }
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
@@ -324,12 +332,14 @@ Task ("tests-ios")
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 
     // package the app
-    RunDotNetBuild (csproj,
-        configuration: configuration,
-        properties: new Dictionary<string, string> {
-            { "TargetFramework", tfm },
-            { "RuntimeIdentifier", rid },
-        });
+    if (!SKIP_BUILD) {
+        RunDotNetBuild (csproj,
+            configuration: configuration,
+            properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm },
+                { "RuntimeIdentifier", rid },
+            });
+    }
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/{DATE_TIME_STR}";
@@ -354,12 +364,14 @@ Task ("tests-maccatalyst")
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 
     // package the app
-    RunDotNetBuild (csproj,
-        configuration: configuration,
-        properties: new Dictionary<string, string> {
-            { "TargetFramework", tfm },
-            { "RuntimeIdentifier", rid },
-        });
+    if (!SKIP_BUILD) {
+        RunDotNetBuild (csproj,
+            configuration: configuration,
+            properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm },
+                { "RuntimeIdentifier", rid },
+            });
+    }
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";
@@ -375,7 +387,9 @@ Task ("tests-wasm")
     .IsDependentOn ("externals-wasm")
     .Does (() =>
 {
-    RunDotNetBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
+    if (!SKIP_BUILD) {
+        RunDotNetBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
+    }
 
     IProcess serverProc = null;
     try {

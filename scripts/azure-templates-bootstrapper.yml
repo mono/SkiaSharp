@@ -275,9 +275,11 @@ jobs:
       - ${{ if eq(parameters.docker, '') }}:
         - ${{ if endsWith(parameters.name, '_windows') }}:
           - pwsh: |
+              Get-Content $PSCommandPath
               dotnet tool restore
               ${{ parameters.initScript }}
               dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+
             env:
               JavaSdkDirectory: $(JAVA_HOME)
               LLVM_HOME: $(LLVM_HOME)
@@ -288,9 +290,11 @@ jobs:
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - ${{ if not(endsWith(parameters.name, '_windows')) }}:
           - bash: |
+              cat ${BASH_SOURCE[0]}
               dotnet tool restore
               ${{ parameters.initScript }}
               dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+
             env:
               JavaSdkDirectory: $(JAVA_HOME)
             displayName: Run the bootstrapper for ${{ parameters.target }}
@@ -309,6 +313,7 @@ jobs:
             echo dotnet tool restore > cmd.sh
             echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
             sed -i 's/--gnArgs=\" \"//' cmd.sh
+            cat cmd.sh
           displayName: Generate the script for the Docker image
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - bash: |
