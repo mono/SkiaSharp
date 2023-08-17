@@ -3,14 +3,13 @@
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 #addin nuget:?package=Cake.Json&version=6.0.1
 #addin nuget:?package=NuGet.Packaging.Core&version=5.11.0
-#addin nuget:?package=SharpCompress&version=0.28.3
+#addin nuget:?package=SharpCompress&version=0.32.2
 #addin nuget:?package=Mono.Cecil&version=0.10.0
 #addin nuget:?package=Mono.ApiTools&version=5.14.0.2
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2
-#addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.5
 
-#tool nuget:?package=mdoc&version=5.8.3
-#tool nuget:?package=xunit.runner.console&version=2.4.1
+#tool nuget:?package=mdoc&version=5.8.9
+#tool nuget:?package=xunit.runner.console&version=2.4.2
 #tool nuget:?package=vswhere&version=2.8.4
 
 using System.Linq;
@@ -27,17 +26,14 @@ using NuGet.Versioning;
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
-#load "cake/shared.cake"
-#load "cake/native-shared.cake"
+#load "./scripts/cake/shared.cake"
+#load "./scripts/cake/native-shared.cake"
 
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 var SKIP_BUILD = Argument ("skipbuild", false);
-var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
-var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
-var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
-var THROW_ON_TEST_FAILURE = Argument ("throwOnTestFailure", true);
+var THROW_ON_FIRST_TEST_FAILURE = Argument ("throwOnFirstTestFailure", false);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
@@ -48,51 +44,73 @@ var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () 
 
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 
-DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
+DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
+DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
 
 var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview");
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
+var BUILD_COUNTER = Argument ("buildCounter", EnvironmentVariable ("BUILD_COUNTER") ?? BUILD_NUMBER);
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? ""). Replace ("refs/heads/", "");
 var GIT_URL = Argument ("gitUrl", EnvironmentVariable ("GIT_URL") ?? "");
 
-var PREVIEW_NUGET_SUFFIX = string.IsNullOrEmpty (BUILD_NUMBER)
-    ? $"{PREVIEW_LABEL}"
-    : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
+var PREVIEW_NUGET_SUFFIX = "";
+if (!string.IsNullOrEmpty (FEATURE_NAME)) {
+    PREVIEW_NUGET_SUFFIX = $"featurepreview-{FEATURE_NAME}";
+} else {
+    PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}";
+}
+if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
+    PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
+}
+
+var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {
+    { "GIT_SHA", GIT_SHA },
+    { "GIT_BRANCH_NAME", GIT_BRANCH_NAME },
+    { "GIT_URL", GIT_URL },
+    { "BUILD_COUNTER", BUILD_COUNTER },
+    { "BUILD_NUMBER", BUILD_NUMBER },
+    { "FEATURE_NAME", FEATURE_NAME },
+    { "PREVIEW_LABEL", PREVIEW_LABEL },
+};
+
+var CURRENT_PLATFORM = "";
+if (IsRunningOnWindows ()) {
+    CURRENT_PLATFORM = "Windows";
+} else if (IsRunningOnMacOs ()) {
+    CURRENT_PLATFORM = "Mac";
+} else if (IsRunningOnLinux ()) {
+    CURRENT_PLATFORM = "Linux";
+} else {
+    throw new Exception ("This script is not running on a known platform.");
+}
 
 var PREVIEW_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json");
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
-    { "SkiaSharp",                                     new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Android",                new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.iOS",                    new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.MacCatalyst",            new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.macOS",                  new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Tizen",                  new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.tvOS",                   new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.UWP",                    new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.watchOS",                new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Win32",                  new Version (1, 57, 0) },
-    { "SkiaSharp.Views",                               new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Desktop.Common",                new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Gtk2",                          new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Gtk3",                          new Version (1, 57, 0) },
-    { "SkiaSharp.Views.WindowsForms",                  new Version (1, 57, 0) },
-    { "SkiaSharp.Views.WPF",                           new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms",                         new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms.WPF",                     new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms.GTK",                     new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Uno",                           new Version (1, 57, 0) },
-    { "SkiaSharp.Views.WinUI",                         new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Maui.Core",                     new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Blazor",                        new Version (1, 57, 0) },
+    { "SkiaSharp",                                     new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.Android",                new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.iOS",                    new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.MacCatalyst",            new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.macOS",                  new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.Tizen",                  new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.tvOS",                   new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.Win32",                  new Version (1, 60, 0) },
+    { "SkiaSharp.Views",                               new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Desktop.Common",                new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Gtk3",                          new Version (1, 60, 0) },
+    { "SkiaSharp.Views.WindowsForms",                  new Version (1, 60, 0) },
+    { "SkiaSharp.Views.WPF",                           new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Uno.WinUI",                     new Version (1, 60, 0) },
+    { "SkiaSharp.Views.WinUI",                         new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Maui.Core",                     new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 60, 0) },
+    { "SkiaSharp.Views.Blazor",                        new Version (1, 60, 0) },
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Android",            new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.iOS",                new Version (1, 0, 0) },
@@ -101,21 +119,19 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "HarfBuzzSharp.NativeAssets.macOS",              new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Tizen",              new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.tvOS",               new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.UWP",                new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.watchOS",            new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Win32",              new Version (1, 0, 0) },
-    { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
-    { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 57, 0) },
+    { "SkiaSharp.HarfBuzz",                            new Version (1, 60, 0) },
+    { "SkiaSharp.Skottie",                             new Version (1, 60, 0) },
+    { "SkiaSharp.SceneGraph",                          new Version (1, 60, 0) },
+    { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 60, 0) },
 };
 
 var PREVIEW_ONLY_NUGETS = new List<string> {
-    "SkiaSharp.Views.Maui.Core",
-    "SkiaSharp.Views.Maui.Controls",
-    "SkiaSharp.Views.Maui.Controls.Compatibility",
-    "SkiaSharp.Views.WinUI",
-    "SkiaSharp.Views.Blazor",
 };
+
+var DATE_TIME_NOW = DateTime.Now;
+var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_hhmmss");
 
 Information("Source Control:");
 Information($"    {"PREVIEW_LABEL".PadRight(30)} {{0}}", PREVIEW_LABEL);
@@ -125,11 +141,11 @@ Information($"    {"GIT_SHA".PadRight(30)} {{0}}", GIT_SHA);
 Information($"    {"GIT_BRANCH_NAME".PadRight(30)} {{0}}", GIT_BRANCH_NAME);
 Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
 
-#load "cake/msbuild.cake"
-#load "cake/UtilsManaged.cake"
-#load "cake/externals.cake"
-#load "cake/UpdateDocs.cake"
-#load "cake/samples.cake"
+#load "./scripts/cake/msbuild.cake"
+#load "./scripts/cake/UtilsManaged.cake"
+#load "./scripts/cake/externals.cake"
+#load "./scripts/cake/UpdateDocs.cake"
+#load "./scripts/cake/samples.cake"
 
 Task ("__________________________________")
     .Description ("__________________________________________________");
@@ -149,39 +165,11 @@ Task ("externals")
 
 Task ("libs")
     .Description ("Build all managed assemblies.")
-    .WithCriteria(!SKIP_BUILD)
+    .WithCriteria (!SKIP_BUILD)
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    // build the managed libraries
-    var platform = "";
-    if (!BUILD_ALL_PLATFORMS) {
-        if (IsRunningOnWindows ()) {
-            platform = ".Windows";
-        } else if (IsRunningOnMacOs ()) {
-            platform = ".Mac";
-        } else if (IsRunningOnLinux ()) {
-            platform = ".Linux";
-        }
-    }
-
-    var net6 = $"./source/SkiaSharpSource{platform}-net6.slnf";
-    var netfx = $"./source/SkiaSharpSource{platform}-netfx.slnf";
-    if (FileExists (net6) || FileExists (netfx)) {
-        if (FileExists (net6))
-            RunMSBuild (net6, properties: new Dictionary<string, string> { { "BuildingForNet6", "true" } });
-        if (FileExists (netfx))
-            RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet6", "false" } });
-    } else {
-        RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
-    }
-
-    // assemble the mdoc docs
-    EnsureDirectoryExists ("./output/docs/mdoc/");
-    RunProcess (MDocPath, new ProcessSettings {
-        Arguments = $"assemble --out=\"./output/docs/mdoc/SkiaSharp\" \"{DOCS_PATH}\" --debug",
-    });
-    CopyFileToDirectory ("./docs/SkiaSharp.source", "./output/docs/mdoc/");
+    RunDotNetBuild ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", properties: MSBUILD_VERSION_PROPERTIES);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -193,55 +181,53 @@ Task ("tests")
     .IsDependentOn ("tests-netfx")
     .IsDependentOn ("tests-netcore")
     .IsDependentOn ("tests-android")
-    .IsDependentOn ("tests-ios");
+    .IsDependentOn ("tests-ios")
+    .IsDependentOn ("tests-maccatalyst");
 
 Task ("tests-netfx")
     .Description ("Run all Full .NET Framework tests.")
+    .WithCriteria (IsRunningOnWindows ())
     .IsDependentOn ("externals")
     .Does (() =>
 {
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+
     var failedTests = 0;
 
-    void RunDesktopTest (string arch)
-    {
-        if (Skip(arch)) return;
+    foreach ( var arch in new [] { "x86", "x64" }) {
+        if (Skip(arch)) continue;
 
-        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
+        var tfm = "net472";
+        var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
+        if (SUPPORT_VULKAN)
+            testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
+        foreach (var testAssembly in testAssemblies) {
+            var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
 
-        // SkiaSharp.Tests.dll
-        try {
-            RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
-        } catch {
-            failedTests++;
-        }
+            // build
+            if (!SKIP_BUILD) {
+                RunDotNetBuild (csproj, platform: arch, properties: new Dictionary<string, string> {
+                    { "TargetFramework", tfm }
+                });
+            }
 
-        // SkiaSharp.Vulkan.Tests.dll
-        if (SUPPORT_VULKAN) {
+            // test
+            DirectoryPath results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}-{arch}";
+            var assName = testAssembly.Replace (".Console", "");
+            EnsureDirectoryExists (results);
             try {
-                RunTests ($"./tests/SkiaSharp.Vulkan.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Vulkan.Tests.dll", arch == "x86");
+                RunTests ($"./tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/{tfm}/{assName}.dll", results, arch == "x86");
             } catch {
                 failedTests++;
+                if (THROW_ON_FIRST_TEST_FAILURE)
+                    throw;
             }
         }
     }
 
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    if (IsRunningOnWindows ()) {
-        RunDesktopTest ("x86");
-        RunDesktopTest ("x64");
-    } else if (IsRunningOnMacOs ()) {
-        RunDesktopTest ("AnyCPU");
-    } else if (IsRunningOnLinux ()) {
-        RunDesktopTest ("x64");
-    }
-
     if (failedTests > 0) {
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
+        throw new Exception ($"There were {failedTests} failed test runs.");
     }
 });
 
@@ -250,35 +236,52 @@ Task ("tests-netcore")
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    var failedTests = 0;
+    if (IsRunningOnLinux ()) {
+        try {
+            RunProcess ("dpkg", "-s libfontconfig1 ttf-ancient-fonts ttf-mscorefonts-installer", out var _);
+        } catch {
+            Warning ("Running tests on Linux requires that FontConfig and various font packages are installed. Run the `./scripts/install-linux-test-requirements.sh` script file.");
+        }
+    }
 
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.NetCore.Tests.csproj
-    try {
-        RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
-    } catch {
-        failedTests++;
-    }
+    var failedTests = 0;
 
-    // SkiaSharp.Vulkan.NetCore.Tests.csproj
-    if (SUPPORT_VULKAN) {
+    var tfm = "net7.0";
+    var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
+    if (SUPPORT_VULKAN)
+        testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
+    foreach (var testAssembly in testAssemblies) {
+        var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
+
+        // build
+        if (!SKIP_BUILD) {
+            RunDotNetBuild (csproj, properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm }
+            });
+        }
+
+        // test
+        var results = $"./output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}";
         try {
-            RunNetCoreTests ("./tests/SkiaSharp.Vulkan.NetCore.Tests/SkiaSharp.Vulkan.NetCore.Tests.csproj");
+            RunDotNetTest (csproj, results, properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm }
+            });
         } catch {
             failedTests++;
+            if (THROW_ON_FIRST_TEST_FAILURE)
+                throw;
         }
     }
 
     if (failedTests > 0) {
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
+        throw new Exception ($"There were {failedTests} failed test runs.");
     }
+
     if (COVERAGE) {
-        RunCodeCoverage ("./tests/**/Coverage/**/*.xml", "./output/coverage");
+        RunCodeCoverage ("./output/logs/testlogs/**/Coverage/**/*.xml", "./output/coverage");
     }
 });
 
@@ -287,40 +290,31 @@ Task ("tests-android")
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    var failedTests = 0;
-
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.Android.Tests.csproj
-    try {
-        // build the solution to copy all the files
-        RunMSBuild ("./tests/SkiaSharp.Android.Tests.sln", configuration: "Debug");
-        // package the app
-        FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
-        RunMSBuild (csproj,
-            targets: new [] { "SignAndroidPackage" }, 
-            platform: "AnyCPU",
-            configuration: "Debug");
-        // run the tests
-        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.Android.Tests";
-        RunCake ("./cake/xharness-android.cake", "Default", new Dictionary<string, string> {
-            { "project", MakeAbsolute(csproj).FullPath },
-            { "configuration", "Debug" },
-            { "exclusive", "true" },
-            { "results", MakeAbsolute(results).FullPath },
-            { "verbosity", "diagnostic" },
-        });
-    } catch {
-        failedTests++;
+    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
+    var configuration = "Release";
+    var tfm = "net7.0-android";
+    var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
+    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
+
+    // build the app
+    if (!SKIP_BUILD) {
+        RunDotNetBuild (csproj,
+            configuration: configuration,
+            properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm },
+                { "RuntimeIdentifier", rid },
+            });
     }
 
-    if (failedTests > 0) {
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
-    }
+    // run the tests
+    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
+    RunCake ("./scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
+        { "app", MakeAbsolute (app).FullPath },
+        { "results", MakeAbsolute (results).FullPath },
+    });
 });
 
 Task ("tests-ios")
@@ -328,39 +322,64 @@ Task ("tests-ios")
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    var failedTests = 0;
-
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // SkiaSharp.iOS.Tests.csproj
-    try {
-        // build the solution to copy all the files
-        RunMSBuild ("./tests/SkiaSharp.iOS.Tests.sln", configuration: "Debug");
-        // package the app
-        FilePath csproj = "./tests/SkiaSharp.iOS.Tests/SkiaSharp.iOS.Tests.csproj";
-        RunMSBuild (csproj,
-            properties: new Dictionary<string, string> { { "BuildIpa", "true" } },
-            platform: "iPhoneSimulator",
-            configuration: "Debug");
-        // run the tests
-        DirectoryPath results = "./output/logs/testlogs/SkiaSharp.iOS.Tests";
-        RunCake ("./cake/xharness-ios.cake", "Default", new Dictionary<string, string> {
-            { "project", MakeAbsolute(csproj).FullPath },
-            { "configuration", "Debug" },
-            { "exclusive", "true" },
-            { "results", MakeAbsolute(results).FullPath },
-        });
-    } catch {
-        failedTests++;
+    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
+    var configuration = "Debug";
+    var tfm = "net7.0-ios";
+    var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
+    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
+
+    // package the app
+    if (!SKIP_BUILD) {
+        RunDotNetBuild (csproj,
+            configuration: configuration,
+            properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm },
+                { "RuntimeIdentifier", rid },
+            });
     }
 
-    if (failedTests > 0) {
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
+    // run the tests
+    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/{DATE_TIME_STR}";
+    RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {
+        { "app", MakeAbsolute (app).FullPath },
+        { "results", MakeAbsolute (results).FullPath },
+    });
+});
+
+Task ("tests-maccatalyst")
+    .Description ("Run all Mac Catalyst tests.")
+    .IsDependentOn ("externals")
+    .Does (() =>
+{
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+
+    FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
+    var configuration = "Debug";
+    var tfm = "net7.0-maccatalyst";
+    var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
+    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
+
+    // package the app
+    if (!SKIP_BUILD) {
+        RunDotNetBuild (csproj,
+            configuration: configuration,
+            properties: new Dictionary<string, string> {
+                { "TargetFramework", tfm },
+                { "RuntimeIdentifier", rid },
+            });
     }
+
+    // run the tests
+    DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";
+    RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {
+        { "app", MakeAbsolute (app).FullPath },
+        { "results", MakeAbsolute (results).FullPath },
+        { "device", "maccatalyst" },
+    });
 });
 
 Task ("tests-wasm")
@@ -368,34 +387,23 @@ Task ("tests-wasm")
     .IsDependentOn ("externals-wasm")
     .Does (() =>
 {
-    var failedTests = 0;
-
-    RunMSBuild ("./tests/SkiaSharp.Wasm.Tests.sln");
-
-    var pubDir = "./tests/SkiaSharp.Wasm.Tests/bin/publish/";
-    RunNetCorePublish("./tests/SkiaSharp.Wasm.Tests/SkiaSharp.Wasm.Tests.csproj", pubDir);
-    IProcess serverProc = null;
-    try {
-        serverProc = RunAndReturnProcess(PYTHON_EXE, new ProcessSettings {
-            Arguments = "server.py",
-            WorkingDirectory = pubDir,
-        });
-        DotNetCoreRun("./utils/WasmTestRunner/WasmTestRunner.csproj",
-            "--output=\"./tests/SkiaSharp.Wasm.Tests/TestResults/\" " +
-            (string.IsNullOrEmpty(CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
-            "--verbose " +
-            "\"http://127.0.0.1:8000/\" ");
-    } catch {
-        failedTests++;
-    } finally {
-        serverProc?.Kill();
+    if (!SKIP_BUILD) {
+        RunDotNetBuild ("./tests/SkiaSharp.Tests.Wasm.sln");
     }
 
-    if (failedTests > 0) {
-        if (THROW_ON_TEST_FAILURE)
-            throw new Exception ($"There were {failedTests} failed tests.");
-        else
-            Warning ($"There were {failedTests} failed tests.");
+    IProcess serverProc = null;
+    try {
+        serverProc = RunAndReturnProcess (PYTHON_EXE, new ProcessSettings {
+            Arguments = MakeAbsolute (File ("./tests/SkiaSharp.Tests.Wasm/server.py")).FullPath,
+            WorkingDirectory = "./tests/SkiaSharp.Tests.Wasm/bin/Release/net7.0/dist",
+        });
+        DotNetRun ("./utils/WasmTestRunner/WasmTestRunner.csproj",
+            $"--output=\"./output/logs/testlogs/SkiaSharp.Tests.Wasm/{DATE_TIME_STR}/\" " +
+            (string.IsNullOrEmpty (CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
+            "--verbose " +
+            "\"http://127.0.0.1:8000/\" ");
+    } finally {
+        serverProc?.Kill ();
     }
 });
 
@@ -430,32 +438,7 @@ Task ("samples")
     var isMac = IsRunningOnMacOs ();
     var isWin = IsRunningOnWindows ();
 
-    var buildMatrix = new Dictionary<string, bool> {
-        { "android", isMac || isWin },
-        { "gtk", isLinux || isMac },
-        { "ios", isMac },
-        { "macos", isMac },
-        { "tvos", isMac },
-        { "uwp", isWin },
-        { "winui", isWin },
-        { "wapproj", isWin },
-        { "msix", isWin },
-        { "watchos", isMac },
-        { "wpf", isWin },
-    };
-
-    var platformMatrix = new Dictionary<string, string> {
-        { "ios", "iPhone" },
-        { "tvos", "iPhoneSimulator" },
-        { "uwp", "x86" },
-        { "winui", "x64" },
-        { "wapproj", "x64" },
-        { "watchos", "iPhoneSimulator" },
-        { "xamarin.forms.mac", "iPhone" },
-        { "xamarin.forms.windows", "x86" },
-    };
-
-    void BuildSample (FilePath sln)
+    void BuildSample (FilePath sln, bool dryrun)
     {
         var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
         var name = sln.GetFilenameWithoutExtension ();
@@ -464,23 +447,11 @@ Task ("samples")
             slnPlatform = slnPlatform.ToLower ();
         }
 
-        if (!buildMatrix.ContainsKey (platform) || buildMatrix [platform]) {
-            string buildPlatform = null;
-            if (!string.IsNullOrEmpty (slnPlatform)) {
-                if (platformMatrix.ContainsKey (platform + slnPlatform)) {
-                    buildPlatform = platformMatrix [platform + slnPlatform];
-                }
-            }
-            if (string.IsNullOrEmpty (buildPlatform) && platformMatrix.ContainsKey (platform)) {
-                buildPlatform = platformMatrix [platform];
-            }
-
-            Information ($"Building {sln} ({platform})...");
-
-            RunNuGetRestorePackagesConfig (sln);
-            RunMSBuild (sln, platform: buildPlatform);
+        if (dryrun) {
+            Information ($"    BUILD       {sln}");
         } else {
-            Information ($"Skipping {sln} ({platform})...");
+            Information ($"Building sample {sln} ({platform})...");
+            RunDotNetBuild (sln);
         }
     }
 
@@ -509,53 +480,70 @@ Task ("samples")
     var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
         ? "samples-preview"
         : "samples";
-    var solutions = GetFiles ($"./output/{actualSamples}/**/*.sln");
+    var solutions =
+        GetFiles ($"./output/{actualSamples}/**/*.sln").Union (
+        GetFiles ($"./output/{actualSamples}/**/*.slnf"))
+        .OrderBy (x => x.FullPath)
+        .ToArray ();
 
     Information ("Solutions found:");
     foreach (var sln in solutions) {
         Information ("    " + sln);
     }
 
-    foreach (var sln in solutions) {
-        // might have been deleted due to a platform build and cleanup
-        if (!FileExists (sln))
-            continue;
+    var firstLoop = true;
+    foreach (var dryrun in new [] { true, true, false }) {
+        if (dryrun)
+            Information ("Sample builds:");
 
-        var name = sln.GetFilenameWithoutExtension ();
-        var slnPlatform = name.GetExtension ();
+        foreach (var sln in solutions) {
+            // might have been deleted due to a platform build and cleanup
+            if (!FileExists (sln))
+                continue;
 
-        if (string.IsNullOrEmpty (slnPlatform)) {
-            // this is the main solution
-            var variants = GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln");
-            if (!variants.Any ()) {
-                // there is no platform variant
-                BuildSample (sln);
-                // delete the built sample
-                CleanDirectories (sln.GetDirectory ().FullPath);
+            var name = sln.GetFilenameWithoutExtension ();
+            var slnPlatform = name.GetExtension ();
+            if (string.IsNullOrEmpty (slnPlatform)) {
+                // this is the main solution
+                var variants =
+                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln").Union (
+                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf"));
+                if (!variants.Any ()) {
+                    // there is no platform variant
+                    BuildSample (sln, dryrun);
+                    // delete the built sample
+                    if (!dryrun)
+                        CleanDir (sln.GetDirectory ().FullPath);
+                } else {
+                    // skip as there is a platform variant
+                    if (dryrun && firstLoop)
+                        Information ($"    SKIP   (PS) {sln} (has platform specific)");
+                }
             } else {
-                // skip as there is a platform variant
-            }
-        } else {
-            // this is a platform variant
-            slnPlatform = slnPlatform.ToLower ();
-            var shouldBuild =
-                (isLinux && slnPlatform == ".linux") ||
-                (isMac && slnPlatform == ".mac") ||
-                (isWin && slnPlatform == ".windows");
-            if (shouldBuild) {
-                BuildSample (sln);
-                // delete the built sample
-                CleanDirectories (sln.GetDirectory ().FullPath);
-            } else {
-                // skip this as this is not the correct platform
+                // this is a platform variant
+                slnPlatform = slnPlatform.ToLower ();
+                if (slnPlatform == ($".{CURRENT_PLATFORM.ToLower ()}")) {
+                    // this is the correct platform variant
+                    BuildSample (sln, dryrun);
+                    // delete the built sample
+                    if (!dryrun) {
+                        CleanDir (sln.GetDirectory ().FullPath);
+                    }
+                } else {
+                    // skip this as this is not the correct platform
+                    if (dryrun && firstLoop)
+                        Information ($"    SKIP   (AP) {sln} (has alternate platform)");
+                }
             }
         }
+
+        firstLoop = false;
     }
 
-    CleanDirectory ("./output/samples/");
-    DeleteDirectory ("./output/samples/", new DeleteDirectorySettings { Recursive = true, Force = true });
-    CleanDirectory ("./output/samples-preview/");
-    DeleteDirectory ("./output/samples-preview/", new DeleteDirectorySettings { Recursive = true, Force = true });
+    CleanDir ("./output/samples/");
+    DeleteDir ("./output/samples/");
+    CleanDir ("./output/samples-preview/");
+    DeleteDir ("./output/samples-preview/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -572,198 +560,23 @@ Task ("nuget-normal")
     .IsDependentOn ("libs")
     .Does (() =>
 {
-    var platform = "";
-    if (!PACK_ALL_PLATFORMS) {
-        if (IsRunningOnWindows ()) {
-            platform = "windows";
-        } else if (IsRunningOnMacOs ()) {
-            platform = "macos";
-        } else if (IsRunningOnLinux ()) {
-            platform = "linux";
-        }
-    }
+    var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
+        { "BuildingInsideUnoSourceGenerator", "true" },
+        { "BuildProjectReferences", "false" },
+    };
 
-    void RemovePlatforms (XDocument xdoc)
-    {
-        var files = xdoc.Root
-            .Elements ("files")
-            .Elements ("file");
-        foreach (var file in files.ToArray ()) {
-            // remove the files that aren't available
-            var nuspecPlatform = file.Attribute ("platform");
-            if (!string.IsNullOrEmpty (nuspecPlatform?.Value)) {
-                nuspecPlatform.Remove ();
-                if (!string.IsNullOrEmpty (platform)) {
-                    // handle the platform builds
-                    if (!nuspecPlatform.Value.Split (',').Contains (platform)) {
-                        file.Remove ();
-                    }
-                }
-            }
-            // copy the src attribute and set it for the target if there is none already
-            if (string.IsNullOrEmpty (file.Attribute ("target")?.Value)) {
-                file.Add (new XAttribute ("target", file.Attribute ("src").Value));
-            }
-            // make sure all the paths have the correct slash
-            if (IsRunningOnWindows ()) {
-                file.Attribute ("src").Value = file.Attribute ("src").Value.Replace ("/", "\\");
-                file.Attribute ("target").Value = file.Attribute ("target").Value.Replace ("/", "\\");
-            }
-        }
-    }
+    // pack stable
+    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pack", properties: props);
 
-    void SetVersion (XDocument xdoc, string suffix)
-    {
-        var metadata = xdoc.Root.Element ("metadata");
-        var id = metadata.Element ("id");
-        var version = metadata.Element ("version");
+    // pack preview
+    props ["VersionSuffix"] = PREVIEW_NUGET_SUFFIX;
+    RunDotNetPack ($"./source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pre.pack", properties: props);
 
-        // <version>
-        if (id != null && version != null) {
-            var v = GetVersion (id.Value);
-            if (!string.IsNullOrEmpty (v)) {
-                if (id.Value.StartsWith("SkiaSharp") || id.Value.StartsWith("HarfBuzzSharp"))
-                    v += suffix;
-                version.Value = v;
-            }
-        }
-
-        // <repository>
-        var repository = metadata.Element ("repository");
-        if (repository == null) {
-            repository = new XElement ("repository");
-            metadata.Add (repository);
-        }
-        repository.SetAttributeValue ("type", "git");
-        repository.SetAttributeValue ("url", GIT_URL);
-        repository.SetAttributeValue ("branch", GIT_BRANCH_NAME);
-        repository.SetAttributeValue ("commit", GIT_SHA);
-
-        // <version>
-        if (id != null && version != null) {
-            var v = GetVersion (id.Value);
-            if (!string.IsNullOrEmpty (v)) {
-                if (id.Value.StartsWith("SkiaSharp") || id.Value.StartsWith("HarfBuzzSharp"))
-                    v += suffix;
-                version.Value = v;
-            }
-        }
-
-        // <dependency>
-        var dependencies = metadata
-            .Elements ("dependencies")
-            .Elements ("dependency");
-        var groupDependencies = metadata
-            .Elements ("dependencies")
-            .Elements ("group")
-            .Elements ("dependency");
-        foreach (var package in dependencies.Union (groupDependencies)) {
-            var depId = package.Attribute ("id");
-            var depVersion = package.Attribute ("version");
-            if (depId != null && depVersion != null) {
-                var v = GetVersion (depId.Value);
-                if (!string.IsNullOrEmpty (v)) {
-                    if (depId.Value.StartsWith("SkiaSharp") || depId.Value.StartsWith("HarfBuzzSharp"))
-                        v += suffix;
-                    depVersion.Value = v;
-                } else {
-                    v = GetVersion (depId.Value, "release");
-                    if (!string.IsNullOrEmpty (v))
-                        depVersion.Value = v;
-                }
-            }
-        }
-    }
-
-    DeleteFiles ("./output/*/nuget/*.nuspec");
-    foreach (var nuspec in GetFiles ("./nuget/*.nuspec")) {
-        var xdoc = XDocument.Load (nuspec.FullPath);
-        var metadata = xdoc.Root.Element ("metadata");
-        var id = metadata.Element ("id").Value;
-        if (id.StartsWith ("_"))
-            continue;
-        var dir = id;
-        if (id.Contains(".NativeAssets.")) {
-            dir = id.Substring(0, id.IndexOf(".NativeAssets."));
-        }
-
-        var preview = "";
-        if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-            preview += $"-featurepreview-{FEATURE_NAME}";
-        } else {
-            preview += $"-{PREVIEW_LABEL}";
-        }
-        if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
-            preview += $".{BUILD_NUMBER}";
-        }
-
-        RemovePlatforms (xdoc);
-
-        var outDir = $"./output/{dir}/nuget";
-        EnsureDirectoryExists (outDir);
-
-        if (!PREVIEW_ONLY_NUGETS.Contains (id)) {
-            SetVersion (xdoc, "");
-            xdoc.Save ($"{outDir}/{id}.nuspec");
-        }
-
-        SetVersion (xdoc, $"{preview}");
-        xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
-
-        // the placeholders
-        FileWriteText ($"{outDir}/_._", "");
-
-        // the legal
-        CopyFile ("./LICENSE.txt", $"{outDir}/LICENSE.txt");
-        CopyFile ("./External-Dependency-Info.txt", $"{outDir}/THIRD-PARTY-NOTICES.txt");
-    }
-
-    EnsureDirectoryExists ($"{OUTPUT_NUGETS_PATH}");
-    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
-    foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
-
-        string symbolsFormat = null;
-        // *.NativeAssets.* are special as they contain just native code
-        if (nuspec.FullPath.Contains(".NativeAssets."))
-            symbolsFormat = "symbols.nupkg";
-
-        PackageNuGet (nuspec, OUTPUT_NUGETS_PATH, symbolsFormat: symbolsFormat);
-    }
-
-    // copy & move symbols to a special location to avoid signing
+    // move symbols to a special location to avoid signing
     EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
     DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
-
-    // setup validation options
-    var options = new Xamarin.Nuget.Validator.NugetValidatorOptions {
-        Copyright = "© Microsoft Corporation. All rights reserved.",
-        Author = "Microsoft",
-        Owner = "Microsoft",
-        NeedsProjectUrl = true,
-        NeedsLicenseUrl = true,
-        ValidateRequireLicenseAcceptance = true,
-        ValidPackageNamespace = new [] { "SkiaSharp", "HarfBuzzSharp" },
-    };
-
-    var nupkgFiles = GetFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
-
-    Information ("Found ({0}) Nuget's to validate", nupkgFiles.Count ());
-
-    foreach (var nupkgFile in nupkgFiles) {
-        Verbose ("Verifiying Metadata of {0}", nupkgFile.GetFilename ());
-
-        var result = Xamarin.Nuget.Validator.NugetValidator.Validate(MakeAbsolute(nupkgFile).FullPath, options);
-        if (!result.Success) {
-            Information ("Metadata validation failed for: {0} \n\n", nupkgFile.GetFilename ());
-            Information (string.Join("\n    ", result.ErrorMessages));
-            throw new Exception ($"Invalid Metadata for: {nupkgFile.GetFilename ()}");
-
-        } else {
-            Information ("Metadata validation passed for: {0}", nupkgFile.GetFilename ());
-        }
-    }
 });
 
 Task ("nuget-special")
@@ -775,30 +588,38 @@ Task ("nuget-special")
     DeleteFiles ($"{OUTPUT_SPECIAL_NUGETS_PATH}/*.nupkg");
 
     // get a list of all the version number variants
-    var versions = new List<string> ();
+    var versions = new Dictionary<string, string> ();
     if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
         var v = $"0.0.0-{PREVIEW_LABEL}";
-        if (!string.IsNullOrEmpty (BUILD_NUMBER))
-            v += $".{BUILD_NUMBER}";
-        versions.Add (v);
+        if (!string.IsNullOrEmpty (BUILD_COUNTER))
+            v += $".{BUILD_COUNTER}";
+        versions.Add ("pr", v);
     } else {
         if (!string.IsNullOrEmpty (GIT_SHA)) {
             var v = $"0.0.0-commit.{GIT_SHA}";
-            if (!string.IsNullOrEmpty (BUILD_NUMBER))
-                v += $".{BUILD_NUMBER}";
-            versions.Add (v);
+            if (!string.IsNullOrEmpty (BUILD_COUNTER))
+                v += $".{BUILD_COUNTER}";
+            versions.Add ("commit", v);
         }
         if (!string.IsNullOrEmpty (GIT_BRANCH_NAME)) {
             var v = $"0.0.0-branch.{GIT_BRANCH_NAME.Replace ("/", ".")}";
-            if (!string.IsNullOrEmpty (BUILD_NUMBER))
-                v += $".{BUILD_NUMBER}";
-            versions.Add (v);
+            if (!string.IsNullOrEmpty (BUILD_COUNTER))
+                v += $".{BUILD_COUNTER}";
+            versions.Add ("branch", v);
         }
+    }
+    Information ("Detected {0} special versions to process:", versions.Count);
+    var max = 0;
+    foreach (var version in versions) {
+        if (version.Key.Length > max)
+            max = version.Key.Length + 1;
+    }
+    foreach (var version in versions) {
+        Information ("  - {0}" + " ".PadRight(max - version.Key.Length) + "=> {1}", version.Key, version.Value);
     }
 
     // get a list of all the nuspecs to pack
     var specials = new Dictionary<string, string> ();
-
     var nativePlatforms = GetDirectories ("./output/native/*")
         .Select (d => d.GetDirectoryName ())
         .ToArray ();
@@ -814,6 +635,15 @@ Task ("nuget-special")
         specials[$"_Symbols"] = $"nugets-symbols";
         specials[$"_SymbolsPreview"] = $"nugets-symbols";
     }
+    Information ("Detected {0} special artifacts to process:", specials.Count);
+    max = 0;
+    foreach (var special in specials) {
+        if (special.Key.Length > max)
+            max = special.Key.Length + 1;
+    }
+    foreach (var special in specials) {
+        Information ("  - {0}" + " ".PadRight(max - special.Key.Length) + "=> {1}", special.Key, special.Value);
+    }
 
     foreach (var pair in specials) {
         var id = pair.Key;
@@ -822,10 +652,11 @@ Task ("nuget-special")
 
         DeleteFiles ($"./output/{path}/*.nuspec");
 
-        foreach (var packageVersion in versions) {
+        foreach (var version in versions) {
             // update the version
+            var packageVersion = version.Value;
             var fn = id.StartsWith ("_NativeAssets.") ? "_NativeAssets" : id;
-            var xdoc = XDocument.Load ($"./nuget/{fn}.nuspec");
+            var xdoc = XDocument.Load ($"./scripts/nuget/{fn}.nuspec");
             var metadata = xdoc.Root.Element ("metadata");
             metadata.Element ("version").Value = packageVersion;
             metadata.Element ("id").Value = id;
@@ -846,9 +677,24 @@ Task ("nuget-special")
                     new XAttribute ("src", $"**"),
                     new XAttribute ("target", $"tools/{platform}")));
             }
+            // add the readme
+            {
+                var files = xdoc.Root.Element ("files");
+                files.Add (new XElement ("file",
+                    new XAttribute ("src", MakeAbsolute(File("./scripts/nuget/README.md")).FullPath),
+                    new XAttribute ("target", $"README.md")));
+            }
 
+            // save and pack
             xdoc.Save (nuspec);
-            PackageNuGet (nuspec, OUTPUT_SPECIAL_NUGETS_PATH, true);
+            RunDotNetPack (
+                "./scripts/nuget/NuGet.csproj",
+                OUTPUT_SPECIAL_NUGETS_PATH,
+                bl: $".{id}.{version.Key}",
+                additionalArgs: "/restore /nologo",
+                properties: new Dictionary<string, string> {
+                    { "NuspecFile", MakeAbsolute(File(nuspec)).FullPath },
+                });
         }
 
         DeleteFiles ($"./output/{path}/*.nuspec");
@@ -902,10 +748,7 @@ Task ("clean-managed")
     CleanDirectories ("./source/*/*/Generated Files");
     CleanDirectories ("./source/packages");
 
-    DeleteFiles ("./nuget/*.prerelease.nuspec");
-
-    if (DirectoryExists ("./output"))
-        DeleteDirectory ("./output", new DeleteDirectorySettings { Recursive = true, Force = true });
+    DeleteDir ("./output");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

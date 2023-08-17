@@ -13,14 +13,18 @@ namespace SkiaSharp.Tests
 	{
 		private static IEnumerable<Type> InteropApiTypes => new[]
 		{
-			typeof(SkiaSharp.SKNativeObject).Assembly.GetType("SkiaSharp.SkiaApi"),
-			typeof(HarfBuzzSharp.NativeObject).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi")
+			typeof(SkiaSharp.SkiaApi),
+			typeof(HarfBuzzSharp.HarfBuzzApi),
+			typeof(SkiaSharp.SceneGraphApi),
+			typeof(SkiaSharp.SkottieApi),
 		};
 
 		private static IEnumerable<Type> InteropApiDelegatesTypes => new[]
 		{
-			typeof(SkiaSharp.SKNativeObject).Assembly.GetType("SkiaSharp.SkiaApi+Delegates"),
-			typeof(HarfBuzzSharp.NativeObject).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi+Delegates")
+			typeof(SkiaSharp.SkiaApi).Assembly.GetType("SkiaSharp.SkiaApi+Delegates"),
+			typeof(HarfBuzzSharp.HarfBuzzApi).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi+Delegates"),
+			typeof(SkiaSharp.SceneGraphApi).Assembly.GetType("SkiaSharp.SceneGraphApi+Delegates"),
+			typeof(SkiaSharp.SkottieApi).Assembly.GetType("SkiaSharp.SkottieApi+Delegates"),
 		};
 
 		private static IEnumerable<MethodInfo> InteropMembers =>
@@ -52,7 +56,7 @@ namespace SkiaSharp.Tests
 		public static IEnumerable<object[]> InteropDelegatesData =>
 			InteropDelegates.Select(m => new object[] { m });
 
-		[Trait(CategoryKey, ApiCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableFact]
 		public void DelegateTypesAreValid()
 		{
@@ -60,7 +64,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(del);
 		}
 
-		[Trait(CategoryKey, ApiCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableTheory]
 		[MemberData(nameof(InteropDelegatesData))]
 		public void DelegateTypesHaveAttributes(Type delegateType)
@@ -68,7 +72,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(delegateType.GetCustomAttribute<UnmanagedFunctionPointerAttribute>());
 		}
 
-		[Trait(CategoryKey, ApiCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableTheory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiTypesAreNotInvalid(MethodInfo method, string delegateName)
@@ -92,7 +96,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, ApiCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableTheory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiReturnTypesArePrimitives(MethodInfo method, string delegateName)
@@ -119,7 +123,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, ApiCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableTheory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiTypesAreMarshalledCorrectly(MethodInfo method, string delegateName)
@@ -192,7 +196,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, ApiCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableTheory]
 		// too old
 		[InlineData("80.0", "0.0", "[80.0, 81.0)")]
@@ -236,38 +240,25 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(CategoryKey, ApiCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableFact]
 		public void TestLibraryVersions()
 		{
 			Assert.True(SkiaSharpVersion.CheckNativeLibraryCompatible());
 		}
 
-		[Trait(CategoryKey, ApiCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableFact]
 		public void TestLibraryVersionsDoesNotThrow()
 		{
 			SkiaSharpVersion.CheckNativeLibraryCompatible(true);
 		}
 
-		[Trait(CategoryKey, ApiCategory)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableFact]
 		public void TestVersionsString()
 		{
 			Assert.Equal(SkiaSharpVersion.Native.ToString(2), SkiaSharpVersion.NativeString);
-		}
-
-		[Trait(CategoryKey, ApiCategory)]
-		[SkippableFact]
-		public void PlatformConfigurationIsMuslOverrideCanBeFoundViaReflection()
-		{
-			var assembly = typeof(SkiaSharpVersion).Assembly;
-			var config = assembly.DefinedTypes.FirstOrDefault(t => t.Name == "PlatformConfiguration");
-			var overrideProp = config.GetProperty("LinuxFlavor");
-
-			Assert.Equal(typeof(string), overrideProp.PropertyType);
-			Assert.True(overrideProp.CanRead);
-			Assert.True(overrideProp.CanWrite);
 		}
 	}
 }

@@ -1,11 +1,11 @@
 type = sharedLib
-profile = mobile-4.0
+profile = mobile-6.0
 
 skia_root = $(abspath ../../../externals/skia)
 
 USER_LIB_DIRS = $(skia_root)/out/tizen/$(BUILD_ARCH)
 
-USER_LIBS = skia
+USER_LIBS = skia skresources skottie sksg skshaper
 
 USER_LINK_OPTS = -Wl,--gc-sections
 
@@ -14,21 +14,24 @@ APPNAME = SkiaSharp
 USER_INC_DIRS = $(skia_root)
 
 USER_DEFS = NDEBUG                                        \
-            GR_OP_ALLOCATE_USE_NEW                        \
             SK_BUILD_FOR_TIZEN                            \
             SK_CODEC_DECODES_JPEG                         \
             SK_CODEC_DECODES_PNG                          \
             SK_CODEC_DECODES_RAW                          \
             SK_CODEC_DECODES_WEBP                         \
-            SK_ENCODE_JPEG                                \
-            SK_ENCODE_PNG                                 \
-            SK_ENCODE_WEBP                                \
+            SK_ENABLE_PRECOMPILE                          \
+            SK_ENABLE_SKOTTIE                             \
+            SK_ENABLE_SKOTTIE_SKSLEFFECT                  \
+            SK_ENABLE_SKSL                                \
+            SK_ENABLE_SKSL_IN_RASTER_PIPELINE             \
             SK_GAMMA_APPLY_TO_A8                          \
+            SK_GANESH                                     \
             SK_GL                                         \
-            SK_NO_MAKE_SHARED_PTR                         \
+            SK_HAS_WUFFS_LIBRARY                          \
             SK_R32_SHIFT=16                               \
             SK_SUPPORT_PDF                                \
-            SK_USE_LIBGIFCODEC                            \
+            SK_TYPEFACE_FACTORY_FREETYPE                  \
+            SK_USE_PERFETTO                               \
             SK_XML                                        \
             SKIA_C_DLL                                    \
             SKIA_IMPLEMENTATION=1                         \

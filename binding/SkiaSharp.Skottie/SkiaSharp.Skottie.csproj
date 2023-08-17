@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(AllTargetFrameworks)</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Skottie</RootNamespace>
+    <AssemblyName>SkiaSharp.Skottie</AssemblyName>
+    <PackagingGroup>SkiaSharp.Skottie</PackagingGroup>
+    <Title>SkiaSharp Skottie</Title>
+    <PackageDescription>SkiaSharp Skottie provides a Lottie implementation using the SkiaSharp library.</PackageDescription>
+    <PackageTags>skottie;lottie</PackageTags>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
+  </ItemGroup>
+</Project>

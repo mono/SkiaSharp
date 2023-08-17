@@ -1,18 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net462;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>$(BasicTargetFrameworks);$(WindowsDesktopTargetFrameworks)</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.Desktop</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Desktop.Common</AssemblyName>
     <PackagingGroup>SkiaSharp.Views.Desktop.Common</PackagingGroup>
     <DefineConstants>$(DefineConstants);__DESKTOP__</DefineConstants>
+    <Title>SkiaSharp Views &amp; Layers for Desktop</Title>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
   </ItemGroup>
 </Project>

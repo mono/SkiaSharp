@@ -1,13 +1,13 @@
 ﻿using System;
 
-#if WINDOWS_UWP || HAS_UNO
+#if HAS_UNO_WINUI
+namespace SkiaSharp.Views.Windows
+#elif WINDOWS_UWP || HAS_UNO
 namespace SkiaSharp.Views.UWP
 #elif __ANDROID__
 namespace SkiaSharp.Views.Android
 #elif __TVOS__
 namespace SkiaSharp.Views.tvOS
-#elif __WATCHOS__
-namespace SkiaSharp.Views.watchOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __DESKTOP__

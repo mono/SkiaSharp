@@ -2,9 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <LangVersion>8.0</LangVersion>
-    <RuntimeFrameworkVersion>3.1.19</RuntimeFrameworkVersion>
+    <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GtkSharp" Version="3.22.24.37" />
+    <PackageReference Include="GtkSharp" Version="3.24.24.95" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,19 +20,6 @@
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Gtk3\SkiaSharp.Views.Gtk3.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\..\..\..\output\native\windows\x64\libSkiaSharp.dll" Condition="Exists('..\..\..\..\output\native\windows\x64\libSkiaSharp.dll')">
-      <Link>libSkiaSharp.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\..\..\..\output\native\osx\libSkiaSharp.dylib" Condition="Exists('..\..\..\..\output\native\osx\libSkiaSharp.dylib')">
-      <Link>libSkiaSharp.dylib</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\..\..\..\output\native\linux\x64\libSkiaSharp.so" Condition="Exists('..\..\..\..\output\native\linux\x64\libSkiaSharp.so')">
-      <Link>libSkiaSharp.so</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
 
 </Project>

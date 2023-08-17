@@ -1,0 +1,60 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_IncludeAdditionalTfmSpecificPackageFiles</TargetsForTfmSpecificContentInPackage>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder Condition="'$(ExcludeSymbolsFromPackage)' != 'false'">$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GetPackageVersionDependsOn>$(GetPackageVersionDependsOn);CollectAssemblyVersionInfo</GetPackageVersionDependsOn>
+    <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);CollectAssemblyVersionInfo</GenerateNuspecDependsOn>
+    <CollectAssemblyVersionInfoDependsOn>$(CollectAssemblyVersionInfoDependsOn);_IncludeAdditionalVersionInfo</CollectAssemblyVersionInfoDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageTags Condition="$(PackagingGroup.StartsWith('SkiaSharp'))">graphics;cross-platform;skiasharp;skia;$(PackageTags);ios;android;linux;windows;tvos;macos;tizen</PackageTags>
+    <PackageTags Condition="$(PackagingGroup.StartsWith('HarfBuzzSharp'))">graphics;text;cross-platform;harfbuzzsharp;harfbuzz;$(PackageTags);ios;android;linux;windows;tvos;macos;tizen</PackageTags>
+    <PackageDescription Condition="'$(PackageNotes)' != ''">$(PackageDescription)
+
+$(PackageNotes)</PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="@(PackageFile)" Link="%(PackagePath)" Pack="True" />
+  </ItemGroup>
+
+  <!-- Generate the README -->
+  <Target Name="_IncludeAdditionalPackageFiles"
+          BeforeTargets="_GetPackageFiles"
+          Condition="'$(PackageDescription)' != ''">
+    <WriteLinesToFile File="$(IntermediateOutputPath)$(PackageReadmeFile)" Lines="$(PackageDescription)" Overwrite="True" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)$(PackageReadmeFile)" />
+      <None Include="$(IntermediateOutputPath)$(PackageReadmeFile)" PackagePath="$(PackageReadmeFile)" Pack="True" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Add the xml docs -->
+  <Target Name="_IncludeAdditionalTfmSpecificPackageFilesPrepare">
+    <GetNuGetShortFolderName
+      TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
+      TargetPlatformMoniker="$(TargetPlatformMoniker)">
+      <Output TaskParameter="NuGetShortFolderName" PropertyName="NuGetShortFolderName" />
+    </GetNuGetShortFolderName>
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(MDocOutputPath)" PackagePath="lib\$(NuGetShortFolderName)\$(MDocOutputName)"
+                              Exclude="@(DocumentationProjectOutputGroupOutput)" Condition="Exists('$(MDocOutputPath)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_IncludeAdditionalTfmSpecificPackageFiles"
+          DependsOnTargets="_IncludeAdditionalTfmSpecificPackageFilesPrepare;IncludeAdditionalTfmSpecificPackageFiles" />
+
+  <!-- Set the package version properties -->
+  <Target Name="_IncludeAdditionalVersionInfo">
+    <PropertyGroup>
+      <PackageVersion>$(Version)</PackageVersion>
+    </PropertyGroup>
+  </Target>
+
+</Project>

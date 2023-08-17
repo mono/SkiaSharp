@@ -10,47 +10,47 @@ namespace SkiaSharp.Views.Maui.Handlers
 		private SKSizeI lastCanvasSize;
 		private SKTouchHandler? touchHandler;
 
-		protected override SKCanvasView CreateNativeView() => new SKCanvasView { BackgroundColor = UIColor.Clear };
+		protected override SKCanvasView CreatePlatformView() => new SKCanvasView { BackgroundColor = UIColor.Clear };
 
-		protected override void ConnectHandler(SKCanvasView nativeView)
+		protected override void ConnectHandler(SKCanvasView platformView)
 		{
-			nativeView.PaintSurface += OnPaintSurface;
+			platformView.PaintSurface += OnPaintSurface;
 
-			base.ConnectHandler(nativeView);
+			base.ConnectHandler(platformView);
 		}
 
-		protected override void DisconnectHandler(SKCanvasView nativeView)
+		protected override void DisconnectHandler(SKCanvasView platformView)
 		{
-			touchHandler?.Detach(nativeView);
+			touchHandler?.Detach(platformView);
 			touchHandler = null;
 
-			nativeView.PaintSurface -= OnPaintSurface;
+			platformView.PaintSurface -= OnPaintSurface;
 
-			base.DisconnectHandler(nativeView);
+			base.DisconnectHandler(platformView);
 		}
 
 		// Mapper actions / properties
 
 		public static void OnInvalidateSurface(SKCanvasViewHandler handler, ISKCanvasView canvasView, object? args)
 		{
-			handler.NativeView?.SetNeedsDisplay();
+			handler.PlatformView?.SetNeedsDisplay();
 		}
 
 		public static void MapIgnorePixelScaling(SKCanvasViewHandler handler, ISKCanvasView canvasView)
 		{
-			handler.NativeView?.UpdateIgnorePixelScaling(canvasView);
+			handler.PlatformView?.UpdateIgnorePixelScaling(canvasView);
 		}
 
 		public static void MapEnableTouchEvents(SKCanvasViewHandler handler, ISKCanvasView canvasView)
 		{
-			if (handler.NativeView == null)
+			if (handler.PlatformView == null)
 				return;
 
 			handler.touchHandler ??= new SKTouchHandler(
 				args => canvasView.OnTouch(args),
 				(x, y) => handler.OnGetScaledCoord(x, y));
 
-			handler.touchHandler?.SetEnabled(handler.NativeView, canvasView.EnableTouchEvents);
+			handler.touchHandler?.SetEnabled(handler.PlatformView, canvasView.EnableTouchEvents);
 		}
 
 		// helper methods
@@ -64,14 +64,14 @@ namespace SkiaSharp.Views.Maui.Handlers
 				VirtualView?.OnCanvasSizeChanged(newCanvasSize);
 			}
 
-			VirtualView?.OnPaintSurface(new SKPaintSurfaceEventArgs(e.Surface, e.Info));
+			VirtualView?.OnPaintSurface(new SKPaintSurfaceEventArgs(e.Surface, e.Info, e.RawInfo));
 		}
 
 		private SKPoint OnGetScaledCoord(double x, double y)
 		{
-			if (VirtualView?.IgnorePixelScaling == false && NativeView != null)
+			if (VirtualView?.IgnorePixelScaling == false && PlatformView != null)
 			{
-				var scale = NativeView.ContentScaleFactor;
+				var scale = PlatformView.ContentScaleFactor;
 
 				x *= scale;
 				y *= scale;

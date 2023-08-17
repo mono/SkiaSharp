@@ -5,7 +5,7 @@ namespace SkiaSharp.Views.Maui.Handlers
 {
 	public partial class SKCanvasViewHandler : ViewHandler<ISKCanvasView, object>
 	{
-		protected override object CreateNativeView() => throw new NotImplementedException();
+		protected override object CreatePlatformView() => throw new NotImplementedException();
 
 		public static void MapIgnorePixelScaling(SKCanvasViewHandler handler, ISKCanvasView canvasView) { }
 

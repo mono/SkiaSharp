@@ -11,7 +11,9 @@
 ```csharp
 public static class AppHostBuilderExtensions {
 	// methods
-	public static Microsoft.Maui.Hosting.IAppHostBuilder UseSkiaSharpHandlers (this Microsoft.Maui.Hosting.IAppHostBuilder builder);
+
+	[Obsolete]
+public static Microsoft.Maui.Hosting.MauiAppBuilder UseSkiaSharpHandlers (this Microsoft.Maui.Hosting.MauiAppBuilder builder);
 }
 ```
 
@@ -56,7 +58,7 @@ public interface ISKGLViewController : Microsoft.Maui.Controls.IElementControlle
 #### New Type: SkiaSharp.Views.Maui.Controls.SKBitmapImageSource
 
 ```csharp
-public sealed class SKBitmapImageSource : Microsoft.Maui.Controls.ImageSource, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.IElement, Microsoft.Maui.IImageSource, SkiaSharp.Views.Maui.ISKBitmapImageSource, System.ComponentModel.INotifyPropertyChanged {
+public sealed class SKBitmapImageSource : Microsoft.Maui.Controls.ImageSource, Microsoft.Maui.Controls.IEffectControlProvider, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.IElement, Microsoft.Maui.IImageSource, Microsoft.Maui.IVisualTreeElement, SkiaSharp.Views.Maui.ISKBitmapImageSource, System.ComponentModel.INotifyPropertyChanged {
 	// constructors
 	public SKBitmapImageSource ();
 	// fields
@@ -74,7 +76,7 @@ public sealed class SKBitmapImageSource : Microsoft.Maui.Controls.ImageSource, M
 #### New Type: SkiaSharp.Views.Maui.Controls.SKCanvasView
 
 ```csharp
-public class SKCanvasView : Microsoft.Maui.Controls.View, Microsoft.Maui.Controls.IAnimatable, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.IGestureRecognizers, Microsoft.Maui.Controls.ITabStopElement, Microsoft.Maui.Controls.IViewController, Microsoft.Maui.Controls.IVisualElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.IGestureController, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.Controls.Internals.INavigationProxy, Microsoft.Maui.HotReload.IHotReloadableView, Microsoft.Maui.IElement, Microsoft.Maui.IFrameworkElement, Microsoft.Maui.IPropertyMapperView, Microsoft.Maui.IReplaceableView, Microsoft.Maui.ITransform, Microsoft.Maui.IView, ISKCanvasViewController, SkiaSharp.Views.Maui.ISKCanvasView, System.ComponentModel.INotifyPropertyChanged {
+public class SKCanvasView : Microsoft.Maui.Controls.View, Microsoft.Maui.Controls.IAnimatable, Microsoft.Maui.Controls.IEffectControlProvider, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.IGestureRecognizers, Microsoft.Maui.Controls.IViewController, Microsoft.Maui.Controls.IVisualElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.IGestureController, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.Controls.Internals.INavigationProxy, Microsoft.Maui.HotReload.IHotReloadableView, Microsoft.Maui.IElement, Microsoft.Maui.IPropertyMapperView, Microsoft.Maui.IReplaceableView, Microsoft.Maui.ITransform, Microsoft.Maui.IView, Microsoft.Maui.IVisualTreeElement, ISKCanvasViewController, SkiaSharp.Views.Maui.ISKCanvasView, System.ComponentModel.INotifyPropertyChanged {
 	// constructors
 	public SKCanvasView ();
 	// fields
@@ -98,7 +100,7 @@ public class SKCanvasView : Microsoft.Maui.Controls.View, Microsoft.Maui.Control
 #### New Type: SkiaSharp.Views.Maui.Controls.SKGLView
 
 ```csharp
-public class SKGLView : Microsoft.Maui.Controls.View, Microsoft.Maui.Controls.IAnimatable, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.IGestureRecognizers, Microsoft.Maui.Controls.ITabStopElement, Microsoft.Maui.Controls.IViewController, Microsoft.Maui.Controls.IVisualElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.IGestureController, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.Controls.Internals.INavigationProxy, Microsoft.Maui.HotReload.IHotReloadableView, Microsoft.Maui.IElement, Microsoft.Maui.IFrameworkElement, Microsoft.Maui.IPropertyMapperView, Microsoft.Maui.IReplaceableView, Microsoft.Maui.ITransform, Microsoft.Maui.IView, ISKGLViewController, System.ComponentModel.INotifyPropertyChanged {
+public class SKGLView : Microsoft.Maui.Controls.View, Microsoft.Maui.Controls.IAnimatable, Microsoft.Maui.Controls.IEffectControlProvider, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.IGestureRecognizers, Microsoft.Maui.Controls.IViewController, Microsoft.Maui.Controls.IVisualElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.IGestureController, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.Controls.Internals.INavigationProxy, Microsoft.Maui.HotReload.IHotReloadableView, Microsoft.Maui.IElement, Microsoft.Maui.IPropertyMapperView, Microsoft.Maui.IReplaceableView, Microsoft.Maui.ITransform, Microsoft.Maui.IView, Microsoft.Maui.IVisualTreeElement, ISKGLViewController, System.ComponentModel.INotifyPropertyChanged {
 	// constructors
 	public SKGLView ();
 	// fields
@@ -123,7 +125,7 @@ public class SKGLView : Microsoft.Maui.Controls.View, Microsoft.Maui.Controls.IA
 #### New Type: SkiaSharp.Views.Maui.Controls.SKImageImageSource
 
 ```csharp
-public sealed class SKImageImageSource : Microsoft.Maui.Controls.ImageSource, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.IElement, Microsoft.Maui.IImageSource, SkiaSharp.Views.Maui.ISKImageImageSource, System.ComponentModel.INotifyPropertyChanged {
+public sealed class SKImageImageSource : Microsoft.Maui.Controls.ImageSource, Microsoft.Maui.Controls.IEffectControlProvider, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.IElement, Microsoft.Maui.IImageSource, Microsoft.Maui.IVisualTreeElement, SkiaSharp.Views.Maui.ISKImageImageSource, System.ComponentModel.INotifyPropertyChanged {
 	// constructors
 	public SKImageImageSource ();
 	// fields
@@ -141,7 +143,7 @@ public sealed class SKImageImageSource : Microsoft.Maui.Controls.ImageSource, Mi
 #### New Type: SkiaSharp.Views.Maui.Controls.SKPictureImageSource
 
 ```csharp
-public sealed class SKPictureImageSource : Microsoft.Maui.Controls.ImageSource, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.IElement, Microsoft.Maui.IImageSource, SkiaSharp.Views.Maui.ISKPictureImageSource, System.ComponentModel.INotifyPropertyChanged {
+public sealed class SKPictureImageSource : Microsoft.Maui.Controls.ImageSource, Microsoft.Maui.Controls.IEffectControlProvider, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.IElement, Microsoft.Maui.IImageSource, Microsoft.Maui.IVisualTreeElement, SkiaSharp.Views.Maui.ISKPictureImageSource, System.ComponentModel.INotifyPropertyChanged {
 	// constructors
 	public SKPictureImageSource ();
 	// fields
@@ -160,7 +162,7 @@ public sealed class SKPictureImageSource : Microsoft.Maui.Controls.ImageSource, 
 #### New Type: SkiaSharp.Views.Maui.Controls.SKPixmapImageSource
 
 ```csharp
-public sealed class SKPixmapImageSource : Microsoft.Maui.Controls.ImageSource, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.IElement, Microsoft.Maui.IImageSource, SkiaSharp.Views.Maui.ISKPixmapImageSource, System.ComponentModel.INotifyPropertyChanged {
+public sealed class SKPixmapImageSource : Microsoft.Maui.Controls.ImageSource, Microsoft.Maui.Controls.IEffectControlProvider, Microsoft.Maui.Controls.IElementController, Microsoft.Maui.Controls.Internals.IDynamicResourceHandler, Microsoft.Maui.Controls.Internals.INameScope, Microsoft.Maui.IElement, Microsoft.Maui.IImageSource, Microsoft.Maui.IVisualTreeElement, SkiaSharp.Views.Maui.ISKPixmapImageSource, System.ComponentModel.INotifyPropertyChanged {
 	// constructors
 	public SKPixmapImageSource ();
 	// fields
@@ -172,6 +174,17 @@ public sealed class SKPixmapImageSource : Microsoft.Maui.Controls.ImageSource, M
 	protected override void OnPropertyChanged (string propertyName);
 	public static SKPixmapImageSource op_Implicit (SkiaSharp.SKPixmap pixmap);
 	public static SkiaSharp.SKPixmap op_Implicit (SKPixmapImageSource source);
+}
+```
+
+### New Namespace SkiaSharp.Views.Maui.Controls.Hosting
+
+#### New Type: SkiaSharp.Views.Maui.Controls.Hosting.AppHostBuilderExtensions
+
+```csharp
+public static class AppHostBuilderExtensions {
+	// methods
+	public static Microsoft.Maui.Hosting.MauiAppBuilder UseSkiaSharp (this Microsoft.Maui.Hosting.MauiAppBuilder builder);
 }
 ```
 

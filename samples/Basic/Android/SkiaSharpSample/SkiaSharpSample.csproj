@@ -1,76 +1,20 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A7B93BAB-7099-4A27-9298-C5C2F11A2E34}</ProjectGuid>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
-    <RootNamespace>SkiaSharpSample</RootNamespace>
-    <AssemblyName>SkiaSharpSample</AssemblyName>
-    <TargetFrameworkVersion>v10.0</TargetFrameworkVersion>
-    <AndroidApplication>True</AndroidApplication>
-    <AndroidUseIntermediateDesignerFile>true</AndroidUseIntermediateDesignerFile>
-    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
-    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AndroidSupportedAbis>armeabi-v7a;x86;arm64-v8a;x86_64</AndroidSupportedAbis>
-    <LangVersion>8.0</LangVersion>
+    <TargetFrameworks>net7.0-android</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <RuntimeIdentifiers>android-arm;android-x86;android-arm64;android-x64</RuntimeIdentifiers>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>portable</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-    <AndroidLinkMode>None</AndroidLinkMode>
-    <AndroidDexTool>d8</AndroidDexTool>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>portable</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AndroidManagedSymbols>true</AndroidManagedSymbols>
-    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-    <AndroidLinkMode>Full</AndroidLinkMode>
-    <AndroidDexTool>d8</AndroidDexTool>
-    <AndroidLinkTool>r8</AndroidLinkTool>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
-    <Reference Include="Mono.Android" />
+    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.6.1.2" />
   </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.1.0" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="MainActivity.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Properties\AndroidManifest.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\**\*" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Android\SkiaSharp.Views.Android.csproj">
-      <Project>{926C8D29-E047-4F4E-8B35-852E47BFA9F5}</Project>
-      <Name>SkiaSharp.Views.Android</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Android\SkiaSharp.Android.csproj">
-      <Project>{C737DC80-5B71-4B26-A2DC-DA30421788B0}</Project>
-      <Name>SkiaSharp.Android</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
-  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\monoandroid1.0\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\monoandroid1.0\SkiaSharp.targets')" />
+
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+
 </Project>

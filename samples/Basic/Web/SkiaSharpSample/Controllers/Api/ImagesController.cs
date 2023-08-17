@@ -1,77 +1,60 @@
 ﻿using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Web.Http;
 using SkiaSharp;
+using Microsoft.AspNetCore.Mvc;
 
 namespace SkiaSharpSample.Controllers
 {
-	public class ImagesController : ApiController
+	[ApiController]
+	[Route("api/[controller]")]
+	public class ImagesController : ControllerBase
 	{
 		// GET api/images
 		[HttpGet]
-		public HttpResponseMessage Get()
+		public IActionResult Get()
 		{
-			using (var image = CreateImage("SkiaSharp"))
-			{
-				var response = new HttpResponseMessage(HttpStatusCode.OK)
-				{
-					Content = new ByteArrayContent(image.ToArray())
-				};
-
-				response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/png");
-
-				return response;
-			}
+			using var image = CreateImage("SkiaSharp");
+			return File(image.ToArray(), "image/png");
 		}
 
 		// GET api/images/text
-		[HttpGet]
-		public HttpResponseMessage Get(string id)
+		[HttpGet("{id?}")]
+		public IActionResult Get(string id)
 		{
-			using (var image = CreateImage(id ?? "SkiaSharp"))
-			{
-				var response = new HttpResponseMessage(HttpStatusCode.OK)
-				{
-					Content = new ByteArrayContent(image.ToArray())
-				};
-
-				response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/png");
-
-				return response;
-			}
+			using var image = CreateImage(id ?? "SkiaSharp");
+			return File(image.ToArray(), "image/png");
 		}
 
 		private SKData CreateImage(string text)
 		{
 			// create a surface
-			var info = new SKImageInfo(256, 256);
-			using (var surface = SKSurface.Create(info))
+			var info = new SKImageInfo(512, 512);
+			using var surface = SKSurface.Create(info);
+
+			// the the canvas and properties
+			var canvas = surface.Canvas;
+
+			// make sure the canvas is blank
+			canvas.Clear(SKColors.White);
+
+			// draw some text
+			using var paint = new SKPaint
 			{
-				// the the canvas and properties
-				var canvas = surface.Canvas;
+				Color = SKColors.Black,
+				IsAntialias = true,
+				Style = SKPaintStyle.Fill
+			};
+			using var font = new SKFont
+			{
+				Size = 24
+			};
+			var coord = new SKPoint(info.Width / 2, (info.Height + font.Size) / 2);
+			canvas.DrawText(text, coord, SKTextAlign.Center, font, paint);
 
-				// make sure the canvas is blank
-				canvas.Clear(SKColors.White);
-
-				// draw some text
-				var paint = new SKPaint
-				{
-					Color = SKColors.Black,
-					IsAntialias = true,
-					Style = SKPaintStyle.Fill,
-					TextAlign = SKTextAlign.Center,
-					TextSize = 24
-				};
-				var coord = new SKPoint(info.Width / 2, (info.Height + paint.TextSize) / 2);
-				canvas.DrawText(text, coord, paint);
-
-				// retrieve the encoded image
-				using (var image = surface.Snapshot())
-				{
-					return image.Encode(SKEncodedImageFormat.Png, 100);
-				}
-			}
+			// retrieve the encoded image
+			using var image = surface.Snapshot();
+			return image.Encode(SKEncodedImageFormat.Png, 100);
 		}
 	}
 }

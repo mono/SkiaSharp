@@ -11,14 +11,14 @@
 Obsoleted properties:
 
 ```diff
- [Obsolete ("Use PaintSurface instead.")]
+ [Obsolete ()]
  public ISKCanvasLayerDelegate SKDelegate { get; set; }
 ```
 
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
+ [Obsolete ()]
  public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info);
 ```
 
@@ -34,7 +34,7 @@ protected virtual void OnPaintSurface (SKPaintSurfaceEventArgs e);
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
+ [Obsolete ()]
  public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info);
 ```
 
@@ -50,14 +50,14 @@ protected virtual void OnPaintSurface (SKPaintSurfaceEventArgs e);
 Obsoleted properties:
 
 ```diff
- [Obsolete ("Use PaintSurface instead.")]
+ [Obsolete ()]
  public ISKGLLayerDelegate SKDelegate { get; set; }
 ```
 
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
+ [Obsolete ()]
  public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 ```
 
@@ -73,7 +73,7 @@ protected virtual void OnPaintSurface (SKPaintGLSurfaceEventArgs e);
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
+ [Obsolete ()]
  public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 ```
 
@@ -89,7 +89,7 @@ protected virtual void OnPaintSurface (SKPaintGLSurfaceEventArgs e);
 Obsoleted constructors:
 
 ```diff
- [Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
+ [Obsolete ()]
  public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 ```
 
@@ -103,7 +103,7 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 Obsoleted properties:
 
 ```diff
- [Obsolete ("Use BackendRenderTarget instead.")]
+ [Obsolete ()]
  public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 ```
 

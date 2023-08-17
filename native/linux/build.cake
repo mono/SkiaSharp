@@ -1,7 +1,7 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-#load "../../cake/native-shared.cake"
+#load "../../scripts/cake/native-shared.cake"
 
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
@@ -63,7 +63,8 @@ Task("libSkiaSharp")
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
             $"target_cpu='{arch}' " +
-            $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
+            $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
+            $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +
@@ -73,6 +74,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
+            $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +

@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0-ios;net6.0-maccatalyst;net6.0-tvos;net6.0-macos;net6.0-android</TargetFrameworks>
+    <TargetFrameworks>$(PlatformTargetFrameworks);$(WindowsDesktopTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
-    <!-- https://github.com/NuGet/Home/issues/5226 -->
     <PackageId>SkiaSharp.Views</PackageId>
+    <Title>SkiaSharp Views &amp; Layers for Android, iOS, Mac Catalyst, macOS, and tvOS</Title>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
     <RootNamespace>SkiaSharp.Views.iOS</RootNamespace>
@@ -21,59 +21,73 @@
     <RootNamespace>SkiaSharp.Views.Android</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
   </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <RootNamespace>SkiaSharp.Views.Tizen</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-windows')) or $(TargetFramework.StartsWith('net4'))">
+    <RootNamespace>SkiaSharp.Views.InvalidPlatform</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.InvalidPlatform</AssemblyName>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
-  <ItemGroup>
-    <!-- iOS / Mac Catalyst -->
-    <None Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="..\SkiaSharp.Views.iOS\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <!-- tvOS -->
-    <None Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="..\SkiaSharp.Views.tvOS\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <!-- macOS -->
-    <None Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\macOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="..\SkiaSharp.Views.Mac\**\*.cs" Link="Platform\macOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <!-- Android -->
-    <None Include="..\SkiaSharp.Views.Android\**\*.cs" Link="Platform\Android\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="..\SkiaSharp.Views.Android\Resources\*\*" Link="Platform\Android\Resources\%(RecursiveDir)%(Filename)%(Extension)" />
-    <!-- local platforms -->
+    <!-- Remove all the platform-specific files -->
     <Compile Remove="Platform\**" />
-    <None Include="Platform\**\*.cs" />
+    <None Include="Platform\**" />
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
-    <!-- iOS / Mac Catalyst -->
-    <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\SkiaSharp.Views.iOS\**\*.cs" Link="Platform\iOS\%(RecursiveDir)%(Filename)%(Extension)" />
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-tvos'))">
+    <!-- iOS / tvOS / Mac Catalyst -->
+    <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="Platform\Apple\**\*.cs" />
     <Compile Include="Platform\iOS\**\*.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
-    <!-- tvOS -->
-    <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\SkiaSharp.Views.tvOS\**\*.cs" Link="Platform\tvOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="Platform\tvOS\**\*.cs" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
     <!-- macOS -->
-    <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="Platform\macOS\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\SkiaSharp.Views.Mac\**\*.cs" Link="Platform\macOS\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="Platform\Apple\**\*.cs" />
     <Compile Include="Platform\macOS\**\*.cs" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
     <!-- Android -->
-    <Compile Include="..\SkiaSharp.Views.Android\**\*.cs" Link="Platform\Android\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="Platform\Android\**\*.cs" />
-    <AndroidResource Include="..\SkiaSharp.Views.Android\Resources\*\*" Link="Platform\Android\Resources\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidResource Include="Platform\Android\Resources\*\*" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="..\*\bin\**;..\*\obj\**" />
-    <None Remove="..\*\bin\**;..\*\obj\**" />
+  <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <!-- Tizen -->
+    <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="Platform\Tizen\**\*.cs" />
   </ItemGroup>
+  <!-- Replace windows/desktop with just placeholders -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows')) or $(TargetFramework.StartsWith('net4'))">
+    <Compile Remove="@(Compile)" />
+  </ItemGroup>
+  <Target Name="_UpdateWindowsPackageFiles" BeforeTargets="_GetPackageFiles">
+    <WriteLinesToFile File="$(IntermediateOutputPath)_._" Lines="$(PackageDescription)" Overwrite="True" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)_._" />
+      <_AssemblyOutputFiles Include="@(_BuildOutputInPackage->HasMetadata('TargetFramework'))" />
+      <_WindowsAssemblyOutputFiles Include="@(_AssemblyOutputFiles)" Condition="$([MSBuild]::ValueOrDefault('%(TargetFramework)', '').StartsWith('net4'))" />
+      <_WindowsAssemblyOutputFiles Include="@(_AssemblyOutputFiles)" Condition="$([MSBuild]::ValueOrDefault('%(TargetFramework)', '').Contains('-windows'))" />
+      <_SymbolOutputFiles Include="@(_TargetPathsToSymbols->HasMetadata('TargetFramework'))" />
+      <_WindowsSymbolOutputFiles Include="@(_SymbolOutputFiles)" Condition="$([MSBuild]::ValueOrDefault('%(TargetFramework)', '').StartsWith('net4'))" />
+      <_WindowsSymbolOutputFiles Include="@(_SymbolOutputFiles)" Condition="$([MSBuild]::ValueOrDefault('%(TargetFramework)', '').Contains('-windows'))" />
+      <_WindowsPlaceholders Include="@(_WindowsAssemblyOutputFiles->'$(IntermediateOutputPath)_._')" PackagePath="lib\%(TargetFramework)\_._" Condition="'%(Extension)' == '.dll'" />
+      <None Include="@(_WindowsPlaceholders)" Pack="True" />
+      <_BuildOutputInPackage Remove="@(_WindowsAssemblyOutputFiles)" />
+      <_TargetPathsToSymbols Remove="@(_WindowsSymbolOutputFiles)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+      <!-- net4.x -->
+      <TfmSpecificPackageFile Include="nuget\buildTransitive\net4\SkiaSharp.Views.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+    </ItemGroup>
+    <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+      <!-- net4.x -->
+      <TfmSpecificPackageFile Include="nuget\buildTransitive\windows\SkiaSharp.Views.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+    </ItemGroup>
+  </Target>
 </Project>

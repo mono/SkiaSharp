@@ -9,7 +9,7 @@
 Obsoleted methods:
 
 ```diff
- [Obsolete ("This method is provided for binary backward compatibility. It will always return null.")]
+ [Obsolete ()]
  public static object FindResource (string name);
 ```
 

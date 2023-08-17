@@ -1,6 +1,6 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 
-#load "../../cake/shared.cake"
+#load "../../scripts/cake/shared.cake"
 
 if (BUILD_ARCH.Length == 0)
     BUILD_ARCH = new [] { "arm" };

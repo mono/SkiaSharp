@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(UnoTargetFrameworksReference)</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <PackagingGroup>SkiaSharp.Views.Uno.WinUI</PackagingGroup>
+    <PackagingLocation>uno-runtime\$(TargetFramework)\webassembly</PackagingLocation>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);__WASM__;WINUI</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Uno.WinUI" Version="4.9.26" />
+    <PackageReference Include="Uno.WinUI.Runtime.WebAssembly" Version="4.9.26" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WinUI\UWPExtensions.cs" />
+    <Compile Include="..\SkiaSharp.Views.Uno.WinUI.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="LinkerDefinition.Wasm.xml">
+      <LogicalName>$(AssemblyName).xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WasmScripts\SkiaSharp.Views.Uno.Wasm.js" />
+  </ItemGroup>
+</Project>

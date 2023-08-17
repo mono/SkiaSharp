@@ -1,8 +1,16 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/osx"));
 
-#load "../../cake/native-shared.cake"
-#load "../../cake/xcode.cake"
+#load "../../scripts/cake/native-shared.cake"
+#load "../../scripts/cake/xcode.cake"
+
+string GetDeploymentTarget(string arch)
+{
+    switch (arch.ToLower()) {
+        case "arm64": return "11.0";
+        default: return "10.13";
+    }
+}
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
@@ -18,14 +26,11 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
-        var minVersion = skiaArch.ToLower() == "arm64"
-            ? "11.0"
-            : "10.8";
-
-        GnNinja($"macos/{arch}", "skia",
+        GnNinja($"macos/{arch}", "skia modules/skottie",
             $"target_os='mac' " +
             $"target_cpu='{skiaArch}' " +
-            $"min_macos_version='{minVersion}' " +
+            $"min_macos_version='{GetDeploymentTarget(arch)}' " +
+            $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_metal=true " +
             $"skia_use_piex=true " +
@@ -35,10 +40,13 @@ Task("libSkiaSharp")
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
+            $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
             $"extra_ldflags=[ '-stdlib=libc++' ]");
 
-        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch);
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch, properties: new Dictionary<string, string> {
+            { "MACOSX_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
+        });
 
         SafeCopy(
             $"libSkiaSharp/bin/{CONFIGURATION}/macosx/{arch}.xcarchive",
@@ -59,7 +67,9 @@ Task("libHarfBuzzSharp")
     {
         if (Skip(arch)) return;
 
-        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", "macosx", arch);
+        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", "macosx", arch, properties: new Dictionary<string, string> {
+            { "MACOSX_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
+        });
 
         SafeCopy(
             $"libHarfBuzzSharp/bin/{CONFIGURATION}/macosx/{arch}.xcarchive",

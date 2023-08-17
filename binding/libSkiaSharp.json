@@ -2,16 +2,33 @@
 {
   "dllName": "SKIA",
   "namespace": "SkiaSharp",
+  "namespaces": {
+    "sk_managed": {
+      "prefix": "SKManaged"
+    },
+    "sk_": {
+      "prefix": "SK"
+    },
+    "gr_": {
+      "prefix": "GR"
+    },
+    "sksg_": {
+      "exclude": true
+    },
+    "skottie_": {
+      "exclude": true
+    }
+  },
   "className": "SkiaApi",
   "includeDirs": [
     "."
   ],
   "headers": {
-    "include/c": [ "sk_*", "gr_*" ],
+    "include/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
     "include/xamarin": [ "sk_*" ]
   },
   "source": {
-    "src/c": [ "sk_*", "gr_*" ],
+    "src/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
     "src/xamarin": [ "sk_*" ]
   },
   "mappings": {
@@ -88,8 +105,16 @@
           "fA": "Alpha"
         }
       },
+      "sk_sampling_options_t": {
+        "readonly": true
+      },
+      "sk_cubic_resampler_t": {
+        "readonly": true
+      },
       "sk_jpegencoder_options_t": {
-        "cs": "SKJpegEncoderOptions"
+        "cs": "SKJpegEncoderOptions",
+        "readonly": true,
+        "properties": false
       },
       "sk_colorspace_transfer_fn_t": {
         "cs": "SKColorSpaceTransferFn"
@@ -141,7 +166,9 @@
         "cs": "SKWebpEncoderCompression"
       },
       "sk_webpencoder_options_t": {
-        "cs": "SKWebpEncoderOptions"
+        "cs": "SKWebpEncoderOptions",
+        "readonly": true,
+        "properties": false
       },
       "sk_alphatype_t": {
         "cs": "SKAlphaType"
@@ -168,6 +195,9 @@
         "members": {
           "RESTORE_BG_COLOR_SK_CODEC_ANIMATION_DISPOSAL_METHOD": "RestoreBackgroundColor"
         }
+      },
+      "sk_codecanimation_blend_t": {
+        "cs": "SKCodecAnimationBlend"
       },
       "sk_paint_hinting_t": {
         "members": {
@@ -282,18 +312,10 @@
       },
       "sk_pngencoder_options_t": {
         "cs": "SKPngEncoderOptions",
+        "readonly": true,
         "properties": false
-      },
-      "sk_mask_t": {
-        "properties": false
-      },
-      "sk_matrix44_type_mask_t": {
-        "flags": true
       },
       "sk_path_segment_mask_t": {
-        "flags": true
-      },
-      "sk_crop_rect_flags_t": {
         "flags": true
       },
       "sk_surfaceprops_flags_t": {
@@ -355,6 +377,27 @@
       "sk_lattice_t": {
         "cs": "SKLatticeInternal",
         "internal": true
+      },
+      "sk_runtimeeffect_uniform_type_t": {
+        "cs": "SKRuntimeEffectUniformTypeNative",
+        "internal": true
+      },
+      "sk_runtimeeffect_child_type_t": {
+        "cs": "SKRuntimeEffectChildTypeNative",
+        "internal": true
+      },
+      "sk_runtimeeffect_uniform_flags_t": {
+        "cs": "SKRuntimeEffectUniformFlagsNative",
+        "internal": true,
+        "flags": true
+      },
+      "sk_runtimeeffect_uniform_t": {
+        "cs": "SKRuntimeEffectUniformNative",
+        "internal": true
+      },
+      "sk_runtimeeffect_child_t": {
+        "cs": "SKRuntimeEffectChildNative",
+        "internal": true
       }
     },
     "functions": {
@@ -405,23 +448,23 @@
       },
       "sk_fontmgr_match_family": {
         "parameters": {
-          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+          "1": "IntPtr"
         }
       },
       "sk_fontmgr_match_family_style": {
         "parameters": {
-          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+          "1": "IntPtr"
         }
       },
       "sk_fontmgr_match_family_style_character": {
         "parameters": {
-          "1": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "1": "IntPtr",
           "3": "[MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[]"
         }
       },
       "sk_typeface_create_from_name": {
         "parameters": {
-          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+          "0": "IntPtr"
         }
       },
       "sk_path_parse_svg_string": {

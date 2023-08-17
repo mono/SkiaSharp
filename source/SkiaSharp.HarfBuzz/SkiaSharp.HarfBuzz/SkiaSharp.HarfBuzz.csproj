@@ -1,15 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0;net462</TargetFrameworks>
+    <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
     <RootNamespace>SkiaSharp.HarfBuzz</RootNamespace>
     <AssemblyName>SkiaSharp.HarfBuzz</AssemblyName>
     <PackagingGroup>SkiaSharp.HarfBuzz</PackagingGroup>
+    <Title>HarfBuzz text shaping for SkiaSharp</Title>
+    <PackageDescription>This package adds text shaping support to SkiaSharp via HarfBuzz.</PackageDescription>
+    <PackageTags>harfbuzz;text;shaping</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\SkiaSharp.HarfBuzz.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

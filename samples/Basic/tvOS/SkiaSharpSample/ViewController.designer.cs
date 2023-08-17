@@ -8,21 +8,20 @@ using Foundation;
 using System;
 using System.CodeDom.Compiler;
 
-namespace SkiaSharpSample
-{
-    [Register ("ViewController")]
-    partial class ViewController
-    {
-        [Outlet]
-        [GeneratedCode ("iOS Designer", "1.0")]
-        SkiaSharp.Views.tvOS.SKCanvasView skiaView { get; set; }
+namespace SkiaSharpSample;
 
-        void ReleaseDesignerOutlets ()
-        {
-            if (skiaView != null) {
-                skiaView.Dispose ();
-                skiaView = null;
-            }
-        }
-    }
+[Register ("ViewController")]
+partial class ViewController
+{
+	[Outlet]
+	[GeneratedCode ("iOS Designer", "1.0")]
+	SkiaSharp.Views.tvOS.SKCanvasView skiaView { get; set; }
+
+	void ReleaseDesignerOutlets ()
+	{
+		if (skiaView != null) {
+			skiaView.Dispose ();
+			skiaView = null;
+		}
+	}
 }
