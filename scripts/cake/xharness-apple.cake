@@ -5,6 +5,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 var TEST_APP = Argument("app", EnvironmentVariable("IOS_TEST_APP"));
 var TEST_RESULTS = Argument("results", EnvironmentVariable("IOS_TEST_RESULTS") ?? "");
 var TEST_DEVICE = Argument("device", EnvironmentVariable("IOS_TEST_DEVICE") ?? "ios-simulator-64");
+var TEST_VERSION = Argument("deviceVersion", EnvironmentVariable("IOS_TEST_DEVICE_VERSION") ?? "latest");
 
 Task("Default")
     .Does(() =>
@@ -15,6 +16,9 @@ Task("Default")
     if (string.IsNullOrEmpty(TEST_RESULTS)) {
         TEST_RESULTS = TEST_APP + "-results";
     }
+
+    if (!string.IsNullOrEmpty(TEST_VERSION) && TEST_VERSION.ToLower() != "latest")
+        TEST_DEVICE = $"{TEST_DEVICE}_{TEST_VERSION}";
 
     Information("Test App: {0}", TEST_APP);
     Information("Test Device: {0}", TEST_DEVICE);

@@ -7,7 +7,8 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 
 var TEST_APP = Argument("app", EnvironmentVariable("ANDROID_TEST_APP") ?? "");
 var TEST_RESULTS = Argument("results", EnvironmentVariable("ANDROID_TEST_RESULTS") ?? "");
-var TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-64_34");
+var TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-64");
+var TEST_VERSION = Argument("deviceVersion", EnvironmentVariable("ANDROID_TEST_DEVICE_VERSION") ?? "34");
 var TEST_APP_PACKAGE_NAME = Argument("package", EnvironmentVariable("ANDROID_TEST_APP_PACKAGE_NAME") ?? "");
 var TEST_APP_INSTRUMENTATION = Argument("instrumentation", EnvironmentVariable("ANDROID_TEST_APP_INSTRUMENTATION") ?? "devicerunners.xharness.maui.XHarnessInstrumentation");
 
@@ -52,7 +53,12 @@ AndroidEmulatorProcess emulatorProcess = null;
 
 Setup(context =>
 {
+    if (!string.IsNullOrEmpty(TEST_VERSION) && TEST_VERSION != "latest")
+        TEST_DEVICE = $"{TEST_DEVICE}_{TEST_VERSION}";
+
+    Information("Test App: {0}", TEST_APP);
     Information("Test Device: {0}", TEST_DEVICE);
+    Information("Test Results Directory: {0}", TEST_RESULTS);
 
     // determine the device characteristics
     {
