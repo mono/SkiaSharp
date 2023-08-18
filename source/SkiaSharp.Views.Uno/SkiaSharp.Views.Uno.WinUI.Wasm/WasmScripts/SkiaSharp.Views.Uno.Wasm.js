@@ -10,6 +10,11 @@
 
                 static invalidateCanvas(pData, canvasId, width, height) {
                     var htmlCanvas = document.getElementById(canvasId);
+
+                    if (!htmlCanvas) {
+                        return false;
+                    }
+
                     htmlCanvas.width = width;
                     htmlCanvas.height = height;
 
