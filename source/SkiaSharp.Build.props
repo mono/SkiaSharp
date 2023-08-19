@@ -48,17 +48,44 @@
   </PropertyGroup>
 
   <!-- Try determine which .NET workloads are installed for LOCAL builds -->
-  <PropertyGroup Condition="!$(IsCI) and '$(BuildEverything)' != 'true' and false">
-    <DotNetWorkloadVersionRegex>\d+\.\d+\.\d+(-[a-z]+[\.\d+]+)?</DotNetWorkloadVersionRegex>
-    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists('$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)\microsoft.net.sdk.macos\WorkloadManifest.json')">$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)\</DotNetWorkloadInstallLocation>
-    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists('$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)\microsoft.net.sdk.macos\WorkloadManifest.json')">$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)\</DotNetWorkloadInstallLocation>
+  <PropertyGroup Condition="!$(IsCI) and '$(BuildEverything)' != 'true'">
+    <DotNetWorkloadSearchManifest>microsoft.net.sdk.macos\WorkloadManifest.json</DotNetWorkloadSearchManifest>
+    <!-- DOTNET_INSTALL_DIR -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(DOTNET_INSTALL_DIR)\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+    <!-- DOTNET_ROOT -->
+    <DotNetWorkloadSearchPath> Condition="'$(DotNetWorkloadInstallLocation)' == ''"$([MSBuild]::NormalizeDirectory('$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+    <!-- ProgramFiles\dotnet -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+    <!-- /usr/local/share/dotnet -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('/usr/local/share/dotnet/sdk-manifests/$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+    <!-- LocalAppData\Microsoft\dotnet -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(LocalAppData)\Microsoft\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+    <!-- HOME\.dotnet -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(HOME)/.dotnet/sdk-manifests/$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+  </PropertyGroup>
+  <PropertyGroup Condition="!$(IsCI) and '$(BuildEverything)' != 'true'">
+    <DotNetWorkloadVersionRegex>\d+\.\d+\.\d+(-[a-z]+[\.\d+]+)*</DotNetWorkloadVersionRegex>
     <DotNetWorkloadPacksInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' != ''">$(DotNetWorkloadInstallLocation)..\..\packs\</DotNetWorkloadPacksInstallLocation>
+    <DotNetAndroidWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.android\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.android\WorkloadManifest.json')), $(DotNetWorkloadVersionRegex)))</DotNetAndroidWorkloadInstalledVersion>
+    <DotNetIOSWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.ios\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.ios\WorkloadManifest.json')), $(DotNetWorkloadVersionRegex)))</DotNetIOSWorkloadInstalledVersion>
+    <DotNetMauiWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.maui\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.maui\WorkloadManifest.json')), $(DotNetWorkloadVersionRegex)))</DotNetMauiWorkloadInstalledVersion>
     <DotNetTizenWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)samsung.net.sdk.tizen\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\samsung.net.sdk.tizen\WorkloadManifest.json')), $(DotNetWorkloadVersionRegex)))</DotNetTizenWorkloadInstalledVersion>
     <DotNetTVOSWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.tvos\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.tvos\WorkloadManifest.json')), '$(DotNetWorkloadVersionRegex)'))</DotNetTVOSWorkloadInstalledVersion>
     <DotNetMacOSWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.macos\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.macos\WorkloadManifest.json')), '$(DotNetWorkloadVersionRegex)'))</DotNetMacOSWorkloadInstalledVersion>
     <DotNetTizenWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Samsung.Tizen.Sdk\$(DotNetTizenWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetTizenWorkloadIsInstalled>
-    <DotNetTVOSWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.tvOS.Sdk\$(DotNetMacOSWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetTVOSWorkloadIsInstalled>
+    <DotNetTVOSWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.tvOS.Sdk\$(DotNetTVOSWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetTVOSWorkloadIsInstalled>
     <DotNetMacOSWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.macOS.Sdk\$(DotNetMacOSWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetMacOSWorkloadIsInstalled>
+    <DotNetAndroidWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.Android.Sdk.Windows\$(DotNetAndroidWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetAndroidWorkloadIsInstalled>
+    <DotNetAndroidWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.Android.Sdk.Darwin\$(DotNetAndroidWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetAndroidWorkloadIsInstalled>
+    <DotNetAndroidWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.Android.Sdk.Linux\$(DotNetAndroidWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetAndroidWorkloadIsInstalled>
+    <DotNetIOSWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.iOS.Sdk\$(DotNetIOSWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetIOSWorkloadIsInstalled>
+    <DotNetMauiWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.Maui.Sdk\$(DotNetMauiWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetMauiWorkloadIsInstalled>
     <IsNetTizenSupported Condition="'$(DotNetTizenWorkloadIsInstalled)' != 'true'">false</IsNetTizenSupported>
     <IsNetTVOSSupported Condition="'$(DotNetTVOSWorkloadIsInstalled)' != 'true'">false</IsNetTVOSSupported>
     <IsNetMacOSSupported Condition="'$(DotNetMacOSWorkloadIsInstalled)' != 'true'">false</IsNetMacOSSupported>
@@ -198,6 +225,10 @@
              Condition=" '$(IsMacOS)' == 'true' " />
     <Message Text="Operating System: Linux"
              Condition=" '$(IsLinux)' == 'true' " />
+
+    <Message Text="Workload versions: Android ($(DotNetAndroidWorkloadInstalledVersion)), iOS ($(DotNetIOSWorkloadInstalledVersion)), macOS ($(DotNetMacOSWorkloadInstalledVersion)), tvOS ($(DotNetTVOSWorkloadInstalledVersion)), Tizen ($(DotNetTizenWorkloadInstalledVersion)), MAUI ($(DotNetMauiWorkloadInstalledVersion))" />
+
+    <Message Text="Workloads installed: Android ($(DotNetAndroidWorkloadIsInstalled)), iOS ($(DotNetIOSWorkloadIsInstalled)), macOS ($(DotNetMacOSWorkloadIsInstalled)), tvOS ($(DotNetTVOSWorkloadIsInstalled)), Tizen ($(DotNetTizenWorkloadIsInstalled)), MAUI ($(DotNetMauiWorkloadIsInstalled))" />
 
     <Error Text="There appears to be a problem selecting the operating system. IsWindows='$(IsWindows)',  IsMacOS='$(IsMacOS)',  IsLinux='$(IsLinux)'"
            Condition=" !$(IsWindows) and !$(IsMacOS) and !$(IsLinux) " />
