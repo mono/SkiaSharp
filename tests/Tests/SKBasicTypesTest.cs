@@ -5,10 +5,10 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public class SKBasicTypesTest : SKTest
+	public class SKImageInfoTest : SKTest
 	{
 		[SkippableFact]
-		public void ImageInfoMethodsDoNotModifySource()
+		public void MethodsDoNotModifySource()
 		{
 			var info = new SKImageInfo(100, 30, SKColorType.Rgb565, SKAlphaType.Unpremul);
 
@@ -19,9 +19,12 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Rgb565, info.ColorType);
 			Assert.Equal(SKColorType.Gray8, copy.ColorType);
 		}
+	}
 
+	public class SKRectTest : SKTest
+	{
 		[SkippableFact]
-		public void RectangleHasCorrectProperties()
+		public void HasCorrectProperties()
 		{
 			var rect = new SKRect(15, 25, 55, 75);
 
@@ -38,7 +41,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void RectangleOffsetsCorrectly()
+		public void OffsetsCorrectly()
 		{
 			var expected = new SKRect(25, 30, 65, 80);
 
@@ -53,7 +56,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void RectangleInflatesCorrectly()
+		public void InflatesCorrectly()
 		{
 			var rect = new SKRect(15, 25, 55, 75);
 
@@ -71,7 +74,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void RectangleStandardizeCorrectly()
+		public void StandardizeCorrectly()
 		{
 			var rect = new SKRect(5, 5, 15, 15);
 			Assert.Equal(10, rect.Width);
@@ -95,48 +98,73 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rect, negWH.Standardized);
 		}
 
-		[SkippableFact]
-		public void RectangleAspectFitIsCorrect()
+		[SkippableTheory]
+		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 5, 10, /*result:*/ 5 + 5, 5 + 0, 10, 20)] // tall image in a square frame
+		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 10, 5, /*result:*/ 5 + 0, 5 + 5, 20, 10)] // wide image in a square frame
+		public void AspectFitIsCorrect(float rX, float rY, float rW, float rH, float sW, float sH, float eX, float eY, float eW, float eH)
 		{
-			var bigRect = SKRect.Create(5, 5, 20, 20);
-			var tallSize = new SKSize(5, 10);
-			var wideSize = new SKSize(10, 5);
+			var expected = SKRect.Create(eX, eY, eW, eH);
 
-			var fitTall = bigRect.AspectFit(tallSize);
-			Assert.Equal(5 + 5, fitTall.Left);
-			Assert.Equal(5 + 0, fitTall.Top);
-			Assert.Equal(10, fitTall.Width);
-			Assert.Equal(20, fitTall.Height);
+			var bigRect = SKRect.Create(rX, rY, rW, rH);
+			var imageSize = new SKSize(sW, sH);
 
-			var fitWide = bigRect.AspectFit(wideSize);
-			Assert.Equal(5 + 0, fitWide.Left);
-			Assert.Equal(5 + 5, fitWide.Top);
-			Assert.Equal(20, fitWide.Width);
-			Assert.Equal(10, fitWide.Height);
+			var fit = bigRect.AspectFit(imageSize);
+
+			Assert.Equal(expected, fit);
+		}
+
+		[SkippableTheory]
+		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 5, 10, /*result:*/ 5 + 0, 5 - 10, 20, 40)] // tall image in a square frame
+		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 10, 5, /*result:*/ 5 - 10, 5 + 0, 40, 20)] // wide image in a square frame
+		[InlineData(/*frame:*/ 0, 0, 1024, 767, /*size:*/ 1024, 1024, /*result:*/ 0, -128.5f, 1024, 1024)] // #2562
+		public void AspectFillIsCorrect(float rX, float rY, float rW, float rH, float sW, float sH, float eX, float eY, float eW, float eH)
+		{
+			var expected = SKRect.Create(eX, eY, eW, eH);
+
+			var bigRect = SKRect.Create(rX, rY, rW, rH);
+			var imageSize = new SKSize(sW, sH);
+
+			var fit = bigRect.AspectFill(imageSize);
+
+			Assert.Equal(expected, fit);
+		}
+	}
+
+	public class SKRectITest : SKTest
+	{
+		[SkippableTheory]
+		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 5, 10, /*result:*/ 5 + 5, 5 + 0, 10, 20)] // tall image in a square frame
+		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 10, 5, /*result:*/ 5 + 0, 5 + 5, 20, 10)] // wide image in a square frame
+		public void AspectFitIsCorrect(int rX, int rY, int rW, int rH, int sW, int sH, int eX, int eY, int eW, int eH)
+		{
+			var expected = SKRectI.Create(eX, eY, eW, eH);
+
+			var bigRect = SKRectI.Create(rX, rY, rW, rH);
+			var imageSize = new SKSizeI(sW, sH);
+
+			var fit = bigRect.AspectFit(imageSize);
+
+			Assert.Equal(expected, fit);
+		}
+
+		[SkippableTheory]
+		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 5, 10, /*result:*/ 5 + 0, 5 - 10, 20, 40)] // tall image in a square frame
+		[InlineData(/*frame:*/ 5, 5, 20, 20, /*size:*/ 10, 5, /*result:*/ 5 - 10, 5 + 0, 40, 20)] // wide image in a square frame
+		[InlineData(/*frame:*/ 0, 0, 1024, 767, /*size:*/ 1024, 1024, /*result:*/ 0, -129f, 1024, 1024)] // #2562
+		public void AspectFillIsCorrect(int rX, int rY, int rW, int rH, int sW, int sH, int eX, int eY, int eW, int eH)
+		{
+			var expected = SKRectI.Create(eX, eY, eW, eH);
+
+			var bigRect = SKRectI.Create(rX, rY, rW, rH);
+			var imageSize = new SKSizeI(sW, sH);
+
+			var fit = bigRect.AspectFill(imageSize);
+
+			Assert.Equal(expected, fit);
 		}
 
 		[SkippableFact]
-		public void RectangleAspectFillIsCorrect()
-		{
-			var bigRect = SKRect.Create(5, 5, 20, 20);
-			var tallSize = new SKSize(5, 10);
-			var wideSize = new SKSize(10, 5);
-
-			var fitTall = bigRect.AspectFill(tallSize);
-			Assert.Equal(5 + 0, fitTall.Left);
-			Assert.Equal(5 - 10, fitTall.Top);
-			Assert.Equal(20, fitTall.Width);
-			Assert.Equal(40, fitTall.Height);
-
-			var fitWide = bigRect.AspectFill(wideSize);
-			Assert.Equal(5 - 10, fitWide.Left);
-			Assert.Equal(5 + 0, fitWide.Top);
-			Assert.Equal(40, fitWide.Width);
-			Assert.Equal(20, fitWide.Height);
-		}
-
-		[SkippableFact]
-		public void SKRectICeilingWorksAsExpected()
+		public void CeilingWorksAsExpected()
 		{
 			Assert.Equal(new SKRectI(6, 6, 21, 21), SKRectI.Ceiling(new SKRect(5.5f, 5.5f, 20.5f, 20.5f)));
 			Assert.Equal(new SKRectI(5, 5, 21, 21), SKRectI.Ceiling(new SKRect(5.5f, 5.5f, 20.5f, 20.5f), true));
@@ -147,7 +175,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void SKRectIFloorWorksAsExpected()
+		public void FloorWorksAsExpected()
 		{
 			Assert.Equal(new SKRectI(5, 5, 20, 20), SKRectI.Floor(new SKRect(5.5f, 5.5f, 20.5f, 20.5f)));
 			Assert.Equal(new SKRectI(6, 6, 20, 20), SKRectI.Floor(new SKRect(5.5f, 5.5f, 20.5f, 20.5f), true));
@@ -158,7 +186,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void SKRectIRoundWorksAsExpected()
+		public void RoundWorksAsExpected()
 		{
 			Assert.Equal(new SKRectI(6, 6, 21, 21), SKRectI.Round(new SKRect(5.51f, 5.51f, 20.51f, 20.51f)));
 			Assert.Equal(new SKRectI(5, 6, 20, 21), SKRectI.Round(new SKRect(5.41f, 5.61f, 20.41f, 20.61f)));
