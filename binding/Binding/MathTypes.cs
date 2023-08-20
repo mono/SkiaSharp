@@ -549,10 +549,10 @@ namespace SkiaSharp
 		}
 
 		public readonly SKRectI AspectFit (SKSizeI size) =>
-			Truncate (((SKRect)this).AspectFit (size));
+			Floor (((SKRect)this).AspectFit (size));
 
 		public readonly SKRectI AspectFill (SKSizeI size) =>
-			Truncate (((SKRect)this).AspectFill (size));
+			Floor (((SKRect)this).AspectFill (size));
 
 		public static SKRectI Ceiling (SKRect value) =>
 			Ceiling (value, false);
