@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -472,6 +473,27 @@ namespace SkiaSharp.Tests
 				nn = n;
 				mm = m;
 			}
+		}
+
+		[SkippableTheory]
+		[InlineData("CourierNew.ttf")]
+		[InlineData("Distortable.ttf")]
+		[InlineData("Funkster.ttf")]
+		[InlineData("HangingS.ttf")]
+		[InlineData("ReallyBigA.ttf")]
+		[InlineData("Roboto.woff2")]
+		[InlineData("RobotoMono.woff2")]
+		[InlineData("Roboto2-Regular_NoEmbed.ttf")]
+		[InlineData("segoeui.ttf")]
+		[InlineData("上田雅美.ttf")]
+		public void CanSetTypefacesWithoutCrashing(string fontfile)
+		{
+			using var font = new SKFont();
+
+			using var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, fontfile));
+			font.Typeface = typeface;
+
+			Assert.Same(typeface, font.Typeface);
 		}
 	}
 }
