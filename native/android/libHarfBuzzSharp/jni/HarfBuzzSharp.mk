@@ -3,8 +3,8 @@ include $(CLEAR_VARS)
 
 cmd-strip = $(PRIVATE_STRIP) --strip-all $(call host-path,$1)
 
-src_root = ../../../../externals/skia/third_party/externals/harfbuzz/src
-ext_root = ../../../../externals/skia/third_party/harfbuzz
+src_root = $(abspath ../../../externals/skia/third_party/externals/harfbuzz/src)
+ext_root = $(abspath ../../../externals/skia/third_party/harfbuzz)
 
 LOCAL_MODULE           := HarfBuzzSharp
 
