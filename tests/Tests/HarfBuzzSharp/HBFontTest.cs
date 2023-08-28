@@ -57,7 +57,7 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(face))
 			{
 				Assert.True(font.TryGetVerticalGlyphOrigin(49, out var xOrigin, out var yOrigin));
-				Assert.Equal((557, 1022), (xOrigin, yOrigin));
+				Assert.Equal((557, 1991), (xOrigin, yOrigin));
 			}
 		}
 
@@ -77,7 +77,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				Assert.Equal(-2048, font.GetVerticalGlyphAdvance(49));
+				Assert.Equal(-2961, font.GetVerticalGlyphAdvance(49));
 			}
 		}
 
@@ -101,7 +101,7 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(face))
 			{
 				var advances = font.GetVerticalGlyphAdvances(new[] { 49u, 50u, 51u });
-				var expected = new [] { -2048, -2048, -2048 };
+				var expected = new [] { -2961, -2961, -2961 };
 
 				Assert.Equal(expected, advances);
 			}
