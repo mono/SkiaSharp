@@ -35,7 +35,7 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(face))
 			{
 				font.GetScale(out var xScale, out var yScale);
-				Assert.Equal(new SKPoint(2048, 2048), new SKPoint(xScale, yScale));
+				Assert.Equal((2048, 2048), (xScale, yScale));
 			}
 		}
 
@@ -46,7 +46,7 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(face))
 			{
 				font.TryGetHorizontalGlyphOrigin(49, out var xOrigin, out var yOrigin);
-				Assert.Equal(new SKPoint(0, 0), new SKPoint(xOrigin, yOrigin));
+				Assert.Equal((0, 0), (xOrigin, yOrigin));
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(face))
 			{
 				Assert.True(font.TryGetVerticalGlyphOrigin(49, out var xOrigin, out var yOrigin));
-				Assert.Equal(new SKPoint(557, 1022), new SKPoint(xOrigin, yOrigin));
+				Assert.Equal((557, 1022), (xOrigin, yOrigin));
 			}
 		}
 
