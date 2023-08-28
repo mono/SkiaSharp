@@ -23,7 +23,7 @@ Task("libSkiaSharp")
         Build("iphonesimulator", "x86_64", "x64");
         Build("iphonesimulator", "arm64", "arm64");
         Build("iphoneos", "arm64", "arm64");
-        Build("iphoneos", "arm64", "arm64", "arm64e");
+        // Build("iphoneos", "arm64", "arm64", "arm64e");
 
         SafeCopy(
             $"libSkiaSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
@@ -86,7 +86,7 @@ Task("libHarfBuzzSharp")
         Build("iphonesimulator", "x86_64");
         Build("iphonesimulator", "arm64");
         Build("iphoneos", "arm64");
-        Build("iphoneos", "arm64e");
+        // Build("iphoneos", "arm64e");
 
         SafeCopy(
             $"libHarfBuzzSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
