@@ -39,7 +39,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 		{
 			var clusters = new uint[] { 4, 2, 0 };
 			var codepoints = new uint[] { 629, 668, 891 };
-			var points = new SKPoint[] { new SKPoint(100, 200), new SKPoint(128.25f, 200), new SKPoint(142, 200) };
+			var points = new SKPoint[] { new SKPoint(100, 200), new SKPoint(128.375f, 200), new SKPoint(142.125f, 200) };
 
 			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
@@ -58,7 +58,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 		{
 			var clusters = new uint[] { 4, 2, 0 };
 			var codepoints = new uint[] { 629, 668, 891 };
-			var points = new SKPoint[] { new SKPoint(0, 0), new SKPoint(28.25f, 0), new SKPoint(42, 0) };
+			var points = new SKPoint[] { new SKPoint(0, 0), new SKPoint(28.375f, 0), new SKPoint(42.125f, 0) };
 
 			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
