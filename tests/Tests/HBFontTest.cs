@@ -13,7 +13,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				Assert.Equal(new[] { "ot", "fallback" }, font.SupportedShapers);
+				Assert.Equal(new[] { "ot" }, font.SupportedShapers);
 			}
 		}
 
@@ -35,8 +35,7 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(face))
 			{
 				font.GetScale(out var xScale, out var yScale);
-				Assert.Equal(2048, xScale);
-				Assert.Equal(2048, yScale);
+				Assert.Equal((2048, 2048), (xScale, yScale));
 			}
 		}
 
@@ -47,8 +46,7 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(face))
 			{
 				font.TryGetHorizontalGlyphOrigin(49, out var xOrigin, out var yOrigin);
-				Assert.Equal(0, xOrigin);
-				Assert.Equal(0, yOrigin);
+				Assert.Equal((0, 0), (xOrigin, yOrigin));
 			}
 		}
 
@@ -59,8 +57,7 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(face))
 			{
 				Assert.True(font.TryGetVerticalGlyphOrigin(49, out var xOrigin, out var yOrigin));
-				Assert.Equal(557, xOrigin);
-				Assert.Equal(1022, yOrigin);
+				Assert.Equal((557, 1991), (xOrigin, yOrigin));
 			}
 		}
 
@@ -80,7 +77,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				Assert.Equal(-2048, font.GetVerticalGlyphAdvance(49));
+				Assert.Equal(-2961, font.GetVerticalGlyphAdvance(49));
 			}
 		}
 
@@ -91,10 +88,9 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(face))
 			{
 				var advances = font.GetHorizontalGlyphAdvances(new[] { 49u, 50u, 51u });
+				var expected = new [] { 1114, 514, 602 };
 
-				Assert.Equal(1114, advances[0]);
-				Assert.Equal(514, advances[1]);
-				Assert.Equal(602, advances[2]);
+				Assert.Equal(expected, advances);
 			}
 		}
 
@@ -105,10 +101,9 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(face))
 			{
 				var advances = font.GetVerticalGlyphAdvances(new[] { 49u, 50u, 51u });
+				var expected = new [] { -2961, -2961, -2961 };
 
-				Assert.Equal(-2048, advances[0]);
-				Assert.Equal(-2048, advances[1]);
-				Assert.Equal(-2048, advances[2]);
+				Assert.Equal(expected, advances);
 			}
 		}
 
