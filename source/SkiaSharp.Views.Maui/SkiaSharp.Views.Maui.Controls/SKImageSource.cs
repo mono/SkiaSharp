@@ -5,7 +5,7 @@ using Microsoft.Maui.Controls;
 
 namespace SkiaSharp.Views.Maui.Controls
 {
-	public sealed partial class SKImageImageSource : ImageSource
+	public sealed partial class SKImageImageSource : ImageSource, ISKImageImageSource
 	{
 		public static readonly BindableProperty ImageProperty = BindableProperty.Create(nameof(Image), typeof(SKImage), typeof(SKImageImageSource), default(SKImage));
 
@@ -41,7 +41,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		}
 	}
 
-	public sealed partial class SKBitmapImageSource : ImageSource
+	public sealed partial class SKBitmapImageSource : ImageSource, ISKBitmapImageSource
 	{
 		public static readonly BindableProperty BitmapProperty = BindableProperty.Create(nameof(Bitmap), typeof(SKBitmap), typeof(SKBitmapImageSource), default(SKBitmap));
 
@@ -77,7 +77,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		}
 	}
 
-	public sealed partial class SKPixmapImageSource : ImageSource
+	public sealed partial class SKPixmapImageSource : ImageSource, ISKPixmapImageSource
 	{
 		public static readonly BindableProperty PixmapProperty = BindableProperty.Create(nameof(Pixmap), typeof(SKPixmap), typeof(SKPixmapImageSource), default(SKPixmap));
 
@@ -113,7 +113,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		}
 	}
 
-	public sealed partial class SKPictureImageSource : ImageSource
+	public sealed partial class SKPictureImageSource : ImageSource, ISKPictureImageSource
 	{
 		public static readonly BindableProperty PictureProperty = BindableProperty.Create(nameof(Picture), typeof(SKPicture), typeof(SKPictureImageSource), default(SKPicture));
 

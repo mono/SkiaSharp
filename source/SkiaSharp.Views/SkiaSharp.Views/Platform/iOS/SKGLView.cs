@@ -2,6 +2,8 @@
 
 using System;
 using System.ComponentModel;
+using System.Runtime.Versioning;
+using CoreAnimation;
 using CoreGraphics;
 using Foundation;
 using GLKit;
@@ -18,6 +20,11 @@ namespace SkiaSharp.Views.tvOS
 namespace SkiaSharp.Views.iOS
 #endif
 {
+	[ObsoletedOSPlatform("ios12.0", "Use 'Metal' instead.")]
+	[ObsoletedOSPlatform("tvos12.0", "Use 'Metal' instead.")]
+	[SupportedOSPlatform("ios")]
+	[SupportedOSPlatform("tvos")]
+	[UnsupportedOSPlatform("macos")]
 	[DesignTimeVisible(true)]
 #if HAS_UNO
 	internal
