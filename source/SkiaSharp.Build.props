@@ -54,7 +54,7 @@
     <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(DOTNET_INSTALL_DIR)\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
     <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
     <!-- DOTNET_ROOT -->
-    <DotNetWorkloadSearchPath> Condition="'$(DotNetWorkloadInstallLocation)' == ''"$([MSBuild]::NormalizeDirectory('$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
     <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
     <!-- ProgramFiles\dotnet -->
     <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
