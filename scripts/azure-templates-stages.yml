@@ -448,6 +448,12 @@ stages:
                 inputs:
                   artifactName: api-diff
                   pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the changelogs
+                condition: always()
+                inputs:
+                  artifactName: changelogs
+                  pathToPublish: '$(Build.SourcesDirectory)\changelogs'
 
   - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
     - stage: signing
