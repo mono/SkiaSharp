@@ -17,10 +17,7 @@
 	// }
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": {
-		"dotnet tool restore": "Install the Cake tools",
-		"dotnet cake --target externals-download": "Download the latest native binaries to accelerate development",
-  },
+	"postCreateCommand": "dotnet tool restore && dotnet cake --target externals-download",
 
 	// Configure tool-specific properties.
 	// "customizations": {},
