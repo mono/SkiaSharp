@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+# Update APT package lists
+sudo apt update
+
 # Install FontConfig - this is a dependency of libSkiaSharp.so
 sudo apt install -y libfontconfig1
 
