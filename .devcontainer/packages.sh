@@ -11,5 +11,8 @@ sudo apt install -y libfontconfig1
 sudo apt install -y ttf-ancient-fonts
 
 # Install the Microsoft fonts (eg: Times New Roman) - for tests
-echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections
+sudo apt install -y software-properties-common
+sudo apt-add-repository -y contrib
+sudo apt update
+# echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections
 sudo apt install -y ttf-mscorefonts-installer
