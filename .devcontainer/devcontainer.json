@@ -19,7 +19,11 @@
 	// }
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "echo 'Downloading pre-built native binaries' && dotnet tool restore && dotnet cake --target externals-download",
+	"postCreateCommand": {
+		"message": "echo 'Downloading pre-built native binaries'",
+		"native": "dotnet tool restore && dotnet cake --target externals-download",
+		"tests": "dotnet build tests/SkiaSharp.Tests.Console.sln",
+	},
 
 	// Configure tool-specific properties.
 	"customizations": {
