@@ -20,7 +20,7 @@
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": {
-		"message": "echo 'Downloading pre-built native binaries'",
+		"packages": ".devcontainer/packages.sh",
 		"native": "dotnet tool restore && dotnet cake --target externals-download",
 		"tests": "dotnet build tests/SkiaSharp.Tests.Console.sln",
 	},
