@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
 {
-	"name": "SkiaSharp (.NET)",
+	"name": ".NET / C# Development",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/dotnet",
 
@@ -17,7 +17,7 @@
 	// }
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "dotnet tool restore && dotnet cake --target externals-download",
+	"postCreateCommand": "echo 'Downloading pre-built native binaries' && dotnet tool restore && dotnet cake --target externals-download",
 
 	// Configure tool-specific properties.
 	// "customizations": {},
