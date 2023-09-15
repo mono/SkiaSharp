@@ -112,6 +112,43 @@ namespace SkiaSharp
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),
 			};
 
+		// SkImageInfoPriv.h - SkColorTypeShiftPerPixel
+		public static int GetBitShiftPerPixel (this SKColorType colorType) =>
+			colorType switch {
+				// 0
+				SKColorType.Unknown => 0,
+				// 0
+				SKColorType.Alpha8 => 0,
+				SKColorType.Gray8 => 0,
+				SKColorType.R8Unorm => 0,
+				// 1
+				SKColorType.Rgb565 => 1,
+				SKColorType.Argb4444 => 1,
+				SKColorType.Rg88 => 1,
+				SKColorType.Alpha16 => 1,
+				SKColorType.AlphaF16 => 1,
+				// 2
+				SKColorType.Bgra8888 => 2,
+				SKColorType.Bgra1010102 => 2,
+				SKColorType.Bgr101010x => 2,
+				SKColorType.Bgr101010xXR => 2,
+				SKColorType.Rgba8888 => 2,
+				SKColorType.Rgb888x => 2,
+				SKColorType.Rgba1010102 => 2,
+				SKColorType.Rgb101010x => 2,
+				SKColorType.Rg1616 => 2,
+				SKColorType.RgF16 => 2,
+				SKColorType.Srgba8888 => 2,
+				// 3
+				SKColorType.RgbaF16Clamped => 3,
+				SKColorType.RgbaF16 => 3,
+				SKColorType.Rgba16161616 => 3,
+				// 4
+				SKColorType.RgbaF32 => 4,
+				//
+				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),
+			};
+
 		// SkImageInfo.cpp - SkColorTypeValidateAlphaType
 		public static SKAlphaType GetAlphaType (this SKColorType colorType, SKAlphaType alphaType = SKAlphaType.Premul)
 		{

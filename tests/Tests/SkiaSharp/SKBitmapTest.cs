@@ -11,12 +11,6 @@ namespace SkiaSharp.Tests
 {
 	public class SKBitmapTest : SKTest
 	{
-		public static IEnumerable<object[]> GetAllColorTypes()
-		{
-			foreach (SKColorType ct in Enum.GetValues(typeof(SKColorType)))
-				yield return new object[] { ct };
-		}
-
 		[SkippableTheory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CanCopyToIsCorrect(SKColorType colorType)
@@ -633,6 +627,27 @@ namespace SkiaSharp.Tests
 			using var bitmap = SKBitmap.Decode(stream);
 
 			Assert.NotNull(bitmap);
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanHasCorrectLength()
+		{
+			using var bmp = CreateTestBitmap();
+
+			var totalBytes = bmp.Info.BytesSize;
+
+			Assert.Equal(totalBytes, bmp.GetPixelSpan().Length);
+		}
+
+		[SkippableTheory]
+		[InlineData(0, 0, 40 * 40 * 4)]
+		[InlineData(0, 20, 40 * 20 * 4)]
+		[InlineData(39, 39, 4)]
+		public void GetPixelSpanXYHasCorrectLength(int x, int y, int expectedLength)
+		{
+			using var bmp = CreateTestBitmap();
+			var span = bmp.GetPixelSpan(x, y);
+			Assert.Equal(expectedLength, span.Length);
 		}
 	}
 }
