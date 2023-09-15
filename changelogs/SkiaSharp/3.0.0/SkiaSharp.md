@@ -220,6 +220,7 @@ Added methods:
 
 ```csharp
 public System.Span<byte> GetPixelSpan ();
+public System.Span<byte> GetPixelSpan (int x, int y);
 public SKBitmap Resize (SKImageInfo info, SKSamplingOptions sampling);
 public SKBitmap Resize (SKSizeI size, SKSamplingOptions sampling);
 public bool ScalePixels (SKBitmap destination, SKSamplingOptions sampling);
@@ -826,6 +827,15 @@ public static SKImageFilter CreateTile (SKRect src, SKRect dst);
 
 #### Removed Type SkiaSharp.SKImageFilter.CropRect
 
+#### Type Changed: SkiaSharp.SKImageInfo
+
+Added property:
+
+```csharp
+public int BitShiftPerPixel { get; }
+```
+
+
 #### Type Changed: SkiaSharp.SKJpegEncoderOptions
 
 Removed constructor:
@@ -1431,6 +1441,13 @@ Removed property:
 public SKColorTable ColorTable { get; }
 ```
 
+Added properties:
+
+```csharp
+public int BitShiftPerPixel { get; }
+public long BytesSize64 { get; }
+```
+
 Removed methods:
 
 ```csharp
@@ -1475,6 +1492,8 @@ public bool ComputeIsOpaque ();
 public float GetPixelAlpha (int x, int y);
 public SKColorF GetPixelColorF (int x, int y);
 public System.Span<byte> GetPixelSpan ();
+public System.Span<T> GetPixelSpan<T> (int x, int y);
+public System.Span<byte> GetPixelSpan (int x, int y);
 public bool ScalePixels (SKPixmap destination);
 public bool ScalePixels (SKPixmap destination, SKSamplingOptions sampling);
 ```
@@ -2080,9 +2099,10 @@ public static SKShaderTileMode ToShaderTileMode (this SKMatrixConvolutionTileMod
 public static SKTextEncoding ToTextEncoding (this SKEncoding encoding);
 ```
 
-Added method:
+Added methods:
 
 ```csharp
+public static int GetBitShiftPerPixel (this SKColorType colorType);
 
 [Obsolete]
 public static SKSamplingOptions ToSamplingOptions (this SKFilterQuality quality);
