@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -208,6 +209,12 @@ namespace SkiaSharp.Tests
 			{
 				throw new SkipException($"Unable to create GL context: {ex.Message}");
 			}
+		}
+
+		public static IEnumerable<object[]> GetAllColorTypes()
+		{
+			foreach (SKColorType ct in Enum.GetValues(typeof(SKColorType)))
+				yield return new object[] { ct };
 		}
 	}
 }

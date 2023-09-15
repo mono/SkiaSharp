@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -19,30 +20,28 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
-		public void SKColorTypeMappingsToNative()
+		[SkippableTheory]
+		[MemberData(nameof(GetAllColorTypes))]
+		public void SKColorTypeMappingsToNative(SKColorType value)
 		{
-			foreach (SKColorType value in Enum.GetValues(typeof(SKColorType)))
-			{
-				var native = value.ToNative();
+			var native = value.ToNative();
 
-				if (value == SKColorType.RgbaF16Clamped)
-					Assert.Equal(SKColorTypeNative.RgbaF16Norm, native);
-				else if (value == SKColorType.Alpha16)
-					Assert.Equal(SKColorTypeNative.A16Unorm, native);
-				else if (value == SKColorType.Rgba16161616)
-					Assert.Equal(SKColorTypeNative.R16g16b16a16Unorm, native);
-				else if (value == SKColorType.Rg1616)
-					Assert.Equal(SKColorTypeNative.R16g16Unorm, native);
-				else if (value == SKColorType.Rg88)
-					Assert.Equal(SKColorTypeNative.R8g8Unorm, native);
-				else if (value == SKColorType.AlphaF16)
-					Assert.Equal(SKColorTypeNative.A16Float, native);
-				else if (value == SKColorType.RgF16)
-					Assert.Equal(SKColorTypeNative.R16g16Float, native);
-				else
-					Assert.Equal(value.ToString(), native.ToString(), true);
-			}
+			if (value == SKColorType.RgbaF16Clamped)
+				Assert.Equal(SKColorTypeNative.RgbaF16Norm, native);
+			else if (value == SKColorType.Alpha16)
+				Assert.Equal(SKColorTypeNative.A16Unorm, native);
+			else if (value == SKColorType.Rgba16161616)
+				Assert.Equal(SKColorTypeNative.R16g16b16a16Unorm, native);
+			else if (value == SKColorType.Rg1616)
+				Assert.Equal(SKColorTypeNative.R16g16Unorm, native);
+			else if (value == SKColorType.Rg88)
+				Assert.Equal(SKColorTypeNative.R8g8Unorm, native);
+			else if (value == SKColorType.AlphaF16)
+				Assert.Equal(SKColorTypeNative.A16Float, native);
+			else if (value == SKColorType.RgF16)
+				Assert.Equal(SKColorTypeNative.R16g16Float, native);
+			else
+				Assert.Equal(value.ToString(), native.ToString(), true);
 		}
 
 		[SkippableFact]
@@ -71,18 +70,41 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
-		public void GetAlphaTypeMappings()
+		[SkippableTheory]
+		[MemberData(nameof(GetAllColorTypes))]
+		public void GetBytesPerPixelIsCorrect(SKColorType value)
 		{
-			foreach (SKColorType value in Enum.GetValues(typeof(SKColorType)))
-			{
-				var alphaType = value.GetAlphaType();
+			var byteSize = value.GetBytesPerPixel();
 
-				if (value == SKColorType.Unknown)
-					Assert.Equal(SKAlphaType.Unknown, alphaType);
-				else
-					Assert.NotEqual(SKAlphaType.Unknown, alphaType);
-			}
+			if (value == SKColorType.Unknown)
+				Assert.Equal(0, byteSize);
+			else
+				Assert.True(byteSize > 0);
+		}
+
+		[SkippableTheory]
+		[MemberData(nameof(GetAllColorTypes))]
+		public void GetBitShiftPerPixelIsCorrect(SKColorType value)
+		{
+			var byteSize = value.GetBytesPerPixel();
+			var bitShift = value.GetBitShiftPerPixel();
+
+			if (value == SKColorType.Unknown)
+				Assert.Equal(0, bitShift);
+			else
+				Assert.Equal(byteSize, Math.Pow(2, bitShift));
+		}
+
+		[SkippableTheory]
+		[MemberData(nameof(GetAllColorTypes))]
+		public void GetAlphaTypeMappings(SKColorType value)
+		{
+			var alphaType = value.GetAlphaType();
+
+			if (value == SKColorType.Unknown)
+				Assert.Equal(SKAlphaType.Unknown, alphaType);
+			else
+				Assert.NotEqual(SKAlphaType.Unknown, alphaType);
 		}
 	}
 }

@@ -98,9 +98,13 @@ namespace SkiaSharp
 
 		public int BytesPerPixel => Info.BytesPerPixel;
 
+		public int BitShiftPerPixel => Info.BitShiftPerPixel;
+
 		public int RowBytes => (int)SkiaApi.sk_pixmap_get_row_bytes (Handle);
 
 		public int BytesSize => Info.BytesSize;
+
+		public long BytesSize64 => Info.BytesSize64;
 
 		// pixels
 
@@ -111,9 +115,18 @@ namespace SkiaSharp
 			(IntPtr)SkiaApi.sk_pixmap_get_writeable_addr_with_xy (Handle, x, y);
 
 		public Span<byte> GetPixelSpan () =>
-			new Span<byte> (SkiaApi.sk_pixmap_get_writable_addr (Handle), BytesSize);
+			GetPixelSpan<byte> (0, 0);
+
+		public Span<byte> GetPixelSpan (int x, int y) =>
+			GetPixelSpan<byte> (x, y);
 
 		public unsafe Span<T> GetPixelSpan<T> ()
+			where T : unmanaged
+		{
+			return GetPixelSpan<T> (0, 0);
+		}
+
+		public unsafe Span<T> GetPixelSpan<T> (int x, int y)
 			where T : unmanaged
 		{
 			var info = Info;
@@ -124,16 +137,38 @@ namespace SkiaSharp
 			if (bpp <= 0)
 				return null;
 
-			// byte is always valid
+			var spanLength = 0;
+			var spanOffset = 0;
 			if (typeof (T) == typeof (byte))
-				return new Span<T> (SkiaApi.sk_pixmap_get_writable_addr (Handle), info.BytesSize);
+			{
+				// byte is always valid
 
-			// other types need to make sure they fit
-			var size = sizeof (T);
-			if (bpp != size)
-				throw new ArgumentException ($"Size of T ({size}) is not the same as the size of each pixel ({bpp}).", nameof (T));
+				spanLength = info.BytesSize;
 
-			return new Span<T> (SkiaApi.sk_pixmap_get_writable_addr (Handle), info.Width * info.Height);
+				if (x != 0 || y != 0)
+					spanOffset = info.GetPixelBytesOffset (x, y);
+			}
+			else
+			{
+				// other types need to make sure they fit
+
+				var size = sizeof (T);
+				if (bpp != size)
+					throw new ArgumentException ($"Size of T ({size}) is not the same as the size of each pixel ({bpp}).", nameof (T));
+
+				spanLength = info.Width * info.Height;
+
+				if (x != 0 || y != 0)
+					spanOffset = y * info.Height + x;
+			}
+
+			var addr = SkiaApi.sk_pixmap_get_writable_addr (Handle);
+			var span = new Span<T> (addr, spanLength);
+
+			if (spanOffset != 0)
+				span = span.Slice (spanOffset);
+
+			return span;
 		}
 
 		public SKColor GetPixelColor (int x, int y) =>
