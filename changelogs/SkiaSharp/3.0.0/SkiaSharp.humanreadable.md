@@ -10,7 +10,11 @@ The diff below contains all the changes that are in addition to the removal of o
 
 #### Platform Reduction
 
-SkiaSharp 
+SkiaSharp supports many platforms, however in 3.x we reduce the platforms to just the more modern ones:
+
+* .NET Standard 2.0+
+* .NET Framework 4.6.2+
+* .NET 7+ (All the platforms: Android, iOS, Mac Catalyst, macOS, Tizen, tvOS, Windows)
 
 #### Improvements
 
