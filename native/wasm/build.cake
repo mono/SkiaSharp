@@ -114,7 +114,7 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");;
+    bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");
     bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
     bool hasWasmEH = EMSCRIPTEN_FEATURES.Contains("_wasmeh");
 

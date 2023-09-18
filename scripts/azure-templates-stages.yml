@@ -307,15 +307,23 @@ stages:
                 version: 3.1.12
                 features: mt,simd
 
-              # .NET 8 Preview 4
+              # .NET 8
               - 3.1.34:
                 displayName: 3.1.34
                 version: 3.1.34
-                features: _wasmeh,_simd,st
+                features: _wasmeh,st
               - 3.1.34:
                 displayName: '3.1.34_Threading'
                 version: 3.1.34
-                features: _wasmeh,_simd,mt
+                features: _wasmeh,mt
+              - 3.1.34:
+                displayName: '3.1.34_SIMD'
+                version: 3.1.34
+                features: _wasmeh,simd,st
+              - 3.1.34:
+                displayName: '3.1.34_SIMD_Threading'
+                version: 3.1.34
+                features: _wasmeh,simd,mt
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: managed
