@@ -6,19 +6,26 @@
     <_SkiaSharpViewsBlazorStaticAssetsRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\staticwebassets'))\</_SkiaSharpViewsBlazorStaticAssetsRoot>
   </PropertyGroup>
 
+  <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
+  <PropertyGroup>
+    <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
+  </PropertyGroup>
+
   <!-- Workaround for https://github.com/dotnet/runtime/issues/76077 -->
   <PropertyGroup>
     <EmccExtraLDFlags>$(EmccExtraLDFlags) --js-library="$(MSBuildThisFileDirectory)\SkiaSharpGLInterop.js"</EmccExtraLDFlags>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))">
+  <ItemGroup Condition="'$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0')) and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
     <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\2.0.23\*.a" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))">
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\st\*.a" />
+  <ItemGroup Condition="'$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\mt\*.a" Condition="'$(WasmEnableThreads)' == 'True'" />
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\st\*.a" Condition="'$(WasmEnableThreads)' != 'True'" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))">
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\st\*.a" />
+  <ItemGroup Condition="'$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\mt\*.a" Condition="'$(WasmEnableThreads)' == 'True'" />
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\st\*.a" Condition="'$(WasmEnableThreads)' != 'True'" />
   </ItemGroup>
 
   <ItemGroup>
