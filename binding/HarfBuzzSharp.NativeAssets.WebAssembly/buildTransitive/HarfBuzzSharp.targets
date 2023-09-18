@@ -1,18 +1,28 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <!-- if ShouldIncludeNativeHarfBuzzSharp == False then don't include the native libHarfBuzzSharp -->
+  <PropertyGroup>
+    <ShouldIncludeNativeHarfBuzzSharp Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' == '' ">True</ShouldIncludeNativeHarfBuzzSharp>
+  </PropertyGroup>
+
   <!-- If this is an UNO Platform app -->
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly' and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True'">
     <Content Include="@(HarfBuzzSharpStaticLibrary)" Visible="false" />
   </ItemGroup>
 
   <!-- If this is a ASP.NET Blazor web assembly app -->
-  <PropertyGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true'">
+  <PropertyGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True'">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
   </PropertyGroup>
-  <ItemGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(TargetFrameworkVersion)' != ''">
+  <ItemGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True'">
+    <!-- net6.0 -->
     <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
-    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.12\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
-    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.34\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
+    <!-- net7.0 -->
+    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.12\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) and '$(WasmEnableThreads)' != 'True'" />
+    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.12\mt\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) and '$(WasmEnableThreads)' == 'True'" />
+    <!-- net8.0 -->
+    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.34\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) and '$(WasmEnableThreads)' != 'True'" />
+    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.34\mt\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) and '$(WasmEnableThreads)' == 'True'" />
   </ItemGroup>
 
 </Project>
