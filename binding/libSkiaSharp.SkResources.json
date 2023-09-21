@@ -14,22 +14,22 @@
       "exclude": true
     },
     "sksg_": {
-      "cs": "SceneGraph",
-      "prefix": ""
+      "exclude": true
     },
     "skottie_": {
       "exclude": true
     },
     "skresources_": {
-      "exclude": true
+      "cs": "SkResources",
+      "prefix": ""
     }
   },
-  "className": "SceneGraphApi",
+  "className": "SkottieApi",
   "includeDirs": [
     "."
   ],
   "headers": {
-    "include/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
+    "include/c": [ "sk_*", "gr_*", "skottie*", "sksg_*", "skresources_*" ],
     "include/xamarin": [ "sk_*" ]
   },
   "source": {
@@ -38,8 +38,23 @@
   },
   "mappings": {
     "types": {
+      "skottie_animation_builder_flags_t": {
+        "flags": true
+      }
     },
     "functions": {
+      "skottie_animation_builder_make_from_string": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "1": "int"
+
+        }
+      },
+      "skottie_animation_builder_make_from_file": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      }
     }
   }
 }
