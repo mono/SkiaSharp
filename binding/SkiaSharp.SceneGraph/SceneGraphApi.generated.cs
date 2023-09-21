@@ -85,6 +85,7 @@ using skottie_logger_t = System.IntPtr;
 using skottie_marker_observer_t = System.IntPtr;
 using skottie_property_observer_t = System.IntPtr;
 using skottie_resource_provider_t = System.IntPtr;
+using skresources_resource_provider_t = System.IntPtr;
 using sksg_invalidation_controller_t = System.IntPtr;
 using vk_device_t = System.IntPtr;
 using vk_instance_t = System.IntPtr;
