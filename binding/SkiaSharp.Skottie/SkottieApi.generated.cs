@@ -516,41 +516,21 @@ namespace SkiaSharp.Skottie {
 
 	// skottie_animation_builder_stats_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct AnimationBuilderStats : IEquatable<AnimationBuilderStats> {
+	public readonly unsafe partial struct AnimationBuilderStats : IEquatable<AnimationBuilderStats> {
 		// public float fTotalLoadTimeMS
-		private Single fTotalLoadTimeMS;
-		public Single TotalLoadTimeMS {
-			readonly get => fTotalLoadTimeMS;
-			set => fTotalLoadTimeMS = value;
-		}
+		private readonly Single fTotalLoadTimeMS;
 
 		// public float fJsonParseTimeMS
-		private Single fJsonParseTimeMS;
-		public Single JsonParseTimeMS {
-			readonly get => fJsonParseTimeMS;
-			set => fJsonParseTimeMS = value;
-		}
+		private readonly Single fJsonParseTimeMS;
 
 		// public float fSceneParseTimeMS
-		private Single fSceneParseTimeMS;
-		public Single SceneParseTimeMS {
-			readonly get => fSceneParseTimeMS;
-			set => fSceneParseTimeMS = value;
-		}
+		private readonly Single fSceneParseTimeMS;
 
 		// public size_t fJsonSize
-		private /* size_t */ IntPtr fJsonSize;
-		public /* size_t */ IntPtr JsonSize {
-			readonly get => fJsonSize;
-			set => fJsonSize = value;
-		}
+		private readonly /* size_t */ IntPtr fJsonSize;
 
 		// public size_t fAnimatorCount
-		private /* size_t */ IntPtr fAnimatorCount;
-		public /* size_t */ IntPtr AnimatorCount {
-			readonly get => fAnimatorCount;
-			set => fAnimatorCount = value;
-		}
+		private readonly /* size_t */ IntPtr fAnimatorCount;
 
 		public readonly bool Equals (AnimationBuilderStats obj) =>
 			fTotalLoadTimeMS == obj.fTotalLoadTimeMS && fJsonParseTimeMS == obj.fJsonParseTimeMS && fSceneParseTimeMS == obj.fSceneParseTimeMS && fJsonSize == obj.fJsonSize && fAnimatorCount == obj.fAnimatorCount;
