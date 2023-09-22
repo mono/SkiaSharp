@@ -100,7 +100,7 @@ using vk_queue_t = System.IntPtr;
 
 namespace SkiaSharp
 {
-	internal unsafe partial class SkottieApi
+	internal unsafe partial class ResourcesApi
 	{
 		#region skresources_resource_provider.h
 
@@ -132,18 +132,18 @@ namespace SkiaSharp
 			(skresources_data_uri_resource_provider_proxy_make_delegate ??= GetSymbol<Delegates.skresources_data_uri_resource_provider_proxy_make> ("skresources_data_uri_resource_provider_proxy_make")).Invoke (rp, predecode);
 		#endif
 
-		// skresources_resource_provider_t* skresources_file_resource_provider_make(const char* base_dir, size_t length, bool predecode)
+		// skresources_resource_provider_t* skresources_file_resource_provider_make(sk_string_t* base_dir, bool predecode)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern skresources_resource_provider_t skresources_file_resource_provider_make (/* char */ void* base_dir, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool predecode);
+		internal static extern skresources_resource_provider_t skresources_file_resource_provider_make (sk_string_t* base_dir, [MarshalAs (UnmanagedType.I1)] bool predecode);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate skresources_resource_provider_t skresources_file_resource_provider_make (/* char */ void* base_dir, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool predecode);
+			internal delegate skresources_resource_provider_t skresources_file_resource_provider_make (sk_string_t* base_dir, [MarshalAs (UnmanagedType.I1)] bool predecode);
 		}
 		private static Delegates.skresources_file_resource_provider_make skresources_file_resource_provider_make_delegate;
-		internal static skresources_resource_provider_t skresources_file_resource_provider_make (/* char */ void* base_dir, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool predecode) =>
-			(skresources_file_resource_provider_make_delegate ??= GetSymbol<Delegates.skresources_file_resource_provider_make> ("skresources_file_resource_provider_make")).Invoke (base_dir, length, predecode);
+		internal static skresources_resource_provider_t skresources_file_resource_provider_make (sk_string_t* base_dir, [MarshalAs (UnmanagedType.I1)] bool predecode) =>
+			(skresources_file_resource_provider_make_delegate ??= GetSymbol<Delegates.skresources_file_resource_provider_make> ("skresources_file_resource_provider_make")).Invoke (base_dir, predecode);
 		#endif
 
 		// void skresources_resource_provider_delete(skresources_resource_provider_t* instance)
