@@ -13,7 +13,7 @@ namespace SkiaSharp.Tests
 			var fullPath = Path.Combine(PathToImages, "baboon.png");
 			var expectedData = SKData.Create(fullPath);
 
-			using var rp = ResourceProvider.CreateFile(PathToImages);
+			using var rp = new FileResourceProvider(PathToImages);
 
 			using var data = rp.Load("baboon.png");
 
@@ -26,13 +26,29 @@ namespace SkiaSharp.Tests
 			var fullPath = Path.Combine(PathToImages, "baboon.png");
 			var expectedData = SKData.Create(fullPath);
 
-			using var files = ResourceProvider.CreateFile(PathToImages);
-			using var datauri = ResourceProvider.CreateDataUri(files);
-			using var caching = ResourceProvider.CreateCaching(datauri);
+			using var files = new FileResourceProvider(PathToImages);
+			using var datauri = new DataUriResourceProvider(files);
+			using var caching = new CachingResourceProvider(datauri);
 
 			using var data = caching.Load("baboon.png");
 
 			Assert.Equal(expectedData.ToArray(), data.ToArray());
+		}
+
+		[SkippableFact]
+		public void CanCreateDefaultDataUri()
+		{
+			using var datauri = new DataUriResourceProvider();
+
+			Assert.NotNull(datauri);
+		}
+
+		[SkippableFact]
+		public void CanCreateNullDataUri()
+		{
+			using var datauri = new DataUriResourceProvider(null);
+
+			Assert.NotNull(datauri);
 		}
 	}
 }

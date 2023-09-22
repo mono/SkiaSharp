@@ -1,9 +1,8 @@
 ﻿using System;
-using System.IO;
 
 namespace SkiaSharp.Resources
 {
-	public unsafe class ResourceProvider : SKObject, ISKSkipObjectRegistration
+	public abstract unsafe class ResourceProvider : SKObject, ISKSkipObjectRegistration
 	{
 		internal ResourceProvider (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -18,26 +17,49 @@ namespace SkiaSharp.Resources
 
 		public SKData? Load (string resourcePath, string resourceName) =>
 			SKData.GetObject (ResourcesApi.skresources_resource_provider_load (Handle, resourcePath, resourceName));
+	}
 
-		public static ResourceProvider CreateCaching (ResourceProvider resourceProvider)
+	public class CachingResourceProvider : ResourceProvider
+	{
+		public CachingResourceProvider (ResourceProvider resourceProvider)
+			: base (Create (resourceProvider), true)
+		{
+		}
+
+		public static IntPtr Create (ResourceProvider resourceProvider)
 		{
 			_ = resourceProvider ?? throw new ArgumentNullException (nameof (resourceProvider));
-			return GetObject (ResourcesApi.skresources_caching_resource_provider_proxy_make (resourceProvider.Handle))!;
+			return ResourcesApi.skresources_caching_resource_provider_proxy_make (resourceProvider.Handle);
 		}
+	}
 
-		public static ResourceProvider CreateDataUri (ResourceProvider fallbackProvider, bool preDecode = false)
+	public class DataUriResourceProvider : ResourceProvider
+	{
+		public DataUriResourceProvider (bool preDecode = false)
+			: this (null, preDecode)
 		{
-			_ = fallbackProvider ?? throw new ArgumentNullException (nameof (fallbackProvider));
-			return GetObject (ResourcesApi.skresources_data_uri_resource_provider_proxy_make (fallbackProvider.Handle, preDecode))!;
 		}
 
-		public static ResourceProvider CreateFile (string baseDirectory, bool preDecode = false)
+		public DataUriResourceProvider (ResourceProvider? fallbackProvider, bool preDecode = false)
+			: base (Create (fallbackProvider, preDecode), true)
+		{
+		}
+
+		private static IntPtr Create (ResourceProvider? fallbackProvider, bool preDecode = false) =>
+			ResourcesApi.skresources_data_uri_resource_provider_proxy_make (fallbackProvider?.Handle ?? IntPtr.Zero, preDecode);
+	}
+
+	public class FileResourceProvider : ResourceProvider
+	{
+		public FileResourceProvider (string baseDirectory, bool preDecode = false)
+			: base (Create (baseDirectory, preDecode), true)
+		{
+		}
+
+		private static IntPtr Create (string baseDirectory, bool preDecode)
 		{
 			using var baseDir = new SKString(baseDirectory ?? throw new ArgumentNullException (nameof (baseDirectory)));
-			return GetObject (ResourcesApi.skresources_file_resource_provider_make (baseDir.Handle, preDecode))!;
+			return ResourcesApi.skresources_file_resource_provider_make (baseDir.Handle, preDecode);
 		}
-	
-		internal static ResourceProvider? GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new ResourceProvider (handle, true);
 	}
 }

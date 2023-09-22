@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using SkiaSharp.Resources;
 using SkiaSharp.SceneGraph;
 
 namespace SkiaSharp.Skottie
@@ -19,6 +20,11 @@ namespace SkiaSharp.Skottie
 
 		protected override void DisposeNative ()
 			=> SkottieApi.skottie_animation_delete (Handle);
+
+		// AnimationBuilder
+
+		public static AnimationBuilder CreateBuilder (AnimationBuilderFlags flags = AnimationBuilderFlags.None) =>
+			new AnimationBuilder (flags);
 
 		// Parse
 
