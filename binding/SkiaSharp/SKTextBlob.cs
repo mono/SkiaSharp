@@ -61,9 +61,9 @@ namespace SkiaSharp
 				return null;
 
 			using var builder = new SKTextBlobBuilder ();
-			var buffer = builder.AllocatePositionedRun (font, count);
-			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
-			font.GetGlyphPositions (buffer.GetGlyphSpan (), buffer.GetPositionSpan (), origin);
+			builder.AllocatePositionedRun (font, count, bounds: null, out var positionSpan, out var glyphSpan);
+			font.GetGlyphs (text, length, encoding, glyphSpan);
+			font.GetGlyphPositions (glyphSpan, positionSpan, origin);
 			return builder.Build ();
 		}
 
@@ -99,9 +99,9 @@ namespace SkiaSharp
 				return null;
 
 			using var builder = new SKTextBlobBuilder ();
-			var buffer = builder.AllocateHorizontalRun (font, count, y);
-			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
-			positions.CopyTo (buffer.GetPositionSpan ());
+			builder.AllocateHorizontalRun (font, count, y, bounds: null, out var positionSpan, out var glyphSpan);
+			font.GetGlyphs (text, length, encoding, glyphSpan);
+			positions.CopyTo (positionSpan);
 			return builder.Build ();
 		}
 
@@ -137,9 +137,9 @@ namespace SkiaSharp
 				return null;
 
 			using var builder = new SKTextBlobBuilder ();
-			var buffer = builder.AllocatePositionedRun (font, count);
-			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
-			positions.CopyTo (buffer.GetPositionSpan ());
+			builder.AllocatePositionedRun (font, count, bounds: null, out var positionSpan, out var glyphSpan);
+			font.GetGlyphs (text, length, encoding, glyphSpan);
+			positions.CopyTo (positionSpan);
 			return builder.Build ();
 		}
 
@@ -175,9 +175,9 @@ namespace SkiaSharp
 				return null;
 
 			using var builder = new SKTextBlobBuilder ();
-			var buffer = builder.AllocateRotationScaleRun (font, count);
-			font.GetGlyphs (text, length, encoding, buffer.GetGlyphSpan ());
-			positions.CopyTo (buffer.GetRotationScaleSpan ());
+			builder.AllocateRotationScaleRun (font, count, bounds: null, out var glyphSpan, out var rotationScaleSpan);
+			font.GetGlyphs (text, length, encoding, glyphSpan);
+			positions.CopyTo (rotationScaleSpan);
 			return builder.Build ();
 		}
 
@@ -296,9 +296,9 @@ namespace SkiaSharp
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			var buffer = AllocatePositionedRun (font, glyphs.Length);
-			glyphs.CopyTo (buffer.GetGlyphSpan ());
-			font.GetGlyphPositions (buffer.GetGlyphSpan (), buffer.GetPositionSpan (), origin);
+			AllocatePositionedRun (font, glyphs.Length, bounds: null, out var positionSpan, out var glyphSpan);
+			glyphs.CopyTo (glyphSpan);
+			font.GetGlyphPositions (glyphSpan, positionSpan, origin);
 		}
 
 		// AddHorizontalRun
@@ -308,9 +308,9 @@ namespace SkiaSharp
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			var buffer = AllocateHorizontalRun (font, glyphs.Length, y);
-			glyphs.CopyTo (buffer.GetGlyphSpan ());
-			positions.CopyTo (buffer.GetPositionSpan ());
+			AllocateHorizontalRun (font, glyphs.Length, y, bounds: null, out var positionSpan, out var glyphSpan);
+			glyphs.CopyTo (glyphSpan);
+			positions.CopyTo (positionSpan);
 		}
 
 		// AddPositionedRun
@@ -320,9 +320,9 @@ namespace SkiaSharp
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			var buffer = AllocatePositionedRun (font, glyphs.Length);
-			glyphs.CopyTo (buffer.GetGlyphSpan ());
-			positions.CopyTo (buffer.GetPositionSpan ());
+			AllocatePositionedRun (font, glyphs.Length, bounds: null, out var positionSpan, out var glyphSpan);
+			glyphs.CopyTo (glyphSpan);
+			positions.CopyTo (positionSpan);
 		}
 
 		// AddRotationScaleRun 
@@ -332,9 +332,9 @@ namespace SkiaSharp
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			var buffer = AllocateRotationScaleRun (font, glyphs.Length);
-			glyphs.CopyTo (buffer.GetGlyphSpan ());
-			positions.CopyTo (buffer.GetRotationScaleSpan ());
+			AllocateRotationScaleRun (font, glyphs.Length, bounds: null, out var glyphSpan, out var rotationScaleSpan);
+			glyphs.CopyTo (glyphSpan);
+			positions.CopyTo (rotationScaleSpan);
 		}
 
 		// AddPathPositionedRun
@@ -406,6 +406,20 @@ namespace SkiaSharp
 			return new SKRunBuffer (runbuffer, count);
 		}
 
+		public void AllocateRun (SKFont font, int count, float x, float y, SKRect? bounds, out Span<ushort> glyphSpan)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run (Handle, font.Handle, count, x, y, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run (Handle, font.Handle, count, x, y, null, &runbuffer);
+
+			glyphSpan = new Span<ushort> (runbuffer.glyphs, runbuffer.glyphs == null ? 0 : count);
+		}
+
 		public SKTextRunBuffer AllocateTextRun (SKFont font, int count, float x, float y, int textByteCount, SKRect? bounds = null)
 		{
 			if (font == null)
@@ -418,6 +432,22 @@ namespace SkiaSharp
 				SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, null, &runbuffer);
 
 			return new SKTextRunBuffer (runbuffer, count, textByteCount);
+		}
+
+		public void AllocateTextRun (SKFont font, int count, float x, float y, int textByteCount, SKRect? bounds, out Span<byte> textSpan, out Span<ushort> glyphSpan, out Span<uint> clusterSpan)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, null, &runbuffer);
+
+			textSpan = new Span<byte> (runbuffer.utf8text, runbuffer.utf8text == null ? 0 : textByteCount);
+			glyphSpan = new Span<ushort> (runbuffer.glyphs, runbuffer.glyphs == null ? 0 : count);
+			clusterSpan = new Span<uint> (runbuffer.clusters, runbuffer.clusters == null ? 0 : count);
 		}
 
 		// AllocateHorizontalRun
@@ -436,6 +466,21 @@ namespace SkiaSharp
 			return new SKHorizontalRunBuffer (runbuffer, count);
 		}
 
+		public void AllocateHorizontalRun (SKFont font, int count, float y, SKRect? bounds, out Span<float> positionSpan, out Span<ushort> glyphSpan)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_pos_h (Handle, font.Handle, count, y, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_pos_h (Handle, font.Handle, count, y, null, &runbuffer);
+
+			positionSpan = new Span<float> (runbuffer.pos, runbuffer.pos == null ? 0 : count);
+			glyphSpan = new Span<ushort> (runbuffer.glyphs, runbuffer.glyphs == null ? 0 : count);
+		}
+
 		public SKHorizontalTextRunBuffer AllocateHorizontalTextRun (SKFont font, int count, float y, int textByteCount, SKRect? bounds = null)
 		{
 			if (font == null)
@@ -448,6 +493,23 @@ namespace SkiaSharp
 				SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, null, &runbuffer);
 
 			return new SKHorizontalTextRunBuffer (runbuffer, count, textByteCount);
+		}
+
+		public void AllocateHorizontalTextRun (SKFont font, int count, float y, int textByteCount, SKRect? bounds, out Span<byte> textSpan, out Span<float> positionSpan, out Span<ushort> glyphSpan, out Span<uint> clusterSpan)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, null, &runbuffer);
+
+			textSpan = new Span<byte> (runbuffer.utf8text, runbuffer.utf8text == null ? 0 : textByteCount);
+			positionSpan = new Span<float> (runbuffer.pos, runbuffer.pos == null ? 0 : count);
+			glyphSpan = new Span<ushort> (runbuffer.glyphs, runbuffer.glyphs == null ? 0 : count);
+			clusterSpan = new Span<uint> (runbuffer.clusters, runbuffer.clusters == null ? 0 : count);
 		}
 
 		// AllocatePositionedRun
@@ -466,6 +528,21 @@ namespace SkiaSharp
 			return new SKPositionedRunBuffer (runbuffer, count);
 		}
 
+		public void AllocatePositionedRun (SKFont font, int count, SKRect? bounds, out Span<SKPoint> positionSpan, out Span<ushort> glyphSpan)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_pos (Handle, font.Handle, count, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_pos (Handle, font.Handle, count, null, &runbuffer);
+
+			positionSpan = new Span<SKPoint> (runbuffer.pos, runbuffer.pos == null ? 0 : count);
+			glyphSpan = new Span<ushort> (runbuffer.glyphs, runbuffer.glyphs == null ? 0 : count);
+		}
+
 		public SKPositionedTextRunBuffer AllocatePositionedTextRun (SKFont font, int count, int textByteCount, SKRect? bounds = null)
 		{
 			if (font == null)
@@ -478,6 +555,23 @@ namespace SkiaSharp
 				SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, null, &runbuffer);
 
 			return new SKPositionedTextRunBuffer (runbuffer, count, textByteCount);
+		}
+
+		public void AllocatePositionedTextRun (SKFont font, int count, int textByteCount, SKRect? bounds, out Span<byte> textSpan, out Span<float> positionSpan, out Span<ushort> glyphSpan, out Span<uint> clusterSpan)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, null, &runbuffer);
+
+			textSpan = new Span<byte> (runbuffer.utf8text, runbuffer.utf8text == null ? 0 : textByteCount);
+			positionSpan = new Span<float> (runbuffer.pos, runbuffer.pos == null ? 0 : count);
+			glyphSpan = new Span<ushort> (runbuffer.glyphs, runbuffer.glyphs == null ? 0 : count);
+			clusterSpan = new Span<uint> (runbuffer.clusters, runbuffer.clusters == null ? 0 : count);
 		}
 
 		// AllocateRotationScaleRun
@@ -496,6 +590,21 @@ namespace SkiaSharp
 			return new SKRotationScaleRunBuffer (runbuffer, count);
 		}
 
+		public void AllocateRotationScaleRun (SKFont font, int count, SKRect? bounds, out Span<ushort> glyphSpan, out Span<SKRotationScaleMatrix> rotationScaleSpan)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_rsxform (Handle, font.Handle, count, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_rsxform (Handle, font.Handle, count, null, &runbuffer);
+
+			glyphSpan = new Span<ushort> (runbuffer.glyphs, runbuffer.glyphs == null ? 0 : count);
+			rotationScaleSpan = new Span<SKRotationScaleMatrix> (runbuffer.pos, count);
+		}
+
 		public SKRotationScaleRunBuffer AllocateRotationScaleTextRun (SKFont font, int count, int textByteCount, SKRect? bounds = null)
 		{
 			if (font == null)
@@ -508,6 +617,21 @@ namespace SkiaSharp
 				SkiaApi.sk_textblob_builder_alloc_run_text_rsxform (Handle, font.Handle, count, textByteCount, null, &runbuffer);
 
 			return new SKRotationScaleRunBuffer (runbuffer, count);
+		}
+
+		public void AllocateRotationScaleTextRun (SKFont font, int count, int textByteCount, SKRect? bounds, out Span<ushort> glyphSpan, out Span<SKRotationScaleMatrix> rotationScaleSpan)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			SKRunBufferInternal runbuffer;
+			if (bounds is SKRect b)
+				SkiaApi.sk_textblob_builder_alloc_run_text_rsxform (Handle, font.Handle, count, textByteCount, &b, &runbuffer);
+			else
+				SkiaApi.sk_textblob_builder_alloc_run_text_rsxform (Handle, font.Handle, count, textByteCount, null, &runbuffer);
+
+			glyphSpan = new Span<ushort> (runbuffer.glyphs, runbuffer.glyphs == null ? 0 : count);
+			rotationScaleSpan = new Span<SKRotationScaleMatrix> (runbuffer.pos, count);
 		}
 	}
 }

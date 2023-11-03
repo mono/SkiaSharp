@@ -74,11 +74,9 @@ namespace SkiaSharp.HarfBuzz
 
 			// create the text blob
 			using var builder = new SKTextBlobBuilder();
-			var run = builder.AllocatePositionedRun(font, result.Codepoints.Length);
+			builder.AllocatePositionedRun(font, result.Codepoints.Length, bounds: null, out var p, out var g);
 
 			// copy the glyphs
-			var g = run.GetGlyphSpan();
-			var p = run.GetPositionSpan();
 			for (var i = 0; i < result.Codepoints.Length; i++)
 			{
 				g[i] = (ushort)result.Codepoints[i];
