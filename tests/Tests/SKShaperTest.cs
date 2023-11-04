@@ -150,11 +150,35 @@ namespace SkiaSharp.HarfBuzz.Tests
 			paint.TextAlign = align;
 
 			canvas.DrawShapedText("SkiaSharp", 300, 100, paint);
-			using var shapedPath = paint.GetShapedTextPath("SkiaSharp", 300, 200);
+
+			AssertTextAlign(bitmap, offset, 100);
+		}
+
+		[SkippableTheory]
+		[InlineData(SKTextAlign.Left, 300)]
+		[InlineData(SKTextAlign.Center, 162)]
+		[InlineData(SKTextAlign.Right, 23)]
+		public void TextAlignMovesTextPathPosition(SKTextAlign align, int offset)
+		{
+			var font = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(font);
+
+			using var bitmap = new SKBitmap(600, 300);
+			using var canvas = new SKCanvas(bitmap);
+
+			canvas.Clear(SKColors.White);
+
+			using var paint = new SKPaint();
+			paint.Typeface = tf;
+			paint.IsAntialias = true;
+			paint.TextSize = 64;
+			paint.Color = SKColors.Black;
+			paint.TextAlign = align;
+
+			using var shapedPath = paint.GetShapedTextPath("SkiaSharp", 300, 100);
 			canvas.DrawPath(shapedPath, paint);
 
 			AssertTextAlign(bitmap, offset, 100);
-			AssertTextAlign(bitmap, offset, 200);
 		}
 
 		private static void AssertTextAlign(SKBitmap bitmap, int x, int y)
