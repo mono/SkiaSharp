@@ -1,0 +1,142 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(UnoTargetFrameworks)</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
+    <PackagingGroup>SkiaSharp.Views.Uno.WinUI</PackagingGroup>
+    <PackageId>SkiaSharp.Views.Uno.WinUI</PackageId>
+    <SignAssembly>false</SignAssembly>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <Title>SkiaSharp for Uno Platform</Title>
+    <PackageDescription>SkiaSharp for Uno Platform is a set of views that can be used to draw on the screen.</PackageDescription>
+    <PackageTags>uno;uno platform;winui</PackageTags>
+    <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" Condition="$(TargetFramework.Contains('-windows'))" />
+    <ProjectReference Include="..\SkiaSharp.Views.Uno.WinUI.Skia\SkiaSharp.Views.Uno.WinUI.Skia.csproj" Condition="!$(TargetFramework.Contains('-'))" ReferenceOutputAssembly="False" OutputItemType="UnoRuntimeOutput" UnoRuntimeType="skia" />
+    <ProjectReference Include="..\SkiaSharp.Views.Uno.WinUI.Wasm\SkiaSharp.Views.Uno.WinUI.Wasm.csproj" Condition="!$(TargetFramework.Contains('-'))" ReferenceOutputAssembly="False" OutputItemType="UnoRuntimeOutput" UnoRuntimeType="webassembly" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.WebAssembly\SkiaSharp.NativeAssets.WebAssembly.csproj" Condition="!$(TargetFramework.Contains('-'))" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Uno.WinUI" Version="4.9.26" Condition="!$(TargetFramework.Contains('-windows'))" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.1" PrivateAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
+  </ItemGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);HAS_UNO;WINUI</DefineConstants>
+  </PropertyGroup>
+  <!-- Android -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\GLTextureView.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SKGLTextureView.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SKGLTextureViewRenderer.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SurfaceFactory.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-android'))">
+    <Compile Remove="**\Android\**\*.cs" />
+    <None Include="**\Android\**\*.cs" />
+    <Compile Remove="**\*.Android.cs" />
+    <None Include="**\*.Android.cs" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\GLTextureView.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SKGLTextureView.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SKGLTextureViewRenderer.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Android\SurfaceFactory.cs" Link="Platform\Android\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- macOS -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\macOS\SKGLView.cs" Link="Platform\macOS\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-macos'))">
+    <Compile Remove="**\macOS\**\*.cs" />
+    <None Include="**\macOS\**\*.cs" />
+    <Compile Remove="**\*.macOS.cs" />
+    <None Include="**\*.macOS.cs" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\macOS\SKGLView.cs" Link="Platform\macOS\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- iOS -->
+  <ItemGroup Condition="!$(TargetFramework.Contains('-ios'))">
+    <Compile Remove="**\iOS\**\*.cs" />
+    <None Include="**\iOS\**\*.cs" />
+    <Compile Remove="**\*.iOS.cs" />
+    <None Include="**\*.iOS.cs" />
+  </ItemGroup>
+  <!-- macOS -->
+  <ItemGroup Condition="!$(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Remove="**\MacCatalyst\**\*.cs" />
+    <None Include="**\MacCatalyst\**\*.cs" />
+    <Compile Remove="**\*.MacCatalyst.cs" />
+    <None Include="**\*.MacCatalyst.cs" />
+  </ItemGroup>
+  <!-- iOS / Mac Catalyst -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\iOS\SKGLView.cs" Link="Platform\iOS\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-ios')) and !$(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Remove="**\AppleiOS\**\*.cs" />
+    <None Include="**\AppleiOS\**\*.cs" />
+    <Compile Remove="**\*.AppleiOS.cs" />
+    <None Include="**\*.AppleiOS.cs" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\iOS\SKGLView.cs" Link="Platform\iOS\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- iOS / Mac Catalyst / macOS -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-macos'))">
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Apple\SKCGSurfaceFactory.cs" Link="Platform\Apple\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-ios')) and !$(TargetFramework.Contains('-maccatalyst')) and !$(TargetFramework.Contains('-macos'))">
+    <Compile Remove="**\Apple\**\*.cs" />
+    <None Include="**\Apple\**\*.cs" />
+    <Compile Remove="**\*.Apple.cs" />
+    <None Include="**\*.Apple.cs" />
+    <None Include="..\..\SkiaSharp.Views\SkiaSharp.Views\Platform\Apple\SKCGSurfaceFactory.cs" Link="Platform\Apple\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- Reference -->
+  <ItemGroup Condition="!$(TargetFramework.Contains('-'))">
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-'))">
+    <Compile Remove="**\Reference\**\*.cs" />
+    <None Include="**\Reference\**\*.cs" />
+    <Compile Remove="**\*.Reference.cs" />
+    <None Include="**\*.Reference.cs" />
+  </ItemGroup>
+  <!-- Shared -->
+  <ItemGroup>
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WinUI\UWPExtensions.cs" Link="%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Uno.WinUI.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- Replace windows with just placeholders -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <Compile Remove="@(Compile)" />
+  </ItemGroup>
+  <Target Name="_UpdateWindowsPackageFiles" BeforeTargets="_GetPackageFiles">
+    <WriteLinesToFile File="$(IntermediateOutputPath)_._" Lines="$(PackageDescription)" Overwrite="True" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)_._" />
+      <_AssemblyOutputFiles Include="@(_BuildOutputInPackage->HasMetadata('TargetFramework'))" />
+      <_WindowsAssemblyOutputFiles Include="@(_AssemblyOutputFiles)" Condition="$([MSBuild]::ValueOrDefault('%(TargetFramework)', '').Contains('-windows'))" />
+      <_SymbolOutputFiles Include="@(_TargetPathsToSymbols->HasMetadata('TargetFramework'))" />
+      <_WindowsSymbolOutputFiles Include="@(_SymbolOutputFiles)" Condition="$([MSBuild]::ValueOrDefault('%(TargetFramework)', '').Contains('-windows'))" />
+      <_WindowsPlaceholders Include="@(_WindowsAssemblyOutputFiles->'$(IntermediateOutputPath)_._')" PackagePath="lib\%(TargetFramework)\_._" Condition="'%(Extension)' == '.dll'" />
+      <None Include="@(_WindowsPlaceholders)" Pack="True" />
+      <_BuildOutputInPackage Remove="@(_WindowsAssemblyOutputFiles)" />
+      <_TargetPathsToSymbols Remove="@(_WindowsSymbolOutputFiles)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles" DependsOnTargets="ResolveProjectReferences">
+    <ItemGroup Condition="!$(TargetFramework.Contains('-'))">
+      <!-- Add the targets files -->
+      <TfmSpecificPackageFile Include="nuget\buildTransitive\SkiaSharp.Views.Uno.WinUI.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+      <!-- Add the uni-runtime files -->
+      <_UnoRuntimeOutputPackageFile Include="@(UnoRuntimeOutput->'%(RootDir)%(Directory)%(Filename)%(Extension)')" />
+      <_UnoRuntimeOutputPackageFile Include="@(UnoRuntimeOutput->'%(RootDir)%(Directory)%(Filename).xml')" />
+      <_UnoRuntimeOutputPackageFile Include="@(UnoRuntimeOutput->'%(RootDir)%(Directory)%(Filename).pdb')" />
+      <_UnoRuntimeOutputPackageFileWithPackagePath Include="@(_UnoRuntimeOutputPackageFile)" PackagePath="uno-runtime\$(NuGetShortFolderName)\%(UnoRuntimeType)\%(Filename)%(Extension)" />
+      <TfmSpecificPackageFile Include="@(_UnoRuntimeOutputPackageFileWithPackagePath)" Condition="Exists('%(Identity)')" />
+    </ItemGroup>
+  </Target>
+</Project>

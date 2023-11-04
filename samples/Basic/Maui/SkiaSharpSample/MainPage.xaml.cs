@@ -38,18 +38,20 @@ namespace SkiaSharpSample
 			{
 				Color = SKColors.Black,
 				IsAntialias = true,
-				Style = SKPaintStyle.Fill,
-				TextAlign = SKTextAlign.Center,
-				TextSize = 24
+				Style = SKPaintStyle.Fill
+			};
+			using var font = new SKFont
+			{
+				Size = 24
 			};
 
 			// adjust the location based on the pointer
 			var coord = (touchLocation is SKPoint loc)
 				? new SKPoint(loc.X, loc.Y)
-				: new SKPoint(e.Info.Width / 2, (e.Info.Height + paint.TextSize) / 2);
+				: new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
 
 			// draw some text
-			canvas.DrawText("SkiaSharp", coord, paint);
+			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
 		}
 	}
 }

@@ -1,0 +1,176 @@
+name: Bug Report
+description: Create a report to help us improve
+title: "[BUG] <title>"
+labels: ["type/bug"]
+projects: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please complete as much as you can as this really helps us reproduce and fix your issue.
+  - type: textarea
+    id: description
+    validations:
+      required: true
+    attributes:
+      label: Description
+      description: A general description of what you are seeing or what is happening.
+      placeholder: Tell us what you see!
+  - type: textarea
+    id: code
+    validations:
+      required: true
+    attributes:
+      label: Code
+      description: A snippet of code or a link to a repository/branch that demonstrates the issue.
+      placeholder: |
+        The best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123
+        
+        But, you can also share a short block of code here:
+        ```cs
+        // some C# code here
+        ```
+        You can also share some XAML:
+        ```xaml
+        <!-- xaml code here -->
+        ```
+      value: |
+        The best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123
+        
+        But, you can also share a short block of code here:
+        ```cs
+        // some C# code here
+        ```
+        You can also share some XAML:
+        ```xaml
+        <!-- xaml code here -->
+        ```
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A general description of what was the expected behavior or result.
+      placeholder: I expected something expected
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: A general description of what really happened.
+      placeholder: I observed something unexpected
+  - type: markdown
+    attributes:
+      value: |
+        ---
+  - type: dropdown
+    id: version
+    validations:
+      required: true
+    attributes:
+      label: Version of SkiaSharp
+      description: What version of SkiaSharp are you using?
+      options:
+        - 3.x (Alpha)
+        - 2.88.4-preview (Preview)
+        - 2.88.3 (Current)
+        - 2.88.2 (Previous)
+        - 2.88.1 (Deprecated)
+        - 2.88.0 (Deprecated)
+        - 2.80.x (Deprecated)
+        - 1.x (Obsolete)
+        - Other (Please indicate in the description)
+      default: 2
+  - type: dropdown
+    id: goodversion
+    validations:
+      required: true
+    attributes:
+      label: Last Known Good Version of SkiaSharp
+      description: What version of SkiaSharp still did what you expected?
+      options:
+        - 2.88.2 (Previous)
+        - 2.88.1 (Deprecated)
+        - 2.88.0 (Deprecated)
+        - 2.80.x (Deprecated)
+        - 1.x (Obsolete)
+        - Other (Please indicate in the description)
+      default: 0
+  - type: dropdown
+    id: ide
+    validations:
+      required: true
+    attributes:
+      label: IDE / Editor
+      description: What IDE or editor are you using?
+      multiple: true
+      options:
+        - Visual Studio (Windows)
+        - Visual Studio (macOS)
+        - Visual Studio Code (Windows)
+        - Visual Studio Code (macOS)
+        - Visual Studio Code (Linux)
+        - Other (Please indicate in the description)
+  - type: dropdown
+    id: platforms
+    validations:
+      required: true
+    attributes:
+      label: Platform / Operating System
+      description: What platforms are you seeing the problem on?
+      multiple: true
+      options:
+        - All
+        - Android
+        - iOS
+        - Linux
+        - Mac Catalyst
+        - macOS
+        - Tizen
+        - tvOS
+        - Windows
+        - Other (Please indicate in the description)
+  - type: textarea
+    id: platformversions
+    attributes:
+      label: Platform / Operating System Version
+      description: What version of the platforms are you seeing the problem on?
+      placeholder: |
+        List all the OS versions that you are observing the issue on, for example:
+
+        - Android 13
+        - iOS 16.4
+        - Windows 11
+  - type: textarea
+    id: devices
+    attributes:
+      label: Devices
+      description: What devices are you seeing the problem on?
+      placeholder: |
+        List all the devices that you are observing the issue on, for example:
+
+        - Google Pixel 4 XL
+        - iPhone 13
+        - Surface Book
+  - type: markdown
+    attributes:
+      value: |
+        ---
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Relevant Screenshots
+      description: Please share any screenshots that will help diagnose the issue.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/mono/SkiaSharp/blob/main/CODE-OF-CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

@@ -29,12 +29,10 @@ if (("$ExternalsBuildId" -eq 'latest') -and ("$env:BUILD_REASON" -eq 'PullReques
 
     Write-Host "Matching changes:"
     $matching = @(
-        'cake',
         'externals',
         'native',
         'scripts',
-        '.gitmodules',
-        'VERSIONS.txt'
+        '.gitmodules'
     )
     $requiresFull = (git diff-tree --no-commit-id --name-only -r HEAD~ HEAD @matching)
     foreach ($d in $requiresFull) {

@@ -1,22 +1,15 @@
-<Project Sdk="Tizen.NET.Sdk/1.0.9">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>tizen40</TargetFramework>
+    <TargetFramework>net7.0-tizen</TargetFramework>
     <OutputType>Exe</OutputType>
-    <DefineConstants>$(DefineConstants);__TIZEN__;</DefineConstants>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="4.8.0.1821" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SkiaSharp.Views.Forms.Tizen.csproj" />
-    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Tizen\SkiaSharp.Views.Tizen.csproj" />
-    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Classic\SkiaSharp.Classic.csproj" />
-  </ItemGroup>
-
-  <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets')" />
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
 
 </Project>

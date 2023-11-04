@@ -1,18 +1,19 @@
 <Project>
 
-  <!-- annd some compatibility packages for the really old platforms -->
-  <ItemGroup Condition="
-      '$(TargetFramework)' == 'netstandard1.3'">
-    <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
-  </ItemGroup>
-  <ItemGroup Condition="
-      $(TargetFramework.StartsWith('net4')) or
-      $(TargetFramework.StartsWith('netstandard1')) or
-      $(TargetFramework.StartsWith('uap10')) or
-      '$(TargetFramework)' == 'netstandard2.0' or
-      '$(TargetFramework)' == 'tizen40'">
+  <ItemGroup Condition=" ($(TargetFramework.StartsWith('net4')) or '$(TargetFramework)' == 'netstandard2.0') and (!$(MSBuildProjectName.Contains('.NativeAssets.'))) ">
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(PackagingGroup)' == 'SkiaSharp'">
+    <PackageDescription Condition="'$(PackageDescription)' == ''">SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's Skia Graphics Library.
+It provides a comprehensive 2D API that can be used across mobile, server and desktop models to render images.</PackageDescription>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(PackagingGroup)' == 'HarfBuzzSharp'">
+    <PackageDescription Condition="'$(PackageDescription)' == ''">HarfBuzzSharp is a cross-platform OpenType text shaping engine for .NET platforms.</PackageDescription>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)NativeAssets.Build.targets" Condition="$(MSBuildProjectName.Contains('.NativeAssets.'))" />
 
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.targets" />
 

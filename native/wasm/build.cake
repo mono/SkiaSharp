@@ -1,16 +1,13 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-#load "../../cake/native-shared.cake"
+#load "../../scripts/cake/native-shared.cake"
 
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
+string EMSCRIPTEN_ROOT = Argument("emscripten", EnvironmentVariable("EMSCRIPTEN_SDK_ROOT") ?? EnvironmentVariable("EMSDK") ?? "");
 string EMSCRIPTEN_VERSION = Argument("emscriptenVersion", EnvironmentVariable("EMSCRIPTEN_VERSION") ?? "").ToLower();
-string[] EMSCRIPTEN_FEATURES = 
-    Argument("emscriptenFeatures", EnvironmentVariable("EMSCRIPTEN_FEATURES") ?? "")
-    .ToLower()
-    .Split(",")
-    .Where(f => f != "none")
-    .ToArray();
+string[] EMSCRIPTEN_FEATURES = Argument("emscriptenFeatures", EnvironmentVariable("EMSCRIPTEN_FEATURES") ?? "").ToLower()
+    .Split(",").Where(f => f != "none").ToArray();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
 string CC = Argument("cc", "emcc");
@@ -36,14 +33,12 @@ Task("libSkiaSharp")
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
-        $"skia_enable_ccpr=false " +
         $"skia_enable_fontmgr_custom_directory=false " +
         $"skia_enable_fontmgr_custom_empty=false " +
         $"skia_enable_fontmgr_custom_embedded=true " +
         $"skia_enable_fontmgr_empty=false " +
-        $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
+        $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
         (SUPPORT_GPU ? "skia_gl_standard='webgl'" : "") +
-        $"skia_enable_nvpr=false " +
         $"skia_enable_pdf=true " +
         $"skia_use_dng_sdk=false " +
         $"skia_use_webgl=true " +
@@ -53,6 +48,8 @@ Task("libSkiaSharp")
         $"skia_use_icu=false " +
         $"skia_use_piex=false " +
         $"skia_use_sfntly=false " +
+        $"skia_use_expat=true " +
+        $"skia_use_libwebp_encode=true " +
         $"skia_use_system_expat=false " +
         $"skia_use_system_freetype2=false " +
         $"skia_use_system_libjpeg_turbo=false " +
@@ -73,6 +70,7 @@ Task("libSkiaSharp")
         $"] " +
         // SIMD support is based on https://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/modules/canvaskit/compile.sh#L57
         $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
+        $"skia_emsdk_dir='{EMSCRIPTEN_ROOT}'" +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
 
@@ -116,7 +114,7 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
-    bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");;
+    bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");
     bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
     bool hasWasmEH = EMSCRIPTEN_FEATURES.Contains("_wasmeh");
 
@@ -132,6 +130,7 @@ Task("libHarfBuzzSharp")
         $"visibility_hidden=false " +
         $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
+        $"skia_emsdk_dir='{EMSCRIPTEN_ROOT}'" +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
 

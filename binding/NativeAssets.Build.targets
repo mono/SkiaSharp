@@ -1,0 +1,53 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- There is nothing to sign if there is no build -->
+    <SignAssembly>false</SignAssembly>
+    <!-- Don't include build output in a package since NoTargets projects don't emit an assembly. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <!-- Disable symbol generation -->
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <!-- Don't generate docs -->
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- legal -->
+    <None Include="$(MSBuildThisFileDirectory)..\External-Dependency-Info.txt" PackagePath="THIRD-PARTY-NOTICES.txt" Pack="True" Visible="False" />
+  </ItemGroup>
+
+  <Target Name="_IncludePlaceholders" AfterTargets="_IncludeAdditionalTfmSpecificPackageFilesPrepare">
+    <Touch Files="$(IntermediateOutputPath)_._" AlwaysCreate="True" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)_._" />
+      <TfmSpecificPackageFile Include="$(IntermediateOutputPath)_._" PackagePath="lib\$(NuGetShortFolderName)\_._" />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup Condition="'$(IsWindowsNativeAssets)' == 'true'">
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <IncludeSymbols>true</IncludeSymbols>
+    <BuildOutputTargetFolder>runtimes</BuildOutputTargetFolder>
+    <ExcludeSymbolsFromPackage>false</ExcludeSymbolsFromPackage>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsWindowsNativeAssets)' == 'true'">
+    <None Include="@(NativeWindowsPackageFile)" Link="runtimes\%(RuntimeIdentifier)\native\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <Target Name="_IncludeRuntimesPackageFiles" BeforeTargets="_GetPackageFiles" Condition="'$(IsWindowsNativeAssets)' == 'true'">
+    <ItemGroup>
+      <_CompletedNativeWindowsPackageFile
+          Include="@(NativeWindowsPackageFile)" 
+          TargetFramework="%(RuntimeIdentifier)"
+          TargetPath="native\%(Filename)%(Extension)" 
+          PackagePath="runtimes\%(RuntimeIdentifier)\native\%(Filename)%(Extension)" />
+      <_BuildOutputInPackage Remove="@(_BuildOutputInPackage)" />
+      <_BuildOutputInPackage Include="@(_CompletedNativeWindowsPackageFile)" Condition="'%(Extension)' != '.pdb'" />
+      <_TargetPathsToSymbols Remove="@(_TargetPathsToSymbols)" />
+      <_TargetPathsToSymbols Include="@(_CompletedNativeWindowsPackageFile)" Condition="'%(Extension)' == '.pdb'" />
+    </ItemGroup>
+  </Target>
+
+</Project>

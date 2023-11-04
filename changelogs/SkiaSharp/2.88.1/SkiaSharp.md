@@ -13,6 +13,8 @@ Avif = 12,
 ```
 
 
+#### Removed Type SkiaSharp.Resource
+
 ### Namespace SkiaSharp.Internals
 
 #### New Type: SkiaSharp.Internals.PlatformConfiguration

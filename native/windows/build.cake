@@ -7,8 +7,8 @@ string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
 string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
 bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
-#load "../../cake/native-shared.cake"
-#load "../../cake/msbuild.cake"
+#load "../../scripts/cake/native-shared.cake"
+#load "../../scripts/cake/msbuild.cake"
 
 string VARIANT = BUILD_VARIANT ?? "windows";
 
@@ -40,6 +40,7 @@ Task("libSkiaSharp")
             $"target_cpu='{skiaArch}' " +
             $"skia_enable_fontmgr_win_gdi=false " +
             $"skia_use_dng_sdk=true " +
+            $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +

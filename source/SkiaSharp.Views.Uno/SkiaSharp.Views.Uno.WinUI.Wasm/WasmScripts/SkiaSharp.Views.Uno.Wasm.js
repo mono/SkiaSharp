@@ -10,6 +10,11 @@
 
                 static invalidateCanvas(pData, canvasId, width, height) {
                     var htmlCanvas = document.getElementById(canvasId);
+
+                    if (!htmlCanvas) {
+                        return false;
+                    }
+
                     htmlCanvas.width = width;
                     htmlCanvas.height = height;
 
@@ -106,6 +111,9 @@
                     this.currentRequest = window.requestAnimationFrame(() => {
 
                         if (this.requestRender) {
+                            // make current for this canvas instance
+                            GL.makeContextCurrent(this.glCtx);
+
                             this.requestRender();
                         }
 
@@ -178,12 +186,12 @@
                             throw `No <canvas> with id ${canvasOrCanvasId} was found`;
                     }
 
-                    var ctx = SKSwapChainPanel.createWebGLContext(canvas);
-                    if (!ctx || ctx < 0)
+                    this.glCtx = SKSwapChainPanel.createWebGLContext(canvas);
+                    if (!this.glCtx || this.glCtx < 0)
                         throw `Failed to create WebGL context: err ${ctx}`;
 
                     // make current
-                    GL.makeContextCurrent(ctx);
+                    GL.makeContextCurrent(this.glCtx);
 
                     // Starting from .NET 7 the GLctx is defined in an inaccessible scope
                     // when the current GL context changes. We need to pick it up from the
@@ -196,7 +204,7 @@
                     // read values
                     this.canvas = canvas;
                     return {
-                        ctx: ctx,
+                        ctx: this.glCtx,
                         fbo: currentGLctx.getParameter(currentGLctx.FRAMEBUFFER_BINDING),
                         stencil: currentGLctx.getParameter(currentGLctx.STENCIL_BITS),
                         sample: 0, // TODO: currentGLctx.getParameter(GLctx.SAMPLES)

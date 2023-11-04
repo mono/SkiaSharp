@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1.412-bionic
+FROM mcr.microsoft.com/dotnet/sdk:7.0
 
 # Arguments:
 #   EMSCRIPTEN_VERSION   - the version of the emscripten SDK                [ 2.0.23 | * ]
@@ -7,18 +7,13 @@ FROM mcr.microsoft.com/dotnet/core/sdk:3.1.412-bionic
 ARG EMSCRIPTEN_VERSION=2.0.23
 
 RUN apt-get update \
-    && apt-get install -y apt-transport-https curl wget python python3 git make xz-utils \
+    && apt-get install -y apt-transport-https curl wget python python3 git make xz-utils ninja-build \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone --branch ${EMSCRIPTEN_VERSION} https://github.com/emscripten-core/emsdk ~/emsdk && \
     cd ~/emsdk && \
     ./emsdk install ${EMSCRIPTEN_VERSION} && \
     ./emsdk activate ${EMSCRIPTEN_VERSION}
-
-# Workaround for https://github.com/dotnet/sdk/issues/11108
-RUN cd /usr/share/dotnet/sdk/3.1.412/Sdks/Microsoft.NET.Sdk.WindowsDesktop/targets && \
-    mv Microsoft.WinFx.props Microsoft.WinFX.props && \
-    mv Microsoft.WinFx.targets Microsoft.WinFX.targets
 
 WORKDIR /work
 

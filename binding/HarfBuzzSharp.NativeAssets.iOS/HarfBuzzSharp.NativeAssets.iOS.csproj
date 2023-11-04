@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(TFMCurrent)-ios</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-ios</TargetFrameworks>
+    <PackagingGroup>HarfBuzzSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for iOS</Title>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageFile Include="..\..\output\native\ios\libHarfBuzzSharp.framework\**" PackagePath="runtimes\ios\native\libHarfBuzzSharp.framework" />
+    <PackageFile Include="..\..\output\native\iossimulator\libHarfBuzzSharp.framework\**" PackagePath="runtimes\iossimulator\native\libHarfBuzzSharp.framework" />
+  </ItemGroup>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\HarfBuzzSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+    </ItemGroup>
+  </Target>
+</Project>

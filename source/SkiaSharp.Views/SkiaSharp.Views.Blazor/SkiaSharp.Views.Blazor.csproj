@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(TFMCurrent);$(TFMNext)</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Views.Blazor</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Blazor</AssemblyName>
+    <PackagingGroup>SkiaSharp.Views.Blazor</PackagingGroup>
+    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);__BLAZOR__</DefineConstants>
+    <Title>SkiaSharp for ASP.NET Blazor</Title>
+    <PackageDescription>SkiaSharp for ASP.NET Blazor is a set of views that can be used to draw on the screen.</PackageDescription>
+    <PackageTags>aspnet;blazor;web</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.0" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.4.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.WebAssembly\SkiaSharp.NativeAssets.WebAssembly.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\SKPaintSurfaceEventArgs.cs" />
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\SKPaintGLSurfaceEventArgs.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageFile Include="nuget\buildTransitive\SkiaSharp.Views.Blazor.props" PackagePath="build\SkiaSharp.Views.Blazor.props" />
+    <PackageFile Include="nuget\buildTransitive\SkiaSharpGLInterop.js" PackagePath="build\SkiaSharpGLInterop.js" />
+  </ItemGroup>
+
+  <Target Name="AfterCrossTargetingIncludeStaticWebAssets" AfterTargets="CrossTargetingIncludeStaticWebAssets">
+    <ItemGroup>
+      <_ContentToMove Include="@(Content)" Condition="'%(Content.PackagePath)' == 'build\SkiaSharp.Views.Blazor.props'" />
+      <Content Remove="@(_ContentToMove)" />
+      <Content Include="@(_ContentToMove)" PackagePath="build\msbuild.build.SkiaSharp.Views.Blazor.props" />
+    </ItemGroup>
+  </Target>
+
+</Project>

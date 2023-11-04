@@ -1,0 +1,74 @@
+<Project>
+
+  <!-- This file is exactly the same as IncludeNativeAssets.SkiaSharp.targets, but with a find-replace 'SkiaSharp' to 'HarfBuzzSharp' -->
+
+  <ItemGroup Condition="!$(TargetFramework.Contains('-'))">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(Platform)\libHarfBuzzSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\osx\libHarfBuzzSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\linux\x64\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\linux\$(Platform)\libHarfBuzzSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(Platform)\libHarfBuzzSharp.*" Visible="False" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and ('$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU')">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == ''" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) and '$(RuntimeIdentifier)' != ''">
+    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\iossimulator\libHarfBuzzSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('iossimulator'))" />
+    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\ios\libHarfBuzzSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('iossimulator'))" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\x86\libHarfBuzzSharp.so" Abi="x86" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\x86_64\libHarfBuzzSharp.so" Abi="x86_64" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\armeabi-v7a\libHarfBuzzSharp.so" Abi="armeabi-v7a" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)..\output\native\android\arm64-v8a\libHarfBuzzSharp.so" Abi="arm64-v8a" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
+    <ResolvedFileToPublish Include="$(MSBuildThisFileDirectory)..\output\native\maccatalyst\libHarfBuzzSharp.framework.zip" PublishFolderType="CompressedAppleFramework" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
+    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\osx\libHarfBuzzSharp.dylib" Kind="Dynamic" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
+    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\i586\libHarfBuzzSharp.so">
+      <Visible>false</Visible>
+      <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
+      <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
+    </TizenTpkFiles>
+    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\armel\libHarfBuzzSharp.so">
+      <Visible>false</Visible>
+      <TizenTpkSubDir>bin\runtimes\tizen-armel\native\</TizenTpkSubDir>
+      <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
+    </TizenTpkFiles>
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
+    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libHarfBuzzSharp.framework" Kind="Framework" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\**\*.a" Visible="false" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true'">
+    <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(TargetFrameworkVersion)' != ''">
+    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
+    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\3.1.12\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
+    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\3.1.34\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
+  </ItemGroup>
+
+</Project>

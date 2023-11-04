@@ -1,21 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.Gtk</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Gtk3</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Gtk3</PackagingGroup>
     <DefineConstants>$(DefineConstants);__DESKTOP__;__GTK__;__GTK3__</DefineConstants>
+    <Title>SkiaSharp Views &amp; Layers for GTK# 3</Title>
+    <PackageTags>gtk;gtk3;gtksharp</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="GtkSharp" Version="3.22.24.37" />
+    <PackageReference Include="GtkSharp" Version="3.24.24.95" ExcludeAssets="build" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\SkiaSharp.Views.Desktop.Common\SkiaSharp.Views.Desktop.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SkiaSharp.Views.Gtk\GTKExtensions.cs" Link="GTKExtensions.cs" />
     <Compile Include="..\SkiaSharp.Views.Shared\Properties\SkiaSharpViewsAssemblyInfo.cs" Link="Properties\SkiaSharpViewsAssemblyInfo.cs" />
   </ItemGroup>
 </Project>

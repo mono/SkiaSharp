@@ -1,12 +1,12 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/tvos"));
 
-#load "../../cake/native-shared.cake"
-#load "../../cake/xcode.cake"
+#load "../../scripts/cake/native-shared.cake"
+#load "../../scripts/cake/xcode.cake"
 
 string GetDeploymentTarget(string arch)
 {
-    return "9.0";
+    return "11.0";
 }
 
 Task("libSkiaSharp")
@@ -27,8 +27,9 @@ Task("libSkiaSharp")
             $"target_os='tvos' " +
             $"target_cpu='{skiaArch}' " +
             $"min_ios_version='{GetDeploymentTarget(arch)}' " +
+            $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
-            $"skia_use_metal=false " +
+            $"skia_use_metal=true " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +

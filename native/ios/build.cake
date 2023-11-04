@@ -1,8 +1,8 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-#load "../../cake/native-shared.cake"
-#load "../../cake/xcode.cake"
+#load "../../scripts/cake/native-shared.cake"
+#load "../../scripts/cake/xcode.cake"
 
 string VARIANT = (BUILD_VARIANT ?? "ios").ToLower();
 
@@ -23,7 +23,7 @@ Task("libSkiaSharp")
         Build("iphonesimulator", "x86_64", "x64");
         Build("iphonesimulator", "arm64", "arm64");
         Build("iphoneos", "arm64", "arm64");
-        Build("iphoneos", "arm64", "arm64", "arm64e");
+        // Build("iphoneos", "arm64", "arm64", "arm64e");
 
         SafeCopy(
             $"libSkiaSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
@@ -53,8 +53,9 @@ Task("libSkiaSharp")
             $"target_os='{VARIANT}' " +
             $"min_{VARIANT}_version='{GetDeploymentTarget(arch)}' " +
             $"ios_use_simulator={(isSim ? "true" : "false")} " +
+            $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
-            $"skia_use_metal={(sdk == "macosx" ? "false" : "true")} " +
+            $"skia_use_metal=true " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +
@@ -85,7 +86,7 @@ Task("libHarfBuzzSharp")
         Build("iphonesimulator", "x86_64");
         Build("iphonesimulator", "arm64");
         Build("iphoneos", "arm64");
-        Build("iphoneos", "arm64e");
+        // Build("iphoneos", "arm64e");
 
         SafeCopy(
             $"libHarfBuzzSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",

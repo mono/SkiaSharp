@@ -4,7 +4,6 @@
 [![HarfBuzzSharp](https://img.shields.io/nuget/vpre/HarfBuzzSharp.svg?cacheSeconds=3600&label=HarfBuzzSharp%20nuget)](https://www.nuget.org/packages/HarfBuzzSharp)
 
 [![SkiaSharp.Views](https://img.shields.io/nuget/vpre/SkiaSharp.Views.svg?cacheSeconds=3600&label=SkiaSharp.Views%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views)
-[![SkiaSharp.Views.Forms](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Forms.svg?cacheSeconds=3600&label=SkiaSharp.Views.Forms%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Forms)
 [![SkiaSharp.Views.Maui.Controls](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Maui.Controls.svg?cacheSeconds=3600&label=SkiaSharp.Views.Maui.Controls%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls)
 [![SkiaSharp.Views.Uno](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Uno.svg?cacheSeconds=3600&label=SkiaSharp.Views.Uno%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Uno) 
 
@@ -29,14 +28,12 @@ SkiaSharp provides cross-platform bindings for:
  - Android
  - iOS
  - tvOS
- - watchOS
  - macOS
  - Mac Catalyst
  - WinUI 3 (Windows App SDK / Uno Platform)
  - Windows Classic Desktop (Windows.Forms / WPF)
- - Windows UWP (Desktop / Mobile / Xbox / HoloLens)
  - Web Assembly (WASM)
- - Uno Platform (iOS / macOS / Android / WebAssembly / UWP)
+ - Uno Platform (iOS / macOS / Android / WebAssembly)
 
 The [API Documentation](https://docs.microsoft.com/en-us/dotnet/api/SkiaSharp/) is
 available on the web to browse.
@@ -70,6 +67,6 @@ However, these are easy to install as they are found on the various websites. If
 
 Here are some links to show the differences in our code as compared to Google's code.
 
-What version are we on? [**m88**](https://github.com/google/skia/tree/chrome/m88)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m88)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m88...mono:xamarin-mobile-bindings)  
+What version are we on? [**m115**](https://github.com/google/skia/tree/chrome/m115)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m115)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m115...mono:skiasharp)  

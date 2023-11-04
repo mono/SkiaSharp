@@ -35,6 +35,7 @@
 		34CB9AD9205699C400BACCBA /* sk_managedstream.h in Headers */ = {isa = PBXBuildFile; fileRef = 34CB9AD3205699C400BACCBA /* sk_managedstream.h */; };
 		34CB9ADB205699C400BACCBA /* sk_xamarin.h in Headers */ = {isa = PBXBuildFile; fileRef = 34CB9AD5205699C400BACCBA /* sk_xamarin.h */; };
 		34CB9ADC205699C400BACCBA /* WinRTCompat.h in Headers */ = {isa = PBXBuildFile; fileRef = 34CB9AD6205699C400BACCBA /* WinRTCompat.h */; };
+		34ED40A92A8178A6007F12FA /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34ED40A82A8178A6007F12FA /* UIKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,6 +69,7 @@
 		34CB9AD3205699C400BACCBA /* sk_managedstream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sk_managedstream.h; path = ../../../../externals/skia/include/xamarin/sk_managedstream.h; sourceTree = "<group>"; };
 		34CB9AD5205699C400BACCBA /* sk_xamarin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sk_xamarin.h; path = ../../../../externals/skia/include/xamarin/sk_xamarin.h; sourceTree = "<group>"; };
 		34CB9AD6205699C400BACCBA /* WinRTCompat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WinRTCompat.h; path = ../../../../externals/skia/include/xamarin/WinRTCompat.h; sourceTree = "<group>"; };
+		34ED40A82A8178A6007F12FA /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk/System/iOSSupport/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +82,7 @@
 				345A7E581E7635B10046F543 /* CoreGraphics.framework in Frameworks */,
 				34AC597224B80BB4009CDA1D /* MetalKit.framework in Frameworks */,
 				34AC597324B80BB4009CDA1D /* Metal.framework in Frameworks */,
+				34ED40A92A8178A6007F12FA /* UIKit.framework in Frameworks */,
 				34AC596F24B80BAD009CDA1D /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -138,6 +141,7 @@
 		345A7E561E7635B00046F543 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				34ED40A82A8178A6007F12FA /* UIKit.framework */,
 				34AC597124B80BB4009CDA1D /* Metal.framework */,
 				34AC597024B80BB4009CDA1D /* MetalKit.framework */,
 				34AC596E24B80BAD009CDA1D /* Foundation.framework */,
@@ -294,18 +298,23 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"SK_ASSUME_GL_ES=1",
 					"SKIA_IMPLEMENTATION=1",
-					GR_OP_ALLOCATE_USE_NEW,
 					SK_CODEC_DECODES_JPEG,
 					SK_CODEC_DECODES_PNG,
 					SK_CODEC_DECODES_RAW,
 					SK_CODEC_DECODES_WEBP,
-					SK_ENCODE_JPEG,
-					SK_ENCODE_PNG,
-					SK_ENCODE_WEBP,
+					SK_ENABLE_API_AVAILABLE,
+					SK_ENABLE_PRECOMPILE,
+					SK_ENABLE_SKOTTIE_SKSLEFFECT,
+					SK_ENABLE_SKOTTIE,
+					SK_ENABLE_SKSL_IN_RASTER_PIPELINE,
+					SK_ENABLE_SKSL,
 					SK_GAMMA_APPLY_TO_A8,
+					SK_GANESH,
 					SK_GL,
+					SK_HAS_WUFFS_LIBRARY,
+					SK_METAL,
 					SK_SUPPORT_PDF,
-					SK_USE_LIBGIFCODEC,
+					SK_TYPEFACE_FACTORY_CORETEXT,
 					SK_XML,
 					SKIA_C_DLL,
 				);
@@ -367,18 +376,23 @@
 					NDEBUG,
 					"SK_ASSUME_GL_ES=1",
 					"SKIA_IMPLEMENTATION=1",
-					GR_OP_ALLOCATE_USE_NEW,
 					SK_CODEC_DECODES_JPEG,
 					SK_CODEC_DECODES_PNG,
 					SK_CODEC_DECODES_RAW,
 					SK_CODEC_DECODES_WEBP,
-					SK_ENCODE_JPEG,
-					SK_ENCODE_PNG,
-					SK_ENCODE_WEBP,
+					SK_ENABLE_API_AVAILABLE,
+					SK_ENABLE_PRECOMPILE,
+					SK_ENABLE_SKOTTIE_SKSLEFFECT,
+					SK_ENABLE_SKOTTIE,
+					SK_ENABLE_SKSL_IN_RASTER_PIPELINE,
+					SK_ENABLE_SKSL,
 					SK_GAMMA_APPLY_TO_A8,
+					SK_GANESH,
 					SK_GL,
+					SK_HAS_WUFFS_LIBRARY,
+					SK_METAL,
 					SK_SUPPORT_PDF,
-					SK_USE_LIBGIFCODEC,
+					SK_TYPEFACE_FACTORY_CORETEXT,
 					SK_XML,
 					SKIA_C_DLL,
 				);
@@ -395,8 +409,8 @@
 				OTHER_LDFLAGS = "-all_load";
 				SDKROOT = iphoneos;
 				SKIA_PLATFORM = ios;
-				VALIDATE_PRODUCT = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -414,7 +428,7 @@
 				HEADER_SEARCH_PATHS = ../../../externals/skia;
 				INFOPLIST_FILE = libSkiaSharp/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				"IPHONEOS_DEPLOYMENT_TARGET" = "$(IOS_DEPLOYMENT_TARGET_VERSION)";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(IOS_DEPLOYMENT_TARGET_VERSION)";
 				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = "$(MACCATALYST_DEPLOYMENT_TARGET_VERSION)";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/$(SKIA_PLATFORM)/$(ARCHS)";
@@ -426,7 +440,7 @@
 					"-lskshaper",
 					"-lskresources",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.libSkiaSharp";
+				PRODUCT_BUNDLE_IDENTIFIER = com.microsoft.libSkiaSharp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = YES;
@@ -445,7 +459,7 @@
 				HEADER_SEARCH_PATHS = ../../../externals/skia;
 				INFOPLIST_FILE = libSkiaSharp/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				"IPHONEOS_DEPLOYMENT_TARGET" = "$(IOS_DEPLOYMENT_TARGET_VERSION)";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(IOS_DEPLOYMENT_TARGET_VERSION)";
 				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = "$(MACCATALYST_DEPLOYMENT_TARGET_VERSION)";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "../../../externals/skia/out/$(SKIA_PLATFORM)/$(ARCHS)";
@@ -457,7 +471,7 @@
 					"-lskshaper",
 					"-lskresources",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.libSkiaSharp";
+				PRODUCT_BUNDLE_IDENTIFIER = com.microsoft.libSkiaSharp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SUPPORTS_MACCATALYST = YES;

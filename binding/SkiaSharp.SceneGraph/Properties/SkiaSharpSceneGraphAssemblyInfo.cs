@@ -9,12 +9,6 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 [assembly: NeutralResourcesLanguage("en")]
 
-#if DEBUG
-[assembly: AssemblyConfiguration("Debug")]
-#else
-[assembly: AssemblyConfiguration("Release")]
-#endif
-
 [assembly: InternalsVisibleTo("SkiaSharp.Tests, PublicKey=" +
 	"002400000480000094000000060200000024000052534131000400000100010079159977d2d03a" +
 	"8e6bea7a2e74e8d1afcc93e8851974952bb480a12c9134474d04062447c37e0e68c080536fcf3c" +
@@ -31,7 +25,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: AssemblyMetadata("IsTrimmable", "True")]
 
-#if __IOS__ || __TVOS__ || __WATCHOS__ || __MACOS__
+#if __IOS__ || __TVOS__ || __MACOS__
 // This attribute allows you to mark your assemblies as “safe to link”.
 // When the attribute is present, the linker—if enabled—will process the assembly
 // even if you’re using the “Link SDK assemblies only” option, which is the default for device builds.

@@ -63,7 +63,7 @@ public class SKPaintSurfaceEventArgs : System.EventArgs {
 #### New Type: SkiaSharp.Views.Windows.SKXamlCanvas
 
 ```csharp
-public class SKXamlCanvas : Microsoft.UI.Xaml.Controls.Canvas, Microsoft.UI.Composition.IAnimationObject, Microsoft.UI.Composition.IVisualElement, Microsoft.UI.Composition.IVisualElement2, System.IEquatable<Microsoft.UI.Xaml.Controls.Canvas>, System.IEquatable<Microsoft.UI.Xaml.Controls.Panel>, System.IEquatable<Microsoft.UI.Xaml.DependencyObject>, System.IEquatable<Microsoft.UI.Xaml.FrameworkElement>, System.IEquatable<Microsoft.UI.Xaml.UIElement>, System.Runtime.InteropServices.ICustomQueryInterface, System.Runtime.InteropServices.IDynamicInterfaceCastable, WinRT.IWinRTObject {
+public class SKXamlCanvas : Microsoft.UI.Xaml.Controls.Canvas, Microsoft.UI.Composition.IAnimationObject, Microsoft.UI.Composition.IVisualElement, Microsoft.UI.Composition.IVisualElement2, System.IEquatable<Microsoft.UI.Xaml.Controls.Canvas>, System.IEquatable<Microsoft.UI.Xaml.Controls.Panel>, System.IEquatable<Microsoft.UI.Xaml.DependencyObject>, System.IEquatable<Microsoft.UI.Xaml.FrameworkElement>, System.IEquatable<Microsoft.UI.Xaml.UIElement>, System.Runtime.InteropServices.ICustomQueryInterface, WinRT.IWinRTObject {
 	// constructors
 	public SKXamlCanvas ();
 	// properties

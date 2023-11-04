@@ -1,7 +1,7 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/android"));
 
-#load "../../cake/native-shared.cake"
+#load "../../scripts/cake/native-shared.cake"
 
 DirectoryPath ANDROID_NDK_HOME = Argument("ndk", EnvironmentVariable("ANDROID_NDK_HOME") ?? EnvironmentVariable("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine("android-ndk").FullPath);
 
@@ -25,6 +25,7 @@ Task("libSkiaSharp")
         GnNinja($"android/{arch}", "SkiaSharp",
             $"target_cpu='{skiaArch}' " +
             $"target_os='android' " +
+            $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
             $"skia_use_sfntly=false " +
@@ -38,7 +39,7 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
             $"ndk='{ANDROID_NDK_HOME}' " +
-            $"ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 16)}");
+            $"ndk_api=21");
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);

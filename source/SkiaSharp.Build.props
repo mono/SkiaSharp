@@ -8,6 +8,8 @@
      - part of SkiaSharp.Views.Forms: SKx00x
   -->
 
+  <Import Project="SkiaSharp.Build.Override.props" Condition="Exists('SkiaSharp.Build.Override.props')" />
+
   <PropertyGroup>
     <IsWindows>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))</IsWindows>
     <IsMacOS>$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))</IsMacOS>
@@ -20,92 +22,141 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- this is important for mono as it defaults to 'false' -->
+    <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_SHA)</AssemblyVersionGitSha>
+    <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_COMMIT)</AssemblyVersionGitSha>
+    <AssemblyVersionGitBranch Condition=" '$(AssemblyVersionGitBranch)' == '' ">$(GIT_BRANCH_NAME)</AssemblyVersionGitBranch>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <SignAssembly>true</SignAssembly>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <SkiaSharpBuildPropsImported>true</SkiaSharpBuildPropsImported>
-    <BuildingForDotNet Condition="'$(BuildingForDotNet)' == '' and $(IsWindows)">true</BuildingForDotNet>
-    <BuildingForDotNet Condition="'$(BuildingForDotNet)' == ''">false</BuildingForDotNet>
     <MDocDocumentationDirectory>$(MSBuildThisFileDirectory)..\docs\SkiaSharpAPI</MDocDocumentationDirectory>
-    <LangVersion>9.0</LangVersion>
-    <LangVersion Condition="$(IsWindows) or $(BuildingForDotNet)">10.0</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <DotNetSdkManifestVersionRegex>\d+\.\d+\.\d+(-[a-z]+\.\d+)?</DotNetSdkManifestVersionRegex>
-    <DotNetSdkVersionRegex>\d+\.\d+</DotNetSdkVersionRegex>
     <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' == 'Core'">$([System.Text.RegularExpressions.Regex]::Match('$(MSBuildExtensionsPath)', '$(DotNetSdkManifestVersionRegex)'))</DotNetSdkManifestVersion>
     <!-- TODO: find a way to detect the installed SDK version -->
     <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' != 'Core'"></DotNetSdkManifestVersion>
-    <DotNetSdkVersion Condition="'$(DotNetSdkManifestVersion)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(DotNetSdkManifestVersion)', '$(DotNetSdkVersionRegex)'))</DotNetSdkVersion>
-    <DotNetBaseVersion>6.0</DotNetBaseVersion>
-    <DotNetNextVersion Condition="'$(DotNetSdkVersion)' != '' and $([MSBuild]::VersionGreaterThan($(DotNetSdkVersion), $(DotNetBaseVersion)))">$(DotNetSdkVersion)</DotNetNextVersion>
+    <TFMCurrent>net7.0</TFMCurrent>
+    <TFMNext></TFMNext>
+    <TFMWindowsVersion>10.0.19041.0</TFMWindowsVersion>
   </PropertyGroup>
 
   <!-- Try determine which .NET workloads are installed for LOCAL builds -->
-  <PropertyGroup Condition="!$(IsCI)">
-    <DotNetWorkloadVersionRegex>\d+\.\d+\.\d+(-[a-z]+[\.\d+]+)?</DotNetWorkloadVersionRegex>
-    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists('$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)\microsoft.net.sdk.macos\WorkloadManifest.json')">$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)\</DotNetWorkloadInstallLocation>
-    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists('$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)\microsoft.net.sdk.macos\WorkloadManifest.json')">$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)\</DotNetWorkloadInstallLocation>
+  <PropertyGroup Condition="!$(IsCI) and '$(BuildEverything)' != 'true'">
+    <DotNetWorkloadSearchManifest>microsoft.net.sdk.macos\WorkloadManifest.json</DotNetWorkloadSearchManifest>
+    <!-- DOTNET_INSTALL_DIR -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(DOTNET_INSTALL_DIR)\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+    <!-- DOTNET_ROOT -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(DOTNET_ROOT)\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+    <!-- ProgramFiles\dotnet -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(ProgramFiles)\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+    <!-- /usr/local/share/dotnet -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('/usr/local/share/dotnet/sdk-manifests/$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+    <!-- LocalAppData\Microsoft\dotnet -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(LocalAppData)\Microsoft\dotnet\sdk-manifests\$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+    <!-- HOME\.dotnet -->
+    <DotNetWorkloadSearchPath Condition="'$(DotNetWorkloadInstallLocation)' == ''">$([MSBuild]::NormalizeDirectory('$(HOME)/.dotnet/sdk-manifests/$(DotNetSdkManifestVersion)'))</DotNetWorkloadSearchPath>
+    <DotNetWorkloadInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' == '' and Exists($([MSBuild]::NormalizePath('$(DotNetWorkloadSearchPath)', '$(DotNetWorkloadSearchManifest)')))">$(DotNetWorkloadSearchPath)</DotNetWorkloadInstallLocation>
+  </PropertyGroup>
+  <PropertyGroup Condition="!$(IsCI) and '$(BuildEverything)' != 'true'">
+    <DotNetWorkloadVersionRegex>\d+\.\d+\.\d+(-[a-z]+[\.\d+]+)*</DotNetWorkloadVersionRegex>
     <DotNetWorkloadPacksInstallLocation Condition="'$(DotNetWorkloadInstallLocation)' != ''">$(DotNetWorkloadInstallLocation)..\..\packs\</DotNetWorkloadPacksInstallLocation>
+    <DotNetAndroidWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.android\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.android\WorkloadManifest.json')), $(DotNetWorkloadVersionRegex)))</DotNetAndroidWorkloadInstalledVersion>
+    <DotNetIOSWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.ios\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.ios\WorkloadManifest.json')), $(DotNetWorkloadVersionRegex)))</DotNetIOSWorkloadInstalledVersion>
+    <DotNetMauiWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.maui\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.maui\WorkloadManifest.json')), $(DotNetWorkloadVersionRegex)))</DotNetMauiWorkloadInstalledVersion>
     <DotNetTizenWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)samsung.net.sdk.tizen\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\samsung.net.sdk.tizen\WorkloadManifest.json')), $(DotNetWorkloadVersionRegex)))</DotNetTizenWorkloadInstalledVersion>
     <DotNetTVOSWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.tvos\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.tvos\WorkloadManifest.json')), '$(DotNetWorkloadVersionRegex)'))</DotNetTVOSWorkloadInstalledVersion>
     <DotNetMacOSWorkloadInstalledVersion Condition="Exists('$(DotNetWorkloadInstallLocation)microsoft.net.sdk.macos\WorkloadManifest.json')">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(DotNetWorkloadInstallLocation)\microsoft.net.sdk.macos\WorkloadManifest.json')), '$(DotNetWorkloadVersionRegex)'))</DotNetMacOSWorkloadInstalledVersion>
     <DotNetTizenWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Samsung.Tizen.Sdk\$(DotNetTizenWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetTizenWorkloadIsInstalled>
-    <DotNetTVOSWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.tvOS.Sdk\$(DotNetMacOSWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetTVOSWorkloadIsInstalled>
+    <DotNetTVOSWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.tvOS.Sdk\$(DotNetTVOSWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetTVOSWorkloadIsInstalled>
     <DotNetMacOSWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.macOS.Sdk\$(DotNetMacOSWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetMacOSWorkloadIsInstalled>
+    <DotNetAndroidWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.Android.Sdk.Windows\$(DotNetAndroidWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetAndroidWorkloadIsInstalled>
+    <DotNetAndroidWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.Android.Sdk.Darwin\$(DotNetAndroidWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetAndroidWorkloadIsInstalled>
+    <DotNetAndroidWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.Android.Sdk.Linux\$(DotNetAndroidWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetAndroidWorkloadIsInstalled>
+    <DotNetIOSWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.iOS.Sdk\$(DotNetIOSWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetIOSWorkloadIsInstalled>
+    <DotNetMauiWorkloadIsInstalled Condition="Exists('$(DotNetWorkloadPacksInstallLocation)Microsoft.Maui.Sdk\$(DotNetMauiWorkloadInstalledVersion)\Sdk\AutoImport.props')">true</DotNetMauiWorkloadIsInstalled>
     <IsNetTizenSupported Condition="'$(DotNetTizenWorkloadIsInstalled)' != 'true'">false</IsNetTizenSupported>
     <IsNetTVOSSupported Condition="'$(DotNetTVOSWorkloadIsInstalled)' != 'true'">false</IsNetTVOSSupported>
     <IsNetMacOSSupported Condition="'$(DotNetMacOSWorkloadIsInstalled)' != 'true'">false</IsNetMacOSSupported>
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- Disable csc shared compilation to reduce memory usage on CI -->
-    <UseSharedCompilation>False</UseSharedCompilation>
-
     <!-- Force the use of Uno Roslyn generators to reduce memory usage on CI -->
-    <UnoUIUseRoslynSourceGenerators>true</UnoUIUseRoslynSourceGenerators>
+    <UnoUIUseRoslynSourceGenerators>True</UnoUIUseRoslynSourceGenerators>
   </PropertyGroup>
 
-  <!-- Classic Tizen, Xamarin and UWP -->
+  <!-- .NET Standard, .NET Framework and .NET -->
   <PropertyGroup>
-    <ClassicTargetFrameworks>tizen40</ClassicTargetFrameworks>
-    <ClassicTargetFrameworks Condition="$(IsMacOS) or !$(IsCI)">$(ClassicTargetFrameworks);xamarinios1.0;xamarintvos1.0;xamarinwatchos1.0;xamarinmac2.0</ClassicTargetFrameworks>
-    <ClassicTargetFrameworks Condition="$(IsWindows) or $(IsMacOS)">$(ClassicTargetFrameworks);monoandroid10.0</ClassicTargetFrameworks>
-    <ClassicTargetFrameworks Condition="$(IsWindows)">$(ClassicTargetFrameworks);uap10.0.10240;uap10.0.16299</ClassicTargetFrameworks>
+    <BasicTargetFrameworksCurrent>netstandard2.0;netstandard2.1;net462;$(TFMCurrent)</BasicTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tizen</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tvos</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-macos</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="$(IsWindows)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-windows$(TFMWindowsVersion)</PlatformTargetFrameworksCurrent>
   </PropertyGroup>
-
-  <!-- .NET Standard, .NET FX and .NET 6 -->
+  <PropertyGroup Condition="'$(TFMNext)' != ''">
+    <BasicTargetFrameworksNext>$(TFMNext)</BasicTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux)">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tizen</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tvos</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-macos</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="$(IsWindows)">$(PlatformTargetFrameworksNext);$(TFMNext)-windows$(TFMWindowsVersion)</PlatformTargetFrameworksNext>
+  </PropertyGroup>
   <PropertyGroup>
-    <AncientTargetFrameworks>netstandard1.3</AncientTargetFrameworks>
-    <BasicTargetFrameworksWithoutAncient>netstandard2.0;netstandard2.1;net462;netcoreapp3.1</BasicTargetFrameworksWithoutAncient>
-    <BasicTargetFrameworksWithoutAncient Condition="$(BuildingForDotNet)">$(BasicTargetFrameworksWithoutAncient);net$(DotNetBaseVersion)</BasicTargetFrameworksWithoutAncient>
-    <BasicTargetFrameworksWithoutAncient Condition="$(BuildingForDotNet) and '$(DotNetNextVersion)' != ''">$(BasicTargetFrameworksWithoutAncient);net$(DotNetNextVersion)</BasicTargetFrameworksWithoutAncient>
-    <BasicTargetFrameworks>$(AncientTargetFrameworks);$(BasicTargetFrameworksWithoutAncient)</BasicTargetFrameworks>
-    <NetPlatformTargetFrameworks>net$(DotNetBaseVersion)-ios;net$(DotNetBaseVersion)-maccatalyst;net$(DotNetBaseVersion)-android</NetPlatformTargetFrameworks>
-    <NetPlatformTargetFrameworks Condition="$(IsNetTizenSupported)">$(NetPlatformTargetFrameworks);net$(DotNetBaseVersion)-tizen</NetPlatformTargetFrameworks>
-    <NetPlatformTargetFrameworks Condition="$(IsNetTVOSSupported)">$(NetPlatformTargetFrameworks);net$(DotNetBaseVersion)-tvos</NetPlatformTargetFrameworks>
-    <NetPlatformTargetFrameworks Condition="$(IsNetMacOSSupported)">$(NetPlatformTargetFrameworks);net$(DotNetBaseVersion)-macos</NetPlatformTargetFrameworks>
+    <BasicTargetFrameworks>$(BasicTargetFrameworksCurrent);$(BasicTargetFrameworksNext)</BasicTargetFrameworks>
+    <PlatformTargetFrameworks>$(PlatformTargetFrameworksCurrent);$(PlatformTargetFrameworksNext)</PlatformTargetFrameworks>
+    <AllTargetFrameworks>$(BasicTargetFrameworks);$(PlatformTargetFrameworks)</AllTargetFrameworks>
   </PropertyGroup>
 
-  <!-- Special case for SkiaSharp.Benchmarks -->
-  <PropertyGroup Condition="'$(SolutionName)' == 'SkiaSharp.Benchmarks' or '$(IsBenchmarks)' == 'true' or $(MSBuildStartupDirectory.Contains('benchmarks\SkiaSharp.Benchmarks'))">
-    <BasicTargetFrameworks>net462;netcoreapp3.1</BasicTargetFrameworks>
-    <NetPlatformTargetFrameworks>net$(DotNetBaseVersion)</NetPlatformTargetFrameworks>
-  </PropertyGroup>
-
-  <!-- Base TFMs for the core parts -->
+  <!-- Windows TFMs -->
   <PropertyGroup>
-    <AllTargetFrameworks>$(BasicTargetFrameworks)</AllTargetFrameworks>
-    <AllTargetFrameworks Condition="$(BuildingForDotNet)">$(AllTargetFrameworks);$(NetPlatformTargetFrameworks)</AllTargetFrameworks>
+    <WindowsTargetFrameworksCurrent Condition="$(IsWindows)">$(TFMCurrent)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksCurrent>
+    <WindowsTargetFrameworksNext Condition="$(IsWindows) and '$(TFMNext)' != ''">$(TFMNext)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksNext>
+    <WindowsTargetFrameworks Condition="$(IsWindows)">$(WindowsTargetFrameworksCurrent);$(WindowsTargetFrameworksNext)</WindowsTargetFrameworks>
+  </PropertyGroup>
+
+  <!-- Windows Desktop TFMs -->
+  <PropertyGroup>
+    <WindowsDesktopTargetFrameworks>net462</WindowsDesktopTargetFrameworks>
+    <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">$(WindowsDesktopTargetFrameworks);$(WindowsTargetFrameworks)</WindowsDesktopTargetFrameworks>
   </PropertyGroup>
 
   <!-- .NET MAUI -->
   <PropertyGroup>
-    <MauiTargetFrameworks>net$(DotNetBaseVersion);net$(DotNetBaseVersion)-ios;net$(DotNetBaseVersion)-maccatalyst;net$(DotNetBaseVersion)-android</MauiTargetFrameworks>
-    <MauiTargetFrameworks Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworks);net$(DotNetBaseVersion)-tizen</MauiTargetFrameworks>
-    <MauiTargetFrameworks Condition="$(IsWindows)">$(MauiTargetFrameworks);net$(DotNetBaseVersion)-windows10.0.19041.0</MauiTargetFrameworks>
+    <MauiTargetFrameworksPlatformCurrent>$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksPlatformCurrent Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-tizen</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksPlatformCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-windows$(TFMWindowsVersion)</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksCurrent>$(TFMCurrent);$(MauiTargetFrameworksPlatformCurrent)</MauiTargetFrameworksCurrent>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(DotNetNextVersion)' != ''">
-    <MauiTargetFrameworks>$(MauiTargetFrameworks);net$(DotNetNextVersion);net$(DotNetNextVersion)-ios;net$(DotNetNextVersion)-maccatalyst;net$(DotNetNextVersion)-android</MauiTargetFrameworks>
-    <MauiTargetFrameworks Condition="$(IsNetTizenSupported)">$(DotNetNextVersion);net$(DotNetNextVersion)-tizen</MauiTargetFrameworks>
-    <MauiTargetFrameworks Condition="$(IsWindows)">$(DotNetNextVersion);net$(DotNetNextVersion)-windows10.0.19041.0</MauiTargetFrameworks>
+  <PropertyGroup Condition="'$(TFMNext)' != ''">
+    <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
+    <MauiTargetFrameworksPlatformNext>$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</MauiTargetFrameworksPlatformNext>
+    <MauiTargetFrameworksPlatformNext Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksPlatformNext);$(TFMNext)-tizen</MauiTargetFrameworksPlatformNext>
+    <MauiTargetFrameworksPlatformNext Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformNext);$(TFMNext)-windows$(TFMWindowsVersion)</MauiTargetFrameworksPlatformNext>
+    <MauiTargetFrameworksNext>$(TFMNext);$(MauiTargetFrameworksPlatformNext)</MauiTargetFrameworksNext>
+  </PropertyGroup>
+  <PropertyGroup>
+    <MauiTargetFrameworks>$(MauiTargetFrameworksCurrent);$(MauiTargetFrameworksNext)</MauiTargetFrameworks>
+  </PropertyGroup>
+
+  <!-- Uno Platform -->
+  <PropertyGroup>
+    <UnoTargetFrameworksReference>$(TFMCurrent)</UnoTargetFrameworksReference>
+    <UnoTargetFrameworksReference Condition="'$(TFMNext)' != ''">$(UnoTargetFrameworksReference);$(TFMNext)</UnoTargetFrameworksReference>
+    <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android;$(TFMCurrent)-macos</UnoTargetFrameworksCurrent>
+    <UnoTargetFrameworksNext Condition="!$(IsLinux) and '$(TFMNext)' != ''">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android;$(TFMNext)-macos</UnoTargetFrameworksNext>
+    <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksCurrent);$(UnoTargetFrameworksNext);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -122,18 +173,13 @@
     <DefineConstants>$(DefineConstants);THROW_OBJECT_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net$(DotNetBaseVersion)' or '$(TargetFramework)' == 'net$(DotNetNextVersion)' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(TFMCurrent)' or ('$(TargetFramework)' == '$(TFMNext)' and '$(TFMNext)' != '') ">
     <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DependsOnNETStandard>true</DependsOnNETStandard>
   </PropertyGroup>
-
-  <!-- Workaround: Use a slightly newer compiler for C# 9 support for the workaround above -->
-  <ItemGroup Condition="'$(MSBuildVersion)' != '' AND '$(MSBuildVersion)' &lt; '16.7.0'  ">
-    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.9.0" PrivateAssets="all" />
-  </ItemGroup>
 
   <!-- HACK: WinUI seems to have issues without this -->
   <PropertyGroup>
@@ -180,8 +226,14 @@
     <Message Text="Operating System: Linux"
              Condition=" '$(IsLinux)' == 'true' " />
 
+    <Message Text="Workload versions: Android ($(DotNetAndroidWorkloadInstalledVersion)), iOS ($(DotNetIOSWorkloadInstalledVersion)), macOS ($(DotNetMacOSWorkloadInstalledVersion)), tvOS ($(DotNetTVOSWorkloadInstalledVersion)), Tizen ($(DotNetTizenWorkloadInstalledVersion)), MAUI ($(DotNetMauiWorkloadInstalledVersion))" />
+
+    <Message Text="Workloads installed: Android ($(DotNetAndroidWorkloadIsInstalled)), iOS ($(DotNetIOSWorkloadIsInstalled)), macOS ($(DotNetMacOSWorkloadIsInstalled)), tvOS ($(DotNetTVOSWorkloadIsInstalled)), Tizen ($(DotNetTizenWorkloadIsInstalled)), MAUI ($(DotNetMauiWorkloadIsInstalled))" />
+
     <Error Text="There appears to be a problem selecting the operating system. IsWindows='$(IsWindows)',  IsMacOS='$(IsMacOS)',  IsLinux='$(IsLinux)'"
            Condition=" !$(IsWindows) and !$(IsMacOS) and !$(IsLinux) " />
   </Target>
+
+  <Import Project="$(MSBuildThisFileDirectory)SkiaSharp.NuGet.props" />
 
 </Project>
