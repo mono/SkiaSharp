@@ -171,13 +171,15 @@ namespace SkiaSharp.HarfBuzz.Tests
 			canvas.Clear(SKColors.White);
 
 			using var paint = new SKPaint();
-			paint.Typeface = tf;
 			paint.IsAntialias = true;
-			paint.TextSize = 64;
 			paint.Color = SKColors.Black;
-			paint.TextAlign = align;
 
-			using var shapedPath = paint.GetShapedTextPath("SkiaSharp", 300, 100);
+			using var font = new SKFont();
+			font.Typeface = tf;
+			font.TextSize = 64;
+			font.TextAlign = align;
+
+			using var shapedPath = font.GetShapedTextPath("SkiaSharp", 300, 100);
 			canvas.DrawPath(shapedPath, paint);
 
 			AssertTextAlign(bitmap, offset, 100);
