@@ -518,11 +518,17 @@ namespace SkiaSharp
 
 		public static implicit operator SKRuntimeEffectUniform (float[][] value)
 		{
-			var floats = new List<float> ();
-			foreach (var array in value) {
-				floats.AddRange (array);
+			var totalLength = value.Sum (static f => f.Length);
+			var floats = new float[totalLength];
+
+			var offset = 0;
+			foreach (var f in value)
+			{
+				Array.Copy (f, 0, floats, offset, f.Length);
+				offset += f.Length;
 			}
-			return floats.ToArray ();
+
+			return floats;
 		}
 
 		public static implicit operator SKRuntimeEffectUniform (SKMatrix value) => value.Values;

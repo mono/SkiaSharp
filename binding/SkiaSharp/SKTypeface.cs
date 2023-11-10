@@ -232,23 +232,14 @@ namespace SkiaSharp
 		public ushort[] GetGlyphs (string text) =>
 			GetGlyphs (text.AsSpan ());
 
-		public ushort[] GetGlyphs (ReadOnlySpan<char> text)
-		{
-			using var font = ToFont ();
-			return font.GetGlyphs (text);
-		}
+		public ushort[] GetGlyphs (ReadOnlySpan<char> text) =>
+			GetFont ().GetGlyphs (text);
 
-		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
-		{
-			using var font = ToFont ();
-			return font.GetGlyphs (text, encoding);
-		}
+		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
+			GetFont ().GetGlyphs (text, encoding);
 
-		public ushort[] GetGlyphs (IntPtr text, int length, SKTextEncoding encoding)
-		{
-			using var font = ToFont ();
-			return font.GetGlyphs (text, length * encoding.GetCharacterByteSize (), encoding);
-		}
+		public ushort[] GetGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
+			GetFont ().GetGlyphs (text, length * encoding.GetCharacterByteSize (), encoding);
 
 		// ContainsGlyph
 
