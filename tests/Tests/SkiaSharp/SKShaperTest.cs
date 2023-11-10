@@ -42,11 +42,12 @@ namespace SkiaSharp.HarfBuzz.Tests
 			using (var canvas = new SKCanvas(bitmap))
 			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
-			using (var paint = new SKPaint { IsAntialias = true, TextSize = 64, Typeface = tf })
+			using (var paint = new SKPaint { IsAntialias = true })
+			using (var font = new SKFont { Size = 64, Typeface = tf})
 			{
 				canvas.Clear(SKColors.White);
 
-				using var shapedPath = paint.GetShapedTextPath(shaper, "متن", 100, 200);
+				using var shapedPath = font.GetShapedTextPath(shaper, "متن", 100, 200, SKTextAlign.Left);
 				canvas.DrawPath(shapedPath, paint);
 
 				canvas.Flush();
@@ -162,8 +163,8 @@ namespace SkiaSharp.HarfBuzz.Tests
 		[InlineData(SKTextAlign.Right, 23)]
 		public void TextAlignMovesTextPathPosition(SKTextAlign align, int offset)
 		{
-			var font = Path.Combine(PathToFonts, "segoeui.ttf");
-			using var tf = SKTypeface.FromFile(font);
+			var fontFile = Path.Combine(PathToFonts, "segoeui.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
 
 			using var bitmap = new SKBitmap(600, 300);
 			using var canvas = new SKCanvas(bitmap);
@@ -176,7 +177,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 
 			using var font = new SKFont();
 			font.Typeface = tf;
-			font.TextSize = 64;
+			font.Size = 64;
 
 			using var shapedPath = font.GetShapedTextPath("SkiaSharp", 300, 100, align);
 			canvas.DrawPath(shapedPath, paint);
