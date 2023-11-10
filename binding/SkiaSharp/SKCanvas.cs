@@ -409,7 +409,7 @@ namespace SkiaSharp
 
 		// DrawPoints
 
-		public void DrawPoints (SKPointMode mode, SKPoint[] points, SKPaint paint)
+		public void DrawPoints (SKPointMode mode, ReadOnlySpan<SKPoint> points, SKPaint paint)
 		{
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
@@ -754,6 +754,13 @@ namespace SkiaSharp
 			return data;
 		}
 
+		public SKData DrawUrlAnnotation (SKRect rect, ReadOnlySpan<char> value)
+		{
+			var data = SKData.FromCString (value);
+			DrawUrlAnnotation (rect, data);
+			return data;
+		}
+
 		public void DrawNamedDestinationAnnotation (SKPoint point, SKData value)
 		{
 			SkiaApi.sk_canvas_draw_named_destination_annotation (Handle, &point, value == null ? IntPtr.Zero : value.Handle);
@@ -766,12 +773,26 @@ namespace SkiaSharp
 			return data;
 		}
 
+		public SKData DrawNamedDestinationAnnotation (SKPoint point, ReadOnlySpan<char> value)
+		{
+			var data = SKData.FromCString (value);
+			DrawNamedDestinationAnnotation (point, data);
+			return data;
+		}
+
 		public void DrawLinkDestinationAnnotation (SKRect rect, SKData value)
 		{
 			SkiaApi.sk_canvas_draw_link_destination_annotation (Handle, &rect, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKData DrawLinkDestinationAnnotation (SKRect rect, string value)
+		{
+			var data = SKData.FromCString (value);
+			DrawLinkDestinationAnnotation (rect, data);
+			return data;
+		}
+
+		public SKData DrawLinkDestinationAnnotation (SKRect rect, ReadOnlySpan<char> value)
 		{
 			var data = SKData.FromCString (value);
 			DrawLinkDestinationAnnotation (rect, data);
@@ -905,25 +926,25 @@ namespace SkiaSharp
 
 		// DrawVertices
 
-		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKColor[] colors, SKPaint paint)
+		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKColor> colors, SKPaint paint)
 		{
 			var vert = SKVertices.CreateCopy (vmode, vertices, colors);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
 		}
 
-		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKPaint paint)
+		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, SKPaint paint)
 		{
 			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
 		}
 
-		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, UInt16[] indices, SKPaint paint)
+		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, ReadOnlySpan<UInt16> indices, SKPaint paint)
 		{
 			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
 		}
 
-		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKBlendMode mode, UInt16[] indices, SKPaint paint)
+		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, SKBlendMode mode, ReadOnlySpan<UInt16> indices, SKPaint paint)
 		{
 			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
 			DrawVertices (vert, mode, paint);
@@ -963,31 +984,31 @@ namespace SkiaSharp
 
 		// DrawAtlas
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint = null) =>
+		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, SKPaint paint = null) =>
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, null, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKSamplingOptions sampling, SKPaint paint = null) =>
+		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, sampling, null, paint);
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint = null) =>
+		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, ReadOnlySpan<SKColor> colors, SKBlendMode mode, SKPaint paint = null) =>
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, null, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKPaint paint = null) =>
+		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, ReadOnlySpan<SKColor> colors, SKBlendMode mode, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, sampling, null, paint);
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint = null) =>
+		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, ReadOnlySpan<SKColor> colors, SKBlendMode mode, SKRect cullRect, SKPaint paint = null) =>
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, &cullRect, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect cullRect, SKPaint paint = null) =>
+		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, ReadOnlySpan<SKColor> colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect cullRect, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, sampling, &cullRect, paint);
 
-		private void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect* cullRect, SKPaint paint = null)
+		private void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, ReadOnlySpan<SKColor> colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect* cullRect, SKPaint paint = null)
 		{
 			if (atlas == null)
 				throw new ArgumentNullException (nameof (atlas));
@@ -1010,10 +1031,10 @@ namespace SkiaSharp
 
 		// DrawPatch
 
-		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKPaint paint) =>
+		public void DrawPatch (ReadOnlySpan<SKPoint> cubics, ReadOnlySpan<SKColor> colors, ReadOnlySpan<SKPoint> texCoords, SKPaint paint) =>
 			DrawPatch (cubics, colors, texCoords, SKBlendMode.Modulate, paint);
 
-		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKBlendMode mode, SKPaint paint)
+		public void DrawPatch (ReadOnlySpan<SKPoint> cubics, ReadOnlySpan<SKColor> colors, ReadOnlySpan<SKPoint> texCoords, SKBlendMode mode, SKPaint paint)
 		{
 			if (cubics == null)
 				throw new ArgumentNullException (nameof (cubics));

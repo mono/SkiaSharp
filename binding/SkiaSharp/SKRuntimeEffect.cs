@@ -19,7 +19,7 @@ namespace SkiaSharp
 
 		// Create*
 
-		public static SKRuntimeEffect CreateShader (string sksl, out string errors)
+		public static SKRuntimeEffect CreateShader (ReadOnlySpan<char> sksl, out string errors)
 		{
 			using var s = new SKString (sksl);
 			using var errorString = new SKString ();
@@ -30,7 +30,7 @@ namespace SkiaSharp
 			return effect;
 		}
 
-		public static SKRuntimeEffect CreateColorFilter (string sksl, out string errors)
+		public static SKRuntimeEffect CreateColorFilter (ReadOnlySpan<char> sksl, out string errors)
 		{
 			using var s = new SKString (sksl);
 			using var errorString = new SKString ();
@@ -54,14 +54,14 @@ namespace SkiaSharp
 
 		// Build*
 
-		public static SKRuntimeShaderBuilder BuildShader (string sksl)
+		public static SKRuntimeShaderBuilder BuildShader (ReadOnlySpan<char> sksl)
 		{
 			var effect = CreateShader (sksl, out var errors);
 			ValidateResult (effect, errors);
 			return new SKRuntimeShaderBuilder (effect);
 		}
 
-		public static SKRuntimeColorFilterBuilder BuildColorFilter (string sksl)
+		public static SKRuntimeColorFilterBuilder BuildColorFilter (ReadOnlySpan<char> sksl)
 		{
 			var effect = CreateColorFilter (sksl, out var errors);
 			ValidateResult (effect, errors);

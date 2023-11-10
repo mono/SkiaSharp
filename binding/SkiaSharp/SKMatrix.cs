@@ -27,12 +27,10 @@ namespace SkiaSharp
 			public const int Count = 9;
 		}
 
-		public SKMatrix (float[] values)
+		public SKMatrix (ReadOnlySpan<float> values)
 		{
-			if (values == null)
-				throw new ArgumentNullException (nameof (values));
 			if (values.Length != Indices.Count)
-				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
+				throw new ArgumentException ($"The values must have a length of {Indices.Count}.", nameof (values));
 
 			scaleX = values[Indices.ScaleX];
 			skewX = values[Indices.SkewX];
@@ -74,32 +72,13 @@ namespace SkiaSharp
 					skewY, scaleY, transY,
 					persp0, persp1, persp2
 				};
-			set {
-				if (value == null)
-					throw new ArgumentNullException (nameof (Values));
-				if (value.Length != Indices.Count)
-					throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (Values));
-
-				scaleX = value[Indices.ScaleX];
-				skewX = value[Indices.SkewX];
-				transX = value[Indices.TransX];
-
-				skewY = value[Indices.SkewY];
-				scaleY = value[Indices.ScaleY];
-				transY = value[Indices.TransY];
-
-				persp0 = value[Indices.Persp0];
-				persp1 = value[Indices.Persp1];
-				persp2 = value[Indices.Persp2];
-			}
+			set => SetValues (new ReadOnlySpan<float> (value));
 		}
 
-		public readonly void GetValues (float[] values)
+		public readonly void GetValues (Span<float> values)
 		{
-			if (values == null)
-				throw new ArgumentNullException (nameof (values));
 			if (values.Length != Indices.Count)
-				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
+				throw new ArgumentException ($"The values must have a length of {Indices.Count}.", nameof (values));
 
 			values[Indices.ScaleX] = scaleX;
 			values[Indices.SkewX] = skewX;
@@ -112,6 +91,24 @@ namespace SkiaSharp
 			values[Indices.Persp0] = persp0;
 			values[Indices.Persp1] = persp1;
 			values[Indices.Persp2] = persp2;
+		}
+
+		public void SetValues (ReadOnlySpan<float> values)
+		{
+			if (values.Length != Indices.Count)
+				throw new ArgumentException ($"The values must have a length of {Indices.Count}.", nameof(values));
+
+			scaleX = values[Indices.ScaleX];
+			skewX = values[Indices.SkewX];
+			transX = values[Indices.TransX];
+
+			skewY = values[Indices.SkewY];
+			scaleY = values[Indices.ScaleY];
+			transY = values[Indices.TransY];
+
+			persp0 = values[Indices.Persp0];
+			persp1 = values[Indices.Persp1];
+			persp2 = values[Indices.Persp2];
 		}
 
 		// Create*
@@ -399,7 +396,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public readonly SKPoint[] MapVectors (SKPoint[] vectors)
+		public readonly SKPoint[] MapVectors (ReadOnlySpan<SKPoint> vectors)
 		{
 			if (vectors == null)
 				throw new ArgumentNullException (nameof (vectors));

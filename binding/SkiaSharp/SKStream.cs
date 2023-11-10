@@ -11,7 +11,7 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
-		
+
 		public bool IsAtEnd {
 			get {
 				return SkiaApi.sk_stream_is_at_end (Handle);
@@ -124,6 +124,13 @@ namespace SkiaSharp
 			}
 		}
 
+		public int Read (Span<byte> buffer)
+		{
+			fixed (byte* b = buffer) {
+				return Read ((IntPtr)b, buffer.Length);
+			}
+		}
+
 		public int Read (IntPtr buffer, int size)
 		{
 			return (int)SkiaApi.sk_stream_read (Handle, (void*)buffer, (IntPtr)size);
@@ -175,7 +182,7 @@ namespace SkiaSharp
 			get {
 				return (int)SkiaApi.sk_stream_get_position (Handle);
 			}
-			set { 
+			set {
 				Seek (value);
 			}
 		}
@@ -378,7 +385,7 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
-		
+
 		public virtual int BytesWritten {
 			get {
 				return (int)SkiaApi.sk_wstream_bytes_written (Handle);
@@ -389,6 +396,13 @@ namespace SkiaSharp
 		{
 			fixed (byte* b = buffer) {
 				return SkiaApi.sk_wstream_write (Handle, (void*)b, (IntPtr)size);
+			}
+		}
+
+		public virtual bool Write (ReadOnlySpan<byte> buffer)
+		{
+			fixed (byte* b = buffer) {
+				return SkiaApi.sk_wstream_write (Handle, (void*)b, (IntPtr)buffer.Length);
 			}
 		}
 

@@ -36,7 +36,7 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
 		}
 
-		public static SKColorFilter CreateColorMatrix(float[] matrix)
+		public static SKColorFilter CreateColorMatrix (float[] matrix)
 		{
 			if (matrix == null)
 				throw new ArgumentNullException(nameof(matrix));

@@ -9,10 +9,8 @@ namespace SkiaSharp
 	{
 		public static readonly SKColorSpacePrimaries Empty;
 
-		public SKColorSpacePrimaries (float[] values)
+		public SKColorSpacePrimaries (ReadOnlySpan<float> values)
 		{
-			if (values == null)
-				throw new ArgumentNullException (nameof (values));
 			if (values.Length != 8)
 				throw new ArgumentException ("The values must have exactly 8 items, one for each of [RX, RY, GX, GY, BX, BY, WX, WY].", nameof (values));
 
@@ -40,6 +38,36 @@ namespace SkiaSharp
 
 		public readonly float[] Values =>
 			new[] { fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY };
+
+		public readonly void GetValues (Span<float> values)
+		{
+			if (values.Length != 8)
+				throw new ArgumentException ("The values must have exactly 8 items, one for each of [RX, RY, GX, GY, BX, BY, WX, WY].", nameof (values));
+
+			values[0] = fRX;
+			values[1] = fRY;
+			values[2] = fGX;
+			values[3] = fGY;
+			values[4] = fBX;
+			values[5] = fBY;
+			values[6] = fWX;
+			values[7] = fWY;
+		}
+
+		public void SetValues (ReadOnlySpan<float> values)
+		{
+			if (values.Length != 8)
+				throw new ArgumentException ("The values must have exactly 8 items, one for each of [RX, RY, GX, GY, BX, BY, WX, WY].", nameof (values));
+
+			fRX = values[0];
+			fRY = values[1];
+			fGX = values[2];
+			fGY = values[3];
+			fBX = values[4];
+			fBY = values[5];
+			fWX = values[6];
+			fWY = values[7];
+		}
 
 		public readonly bool ToColorSpaceXyz (out SKColorSpaceXyz toXyzD50)
 		{
@@ -105,10 +133,8 @@ namespace SkiaSharp
 
 		public static readonly SKColorSpaceTransferFn Empty;
 
-		public SKColorSpaceTransferFn (float[] values)
+		public SKColorSpaceTransferFn (ReadOnlySpan<float> values)
 		{
-			if (values == null)
-				throw new ArgumentNullException (nameof (values));
 			if (values.Length != 7)
 				throw new ArgumentException ("The values must have exactly 7 items, one for each of [G, A, B, C, D, E, F].", nameof (values));
 
@@ -134,6 +160,35 @@ namespace SkiaSharp
 
 		public readonly float[] Values =>
 			new[] { fG, fA, fB, fC, fD, fE, fF };
+
+
+		public readonly void GetValues (Span<float> values)
+		{
+			if (values.Length != 7)
+				throw new ArgumentException ("The values must have exactly 7 items, one for each of [G, A, B, C, D, E, F].", nameof (values));
+
+			values[0] = fG;
+			values[1] = fA;
+			values[2] = fB;
+			values[3] = fC;
+			values[4] = fD;
+			values[5] = fE;
+			values[6] = fF;
+		}
+
+		public void SetValues (ReadOnlySpan<float> values)
+		{
+			if (values.Length != 8)
+				throw new ArgumentException ("The values must have exactly 7 items, one for each of [G, A, B, C, D, E, F].", nameof (values));
+
+			fG = values[0];
+			fA = values[1];
+			fB = values[2];
+			fC = values[3];
+			fD = values[4];
+			fE = values[5];
+			fF = values[6];
+		}
 
 		public readonly SKColorSpaceTransferFn Invert ()
 		{
@@ -217,12 +272,10 @@ namespace SkiaSharp
 			fM22 = value;
 		}
 
-		public SKColorSpaceXyz (float[] values)
+		public SKColorSpaceXyz (ReadOnlySpan<float> values)
 		{
-			if (values == null)
-				throw new ArgumentNullException (nameof (values));
 			if (values.Length != 9)
-				throw new ArgumentException ("The matrix array must have a length of 9.", nameof (values));
+				throw new ArgumentException ("The values must have a length of 9.", nameof (values));
 
 			fM00 = values[0];
 			fM01 = values[1];
@@ -261,22 +314,43 @@ namespace SkiaSharp
 				fM10, fM11, fM12,
 				fM20, fM21, fM22,
 			};
-			set {
-				if (value.Length != 9)
-					throw new ArgumentException ("The matrix array must have a length of 9.", nameof (value));
+			set => SetValues (new ReadOnlySpan<float> (value));
+		}
 
-				fM00 = value[0];
-				fM01 = value[1];
-				fM02 = value[2];
+		public readonly void GetValues (Span<float> values)
+		{
+			if (values.Length != 9)
+				throw new ArgumentException ("The values must have a length of 9.", nameof(values));
 
-				fM10 = value[3];
-				fM11 = value[4];
-				fM12 = value[5];
+			values[0] = fM00;
+			values[1] = fM01;
+			values[2] = fM02;
 
-				fM20 = value[6];
-				fM21 = value[7];
-				fM22 = value[8];
-			}
+			values[3] = fM10;
+			values[4] = fM11;
+			values[5] = fM12;
+
+			values[6] = fM20;
+			values[7] = fM21;
+			values[8] = fM22;
+		}
+
+		public void SetValues (ReadOnlySpan<float> values)
+		{
+			if (values.Length != 9)
+				throw new ArgumentException ("The values must have a length of 9.", nameof(values));
+
+			fM00 = values[0];
+			fM01 = values[1];
+			fM02 = values[2];
+
+			fM10 = values[3];
+			fM11 = values[4];
+			fM12 = values[5];
+
+			fM20 = values[6];
+			fM21 = values[7];
+			fM22 = values[8];
 		}
 
 		public readonly float this[int x, int y] {

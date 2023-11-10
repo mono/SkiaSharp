@@ -211,6 +211,12 @@ namespace SkiaSharp
 			return SKData.CreateCopy (bytes, (ulong)(bytes.Length + 1)); // + 1 for the terminating char
 		}
 
+		internal static SKData FromCString (ReadOnlySpan<char> str)
+		{
+			var bytes = Encoding.ASCII.GetBytes (str);
+			return SKData.CreateCopy (bytes, (ulong)(bytes.Length + 1)); // + 1 for the terminating char
+		}
+
 		// Subset
 
 		public SKData Subset (ulong offset, ulong length)

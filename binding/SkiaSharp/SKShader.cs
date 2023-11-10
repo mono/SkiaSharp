@@ -119,10 +119,10 @@ namespace SkiaSharp
 
 		// CreateLinearGradient
 
-		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColor[] colors, SKShaderTileMode mode) =>
+		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, ReadOnlySpan<SKColor> colors, SKShaderTileMode mode) =>
 			CreateLinearGradient (start, end, colors, null, mode);
 
-		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColor[] colors, float[] colorPos, SKShaderTileMode mode)
+		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKShaderTileMode mode)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -136,7 +136,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColor[] colors, float[] colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
+		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -150,10 +150,10 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColorF[] colors, SKColorSpace colorspace, SKShaderTileMode mode) =>
+		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, SKShaderTileMode mode) =>
 			CreateLinearGradient (start, end, colors, colorspace, null, mode);
 
-		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode)
+		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, ReadOnlySpan<float> colorPos, SKShaderTileMode mode)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -167,7 +167,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
+		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, ReadOnlySpan<float> colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -183,10 +183,10 @@ namespace SkiaSharp
 
 		// CreateRadialGradient
 
-		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColor[] colors, SKShaderTileMode mode) =>
+		public static SKShader CreateRadialGradient (SKPoint center, float radius, ReadOnlySpan<SKColor> colors, SKShaderTileMode mode) =>
 			CreateRadialGradient (center, radius, colors, null, mode);
 
-		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColor[] colors, float[] colorPos, SKShaderTileMode mode)
+		public static SKShader CreateRadialGradient (SKPoint center, float radius, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKShaderTileMode mode)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -199,7 +199,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColor[] colors, float[] colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
+		public static SKShader CreateRadialGradient (SKPoint center, float radius, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -212,10 +212,10 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColorF[] colors, SKColorSpace colorspace, SKShaderTileMode mode) =>
+		public static SKShader CreateRadialGradient (SKPoint center, float radius, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, SKShaderTileMode mode) =>
 			CreateRadialGradient (center, radius, colors, colorspace, null, mode);
 
-		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode)
+		public static SKShader CreateRadialGradient (SKPoint center, float radius, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, ReadOnlySpan<float> colorPos, SKShaderTileMode mode)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -228,7 +228,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
+		public static SKShader CreateRadialGradient (SKPoint center, float radius, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, ReadOnlySpan<float> colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -243,19 +243,19 @@ namespace SkiaSharp
 
 		// CreateSweepGradient
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors) =>
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors) =>
 			CreateSweepGradient (center, colors, null, SKShaderTileMode.Clamp, 0, 360);
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos) =>
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos) =>
 			CreateSweepGradient (center, colors, colorPos, SKShaderTileMode.Clamp, 0, 360);
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos, SKMatrix localMatrix) =>
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKMatrix localMatrix) =>
 			CreateSweepGradient (center, colors, colorPos, SKShaderTileMode.Clamp, 0, 360, localMatrix);
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, SKShaderTileMode tileMode, float startAngle, float endAngle) =>
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, SKShaderTileMode tileMode, float startAngle, float endAngle) =>
 			CreateSweepGradient (center, colors, null, tileMode, startAngle, endAngle);
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle)
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -268,7 +268,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle, SKMatrix localMatrix)
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle, SKMatrix localMatrix)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -281,19 +281,19 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColorF[] colors, SKColorSpace colorspace) =>
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace) =>
 			CreateSweepGradient (center, colors, colorspace, null, SKShaderTileMode.Clamp, 0, 360);
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos) =>
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, ReadOnlySpan<float> colorPos) =>
 			CreateSweepGradient (center, colors, colorspace, colorPos, SKShaderTileMode.Clamp, 0, 360);
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKMatrix localMatrix) =>
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, ReadOnlySpan<float> colorPos, SKMatrix localMatrix) =>
 			CreateSweepGradient (center, colors, colorspace, colorPos, SKShaderTileMode.Clamp, 0, 360, localMatrix);
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColorF[] colors, SKColorSpace colorspace, SKShaderTileMode tileMode, float startAngle, float endAngle) =>
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, SKShaderTileMode tileMode, float startAngle, float endAngle) =>
 			CreateSweepGradient (center, colors, colorspace, null, tileMode, startAngle, endAngle);
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle)
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, ReadOnlySpan<float> colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -306,7 +306,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateSweepGradient (SKPoint center, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle, SKMatrix localMatrix)
+		public static SKShader CreateSweepGradient (SKPoint center, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, ReadOnlySpan<float> colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle, SKMatrix localMatrix)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -321,10 +321,10 @@ namespace SkiaSharp
 
 		// CreateTwoPointConicalGradient
 
-		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor[] colors, SKShaderTileMode mode) =>
+		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, ReadOnlySpan<SKColor> colors, SKShaderTileMode mode) =>
 			CreateTwoPointConicalGradient (start, startRadius, end, endRadius, colors, null, mode);
 
-		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor[] colors, float[] colorPos, SKShaderTileMode mode)
+		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKShaderTileMode mode)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -337,7 +337,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor[] colors, float[] colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
+		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -350,10 +350,10 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColorF[] colors, SKColorSpace colorspace, SKShaderTileMode mode) =>
+		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, SKShaderTileMode mode) =>
 			CreateTwoPointConicalGradient (start, startRadius, end, endRadius, colors, colorspace, null, mode);
 
-		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode)
+		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, ReadOnlySpan<float> colorPos, SKShaderTileMode mode)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
@@ -366,7 +366,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColorF[] colors, SKColorSpace colorspace, float[] colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
+		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, ReadOnlySpan<SKColorF> colors, SKColorSpace colorspace, ReadOnlySpan<float> colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
