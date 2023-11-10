@@ -156,9 +156,9 @@ namespace SkiaSharp.HarfBuzz
 		{
 			public Result()
 			{
-				Codepoints = new uint[0];
-				Clusters = new uint[0];
-				Points = new SKPoint[0];
+				Codepoints = Array.Empty<uint>();
+				Clusters = Array.Empty<uint>();
+				Points = Array.Empty<SKPoint>();
 				Width = 0f;
 			}
 
