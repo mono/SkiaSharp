@@ -928,25 +928,25 @@ namespace SkiaSharp
 
 		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKColor> colors, SKPaint paint)
 		{
-			var vert = SKVertices.CreateCopy (vmode, vertices, colors);
+			using var vert = SKVertices.CreateCopy (vmode, vertices, colors);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, SKPaint paint)
 		{
-			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors);
+			using var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, ReadOnlySpan<UInt16> indices, SKPaint paint)
 		{
-			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
+			using var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, SKBlendMode mode, ReadOnlySpan<UInt16> indices, SKPaint paint)
 		{
-			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
+			using var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
 			DrawVertices (vert, mode, paint);
 		}
 
