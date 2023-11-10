@@ -603,28 +603,28 @@ namespace SkiaSharp
 
 		// DrawText
 
-		[Obsolete ("Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete ("Use DrawText(ReadOnlySpan<char> text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public void DrawText (string text, SKPoint p, SKPaint paint) =>
-			DrawText (text, p, paint.TextAlign, paint.GetFont (), paint);
+			DrawText (text.AsSpan (), p, paint.TextAlign, paint.GetFont (), paint);
 
-		[Obsolete ("Use DrawText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete ("Use DrawText(ReadOnlySpan<char> text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public void DrawText (string text, float x, float y, SKPaint paint) =>
-			DrawText (text, x, y, paint.TextAlign, paint.GetFont (), paint);
+			DrawText (text.AsSpan (), x, y, paint.TextAlign, paint.GetFont (), paint);
 
-		public void DrawText (string text, SKPoint p, SKFont font, SKPaint paint) =>
+		public void DrawText (ReadOnlySpan<char> text, SKPoint p, SKFont font, SKPaint paint) =>
 #pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
 			DrawText (text, p, paint.TextAlign, font, paint);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-		public void DrawText (string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
+		public void DrawText (ReadOnlySpan<char> text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawText (text, p.X, p.Y, textAlign, font, paint);
 
-		public void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>
+		public void DrawText (ReadOnlySpan<char> text, float x, float y, SKFont font, SKPaint paint) =>
 #pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
 			DrawText (text, x, y, paint.TextAlign, font, paint);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-		public void DrawText (string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint)
+		public void DrawText (ReadOnlySpan<char> text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -649,40 +649,40 @@ namespace SkiaSharp
 
 		// DrawTextOnPath
 
-		[Obsolete ("Use DrawTextOnPath(string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete ("Use DrawTextOnPath(ReadOnlySpan<char> text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint) =>
 			DrawTextOnPath (text, path, offset, true, paint);
 
-		[Obsolete ("Use DrawTextOnPath(string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete ("Use DrawTextOnPath(ReadOnlySpan<char> text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint) =>
 			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, paint);
 
-		[Obsolete ("Use DrawTextOnPath(string text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete ("Use DrawTextOnPath(ReadOnlySpan<char> text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKPaint paint) =>
-			DrawTextOnPath (text, path, offset, warpGlyphs, paint.GetFont (), paint);
+			DrawTextOnPath (text.AsSpan (), path, offset, warpGlyphs, paint.GetFont (), paint);
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKFont font, SKPaint paint) =>
+		public void DrawTextOnPath (ReadOnlySpan<char> text, SKPath path, SKPoint offset, SKFont font, SKPaint paint) =>
 #pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
 			DrawTextOnPath (text, path, offset, true, paint.TextAlign, font, paint);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
+		public void DrawTextOnPath (ReadOnlySpan<char> text, SKPath path, SKPoint offset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, offset, true, textAlign, font, paint);
 
-		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint) =>
+		public void DrawTextOnPath (ReadOnlySpan<char> text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint) =>
 #pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
 			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, paint.TextAlign, font, paint);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
+		public void DrawTextOnPath (ReadOnlySpan<char> text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, textAlign, font, paint);
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKFont font, SKPaint paint) =>
+		public void DrawTextOnPath (ReadOnlySpan<char> text, SKPath path, SKPoint offset, bool warpGlyphs, SKFont font, SKPaint paint) =>
 #pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
 			DrawTextOnPath (text, path, offset, warpGlyphs, paint.TextAlign, font, paint);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint)
+		public void DrawTextOnPath (ReadOnlySpan<char> text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
