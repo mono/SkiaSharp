@@ -38,10 +38,8 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
 		}
 
-		public static SKColorFilter CreateColorMatrix(float[] matrix)
+		public static SKColorFilter CreateColorMatrix (ReadOnlySpan<float> matrix)
 		{
-			if (matrix == null)
-				throw new ArgumentNullException(nameof(matrix));
 			if (matrix.Length != 20)
 				throw new ArgumentException("Matrix must have a length of 20.", nameof(matrix));
 			fixed (float* m = matrix) {
@@ -54,10 +52,8 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_colorfilter_new_luma_color());
 		}
 
-		public static SKColorFilter CreateTable(byte[] table)
+		public static SKColorFilter CreateTable (ReadOnlySpan<byte> table)
 		{
-			if (table == null)
-				throw new ArgumentNullException(nameof(table));
 			if (table.Length != TableMaxLength)
 				throw new ArgumentException($"Table must have a length of {TableMaxLength}.", nameof(table));
 			fixed (byte* t = table) {
@@ -65,7 +61,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB)
+		public static SKColorFilter CreateTable (ReadOnlySpan<byte> tableA, ReadOnlySpan<byte> tableR, ReadOnlySpan<byte> tableG, ReadOnlySpan<byte> tableB)
 		{
 			if (tableA != null && tableA.Length != TableMaxLength)
 				throw new ArgumentException($"Table A must have a length of {TableMaxLength}.", nameof(tableA));

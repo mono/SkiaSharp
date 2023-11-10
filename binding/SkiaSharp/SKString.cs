@@ -19,32 +19,37 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new SKString instance.");
 			}
 		}
-		
-		public SKString (byte [] src, long length)
+
+		public SKString (ReadOnlySpan<byte> src, long length)
 			: base (CreateCopy (src, length), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKString instance.");
 			}
 		}
-		
-		private static IntPtr CreateCopy (byte [] src, long length)
+
+		private static IntPtr CreateCopy (ReadOnlySpan<byte> src, long length)
 		{
 			fixed (byte* s = src) {
 				return SkiaApi.sk_string_new_with_copy (s, (IntPtr)length);
 			}
 		}
 
-		public SKString (byte [] src)
+		public SKString (ReadOnlySpan<byte> src)
 			: this (src, src.Length)
 		{
 		}
-		
+
 		public SKString (string str)
-			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf8))
+			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf8).AsSpan ())
 		{
 		}
-		
+
+		public SKString (ReadOnlySpan<char> str)
+			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf16).AsSpan ())
+		{
+		}
+
 		public override string ToString ()
 		{
 			var cstr = SkiaApi.sk_string_get_c_str (Handle);
@@ -56,8 +61,16 @@ namespace SkiaSharp
 		{
 			return skString.ToString ();
 		}
-		
+
 		internal static SKString Create (string str)
+		{
+			if (str == null) {
+				return null;
+			}
+			return new SKString (str);
+		}
+
+		internal static SKString Create (ReadOnlySpan<char> str)
 		{
 			if (str == null) {
 				return null;

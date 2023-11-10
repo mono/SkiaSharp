@@ -304,6 +304,17 @@ namespace SkiaSharp
 			return adjustments;
 		}
 
+		public void GetKerningPairAdjustments (ReadOnlySpan<ushort> glyphs, Span<int> adjustments)
+		{
+			if (glyphs.Length != adjustments.Length)
+				throw new ArgumentException ("Length of adjustments must be the same as the length of glyphs.", nameof(adjustments));
+
+			fixed (ushort* gp = glyphs)
+			fixed (int* ap = adjustments) {
+				SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, gp, glyphs.Length, ap);
+			}
+		}
+
 		//
 
 		internal static SKTypeface GetObject (IntPtr handle) =>
