@@ -46,7 +46,7 @@ namespace SkiaSharp
 		}
 
 		public SKString (ReadOnlySpan<char> str)
-			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf16).AsSpan ())
+			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf8).AsSpan ())
 		{
 		}
 
