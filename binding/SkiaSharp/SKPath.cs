@@ -133,7 +133,7 @@ namespace SkiaSharp
 		public bool TryGetLine (Span<SKPoint> points)
 		{
 			if (points.Length != 2)
-				return false;
+				throw new ArgumentException ("Points must have a length of 2.");
 
 			fixed (SKPoint* p = points) {
 				var result = SkiaApi.sk_path_is_line (Handle, p);
