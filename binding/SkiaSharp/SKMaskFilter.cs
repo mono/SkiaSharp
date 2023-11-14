@@ -41,10 +41,8 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, respectCTM));
 		}
 
-		public static SKMaskFilter CreateTable (byte[] table)
+		public static SKMaskFilter CreateTable (ReadOnlySpan<byte> table)
 		{
-			if (table == null)
-				throw new ArgumentNullException (nameof (table));
 			if (table.Length != TableMaxLength)
 				throw new ArgumentException ("Table must have a length of {SKColorTable.MaxLength}.", nameof (table));
 			fixed (byte* t = table) {

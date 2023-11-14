@@ -227,23 +227,14 @@ namespace SkiaSharp
 		public ushort[] GetGlyphs (string text) =>
 			GetGlyphs (text.AsSpan ());
 
-		public ushort[] GetGlyphs (ReadOnlySpan<char> text)
-		{
-			using var font = ToFont ();
-			return font.GetGlyphs (text);
-		}
+		public ushort[] GetGlyphs (ReadOnlySpan<char> text) =>
+			GetFont ().GetGlyphs (text);
 
-		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
-		{
-			using var font = ToFont ();
-			return font.GetGlyphs (text, encoding);
-		}
+		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
+			GetFont ().GetGlyphs (text, encoding);
 
-		public ushort[] GetGlyphs (IntPtr text, int length, SKTextEncoding encoding)
-		{
-			using var font = ToFont ();
-			return font.GetGlyphs (text, length * encoding.GetCharacterByteSize (), encoding);
-		}
+		public ushort[] GetGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
+			GetFont ().GetGlyphs (text, length * encoding.GetCharacterByteSize (), encoding);
 
 		// ContainsGlyph
 
@@ -302,6 +293,17 @@ namespace SkiaSharp
 				SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, gp, glyphs.Length, ap);
 			}
 			return adjustments;
+		}
+
+		public void GetKerningPairAdjustments (Span<int> adjustments, ReadOnlySpan<ushort> glyphs)
+		{
+			if (glyphs.Length != adjustments.Length)
+				throw new ArgumentException ("Length of adjustments must be the same as the length of glyphs.", nameof(adjustments));
+
+			fixed (ushort* gp = glyphs)
+			fixed (int* ap = adjustments) {
+				SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, gp, glyphs.Length, ap);
+			}
 		}
 
 		//

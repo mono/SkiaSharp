@@ -100,7 +100,7 @@ namespace SkiaSharp
 			return GetPixels (info, pixels);
 		}
 
-		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels)
+		public SKCodecResult GetPixels (SKImageInfo info, Span<byte> pixels)
 		{
 			if (pixels == null)
 				throw new ArgumentNullException (nameof (pixels));
