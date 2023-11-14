@@ -495,7 +495,7 @@ namespace SkiaSharp.Tests
 		public unsafe void FontStyleIsNotTheSame()
 		{
 			var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
-			
+
 			var fs1 = tf.FontStyle;
 			var fs2 = tf.FontStyle;
 
@@ -555,6 +555,20 @@ namespace SkiaSharp.Tests
 
 				return tf1.Handle;
 			}
+		}
+
+		[SkippableFact]
+		public void GetKerningPairAdjustmentsSpanMatchesArray()
+		{
+			using var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
+
+			var glyphs = new ushort[] { 54, 78, 76, 68, 54, 75, 68, 85, 83 };
+
+			var adjustments1 = tf.GetKerningPairAdjustments(glyphs);
+			var adjustments2 = new int[glyphs.Length];
+			tf.GetKerningPairAdjustments(adjustments2, glyphs);
+
+			Assert.Equal(adjustments1, adjustments2);
 		}
 	}
 }
