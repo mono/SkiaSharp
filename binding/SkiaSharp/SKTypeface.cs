@@ -295,7 +295,7 @@ namespace SkiaSharp
 			return adjustments;
 		}
 
-		public void GetKerningPairAdjustments (ReadOnlySpan<ushort> glyphs, Span<int> adjustments)
+		public void GetKerningPairAdjustments (Span<int> adjustments, ReadOnlySpan<ushort> glyphs)
 		{
 			if (glyphs.Length != adjustments.Length)
 				throw new ArgumentException ("Length of adjustments must be the same as the length of glyphs.", nameof(adjustments));

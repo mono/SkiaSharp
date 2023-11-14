@@ -123,10 +123,13 @@ namespace SkiaSharp
 		public SKPoint[] GetLine ()
 		{
 			Span<SKPoint> temp = stackalloc SKPoint[2];
-			if (TryGetLine (temp)) {
-				return temp.ToArray ();
-			} else {
-				return null;
+			fixed (SKPoint* t = temp) {
+				var result = SkiaApi.sk_path_is_line (Handle, t);
+				if (result) {
+					return temp.ToArray ();
+				} else {
+					return null;
+				}
 			}
 		}
 
@@ -135,12 +138,13 @@ namespace SkiaSharp
 			if (points.Length != 2)
 				throw new ArgumentException ("Points must have a length of 2.");
 
-			fixed (SKPoint* p = points) {
-				var result = SkiaApi.sk_path_is_line (Handle, p);
+			Span<SKPoint> temp = stackalloc SKPoint[2];
+			fixed (SKPoint* t = temp) {
+				var result = SkiaApi.sk_path_is_line (Handle, t);
 				if (result) {
+					temp.CopyTo (points);
 					return true;
 				} else {
-					points.Clear ();
 					return false;
 				}
 			}
