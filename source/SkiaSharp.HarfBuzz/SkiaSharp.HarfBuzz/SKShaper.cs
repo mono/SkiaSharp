@@ -152,6 +152,24 @@ namespace SkiaSharp.HarfBuzz
 			return Shape(buffer, xOffset, yOffset, font);
 		}
 
+		public Result Shape(ReadOnlySpan<char> text, SKFont font) =>
+			Shape(text, 0, 0, font);
+
+		public Result Shape(ReadOnlySpan<char> text, float xOffset, float yOffset, SKFont font)
+		{
+			if (text.IsEmpty)
+			{
+				return new Result();
+			}
+
+			using var buffer = new Buffer();
+			buffer.AddUtf16(text);
+
+			buffer.GuessSegmentProperties();
+
+			return Shape(buffer, xOffset, yOffset, font);
+		}
+
 		public class Result
 		{
 			public Result()
