@@ -36,8 +36,9 @@ New-Item -ItemType Directory -Force -Path "$ndkTemp" | Out-Null
 # extract
 Write-Host "Extracting NDK..."
 if ($IsMacOS) {
-    hdiutil attach $install
+    hdiutil attach $install -verbose
     $ndkSource = (Get-ChildItem "/Volumes/Android NDK ${Version}/AndroidNDK*.app/Contents/NDK").Fullname
+    Write-Host "Copying NDK..."
     New-Item -ItemType Directory -Force -Path "$ndk" | Out-Null
     cp -r "$ndkSource/" "$ndk"
     hdiutil detach "/Volumes/Android NDK ${Version}"
