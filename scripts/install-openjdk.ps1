@@ -1,5 +1,6 @@
 Param(
-    [string] $Version = '11.0.14.9.1',
+    [string] $Version = '17.0.8.1',
+    [string] $FolderVersion = '17.0.8.1+1',
     [string] $InstallDestination = $null
 )
 
@@ -44,8 +45,6 @@ if ($IsMacOS -or $IsLinux) {
 }
 
 # set the JAVA_HOME
-$VersionParts = $Version.Split(".")
-$FolderVersion = "$($VersionParts[0]).$($VersionParts[1]).$($VersionParts[2])+$($VersionParts[3])"
 if ($IsMacOS) {
     $java_home = Join-Path "$jdk" "jdk-$FolderVersion/Contents/Home"
 } else {

@@ -129,13 +129,8 @@ jobs:
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         # install the bits needed for Android on macOS and Windows
         - ${{ if and(eq(parameters.installAndroidSdk, 'true'), not(endsWith(parameters.name, '_linux'))) }}:
-          # install the correct version of the JDK for .NET 6
-          - pwsh: |
-              if ("$env:JAVA_HOME_11_X64") {
-                echo "##vso[task.setvariable variable=JAVA_HOME]$env:JAVA_HOME_11_X64"
-              } else {
-                .\scripts\install-openjdk.ps1
-              }
+          # install the correct version of the JDK
+          - pwsh: .\scripts\install-openjdk.ps1
             displayName: Install OpenJDK
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
