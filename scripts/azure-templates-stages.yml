@@ -19,6 +19,9 @@ parameters:
     type: object
   - name: VM_IMAGE_LINUX_NATIVE
     type: object
+  - name: runCompliance
+    type: boolean
+    default: false
 
 stages:
   - stage: prepare
@@ -910,63 +913,33 @@ stages:
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
 
-  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests')) }}:
-    - stage: checks
-      displayName: Run Code Checks
-      dependsOn: prepare
-      jobs:
-        - template: azure-templates-bootstrapper.yml # Run Code Checks
-          parameters:
-            name: native_checks_windows
-            displayName: Run Code Checks
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            condition: or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
-            target: git-sync-deps
-            installWindowsSdk: false
-            installAndroidSdk: false
-            installDotNet: false
-            shouldPublish: false
-            postBuildSteps:
-              - task: CredScan@3
-                displayName: Analyze source for credentials
-                condition: always()
-                inputs:
-                  suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
-              - task: PoliCheck@2
-                displayName: Run PoliCheck
-                condition: always()
-                inputs:
-                  inputType: 'Basic'
-                  targetType: 'F'
-                  optionsUEPATH: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
-              - task: SdtReport@2
-                displayName: Create security analysis report
-                condition: always()
-                inputs:
-                  GdnExportAllTools: false
-                  GdnExportGdnToolCredScan: true
-                  GdnExportGdnToolPoliCheck: true
-                  GdnExportOutputSuppressionFile: source.gdnsuppress
-              - task: PublishSecurityAnalysisLogs@3
-                displayName: Publish security analysis logs
-                condition: always()
-              - pwsh: |
-                  $tsaConfig = '$(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json'
-                  $tsaConfigJson = Get-Content $tsaConfig | ConvertFrom-Json
-                  $tsaConfigJson | Add-Member -Type NoteProperty -Name 'SuppressionFiles' -Value @("$(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress")
-                  $tsaConfigJson | Add-Member -Type NoteProperty -Name 'SuppressionSets' -Value @("default")
-                  $tsaConfigJson | ConvertTo-Json | Out-File $tsaConfig
-                  cat $tsaConfig
-                displayName: Update TSA suppressions
-                condition: always()
-              - task: TSAUpload@2
-                displayName: Publish TSA logs
-                condition: always()
-                continueOnError: true
-                inputs:
-                  GdnPublishTsaOnboard: true
-                  GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
+  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), parameters.runCompliance)) }}:
+    - template: security/full/v1.yml@xamarin-templates
+      parameters:
+        stageDependsOn:
+          - managed
+          - native_windows
+          - native_macos
+          - native_linux
+          - native_wasm
+        complianceEnabled: true
+        complianceTimeoutInMinutes: 480
+        scanArtifacts:
+          - managed
+          - native
+        antiMalwareEnabled: true
+        binSkimEnabled: true
+        policheckExclusionFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
+        policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\scripts\guardian
+        credScanEnabled: true
+        credScanSuppressionFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
+        sourceGdnSuppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
+        tsaConfigFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
+        tsaReportBranch: $(Build.SourceBranch)
+        enableCodeInspector: true
+        apiScanEnabled: true
+        apiScanSoftwareName: 'SkiaSharp'
+        apiScanSoftwareVersionNum: $(Build.BuildNumber)
 
   - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
     - stage: finalize
