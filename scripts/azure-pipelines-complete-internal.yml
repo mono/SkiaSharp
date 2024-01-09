@@ -31,6 +31,9 @@ parameters:
       pool:
         name: Azure Pipelines
         vmImage: ubuntu-20.04
+  - name: runCompliance
+    type: boolean
+    default: false
 
 pool:
   name: Azure Pipelines
@@ -52,6 +55,7 @@ stages:
     parameters:
       buildPipelineType: 'both'
       buildExternals: ${{ parameters.buildExternals }}
+      runCompliance: ${{ parameters.runCompliance }}
       VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
       VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
       VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
