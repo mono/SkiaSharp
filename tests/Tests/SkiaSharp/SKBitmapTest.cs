@@ -6,11 +6,17 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests
 {
 	public class SKBitmapTest : SKTest
 	{
+		public SKBitmapTest(ITestOutputHelper output)
+			: base(output)
+		{
+		}
+
 		[SkippableTheory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CanCopyToIsCorrect(SKColorType colorType)
@@ -648,6 +654,25 @@ namespace SkiaSharp.Tests
 			using var bmp = CreateTestBitmap();
 			var span = bmp.GetPixelSpan(x, y);
 			Assert.Equal(expectedLength, span.Length);
+		}
+
+		[SkippableTheory]
+		[InlineData("baboon.jpg", "baboon-reencoded.jpg")]
+		public void CanEncodeImageStreams(string filename, string encodedFilename)
+		{
+			var path = Path.Combine(PathToImages, filename);
+			using var stream = File.OpenRead(path);
+			using var bitmap = SKBitmap.Decode(stream);
+
+			using var ouputStream = new MemoryStream();
+			bitmap.Encode(ouputStream, SKEncodedImageFormat.Jpeg, 100);
+			ouputStream.Position = 0;
+			using var outputBitmp = SKBitmap.Decode(ouputStream);
+
+			var encodedPath = Path.Combine(PathToImages, encodedFilename);
+			using var encodedBitmap = SKBitmap.Decode(encodedPath);
+
+			AssertSimilar(encodedBitmap, outputBitmp);
 		}
 	}
 }

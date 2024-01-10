@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
+using SkiaSharp.Extended;
 
 namespace SkiaSharp.Tests
 {
@@ -197,6 +198,28 @@ namespace SkiaSharp.Tests
 				.ToArray();
 
 			Assert.Equal(eTrimmed, aTrimmed);
+		}
+
+		protected void AssertSimilar(SKBitmap expected, SKBitmap actual, int precision = PRECISION)
+		{
+			var percentage = 1 / Math.Pow(10, precision);
+
+			var result = SKPixelComparer.Compare(expected, actual);
+
+			try
+			{
+				Assert.True(result.ErrorPixelPercentage < percentage);
+			}
+			catch
+			{
+				WriteOutput(expected, "EXPECTED bitmap");
+				WriteOutput(actual, "ACTUAL bitmap");
+
+				using var diff = SKPixelComparer.GenerateDifferenceMask(expected, actual);
+				WriteOutput(diff, "DIFF bitmap");
+
+				throw;
+			}
 		}
 
 		protected GlContext CreateGlContext()
