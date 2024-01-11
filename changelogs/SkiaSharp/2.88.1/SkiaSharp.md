@@ -13,7 +13,6 @@ Avif = 12,
 ```
 
 
-#### Removed Type SkiaSharp.Resource
 
 ### Namespace SkiaSharp.Internals
 

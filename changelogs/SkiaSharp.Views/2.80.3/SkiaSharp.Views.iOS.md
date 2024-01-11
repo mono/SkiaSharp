@@ -7,7 +7,7 @@
 #### New Type: SkiaSharp.Views.iOS.SKMetalView
 
 ```csharp
-public class SKMetalView : MetalKit.MTKView, CoreAnimation.ICALayerDelegate, Foundation.INSCoding, Foundation.INSObjectProtocol, MetalKit.IMTKViewDelegate, ObjCRuntime.INativeObject, System.Collections.IEnumerable, System.ComponentModel.IComponent, System.IDisposable, System.IEquatable<Foundation.NSObject>, UIKit.IUIAccessibilityIdentification, UIKit.IUIActivityItemsConfigurationProviding, UIKit.IUIAppearance, UIKit.IUIAppearanceContainer, UIKit.IUICoordinateSpace, UIKit.IUIDynamicItem, UIKit.IUIFocusEnvironment, UIKit.IUIFocusItem, UIKit.IUIFocusItemContainer, UIKit.IUILargeContentViewerItem, UIKit.IUIPasteConfigurationSupporting, UIKit.IUIPopoverPresentationControllerSourceItem, UIKit.IUIResponderStandardEditActions, UIKit.IUITraitEnvironment, UIKit.IUIUserActivityRestoring {
+public class SKMetalView : MetalKit.MTKView, MetalKit.IMTKViewDelegate, ObjCRuntime.INativeObject, System.ComponentModel.IComponent, System.IDisposable {
 	// constructors
 	public SKMetalView ();
 	public SKMetalView (CoreGraphics.CGRect frame);
