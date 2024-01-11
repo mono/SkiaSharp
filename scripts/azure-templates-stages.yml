@@ -128,6 +128,36 @@ stages:
             target: externals-windows
             additionalArgs: --buildarch=arm64
             artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native WinUI|x86 (Win)
+          parameters:
+            name: native_winui_x86_windows
+            displayName: WinUI x86
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-winui
+            additionalArgs: --buildarch=x86
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native WinUI|x64 (Win)
+          parameters:
+            name: native_winui_x64_windows
+            displayName: WinUI x64
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-winui
+            additionalArgs: --buildarch=x64
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native WinUI|arm64 (Win)
+          parameters:
+            name: native_winui_arm64_windows
+            displayName: WinUI arm64
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-winui
+            additionalArgs: --buildarch=arm64
+            artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Win)
           parameters:
             name: native_win32_x64_nanoserver_windows

@@ -1,14 +1,14 @@
-﻿#if !WINDOWS
-
-using System;
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 using SkiaSharp.Views.GlesInterop;
 using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.System.Threading;
 using Windows.UI.Core;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Data;
 
 #if WINDOWS
 namespace SkiaSharp.Views.Windows
@@ -293,11 +293,15 @@ namespace SkiaSharp.Views.UWP
 				else
 				{
 					// run in the main thread, block this one
-					Dispatcher.RunAsync(CoreDispatcherPriority.Normal, RenderFrame).AsTask().Wait();
+					var tcs = new TaskCompletionSource();
+					DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+					{
+						RenderFrame();
+						tcs.SetResult();
+					});
+					tcs.Task.Wait();
 				}
 			}
 		}
 	}
 }
-
-#endif
