@@ -104,7 +104,7 @@
     <PropertyGroup>
       <Version>$(_VersionNuGetMatch)</Version>
       <Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
-      <Version Condition="'$(AssemblyVersionGitBranch)' != ''">$(Version)+$(AssemblyVersionGitBranch.Replace('/', '-').Replace('\', '-'))</Version>
+      <Version Condition="'$(AssemblyVersionGitBranch)' != '' and !$(AssemblyVersionGitBranch.StartsWith('release/'))">$(Version)+$(AssemblyVersionGitBranch.Replace('/', '-').Replace('\', '-'))</Version>
       <Version Condition="'$(AssemblyVersionGitSha)' != ''">$(Version).$(AssemblyVersionGitSha)</Version>
       <InformationalVersion>$(Version)</InformationalVersion>
       <AssemblyVersion>$(_VersionAssemblyMatch)</AssemblyVersion>
