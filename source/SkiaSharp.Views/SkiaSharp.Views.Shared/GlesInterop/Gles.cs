@@ -74,6 +74,18 @@ namespace SkiaSharp.Views.GlesInterop
 		public const int GL_DEPTH24_STENCIL8_OES = 0x88F0;
 
 		[DllImport(libGLESv2)]
+		public static extern void glGetIntegerv(uint pname, out int data);
+		[DllImport(libGLESv2)]
+		public static extern System.IntPtr glGetString(uint value);
+		[DllImport(libGLESv2)]
+		public static extern void glViewport(int x, int y, int width, int height);
+		[DllImport(libGLESv2)]
+		public static extern void glClearColor(float red, float green, float blue, float alpha);
+		[DllImport(libGLESv2)]
+		public static extern void glClear(uint mask);
+
+#if !__DESKTOP__
+		[DllImport(libGLESv2)]
 		public static extern void glGenRenderbuffers(int n, [In, Out] uint[] buffers);
 		[DllImport(libGLESv2)]
 		public static extern void glGenRenderbuffers(int n, ref uint buffer);
@@ -82,17 +94,9 @@ namespace SkiaSharp.Views.GlesInterop
 		[DllImport(libGLESv2)]
 		public static extern void glGenFramebuffers(int n, ref uint buffer);
 		[DllImport(libGLESv2)]
-		public static extern void glGetIntegerv(uint pname, out int data);
-		[DllImport(libGLESv2)]
 		public static extern void glGetRenderbufferParameteriv(uint target, int pname, out int param);
 		[DllImport(libGLESv2)]
 		public static extern void glBindRenderbuffer(uint target, uint buffer);
-		[DllImport(libGLESv2)]
-		public static extern void glViewport(int x, int y, int width, int height);
-		[DllImport(libGLESv2)]
-		public static extern void glClearColor(float red, float green, float blue, float alpha);
-		[DllImport(libGLESv2)]
-		public static extern void glClear(uint mask);
 		[DllImport(libGLESv2)]
 		public static extern void glBindFramebuffer(uint target, uint framebuffer);
 		[DllImport(libGLESv2)]
@@ -105,8 +109,7 @@ namespace SkiaSharp.Views.GlesInterop
 		public static extern void glDeleteRenderbuffers(int n, ref uint renderbuffer);
 		[DllImport(libGLESv2)]
 		public static extern void glFramebufferRenderbuffer(uint target, uint attachment, uint renderbuffertarget, uint renderbuffer);
-		[DllImport(libGLESv2)]
-		public static extern System.IntPtr glGetString(uint value);
+#endif
 	}
 }
 #endif
