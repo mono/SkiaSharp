@@ -54,7 +54,7 @@ Task("libSkiaSharp")
             clang +
             win_vcvars_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '-D_HAS_AUTO_PTR_ETC=1' ] " +
-            $"extra_ldflags=[ '/DEBUG:FULL' ] " +
+            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP' ] " +
             ADDITIONAL_GN_ARGS);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
