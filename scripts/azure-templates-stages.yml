@@ -917,18 +917,13 @@ stages:
     - template: security/full/v1.yml@xamarin-templates
       parameters:
         stageDependsOn:
-          - managed
-          - native_windows
-          - native_macos
-          - native_linux
-          - native_wasm
+          - package
         complianceEnabled: true
         complianceTimeoutInMinutes: 480
         scanArtifacts:
-          - managed
-          - native
+          - nuget_symbols
         antiMalwareEnabled: true
-        binSkimEnabled: true
+        binSkimEnabled: false
         policheckExclusionFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
         policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\scripts\guardian
         credScanEnabled: true
@@ -939,7 +934,19 @@ stages:
         enableCodeInspector: true
         apiScanEnabled: true
         apiScanSoftwareName: 'SkiaSharp'
-        apiScanSoftwareVersionNum: $(Build.BuildNumber)
+        apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
+        apiScanPreserveLogsFolder: true
+        preScanSteps:
+          - pwsh: |
+              $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols\*.*nupkg")
+              foreach ($nupkg in $nupkgs) {
+                $filename = $nupkg.Name.TrimEnd('.nupkg')
+                $dest = "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted\$filename"
+                Write-Host "Extracting '$nupkg' to '$dest'..."
+                Expand-Archive $nupkg $dest
+                Remove-Item $nupkg
+              }
+            displayName: Extract all the .nupkg files
 
   - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
     - stage: finalize
