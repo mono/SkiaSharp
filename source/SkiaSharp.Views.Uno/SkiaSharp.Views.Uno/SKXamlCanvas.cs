@@ -125,12 +125,12 @@ namespace SkiaSharp.Views.UWP
 			display.DpiChanged -= OnDpiChanged;
 		}
 
-		public new async void Invalidate()
+		public new void Invalidate()
 		{
 			if (Dispatcher.HasThreadAccess)
 				DoInvalidate();
 			else
-				await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
+				_ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
 		}
 
 		partial void DoLoaded();
