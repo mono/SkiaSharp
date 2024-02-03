@@ -101,6 +101,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.NativeAssets.Tizen",                  new Version (1, 60, 0) },
     { "SkiaSharp.NativeAssets.tvOS",                   new Version (1, 60, 0) },
     { "SkiaSharp.NativeAssets.Win32",                  new Version (1, 60, 0) },
+    { "SkiaSharp.NativeAssets.WinUI",                  new Version (1, 60, 0) },
     { "SkiaSharp.Views",                               new Version (1, 60, 0) },
     { "SkiaSharp.Views.Desktop.Common",                new Version (1, 60, 0) },
     { "SkiaSharp.Views.Gtk3",                          new Version (1, 60, 0) },

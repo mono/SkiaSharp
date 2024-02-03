@@ -20,6 +20,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.WinUI\SkiaSharp.NativeAssets.WinUI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="..\..\..\output\native\winui\any\*.dll" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
