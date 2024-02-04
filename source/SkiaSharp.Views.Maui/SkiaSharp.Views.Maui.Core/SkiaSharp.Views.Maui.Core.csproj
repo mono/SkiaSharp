@@ -27,10 +27,22 @@
     <None Include="**\*.Ref.cs" />
   </ItemGroup>
   <ItemGroup Condition="!$(TargetFramework.Contains('-ios')) and !$(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Remove="**\Apple\**\*.cs" />
+    <None Include="**\Apple\**\*.cs" />
+    <Compile Remove="**\*.Apple.cs" />
+    <None Include="**\*.Apple.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-ios'))">
     <Compile Remove="**\iOS\**\*.cs" />
     <None Include="**\iOS\**\*.cs" />
     <Compile Remove="**\*.iOS.cs" />
     <None Include="**\*.iOS.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Remove="**\MacCatalyst\**\*.cs" />
+    <None Include="**\MacCatalyst\**\*.cs" />
+    <Compile Remove="**\*.MacCatalyst.cs" />
+    <None Include="**\*.MacCatalyst.cs" />
   </ItemGroup>
   <ItemGroup Condition="!$(TargetFramework.Contains('-android'))">
     <Compile Remove="**\Android\**\*.cs" />

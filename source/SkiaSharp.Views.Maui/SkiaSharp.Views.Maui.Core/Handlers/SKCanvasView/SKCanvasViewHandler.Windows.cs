@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Handlers;
+using Microsoft.UI.Xaml;
 using SkiaSharp.Views.Maui.Platform;
 using SkiaSharp.Views.Windows;
 
@@ -32,12 +33,12 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		public static void OnInvalidateSurface(SKCanvasViewHandler handler, ISKCanvasView canvasView, object? args)
 		{
-			handler.PlatformView?.Invalidate();
+			handler.PlatformView.Invalidate();
 		}
 
 		public static void MapIgnorePixelScaling(SKCanvasViewHandler handler, ISKCanvasView canvasView)
 		{
-			handler.PlatformView?.UpdateIgnorePixelScaling(canvasView);
+			handler.PlatformView.IgnorePixelScaling = canvasView.IgnorePixelScaling;
 		}
 
 		public static void MapEnableTouchEvents(SKCanvasViewHandler handler, ISKCanvasView canvasView)
