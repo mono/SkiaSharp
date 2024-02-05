@@ -14,12 +14,6 @@ Removed interface:
 ISKCanvasViewController
 ```
 
-Removed method:
-
-```csharp
-protected override Microsoft.Maui.SizeRequest OnMeasure (double widthConstraint, double heightConstraint);
-```
-
 
 #### Type Changed: SkiaSharp.Views.Maui.Controls.SKGLView
 
@@ -27,30 +21,6 @@ Removed interface:
 
 ```csharp
 ISKGLViewController
-```
-
-Added interface:
-
-```csharp
-SkiaSharp.Views.Maui.ISKGLView
-```
-
-Added field:
-
-```csharp
-public static Microsoft.Maui.Controls.BindableProperty IgnorePixelScalingProperty;
-```
-
-Added property:
-
-```csharp
-public override bool IgnorePixelScaling { get; set; }
-```
-
-Removed method:
-
-```csharp
-protected override Microsoft.Maui.SizeRequest OnMeasure (double widthConstraint, double heightConstraint);
 ```
 
 
