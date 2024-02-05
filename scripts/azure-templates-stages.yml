@@ -128,6 +128,36 @@ stages:
             target: externals-windows
             additionalArgs: --buildarch=arm64
             artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native WinUI|x86 (Win)
+          parameters:
+            name: native_winui_x86_windows
+            displayName: WinUI x86
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-winui
+            additionalArgs: --buildarch=x86
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native WinUI|x64 (Win)
+          parameters:
+            name: native_winui_x64_windows
+            displayName: WinUI x64
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-winui
+            additionalArgs: --buildarch=x64
+            artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native WinUI|arm64 (Win)
+          parameters:
+            name: native_winui_arm64_windows
+            displayName: WinUI arm64
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-winui
+            additionalArgs: --buildarch=arm64
+            artifactName: native
         - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Win)
           parameters:
             name: native_win32_x64_nanoserver_windows
@@ -392,11 +422,11 @@ stages:
       jobs:
         - template: azure-templates-bootstrapper.yml # Package NuGets
           parameters:
-            name: package_windows
+            name: package_normal_windows
             displayName: Package NuGets
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
-            target: nuget
+            target: nuget-normal
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
@@ -407,22 +437,42 @@ stages:
                   artifactName: nuget
                   pathToPublish: 'output/nugets'
               - task: PublishBuildArtifacts@1
-                displayName: Publish the special nuget artifacts
-                inputs:
-                  artifactName: nuget_special
-                  pathToPublish: 'output/nugets-special'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the special nuget artifacts
-                inputs:
-                  artifactName: nuget_symbols
-                  pathToPublish: 'output/nugets-symbols'
-              - task: PublishBuildArtifacts@1
                 displayName: Publish the SignList.xml into nuget artifacts
                 inputs:
                   artifactName: nuget
                   pathToPublish: 'scripts\SignList.xml'
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the symbols nuget artifacts
+                inputs:
+                  artifactName: nuget_symbols
+                  pathToPublish: 'output/nugets-symbols'
               - pwsh: |
                   Remove-Item ./output/native/ -Recurse -Force
+                  Remove-Item ./output/nugets/ -Recurse -Force
+                  Remove-Item ./output/nugets-symbols/ -Recurse -Force
+                displayName: Delete the pre-published folders
+        - template: azure-templates-bootstrapper.yml # Package Special NuGets
+          parameters:
+            name: package_special_windows
+            displayName: Package Special NuGets
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            dependsOn:
+              - package_normal_windows
+            target: nuget-special
+            additionalArgs: --skipExternals="all" --exclusive
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
+              - name: nuget_symbols
+                dir: nugets-symbols
+            postBuildSteps:
+              - task: PublishBuildArtifacts@1
+                displayName: Publish the special nuget artifacts
+                inputs:
+                  artifactName: nuget_special
+                  pathToPublish: 'output/nugets-special'
+              - pwsh: |
                   Remove-Item ./output/nugets/ -Recurse -Force
                   Remove-Item ./output/nugets-special/ -Recurse -Force
                   Remove-Item ./output/nugets-symbols/ -Recurse -Force
@@ -446,7 +496,6 @@ stages:
             additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
             shouldPublish: false
             requiredArtifacts:
-              - name: package_windows
               - name: nuget
                 dir: nugets
             preBuildSteps:

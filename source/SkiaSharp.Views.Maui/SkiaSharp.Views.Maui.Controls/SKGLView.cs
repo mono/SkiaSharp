@@ -8,127 +8,71 @@ using Microsoft.Maui.Graphics;
 
 namespace SkiaSharp.Views.Maui.Controls
 {
-	public partial class SKGLView : View, ISKGLViewController
+	public partial class SKGLView : View, ISKGLView
 	{
+		public static readonly BindableProperty IgnorePixelScalingProperty =
+			BindableProperty.Create(nameof(IgnorePixelScaling), typeof(bool), typeof(SKGLView), false);
+
 		public static readonly BindableProperty HasRenderLoopProperty =
 			BindableProperty.Create(nameof(HasRenderLoop), typeof(bool), typeof(SKGLView), false);
 
 		public static readonly BindableProperty EnableTouchEventsProperty =
 			BindableProperty.Create(nameof(EnableTouchEvents), typeof(bool), typeof(SKGLView), false);
 
+		private SKSizeI lastCanvasSize;
+		private GRContext? lastGRContext;
+
+		public bool IgnorePixelScaling
+		{
+			get => (bool)GetValue(IgnorePixelScalingProperty);
+			set => SetValue(IgnorePixelScalingProperty, value);
+		}
+
 		public bool HasRenderLoop
 		{
-			get { return (bool)GetValue(HasRenderLoopProperty); }
-			set { SetValue(HasRenderLoopProperty, value); }
+			get => (bool)GetValue(HasRenderLoopProperty);
+			set => SetValue(HasRenderLoopProperty, value);
 		}
 
 		public bool EnableTouchEvents
 		{
-			get { return (bool)GetValue(EnableTouchEventsProperty); }
-			set { SetValue(EnableTouchEventsProperty, value); }
+			get => (bool)GetValue(EnableTouchEventsProperty);
+			set => SetValue(EnableTouchEventsProperty, value);
 		}
 
-		// the user can subscribe to repaint
 		public event EventHandler<SKPaintGLSurfaceEventArgs>? PaintSurface;
 
-		// the user can subscribe to touch events
 		public event EventHandler<SKTouchEventArgs>? Touch;
 
-		// the native listens to this event
-		private event EventHandler? SurfaceInvalidated;
-		private event EventHandler<GetPropertyValueEventArgs<SKSize>>? GetCanvasSize;
-		private event EventHandler<GetPropertyValueEventArgs<GRContext>>? GetGRContext;
+		public SKSize CanvasSize => lastCanvasSize;
 
-		// the user asks the for the size
-		public SKSize CanvasSize
-		{
-			get
-			{
-				// send a mesage to the native view
-				var args = new GetPropertyValueEventArgs<SKSize>();
-				GetCanvasSize?.Invoke(this, args);
-				return args.Value;
-			}
-		}
+		public GRContext? GRContext => lastGRContext;
 
-		// the user asks the for the current GRContext
-		public GRContext GRContext
-		{
-			get
-			{
-				// send a mesage to the native view
-				var args = new GetPropertyValueEventArgs<GRContext>();
-				GetGRContext?.Invoke(this, args);
-				return args.Value;
-			}
-		}
-
-		// the user asks to repaint
 		public void InvalidateSurface()
 		{
-			// send a mesage to the native view
-			SurfaceInvalidated?.Invoke(this, EventArgs.Empty);
+			Handler?.Invoke(nameof(ISKGLView.InvalidateSurface));
 		}
 
-		// the native view tells the user to repaint
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
 		}
 
-		// the native view responds to a touch
 		protected virtual void OnTouch(SKTouchEventArgs e)
 		{
 			Touch?.Invoke(this, e);
 		}
 
-		// ISKViewController implementation
+		void ISKGLView.OnCanvasSizeChanged(SKSizeI size) =>
+			lastCanvasSize = size;
 
-		event EventHandler ISKGLViewController.SurfaceInvalidated
-		{
-			add { SurfaceInvalidated += value; }
-			remove { SurfaceInvalidated -= value; }
-		}
+		void ISKGLView.OnGRContextChanged(GRContext? context) =>
+			lastGRContext = context;
 
-		event EventHandler<GetPropertyValueEventArgs<SKSize>> ISKGLViewController.GetCanvasSize
-		{
-			add { GetCanvasSize += value; }
-			remove { GetCanvasSize -= value; }
-		}
-
-		event EventHandler<GetPropertyValueEventArgs<GRContext>> ISKGLViewController.GetGRContext
-		{
-			add { GetGRContext += value; }
-			remove { GetGRContext -= value; }
-		}
-
-		void ISKGLViewController.OnPaintSurface(SKPaintGLSurfaceEventArgs e)
-		{
+		void ISKGLView.OnPaintSurface(SKPaintGLSurfaceEventArgs e) =>
 			OnPaintSurface(e);
-		}
 
-		void ISKGLViewController.OnTouch(SKTouchEventArgs e)
-		{
+		void ISKGLView.OnTouch(SKTouchEventArgs e) =>
 			OnTouch(e);
-		}
-
-		protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
-		{
-			return new SizeRequest(new Size(40.0, 40.0));
-		}
-	}
-
-	public interface ISKGLViewController : IViewController
-	{
-		// the native listens to this event
-		event EventHandler SurfaceInvalidated;
-		event EventHandler<GetPropertyValueEventArgs<SKSize>> GetCanvasSize;
-		event EventHandler<GetPropertyValueEventArgs<GRContext>> GetGRContext;
-
-		// the native view tells the user to repaint
-		void OnPaintSurface(SKPaintGLSurfaceEventArgs e);
-
-		// the native view responds to a touch
-		void OnTouch(SKTouchEventArgs e);
 	}
 }

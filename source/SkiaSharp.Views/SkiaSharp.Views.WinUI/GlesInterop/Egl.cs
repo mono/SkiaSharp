@@ -6,7 +6,7 @@ using EGLContext = System.IntPtr;
 using EGLConfig = System.IntPtr;
 using EGLSurface = System.IntPtr;
 using EGLNativeDisplayType = System.IntPtr;
-using EGLNativeWindowType = System.Object;
+using EGLNativeWindowType = System.IntPtr;
 using glbool = System.Int32;
 
 namespace SkiaSharp.Views.GlesInterop
@@ -94,7 +94,7 @@ namespace SkiaSharp.Views.GlesInterop
 		[DllImport(libEGL)]
 		public static extern EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, int[] attrib_list);
 		[DllImport(libEGL)]
-		public static extern EGLSurface eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, [MarshalAs(UnmanagedType.IInspectable)] EGLNativeWindowType win, int[] attrib_list);
+		public static extern EGLSurface eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, int[] attrib_list);
 		[DllImport(libEGL)]
 		public static extern glbool eglQuerySurface(EGLDisplay dpy, EGLSurface surface, int attribute, out int value);
 		[DllImport(libEGL)]

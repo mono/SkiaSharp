@@ -38,23 +38,43 @@ Task("git-sync-deps")
     if (actualIncrement != expectedIncrement)
         throw new Exception($"The libSkiaSharp C API version did not match the expected '{expectedIncrement}', instead was '{actualIncrement}'.");
 
-    RunProcess(PYTHON_EXE, new ProcessSettings {
-        Arguments = SKIA_PATH.CombineWithFilePath("tools/git-sync-deps").FullPath,
-        WorkingDirectory = SKIA_PATH.FullPath,
-    });
+    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"));
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
+void RunPython(DirectoryPath working, FilePath script, string args = "")
+{
+    RunProcess(PYTHON_EXE, new ProcessSettings {
+        Arguments = $"{script.FullPath} {args}",
+        WorkingDirectory = working.FullPath,
+    });
+}
+
+void RunGn(DirectoryPath working, DirectoryPath outDir, string args = "")
 {
     var isCore = Context.Environment.Runtime.IsCoreClr;
 
     var quote = IsRunningOnWindows() || isCore ? "\"" : "'";
     var innerQuote = IsRunningOnWindows() || isCore ? "\\\"" : "\"";
 
+    RunProcess(GN_EXE, new ProcessSettings {
+        Arguments = $"gen {outDir} --script-executable={quote}{PYTHON_EXE}{quote} --args={quote}{args.Replace("'", innerQuote)}{quote}",
+        WorkingDirectory = working.FullPath,
+    });
+}
+
+void RunNinja(DirectoryPath working, DirectoryPath outDir, string target = "")
+{
+    var script = DEPOT_PATH.CombineWithFilePath("ninja.py");
+
+    RunPython(working, script, $"-C {outDir} {target}");
+}
+
+void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
+{
     // override win_vc with the command line args
     if (!string.IsNullOrEmpty(VS_INSTALL)) {
         DirectoryPath win_vc = VS_INSTALL;
@@ -67,16 +87,10 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
         $" is_official_build={CONFIGURATION.ToLower() == "release"} ".ToLower();
 
     // generate native skia build files
-    RunProcess(GN_EXE, new ProcessSettings {
-        Arguments = $"gen out/{outDir} --script-executable={quote}{PYTHON_EXE}{quote} --args={quote}{skiaArgs.Replace("'", innerQuote)}{quote}",
-        WorkingDirectory = SKIA_PATH.FullPath,
-    });
+    RunGn(SKIA_PATH, $"out/{outDir}", skiaArgs);
 
     // build native skia
-    RunProcess(PYTHON_EXE, new ProcessSettings {
-        Arguments = DEPOT_PATH.CombineWithFilePath("ninja.py").FullPath + $" -C out/{outDir} {target}",
-        WorkingDirectory = SKIA_PATH.FullPath,
-    });
+    RunNinja(SKIA_PATH, $"out/{outDir}", target);
 }
 
 bool Skip(string arch)
