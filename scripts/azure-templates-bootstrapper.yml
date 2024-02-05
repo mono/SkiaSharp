@@ -338,7 +338,7 @@ jobs:
           inputs:
             artifactName: ${{ parameters.artifactName }}
             pathToPublish: 'output'
-      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+      - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true'), or(and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))), parameters.runCompliance)) }}:
         - task: ComponentGovernanceComponentDetection@0
           displayName: Run component detection
           condition: always()
