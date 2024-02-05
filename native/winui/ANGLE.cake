@@ -19,7 +19,7 @@ void InitializeAngle(string branch, DirectoryPath ANGLE_PATH, DirectoryPath WINA
             continue;
 
         RunProcess("git", new ProcessSettings {
-            Arguments = $"submodule update --init --recursive {submodule}",
+            Arguments = $"submodule update --init --recursive --depth 1 --single-branch {submodule}",
             WorkingDirectory = ANGLE_PATH.FullPath,
         });
     }
