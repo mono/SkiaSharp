@@ -104,9 +104,9 @@
     <PropertyGroup>
       <Version>$(_VersionNuGetMatch)</Version>
       <Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
-      <Version Condition="'$(AssemblyVersionGitBranch)' != '' and !$(AssemblyVersionGitBranch.StartsWith('release/'))">$(Version)+$(AssemblyVersionGitBranch.Replace('/', '-').Replace('\', '-'))</Version>
-      <Version Condition="'$(AssemblyVersionGitSha)' != ''">$(Version).$(AssemblyVersionGitSha)</Version>
       <InformationalVersion>$(Version)</InformationalVersion>
+      <InformationalVersion Condition="'$(AssemblyVersionGitBranch)' != ''">$(InformationalVersion)+$(AssemblyVersionGitBranch.Replace('/', '-').Replace('\', '-'))</InformationalVersion>
+      <InformationalVersion Condition="'$(AssemblyVersionGitSha)' != ''">$(InformationalVersion).$(AssemblyVersionGitSha)</InformationalVersion>
       <AssemblyVersion>$(_VersionAssemblyMatch)</AssemblyVersion>
       <FileVersion>$(_VersionFileMatch)</FileVersion>
     </PropertyGroup>
