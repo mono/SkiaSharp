@@ -43,6 +43,9 @@
     <Compile Include="Platform\Apple\**\*.cs" />
     <Compile Include="Platform\iOS\**\*.cs" />
   </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
+    <Compile Include="Platform\MacCatalyst\**\*.cs" />
+  </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
     <!-- macOS -->
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
