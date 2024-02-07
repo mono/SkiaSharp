@@ -9,6 +9,7 @@ using ObjCRuntime;
 using OpenGL;
 using SkiaSharp.Views.GlesInterop;
 using UIKit;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Views.iOS
 {
@@ -44,9 +45,12 @@ namespace SkiaSharp.Views.iOS
 			PaintSurface?.Invoke(this, e);
 		}
 
-		public override void DrawInCGLContext(CGLContext glContext, CGLPixelFormat pixelFormat, double timeInterval, ref CVTimeStamp timeStamp)
+		[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
+		private static extern CGLErrorCode CGLSetCurrentContext(NativeHandle ctx);
+
+		public override void DrawInCGLContext(NativeHandle glContext, NativeHandle pixelFormat, double timeInterval, ref CVTimeStamp timeStamp)
 		{
-			CGLContext.CurrentContext = glContext;
+			CGLSetCurrentContext(glContext);
 
 			if (context == null)
 			{
@@ -83,28 +87,31 @@ namespace SkiaSharp.Views.iOS
 				renderTarget = new GRBackendRenderTarget(newSize.Width, newSize.Height, samples, stencil, glInfo);
 			}
 
-			// create the surface
-			if (surface == null)
-			{
-				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
-				canvas = surface.Canvas;
-			}
+			Gles.glClearColor(1, 0 ,0 , 1);
+			Gles.glClear(Gles.GL_COLOR_BUFFER_BIT);
 
-			using (new SKAutoCanvasRestore(canvas, true))
-			{
-				// start drawing
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
-				OnPaintSurface(e);
-			}
+			// // create the surface
+			// if (surface == null)
+			// {
+			// 	surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
+			// 	canvas = surface.Canvas;
+			// }
 
-			// flush the SkiaSharp context to the GL context
-			canvas.Flush();
+			// using (new SKAutoCanvasRestore(canvas, true))
+			// {
+			// 	// start drawing
+			// 	var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
+			// 	OnPaintSurface(e);
+			// }
+
+			// // flush the SkiaSharp context to the GL context
+			// canvas.Flush();
 			context.Flush();
 
 			base.DrawInCGLContext(glContext, pixelFormat, timeInterval, ref timeStamp);
 		}
 
-		public override void Release(CGLContext glContext)
+		public override void Release(NativeHandle glContext)
 		{
 			context.Dispose();
 

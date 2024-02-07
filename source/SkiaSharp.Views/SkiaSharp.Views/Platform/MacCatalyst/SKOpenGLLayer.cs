@@ -195,17 +195,17 @@ namespace OpenGL
 
 		[Export("drawInCGLContext:pixelFormat:forLayerTime:displayTime:")]
 		[BindingImpl(BindingImplOptions.GeneratedCode | BindingImplOptions.Optimizable)]
-		public unsafe virtual void DrawInCGLContext(CGLContext glContext, CGLPixelFormat pixelFormat, double timeInterval, ref CVTimeStamp timeStamp)
+		public unsafe virtual void DrawInCGLContext(NativeHandle glContext, NativeHandle pixelFormat, double timeInterval, ref CVTimeStamp timeStamp)
 		{
-			glContext.GetNonNullHandle("glContext");
-			pixelFormat.GetNonNullHandle("pixelFormat");
+			// glContext.GetNonNullHandle("glContext");
+			// pixelFormat.GetNonNullHandle("pixelFormat");
 			if (base.IsDirectBinding)
 			{
-				void_objc_msgSend_NativeHandle_NativeHandle_Double_ref_CVTimeStamp(base.Handle, selDrawInCGLContext_PixelFormat_ForLayerTime_DisplayTime_XHandle, glContext.Handle, pixelFormat.Handle, timeInterval, (CVTimeStamp*)Unsafe.AsPointer(ref timeStamp));
+				void_objc_msgSend_NativeHandle_NativeHandle_Double_ref_CVTimeStamp(base.Handle, selDrawInCGLContext_PixelFormat_ForLayerTime_DisplayTime_XHandle, glContext, pixelFormat, timeInterval, (CVTimeStamp*)Unsafe.AsPointer(ref timeStamp));
 			}
 			else
 			{
-				void_objc_msgSendSuper_NativeHandle_NativeHandle_Double_ref_CVTimeStamp(base.SuperHandle, selDrawInCGLContext_PixelFormat_ForLayerTime_DisplayTime_XHandle, glContext.Handle, pixelFormat.Handle, timeInterval, (CVTimeStamp*)Unsafe.AsPointer(ref timeStamp));
+				void_objc_msgSendSuper_NativeHandle_NativeHandle_Double_ref_CVTimeStamp(base.SuperHandle, selDrawInCGLContext_PixelFormat_ForLayerTime_DisplayTime_XHandle, glContext, pixelFormat, timeInterval, (CVTimeStamp*)Unsafe.AsPointer(ref timeStamp));
 			}
 		}
 
@@ -226,16 +226,16 @@ namespace OpenGL
 
 		[Export("releaseCGLContext:")]
 		[BindingImpl(BindingImplOptions.GeneratedCode | BindingImplOptions.Optimizable)]
-		public virtual void Release(CGLContext glContext)
+		public virtual void Release(NativeHandle glContext)
 		{
-			glContext.GetNonNullHandle("glContext");
+			// glContext.GetNonNullHandle("glContext");
 			if (base.IsDirectBinding)
 			{
-				void_objc_msgSend_NativeHandle(base.Handle, selReleaseCGLContext_XHandle, glContext.Handle);
+				void_objc_msgSend_NativeHandle(base.Handle, selReleaseCGLContext_XHandle, glContext);
 			}
 			else
 			{
-				void_objc_msgSendSuper_NativeHandle(base.SuperHandle, selReleaseCGLContext_XHandle, glContext.Handle);
+				void_objc_msgSendSuper_NativeHandle(base.SuperHandle, selReleaseCGLContext_XHandle, glContext);
 			}
 		}
 
@@ -249,74 +249,74 @@ namespace OpenGL
 		public static extern void void_objc_msgSendSuper_NativeHandle(IntPtr receiver, IntPtr selector, NativeHandle arg1);
 	}
 
-	[SupportedOSPlatform("maccatalyst")]
-	[ObsoletedOSPlatform("maccatalyst31.1", "Use 'Metal' Framework instead.")]
-	public class CGLContext : NativeObject
-	{
-		public static CGLContext? CurrentContext
-		{
-			get
-			{
-				IntPtr ctx = CGLGetCurrentContext();
-				if (ctx != IntPtr.Zero)
-				{
-					return new CGLContext(ctx, owns: false);
-				}
-				return null;
-			}
-			set
-			{
-				if (CGLSetCurrentContext(value.GetHandle()) != 0)
-				{
-					throw new Exception("Error setting the Current Context");
-				}
-			}
-		}
+	// [SupportedOSPlatform("maccatalyst")]
+	// [ObsoletedOSPlatform("maccatalyst31.1", "Use 'Metal' Framework instead.")]
+	// public class CGLContext : NativeObject
+	// {
+	// 	public static CGLContext? CurrentContext
+	// 	{
+	// 		get
+	// 		{
+	// 			IntPtr ctx = CGLGetCurrentContext();
+	// 			if (ctx != IntPtr.Zero)
+	// 			{
+	// 				return new CGLContext(ctx, owns: false);
+	// 			}
+	// 			return null;
+	// 		}
+	// 		set
+	// 		{
+	// 			if (CGLSetCurrentContext(value.GetHandle()) != 0)
+	// 			{
+	// 				throw new Exception("Error setting the Current Context");
+	// 			}
+	// 		}
+	// 	}
 
-		[Preserve(Conditional = true)]
-		internal CGLContext(NativeHandle handle, bool owns)
-			: base(handle, owns, verify: true)
-		{
-		}
+	// 	[Preserve(Conditional = true)]
+	// 	internal CGLContext(NativeHandle handle, bool owns)
+	// 		: base(handle, owns, verify: true)
+	// 	{
+	// 	}
 
-		//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
-		//private static extern void CGLRetainContext(IntPtr handle);
+	// 	//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
+	// 	//private static extern void CGLRetainContext(IntPtr handle);
 
-		//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
-		//private static extern void CGLReleaseContext(IntPtr handle);
+	// 	//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
+	// 	//private static extern void CGLReleaseContext(IntPtr handle);
 
-		//protected internal override void Retain()
-		//{
-		//	CGLRetainContext(GetCheckedHandle());
-		//}
+	// 	//protected internal override void Retain()
+	// 	//{
+	// 	//	CGLRetainContext(GetCheckedHandle());
+	// 	//}
 
-		//protected internal override void Release()
-		//{
-		//	CGLReleaseContext(GetCheckedHandle());
-		//}
+	// 	//protected internal override void Release()
+	// 	//{
+	// 	//	CGLReleaseContext(GetCheckedHandle());
+	// 	//}
 
-		//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
-		//private static extern CGLErrorCode CGLLockContext(IntPtr ctx);
+	// 	//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
+	// 	//private static extern CGLErrorCode CGLLockContext(IntPtr ctx);
 
-		//public CGLErrorCode Lock()
-		//{
-		//	return CGLLockContext(base.Handle);
-		//}
+	// 	//public CGLErrorCode Lock()
+	// 	//{
+	// 	//	return CGLLockContext(base.Handle);
+	// 	//}
 
-		//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
-		//private static extern CGLErrorCode CGLUnlockContext(IntPtr ctx);
+	// 	//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
+	// 	//private static extern CGLErrorCode CGLUnlockContext(IntPtr ctx);
 
-		//public CGLErrorCode Unlock()
-		//{
-		//	return CGLUnlockContext(base.Handle);
-		//}
+	// 	//public CGLErrorCode Unlock()
+	// 	//{
+	// 	//	return CGLUnlockContext(base.Handle);
+	// 	//}
 
-		[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
-		private static extern CGLErrorCode CGLSetCurrentContext(IntPtr ctx);
+	// 	[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
+	// 	private static extern CGLErrorCode CGLSetCurrentContext(IntPtr ctx);
 
-		[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
-		private static extern IntPtr CGLGetCurrentContext();
-	}
+	// 	[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
+	// 	private static extern IntPtr CGLGetCurrentContext();
+	// }
 
 	[SupportedOSPlatform("maccatalyst")]
 	[ObsoletedOSPlatform("maccatalyst31.1", "Use 'Metal' Framework instead.")]
@@ -343,129 +343,129 @@ namespace OpenGL
 		BadConnection = 10017u
 	}
 
-	[SupportedOSPlatform("maccatalyst")]
-	[ObsoletedOSPlatform("maccatalyst31.1", "Use 'Metal' Framework instead.")]
-	public class CGLPixelFormat : NativeObject
-	{
-		//protected internal override void Retain()
-		//{
-		//	CGLRetainPixelFormat(GetCheckedHandle());
-		//}
+	// [SupportedOSPlatform("maccatalyst")]
+	// [ObsoletedOSPlatform("maccatalyst31.1", "Use 'Metal' Framework instead.")]
+	// public class CGLPixelFormat : NativeObject
+	// {
+	// 	//protected internal override void Retain()
+	// 	//{
+	// 	//	CGLRetainPixelFormat(GetCheckedHandle());
+	// 	//}
 
-		//protected internal override void Release()
-		//{
-		//	CGLReleasePixelFormat(GetCheckedHandle());
-		//}
+	// 	//protected internal override void Release()
+	// 	//{
+	// 	//	CGLReleasePixelFormat(GetCheckedHandle());
+	// 	//}
 
-		[Preserve(Conditional = true)]
-		internal CGLPixelFormat(NativeHandle handle, bool owns)
-			: base(handle, owns)
-		{
-		}
+	// 	[Preserve(Conditional = true)]
+	// 	internal CGLPixelFormat(NativeHandle handle, bool owns)
+	// 		: base(handle, owns)
+	// 	{
+	// 	}
 
-		//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
-		//private static extern void CGLRetainPixelFormat(IntPtr handle);
+	// 	//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
+	// 	//private static extern void CGLRetainPixelFormat(IntPtr handle);
 
-		//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
-		//private static extern void CGLReleasePixelFormat(IntPtr handle);
+	// 	//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
+	// 	//private static extern void CGLReleasePixelFormat(IntPtr handle);
 
-		//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
-		//private static extern CGLErrorCode CGLChoosePixelFormat(CGLPixelFormatAttribute[] attributes, out IntPtr pix, out int npix);
+	// 	//[DllImport("/System/Library/Frameworks/OpenGL.framework/OpenGL")]
+	// 	//private static extern CGLErrorCode CGLChoosePixelFormat(CGLPixelFormatAttribute[] attributes, out IntPtr pix, out int npix);
 
-		//public CGLPixelFormat(CGLPixelFormatAttribute[] attributes, out int npix)
-		//	: base(Create(attributes, out npix), owns: true)
-		//{
-		//}
+	// 	//public CGLPixelFormat(CGLPixelFormatAttribute[] attributes, out int npix)
+	// 	//	: base(Create(attributes, out npix), owns: true)
+	// 	//{
+	// 	//}
 
-		//private static IntPtr Create(CGLPixelFormatAttribute[] attributes, out int npix)
-		//{
-		//	if (attributes == null)
-		//	{
-		//		ThrowHelper.ThrowArgumentNullException("attributes");
-		//	}
-		//	CGLPixelFormatAttribute[] marshalAttribs = new CGLPixelFormatAttribute[attributes.Length + 1];
-		//	Array.Copy(attributes, marshalAttribs, attributes.Length);
-		//	IntPtr pixelFormatOut;
-		//	CGLErrorCode ret = CGLChoosePixelFormat(marshalAttribs, out pixelFormatOut, out npix);
-		//	if (ret != 0)
-		//	{
-		//		throw new Exception("CGLChoosePixelFormat returned: " + ret);
-		//	}
-		//	return pixelFormatOut;
-		//}
+	// 	//private static IntPtr Create(CGLPixelFormatAttribute[] attributes, out int npix)
+	// 	//{
+	// 	//	if (attributes == null)
+	// 	//	{
+	// 	//		ThrowHelper.ThrowArgumentNullException("attributes");
+	// 	//	}
+	// 	//	CGLPixelFormatAttribute[] marshalAttribs = new CGLPixelFormatAttribute[attributes.Length + 1];
+	// 	//	Array.Copy(attributes, marshalAttribs, attributes.Length);
+	// 	//	IntPtr pixelFormatOut;
+	// 	//	CGLErrorCode ret = CGLChoosePixelFormat(marshalAttribs, out pixelFormatOut, out npix);
+	// 	//	if (ret != 0)
+	// 	//	{
+	// 	//		throw new Exception("CGLChoosePixelFormat returned: " + ret);
+	// 	//	}
+	// 	//	return pixelFormatOut;
+	// 	//}
 
-		//public CGLPixelFormat(params object[] attributes)
-		//	: base(Create(ConvertToAttributes(attributes), out var _), owns: true)
-		//{
-		//}
+	// 	//public CGLPixelFormat(params object[] attributes)
+	// 	//	: base(Create(ConvertToAttributes(attributes), out var _), owns: true)
+	// 	//{
+	// 	//}
 
-		//public CGLPixelFormat(out int npix, params object[] attributes)
-		//	: this(ConvertToAttributes(attributes), out npix)
-		//{
-		//}
+	// 	//public CGLPixelFormat(out int npix, params object[] attributes)
+	// 	//	: this(ConvertToAttributes(attributes), out npix)
+	// 	//{
+	// 	//}
 
-		//private static CGLPixelFormatAttribute[] ConvertToAttributes(object[] args)
-		//{
-		//	List<CGLPixelFormatAttribute> list = new List<CGLPixelFormatAttribute>();
-		//	for (int i = 0; i < args.Length; i++)
-		//	{
-		//		CGLPixelFormatAttribute v = (CGLPixelFormatAttribute)args[i];
-		//		switch (v)
-		//		{
-		//			case CGLPixelFormatAttribute.AllRenderers:
-		//			case CGLPixelFormatAttribute.DoubleBuffer:
-		//			case CGLPixelFormatAttribute.Stereo:
-		//			case CGLPixelFormatAttribute.MinimumPolicy:
-		//			case CGLPixelFormatAttribute.MaximumPolicy:
-		//			case CGLPixelFormatAttribute.OffScreen:
-		//			case CGLPixelFormatAttribute.FullScreen:
-		//			case CGLPixelFormatAttribute.AuxDepthStencil:
-		//			case CGLPixelFormatAttribute.ColorFloat:
-		//			case CGLPixelFormatAttribute.Multisample:
-		//			case CGLPixelFormatAttribute.Supersample:
-		//			case CGLPixelFormatAttribute.SampleAlpha:
-		//			case CGLPixelFormatAttribute.SingleRenderer:
-		//			case CGLPixelFormatAttribute.NoRecovery:
-		//			case CGLPixelFormatAttribute.Accelerated:
-		//			case CGLPixelFormatAttribute.ClosestPolicy:
-		//			case CGLPixelFormatAttribute.Robust:
-		//			case CGLPixelFormatAttribute.BackingStore:
-		//			case CGLPixelFormatAttribute.MPSafe:
-		//			case CGLPixelFormatAttribute.Window:
-		//			case CGLPixelFormatAttribute.MultiScreen:
-		//			case CGLPixelFormatAttribute.Compliant:
-		//			case CGLPixelFormatAttribute.PixelBuffer:
-		//			case CGLPixelFormatAttribute.RemotePixelBuffer:
-		//			case CGLPixelFormatAttribute.AllowOfflineRenderers:
-		//			case CGLPixelFormatAttribute.AcceleratedCompute:
-		//				list.Add(v);
-		//				break;
-		//			case CGLPixelFormatAttribute.AuxBuffers:
-		//			case CGLPixelFormatAttribute.ColorSize:
-		//			case CGLPixelFormatAttribute.AlphaSize:
-		//			case CGLPixelFormatAttribute.DepthSize:
-		//			case CGLPixelFormatAttribute.StencilSize:
-		//			case CGLPixelFormatAttribute.AccumSize:
-		//			case CGLPixelFormatAttribute.SampleBuffers:
-		//			case CGLPixelFormatAttribute.Samples:
-		//			case CGLPixelFormatAttribute.RendererID:
-		//			case CGLPixelFormatAttribute.ScreenMask:
-		//			case CGLPixelFormatAttribute.VirtualScreenCount:
-		//				{
-		//					list.Add(v);
-		//					i++;
-		//					if (i >= args.Length)
-		//					{
-		//						throw new ArgumentException("Attribute " + v.ToString() + " needs a value");
-		//					}
-		//					object item = args[i];
-		//					CGLPixelFormatAttribute attr = ((!(item is CGLPixelFormatAttribute)) ? ((CGLPixelFormatAttribute)Convert.ChangeType(item, typeof(CGLPixelFormatAttribute)!.GetEnumUnderlyingType())) : ((CGLPixelFormatAttribute)item));
-		//					list.Add(attr);
-		//					break;
-		//				}
-		//		}
-		//	}
-		//	return list.ToArray();
-		//}
-	}
+	// 	//private static CGLPixelFormatAttribute[] ConvertToAttributes(object[] args)
+	// 	//{
+	// 	//	List<CGLPixelFormatAttribute> list = new List<CGLPixelFormatAttribute>();
+	// 	//	for (int i = 0; i < args.Length; i++)
+	// 	//	{
+	// 	//		CGLPixelFormatAttribute v = (CGLPixelFormatAttribute)args[i];
+	// 	//		switch (v)
+	// 	//		{
+	// 	//			case CGLPixelFormatAttribute.AllRenderers:
+	// 	//			case CGLPixelFormatAttribute.DoubleBuffer:
+	// 	//			case CGLPixelFormatAttribute.Stereo:
+	// 	//			case CGLPixelFormatAttribute.MinimumPolicy:
+	// 	//			case CGLPixelFormatAttribute.MaximumPolicy:
+	// 	//			case CGLPixelFormatAttribute.OffScreen:
+	// 	//			case CGLPixelFormatAttribute.FullScreen:
+	// 	//			case CGLPixelFormatAttribute.AuxDepthStencil:
+	// 	//			case CGLPixelFormatAttribute.ColorFloat:
+	// 	//			case CGLPixelFormatAttribute.Multisample:
+	// 	//			case CGLPixelFormatAttribute.Supersample:
+	// 	//			case CGLPixelFormatAttribute.SampleAlpha:
+	// 	//			case CGLPixelFormatAttribute.SingleRenderer:
+	// 	//			case CGLPixelFormatAttribute.NoRecovery:
+	// 	//			case CGLPixelFormatAttribute.Accelerated:
+	// 	//			case CGLPixelFormatAttribute.ClosestPolicy:
+	// 	//			case CGLPixelFormatAttribute.Robust:
+	// 	//			case CGLPixelFormatAttribute.BackingStore:
+	// 	//			case CGLPixelFormatAttribute.MPSafe:
+	// 	//			case CGLPixelFormatAttribute.Window:
+	// 	//			case CGLPixelFormatAttribute.MultiScreen:
+	// 	//			case CGLPixelFormatAttribute.Compliant:
+	// 	//			case CGLPixelFormatAttribute.PixelBuffer:
+	// 	//			case CGLPixelFormatAttribute.RemotePixelBuffer:
+	// 	//			case CGLPixelFormatAttribute.AllowOfflineRenderers:
+	// 	//			case CGLPixelFormatAttribute.AcceleratedCompute:
+	// 	//				list.Add(v);
+	// 	//				break;
+	// 	//			case CGLPixelFormatAttribute.AuxBuffers:
+	// 	//			case CGLPixelFormatAttribute.ColorSize:
+	// 	//			case CGLPixelFormatAttribute.AlphaSize:
+	// 	//			case CGLPixelFormatAttribute.DepthSize:
+	// 	//			case CGLPixelFormatAttribute.StencilSize:
+	// 	//			case CGLPixelFormatAttribute.AccumSize:
+	// 	//			case CGLPixelFormatAttribute.SampleBuffers:
+	// 	//			case CGLPixelFormatAttribute.Samples:
+	// 	//			case CGLPixelFormatAttribute.RendererID:
+	// 	//			case CGLPixelFormatAttribute.ScreenMask:
+	// 	//			case CGLPixelFormatAttribute.VirtualScreenCount:
+	// 	//				{
+	// 	//					list.Add(v);
+	// 	//					i++;
+	// 	//					if (i >= args.Length)
+	// 	//					{
+	// 	//						throw new ArgumentException("Attribute " + v.ToString() + " needs a value");
+	// 	//					}
+	// 	//					object item = args[i];
+	// 	//					CGLPixelFormatAttribute attr = ((!(item is CGLPixelFormatAttribute)) ? ((CGLPixelFormatAttribute)Convert.ChangeType(item, typeof(CGLPixelFormatAttribute)!.GetEnumUnderlyingType())) : ((CGLPixelFormatAttribute)item));
+	// 	//					list.Add(attr);
+	// 	//					break;
+	// 	//				}
+	// 	//		}
+	// 	//	}
+	// 	//	return list.ToArray();
+	// 	//}
+	// }
 }

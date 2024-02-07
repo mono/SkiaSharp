@@ -8,7 +8,7 @@ namespace SkiaSharp.Views.GlesInterop
 {
 	internal static class Gles
 	{
-#if __MACOS__
+#if __MACOS__ || MACCATALYST
 		private const string libGLESv2 = "/System/Library/Frameworks/OpenGL.framework/OpenGL";
 #elif __IOS__ || __TVOS__
 		private const string libGLESv2 = "/System/Library/Frameworks/OpenGLES.framework/OpenGLES";
