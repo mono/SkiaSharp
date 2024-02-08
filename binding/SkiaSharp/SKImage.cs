@@ -415,6 +415,26 @@ namespace SkiaSharp
 		private SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix* localMatrix) =>
 			SKShader.GetObject (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, &sampling, localMatrix));
 
+		// ToRawShader
+
+		public SKShader ToRawShader () =>
+			ToRawShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, SKSamplingOptions.Default, null);
+
+		public SKShader ToRawShader (SKShaderTileMode tileX, SKShaderTileMode tileY) =>
+			ToRawShader (tileX, tileY, SKSamplingOptions.Default, null);
+
+		public SKShader ToRawShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKMatrix localMatrix) =>
+			ToRawShader (tileX, tileY, SKSamplingOptions.Default, &localMatrix);
+
+		public SKShader ToRawShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling) =>
+			ToRawShader (tileX, tileY, sampling, null);
+
+		public SKShader ToRawShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix localMatrix) =>
+			ToRawShader (tileX, tileY, sampling, &localMatrix);
+
+		private SKShader ToRawShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix* localMatrix) =>
+			SKShader.GetObject (SkiaApi.sk_image_make_raw_shader (Handle, tileX, tileY, &sampling, localMatrix));
+
 		// PeekPixels
 
 		public bool PeekPixels (SKPixmap pixmap)
