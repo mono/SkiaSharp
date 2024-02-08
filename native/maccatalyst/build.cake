@@ -9,6 +9,7 @@ Task("libSkiaSharp")
 {
     RunCake("../ios/build.cake", "libSkiaSharp", new Dictionary<string, string> {
         { "variant", "maccatalyst" },
+        { "gnArgs", "skia_use_gl=false " + ADDITIONAL_GN_ARGS },
     });
 });
 

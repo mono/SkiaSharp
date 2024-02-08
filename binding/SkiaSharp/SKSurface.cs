@@ -114,7 +114,8 @@ namespace SkiaSharp
 			if (renderTarget == null)
 				throw new ArgumentNullException (nameof (renderTarget));
 
-			return GetObject (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			var tt = SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero);
+			return GetObject (tt);
 		}
 
 		// GPU BACKEND TEXTURE surface

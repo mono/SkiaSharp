@@ -90,12 +90,12 @@ namespace SkiaSharp.Views.iOS
 			Gles.glClearColor(1, 0 ,0 , 1);
 			Gles.glClear(Gles.GL_COLOR_BUFFER_BIT);
 
-			// // create the surface
-			// if (surface == null)
-			// {
-			// 	surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
-			// 	canvas = surface.Canvas;
-			// }
+			// create the surface
+			if (surface == null)
+			{
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
+				canvas = surface.Canvas;
+			}
 
 			// using (new SKAutoCanvasRestore(canvas, true))
 			// {
