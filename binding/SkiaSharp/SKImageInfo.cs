@@ -88,7 +88,7 @@ namespace SkiaSharp
 			Width = width;
 			Height = height;
 			ColorType = PlatformColorType;
-			AlphaType = SKAlphaType.Premul;
+			AlphaType = alphaType;
 			ColorSpace = null;
 		}
 
