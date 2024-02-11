@@ -16,11 +16,11 @@ namespace SkiaSharpGenerator
 		{
 		}
 
-		public async Task VerifyAsync()
+		public void DoVerify()
 		{
 			Log?.Log("Starting C API verification...");
 
-			config = await LoadConfigAsync(ConfigFile);
+			config = LoadConfig(ConfigFile);
 
 			ParseSkiaHeaders();
 

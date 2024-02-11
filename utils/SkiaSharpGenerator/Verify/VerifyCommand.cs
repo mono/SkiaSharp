@@ -58,7 +58,7 @@ namespace SkiaSharpGenerator
 
 			try
 			{
-				verifier.VerifyAsync().Wait();
+				verifier.DoVerify();
 			}
 			catch
 			{

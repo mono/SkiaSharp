@@ -71,7 +71,7 @@ namespace SkiaSharpGenerator
 
 			try
 			{
-				generator.GenerateAsync().Wait();
+				generator.DoGenerate();
 			}
 			catch
 			{
