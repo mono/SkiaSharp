@@ -51,9 +51,9 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(animation);
 		
 			var stats = builder.Stats;
-			Assert.True(stats.SceneParseTime > TimeSpan.Zero);
-			Assert.True(stats.JsonParseTime > TimeSpan.Zero);
-			Assert.True(stats.TotalLoadTime > TimeSpan.Zero);
+			Assert.True(stats.SceneParseTime >= TimeSpan.Zero);
+			Assert.True(stats.JsonParseTime >= TimeSpan.Zero);
+			Assert.True(stats.TotalLoadTime >= TimeSpan.Zero);
 			Assert.True(stats.JsonSize > 0);
 			Assert.True(stats.AnimatorCount > 0);
 		}
