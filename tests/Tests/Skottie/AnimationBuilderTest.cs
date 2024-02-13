@@ -94,5 +94,33 @@ namespace SkiaSharp.Tests
 
 			Assert.NotEqual(beforePixels, afterPixels);
 		}
+
+		[SkippableFact]
+		public void WrappedResourceManagersAreNotCollectedPrematurely()
+		{
+			var (builder, weak) = CreateBuilder();
+
+			CollectGarbage();
+
+			Assert.True(weak.IsAlive);
+
+			using var animation = builder.Build(Path.Combine(PathToImages, "lottie-base64_dotnet-bot.json"));
+
+			builder.Dispose();
+			CollectGarbage();
+
+			Assert.False(weak.IsAlive);
+
+			static (AnimationBuilder, WeakReference) CreateBuilder()
+			{
+				var provider = new DataUriResourceProvider();
+
+				var builder = Animation
+					.CreateBuilder()
+					.SetResourceProvider(provider);
+
+				return (builder, new WeakReference(provider));
+			}
+		}
 	}
 }

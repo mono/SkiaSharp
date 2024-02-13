@@ -195,7 +195,7 @@ namespace SkiaSharp
 			return owner;
 		}
 
-		// indicate that the chile should not be garbage collected while
+		// indicate that the child should not be garbage collected while
 		// the owner still lives
 		internal static T Referenced<T> (T owner, SKObject child)
 			where T : SKObject

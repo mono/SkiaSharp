@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using SkiaSharp.Resources;
 using Xunit;
 
@@ -49,6 +50,32 @@ namespace SkiaSharp.Tests
 			using var datauri = new DataUriResourceProvider(null);
 
 			Assert.NotNull(datauri);
+		}
+
+		[SkippableFact]
+		public void WrappedResourceManagersAreNotCollectedPrematurely()
+		{
+			var fullPath = Path.Combine(PathToImages, "baboon.png");
+			var expectedData = SKData.Create(fullPath);
+
+			var (caching, weak) = CreateProvider();
+
+			CollectGarbage();
+
+			Assert.True(weak.IsAlive);
+
+			using var data = caching.Load("baboon.png");
+
+			Assert.Equal(expectedData.ToArray(), data.ToArray());
+
+			static (CachingResourceProvider, WeakReference) CreateProvider()
+			{
+				var files = new FileResourceProvider(PathToImages);
+				var datauri = new DataUriResourceProvider(files);
+				var caching = new CachingResourceProvider(datauri);
+
+				return (caching, new WeakReference(files));
+			}
 		}
 	}
 }

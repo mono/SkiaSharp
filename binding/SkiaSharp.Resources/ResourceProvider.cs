@@ -19,21 +19,22 @@ namespace SkiaSharp.Resources
 			SKData.GetObject (ResourcesApi.skresources_resource_provider_load (Handle, resourcePath, resourceName));
 	}
 
-	public class CachingResourceProvider : ResourceProvider
+	public sealed class CachingResourceProvider : ResourceProvider
 	{
 		public CachingResourceProvider (ResourceProvider resourceProvider)
 			: base (Create (resourceProvider), true)
 		{
+			Referenced(this, resourceProvider);
 		}
 
-		public static IntPtr Create (ResourceProvider resourceProvider)
+		private static IntPtr Create (ResourceProvider resourceProvider)
 		{
 			_ = resourceProvider ?? throw new ArgumentNullException (nameof (resourceProvider));
 			return ResourcesApi.skresources_caching_resource_provider_proxy_make (resourceProvider.Handle);
 		}
 	}
 
-	public class DataUriResourceProvider : ResourceProvider
+	public sealed class DataUriResourceProvider : ResourceProvider
 	{
 		public DataUriResourceProvider (bool preDecode = false)
 			: this (null, preDecode)
@@ -43,13 +44,14 @@ namespace SkiaSharp.Resources
 		public DataUriResourceProvider (ResourceProvider? fallbackProvider, bool preDecode = false)
 			: base (Create (fallbackProvider, preDecode), true)
 		{
+			Referenced (this, fallbackProvider);
 		}
 
 		private static IntPtr Create (ResourceProvider? fallbackProvider, bool preDecode = false) =>
 			ResourcesApi.skresources_data_uri_resource_provider_proxy_make (fallbackProvider?.Handle ?? IntPtr.Zero, preDecode);
 	}
 
-	public class FileResourceProvider : ResourceProvider
+	public sealed class FileResourceProvider : ResourceProvider
 	{
 		public FileResourceProvider (string baseDirectory, bool preDecode = false)
 			: base (Create (baseDirectory, preDecode), true)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using SkiaSharp.Resources;
 
@@ -20,6 +20,7 @@ namespace SkiaSharp.Skottie
 		{
 			_ = fontManager ?? throw new ArgumentNullException (nameof (fontManager));
 			SkottieApi.skottie_animation_builder_set_font_manager (Handle, fontManager.Handle);
+			Referenced (this, fontManager);
 			return this;
 		}
 
@@ -27,6 +28,7 @@ namespace SkiaSharp.Skottie
 		{
 			_ = resourceProvider ?? throw new ArgumentNullException (nameof (resourceProvider));
 			SkottieApi.skottie_animation_builder_set_resource_provider (Handle, resourceProvider.Handle);
+			Referenced (this, resourceProvider);
 			return this;
 		}
 
