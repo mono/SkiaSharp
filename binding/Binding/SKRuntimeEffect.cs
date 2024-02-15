@@ -17,7 +17,10 @@ namespace SkiaSharp
 
 		// Create
 
-		public static SKRuntimeEffect Create (string sksl, out string errors)
+		[Obsolete("Use SKRuntimeEffect.CreateShader() instead.")]
+		public static SKRuntimeEffect Create (string sksl, out string errors) => CreateShader (sksl, out errors);
+
+		public static SKRuntimeEffect CreateShader (string sksl, out string errors)
 		{
 			using var s = new SKString (sksl);
 			using var errorString = new SKString ();
@@ -63,14 +66,26 @@ namespace SkiaSharp
 
 		// ToShader
 
+		public SKShader ToShader () =>
+			ToShader (true, null, null, null);
+
 		public SKShader ToShader (bool isOpaque) =>
 			ToShader (isOpaque, null, null, null);
+
+		public SKShader ToShader (SKRuntimeEffectUniforms uniforms) =>
+			ToShader (true, uniforms.ToData (), null, null);
 
 		public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms) =>
 			ToShader (isOpaque, uniforms.ToData (), null, null);
 
+		public SKShader ToShader (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children) =>
+			ToShader (true, uniforms.ToData (), children.ToArray (), null);
+
 		public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children) =>
 			ToShader (isOpaque, uniforms.ToData (), children.ToArray (), null);
+
+		public SKShader ToShader (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKMatrix localMatrix) =>
+			ToShader (true, uniforms.ToData (), children.ToArray (), &localMatrix);
 
 		public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKMatrix localMatrix) =>
 			ToShader (isOpaque, uniforms.ToData (), children.ToArray (), &localMatrix);
