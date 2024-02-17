@@ -2,7 +2,7 @@
 
 namespace SkiaSharp.Resources
 {
-	public abstract unsafe class ResourceProvider : SKObject, ISKSkipObjectRegistration
+	public abstract unsafe class ResourceProvider : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal ResourceProvider (IntPtr handle, bool owns)
 			: base (handle, owns)

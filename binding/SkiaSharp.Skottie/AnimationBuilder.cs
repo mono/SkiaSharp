@@ -66,8 +66,11 @@ namespace SkiaSharp.Skottie
 			var span = data.AsSpan ().Slice (preamble);
 
 			fixed (byte* ptr = span) {
-				GC.KeepAlive(data);
-				return Animation.GetObject (SkottieApi.skottie_animation_builder_make_from_data (Handle, ptr, (IntPtr)span.Length));
+				try {
+					return Animation.GetObject (SkottieApi.skottie_animation_builder_make_from_data (Handle, ptr, (IntPtr)span.Length));
+				} finally {
+					GC.KeepAlive(data);
+				}
 			}
 		}
 
