@@ -58,9 +58,12 @@ namespace SkiaSharp.Tests
 			Assert.True(stats.AnimatorCount > 0);
 		}
 
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)]
 		[SkippableTheory]
 		[MemberData(nameof(Base64Files))]
-		public void CanLoadBase64Images(string filename)
+		public void CanLoadBase64ImagesFromData(string filename)
 		{
 			var path = Path.Combine(PathToImages, filename);
 			using var data = SKData.Create(path);
@@ -74,6 +77,27 @@ namespace SkiaSharp.Tests
 			Assert.True(animation.Duration > TimeSpan.Zero);
 		}
 
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)]
+		[SkippableTheory]
+		[MemberData(nameof(Base64Files))]
+		public void CanLoadBase64ImagesFromFilename(string filename)
+		{
+			var path = Path.Combine(PathToImages, filename);
+
+			var animation = Animation
+				.CreateBuilder()
+				.SetResourceProvider(new DataUriResourceProvider())
+				.Build(path);
+
+			Assert.NotNull(animation);
+			Assert.True(animation.Duration > TimeSpan.Zero);
+		}
+
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)]
 		[SkippableTheory]
 		[MemberData(nameof(Base64Files))]
 		public void CanRenderWithBase64(string filename)
