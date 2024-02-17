@@ -58,9 +58,6 @@ namespace SkiaSharp.Tests
 			Assert.True(stats.AnimatorCount > 0);
 		}
 
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)]
 		[SkippableTheory]
 		[MemberData(nameof(Base64Files))]
 		public void CanLoadBase64ImagesFromData(string filename)
@@ -77,9 +74,6 @@ namespace SkiaSharp.Tests
 			Assert.True(animation.Duration > TimeSpan.Zero);
 		}
 
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)]
 		[SkippableTheory]
 		[MemberData(nameof(Base64Files))]
 		public void CanLoadBase64ImagesFromFilename(string filename)
@@ -95,9 +89,6 @@ namespace SkiaSharp.Tests
 			Assert.True(animation.Duration > TimeSpan.Zero);
 		}
 
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)]
 		[SkippableTheory]
 		[MemberData(nameof(Base64Files))]
 		public void CanRenderWithBase64(string filename)

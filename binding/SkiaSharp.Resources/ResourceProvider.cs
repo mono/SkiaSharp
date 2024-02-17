@@ -9,9 +9,6 @@ namespace SkiaSharp.Resources
 		{
 		}
 
-		protected override void DisposeNative ()
-			=> ResourcesApi.skresources_resource_provider_delete (Handle);
-
 		public SKData? Load (string resourceName) =>
 			Load ("", resourceName);
 
