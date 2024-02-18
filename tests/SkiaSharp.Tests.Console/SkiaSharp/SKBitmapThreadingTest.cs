@@ -12,6 +12,7 @@ namespace SkiaSharp.Tests
 	public class SKBitmapThreadingTest : SKTest
 	{
 		[SkippableTheory]
+		[InlineData(10, 10)]
 		[InlineData(100, 1000)]
 		public static void ImageScalingMultipleThreadsTest(int numThreads, int numIterationsPerThread)
 		{

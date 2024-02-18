@@ -11,10 +11,7 @@ This is a small set of tools that help with generating the p/invoke layer from t
 This can be run with:
 
 ```pwsh
-dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libSkiaSharp.json --skia externals/skia --output binding/SkiaSharp/SkiaApi.generated.cs
-dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libSkiaSharp.Skottie.json --skia externals/skia --output binding/SkiaSharp.Skottie/SkottieApi.generated.cs
-dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libSkiaSharp.SceneGraph.json --skia externals/skia --output binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs
-dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libHarfBuzzSharp.json --skia externals/skia/third_party/externals/harfbuzz --output binding/HarfBuzzSharp/HarfBuzzApi.generated.cs
+.\utils\generate.ps1
 ```
 
 * `--config binding/libSkiaSharp.json`  

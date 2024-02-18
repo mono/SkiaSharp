@@ -9,6 +9,41 @@ namespace SkiaSharp.Tests
 		{
 			using (var drawable = new TestDrawable())
 			{
+			}
+		}
+
+		[SkippableFact]
+		public void CanAccessBounds()
+		{
+			using (var drawable = new TestDrawable())
+			{
+				Assert.Equal(SKRect.Create(100, 100), drawable.Bounds);
+				Assert.Equal(1, drawable.BoundsFireCount);
+			}
+		}
+
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
+		[SkippableFact]
+		public void CanCreateSnapshot()
+		{
+			using (var drawable = new TestDrawable())
+			{
+				var picture = drawable.Snapshot();
+				Assert.NotNull(picture);
+				Assert.Equal(1, drawable.SnapshotFireCount);
+			}
+		}
+
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
+		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
+		[SkippableFact]
+		public void CanUseAllMembers()
+		{
+			using (var drawable = new TestDrawable())
+			{
 				Assert.Equal(SKRect.Create(100, 100), drawable.Bounds);
 				Assert.Equal(1, drawable.BoundsFireCount);
 
