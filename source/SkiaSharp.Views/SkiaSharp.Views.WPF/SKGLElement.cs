@@ -61,7 +61,11 @@ namespace SkiaSharp.Views.WPF
 				this.listener = listener;
             };
 
-            Start(settings);
+#if NETCOREAPP
+			this.RegisterToEventsDirectly = false;
+#endif
+
+			Start(settings);
 		}
 
 
