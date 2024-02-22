@@ -372,7 +372,7 @@ namespace SkiaSharp
 
 	/// <summary>
 	/// This should be implemented on all types that can skip the expensive
-	// registration in the global dictionary. Typically this would be the case
+	/// registration in the global dictionary. Typically this would be the case
 	/// if the type os _only_ constructed by the user and not provided as a
 	/// return type for _any_ member.
 	/// </summary>
