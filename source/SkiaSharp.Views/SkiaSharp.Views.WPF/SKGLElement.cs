@@ -136,7 +136,6 @@ namespace SkiaSharp.Views.WPF
 			var newSize = GetSize();
 
 			GL.ClearColor(Color4.Transparent);
-			GL.Clear(ClearBufferMask.ColorBufferBit);
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
 
 			// manage the drawing surface
