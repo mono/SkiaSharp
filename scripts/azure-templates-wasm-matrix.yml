@@ -19,6 +19,6 @@ jobs:
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version.version }}
         additionalArgs: --emscriptenVersion=${{ version.version }} --emscriptenFeatures="${{ version.features }}"
         artifactName: ${{ parameters.artifactName }}
-        additionalArtifacts:
+        publishArtifacts:
          - name: native_wasm_linux
            path: 'output'

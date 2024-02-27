@@ -472,10 +472,7 @@ stages:
     - stage: package
       displayName: Package NuGets
       dependsOn:
-        - native_windows
-        - native_macos
-        - native_linux
-        - native_wasm
+        - native
       jobs:
         - template: /scripts/azure-templates-bootstrapper.yml@self # Package NuGets
           parameters:
@@ -493,7 +490,7 @@ stages:
                   Remove-Item ./output/nugets/ -Recurse -Force
                   Remove-Item ./output/nugets-symbols/ -Recurse -Force
                 displayName: Delete the pre-published folders
-            additionalArtifacts:
+            publishArtifacts:
               - name: nuget
                 path: 'output/nugets'
               - name: nuget
@@ -521,7 +518,7 @@ stages:
                   Remove-Item ./output/nugets-special/ -Recurse -Force
                   Remove-Item ./output/nugets-symbols/ -Recurse -Force
                 displayName: Delete the pre-published folders
-            additionalArtifacts:
+            publishArtifacts:
               - name: nuget_special
                 path: 'output/nugets-special'
 
@@ -548,7 +545,7 @@ stages:
             preBuildSteps:
               - pwsh: .\scripts\install-gtk.ps1
                 displayName: Install GTK# 2.12
-            additionalArtifacts:
+            publishArtifacts:
               - name: api-diff
                 always: true
                 path: '$(Build.SourcesDirectory)\output\api-diff'
@@ -612,7 +609,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Windows .NET Framework Tests'
-            additionalArtifacts:
+            publishArtifacts:
               - name: testlogs_netfx_windows
                 always: true
                 path: 'output/logs/testlogs'
@@ -637,7 +634,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Windows .NET Core Tests'
-            additionalArtifacts:
+            publishArtifacts:
               - name: testlogs_netcore_windows
                 always: true
                 path: 'output/logs/testlogs'
@@ -662,7 +659,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'macOS .NET Core Tests'
-            additionalArtifacts:
+            publishArtifacts:
               - name: testlogs_netcore_macos
                 always: true
                 path: 'output/logs/testlogs'
@@ -689,7 +686,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Linux .NET Core Tests'
-            additionalArtifacts:
+            publishArtifacts:
               - name: testlogs_netcore_linux
                 always: true
                 path: 'output/logs/testlogs'
@@ -722,7 +719,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Android Tests (API $(ANDROID_TEST_DEVICE_VERSION))'
-            additionalArtifacts:
+            publishArtifacts:
               - name: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
                 always: true
                 path: 'output/logs/testlogs'
@@ -747,7 +744,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'iOS Tests (v$(IOS_TEST_DEVICE_VERSION))'
-            additionalArtifacts:
+            publishArtifacts:
               - name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
                 always: true
                 path: 'output/logs/testlogs'
@@ -772,7 +769,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Mac Catalyst Tests'
-            additionalArtifacts:
+            publishArtifacts:
               - name: testlogs_maccatalyst
                 always: true
                 path: 'output/logs/testlogs'
@@ -798,7 +795,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/*.xml'
                   testRunTitle: 'Linux WASM Tests'
-            additionalArtifacts:
+            publishArtifacts:
               - name: testlogs_wasm
                 always: true
                 path: 'output/logs/testlogs'

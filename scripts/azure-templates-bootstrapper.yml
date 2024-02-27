@@ -31,7 +31,7 @@ parameters:
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
   artifactName: ''                              # the name of the artifact to merge this run into
-  additionalArtifacts: []                       # the additional artifacts to publish
+  publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
   skipInstall: false                            # whether or not to install any tools
   skipSteps: false                              # whether or not to run any steps
@@ -66,7 +66,7 @@ jobs:
             displayName: 'Publish the combined ${{ parameters.artifactName }} artifacts'
             artifactName: ${{ parameters.artifactName }}
             targetPath: 'output'
-        - ${{ each additionalArtifact in parameters.additionalArtifacts }}:
+        - ${{ each additionalArtifact in parameters.publishArtifacts }}:
           - output: pipelineArtifact
             displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
             ${{ if eq(additionalArtifact.always, 'true') }}:
