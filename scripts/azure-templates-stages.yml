@@ -433,8 +433,7 @@ stages:
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: managed
       displayName: Build Managed
-      dependsOn:
-        - native
+      dependsOn: native
       jobs:
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Managed (Windows)
           parameters:
@@ -480,8 +479,7 @@ stages:
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: package
       displayName: Package NuGets
-      dependsOn:
-        - native
+      dependsOn: native
       jobs:
         - template: /scripts/azure-templates-bootstrapper.yml@self # Package NuGets
           parameters:
@@ -518,8 +516,7 @@ stages:
             displayName: Package Special NuGets
             buildPipelineType: ${{ parameters.buildPipelineType }}
             buildAgent: ${{ parameters.buildAgentWindows}}
-            dependsOn:
-              - package_normal_windows
+            dependsOn: package_normal_windows
             target: nuget-special
             additionalArgs: --skipExternals="all" --exclusive
             requiredArtifacts:
@@ -601,11 +598,7 @@ stages:
       ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         dependsOn: prepare
       ${{ if eq(parameters.buildPipelineType, 'both') }}:
-        dependsOn:
-          - native_windows
-          - native_macos
-          - native_linux
-          - native_wasm
+        dependsOn: native
       jobs:
         - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netfx (Windows)
           parameters:
