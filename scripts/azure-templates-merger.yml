@@ -1,0 +1,44 @@
+parameters:
+  name: ''                                      # in the form type_platform_host
+  displayName: ''                               # the human name
+  buildAgent: ''                                # the configuration for the build agent
+  buildPipelineType: 'both'                     # the type of build pipeline setup
+  requiredArtifacts: []                         # the artifacts that this build needs to download
+  matrixArtifacts: []                           # the artifacts that this build needs to download
+
+jobs:
+  - template: /scripts/azure-templates-bootstrapper.yml@self
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      buildPipelineType: ${{ parameters.buildPipelineType }}
+      buildAgent: ${{ parameters.buildAgent }}
+      skipInstall: true
+      skipSteps: true
+      requiredArtifacts: ${{ parameters.requiredArtifacts }}
+      preBuildSteps:
+        - pwsh: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject) --use-git-aliases true
+        - ${{ each artifactJson in parameters.matrixArtifacts }}:
+          - pwsh: |
+              $artifactJson=@'
+              ${{ artifactJson }}
+              '@
+
+              echo $artifactJson
+
+              $json = ConvertFrom-Json $artifactJson
+              $objects = $json | Get-Member -MemberType NoteProperty
+              $names = $objects | ForEach-Object { $json."$($_.Name)".name }
+
+              Write-Host "Found $($names.Length) items:"
+              $names | ForEach-Object { Write-Host " - $_" }
+
+              $dir = "$(Build.ArtifactStagingDirectory)"
+              $id = "$(Build.BuildId)"
+              foreach ($name in $names) {
+                Write-Host "Downloading '$name'..."
+                az pipelines runs artifact download --artifact-name "$name" --path "$dir" --run-id "$id"
+              }
+              Write-Host "Downloads complete."
+            env:
+              AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)

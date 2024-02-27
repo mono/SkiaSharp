@@ -2,26 +2,23 @@ parameters:
   artifactName: ''                              # the name of the artifact to merge this run into
   buildExternals: ''                            # the build number to download externals from
   buildPipelineType: false
-  vmImage: ''                                   # the VM image
+  buildAgent: ''                                # the configuration for the build agent
   emscripten: [ ]
 
 jobs:
   - ${{ each version in parameters.emscripten }}:
-    - template: azure-templates-bootstrapper.yml
+    - template: /scripts/azure-templates-bootstrapper.yml@self
       parameters:
         name: native_wasm_${{ replace(version.displayName, '.', '_') }}_linux
         displayName: WASM (${{ version.displayName }})
         buildExternals: ${{ parameters.buildExternals }}
         buildPipelineType: ${{ parameters.buildPipelineType }}
-        vmImage: ${{ parameters.vmImage }}
+        buildAgent: ${{ parameters.buildAgent }}
         docker: scripts/Docker/wasm
         target: externals-wasm
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version.version }}
         additionalArgs: --emscriptenVersion=${{ version.version }} --emscriptenFeatures="${{ version.features }}"
         artifactName: ${{ parameters.artifactName }}
-        postBuildSteps:
-          - task: PublishBuildArtifacts@1
-            displayName: Publish the native_wasm_linux artifacts
-            inputs:
-              artifactName: native_wasm_linux
-              pathToPublish: 'output'
+        additionalArtifacts:
+         - name: native_wasm_linux
+           path: 'output'

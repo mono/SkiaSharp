@@ -1,7 +1,7 @@
 parameters:
   name: ''                                      # in the form type_platform_host
   displayName: ''                               # the human name
-  vmImage: ''                                   # the VM image
+  buildAgent: ''                                # the configuration for the build agent
   packages: ''                                  # any additional packages
   target: ''                                    # the bootstrapper target
   dependsOn: []                                 # the dependiencies
@@ -31,25 +31,54 @@ parameters:
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
   artifactName: ''                              # the name of the artifact to merge this run into
+  additionalArtifacts: []                       # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
+  skipInstall: false                            # whether or not to install any tools
+  skipSteps: false                              # whether or not to run any steps
 
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 180
-    pool: ${{ parameters.vmImage.pool }}
+    pool: ${{ parameters.buildAgent.pool }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     variables:
-      ${{ if ne(parameters.vmImage.variables, '') }}:
-        ${{ parameters.vmImage.variables }}
+      ${{ if ne(parameters.buildAgent.variables, '') }}:
+        ${{ parameters.buildAgent.variables }}
       ${{ if ne(length(parameters.variables), 0) }}:
         ${{ parameters.variables }}
+    templateContext:
+      sdl:
+        spotBugs:
+          enabled: false
+        binskim:
+          break: false
+      outputParentDirectory: 'output'
+      outputs:
+        - output: pipelineArtifact
+          displayName: 'Publish the ${{ parameters.name }} artifacts'
+          condition: or(${{ parameters.shouldPublish }}, failed())
+          artifactName: ${{ parameters.name }}
+          targetPath: 'output'
+        - ${{ if ne(parameters.artifactName, '') }}:
+          - output: pipelineArtifact
+            displayName: 'Publish the combined ${{ parameters.artifactName }} artifacts'
+            artifactName: ${{ parameters.artifactName }}
+            targetPath: 'output'
+        - ${{ each additionalArtifact in parameters.additionalArtifacts }}:
+          - output: pipelineArtifact
+            displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
+            ${{ if eq(additionalArtifact.always, 'true') }}:
+              condition: always()
+            artifactName: ${{ additionalArtifact.name }}
+            targetPath: ${{ additionalArtifact.path }}
+
     steps:
       # prepare
       - checkout: self
         submodules: recursive
-      - template: azure-templates-variables.yml
+      - template: /scripts/azure-templates-variables.yml@self
 
       # checkout required skia PR
       - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
@@ -57,7 +86,7 @@ jobs:
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
-        - template: azure-templates-github-status.yml
+        - template: /scripts/azure-templates-github-status.yml@self
           parameters:
             state: 'pending'
 
@@ -66,13 +95,13 @@ jobs:
         displayName: Determine build type
 
       # provisioning steps
-      - ${{ if ne(parameters.vmImage.provisioningSteps, '') }}:
-        - ${{ parameters.vmImage.provisioningSteps }}
+      - ${{ if ne(parameters.buildAgent.provisioningSteps, '') }}:
+        - ${{ parameters.buildAgent.provisioningSteps }}
       - ${{ if ne(length(parameters.provisioningSteps), 0) }}:
         - ${{ parameters.provisioningSteps }}
 
       # install any packages on linux
-      - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux')) }}:
+      - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux'), ne(parameters.skipInstall, 'true')) }}:
         - bash: |
             sudo apt update
             sudo apt install -y ${{ parameters.packages }}
@@ -81,7 +110,7 @@ jobs:
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne('${{ parameters.packages }}', ''))
 
       # install extra bits for the native builds
-      - ${{ if startsWith(parameters.name, 'native_') }}:
+      - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipInstall, 'true')) }}:
         # switch to the correct Python version
         - task: UsePythonVersion@0
           displayName: Switch to the correct Python version
@@ -120,7 +149,7 @@ jobs:
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install extra bits for the managed builds
-      - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+      - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
         # install ninja
         - ${{ if eq(parameters.installNinja, 'true') }}:
           - pwsh: .\scripts\install-ninja.ps1
@@ -201,7 +230,7 @@ jobs:
             displayName: Install the .NET workloads
 
       # install the mac tools
-      - ${{ if endsWith(parameters.name, '_macos') }}:
+      - ${{ if and(endsWith(parameters.name, '_macos'), ne(parameters.skipInstall, 'true')) }}:
         - ${{ if not(startsWith(parameters.name, 'native_')) }}:
           - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
             displayName: Switch to the latest Xcode
@@ -212,14 +241,14 @@ jobs:
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install the linux tools
-      - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux')) }}:
+      - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux'), ne(parameters.skipInstall, 'true')) }}:
         - bash: ./scripts/install-emsdk.sh $(EMSCRIPTEN_VERSION)
           displayName: Install the Emscripten SDK
           retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install the Windows tools
-      - ${{ if endsWith(parameters.name, '_windows') }}:
+      - ${{ if and(endsWith(parameters.name, '_windows'), ne(parameters.skipInstall, 'true')) }}:
         # select the correct/latest version of Visual Studio
         - pwsh: .\scripts\select-vs.ps1
           displayName: Select Visual Studio
@@ -245,18 +274,19 @@ jobs:
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install any .NET global tools
-      - ${{ each tool in parameters.tools }}:
-        - pwsh: dotnet tool install -g ${{ tool }}
-          displayName: Install ${{ tool }}
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+      - ${{ if ne(parameters.skipInstall, 'true') }}:
+        - ${{ each tool in parameters.tools }}:
+          - pwsh: dotnet tool install -g ${{ tool }}
+            displayName: Install ${{ tool }}
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # download artifacts
-      - template: azure-templates-download-artifacts.yml
+      - template: /scripts/azure-templates-download-artifacts.yml@self
         parameters:
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           artifacts: ${{ parameters.requiredArtifacts }}
-      - template: azure-templates-download-artifacts.yml
+      - template: /scripts/azure-templates-download-artifacts.yml@self
         parameters:
           condition: and(succeeded(), ne(variables['DOWNLOAD_EXTERNALS'], ''))
           sourceBuildId: $(DOWNLOAD_EXTERNALS)
@@ -264,88 +294,65 @@ jobs:
             - name: ${{ parameters.name }}
 
       # pre-build steps
-      - ${{ if ne(parameters.vmImage.preBuildSteps, '') }}:
-        - ${{ parameters.vmImage.preBuildSteps }}
+      - ${{ if ne(parameters.buildAgent.preBuildSteps, '') }}:
+        - ${{ parameters.buildAgent.preBuildSteps }}
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
 
-      # build
-      - ${{ if eq(parameters.docker, '') }}:
-        - ${{ if endsWith(parameters.name, '_windows') }}:
-          - pwsh: |
-              Get-Content $PSCommandPath
-              dotnet tool restore
-              ${{ parameters.initScript }}
-              dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+      # actual build
+      - ${{ if ne(parameters.skipSteps, 'true') }}:
+        - ${{ if eq(parameters.docker, '') }}:
+          - ${{ if endsWith(parameters.name, '_windows') }}:
+            - pwsh: |
+                Get-Content $PSCommandPath
+                dotnet tool restore
+                ${{ parameters.initScript }}
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
-            env:
-              JavaSdkDirectory: $(JAVA_HOME)
-              LLVM_HOME: $(LLVM_HOME)
-              # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
-              AppxSymbolPackageEnabled: false
-            displayName: Run the bootstrapper for ${{ parameters.target }}
-            retryCountOnTaskFailure: ${{ parameters.retryCount }}
+              env:
+                JavaSdkDirectory: $(JAVA_HOME)
+                LLVM_HOME: $(LLVM_HOME)
+                # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
+                AppxSymbolPackageEnabled: false
+              displayName: Run the bootstrapper for ${{ parameters.target }}
+              retryCountOnTaskFailure: ${{ parameters.retryCount }}
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - ${{ if not(endsWith(parameters.name, '_windows')) }}:
+            - bash: |
+                cat ${BASH_SOURCE[0]}
+                dotnet tool restore
+                ${{ parameters.initScript }}
+                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+
+              env:
+                JavaSdkDirectory: $(JAVA_HOME)
+              displayName: Run the bootstrapper for ${{ parameters.target }}
+              retryCountOnTaskFailure: ${{ parameters.retryCount }}
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+        - ${{ if ne(parameters.docker, '') }}:
+          - task: 1ES.BuildContainerImage@1
+            displayName: Build the Docker image for ${{ parameters.docker }}
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-        - ${{ if not(endsWith(parameters.name, '_windows')) }}:
+            inputs:
+              dockerfile: ${{ parameters.docker }}/Dockerfile
+              context: ${{ parameters.docker }}
+              image: skiasharp:skiasharp
+              buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
           - bash: |
-              cat ${BASH_SOURCE[0]}
-              dotnet tool restore
-              ${{ parameters.initScript }}
-              dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
-
-            env:
-              JavaSdkDirectory: $(JAVA_HOME)
-            displayName: Run the bootstrapper for ${{ parameters.target }}
+              echo dotnet tool restore > cmd.sh
+              echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
+              sed -i 's/--gnArgs=\" \"//' cmd.sh
+              cat cmd.sh
+            displayName: Generate the script for the Docker image
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - bash: |
+              docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash /work/cmd.sh
+            displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
             retryCountOnTaskFailure: ${{ parameters.retryCount }}
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-      - ${{ if ne(parameters.docker, '') }}:
-        - task: Docker@2
-          displayName: Build the Docker image for ${{ parameters.docker }}
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          inputs:
-            command: build
-            buildContext: ${{ parameters.docker }}
-            dockerfile: ${{ parameters.docker }}/Dockerfile
-            arguments: --tag skiasharp ${{ parameters.dockerArgs }}
-        - bash: |
-            echo dotnet tool restore > cmd.sh
-            echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
-            sed -i 's/--gnArgs=\" \"//' cmd.sh
-            cat cmd.sh
-          displayName: Generate the script for the Docker image
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-        - bash: |
-            docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash /work/cmd.sh
-          displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
-          retryCountOnTaskFailure: ${{ parameters.retryCount }}
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # post-build steps
       - ${{ parameters.postBuildSteps }}
 
-      # publish artifacts
-      - task: PublishBuildArtifacts@1
-        displayName: Publish the ${{ parameters.name }} artifacts
-        condition: or(${{ parameters.shouldPublish }}, failed())
-        retryCountOnTaskFailure: 3
-        inputs:
-          artifactName: ${{ parameters.name }}
-          pathToPublish: 'output'
-      - ${{ if ne(parameters.artifactName, '') }}:
-        - task: PublishBuildArtifacts@1
-          displayName: Publish the combined ${{ parameters.artifactName }} artifacts
-          retryCountOnTaskFailure: 3
-          inputs:
-            artifactName: ${{ parameters.artifactName }}
-            pathToPublish: 'output'
-      - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true'), or(and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))), parameters.runCompliance)) }}:
-        - task: ComponentGovernanceComponentDetection@0
-          displayName: Run component detection
-          condition: always()
-          inputs:
-            scanType: 'Register'
-            verbosity: 'Verbose'
-            alertWarningLevel: 'High'
-
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
-        - template: azure-templates-github-status.yml
+        - template: /scripts/azure-templates-github-status.yml@self
