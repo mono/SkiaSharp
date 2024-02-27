@@ -126,7 +126,7 @@ stages:
             displayName: Win32 x86 [MSVC]
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.buildAgentWindowsNative }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-windows
             additionalArgs: --buildarch=x86 --llvm="msvc"
             installLlvm: false
@@ -136,7 +136,7 @@ stages:
             displayName: Win32 x64 [MSVC]
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.buildAgentWindowsNative }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-windows
             additionalArgs: --buildarch=x64 --llvm="msvc"
             installLlvm: false
@@ -146,7 +146,7 @@ stages:
             displayName: Win32 arm64 [MSVC]
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.buildAgentWindowsNative }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-windows
             additionalArgs: --buildarch=arm64 --llvm="msvc"
             installLlvm: false
