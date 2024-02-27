@@ -18,10 +18,11 @@ jobs:
       requiredArtifacts: ${{ parameters.requiredArtifacts }}
       preBuildSteps:
         - pwsh: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject) --use-git-aliases true
-        - ${{ each artifactJson in parameters.matrixArtifacts }}:
+          displayName: Configure the az CLI tool
+        - ${{ each artifact in parameters.matrixArtifacts }}:
           - pwsh: |
               $artifactJson=@'
-              ${{ artifactJson }}
+              ${{ artifact.jobs }}
               '@
 
               echo $artifactJson
@@ -42,3 +43,4 @@ jobs:
               Write-Host "Downloads complete."
             env:
               AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+            displayName: Download the pre-built ${{ artifact.name }} artifacts

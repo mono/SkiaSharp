@@ -415,8 +415,20 @@ stages:
               # tvOS
               - name: native_tvos_macos
             matrixArtifacts:
-              - $(nativeLinuxJobs)
-              - $(nativeWasmJobs)
+              - name: native_linux
+                jobs: $(nativeLinuxJobs)
+              - name: native_wasm
+                jobs: $(nativeWasmJobs)
+        - template: /scripts/azure-templates-merger.yml@self # Merge Native MSVC Artifacts
+          parameters:
+            name: native_msvc
+            displayName: Merge Native MSVC Artifacts
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              - name: native_win32_x86_msvc_windows
+              - name: native_win32_x64_msvc_windows
+              - name: native_win32_arm64_msvc_windows
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: managed
@@ -434,7 +446,6 @@ stages:
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
-            artifactName: managed
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
@@ -448,7 +459,6 @@ stages:
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
-            artifactName: managed
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
@@ -463,7 +473,6 @@ stages:
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
-            artifactName: managed
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
@@ -485,18 +494,24 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
+              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the native folder
               - pwsh: |
-                  Remove-Item ./output/native/ -Recurse -Force
-                  Remove-Item ./output/nugets/ -Recurse -Force
-                  Remove-Item ./output/nugets-symbols/ -Recurse -Force
-                displayName: Delete the pre-published folders
+                  New-Item '$(Build.ArtifactStagingDirectory)\nugets\' -Type Directory -Force | Out-Null
+                  Get-ChildItem '.\output\nugets\' | Copy-Item -Destination '$(Build.ArtifactStagingDirectory)\nugets\' -Recurse -Force
+                  Copy-Item -Path '.\scripts\SignList.xml' -Destination '$(Build.ArtifactStagingDirectory)\nugets\'
+                  Remove-Item '.\output\nugets\' -Recurse -Force
+                displayName: Move the nugets artifact to the staging directory
+              - pwsh: |
+                  New-Item '$(Build.ArtifactStagingDirectory)\nugets-symbols\' -Type Directory -Force | Out-Null
+                  Get-ChildItem '.\output\nugets-symbols\' | Copy-Item -Destination '$(Build.ArtifactStagingDirectory)\nugets-symbols\' -Recurse -Force
+                  Remove-Item '.\output\nugets-symbols\' -Recurse -Force
+                displayName: Move the nugets-symbols artifact to the staging directory
             publishArtifacts:
               - name: nuget
-                path: 'output/nugets'
-              - name: nuget
-                path: 'scripts/SignList.xml'
+                path: '$(Build.ArtifactStagingDirectory)\nugets'
               - name: nuget_symbols
-                path: 'output/nugets-symbols'
+                path: '$(Build.ArtifactStagingDirectory)\nugets-symbols'
         - template: /scripts/azure-templates-bootstrapper.yml@self # Package Special NuGets
           parameters:
             name: package_special_windows
@@ -514,13 +529,17 @@ stages:
                 dir: nugets-symbols
             postBuildSteps:
               - pwsh: |
+                  New-Item '$(Build.ArtifactStagingDirectory)\nugets-special\' -Type Directory -Force | Out-Null
+                  Get-ChildItem '.\output\nugets-special\' | Copy-Item -Destination '$(Build.ArtifactStagingDirectory)\nugets-special\' -Recurse -Force
+                  Remove-Item '.\output\nugets-special\' -Recurse -Force
+                displayName: Move the nugets-special artifact to the staging directory
+              - pwsh: |
                   Remove-Item ./output/nugets/ -Recurse -Force
-                  Remove-Item ./output/nugets-special/ -Recurse -Force
                   Remove-Item ./output/nugets-symbols/ -Recurse -Force
-                displayName: Delete the pre-published folders
+                displayName: Delete the downloaded artifacts
             publishArtifacts:
               - name: nuget_special
-                path: 'output/nugets-special'
+                path: '$(Build.ArtifactStagingDirectory)\nugets-special'
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: api_diff
