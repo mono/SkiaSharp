@@ -1,5 +1,4 @@
 parameters:
-  artifactName: ''                              # the name of the artifact to merge this run into
   buildExternals: ''                            # the build number to download externals from
   buildPipelineType: false
   buildAgent: ''                                # the configuration for the build agent
@@ -18,7 +17,3 @@ jobs:
         target: externals-wasm
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version.version }}
         additionalArgs: --emscriptenVersion=${{ version.version }} --emscriptenFeatures="${{ version.features }}"
-        artifactName: ${{ parameters.artifactName }}
-        publishArtifacts:
-         - name: native_wasm_linux
-           path: 'output'

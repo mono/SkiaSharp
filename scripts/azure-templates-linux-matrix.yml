@@ -1,5 +1,4 @@
 parameters:
-  artifactName: ''                              # the name of the artifact to merge this run into
   buildExternals: ''                            # the build number to download externals from
   buildPipelineType: 'both'                     # the type of build pipeline setup
   buildAgent: ''                                # the configuration for the build agent
@@ -31,4 +30,3 @@ jobs:
           dockerArgs: ${{ item.dockerArgs }}
           target: ${{ coalesce(item.target, 'externals-linux') }}
           additionalArgs: --buildarch=${{ item.arch }} --variant=${{ coalesce(item.variant, 'linux') }}${{ build.name }} --gnArgs="\"${{ build.gnArgs }} ${{ item.gnArgs }}\"" ${{ build.additionalArgs }} ${{ item.additionalArgs }}
-          artifactName: ${{ parameters.artifactName }}
