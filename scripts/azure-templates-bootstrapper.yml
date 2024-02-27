@@ -338,6 +338,7 @@ jobs:
               context: ${{ parameters.docker }}
               image: skiasharp:skiasharp
               buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
+              enableNetwork: true
           - bash: |
               echo dotnet tool restore > cmd.sh
               echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
