@@ -57,6 +57,7 @@ steps:
         downloadPath: 'download-temp'
 
     - pwsh: |
+        Get-ChildItem '.\download-temp\'
         New-Item '.\output\${{ artifact.dir }}\' -Type Directory -Force | Out-Null
         Get-ChildItem '.\download-temp\${{ artifact.name }}\' | Copy-Item -Destination '.\output\${{ artifact.dir }}\' -Recurse -Force
         Remove-Item '.\download-temp\${{ artifact.name }}\' -Recurse -Force
