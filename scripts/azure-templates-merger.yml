@@ -34,7 +34,7 @@ jobs:
               Write-Host "Found $($names.Length) items:"
               $names | ForEach-Object { Write-Host " - $_" }
 
-              $dir = "$(Build.SourcesDirectory)\output"
+              $dir = "$(Build.SourcesDirectory)/output"
               New-Item "$dir" -Type Directory -Force | Out-Null
 
               $id = "$(Build.BuildId)"
