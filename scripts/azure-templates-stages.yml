@@ -22,6 +22,9 @@ parameters:
   - name: runCompliance
     type: boolean
     default: false
+  - name: use1ESPipelineTemplates
+    type: boolean
+    default: false
 
 stages:
   - stage: prepare
@@ -279,6 +282,7 @@ stages:
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             buildAgent: ${{ parameters.buildAgentLinuxNative }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
             builds:
               - name: ''
               - name: nodeps
