@@ -67,7 +67,7 @@ extends:
   ${{ if eq('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
     template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
   ${{ if ne('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
-    template: /scripts/azure-pipelines-public-template.yml@self
+    template: /scripts/azure-template.yml@self
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     customBuildTags:
