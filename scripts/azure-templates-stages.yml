@@ -588,7 +588,7 @@ stages:
               signType: 'Real'
             ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
               signType: 'Test'
-            use1ESTemplate: true
+            use1ESTemplate: ${{ parameters.use1ESPipelineTemplates }}
             usePipelineArtifactTasks: true
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
