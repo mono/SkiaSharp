@@ -330,15 +330,26 @@ jobs:
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         - ${{ if ne(parameters.docker, '') }}:
-          - task: 1ES.BuildContainerImage@1
-            displayName: Build the Docker image for ${{ parameters.docker }}
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-            inputs:
-              dockerfile: ${{ parameters.docker }}/Dockerfile
-              context: ${{ parameters.docker }}
-              image: skiasharp:skiasharp
-              buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
-              enableNetwork: true
+          - ${{ if eq(parameters.use1ESPipelineTemplates, 'true') }}:
+            - task: 1ES.BuildContainerImage@1
+              displayName: Build the Docker image for ${{ parameters.docker }}
+              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+              inputs:
+                dockerfile: ${{ parameters.docker }}/Dockerfile
+                context: ${{ parameters.docker }}
+                image: skiasharp:skiasharp
+                buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
+                enableNetwork: true
+          - ${{ if ne(parameters.use1ESPipelineTemplates, 'true') }}:
+            - task: Docker@2
+                displayName: Build the Docker image for ${{ parameters.docker }}
+                condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+                inputs:
+                command: build
+                buildContext: ${{ parameters.docker }}
+                  dockerfile: ${{ parameters.docker }}/Dockerfile
+                arguments: --tag skiasharp ${{ parameters.dockerArgs }}
+
           - bash: |
               echo dotnet tool restore > cmd.sh
               echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
