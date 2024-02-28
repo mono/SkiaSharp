@@ -435,10 +435,13 @@ stages:
               - name: native_win32_x64_msvc_windows
               - name: native_win32_arm64_msvc_windows
 
-  - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
+  - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: managed
       displayName: Build Managed
-      dependsOn: native
+      ${{ if eq(parameters.buildPipelineType, 'tests') }}:
+        dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'both') }}:
+        dependsOn: native
       jobs:
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Managed (Windows)
           parameters:
