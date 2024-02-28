@@ -49,10 +49,6 @@ parameters:
     displayName: 'Run post-build compliance tasks (such as API Scan)'
     type: boolean
     default: false
-  - name: use1ESPipelineTemplates
-    displayName: 'Run the build using the internal 1ES Pipeline Templates'
-    type: boolean
-    default: true
 
 variables:
   - template: /scripts/azure-pipelines-variables.yml@self
@@ -81,7 +77,7 @@ extends:
           buildPipelineType: 'build'
           buildExternals: ${{ parameters.buildExternals }}
           runCompliance: ${{ parameters.runCompliance }}
-          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+          use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindows }}
