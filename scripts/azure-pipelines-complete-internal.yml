@@ -12,16 +12,16 @@ parameters:
     type: object
     default:
       pool:
-        name: AzurePipelines-EO
-        image: 1ESPT-Windows2022
+        name: Azure Pipelines
+        vmImage: ubuntu-20.04
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
-        name: AzurePipelines-EO
-        image: 1ESPT-Windows2022
+        name: Azure Pipelines
+        vmImage: windows-2022
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -32,15 +32,19 @@ parameters:
         vmImage: macos-13
         os: macos
   - name: buildAgentLinux
-    displayName: 'The Linus build agent configuration:'
+    displayName: 'The Linux build agent configuration:'
     type: object
     default:
       pool:
-        name: AzurePipelines-EO
-        image: 1ESPT-Ubuntu20.04
+        name: Azure Pipelines
+        vmImage: ubuntu-20.04
         os: linux
   - name: runCompliance
     displayName: 'Run post-build compliance tasks (such as API Scan)'
+    type: boolean
+    default: false
+  - name: use1ESPipelineTemplates
+    displayName: 'Run the build using the internal 1ES Pipeline Templates'
     type: boolean
     default: false
 
@@ -60,7 +64,10 @@ resources:
       ref: refs/tags/release
 
 extends:
-  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  ${{ if eq('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
+    template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  ${{ else }}:
+    template: /scripts/azure-pipelines-public-template.yml@self
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     customBuildTags:
