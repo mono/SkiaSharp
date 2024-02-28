@@ -424,6 +424,15 @@ stages:
                 jobs: $(nativeLinuxJobs)
               - name: native_wasm
                 jobs: $(nativeWasmJobs)
+        - template: /scripts/azure-templates-merger.yml@self # Merge Native WASM Artifacts
+          parameters:
+            name: native_wasm
+            displayName: Merge Native WASM Artifacts
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentHost }}
+            matrixArtifacts:
+              - name: native_wasm
+                jobs: $(nativeWasmJobs)
         - template: /scripts/azure-templates-merger.yml@self # Merge Native MSVC Artifacts
           parameters:
             name: native_msvc
@@ -795,7 +804,7 @@ stages:
             additionalArgs: --skipExternals="all" --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
             shouldPublish: false
             requiredArtifacts:
-              - name: native_wasm_linux
+              - name: native_wasm
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
             postBuildSteps:
