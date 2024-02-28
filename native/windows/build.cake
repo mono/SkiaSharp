@@ -1,7 +1,8 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-DirectoryPath LLVM_HOME = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Program Files/LLVM");
+var llvmHomeArg = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Program Files/LLVM");
+DirectoryPath LLVM_HOME = string.IsNullOrEmpty(llvmHomeArg) || llvmHomeArg.ToLower() == "msvc" ? "" : llvmHomeArg;
 string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
 
 string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
@@ -13,7 +14,7 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower ()
 string VARIANT = BUILD_VARIANT ?? "windows";
 
 Information("Native Arguments:");
-Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", LLVM_HOME);
+Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "(Using MSVC)" : LLVM_HOME);
 Information($"    {"SUPPORT_VULKAN".PadRight(30)} {{0}}", SUPPORT_VULKAN);
 Information($"    {"VARIANT".PadRight(30)} {{0}}", VARIANT);
 Information($"    {"CONFIGURATION".PadRight(30)} {{0}}", CONFIGURATION);

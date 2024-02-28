@@ -128,6 +128,39 @@ stages:
             target: externals-windows
             additionalArgs: --buildarch=arm64
             artifactName: native
+        - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Win + MSVC)
+          parameters:
+            name: native_win32_x86_msvc_windows
+            displayName: Win32 x86 [MSVC]
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-windows
+            additionalArgs: --buildarch=x86 --llvm="msvc"
+            artifactName: native_msvc
+            installLlvm: false
+        - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Win + MSVC)
+          parameters:
+            name: native_win32_x64_msvc_windows
+            displayName: Win32 x64 [MSVC]
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-windows
+            additionalArgs: --buildarch=x64 --llvm="msvc"
+            artifactName: native_msvc
+            installLlvm: false
+        - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Win + MSVC)
+          parameters:
+            name: native_win32_arm64_msvc_windows
+            displayName: Win32 arm64 [MSVC]
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-windows
+            additionalArgs: --buildarch=arm64 --llvm="msvc"
+            artifactName: native_msvc
+            installLlvm: false
         - template: azure-templates-bootstrapper.yml # Build Native WinUI|x86 (Win)
           parameters:
             name: native_winui_x86_windows
@@ -886,6 +919,7 @@ stages:
         scanArtifacts:
           - nuget
           - nuget_symbols
+          - native_msvc
         antiMalwareEnabled: true
         binSkimEnabled: false
         policheckExclusionFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
@@ -900,7 +934,18 @@ stages:
         apiScanSoftwareName: 'SkiaSharp'
         apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
         apiScanPreserveLogsFolder: true
+        apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
         preScanSteps:
+          - pwsh: |
+              $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
+              $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
+              $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
+              $destFile = "$destFolder\APIScanSurrogates.xml"
+              New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
+              $surrogateContents = (Get-Content $surrogateFile)
+              $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
+              $surrogateContents | Set-Content $destFile
+            displayName: Generate the surrogate files
           - pwsh: |
               $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
               foreach ($nupkg in $nupkgs) {
