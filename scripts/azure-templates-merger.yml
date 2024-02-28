@@ -40,7 +40,7 @@ jobs:
               $id = "$(Build.BuildId)"
               foreach ($name in $names) {
                 Write-Host "Downloading '$name'..."
-                az pipelines runs artifact download --artifact-name "$name" --path "$dir" --run-id "$id"
+                az pipelines runs artifact download --artifact-name "$name" --path "$dir" --run-id "$id" --verbose
               }
               Write-Host "Downloads complete."
               Get-ChildItem "$dir"
