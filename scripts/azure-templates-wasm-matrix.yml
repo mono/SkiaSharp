@@ -1,7 +1,8 @@
 parameters:
   buildExternals: ''                            # the build number to download externals from
-  buildPipelineType: false
+  buildPipelineType: 'both'                     # the type of build pipeline setup
   buildAgent: ''                                # the configuration for the build agent
+  use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
   emscripten: [ ]
 
 jobs:
@@ -13,6 +14,7 @@ jobs:
         buildExternals: ${{ parameters.buildExternals }}
         buildPipelineType: ${{ parameters.buildPipelineType }}
         buildAgent: ${{ parameters.buildAgent }}
+        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         docker: scripts/Docker/wasm
         target: externals-wasm
         dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version.version }}
