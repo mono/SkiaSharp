@@ -574,28 +574,17 @@ stages:
                 always: true
                 path: '$(Build.SourcesDirectory)\changelogs'
 
-  # - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
-  #   - stage: signing
-  #     displayName: Sign NuGets
-  #     dependsOn: package
-  #     jobs:
-  #       - template: sign-artifacts/jobs/v2.yml@xamarin-templates
-  #         parameters:
-  #           ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
-  #             signType: 'Real'
-  #           ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
-  #             signType: 'Test'
-
-  # - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
-  #   - stage: sbom
-  #     displayName: 'Software Bill of Materials'
-  #     dependsOn: signing
-  #     jobs:
-  #     - template: compliance/sbom/job.v1.yml@xamarin-templates        # Software Bill of Materials (SBOM): https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
-  #       parameters:
-  #         artifactNames: ['nuget']
-  #         packageName: 'SkiaSharp'
-  #         packageFilter: '*.nupkg'
+  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
+    - stage: signing
+      displayName: Sign NuGets
+      dependsOn: package
+      jobs:
+        - template: sign-artifacts/jobs/v2.yml@xamarin-templates
+          parameters:
+            ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+              signType: 'Real'
+            ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
+              signType: 'Test'
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: tests
@@ -906,53 +895,53 @@ stages:
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
 
-  # - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true'), or(and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))), parameters.runCompliance)) }}:
-  #   - template: security/full/v1.yml@xamarin-templates
-  #     parameters:
-  #       stageDependsOn:
-  #         - package
-  #       complianceEnabled: true
-  #       complianceTimeoutInMinutes: 480
-  #       scanArtifacts:
-  #         - nuget
-  #         - nuget_symbols
-  #         - native_msvc
-  #       antiMalwareEnabled: true
-  #       binSkimEnabled: false
-  #       policheckExclusionFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
-  #       policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\scripts\guardian
-  #       credScanEnabled: true
-  #       credScanSuppressionFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
-  #       sourceGdnSuppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
-  #       tsaConfigFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
-  #       tsaReportBranch: $(Build.SourceBranch)
-  #       enableCodeInspector: true
-  #       apiScanEnabled: true
-  #       apiScanSoftwareName: 'SkiaSharp'
-  #       apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
-  #       apiScanPreserveLogsFolder: true
-  #       apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
-  #       preScanSteps:
-  #         - pwsh: |
-  #             $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
-  #             $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
-  #             $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
-  #             $destFile = "$destFolder\APIScanSurrogates.xml"
-  #             New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
-  #             $surrogateContents = (Get-Content $surrogateFile)
-  #             $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
-  #             $surrogateContents | Set-Content $destFile
-  #           displayName: Generate the surrogate files
-  #         - pwsh: |
-  #             $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
-  #             foreach ($nupkg in $nupkgs) {
-  #               $filename = $nupkg.Name.TrimEnd('.nupkg')
-  #               $dest = "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted\$filename"
-  #               Write-Host "Extracting '$nupkg' to '$dest'..."
-  #               Expand-Archive $nupkg $dest
-  #               Remove-Item $nupkg
-  #             }
-  #           displayName: Extract all the .nupkg files
+  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true'), or(and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))), parameters.runCompliance)) }}:
+    - template: security/full/v1.yml@xamarin-templates
+      parameters:
+        stageDependsOn:
+          - package
+        complianceEnabled: true
+        complianceTimeoutInMinutes: 480
+        scanArtifacts:
+          - nuget
+          - nuget_symbols
+          - native_msvc
+        antiMalwareEnabled: true
+        binSkimEnabled: false
+        policheckExclusionFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
+        policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\scripts\guardian
+        credScanEnabled: true
+        credScanSuppressionFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
+        sourceGdnSuppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
+        tsaConfigFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
+        tsaReportBranch: $(Build.SourceBranch)
+        enableCodeInspector: true
+        apiScanEnabled: true
+        apiScanSoftwareName: 'SkiaSharp'
+        apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
+        apiScanPreserveLogsFolder: true
+        apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
+        preScanSteps:
+          - pwsh: |
+              $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
+              $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
+              $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
+              $destFile = "$destFolder\APIScanSurrogates.xml"
+              New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
+              $surrogateContents = (Get-Content $surrogateFile)
+              $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
+              $surrogateContents | Set-Content $destFile
+            displayName: Generate the surrogate files
+          - pwsh: |
+              $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
+              foreach ($nupkg in $nupkgs) {
+                $filename = $nupkg.Name.TrimEnd('.nupkg')
+                $dest = "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted\$filename"
+                Write-Host "Extracting '$nupkg' to '$dest'..."
+                Expand-Archive $nupkg $dest
+                Remove-Item $nupkg
+              }
+            displayName: Extract all the .nupkg files
 
   - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
     - stage: finalize

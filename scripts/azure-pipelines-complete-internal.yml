@@ -65,7 +65,7 @@ resources:
 
 extends:
   ${{ if eq('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
-    template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+    template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
   ${{ if ne('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
     template: /scripts/azure-pipelines-public-template.yml@self
   parameters:
