@@ -30,7 +30,6 @@ parameters:
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
-  artifactName: ''                              # the name of the artifact to merge this run into
   publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
   skipInstall: false                            # whether or not to install any tools
@@ -57,23 +56,27 @@ jobs:
           break: false
       outputParentDirectory: 'output'
       outputs:
-        - output: pipelineArtifact
-          displayName: 'Publish the ${{ parameters.name }} artifacts'
-          condition: or(${{ parameters.shouldPublish }}, failed())
-          artifactName: ${{ parameters.name }}
-          targetPath: 'output'
-        - ${{ if ne(parameters.artifactName, '') }}:
+        - ${{ if eq(parameters.shouldPublish, 'true') }}:
           - output: pipelineArtifact
-            displayName: 'Publish the combined ${{ parameters.artifactName }} artifacts'
-            artifactName: ${{ parameters.artifactName }}
+            displayName: 'Publish the ${{ parameters.name }} artifacts'
+            artifactName: ${{ parameters.name }}
+            targetPath: 'output'
+          - output: pipelineArtifact
+            displayName: 'Publish the failed ${{ parameters.name }} artifacts'
+            condition: failed()
+            artifactName: ${{ parameters.name }}_failed_$(System.JobAttempt)
             targetPath: 'output'
         - ${{ each additionalArtifact in parameters.publishArtifacts }}:
           - output: pipelineArtifact
             displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
-            ${{ if eq(additionalArtifact.always, 'true') }}:
-              condition: always()
             artifactName: ${{ additionalArtifact.name }}
             targetPath: ${{ additionalArtifact.path }}
+          - ${{ if eq(additionalArtifact.always, 'true') }}:
+            - output: pipelineArtifact
+              displayName: 'Publish the failed ${{ additionalArtifact.name }} artifacts'
+              condition: failed()
+              artifactName: ${{ additionalArtifact.name }}_failed_$(System.JobAttempt)
+              targetPath: ${{ additionalArtifact.path }}
 
     steps:
       # prepare
