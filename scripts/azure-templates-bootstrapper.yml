@@ -56,7 +56,7 @@ jobs:
           break: false
       outputParentDirectory: 'output'
       outputs:
-        -  ${{ if eq(additionalArtifact.shouldPublish, 'true') }}:
+        - ${{ if eq(additionalArtifact.shouldPublish, 'true') }}:
           - output: pipelineArtifact
             displayName: 'Publish the ${{ parameters.name }} artifacts'
             artifactName: ${{ parameters.name }}
@@ -71,7 +71,7 @@ jobs:
             displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
             artifactName: ${{ additionalArtifact.name }}
             targetPath: ${{ additionalArtifact.path }}
-          -  ${{ if eq(additionalArtifact.always, 'true') }}:
+          - ${{ if eq(additionalArtifact.always, 'true') }}:
             - output: pipelineArtifact
               displayName: 'Publish the failed ${{ additionalArtifact.name }} artifacts'
               condition: failed()
