@@ -916,6 +916,8 @@ stages:
           - package
         complianceEnabled: true
         complianceTimeoutInMinutes: 480
+        windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
+        windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
         scanArtifacts:
           - nuget
           - nuget_symbols
