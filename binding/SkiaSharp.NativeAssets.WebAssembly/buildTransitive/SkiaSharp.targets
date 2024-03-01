@@ -20,16 +20,20 @@
   <PropertyGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
     <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGL2=1</EmccExtraLDFlags>
+    <!-- Pick the threading type: 'mt' for multi-threading or 'st' for single-threading -->
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_SkiaSharpNativeBinaryType>
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_SkiaSharpNativeBinaryType>
+    <!-- Pick the SIMD support: 'simd' for supported or '' for not-supported -->
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_SkiaSharpNativeBinaryType),simd</_SkiaSharpNativeBinaryType>
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' != 'True'">$(_SkiaSharpNativeBinaryType)</_SkiaSharpNativeBinaryType>
   </PropertyGroup>
   <ItemGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
-    <!-- net6.0 -->
+    <!-- net6.0 (only has st and non-simd) -->
     <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
     <!-- net7.0 -->
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) and '$(WasmEnableThreads)' != 'True'" />
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\mt\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0')) and '$(WasmEnableThreads)' == 'True'" />
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
     <!-- net8.0 -->
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) and '$(WasmEnableThreads)' != 'True'" />
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\mt\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) and '$(WasmEnableThreads)' == 'True'" />
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
   </ItemGroup>
 
 </Project>
