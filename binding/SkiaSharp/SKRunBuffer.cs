@@ -133,14 +133,14 @@ namespace SkiaSharp
 
 	// Raw / Struct
 
-	public unsafe readonly struct SKRunBuffer<T>
+	public unsafe readonly struct SKRawRunBuffer<T>
 	{
 		internal readonly SKRunBufferInternal buffer;
 		private readonly int size;
 		private readonly int posSize;
 		private readonly int textSize;
 
-		internal SKRunBuffer (SKRunBufferInternal buffer, int size, int posSize, int textSize)
+		internal SKRawRunBuffer (SKRunBufferInternal buffer, int size, int posSize, int textSize)
 		{
 			this.buffer = buffer;
 			this.size = size;

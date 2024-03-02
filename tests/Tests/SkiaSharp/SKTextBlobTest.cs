@@ -37,7 +37,7 @@ namespace SkiaSharp.Tests
 
 			using var builder = new SKTextBlobBuilder();
 
-			builder.AllocateRun(font, 100, 0, 0, null, out var run);
+			var run = builder.AllocateRawRun(font, 100, 0, 0);
 			Assert.Equal(100, run.Glyphs.Length);
 			Assert.Equal(0, run.Positions.Length);
 			Assert.Equal(0, run.Text.Length);
@@ -68,7 +68,7 @@ namespace SkiaSharp.Tests
 
 			using var builder = new SKTextBlobBuilder();
 
-			builder.AllocateTextRun(font, 100, 0, 0, 50, null, out var run);
+			var run = builder.AllocateRawTextRun(font, 100, 0, 0, 50);
 			Assert.Equal(100, run.Glyphs.Length);
 			Assert.Equal(50, run.Text.Length);
 
