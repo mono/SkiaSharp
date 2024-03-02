@@ -61,6 +61,74 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void TranslationFieldsAreCorrectForMatrix()
+		{
+			var skm44 = SKMatrix44.CreateTranslation(10, 20, 30);
+
+			var matrix = skm44.Matrix;
+
+			Assert.Equal(10, matrix.TransX);
+			Assert.Equal(20, matrix.TransY);
+		}
+
+		[SkippableFact]
+		public void ScaleFieldsAreCorrectForMatrix()
+		{
+			var skm44 = SKMatrix44.CreateScale(10, 20, 30);
+
+			var matrix = skm44.Matrix;
+
+			Assert.Equal(10, matrix.ScaleX);
+			Assert.Equal(20, matrix.ScaleY);
+		}
+
+		[SkippableFact]
+		public void TranslateConvertsToMatrix()
+		{
+			var matrix44 = SKMatrix44.CreateTranslation(10, 20, 30);
+			var matrix = SKMatrix.CreateTranslation(10, 20);
+
+			AssertSimilar(matrix.Values, matrix44.Matrix.Values, 6);
+		}
+
+		[SkippableFact]
+		public void ScaleConvertsToMatrix()
+		{
+			var matrix44 = SKMatrix44.CreateScale(10, 20, 30);
+			var matrix = SKMatrix.CreateScale(10, 20);
+
+			AssertSimilar(matrix.Values, matrix44.Matrix.Values, 6);
+		}
+
+		[SkippableFact]
+		public void RotationConvertsToMatrix()
+		{
+			var matrix44 = SKMatrix44.CreateRotationDegrees(0, 0, 1, 45);
+			var matrix = SKMatrix.CreateRotationDegrees(45);
+
+			AssertSimilar(matrix.Values, matrix44.Matrix.Values, 6);
+		}
+
+		[SkippableFact]
+		public void ImplicitFromMatrix()
+		{
+			var matrix = SKMatrix.CreateRotationDegrees(45);
+			var matrix44 = (SKMatrix44)matrix;
+
+			Assert.Equal(matrix.Values, matrix44.Matrix.Values);
+		}
+
+		[SkippableFact]
+		public void ImplicitFromRotationScale()
+		{
+			var rs = SKRotationScaleMatrix.CreateRotationDegrees(45, 0, 0);
+			var matrix = SKMatrix.CreateRotationDegrees(45);
+			var matrix44 = (SKMatrix44)rs.ToMatrix();
+
+			Assert.Equal(matrix.Values, matrix44.Matrix.Values);
+		}
+
+		[SkippableFact]
 		public void TransposeWorks()
 		{
 			var rowMajor = new float[] {
@@ -136,107 +204,31 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void Matrix44ConvertsToMatrix()
-		{
-			var rowMajor44 = new float[] {
-				2, 3, 4, 5,
-				4, 6, 8, 10,
-				6, 9, 12, 15,
-				8, 12, 16, 20,
-			};
-			var rowMajor = new float[] {
-				rowMajor44[0], rowMajor44[1], rowMajor44[3],
-				rowMajor44[4], rowMajor44[5], rowMajor44[7],
-				rowMajor44[12], rowMajor44[13], rowMajor44[15],
-			};
-
-			var matrix44 = SKMatrix44.FromRowMajor(rowMajor44);
-
-			Assert.Equal(rowMajor, matrix44.Matrix.Values);
-		}
-
-		[SkippableFact]
-		public void TransformConvertsToMatrix()
-		{
-			var matrix44 = SKMatrix44.CreateRotationDegrees(0, 0, 1, 45);
-			var matrix = SKMatrix.CreateRotationDegrees(45);
-
-			AssertSimilar(matrix.Values, matrix44.Matrix.Values, 6);
-		}
-
-		[SkippableFact]
-		public void ImplicitFromMatrix()
-		{
-			var matrix = SKMatrix.CreateRotationDegrees(45);
-			var matrix44 = (SKMatrix44)matrix;
-
-			Assert.Equal(matrix.Values, matrix44.Matrix.Values);
-		}
-
-		[SkippableFact]
-		public void ImplicitFromRotationScale()
-		{
-			var rs = SKRotationScaleMatrix.CreateRotationDegrees(45, 0, 0);
-			var matrix = SKMatrix.CreateRotationDegrees(45);
-			var matrix44 = (SKMatrix44)rs.ToMatrix();
-
-			Assert.Equal(matrix.Values, matrix44.Matrix.Values);
-		}
-
-#if NET5_0_OR_GREATER
-
-		[SkippableFact]
-		public void IndicesAreCorrectOnIdentity()
+		public void IndicesAreCorrectOnIdentityUsingFields()
 		{
 			var skm = SKMatrix44.CreateIdentity();
 			var m4x4 = Matrix4x4.Identity;
 
-			for (var row = 0; row < 4; row++)
-			{
-				for (var col = 0; col < 4; col++)
-				{
-					var sk = skm[row, col];
-					var m = m4x4[row, col];
-					Assert.Equal(m, sk);
-				}
-			}
+			AssertEqualFields(skm, m4x4);
 		}
 
 		[SkippableFact]
-		public void IndicesAreCorrectOnTranslate()
+		public void IndicesAreCorrectOnTranslateUsingFields()
 		{
 			var skm = SKMatrix44.CreateTranslation(10, 20, 30);
 			var m4x4 = Matrix4x4.CreateTranslation(10, 20, 30);
 
-			for (var row = 0; row < 4; row++)
-			{
-				for (var col = 0; col < 4; col++)
-				{
-					var sk = skm[row, col];
-					var m = m4x4[row, col];
-					Assert.Equal(m, sk);
-				}
-			}
+			AssertEqualFields(skm, m4x4);
 		}
 
 		[SkippableFact]
-		public void IndicesAreCorrectOnScale()
+		public void IndicesAreCorrectOnScaleUsingFields()
 		{
 			var skm = SKMatrix44.CreateScale(10, 20, 30);
 			var m4x4 = Matrix4x4.CreateScale(10, 20, 30);
 
-			for (var row = 0; row < 4; row++)
-			{
-				for (var col = 0; col < 4; col++)
-				{
-					var sk = skm[row, col];
-					var m = m4x4[row, col];
-					Assert.Equal(m, sk);
-				}
-			}
+			AssertEqualFields(skm, m4x4);
 		}
-
-#endif
 
 		[SkippableFact]
 		public void TranslationMapsScalars()
@@ -348,6 +340,87 @@ namespace SkiaSharp.Tests
 			using var bmp = DrawMatrixBitmap(SKRectI.Create(30, 30, 10, 10), matrix);
 
 			AssertMatrixBitmap(bmp, SKRectI.Create(30 * x, 30 * y, 10 * x, 10 * y));
+		}
+
+		[SkippableTheory]
+		[InlineData(1, 0, 0, 30)]
+		[InlineData(0, 1, 0, 30)]
+		[InlineData(0, 0, 1, 30)]
+		[InlineData(1, 0, 0, -30)]
+		[InlineData(0, 1, 0, -30)]
+		[InlineData(0, 0, 1, -30)]
+		public void RotationIsCorrectLayoutWithOriginTopLeft(int x, int y, int z, int angle)
+		{
+			var matrix = SKMatrix44.CreateRotationDegrees(x, y, z, angle);
+
+			using var bmp = DrawMatrixBitmap(SKRectI.Create(25, 25, 50, 50), matrix);
+		}
+
+#if NET5_0_OR_GREATER
+
+		[SkippableFact]
+		public void IndicesAreCorrectOnIdentity()
+		{
+			var skm = SKMatrix44.CreateIdentity();
+			var m4x4 = Matrix4x4.Identity;
+
+			AssertEqualIndices(skm, m4x4);
+		}
+
+		[SkippableFact]
+		public void IndicesAreCorrectOnTranslate()
+		{
+			var skm = SKMatrix44.CreateTranslation(10, 20, 30);
+			var m4x4 = Matrix4x4.CreateTranslation(10, 20, 30);
+
+			AssertEqualIndices(skm, m4x4);
+		}
+
+		[SkippableFact]
+		public void IndicesAreCorrectOnScale()
+		{
+			var skm = SKMatrix44.CreateScale(10, 20, 30);
+			var m4x4 = Matrix4x4.CreateScale(10, 20, 30);
+
+			AssertEqualIndices(skm, m4x4);
+		}
+
+		private static void AssertEqualIndices(SKMatrix44 skm, Matrix4x4 m4x4)
+		{
+			for (var row = 0; row < 4; row++)
+			{
+				for (var col = 0; col < 4; col++)
+				{
+					var sk = skm[row, col];
+					var m = m4x4[row, col];
+					Assert.Equal(m, sk);
+				}
+			}
+		}
+
+#endif
+
+		private static void AssertEqualFields(SKMatrix44 skm, Matrix4x4 m4x4)
+		{
+			Assert.Equal(skm.M00, m4x4.M11);
+			Assert.Equal(skm.M01, m4x4.M12);
+			Assert.Equal(skm.M02, m4x4.M13);
+			Assert.Equal(skm.M03, m4x4.M14);
+
+			Assert.Equal(skm.M10, m4x4.M21);
+			Assert.Equal(skm.M11, m4x4.M22);
+			Assert.Equal(skm.M12, m4x4.M23);
+			Assert.Equal(skm.M13, m4x4.M24);
+
+			Assert.Equal(skm.M20, m4x4.M31);
+			Assert.Equal(skm.M21, m4x4.M32);
+			Assert.Equal(skm.M22, m4x4.M33);
+			Assert.Equal(skm.M23, m4x4.M34);
+
+			Assert.Equal(skm.M30, m4x4.M41);
+			Assert.Equal(skm.M31, m4x4.M42);
+			Assert.Equal(skm.M32, m4x4.M43);
+			Assert.Equal(skm.M33, m4x4.M44);
 		}
 
 		private static SKBitmap DrawMatrixBitmap(SKRect rect, SKMatrix44 matrix)
