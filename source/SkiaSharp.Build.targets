@@ -166,14 +166,14 @@ internal partial class VersionConstants {
     Verify that the output assembly is signed correctly for release.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+  <PropertyGroup Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
     <_SignAssemblyVerifyAfterTargets>
       Build
     </_SignAssemblyVerifyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssemblyVerify"
           AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
-          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" StandardOutputImportance="Normal" />
   </Target>
 
