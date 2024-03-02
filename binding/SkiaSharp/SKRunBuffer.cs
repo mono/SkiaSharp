@@ -131,6 +131,8 @@ namespace SkiaSharp
 		public void SetPositions (ReadOnlySpan<SKRotationScaleMatrix> positions) => positions.CopyTo (Positions);
 	}
 
+	// Raw / Struct
+
 	public unsafe readonly struct SKRunBuffer<T>
 	{
 		internal readonly SKRunBufferInternal buffer;
