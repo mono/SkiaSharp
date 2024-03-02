@@ -21,6 +21,9 @@ namespace SkiaSharp
 		public Span<ushort> Glyphs => new (internalBuffer.glyphs, Size);
 
 		public void SetGlyphs (ReadOnlySpan<ushort> glyphs) => glyphs.CopyTo (Glyphs);
+
+		[Obsolete ("Use Glyphs instead.")]
+		public Span<ushort> GetGlyphSpan () => Glyphs;
 	}
 
 	public sealed unsafe class SKHorizontalRunBuffer : SKRunBuffer
@@ -33,6 +36,9 @@ namespace SkiaSharp
 		public Span<float> Positions => new (internalBuffer.pos, Size);
 
 		public void SetPositions (ReadOnlySpan<float> positions) => positions.CopyTo (Positions);
+
+		[Obsolete ("Use Positions instead.")]
+		public Span<float> GetPositionSpan () => Positions;
 	}
 
 	public sealed unsafe class SKPositionedRunBuffer : SKRunBuffer
@@ -45,6 +51,9 @@ namespace SkiaSharp
 		public Span<SKPoint> Positions => new (internalBuffer.pos, Size);
 
 		public void SetPositions (ReadOnlySpan<SKPoint> positions) => positions.CopyTo (Positions);
+
+		[Obsolete ("Use Positions instead.")]
+		public Span<SKPoint> GetPositionSpan () => Positions;
 	}
 
 	public sealed unsafe class SKRotationScaleRunBuffer : SKRunBuffer
@@ -57,6 +66,12 @@ namespace SkiaSharp
 		public Span<SKRotationScaleMatrix> Positions => new (internalBuffer.pos, Size);
 
 		public void SetPositions (ReadOnlySpan<SKRotationScaleMatrix> positions) => positions.CopyTo (Positions);
+
+		[Obsolete ("Use Positions instead.")]
+		public Span<SKRotationScaleMatrix> GetRotationScaleSpan () => Positions;
+
+		[Obsolete ("Use SetPositions instead.")]
+		public void SetRotationScale (ReadOnlySpan<SKRotationScaleMatrix> positions) => SetPositions (positions);
 	}
 
 	// Text
