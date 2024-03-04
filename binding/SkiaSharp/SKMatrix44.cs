@@ -2,6 +2,7 @@
 
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace SkiaSharp
 {
@@ -348,46 +349,46 @@ namespace SkiaSharp
 
 		public SKMatrix Matrix =>
 			new SKMatrix (
-				m00, m01, m03,
-				m10, m11, m13,
-				m30, m31, m33);
+				m00, m10, m30,
+				m01, m11, m31,
+				m03, m13, m33);
 
 		public float this[int row, int column] {
-			get => column switch {
-				0 => row switch {
+			get => row switch {
+				0 => column switch {
 					0 => m00,
 					1 => m01,
 					2 => m02,
 					3 => m03,
-					_ => throw new ArgumentOutOfRangeException (nameof (row))
+					_ => throw new ArgumentOutOfRangeException (nameof (column))
 				},
-				1 => row switch {
+				1 => column switch {
 					0 => m10,
 					1 => m11,
 					2 => m12,
 					3 => m13,
-					_ => throw new ArgumentOutOfRangeException (nameof (row))
+					_ => throw new ArgumentOutOfRangeException (nameof (column))
 				},
-				2 => row switch {
+				2 => column switch {
 					0 => m20,
 					1 => m21,
 					2 => m22,
 					3 => m23,
-					_ => throw new ArgumentOutOfRangeException (nameof (row))
+					_ => throw new ArgumentOutOfRangeException (nameof (column))
 				},
-				3 => row switch {
+				3 => column switch {
 					0 => m30,
 					1 => m31,
 					2 => m32,
 					3 => m33,
-					_ => throw new ArgumentOutOfRangeException (nameof (row))
+					_ => throw new ArgumentOutOfRangeException (nameof (column))
 				},
-				_ => throw new ArgumentOutOfRangeException (nameof (column))
+				_ => throw new ArgumentOutOfRangeException (nameof (row))
 			};
 			set {
-				switch (column) {
+				switch (row) {
 					case 0:
-						switch (row) {
+						switch (column) {
 							case 0:
 								m00 = value;
 								break;
@@ -401,11 +402,11 @@ namespace SkiaSharp
 								m03 = value;
 								break;
 							default:
-								throw new ArgumentOutOfRangeException (nameof (row));
+								throw new ArgumentOutOfRangeException (nameof (column));
 						};
 						break;
 					case 1:
-						switch (row) {
+						switch (column) {
 							case 0:
 								m10 = value;
 								break;
@@ -419,11 +420,11 @@ namespace SkiaSharp
 								m13 = value;
 								break;
 							default:
-								throw new ArgumentOutOfRangeException (nameof (row));
+								throw new ArgumentOutOfRangeException (nameof (column));
 						};
 						break;
 					case 2:
-						switch (row) {
+						switch (column) {
 							case 0:
 								m20 = value;
 								break;
@@ -437,11 +438,11 @@ namespace SkiaSharp
 								m23 = value;
 								break;
 							default:
-								throw new ArgumentOutOfRangeException (nameof (row));
+								throw new ArgumentOutOfRangeException (nameof (column));
 						};
 						break;
 					case 3:
-						switch (row) {
+						switch (column) {
 							case 0:
 								m30 = value;
 								break;
@@ -455,11 +456,11 @@ namespace SkiaSharp
 								m33 = value;
 								break;
 							default:
-								throw new ArgumentOutOfRangeException (nameof (row));
+								throw new ArgumentOutOfRangeException (nameof (column));
 						};
 						break;
 					default:
-						throw new ArgumentOutOfRangeException (nameof (column));
+						throw new ArgumentOutOfRangeException (nameof (row));
 				};
 			}
 		}
@@ -468,23 +469,15 @@ namespace SkiaSharp
 
 		public static implicit operator SKMatrix44 (SKMatrix matrix) =>
 			new SKMatrix44 (
-				matrix.ScaleX, matrix.SkewX, 0, matrix.TransX,
-				matrix.SkewY, matrix.ScaleY, 0, matrix.TransY,
+				matrix.ScaleX, matrix.SkewY, 0, matrix.Persp0,
+				matrix.SkewX, matrix.ScaleY, 0, matrix.Persp1,
 				0, 0, 1, 0,
-				matrix.Persp0, matrix.Persp1, 0, matrix.Persp2);
+				matrix.TransX, matrix.TransY, 0, matrix.Persp2);
 
 		public static implicit operator Matrix4x4 (SKMatrix44 matrix) =>
-			new Matrix4x4 (
-				matrix.m00, matrix.m10, matrix.m20, matrix.m30,
-				matrix.m01, matrix.m11, matrix.m21, matrix.m31,
-				matrix.m02, matrix.m12, matrix.m22, matrix.m32,
-				matrix.m03, matrix.m13, matrix.m23, matrix.m33);
+			Unsafe.As<SKMatrix44, Matrix4x4> (ref matrix);
 
 		public static implicit operator SKMatrix44 (Matrix4x4 matrix) =>
-			new SKMatrix44 (
-				matrix.M11, matrix.M21, matrix.M31, matrix.M41,
-				matrix.M12, matrix.M22, matrix.M32, matrix.M42,
-				matrix.M13, matrix.M23, matrix.M33, matrix.M43,
-				matrix.M14, matrix.M24, matrix.M34, matrix.M44);
+			Unsafe.As<Matrix4x4, SKMatrix44> (ref matrix);
 	}
 }
