@@ -54,9 +54,6 @@ jobs:
           enabled: false
         binskim:
           break: false
-        ${{ if endsWith(parameters.name, '_linux') }}:
-          git:
-            submodules: false
       outputParentDirectory: 'output'
       outputs:
         - ${{ if eq(parameters.shouldPublish, 'true') }}:
