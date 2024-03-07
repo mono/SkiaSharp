@@ -952,13 +952,6 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_set_matrix (Handle, &matrix);
 		}
 
-		public void SetMatrix (in SKMatrix matrix)
-		{
-			fixed (SKMatrix* ptr = &matrix) {
-				SkiaApi.sk_canvas_set_matrix (Handle, ptr);
-			}
-		}
-
 		public SKMatrix TotalMatrix {
 			get {
 				SKMatrix matrix;
