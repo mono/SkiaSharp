@@ -327,23 +327,8 @@ namespace SkiaSharp
 			return rect;
 		}
 
-		public void Transform (in SKMatrix matrix)
-		{
-			fixed (SKMatrix* m = &matrix)
-				SkiaApi.sk_path_transform (Handle, m);
-		}
-
 		public void Transform (SKMatrix matrix) =>
 			SkiaApi.sk_path_transform (Handle, &matrix);
-
-		public void Transform (in SKMatrix matrix, SKPath destination)
-		{
-			if (destination == null)
-				throw new ArgumentNullException (nameof (destination));
-
-			fixed (SKMatrix* m = &matrix)
-				SkiaApi.sk_path_transform_to_dest (Handle, m, destination.Handle);
-		}
 
 		public void Transform (SKMatrix matrix, SKPath destination)
 		{
