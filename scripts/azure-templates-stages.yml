@@ -32,24 +32,24 @@ stages:
         pool: ${{ parameters.VM_IMAGE_HOST.pool }}
         steps:
           - checkout: none
-          - template: azure-templates-variables.yml
+          - template: /scripts/azure-templates-variables.yml@self
             parameters:
               updateBuild: true
           - ${{ if eq(parameters.buildPipelineType, 'build') }}:
-            - template: azure-templates-github-status.yml
+            - template: /scripts/azure-templates-github-status.yml@self
               parameters:
                 context: 'SkiaSharp-Tests'
                 state: 'pending'
                 displayName: Queue up the status for the tests pipeline
           - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
-            - template: azure-templates-github-status.yml
+            - template: /scripts/azure-templates-github-status.yml@self
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_windows
       displayName: Native Windows
       dependsOn: prepare
       jobs:
-        - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|x86 (Win)
           parameters:
             name: native_android_x86_windows
             displayName: Android x86
@@ -60,7 +60,7 @@ stages:
             additionalArgs: --buildarch=x86
             installWindowsSdk: false
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|x64 (Win)
           parameters:
             name: native_android_x64_windows
             displayName: Android x64
@@ -71,7 +71,7 @@ stages:
             additionalArgs: --buildarch=x64
             installWindowsSdk: false
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|arm (Win)
           parameters:
             name: native_android_arm_windows
             displayName: Android arm
@@ -82,7 +82,7 @@ stages:
             additionalArgs: --buildarch=arm
             installWindowsSdk: false
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|arm64 (Win)
           parameters:
             name: native_android_arm64_windows
             displayName: Android arm64
@@ -93,7 +93,7 @@ stages:
             additionalArgs: --buildarch=arm64
             installWindowsSdk: false
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Tizen (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Win)
           parameters:
             name: native_tizen_windows
             displayName: Tizen
@@ -103,7 +103,7 @@ stages:
             target: externals-tizen
             installWindowsSdk: false
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x86 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build ANGLE UWP|x86 (Win)
           parameters:
             name: native_uwp_angle_x86_windows
             displayName: ANGLE x86
@@ -113,7 +113,7 @@ stages:
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=x86
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|x64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build ANGLE UWP|x64 (Win)
           parameters:
             name: native_uwp_angle_x64_windows
             displayName: ANGLE x64
@@ -123,7 +123,7 @@ stages:
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=x64
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build ANGLE UWP|arm (Win)
           parameters:
             name: native_uwp_angle_arm_windows
             displayName: ANGLE arm
@@ -133,7 +133,7 @@ stages:
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build ANGLE UWP|arm64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build ANGLE UWP|arm64 (Win)
           parameters:
             name: native_uwp_angle_arm64_windows
             displayName: ANGLE arm64
@@ -143,7 +143,7 @@ stages:
             target: ANGLE
             additionalArgs: -Script .\native\uwp\build.cake --buildarch=arm64
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native UWP|x86 (Win)
           parameters:
             name: native_uwp_x86_windows
             displayName: UWP x86
@@ -153,7 +153,7 @@ stages:
             target: externals-uwp
             additionalArgs: --buildarch=x86 --skipAngle=true
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native UWP|x64 (Win)
           parameters:
             name: native_uwp_x64_windows
             displayName: UWP x64
@@ -162,7 +162,7 @@ stages:
             target: externals-uwp
             additionalArgs: --buildarch=x64 --skipAngle=true
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native UWP|arm (Win)
           parameters:
             name: native_uwp_arm_windows
             displayName: UWP arm
@@ -172,7 +172,7 @@ stages:
             target: externals-uwp
             additionalArgs: --buildarch=arm --skipAngle=true
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native UWP|arm64 (Win)
           parameters:
             name: native_uwp_arm64_windows
             displayName: UWP arm64
@@ -182,7 +182,7 @@ stages:
             target: externals-uwp
             additionalArgs: --buildarch=arm64 --skipAngle=true
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x86 (Win)
           parameters:
             name: native_win32_x86_windows
             displayName: Win32 x86
@@ -192,7 +192,7 @@ stages:
             target: externals-windows
             additionalArgs: --buildarch=x86
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x64 (Win)
           parameters:
             name: native_win32_x64_windows
             displayName: Win32 x64
@@ -202,7 +202,7 @@ stages:
             target: externals-windows
             additionalArgs: --buildarch=x64
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|arm64 (Win)
           parameters:
             name: native_win32_arm64_windows
             displayName: Win32 arm64
@@ -212,7 +212,7 @@ stages:
             target: externals-windows
             additionalArgs: --buildarch=arm64
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native NanoServer|x64 (Win)
           parameters:
             name: native_win32_x64_nanoserver_windows
             displayName: Nano Server x64
@@ -228,7 +228,7 @@ stages:
       displayName: Native macOS
       dependsOn: prepare
       jobs:
-        - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|x86 (macOS)
           parameters:
             name: native_android_x86_macos
             displayName: Android x86
@@ -237,7 +237,7 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x86
-        - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|x64 (macOS)
           parameters:
             name: native_android_x64_macos
             displayName: Android x64
@@ -246,7 +246,7 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=x64
-        - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|arm (macOS)
           parameters:
             name: native_android_arm_macos
             displayName: Android arm
@@ -255,7 +255,7 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm
-        - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|arm64 (macOS)
           parameters:
             name: native_android_arm64_macos
             displayName: Android arm64
@@ -264,7 +264,7 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-android
             additionalArgs: --buildarch=arm64
-        - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native iOS (macOS)
           parameters:
             name: native_ios_macos
             displayName: iOS
@@ -273,7 +273,7 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-ios
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Mac Catalyst (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Mac Catalyst (macOS)
           parameters:
             name: native_maccatalyst_macos
             displayName: Mac Catalyst
@@ -282,7 +282,7 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-maccatalyst
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native macOS (macOS)
           parameters:
             name: native_macos_macos
             displayName: macOS
@@ -291,7 +291,7 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-macos
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native tvOS (macOS)
           parameters:
             name: native_tvos_macos
             displayName: tvOS
@@ -300,7 +300,7 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-tvos
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native watchOS (macOS)
           parameters:
             name: native_watchos_macos
             displayName: watchOS
@@ -309,7 +309,7 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
             target: externals-watchos
             artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (macOS)
           parameters:
             name: native_tizen_macos
             displayName: Tizen
@@ -324,7 +324,7 @@ stages:
       displayName: Native Linux
       dependsOn: prepare
       jobs:
-        - template: azure-templates-linux-matrix.yml # Build Native Linux (Linux)
+        - template: /scripts/azure-templates-linux-matrix.yml@self # Build Native Linux (Linux)
           parameters:
             artifactName: native
             buildExternals: ${{ parameters.buildExternals }}
@@ -349,7 +349,7 @@ stages:
                 docker: scripts/Docker/debian9/clang-cross
                 dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
                 target: externals-linux-clang-cross
-        - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Linux)
           parameters:
             name: native_tizen_linux
             displayName: Tizen
@@ -364,7 +364,7 @@ stages:
       displayName: Native WASM
       dependsOn: prepare
       jobs:
-        - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
+        - template: /scripts/azure-templates-wasm-matrix.yml@self # Build Native WASM (Linux)
           parameters:
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
@@ -431,7 +431,7 @@ stages:
         - native_linux
         - native_wasm
       jobs:
-        - template: azure-templates-bootstrapper.yml # Build Managed .NET Framework (Windows)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Managed .NET Framework (Windows)
           parameters:
             name: managed_netfx_windows
             displayName: Managed .NET Framework (Windows)
@@ -446,7 +446,7 @@ stages:
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
-        - template: azure-templates-bootstrapper.yml # Build Managed .NET (Windows)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Managed .NET (Windows)
           parameters:
             name: managed_net_windows
             displayName: Managed .NET (Windows)
@@ -461,7 +461,7 @@ stages:
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
-        - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Managed (macOS)
           parameters:
             name: managed_macos
             displayName: Managed (macOS)
@@ -475,7 +475,7 @@ stages:
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
-        - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Managed (Linux)
           parameters:
             name: managed_linux
             displayName: Managed (Linux)
@@ -496,7 +496,7 @@ stages:
       displayName: Package NuGets
       dependsOn: managed
       jobs:
-        - template: azure-templates-bootstrapper.yml # Package NuGets
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Package NuGets
           parameters:
             name: package_windows
             displayName: Package NuGets
@@ -546,7 +546,7 @@ stages:
       ${{ if eq(parameters.buildPipelineType, 'both') }}:
         dependsOn: package
       jobs:
-        - template: azure-templates-bootstrapper.yml # API Diff
+        - template: /scripts/azure-templates-bootstrapper.yml@self # API Diff
           parameters:
             name: api_diff_windows
             displayName: API Diff
@@ -575,7 +575,7 @@ stages:
       displayName: Sign NuGets
       dependsOn: package
       jobs:
-        - template: sign-artifacts/jobs/v2.yml@xamarin-templates
+        - template: sign-artifacts/jobs/v2.yml@self@xamarin-templates
           parameters:
             ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
               signType: 'Real'
@@ -587,7 +587,7 @@ stages:
       displayName: 'Software Bill of Materials'
       dependsOn: signing
       jobs:
-      - template: compliance/sbom/job.v1.yml@xamarin-templates        # Software Bill of Materials (SBOM): https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
+      - template: compliance/sbom/job.v1.yml@self@xamarin-templates        # Software Bill of Materials (SBOM): https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
         parameters:
           artifactNames: ['nuget']
           packageName: 'SkiaSharp'
@@ -605,7 +605,7 @@ stages:
           - native_linux
           - native_wasm
       jobs:
-        - template: azure-templates-bootstrapper.yml # Tests|netfx (Windows)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netfx (Windows)
           parameters:
             name: tests_netfx_windows
             displayName: Windows (.NET Framework)
@@ -627,7 +627,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                   testRunTitle: 'Windows .NET Framework Tests'
-        - template: azure-templates-bootstrapper.yml # Tests|netcore (Windows)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netcore (Windows)
           parameters:
             name: tests_netcore_windows
             displayName: Windows (.NET Core)
@@ -653,7 +653,7 @@ stages:
                 inputs:
                   artifactName: coverage_netcore_windows
                   pathToPublish: 'output/coverage'
-        - template: azure-templates-bootstrapper.yml # Tests|netfx (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netfx (macOS)
           parameters:
             name: tests_netfx_macos
             displayName: macOS (.NET Framework)
@@ -672,7 +672,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                   testRunTitle: 'macOS Mono Tests'
-        - template: azure-templates-bootstrapper.yml # Tests|netcore (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netcore (macOS)
           parameters:
             name: tests_netcore_macos
             displayName: macOS (.NET Core)
@@ -696,7 +696,7 @@ stages:
                 inputs:
                   artifactName: coverage_netcore_macos
                   pathToPublish: 'output/coverage'
-        - template: azure-templates-bootstrapper.yml # Tests|android (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|android (macOS)
           parameters:
             name: tests_android_macos
             displayName: Android (macOS)
@@ -729,7 +729,7 @@ stages:
                 inputs:
                   artifactName: testlogs_android
                   pathToPublish: 'output/logs/testlogs'
-        - template: azure-templates-bootstrapper.yml # Tests|ios (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|ios (macOS)
           parameters:
             name: tests_ios_macos
             displayName: iOS (macOS)
@@ -741,7 +741,7 @@ stages:
             requiredArtifacts:
               - name: native_ios_macos
             preBuildSteps:
-              - template: azure-templates-provisioning-profiles.yml
+              - template: /scripts/azure-templates-provisioning-profiles.yml@self
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the iOS test results
@@ -756,7 +756,7 @@ stages:
                 inputs:
                   artifactName: testlogs_ios
                   pathToPublish: 'output/logs/testlogs'
-        - template: azure-templates-bootstrapper.yml # Tests|netfx (Linux)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netfx (Linux)
           parameters:
             name: tests_netfx_linux
             displayName: Linux (.NET Framework)
@@ -776,7 +776,7 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'tests/SkiaSharp*.Desktop.Tests/**/TestResults.xml'
                   testRunTitle: 'Linux Mono Tests'
-        - template: azure-templates-bootstrapper.yml # Tests|netcore (Linux)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netcore (Linux)
           parameters:
             name: tests_netcore_linux
             displayName: Linux (.NET Core)
@@ -801,7 +801,7 @@ stages:
                 inputs:
                   artifactName: coverage_netcore_linux
                   pathToPublish: 'output/coverage'
-        - template: azure-templates-bootstrapper.yml # Tests [WASM] (Linux)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests [WASM] (Linux)
           parameters:
             name: tests_wasm_linux
             displayName: WASM (Linux)
@@ -835,9 +835,9 @@ stages:
             - tests_netcore_linux
           steps:
             - checkout: self
-            - template: azure-templates-variables.yml
+            - template: /scripts/azure-templates-variables.yml@self
             - ${{ if ne(parameters.buildPipelineType, 'both') }}:
-              - template: azure-templates-github-status.yml
+              - template: /scripts/azure-templates-github-status.yml@self
                 parameters:
                   state: 'pending'
             - task: DownloadBuildArtifacts@1
@@ -861,7 +861,7 @@ stages:
                 codeCoverageTool: Cobertura
                 summaryFileLocation: 'output/**/Cobertura.xml'
             - ${{ if ne(parameters.buildPipelineType, 'both') }}:
-              - template: azure-templates-github-status.yml
+              - template: /scripts/azure-templates-github-status.yml@self
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: samples
@@ -871,7 +871,7 @@ stages:
       ${{ if eq(parameters.buildPipelineType, 'both') }}:
         dependsOn: package
       jobs:
-        - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Samples (Windows)
           parameters:
             name: samples_windows
             displayName: Windows
@@ -885,7 +885,7 @@ stages:
             postBuildSteps:
               - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the nugets folder
-        - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Samples (macOS)
           parameters:
             name: samples_macos
             displayName: macOS
@@ -897,8 +897,8 @@ stages:
               - name: nuget
                 dir: nugets
             preBuildSteps:
-              - template: azure-templates-provisioning-profiles.yml
-        - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
+              - template: /scripts/azure-templates-provisioning-profiles.yml@self
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Samples (Linux)
           parameters:
             name: samples_linux
             displayName: Linux
@@ -914,7 +914,7 @@ stages:
             initScript: source ~/emsdk/emsdk_env.sh
 
   - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true'), or(and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))), parameters.runCompliance)) }}:
-    - template: security/full/v1.yml@xamarin-templates
+    - template: security/full/v1.yml@self@xamarin-templates
       parameters:
         stageDependsOn:
           - managed
@@ -954,8 +954,8 @@ stages:
           pool: ${{ parameters.VM_IMAGE_HOST.pool }}
           steps:
             - checkout: none
-            - template: azure-templates-variables.yml
-            - template: azure-templates-github-status.yml
+            - template: /scripts/azure-templates-variables.yml@self
+            - template: /scripts/azure-templates-github-status.yml@self
               parameters:
                 context: 'SkiaSharp-Tests'
                 displayName: Update the final status for the tests pipeline

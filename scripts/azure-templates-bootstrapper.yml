@@ -48,7 +48,7 @@ jobs:
       # prepare
       - checkout: self
         submodules: recursive
-      - template: azure-templates-variables.yml
+      - template: /scripts/azure-templates-variables.yml@self
 
       # checkout required skia PR
       - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
@@ -56,7 +56,7 @@ jobs:
         condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
-        - template: azure-templates-github-status.yml
+        - template: /scripts/azure-templates-github-status.yml@self
           parameters:
             state: 'pending'
 
@@ -259,11 +259,11 @@ jobs:
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # download artifacts
-      - template: azure-templates-download-artifacts.yml
+      - template: /scripts/azure-templates-download-artifacts.yml@self
         parameters:
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           artifacts: ${{ parameters.requiredArtifacts }}
-      - template: azure-templates-download-artifacts.yml
+      - template: /scripts/azure-templates-download-artifacts.yml@self
         parameters:
           condition: and(succeeded(), ne(variables['DOWNLOAD_EXTERNALS'], ''))
           sourceBuildId: $(DOWNLOAD_EXTERNALS)
@@ -350,4 +350,4 @@ jobs:
             alertWarningLevel: 'High'
 
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
-        - template: azure-templates-github-status.yml
+        - template: /scripts/azure-templates-github-status.yml@self

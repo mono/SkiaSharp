@@ -7,7 +7,7 @@ parameters:
 
 jobs:
   - ${{ each version in parameters.emscripten }}:
-    - template: azure-templates-bootstrapper.yml
+    - template: /scripts/azure-templates-bootstrapper.yml@self
       parameters:
         name: native_wasm_${{ replace(version.displayName, '.', '_') }}_linux
         displayName: WASM (${{ version.displayName }})
