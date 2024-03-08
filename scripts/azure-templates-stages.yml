@@ -575,7 +575,7 @@ stages:
       displayName: Sign NuGets
       dependsOn: package
       jobs:
-        - template: sign-artifacts/jobs/v2.yml@self@xamarin-templates
+        - template: sign-artifacts/jobs/v2.yml@xamarin-templates
           parameters:
             ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
               signType: 'Real'
@@ -587,7 +587,7 @@ stages:
       displayName: 'Software Bill of Materials'
       dependsOn: signing
       jobs:
-      - template: compliance/sbom/job.v1.yml@self@xamarin-templates        # Software Bill of Materials (SBOM): https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
+      - template: compliance/sbom/job.v1.yml@xamarin-templates        # Software Bill of Materials (SBOM): https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
         parameters:
           artifactNames: ['nuget']
           packageName: 'SkiaSharp'
@@ -914,7 +914,7 @@ stages:
             initScript: source ~/emsdk/emsdk_env.sh
 
   - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true'), or(and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))), parameters.runCompliance)) }}:
-    - template: security/full/v1.yml@self@xamarin-templates
+    - template: security/full/v1.yml@xamarin-templates
       parameters:
         stageDependsOn:
           - managed
