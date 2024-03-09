@@ -1000,10 +1000,7 @@ stages:
                 [xml] $nuspecContent = (Get-Content $nuspec)
                 $nuspecId = $nuspecContent.package.metadata.id
                 $nuspecVersion = $nuspecContent.package.metadata.version
-                if ($surrogateContents.Contains("{$nuspecId}", 'InvariantCultureIgnoreCase')) {
-                  Write-Host "Replacing '{$nuspecId}' with '$nuspecId.$nuspecVersion'..."
-                  $surrogateContents = $surrogateContents.Replace("{$nuspecId}", "$nuspecId.$nuspecVersion", 'InvariantCultureIgnoreCase')
-                }
+                $surrogateContents = $surrogateContents.Replace("{$nuspecId}", "$nuspecId.$nuspecVersion", 'InvariantCultureIgnoreCase')
               }
               $surrogateContents | Set-Content $destFile
             displayName: Generate the surrogate files
