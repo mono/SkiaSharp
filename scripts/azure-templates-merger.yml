@@ -1,6 +1,7 @@
 parameters:
   name: ''                                      # in the form type_platform_host
   displayName: ''                               # the human name
+  dependsOn: []                                 # the dependiencies
   vmImage: ''                                   # the configuration for the build agent
   buildPipelineType: 'both'                     # the type of build pipeline setup
   requiredArtifacts: []                         # the artifacts that this build needs to download
@@ -11,6 +12,7 @@ jobs:
     parameters:
       name: ${{ parameters.name }}
       displayName: ${{ parameters.displayName }}
+      dependsOn: ${{ parameters.dependsOn }}
       buildPipelineType: ${{ parameters.buildPipelineType }}
       vmImage: ${{ parameters.vmImage }}
       skipInstall: true

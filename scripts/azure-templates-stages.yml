@@ -535,7 +535,12 @@ stages:
         - template: /scripts/azure-templates-merger.yml@self       # Merge Managed Artifacts
           parameters:
             name: managed
-            displayName: Merge Native Artifacts
+            displayName: Merge Managed Artifacts
+            dependsOn:
+              - managed_netfx_windows
+              - managed_net_windows
+              - managed_macos
+              - managed_linux
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_HOST }}
             requiredArtifacts:
@@ -948,15 +953,14 @@ stages:
     - template: security/full/v1.yml@xamarin-templates
       parameters:
         stageDependsOn:
-          - managed
-          - native
+          - package
         complianceEnabled: true
         complianceTimeoutInMinutes: 480
         windowsPoolName: ${{ parameters.VM_IMAGE_HOST.pool.name }}
         windowsImageOverride: ${{ parameters.VM_IMAGE_HOST.pool.image }}
         scanArtifacts:
-          - managed
-          - native
+          - nuget
+          - nuget_symbols
         antiMalwareEnabled: true
         binSkimEnabled: false
         policheckExclusionFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
@@ -983,6 +987,16 @@ stages:
               $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
               $surrogateContents | Set-Content $destFile
             displayName: Generate the surrogate files
+          - pwsh: |
+              $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
+              foreach ($nupkg in $nupkgs) {
+                $filename = $nupkg.Name.TrimEnd('.nupkg')
+                $dest = "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted\$filename"
+                Write-Host "Extracting '$nupkg' to '$dest'..."
+                Expand-Archive $nupkg $dest
+                Remove-Item $nupkg
+              }
+            displayName: Extract all the .nupkg files
 
   - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
     - stage: finalize
