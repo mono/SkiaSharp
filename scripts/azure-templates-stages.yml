@@ -978,16 +978,6 @@ stages:
         apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
         preScanSteps:
           - pwsh: |
-              $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
-              $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
-              $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
-              $destFile = "$destFolder\APIScanSurrogates.xml"
-              New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
-              $surrogateContents = (Get-Content $surrogateFile)
-              $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
-              $surrogateContents | Set-Content $destFile
-            displayName: Generate the surrogate files
-          - pwsh: |
               $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
               foreach ($nupkg in $nupkgs) {
                 $filename = $nupkg.Name.TrimEnd('.nupkg')
@@ -997,6 +987,26 @@ stages:
                 Remove-Item $nupkg
               }
             displayName: Extract all the .nupkg files
+          - pwsh: |
+              $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
+              $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
+              $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
+              $destFile = "$destFolder\APIScanSurrogates.xml"
+              New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
+              $surrogateContents = (Get-Content $surrogateFile)
+              $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
+              $nuspecs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted\*\*.nuspec")
+              foreach ($nuspec in $nuspecs) {
+                [xml] $nuspecContent = (Get-Content $nuspec)
+                $nuspecId = $nuspecContent.package.metadata.id
+                $nuspecVersion = $nuspecContent.package.metadata.version
+                Write-Host "Version for '$nuspecId' is '$nuspecVersion'"
+                $surrogateContents = $surrogateContents.Replace("{$nuspecId}", $nuspecVersion, 'OrdinalIgnoreCase')
+              }
+              Write-Host "Surrogate Contents:"
+              Write-Host $surrogateContents
+              $surrogateContents | Set-Content $destFile
+            displayName: Generate the surrogate files
 
   - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
     - stage: finalize
