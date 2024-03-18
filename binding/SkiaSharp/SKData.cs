@@ -57,20 +57,13 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_data_new_with_copy ((void*)bytes, (IntPtr)length));
 		}
 
-		public static SKData CreateCopy (byte[] bytes) =>
+		public static SKData CreateCopy (ReadOnlySpan<byte> bytes) =>
 			CreateCopy (bytes, (ulong)bytes.Length);
 
-		public static SKData CreateCopy (byte[] bytes, ulong length)
+		public static SKData CreateCopy (ReadOnlySpan<byte> bytes, ulong length)
 		{
 			fixed (byte* b = bytes) {
 				return GetObject (SkiaApi.sk_data_new_with_copy (b, (IntPtr)length));
-			}
-		}
-
-		public static SKData CreateCopy (ReadOnlySpan<byte> bytes)
-		{
-			fixed (byte* b = bytes) {
-				return CreateCopy ((IntPtr)b, (ulong)bytes.Length);
 			}
 		}
 
