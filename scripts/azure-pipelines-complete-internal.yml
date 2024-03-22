@@ -39,8 +39,12 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-20.04
         os: linux
+  - name: enableSigning
+    displayName: 'Enable package signing (Test signing)'
+    type: boolean
+    default: false
   - name: runCompliance
-    displayName: 'Run post-build compliance tasks (such as API Scan)'
+    displayName: 'Run post-build compliance tasks (such as API Scan and PoliCheck)'
     type: boolean
     default: false
   - name: use1ESPipelineTemplates
@@ -77,7 +81,27 @@ extends:
         parameters:
           buildPipelineType: 'both'
           buildExternals: ${{ parameters.buildExternals }}
-          runCompliance: ${{ parameters.runCompliance }}
+          enableSigning: ${{ parameters.enableSigning }}
+          ${{ if eq(parameters.runCompliance, 'true') }}:
+            sdl:
+              apiscan:
+                enabled: true
+              binskim:
+                break: false
+              codeInspector:
+                enabled: true
+              credscan:
+                suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
+              policheck:
+                enabled: true
+                exclusionsFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
+              spotBugs:
+                enabled: false
+              suppression:
+                suppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
+              tsa:
+                enabled: true
+                configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
           VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}

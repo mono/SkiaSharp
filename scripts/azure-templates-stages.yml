@@ -19,10 +19,19 @@ parameters:
     type: object
   - name: VM_IMAGE_LINUX_NATIVE
     type: object
-  - name: runCompliance
+  - name: sdl
+    type: object
+    default:
+      apiscan:
+        enabled: false
+      binskim:
+        break: false
+      spotBugs:
+        enabled: false
+  - name: use1ESPipelineTemplates
     type: boolean
     default: false
-  - name: use1ESPipelineTemplates
+  - name: enableSigning
     type: boolean
     default: false
 
@@ -56,6 +65,7 @@ stages:
           parameters:
             name: native_android_x86_windows
             displayName: Android x86
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -66,6 +76,7 @@ stages:
           parameters:
             name: native_android_x64_windows
             displayName: Android x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -76,6 +87,7 @@ stages:
           parameters:
             name: native_android_arm_windows
             displayName: Android arm
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -86,6 +98,7 @@ stages:
           parameters:
             name: native_android_arm64_windows
             displayName: Android arm64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -96,6 +109,7 @@ stages:
           parameters:
             name: native_tizen_windows
             displayName: Tizen
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -105,6 +119,7 @@ stages:
           parameters:
             name: native_uwp_angle_x86_windows
             displayName: ANGLE x86
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -114,6 +129,7 @@ stages:
           parameters:
             name: native_uwp_angle_x64_windows
             displayName: ANGLE x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -123,6 +139,7 @@ stages:
           parameters:
             name: native_uwp_angle_arm_windows
             displayName: ANGLE arm
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -132,6 +149,7 @@ stages:
           parameters:
             name: native_uwp_angle_arm64_windows
             displayName: ANGLE arm64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -141,6 +159,7 @@ stages:
           parameters:
             name: native_uwp_x86_windows
             displayName: UWP x86
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -150,6 +169,7 @@ stages:
           parameters:
             name: native_uwp_x64_windows
             displayName: UWP x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-uwp
@@ -158,6 +178,7 @@ stages:
           parameters:
             name: native_uwp_arm_windows
             displayName: UWP arm
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -167,6 +188,7 @@ stages:
           parameters:
             name: native_uwp_arm64_windows
             displayName: UWP arm64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -176,6 +198,7 @@ stages:
           parameters:
             name: native_win32_x86_windows
             displayName: Win32 x86
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -185,6 +208,7 @@ stages:
           parameters:
             name: native_win32_x64_windows
             displayName: Win32 x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -194,6 +218,7 @@ stages:
           parameters:
             name: native_win32_arm64_windows
             displayName: Win32 arm64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -203,6 +228,7 @@ stages:
           parameters:
             name: native_win32_x64_nanoserver_windows
             displayName: Nano Server x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
@@ -218,6 +244,7 @@ stages:
           parameters:
             name: native_android_x86_macos
             displayName: Android x86
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
@@ -227,6 +254,7 @@ stages:
           parameters:
             name: native_android_x64_macos
             displayName: Android x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
@@ -236,6 +264,7 @@ stages:
           parameters:
             name: native_android_arm_macos
             displayName: Android arm
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
@@ -245,6 +274,7 @@ stages:
           parameters:
             name: native_android_arm64_macos
             displayName: Android arm64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
@@ -254,6 +284,7 @@ stages:
           parameters:
             name: native_ios_macos
             displayName: iOS
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
@@ -262,6 +293,7 @@ stages:
           parameters:
             name: native_maccatalyst_macos
             displayName: Mac Catalyst
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
@@ -270,6 +302,7 @@ stages:
           parameters:
             name: native_macos_macos
             displayName: macOS
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
@@ -278,6 +311,7 @@ stages:
           parameters:
             name: native_tvos_macos
             displayName: tvOS
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
@@ -294,6 +328,7 @@ stages:
           parameters:
             name: native_tizen_macos
             displayName: Tizen
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
@@ -307,6 +342,7 @@ stages:
       jobs:
         - template: /scripts/azure-templates-linux-matrix.yml@self # Build Native Linux (Linux)
           parameters:
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
@@ -347,6 +383,7 @@ stages:
       jobs:
         - template: /scripts/azure-templates-wasm-matrix.yml@self # Build Native WASM (Linux)
           parameters:
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
@@ -419,6 +456,7 @@ stages:
           parameters:
             name: native
             displayName: Merge Native Artifacts
+            sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_HOST }}
             requiredArtifacts:
@@ -463,6 +501,7 @@ stages:
           parameters:
             name: native_wasm_linux
             displayName: Merge Native WASM Artifacts
+            sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_HOST }}
             matrixArtifacts:
@@ -558,6 +597,7 @@ stages:
           parameters:
             name: package_windows
             displayName: Package NuGets
+            sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: nuget
@@ -625,7 +665,7 @@ stages:
                 always: true
                 path: '$(Build.SourcesDirectory)\output\api-diff'
 
-  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
+  - ${{ if eq(parameters.enableSigning, 'true') }}:
     - stage: signing
       displayName: Sign NuGets
       dependsOn: package
@@ -949,32 +989,21 @@ stages:
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
 
-  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true'), or(and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))), parameters.runCompliance)) }}:
-    - template: security/full/v1.yml@xamarin-templates
+  - ${{ if eq(parameters.sdl.apiscan.enabled, 'true') }}:
+    - template: security/apiscan/v0.yml@xamarin-templates
       parameters:
+        windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
+        windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
+        timeoutInMinutes: 480
         stageDependsOn:
           - package
-        complianceEnabled: true
-        complianceTimeoutInMinutes: 480
-        windowsPoolName: ${{ parameters.VM_IMAGE_HOST.pool.name }}
-        windowsImageOverride: ${{ parameters.VM_IMAGE_HOST.pool.image }}
         scanArtifacts:
           - nuget
           - nuget_symbols
-        antiMalwareEnabled: true
-        binSkimEnabled: false
-        policheckExclusionFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
-        policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\scripts\guardian
-        credScanEnabled: true
-        credScanSuppressionFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
-        sourceGdnSuppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
-        tsaConfigFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
-        tsaReportBranch: $(Build.SourceBranch)
-        enableCodeInspector: true
-        apiScanEnabled: true
         apiScanSoftwareName: 'SkiaSharp'
         apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
         apiScanPreserveLogsFolder: true
+        apiScanAuthConnectionString: 'runAs=App;AppId=$(ApiScanClientId)'
         apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
         preScanSteps:
           - pwsh: |
