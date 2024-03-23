@@ -85,7 +85,6 @@ namespace SkiaSharp.Views.Mac
 			SampleCount = 1;
 			FramebufferOnly = false;
 			Device = device;
-			FramebufferOnly=false;
 			backendContext = new GRMtlBackendContext
 			{
 				Device = device,
