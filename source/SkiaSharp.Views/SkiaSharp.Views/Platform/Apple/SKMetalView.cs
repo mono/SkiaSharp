@@ -84,6 +84,7 @@ namespace SkiaSharp.Views.Mac
 			DepthStencilPixelFormat = MTLPixelFormat.Depth32Float_Stencil8;
 			SampleCount = 1;
 			Device = device;
+			FramebufferOnly=false;
 			backendContext = new GRMtlBackendContext
 			{
 				Device = device,
