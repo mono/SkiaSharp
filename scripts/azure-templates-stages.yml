@@ -992,11 +992,11 @@ stages:
   - ${{ if eq(parameters.sdl.apiscan.enabled, 'true') }}:
     - template: security/apiscan/v0.yml@xamarin-templates
       parameters:
-        windowsPoolName: ${{ parameters.VM_IMAGE_HOST.pool.name }}
-        windowsImageOverride: ${{ parameters.VM_IMAGE_HOST.pool.image }}
-        timeoutInMinutes: 480
         stageDependsOn:
           - package
+        timeoutInMinutes: 480
+        windowsPoolName: ${{ parameters.VM_IMAGE_HOST.pool.name }}
+        windowsImageOverride: ${{ parameters.VM_IMAGE_HOST.pool.image }}
         scanArtifacts:
           - nuget
           - nuget_symbols
