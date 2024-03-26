@@ -545,27 +545,34 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: nuget-normal
             additionalArgs: --skipExternals="all"
+            shouldPublish: false
             requiredArtifacts:
               - name: native
             postBuildSteps:
-              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
-                displayName: Delete the native folder
               - pwsh: |
-                  New-Item '$(Build.ArtifactStagingDirectory)\nugets\' -Type Directory -Force | Out-Null
-                  Get-ChildItem '.\output\nugets\' | Copy-Item -Destination '$(Build.ArtifactStagingDirectory)\nugets\' -Recurse -Force
-                  Copy-Item -Path '.\scripts\SignList.xml' -Destination '$(Build.ArtifactStagingDirectory)\nugets\'
-                  Remove-Item '.\output\nugets\' -Recurse -Force
-                displayName: Move the nugets artifact to the staging directory
+                  Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                  Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output-temp\'
+                displayName: Re-organize the output folder for publishing
               - pwsh: |
-                  New-Item '$(Build.ArtifactStagingDirectory)\nugets-symbols\' -Type Directory -Force | Out-Null
-                  Get-ChildItem '.\output\nugets-symbols\' | Copy-Item -Destination '$(Build.ArtifactStagingDirectory)\nugets-symbols\' -Recurse -Force
-                  Remove-Item '.\output\nugets-symbols\' -Recurse -Force
-                displayName: Move the nugets-symbols artifact to the staging directory
+                  New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output-temp\nugets\' -Destination '.\output\nugets\'
+                  Copy-Item -Path '.\scripts\SignList.xml' -Destination '.\output\nugets\'
+                displayName: Prepare the nugets artifact for publishing
+              - pwsh: |
+                  New-Item '.\output\nugets-symbols\' -Type Directory -Force | Out-Null
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output-temp\nugets-symbols\' -Destination '.\output\nugets-symbols\'
+                displayName: Prepare the nugets-symbols artifact for publishing
+              - pwsh: |
+                  New-Item '.\output\output\' -Type Directory -Force | Out-Null
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output-temp\' -Destination '.\output\output\'
+                displayName: Prepare the build artifact for publishing
             publishArtifacts:
+              - name: package_normal_windows
+                path: '.\output\output\'
               - name: nuget
-                path: '$(Build.ArtifactStagingDirectory)\nugets'
+                path: '.\output\nugets'
               - name: nuget_symbols
-                path: '$(Build.ArtifactStagingDirectory)\nugets-symbols'
+                path: '.\output\nugets-symbols'
         - template: /scripts/azure-templates-bootstrapper.yml@self # Package Special NuGets
           parameters:
             name: package_special_windows
@@ -576,6 +583,7 @@ stages:
             dependsOn: package_normal_windows
             target: nuget-special
             additionalArgs: --skipExternals="all" --exclusive
+            shouldPublish: false
             requiredArtifacts:
               - name: nuget
                 dir: nugets
@@ -583,17 +591,23 @@ stages:
                 dir: nugets-symbols
             postBuildSteps:
               - pwsh: |
-                  New-Item '$(Build.ArtifactStagingDirectory)\nugets-special\' -Type Directory -Force | Out-Null
-                  Get-ChildItem '.\output\nugets-special\' | Copy-Item -Destination '$(Build.ArtifactStagingDirectory)\nugets-special\' -Recurse -Force
-                  Remove-Item '.\output\nugets-special\' -Recurse -Force
-                displayName: Move the nugets-special artifact to the staging directory
+                  Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
+                  Remove-Item ./output/nugets-symbols/ -Recurse -Force -ErrorAction Continue
+                  Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output-temp\'
+                displayName: Re-organize the output folder for publishing
               - pwsh: |
-                  Remove-Item ./output/nugets/ -Recurse -Force
-                  Remove-Item ./output/nugets-symbols/ -Recurse -Force
-                displayName: Delete the downloaded artifacts
+                  New-Item '.\output\nugets-special\' -Type Directory -Force | Out-Null
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output-temp\nugets-special\' -Destination '.\output\nugets-special\'
+                displayName: Prepare the nugets-special artifact for publishing
+              - pwsh: |
+                  New-Item '.\output\output\' -Type Directory -Force | Out-Null
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output-temp\' -Destination '.\output\output\'
+                displayName: Prepare the build artifact for publishing
             publishArtifacts:
+              - name: package_special_windows
+                path: '.\output\output\'
               - name: nuget_special
-                path: '$(Build.ArtifactStagingDirectory)\nugets-special'
+                path: '.\output\nugets-special'
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: api_diff
