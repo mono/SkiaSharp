@@ -606,7 +606,6 @@ stages:
                   Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
                 displayName: Prepare the nugets-special artifact for publishing
               - pwsh: |
-                  New-Item '.\output\output\' -Type Directory -Force | Out-Null
                   Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
                 displayName: Prepare the build artifact for publishing
             publishArtifacts:
