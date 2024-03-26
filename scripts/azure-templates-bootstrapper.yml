@@ -78,7 +78,7 @@ jobs:
       # prepare
       - checkout: self
         submodules: recursive
-      - pwsh: Write-Host '${{ parameters.sdl }}'
+      - pwsh: Write-Host '${{ convertToJson(parameters.sdl) }}'
         displayName: Print current SDL input
       - template: /scripts/azure-templates-variables.yml@self
 
