@@ -628,13 +628,12 @@ stages:
                   Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
                 displayName: Prepare the nugets-symbols artifact for publishing
               - pwsh: |
-                  $nupkgs = (Get-ChildItem ".\output\nugets-*\*.*nupkg")
+                  $nupkgs = (Get-ChildItem ".\output\nugets*\*.*nupkg")
                   foreach ($nupkg in $nupkgs) {
                     $filename = $nupkg.Name.TrimEnd('.nupkg')
                     $dest = ".\output\extracted_nugets\$filename"
                     Write-Host "Extracting '$nupkg' to '$dest'..."
                     Expand-Archive $nupkg $dest
-                    Remove-Item $nupkg
                   }
                 displayName: Extract all the .nupkg files for scanning
               - pwsh: |
