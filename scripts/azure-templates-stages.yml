@@ -551,21 +551,31 @@ stages:
             postBuildSteps:
               - pwsh: |
                   Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
-                  Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output-temp\'
+                  Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
+                  New-Item '.\output\' -Type Directory -Force | Out-Null
                 displayName: Re-organize the output folder for publishing
               - pwsh: |
-                  New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
-                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output-temp\nugets\' -Destination '.\output\nugets\'
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
                   Copy-Item -Path '.\scripts\SignList.xml' -Destination '.\output\nugets\'
                 displayName: Prepare the nugets artifact for publishing
               - pwsh: |
                   New-Item '.\output\nugets-symbols\' -Type Directory -Force | Out-Null
-                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output-temp\nugets-symbols\' -Destination '.\output\nugets-symbols\'
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
                 displayName: Prepare the nugets-symbols artifact for publishing
               - pwsh: |
                   New-Item '.\output\output\' -Type Directory -Force | Out-Null
-                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output-temp\' -Destination '.\output\output\'
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
                 displayName: Prepare the build artifact for publishing
+              - pwsh: |
+                  $nupkgs = (Get-ChildItem ".\output\nugets-*\*.*nupkg")
+                  foreach ($nupkg in $nupkgs) {
+                    $filename = $nupkg.Name.TrimEnd('.nupkg')
+                    $dest = ".\output\extracted_nugets\$filename"
+                    Write-Host "Extracting '$nupkg' to '$dest'..."
+                    Expand-Archive $nupkg $dest
+                    Remove-Item $nupkg
+                  }
+                displayName: Extract all the .nupkg files for scanning
             publishArtifacts:
               - name: package_normal_windows
                 path: '.\output\output\'
@@ -593,15 +603,15 @@ stages:
               - pwsh: |
                   Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
                   Remove-Item ./output/nugets-symbols/ -Recurse -Force -ErrorAction Continue
-                  Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output-temp\'
+                  Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
                 displayName: Re-organize the output folder for publishing
               - pwsh: |
                   New-Item '.\output\nugets-special\' -Type Directory -Force | Out-Null
-                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output-temp\nugets-special\' -Destination '.\output\nugets-special\'
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
                 displayName: Prepare the nugets-special artifact for publishing
               - pwsh: |
                   New-Item '.\output\output\' -Type Directory -Force | Out-Null
-                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output-temp\' -Destination '.\output\output\'
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
                 displayName: Prepare the build artifact for publishing
             publishArtifacts:
               - name: package_special_windows
@@ -966,6 +976,7 @@ stages:
   - ${{ if eq(parameters.sdl.apiscan.enabled, 'true') }}:
     - template: security/apiscan/v0.yml@xamarin-templates
       parameters:
+        displayName: API Scan
         windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
         windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
         timeoutInMinutes: 480
