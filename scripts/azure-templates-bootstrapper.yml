@@ -78,6 +78,8 @@ jobs:
       # prepare
       - checkout: self
         submodules: recursive
+      - pwsh: Write-Host '${{ parameters.sdl }}'
+        displayName: Print current SDL input
       - template: /scripts/azure-templates-variables.yml@self
 
       # checkout required skia PR
