@@ -559,11 +559,9 @@ stages:
                   Copy-Item -Path '.\scripts\SignList.xml' -Destination '.\output\nugets\'
                 displayName: Prepare the nugets artifact for publishing
               - pwsh: |
-                  New-Item '.\output\nugets-symbols\' -Type Directory -Force | Out-Null
                   Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
                 displayName: Prepare the nugets-symbols artifact for publishing
               - pwsh: |
-                  New-Item '.\output\output\' -Type Directory -Force | Out-Null
                   Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
                 displayName: Prepare the build artifact for publishing
               - pwsh: |
