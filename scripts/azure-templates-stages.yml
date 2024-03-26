@@ -520,6 +520,7 @@ stages:
           parameters:
             name: managed_netfx_windows
             displayName: Managed .NET Framework (Windows)
+            sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: libs
@@ -534,6 +535,7 @@ stages:
           parameters:
             name: managed_net_windows
             displayName: Managed .NET (Windows)
+            sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
             target: libs
@@ -548,6 +550,7 @@ stages:
           parameters:
             name: managed_macos
             displayName: Managed (macOS)
+            sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_MAC }}
             target: libs
@@ -561,6 +564,7 @@ stages:
           parameters:
             name: managed_linux
             displayName: Managed (Linux)
+            sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             vmImage: ${{ parameters.VM_IMAGE_LINUX }}
             packages: $(MANAGED_LINUX_PACKAGES)
@@ -575,6 +579,7 @@ stages:
           parameters:
             name: managed
             displayName: Merge Managed Artifacts
+            sdl: ${{ parameters.sdl }}
             dependsOn:
               - managed_netfx_windows
               - managed_net_windows
