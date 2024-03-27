@@ -14,6 +14,14 @@ namespace SkiaSharp
 
 		// CreateMatrix
 
+		[Obsolete("Use SetMatrix(in SKMatrix) instead.", true)]
+		public static SKImageFilter CreateMatrix (SKMatrix matrix) =>
+			CreateMatrix (in matrix);
+
+		[Obsolete("Use SetMatrix(in SKMatrix, SKSamplingOptions, SKImageFilter) instead.", true)]
+		public static SKImageFilter CreateMatrix (SKMatrix matrix, SKFilterQuality quality, SKImageFilter? input) =>
+			CreateMatrix (in matrix, quality.ToSamplingOptions (), input);
+
 		public static SKImageFilter CreateMatrix (in SKMatrix matrix) =>
 			CreateMatrix (matrix, SKSamplingOptions.Default, null);
 
@@ -28,6 +36,14 @@ namespace SkiaSharp
 
 
 		// CreateAlphaThreshold
+
+		[Obsolete("Use CreateAlphaThreshold(SKRegion, float, float, SKImageFilter) instead.", true)]
+		public static SKImageFilter CreateAlphaThreshold(SKRectI region, float innerThreshold, float outerThreshold, SKImageFilter? input)
+		{
+			var reg = new SKRegion ();
+			reg.SetRect (region);
+			return CreateAlphaThreshold (reg, innerThreshold, outerThreshold, input);
+		}
 
 		public static SKImageFilter CreateAlphaThreshold (SKRegion region, float innerThreshold, float outerThreshold) =>
 			CreateAlphaThreshold (region, innerThreshold, outerThreshold, null);
