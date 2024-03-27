@@ -406,6 +406,22 @@ namespace SkiaSharp
 		private static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling, SKImageFilter? input, SKRect* cropRect) =>
 			GetObject (SkiaApi.sk_imagefilter_new_magnifier (&lensBounds, zoomAmount, inset, &sampling, input?.Handle ?? IntPtr.Zero, cropRect));
 
+		// CreatePaint
+
+		[Obsolete("Use CreateShader(SKShader) instead.", true)]
+		public static SKImageFilter CreatePaint (SKPaint paint)
+		{
+			_ = paint ?? throw new ArgumentNullException (nameof (paint));
+			return CreateShader(paint.Shader, paint.IsDither, null);
+		}
+
+		[Obsolete("Use CreateShader(SKShader, bool, SKRect) instead.", true)]
+		public static SKImageFilter CreatePaint (SKPaint paint, SKRect cropRect)
+		{
+			_ = paint ?? throw new ArgumentNullException (nameof (paint));
+			return CreateShader(paint.Shader, paint.IsDither, &cropRect);
+		}
+
 		// CreateShader
 
 		public static SKImageFilter CreateShader (SKShader? shader) =>
