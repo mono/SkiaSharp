@@ -4,40 +4,53 @@ pr: none
 
 parameters:
   - name: buildExternals
-    displayName: 'The specific native artifacts to use for this build.'
+    displayName: 'The Build ID containing the specific native artifacts to use:'
     type: string
     default: 'latest'
   - name: VM_IMAGE_HOST
+    displayName: 'The generic host build agent configuration:'
     type: object
     default:
       pool:
         name: Azure Pipelines
         vmImage: ubuntu-20.04
+        os: windows
   - name: VM_IMAGE_WINDOWS
+    displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
         name: Azure Pipelines
         vmImage: windows-2022
+        os: windows
   - name: VM_IMAGE_MAC
+    displayName: 'The macOS build agent configuration:'
     type: object
     default:
       pool:
         name: Azure Pipelines
         vmImage: macos-12
+        os: macos
   - name: VM_IMAGE_LINUX
+    displayName: 'The Linux build agent configuration:'
     type: object
     default:
       pool:
         name: Azure Pipelines
         vmImage: ubuntu-20.04
-  - name: runCompliance
+        os: linux
+  - name: enableSigning
+    displayName: 'Enable package signing (Test signing)'
     type: boolean
     default: false
-
-pool:
-  name: Azure Pipelines
-  vmImage: ubuntu-20.04
+  - name: runCompliance
+    displayName: 'Run post-build compliance tasks (such as API Scan and PoliCheck)'
+    type: boolean
+    default: false
+  - name: use1ESPipelineTemplates
+    displayName: 'Run the build using the internal 1ES Pipeline Templates'
+    type: boolean
+    default: false
 
 variables:
   - template: /scripts/azure-pipelines-variables.yml@self
@@ -49,17 +62,51 @@ resources:
       name: xamarin/yaml-templates
       endpoint: xamarin
       ref: refs/heads/main
+    - repository: 1ESPipelineTemplates
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
 
-stages:
-  - template: /scripts/azure-templates-stages.yml@self
-    parameters:
-      buildPipelineType: 'both'
-      buildExternals: ${{ parameters.buildExternals }}
-      runCompliance: ${{ parameters.runCompliance }}
-      VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
-      VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
-      VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
-      VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
-      VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC }}
-      VM_IMAGE_LINUX: ${{ parameters.VM_IMAGE_LINUX }}
-      VM_IMAGE_LINUX_NATIVE: ${{ parameters.VM_IMAGE_LINUX }}
+extends:
+  ${{ if eq('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
+    template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
+  ${{ if ne('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
+    template: /scripts/azure-template.yml@self
+  parameters:
+    pool: ${{ parameters.VM_IMAGE_HOST.pool }}
+    customBuildTags:
+      - ES365AIMigrationTooling
+    stages:
+      - template: /scripts/azure-templates-stages.yml@self
+        parameters:
+          buildPipelineType: 'both'
+          buildExternals: ${{ parameters.buildExternals }}
+          enableSigning: ${{ parameters.enableSigning }}
+          ${{ if eq(parameters.runCompliance, 'true') }}:
+            sdl:
+              apiscan:
+                enabled: true
+              binskim:
+                break: false
+              codeInspector:
+                enabled: true
+              credscan:
+                suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
+              policheck:
+                enabled: true
+                exclusionsFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
+              spotBugs:
+                enabled: false
+              suppression:
+                suppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
+              tsa:
+                enabled: true
+                configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
+          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+          VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
+          VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
+          VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
+          VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
+          VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC }}
+          VM_IMAGE_LINUX: ${{ parameters.VM_IMAGE_LINUX }}
+          VM_IMAGE_LINUX_NATIVE: ${{ parameters.VM_IMAGE_LINUX }}
