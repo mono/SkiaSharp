@@ -74,6 +74,9 @@ namespace SkiaSharp
 
 		// CreateMatrix
 
+		public static SKImageFilter CreateMatrix(SKMatrix matrix) =>
+  			CreateMatrix(matrix, SKFilterQuality.Medium, null);
+
 		public static SKImageFilter CreateMatrix(SKMatrix matrix, SKFilterQuality quality, SKImageFilter input = null)
 		{
 			return GetObject(SkiaApi.sk_imagefilter_new_matrix(&matrix, quality, input == null ? IntPtr.Zero : input.Handle));
