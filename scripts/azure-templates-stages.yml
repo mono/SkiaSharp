@@ -601,6 +601,7 @@ stages:
                   Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
                   Remove-Item ./output/nugets-symbols/ -Recurse -Force -ErrorAction Continue
                   Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
+                  New-Item '.\output\' -Type Directory -Force | Out-Null
                 displayName: Re-organize the output folder for publishing
               - pwsh: |
                   Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
