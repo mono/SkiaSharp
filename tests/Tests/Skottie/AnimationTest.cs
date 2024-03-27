@@ -177,9 +177,12 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		private Animation BuildDefaultAnimation()
+		private Animation BuildDefaultAnimation() =>
+			BuildAnimation("LottieLogo1.json");
+
+		private Animation BuildAnimation(string filename)
 		{
-			var path = Path.Combine(PathToImages, "LottieLogo1.json");
+			var path = Path.Combine(PathToImages, filename);
 			var result = Animation.TryCreate(path, out var animation);
 
 			Assert.True(result);
@@ -306,6 +309,40 @@ namespace SkiaSharp.Tests
 			var animation = BuildDefaultAnimation();
 
 			Assert.Equal(new SKSize(375, 667), animation.Size);
+		}
+
+		[SkippableFact]
+		public void Can_Render()
+		{
+			var animation = BuildDefaultAnimation();
+
+			using var bmp = new SKBitmap((int)animation.Size.Width, (int)animation.Size.Height);
+			bmp.Erase(SKColors.Red);
+			var beforePixels = bmp.Pixels;
+
+			using var canvas = new SKCanvas(bmp);
+			animation.Seek(0.1);
+			animation.Render(canvas, bmp.Info.Rect);
+			var afterPixels = bmp.Pixels;
+
+			Assert.NotEqual(beforePixels, afterPixels);
+		}
+
+		[SkippableFact]
+		public void Can_Not_Render_With_Base64()
+		{
+			var animation = BuildAnimation("lottie-base64_dotnet-bot.json");
+
+			using var bmp = new SKBitmap((int)animation.Size.Width, (int)animation.Size.Height);
+			bmp.Erase(SKColors.Red);
+			var beforePixels = bmp.Pixels;
+
+			using var canvas = new SKCanvas(bmp);
+			animation.Seek(0.1);
+			animation.Render(canvas, bmp.Info.Rect);
+			var afterPixels = bmp.Pixels;
+
+			Assert.Equal(beforePixels, afterPixels);
 		}
 	}
 }

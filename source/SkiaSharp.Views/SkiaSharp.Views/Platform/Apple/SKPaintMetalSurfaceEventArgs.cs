@@ -20,6 +20,23 @@ namespace SkiaSharp.Views.Mac
 			BackendRenderTarget = renderTarget;
 			ColorType = colorType;
 			Origin = origin;
+			Info = new SKImageInfo(renderTarget.Width, renderTarget.Height, ColorType);
+			RawInfo = Info;
+		}
+
+		public SKPaintMetalSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info)
+			: this(surface, renderTarget, origin, info, info)
+		{
+		}
+
+		public SKPaintMetalSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info, SKImageInfo rawInfo)
+		{
+			Surface = surface;
+			BackendRenderTarget = renderTarget;
+			ColorType = info.ColorType;
+			Origin = origin;
+			Info = info;
+			RawInfo = rawInfo;
 		}
 
 		public SKSurface Surface { get; private set; }
@@ -29,6 +46,10 @@ namespace SkiaSharp.Views.Mac
 		public SKColorType ColorType { get; private set; }
 
 		public GRSurfaceOrigin Origin { get; private set; }
+
+		public SKImageInfo Info { get; private set; }
+
+		public SKImageInfo RawInfo { get; private set; }
 	}
 }
 #endif

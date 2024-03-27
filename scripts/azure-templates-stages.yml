@@ -5,21 +5,33 @@ parameters:
   - name: buildExternals
     type: string
     default: 'latest'
-  - name: VM_IMAGE_HOST
+  - name: buildAgentHost
     type: object
-  - name: VM_IMAGE_WINDOWS
+  - name: buildAgentWindows
     type: object
-  - name: VM_IMAGE_WINDOWS_NATIVE
+  - name: buildAgentWindowsNative
     type: object
-  - name: VM_IMAGE_MAC
+  - name: buildAgentMac
     type: object
-  - name: VM_IMAGE_MAC_NATIVE
+  - name: buildAgentMacNative
     type: object
-  - name: VM_IMAGE_LINUX
+  - name: buildAgentLinux
     type: object
-  - name: VM_IMAGE_LINUX_NATIVE
+  - name: buildAgentLinuxNative
     type: object
-  - name: runCompliance
+  - name: sdl
+    type: object
+    default:
+      apiscan:
+        enabled: false
+      binskim:
+        break: false
+      spotBugs:
+        enabled: false
+  - name: use1ESPipelineTemplates
+    type: boolean
+    default: false
+  - name: enableSigning
     type: boolean
     default: false
 
@@ -29,230 +41,268 @@ stages:
     jobs:
       - job: prepare                               # Prepare Build
         displayName: Prepare Build
-        pool: ${{ parameters.VM_IMAGE_HOST.pool }}
+        pool: ${{ parameters.buildAgentHost.pool }}
         steps:
           - checkout: none
-          - template: azure-templates-variables.yml
+          - template: /scripts/azure-templates-variables.yml@self
             parameters:
               updateBuild: true
           - ${{ if eq(parameters.buildPipelineType, 'build') }}:
-            - template: azure-templates-github-status.yml
+            - template: /scripts/azure-templates-github-status.yml@self
               parameters:
                 context: 'SkiaSharp-Tests'
                 state: 'pending'
                 displayName: Queue up the status for the tests pipeline
           - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
-            - template: azure-templates-github-status.yml
+            - template: /scripts/azure-templates-github-status.yml@self
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_windows
       displayName: Native Windows
       dependsOn: prepare
       jobs:
-        - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|x86 (Win)
           parameters:
             name: native_android_x86_windows
             displayName: Android x86
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-android
             additionalArgs: --buildarch=x86
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|x64 (Win)
           parameters:
             name: native_android_x64_windows
             displayName: Android x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-android
             additionalArgs: --buildarch=x64
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|arm (Win)
           parameters:
             name: native_android_arm_windows
             displayName: Android arm
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-android
             additionalArgs: --buildarch=arm
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|arm64 (Win)
           parameters:
             name: native_android_arm64_windows
             displayName: Android arm64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-android
             additionalArgs: --buildarch=arm64
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Tizen (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Win)
           parameters:
             name: native_tizen_windows
             displayName: Tizen
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-tizen
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x86 (Win)
           parameters:
             name: native_win32_x86_windows
             displayName: Win32 x86
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-windows
             additionalArgs: --buildarch=x86
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x64 (Win)
           parameters:
             name: native_win32_x64_windows
             displayName: Win32 x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-windows
             additionalArgs: --buildarch=x64
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Win32|arm64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|arm64 (Win)
           parameters:
             name: native_win32_arm64_windows
             displayName: Win32 arm64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-windows
             additionalArgs: --buildarch=arm64
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native WinUI|x86 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x86 (Win + MSVC)
+          parameters:
+            name: native_win32_x86_msvc_windows
+            displayName: Win32 x86 [MSVC]
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
+            target: externals-windows
+            additionalArgs: --buildarch=x86 --llvm="msvc"
+            installLlvm: false
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x64 (Win + MSVC)
+          parameters:
+            name: native_win32_x64_msvc_windows
+            displayName: Win32 x64 [MSVC]
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
+            target: externals-windows
+            additionalArgs: --buildarch=x64 --llvm="msvc"
+            installLlvm: false
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|arm64 (Win + MSVC)
+          parameters:
+            name: native_win32_arm64_msvc_windows
+            displayName: Win32 arm64 [MSVC]
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
+            target: externals-windows
+            additionalArgs: --buildarch=arm64 --llvm="msvc"
+            installLlvm: false
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native WinUI|x86 (Win)
           parameters:
             name: native_winui_x86_windows
             displayName: WinUI x86
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-winui
             additionalArgs: --buildarch=x86
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native WinUI|x64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native WinUI|x64 (Win)
           parameters:
             name: native_winui_x64_windows
             displayName: WinUI x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-winui
             additionalArgs: --buildarch=x64
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native WinUI|arm64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native WinUI|arm64 (Win)
           parameters:
             name: native_winui_arm64_windows
             displayName: WinUI arm64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-winui
             additionalArgs: --buildarch=arm64
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Win)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native NanoServer|x64 (Win)
           parameters:
             name: native_win32_x64_nanoserver_windows
             displayName: Nano Server x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-nanoserver
             additionalArgs: --buildarch=x64
-            artifactName: native
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_macos
       displayName: Native macOS
       dependsOn: prepare
       jobs:
-        - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|x86 (macOS)
           parameters:
             name: native_android_x86_macos
             displayName: Android x86
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentMacNative }}
             target: externals-android
             additionalArgs: --buildarch=x86
-        - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|x64 (macOS)
           parameters:
             name: native_android_x64_macos
             displayName: Android x64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentMacNative }}
             target: externals-android
             additionalArgs: --buildarch=x64
-        - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|arm (macOS)
           parameters:
             name: native_android_arm_macos
             displayName: Android arm
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentMacNative }}
             target: externals-android
             additionalArgs: --buildarch=arm
-        - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Android|arm64 (macOS)
           parameters:
             name: native_android_arm64_macos
             displayName: Android arm64
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentMacNative }}
             target: externals-android
             additionalArgs: --buildarch=arm64
-        - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native iOS (macOS)
           parameters:
             name: native_ios_macos
             displayName: iOS
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentMacNative }}
             target: externals-ios
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Mac Catalyst (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Mac Catalyst (macOS)
           parameters:
             name: native_maccatalyst_macos
             displayName: Mac Catalyst
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentMacNative }}
             target: externals-maccatalyst
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native macOS (macOS)
           parameters:
             name: native_macos_macos
             displayName: macOS
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentMacNative }}
             target: externals-macos
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native tvOS (macOS)
           parameters:
             name: native_tvos_macos
             displayName: tvOS
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentMacNative }}
             target: externals-tvos
-            artifactName: native
-        - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (macOS)
           parameters:
             name: native_tizen_macos
             displayName: Tizen
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentMacNative }}
             target: externals-tizen
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
@@ -260,12 +310,13 @@ stages:
       displayName: Native Linux
       dependsOn: prepare
       jobs:
-        - template: azure-templates-linux-matrix.yml # Build Native Linux (Linux)
+        - template: /scripts/azure-templates-linux-matrix.yml@self # Build Native Linux (Linux)
           parameters:
-            artifactName: native
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentLinuxNative }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
             builds:
               - name: ''
               - name: nodeps
@@ -285,13 +336,13 @@ stages:
                 docker: scripts/Docker/debian9/clang-cross
                 dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
                 target: externals-linux-clang-cross
-        - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Linux)
           parameters:
             name: native_tizen_linux
             displayName: Tizen
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
+            buildAgent: ${{ parameters.buildAgentLinuxNative }}
             packages: $(TIZEN_LINUX_PACKAGES)
             target: externals-tizen
 
@@ -300,12 +351,13 @@ stages:
       displayName: Native WASM
       dependsOn: prepare
       jobs:
-        - template: azure-templates-wasm-matrix.yml # Build Native WASM (Linux)
+        - template: /scripts/azure-templates-wasm-matrix.yml@self # Build Native WASM (Linux)
           parameters:
+            sdl: ${{ parameters.sdl }}
             buildExternals: ${{ parameters.buildExternals }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX_NATIVE }}
-            artifactName: native
+            buildAgent: ${{ parameters.buildAgentLinuxNative }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
             emscripten:
               - 2.0.6:
                 displayName: 2.0.6
@@ -359,54 +411,122 @@ stages:
                 features: _wasmeh,simd,mt
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
-    - stage: managed
-      displayName: Build Managed
+    - stage: native
+      displayName: Native
+      variables:
+        nativeLinuxJobs: $[ convertToJson(stageDependencies.native_linux) ]
+        nativeWasmJobs: $[ convertToJson(stageDependencies.native_wasm) ]
       dependsOn:
         - native_windows
         - native_macos
         - native_linux
         - native_wasm
       jobs:
-        - template: azure-templates-bootstrapper.yml # Build Managed (Windows)
+        - template: /scripts/azure-templates-merger.yml@self # Merge Native Artifacts
+          parameters:
+            name: native
+            displayName: Merge Native Artifacts
+            sdl: ${{ parameters.sdl }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              # Android
+              - name: native_android_x86_windows
+              - name: native_android_x64_windows
+              - name: native_android_arm_windows
+              - name: native_android_arm64_windows
+              # Tizen
+              - name: native_tizen_windows
+              # Win32
+              - name: native_win32_x86_windows
+              - name: native_win32_x64_windows
+              - name: native_win32_arm64_windows
+              # WinUI
+              - name: native_winui_x86_windows
+              - name: native_winui_x64_windows
+              - name: native_winui_arm64_windows
+              # Nano Server
+              - name: native_win32_x64_nanoserver_windows
+              # iOS
+              - name: native_ios_macos
+              # Mac Catalyst
+              - name: native_maccatalyst_macos
+              # macOS
+              - name: native_macos_macos
+              # tvOS
+              - name: native_tvos_macos
+            matrixArtifacts:
+              - name: native_linux
+                jobs: $(nativeLinuxJobs)
+              - name: native_wasm
+                jobs: $(nativeWasmJobs)
+        - template: /scripts/azure-templates-merger.yml@self # Merge Native WASM Artifacts
+          parameters:
+            name: native_wasm
+            displayName: Merge Native WASM Artifacts
+            sdl: ${{ parameters.sdl }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentHost }}
+            matrixArtifacts:
+              - name: native_wasm
+                jobs: $(nativeWasmJobs)
+        - template: /scripts/azure-templates-merger.yml@self # Merge Native MSVC Artifacts
+          parameters:
+            name: native_msvc
+            displayName: Merge Native MSVC Artifacts
+            sdl: ${{ parameters.sdl }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              - name: native_win32_x86_msvc_windows
+              - name: native_win32_x64_msvc_windows
+              - name: native_win32_arm64_msvc_windows
+
+  - ${{ if ne(parameters.buildPipelineType, 'build') }}:
+    - stage: managed
+      displayName: Build Managed
+      ${{ if eq(parameters.buildPipelineType, 'tests') }}:
+        dependsOn: prepare
+      ${{ if eq(parameters.buildPipelineType, 'both') }}:
+        dependsOn: native
+      jobs:
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Managed (Windows)
           parameters:
             name: managed_windows
             displayName: Managed (Windows)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            buildAgent: ${{ parameters.buildAgentWindows}}
             target: libs
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
-            artifactName: managed
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
-        - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Managed (macOS)
           parameters:
             name: managed_macos
             displayName: Managed (macOS)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            buildAgent: ${{ parameters.buildAgentMac }}
             target: libs
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
-            artifactName: managed
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
-        - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Managed (Linux)
           parameters:
             name: managed_linux
             displayName: Managed (Linux)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: libs
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
-            artifactName: managed
             postBuildSteps:
               - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the native folder
@@ -414,69 +534,86 @@ stages:
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: package
       displayName: Package NuGets
-      dependsOn:
-        - native_windows
-        - native_macos
-        - native_linux
-        - native_wasm
+      dependsOn: native
       jobs:
-        - template: azure-templates-bootstrapper.yml # Package NuGets
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Package NuGets
           parameters:
             name: package_normal_windows
             displayName: Package NuGets
+            sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            buildAgent: ${{ parameters.buildAgentWindows}}
             target: nuget-normal
             additionalArgs: --skipExternals="all"
+            shouldPublish: false
             requiredArtifacts:
               - name: native
             postBuildSteps:
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the nuget artifacts
-                inputs:
-                  artifactName: nuget
-                  pathToPublish: 'output/nugets'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the SignList.xml into nuget artifacts
-                inputs:
-                  artifactName: nuget
-                  pathToPublish: 'scripts\SignList.xml'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the symbols nuget artifacts
-                inputs:
-                  artifactName: nuget_symbols
-                  pathToPublish: 'output/nugets-symbols'
               - pwsh: |
-                  Remove-Item ./output/native/ -Recurse -Force
-                  Remove-Item ./output/nugets/ -Recurse -Force
-                  Remove-Item ./output/nugets-symbols/ -Recurse -Force
-                displayName: Delete the pre-published folders
-        - template: azure-templates-bootstrapper.yml # Package Special NuGets
+                  Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                  Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
+                  New-Item '.\output\' -Type Directory -Force | Out-Null
+                displayName: Re-organize the output folder for publishing
+              - pwsh: |
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
+                  Copy-Item -Path '.\scripts\SignList.xml' -Destination '.\output\nugets\'
+                displayName: Prepare the nugets artifact for publishing
+              - pwsh: |
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
+                displayName: Prepare the nugets-symbols artifact for publishing
+              - pwsh: |
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
+                displayName: Prepare the build artifact for publishing
+              - pwsh: |
+                  $nupkgs = (Get-ChildItem ".\output\nugets*\*.*nupkg")
+                  foreach ($nupkg in $nupkgs) {
+                    $filename = $nupkg.Name.TrimEnd('.nupkg')
+                    $dest = ".\output\extracted_nugets\$filename"
+                    Write-Host "Extracting '$nupkg' to '$dest'..."
+                    Expand-Archive $nupkg $dest
+                  }
+                displayName: Extract all the .nupkg files for scanning
+            publishArtifacts:
+              - name: package_normal_windows
+                path: '.\output\output\'
+              - name: nuget
+                path: '.\output\nugets'
+              - name: nuget_symbols
+                path: '.\output\nugets-symbols'
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Package Special NuGets
           parameters:
             name: package_special_windows
             displayName: Package Special NuGets
+            sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
-            dependsOn:
-              - package_normal_windows
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            dependsOn: package_normal_windows
             target: nuget-special
             additionalArgs: --skipExternals="all" --exclusive
+            shouldPublish: false
             requiredArtifacts:
               - name: nuget
                 dir: nugets
               - name: nuget_symbols
                 dir: nugets-symbols
             postBuildSteps:
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the special nuget artifacts
-                inputs:
-                  artifactName: nuget_special
-                  pathToPublish: 'output/nugets-special'
               - pwsh: |
-                  Remove-Item ./output/nugets/ -Recurse -Force
-                  Remove-Item ./output/nugets-special/ -Recurse -Force
-                  Remove-Item ./output/nugets-symbols/ -Recurse -Force
-                displayName: Delete the pre-published folders
+                  Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
+                  Remove-Item ./output/nugets-symbols/ -Recurse -Force -ErrorAction Continue
+                  Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
+                  New-Item '.\output\' -Type Directory -Force | Out-Null
+                displayName: Re-organize the output folder for publishing
+              - pwsh: |
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
+                displayName: Prepare the nugets-special artifact for publishing
+              - pwsh: |
+                  Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
+                displayName: Prepare the build artifact for publishing
+            publishArtifacts:
+              - name: package_special_windows
+                path: '.\output\output\'
+              - name: nuget_special
+                path: '.\output\nugets-special'
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: api_diff
@@ -486,12 +623,12 @@ stages:
       ${{ if eq(parameters.buildPipelineType, 'both') }}:
         dependsOn: package
       jobs:
-        - template: azure-templates-bootstrapper.yml # API Diff
+        - template: /scripts/azure-templates-bootstrapper.yml@self # API Diff
           parameters:
             name: api_diff_windows
             displayName: API Diff
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            buildAgent: ${{ parameters.buildAgentWindows}}
             target: docs-api-diff
             additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
             shouldPublish: false
@@ -501,21 +638,15 @@ stages:
             preBuildSteps:
               - pwsh: .\scripts\install-gtk.ps1
                 displayName: Install GTK# 2.12
-            postBuildSteps:
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the API diffs
-                condition: always()
-                inputs:
-                  artifactName: api-diff
-                  pathToPublish: '$(Build.SourcesDirectory)\output\api-diff'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the changelogs
-                condition: always()
-                inputs:
-                  artifactName: changelogs
-                  pathToPublish: '$(Build.SourcesDirectory)\changelogs'
+            publishArtifacts:
+              - name: api-diff
+                always: true
+                path: '$(Build.SourcesDirectory)\output\api-diff'
+              - name: changelogs
+                always: true
+                path: '$(Build.SourcesDirectory)\changelogs'
 
-  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
+  - ${{ if eq(parameters.enableSigning, 'true') }}:
     - stage: signing
       displayName: Sign NuGets
       dependsOn: package
@@ -526,17 +657,8 @@ stages:
               signType: 'Real'
             ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
               signType: 'Test'
-
-  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
-    - stage: sbom
-      displayName: 'Software Bill of Materials'
-      dependsOn: signing
-      jobs:
-      - template: compliance/sbom/job.v1.yml@xamarin-templates        # Software Bill of Materials (SBOM): https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator
-        parameters:
-          artifactNames: ['nuget']
-          packageName: 'SkiaSharp'
-          packageFilter: '*.nupkg'
+            use1ESTemplate: ${{ parameters.use1ESPipelineTemplates }}
+            usePipelineArtifactTasks: true
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: tests
@@ -544,18 +666,14 @@ stages:
       ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         dependsOn: prepare
       ${{ if eq(parameters.buildPipelineType, 'both') }}:
-        dependsOn:
-          - native_windows
-          - native_macos
-          - native_linux
-          - native_wasm
+        dependsOn: native
       jobs:
-        - template: azure-templates-bootstrapper.yml # Tests|netfx (Windows)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netfx (Windows)
           parameters:
             name: tests_netfx_windows
             displayName: Windows (.NET Framework)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netfx
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
@@ -571,18 +689,16 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Windows .NET Framework Tests'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the test logs
-                condition: always()
-                inputs:
-                  artifactName: testlogs_netfx_windows
-                  pathToPublish: 'output/logs/testlogs'
-        - template: azure-templates-bootstrapper.yml # Tests|netcore (Windows)
+            publishArtifacts:
+              - name: testlogs_netfx_windows
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netcore (Windows)
           parameters:
             name: tests_netcore_windows
             displayName: Windows (.NET Core)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
@@ -598,23 +714,18 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Windows .NET Core Tests'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the test logs
-                condition: always()
-                inputs:
-                  artifactName: testlogs_netcore_windows
-                  pathToPublish: 'output/logs/testlogs'
-              - task: PublishBuildArtifacts@1
-                displayName: 'Publish the code coverage results'
-                inputs:
-                  artifactName: coverage_netcore_windows
-                  pathToPublish: 'output/coverage'
-        - template: azure-templates-bootstrapper.yml # Tests|netcore (macOS)
+            publishArtifacts:
+              - name: testlogs_netcore_windows
+                always: true
+                path: 'output/logs/testlogs'
+              - name: coverage_netcore_windows
+                path: 'output/coverage'
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netcore (macOS)
           parameters:
             name: tests_netcore_macos
             displayName: macOS (.NET Core)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
@@ -628,23 +739,18 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'macOS .NET Core Tests'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the test logs
-                condition: always()
-                inputs:
-                  artifactName: testlogs_netcore_macos
-                  pathToPublish: 'output/logs/testlogs'
-              - task: PublishBuildArtifacts@1
-                displayName: 'Publish the code coverage results'
-                inputs:
-                  artifactName: coverage_netcore_macos
-                  pathToPublish: 'output/coverage'
-        - template: azure-templates-bootstrapper.yml # Tests|netcore (Linux)
+            publishArtifacts:
+              - name: testlogs_netcore_macos
+                always: true
+                path: 'output/logs/testlogs'
+              - name: coverage_netcore_macos
+                path: 'output/coverage'
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|netcore (Linux)
           parameters:
             name: tests_netcore_linux
             displayName: Linux (.NET Core)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
@@ -660,23 +766,18 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Linux .NET Core Tests'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the test logs
-                condition: always()
-                inputs:
-                  artifactName: testlogs_netcore_linux
-                  pathToPublish: 'output/logs/testlogs'
-              - task: PublishBuildArtifacts@1
-                displayName: 'Publish the code coverage results'
-                inputs:
-                  artifactName: coverage_netcore_linux
-                  pathToPublish: 'output/coverage'
-        - template: azure-templates-bootstrapper.yml # Tests|android (macOS)
+            publishArtifacts:
+              - name: testlogs_netcore_linux
+                always: true
+                path: 'output/logs/testlogs'
+              - name: coverage_netcore_linux
+                path: 'output/coverage'
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|android (macOS)
           parameters:
             name: tests_android_macos
             displayName: Android (macOS)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-android
             additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
@@ -698,25 +799,23 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Android Tests (API $(ANDROID_TEST_DEVICE_VERSION))'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the test logs
-                condition: always()
-                inputs:
-                  artifactName: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
-                  pathToPublish: 'output/logs/testlogs'
-        - template: azure-templates-bootstrapper.yml # Tests|ios (macOS)
+            publishArtifacts:
+              - name: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|ios (macOS)
           parameters:
             name: tests_ios_macos
             displayName: iOS (macOS)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-ios
             additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native_ios_macos
             preBuildSteps:
-              - template: azure-templates-provisioning-profiles.yml
+              - template: /scripts/azure-templates-provisioning-profiles.yml@self
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the iOS test results
@@ -725,51 +824,47 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'iOS Tests (v$(IOS_TEST_DEVICE_VERSION))'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the test logs
-                condition: always()
-                inputs:
-                  artifactName: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
-                  pathToPublish: 'output/logs/testlogs'
-        - template: azure-templates-bootstrapper.yml # Tests|maccatalyst (macOS)
+            publishArtifacts:
+              - name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|maccatalyst (macOS)
           parameters:
             name: tests_maccatalyst_macos
             displayName: Mac Catalyst (macOS)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-maccatalyst
             additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native_maccatalyst_macos
             preBuildSteps:
-              - template: azure-templates-provisioning-profiles.yml
+              - template: /scripts/azure-templates-provisioning-profiles.yml@self
             postBuildSteps:
               - task: PublishTestResults@2
-                displayName: Publish the iOMac CatalystS test results
+                displayName: Publish the Mac Catalyst test results
                 condition: always()
                 inputs:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
                   testRunTitle: 'Mac Catalyst Tests'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the test logs
-                condition: always()
-                inputs:
-                  artifactName: testlogs_maccatalyst
-                  pathToPublish: 'output/logs/testlogs'
-        - template: azure-templates-bootstrapper.yml # Tests [WASM] (Linux)
+            publishArtifacts:
+              - name: testlogs_maccatalyst
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests [WASM] (Linux)
           parameters:
             name: tests_wasm_linux
             displayName: WASM (Linux)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
             additionalArgs: --skipExternals="all" --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
             shouldPublish: false
             requiredArtifacts:
-              - name: native_wasm_linux
+              - name: native_wasm
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
             postBuildSteps:
@@ -780,27 +875,25 @@ stages:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/*.xml'
                   testRunTitle: 'Linux WASM Tests'
-              - task: PublishBuildArtifacts@1
-                displayName: Publish the test logs
-                condition: always()
-                inputs:
-                  artifactName: testlogs_wasm
-                  pathToPublish: 'output/logs/testlogs'
+            publishArtifacts:
+              - name: testlogs_wasm
+                always: true
+                path: 'output/logs/testlogs'
         # TODO: add tests for linux alpine
         # TODO: add tests for linux no dependencies
         # TODO: add tests for windows nano server
         - job: coverage_reports                      # Coverage Reports
           displayName: Coverage Reports
-          pool: ${{ parameters.VM_IMAGE_HOST.pool }}
+          pool: ${{ parameters.buildAgentHost.pool }}
           dependsOn:
             - tests_netcore_windows
             - tests_netcore_macos
             - tests_netcore_linux
           steps:
             - checkout: self
-            - template: azure-templates-variables.yml
+            - template: /scripts/azure-templates-variables.yml@self
             - ${{ if ne(parameters.buildPipelineType, 'both') }}:
-              - template: azure-templates-github-status.yml
+              - template: /scripts/azure-templates-github-status.yml@self
                 parameters:
                   state: 'pending'
             - task: DownloadBuildArtifacts@1
@@ -824,7 +917,7 @@ stages:
                 codeCoverageTool: Cobertura
                 summaryFileLocation: 'output/**/Cobertura.xml'
             - ${{ if ne(parameters.buildPipelineType, 'both') }}:
-              - template: azure-templates-github-status.yml
+              - template: /scripts/azure-templates-github-status.yml@self
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: samples
@@ -834,12 +927,12 @@ stages:
       ${{ if eq(parameters.buildPipelineType, 'both') }}:
         dependsOn: package
       jobs:
-        - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Samples (Windows)
           parameters:
             name: samples_windows
             displayName: Windows
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            buildAgent: ${{ parameters.buildAgentWindows}}
             target: samples
             requiredArtifacts:
               - name: nuget
@@ -847,12 +940,12 @@ stages:
             postBuildSteps:
               - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
                 displayName: Delete the nugets folder
-        - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Samples (macOS)
           parameters:
             name: samples_macos
             displayName: macOS
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_MAC }}
+            buildAgent: ${{ parameters.buildAgentMac }}
             target: samples
             installNinja: true
             shouldPublish: false
@@ -860,13 +953,13 @@ stages:
               - name: nuget
                 dir: nugets
             preBuildSteps:
-              - template: azure-templates-provisioning-profiles.yml
-        - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
+              - template: /scripts/azure-templates-provisioning-profiles.yml@self
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Samples (Linux)
           parameters:
             name: samples_linux
             displayName: Linux
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            vmImage: ${{ parameters.VM_IMAGE_LINUX }}
+            buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: samples
             shouldPublish: false
@@ -876,31 +969,34 @@ stages:
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
 
-  - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(parameters.buildPipelineType, 'tests'), ne(variables['System.PullRequest.IsFork'], 'true'), or(and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))), parameters.runCompliance)) }}:
-    - template: security/full/v1.yml@xamarin-templates
+  - ${{ if eq(parameters.sdl.apiscan.enabled, 'true') }}:
+    - template: security/apiscan/v0.yml@xamarin-templates
       parameters:
+        windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
+        windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
+        timeoutInMinutes: 480
         stageDependsOn:
           - package
-        complianceEnabled: true
-        complianceTimeoutInMinutes: 480
         scanArtifacts:
           - nuget
           - nuget_symbols
-        antiMalwareEnabled: true
-        binSkimEnabled: false
-        policheckExclusionFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
-        policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\scripts\guardian
-        credScanEnabled: true
-        credScanSuppressionFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
-        sourceGdnSuppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
-        tsaConfigFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
-        tsaReportBranch: $(Build.SourceBranch)
-        enableCodeInspector: true
-        apiScanEnabled: true
+          - native_msvc
         apiScanSoftwareName: 'SkiaSharp'
         apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
         apiScanPreserveLogsFolder: true
+        apiScanAuthConnectionString: 'runAs=App;AppId=$(ApiScanClientId)'
+        apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
         preScanSteps:
+          - pwsh: |
+              $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
+              $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
+              $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
+              $destFile = "$destFolder\APIScanSurrogates.xml"
+              New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
+              $surrogateContents = (Get-Content $surrogateFile)
+              $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
+              $surrogateContents | Set-Content $destFile
+            displayName: Generate the surrogate files
           - pwsh: |
               $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
               foreach ($nupkg in $nupkgs) {
@@ -917,16 +1013,17 @@ stages:
       displayName: Finalize Build
       dependsOn:
         - api_diff
+        - managed
         - samples
         - tests
       jobs:
         - job: finalize                              # Finalize Build
           displayName: Finalize Build
-          pool: ${{ parameters.VM_IMAGE_HOST.pool }}
+          pool: ${{ parameters.buildAgentHost.pool }}
           steps:
             - checkout: none
-            - template: azure-templates-variables.yml
-            - template: azure-templates-github-status.yml
+            - template: /scripts/azure-templates-variables.yml@self
+            - template: /scripts/azure-templates-github-status.yml@self
               parameters:
                 context: 'SkiaSharp-Tests'
                 displayName: Update the final status for the tests pipeline

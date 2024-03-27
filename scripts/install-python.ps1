@@ -31,12 +31,9 @@ if ($IsMacOS) {
 } else {
     $platform = "win32"
 }
-
-$downloadUrl = (($pythonManifest
-    | Where-Object { $_.version -eq $Version }
-    | Select-Object -First 1).files
-    | Where-Object { $_.platform -eq $platform -and $_.arch -eq $Arch }
-    | Select-Object -First 1).download_url
+$manifestFileVersion = $pythonManifest | Where-Object { $_.version -eq $Version } | Select-Object -First 1
+$manifestFileItem = $manifestFileVersion.files | Where-Object { $_.platform -eq $platform -and $_.arch -eq $Arch } | Select-Object -First 1
+$downloadUrl = $manifestFileItem.download_url
 
 # download
 $tempDir = Join-Path "$HOME_DIR" "python-temp"
