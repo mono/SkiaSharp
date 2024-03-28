@@ -17,6 +17,36 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void RunsAllocateNoPositions()
+		{
+			var font = new SKFont();
+
+			using var builder = new SKTextBlobBuilder();
+
+			var run = builder.AllocateRun(font, 100, 0, 0);
+			Assert.Equal(100, run.Glyphs.Length);
+
+			using var blob = builder.Build();
+			Assert.NotNull(blob);
+		}
+
+		[SkippableFact]
+		public void RawRunsAllocateNoPositions()
+		{
+			var font = new SKFont();
+
+			using var builder = new SKTextBlobBuilder();
+
+			var run = builder.AllocateRawRun(font, 100, 0, 0);
+			Assert.Equal(100, run.Glyphs.Length);
+			Assert.Equal(0, run.Positions.Length);
+			Assert.Equal(0, run.Text.Length);
+
+			using var blob = builder.Build();
+			Assert.NotNull(blob);
+		}
+
+		[SkippableFact]
 		public void TextRunsAllocateTextSpan()
 		{
 			var font = new SKFont();
@@ -24,8 +54,23 @@ namespace SkiaSharp.Tests
 			using var builder = new SKTextBlobBuilder();
 
 			var run = builder.AllocateTextRun(font, 100, 0, 0, 50);
-			Assert.Equal(100, run.GetGlyphSpan().Length);
-			Assert.Equal(50, run.GetTextSpan().Length);
+			Assert.Equal(100, run.Glyphs.Length);
+			Assert.Equal(50, run.Text.Length);
+
+			using var blob = builder.Build();
+			Assert.NotNull(blob);
+		}
+
+		[SkippableFact]
+		public void RawTextRunsAllocateTextSpan()
+		{
+			var font = new SKFont();
+
+			using var builder = new SKTextBlobBuilder();
+
+			var run = builder.AllocateRawTextRun(font, 100, 0, 0, 50);
+			Assert.Equal(100, run.Glyphs.Length);
+			Assert.Equal(50, run.Text.Length);
 
 			using var blob = builder.Build();
 			Assert.NotNull(blob);
@@ -112,7 +157,7 @@ namespace SkiaSharp.Tests
 
 			run.SetPositions(positions);
 
-			var span = run.GetPositionSpan();
+			var span = run.Positions;
 			Assert.Equal(positions, span.ToArray());
 
 			var floats = new float[6];
