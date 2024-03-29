@@ -57,7 +57,6 @@ steps:
         Write-Host "Working with $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
         $match = [regex]::Match("$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME", '.*\-(.+)\.(\d+)')
       }
-      Write-Host "Working with $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
       if ($match) {
         $label = $match.Groups[1].Value
         Write-Host "Preview label: $label"
