@@ -50,9 +50,15 @@ steps:
     condition: eq(variables['Build.Reason'], 'Schedule')
 
   - pwsh: |
-      Write-Host "Working with $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
-      if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
+      if ($env:OVERRIDE_SKIASHARP_RUNNAME) {
+        Write-Host "Working with $env:OVERRIDE_SKIASHARP_RUNNAME"
+        $match = [regex]::Match("$env:OVERRIDE_SKIASHARP_RUNNAME", '.*\-(.+)\.(\d+)')
+      } elseif ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
+        Write-Host "Working with $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
         $match = [regex]::Match("$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME", '.*\-(.+)\.(\d+)')
+      }
+      Write-Host "Working with $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
+      if ($match) {
         $label = $match.Groups[1].Value
         Write-Host "Preview label: $label"
         Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$label"
@@ -67,7 +73,9 @@ steps:
 
   - pwsh: |
       $label = ""
-      if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
+      if ($env:OVERRIDE_SKIASHARP_RUNNAME) {
+        $label = $env:OVERRIDE_SKIASHARP_RUNNAME
+      } elseif ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
         $label = $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME
       } else {
         if ($env:BUILD_REASON -ne "PullRequest") {

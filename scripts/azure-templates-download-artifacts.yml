@@ -7,7 +7,10 @@ steps:
   - ${{ if ne(length(parameters.artifacts), 0) }}:
     - pwsh: |
         $buildId = "${{ parameters.sourceBuildId }}"
-        if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNID) {
+        if ($env:OVERRIDE_SKIASHARP_RUNID) {
+          $buildId = $env:OVERRIDE_SKIASHARP_RUNID
+          Write-Host "Using OVERRIDE_SKIASHARP_RUNID = '$env:OVERRIDE_SKIASHARP_RUNID'"
+        } elseif ($env:RESOURCES_PIPELINE_SKIASHARP_RUNID) {
           $buildId = $env:RESOURCES_PIPELINE_SKIASHARP_RUNID
           Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_RUNID = '$env:RESOURCES_PIPELINE_SKIASHARP_RUNID'"
         }
@@ -20,7 +23,10 @@ steps:
           $versionType = 'latestFromBranch'
         }
         $pipelineId = "$env:SYSTEM_DEFINITIONID"
-        if ($env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID) {
+        if ($env:OVERRIDE_SKIASHARP_PIPELINEID) {
+          $pipelineId = $env:OVERRIDE_SKIASHARP_PIPELINEID
+          Write-Host "Using OVERRIDE_SKIASHARP_PIPELINEID = '$env:OVERRIDE_SKIASHARP_PIPELINEID'"
+        } elseif ($env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID) {
           $pipelineId = $env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID
           Write-Host "Using RESOURCES_PIPELINE_SKIASHARP_PIPELINEID = '$env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID'"
         }

@@ -35,9 +35,21 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-20.04
         os: linux
+  - name: overrideSkiaSharpPipelineId
+    displayName: 'The triggering SkiaSharp pipeline ID (typically 10789):'
+    type: string
+  - name: overrideSkiaSharpRunId
+    displayName: 'The triggering SkiaSharp run ID:'
+    type: string
+  - name: overrideSkiaSharpRunName
+    displayName: 'The triggering SkiaSharp full version number (#.#.#-preview.#+branch):'
+    type: string
 
 variables:
   - template: /scripts/azure-pipelines-variables.yml@self
+  - OVERRIDE_SKIASHARP_PIPELINEID: $[ parameters.overrideSkiaSharpPipelineId ]
+  - OVERRIDE_SKIASHARP_RUNID: $[ parameters.overrideSkiaSharpRunId ]
+  - OVERRIDE_SKIASHARP_RUNNAME: $[ parameters.overrideSkiaSharpRunName ]
 
 resources:
   repositories:
