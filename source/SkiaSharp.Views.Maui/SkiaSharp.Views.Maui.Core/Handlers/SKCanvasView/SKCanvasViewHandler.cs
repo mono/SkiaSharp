@@ -13,7 +13,7 @@ namespace SkiaSharp.Views.Maui.Handlers
 			};
 
 		public static CommandMapper<ISKCanvasView, SKCanvasViewHandler> SKCanvasViewCommandMapper =
-			new CommandMapper<ISKCanvasView, SKCanvasViewHandler>()
+			new CommandMapper<ISKCanvasView, SKCanvasViewHandler>(ViewHandler.ViewCommandMapper)
 			{
 				[nameof(ISKCanvasView.InvalidateSurface)] = OnInvalidateSurface,
 			};

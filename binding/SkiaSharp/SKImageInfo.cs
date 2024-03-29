@@ -104,6 +104,9 @@ namespace SkiaSharp
 		public readonly int BytesPerPixel =>
 			ColorType.GetBytesPerPixel ();
 
+		public readonly int BitShiftPerPixel =>
+			ColorType.GetBitShiftPerPixel ();
+
 		public readonly int BitsPerPixel => BytesPerPixel * 8;
 
 		public readonly int BytesSize => Width * Height * BytesPerPixel;
@@ -121,6 +124,11 @@ namespace SkiaSharp
 		public readonly SKSizeI Size => new SKSizeI (Width, Height);
 
 		public readonly SKRectI Rect => SKRectI.Create (Width, Height);
+
+		internal readonly int GetPixelBytesOffset (int x, int y) =>
+			ColorType == SKColorType.Unknown
+				? 0
+				: y * RowBytes + (x << ColorType.GetBitShiftPerPixel ());
 
 		public readonly SKImageInfo WithSize (SKSizeI size) =>
 			WithSize (size.Width, size.Height);

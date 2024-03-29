@@ -84,6 +84,10 @@ using skottie_logger_t = System.IntPtr;
 using skottie_marker_observer_t = System.IntPtr;
 using skottie_property_observer_t = System.IntPtr;
 using skottie_resource_provider_t = System.IntPtr;
+using skresources_external_track_asset_t = System.IntPtr;
+using skresources_image_asset_t = System.IntPtr;
+using skresources_multi_frame_image_asset_t = System.IntPtr;
+using skresources_resource_provider_t = System.IntPtr;
 using sksg_invalidation_controller_t = System.IntPtr;
 using vk_device_t = System.IntPtr;
 using vk_instance_t = System.IntPtr;
@@ -4958,6 +4962,20 @@ namespace SkiaSharp
 		private static Delegates.sk_image_make_shader sk_image_make_shader_delegate;
 		internal static sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix) =>
 			(sk_image_make_shader_delegate ??= GetSymbol<Delegates.sk_image_make_shader> ("sk_image_make_shader")).Invoke (image, tileX, tileY, sampling, cmatrix);
+		#endif
+
+		// sk_shader_t* sk_image_make_raw_shader(const sk_image_t* image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, const sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_image_make_raw_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_shader_t sk_image_make_raw_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		}
+		private static Delegates.sk_image_make_raw_shader sk_image_make_raw_shader_delegate;
+		internal static sk_shader_t sk_image_make_raw_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix) =>
+			(sk_image_make_raw_shader_delegate ??= GetSymbol<Delegates.sk_image_make_raw_shader> ("sk_image_make_raw_shader")).Invoke (image, tileX, tileY, sampling, cmatrix);
 		#endif
 
 		// sk_image_t* sk_image_make_subset(const sk_image_t* cimage, gr_direct_context_t* context, const sk_irect_t* subset)

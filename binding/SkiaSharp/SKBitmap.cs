@@ -297,10 +297,11 @@ namespace SkiaSharp
 		public IntPtr GetPixels () =>
 			GetPixels (out _);
 
-		public Span<byte> GetPixelSpan ()
-		{
-			return new Span<byte> ((void*)GetPixels (out var length), (int)length);
-		}
+		public Span<byte> GetPixelSpan () =>
+			new Span<byte> ((void*)GetPixels (out var length), (int)length);
+
+		public Span<byte> GetPixelSpan (int x, int y) =>
+			GetPixelSpan ().Slice (Info.GetPixelBytesOffset (x, y));
 
 		public IntPtr GetPixels (out IntPtr length)
 		{

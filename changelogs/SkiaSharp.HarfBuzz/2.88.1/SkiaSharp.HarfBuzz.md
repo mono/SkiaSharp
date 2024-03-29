@@ -4,7 +4,9 @@
 
 ### Namespace SkiaSharp.HarfBuzz
 
-#### Type Changed: SkiaSharp.HarfBuzz.SKShaper+Result
+#### Type Changed: SkiaSharp.HarfBuzz.SKShaper
+
+#### Type Changed: SkiaSharp.HarfBuzz.SKShaper.Result
 
 Added constructor:
 
@@ -17,4 +19,7 @@ Added property:
 ```csharp
 public float Width { get; }
 ```
+
+
+
 

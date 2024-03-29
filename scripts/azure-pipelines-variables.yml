@@ -1,4 +1,5 @@
 variables:
+  SKIASHARP_MAJOR_VERSION: 3
   SKIASHARP_VERSION: 3.0.0
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
@@ -6,17 +7,17 @@ variables:
   GIT_BRANCH_NAME: $(Build.SourceBranch)
   GIT_URL: $(Build.Repository.Uri)
   FEATURE_NAME: ''
-  PREVIEW_LABEL: 'alpha.1'
+  PREVIEW_LABEL: 'preview.0'
   BUILD_NUMBER: $[counter(format('_{0}_{1}_{2}__', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch'], variables['PREVIEW_LABEL']), 1)]
   BUILD_COUNTER: $[counter('global_counter', 1)]
-  TIZEN_LINUX_PACKAGES: libxcb-icccm4 libxcb-render-util0 gettext libxcb-image0 libsdl1.2debian libv4l-0 libxcb-randr0 bridge-utils libxcb-shape0 libpython2.7 openvpn
+  TIZEN_LINUX_PACKAGES: libxcb-icccm4 libxcb-render-util0 gettext libxcb-image0 libsdl1.2debian libv4l-0 libxcb-randr0 bridge-utils libxcb-shape0 libpython2.7 openvpn libkf5itemmodels5 libkf5kiowidgets5 libkchart2
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build
   XCODE_VERSION: '14.3.1'
   XCODE_VERSION_NATIVE: '14.3.1'
   VISUAL_STUDIO_VERSION: ''
   DOTNET_VERSION_PREVIEW: ''
   DOTNET_WORKLOAD_SOURCE: ''
-  DOTNET_WORKLOAD_TIZEN: ''
+  DOTNET_WORKLOAD_TIZEN: '7.0.123'
   CONFIGURATION: 'Release'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   NUGET_DIFF_PRERELEASE: false

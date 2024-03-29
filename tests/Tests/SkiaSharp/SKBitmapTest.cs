@@ -6,15 +6,15 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests
 {
 	public class SKBitmapTest : SKTest
 	{
-		public static IEnumerable<object[]> GetAllColorTypes()
+		public SKBitmapTest(ITestOutputHelper output)
+			: base(output)
 		{
-			foreach (SKColorType ct in Enum.GetValues(typeof(SKColorType)))
-				yield return new object[] { ct };
 		}
 
 		[SkippableTheory]
@@ -633,6 +633,46 @@ namespace SkiaSharp.Tests
 			using var bitmap = SKBitmap.Decode(stream);
 
 			Assert.NotNull(bitmap);
+		}
+
+		[SkippableFact]
+		public void GetPixelSpanHasCorrectLength()
+		{
+			using var bmp = CreateTestBitmap();
+
+			var totalBytes = bmp.Info.BytesSize;
+
+			Assert.Equal(totalBytes, bmp.GetPixelSpan().Length);
+		}
+
+		[SkippableTheory]
+		[InlineData(0, 0, 40 * 40 * 4)]
+		[InlineData(0, 20, 40 * 20 * 4)]
+		[InlineData(39, 39, 4)]
+		public void GetPixelSpanXYHasCorrectLength(int x, int y, int expectedLength)
+		{
+			using var bmp = CreateTestBitmap();
+			var span = bmp.GetPixelSpan(x, y);
+			Assert.Equal(expectedLength, span.Length);
+		}
+
+		[SkippableTheory]
+		[InlineData("baboon.jpg", "baboon-reencoded.jpg")]
+		public void CanEncodeImageStreams(string filename, string encodedFilename)
+		{
+			var path = Path.Combine(PathToImages, filename);
+			using var stream = File.OpenRead(path);
+			using var bitmap = SKBitmap.Decode(stream);
+
+			using var ouputStream = new MemoryStream();
+			bitmap.Encode(ouputStream, SKEncodedImageFormat.Jpeg, 100);
+			ouputStream.Position = 0;
+			using var outputBitmp = SKBitmap.Decode(ouputStream);
+
+			var encodedPath = Path.Combine(PathToImages, encodedFilename);
+			using var encodedBitmap = SKBitmap.Decode(encodedPath);
+
+			AssertSimilar(encodedBitmap, outputBitmp);
 		}
 	}
 }

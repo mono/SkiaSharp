@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !MACCATALYST || HAS_UNO_WINUI
+using System;
 using System.ComponentModel;
 
 #if HAS_UNO_WINUI
@@ -68,3 +69,4 @@ namespace SkiaSharp.Views.Blazor
 		public SKImageInfo RawInfo { get; private set; }
 	}
 }
+#endif

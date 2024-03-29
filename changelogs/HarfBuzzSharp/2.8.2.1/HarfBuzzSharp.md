@@ -2,8 +2,6 @@
 
 ## HarfBuzzSharp.dll
 
-### Namespace HarfBuzzSharp
-
 ### New Namespace HarfBuzzSharp.Internals
 
 #### New Type: HarfBuzzSharp.Internals.PlatformConfiguration

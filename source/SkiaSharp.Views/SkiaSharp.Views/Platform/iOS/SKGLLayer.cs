@@ -2,6 +2,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Runtime.Versioning;
 using CoreAnimation;
 using CoreGraphics;
 using OpenGLES;
@@ -13,6 +14,12 @@ namespace SkiaSharp.Views.tvOS
 namespace SkiaSharp.Views.iOS
 #endif
 {
+	[ObsoletedOSPlatform("tvos12.0", "Use 'Metal' instead.")]
+	[ObsoletedOSPlatform("ios12.0", "Use 'Metal' instead.")]
+	[SupportedOSPlatform("ios")]
+	[SupportedOSPlatform("tvos")]
+	[UnsupportedOSPlatform("macos")]
+	[UnsupportedOSPlatform("maccatalyst")]
 	public class SKGLLayer : CAEAGLLayer
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;

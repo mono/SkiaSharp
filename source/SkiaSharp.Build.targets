@@ -104,9 +104,9 @@
     <PropertyGroup>
       <Version>$(_VersionNuGetMatch)</Version>
       <Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
-      <Version Condition="'$(AssemblyVersionGitBranch)' != ''">$(Version)+$(AssemblyVersionGitBranch.Replace('/', '-').Replace('\', '-'))</Version>
-      <Version Condition="'$(AssemblyVersionGitSha)' != ''">$(Version).$(AssemblyVersionGitSha)</Version>
       <InformationalVersion>$(Version)</InformationalVersion>
+      <InformationalVersion Condition="'$(AssemblyVersionGitBranch)' != ''">$(InformationalVersion)+$(AssemblyVersionGitBranch.Replace('/', '-').Replace('\', '-'))</InformationalVersion>
+      <InformationalVersion Condition="'$(AssemblyVersionGitSha)' != ''">$(InformationalVersion).$(AssemblyVersionGitSha)</InformationalVersion>
       <AssemblyVersion>$(_VersionAssemblyMatch)</AssemblyVersion>
       <FileVersion>$(_VersionFileMatch)</FileVersion>
     </PropertyGroup>
@@ -149,6 +149,9 @@ internal partial class VersionConstants {
     <_SignAssemblyAfterTargets>
       CoreCompile
     </_SignAssemblyAfterTargets>
+    <_SignAssemblyAfterTargets Condition="'$(CsWinRTIncludes)' != ''">
+      CsWinRTReplaceForPatchedRuntime
+    </_SignAssemblyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssembly"
           AfterTargets="$(_SignAssemblyAfterTargets)"
@@ -163,14 +166,14 @@ internal partial class VersionConstants {
     Verify that the output assembly is signed correctly for release.
     ===================================================================================================================
   -->
-  <PropertyGroup Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+  <PropertyGroup Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
     <_SignAssemblyVerifyAfterTargets>
       Build
     </_SignAssemblyVerifyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssemblyVerify"
           AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
-          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' ">
+          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" StandardOutputImportance="Normal" />
   </Target>
 

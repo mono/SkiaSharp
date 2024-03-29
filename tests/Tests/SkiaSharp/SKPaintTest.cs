@@ -698,5 +698,27 @@ namespace SkiaSharp.Tests
 			Assert.True(paint.IsAntialias);
 			Assert.Equal(SKFontEdging.Antialias, paint.GetFont().Edging);
 		}
+
+		[Obsolete]
+		[SkippableTheory]
+		[InlineData("CourierNew.ttf")]
+		[InlineData("Distortable.ttf")]
+		[InlineData("Funkster.ttf")]
+		[InlineData("HangingS.ttf")]
+		[InlineData("ReallyBigA.ttf")]
+		[InlineData("Roboto.woff2")]
+		[InlineData("RobotoMono.woff2")]
+		[InlineData("Roboto2-Regular_NoEmbed.ttf")]
+		[InlineData("segoeui.ttf")]
+		[InlineData("上田雅美.ttf")]
+		public void CanSetTypefacesWithoutCrashing(string fontfile)
+		{
+			using var paint = new SKPaint();
+
+			using var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, fontfile));
+			paint.Typeface = typeface;
+
+			Assert.Same(typeface, paint.Typeface);
+		}
 	}
 }

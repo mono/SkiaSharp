@@ -33,16 +33,20 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(IsWindowsNativeAssets)' == 'true'">
-    <None Include="@(NativeWindowsPackageFile)" Link="runtimes\%(RuntimeIdentifier)\native\%(Filename)%(Extension)" />
+    <_NativeWindowsPackageFileToUse Include="@(NativeWindowsPackageFile->HasMetadata('Folder'))" />
+    <_NativeWindowsPackageFileWithNoFolder Include="@(NativeWindowsPackageFile)" />
+    <_NativeWindowsPackageFileWithNoFolder Remove="@(_NativeWindowsPackageFileToUse)" />
+    <_NativeWindowsPackageFileToUse Include="@(_NativeWindowsPackageFileWithNoFolder)" Folder="native" />
+    <None Include="@(_NativeWindowsPackageFileToUse)" Link="runtimes\%(RuntimeIdentifier)\%(Folder)\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Target Name="_IncludeRuntimesPackageFiles" BeforeTargets="_GetPackageFiles" Condition="'$(IsWindowsNativeAssets)' == 'true'">
     <ItemGroup>
       <_CompletedNativeWindowsPackageFile
-          Include="@(NativeWindowsPackageFile)" 
+          Include="@(_NativeWindowsPackageFileToUse)" 
           TargetFramework="%(RuntimeIdentifier)"
-          TargetPath="native\%(Filename)%(Extension)" 
-          PackagePath="runtimes\%(RuntimeIdentifier)\native\%(Filename)%(Extension)" />
+          TargetPath="%(Folder)\%(Filename)%(Extension)" 
+          PackagePath="runtimes\%(RuntimeIdentifier)\%(Folder)\%(Filename)%(Extension)" />
       <_BuildOutputInPackage Remove="@(_BuildOutputInPackage)" />
       <_BuildOutputInPackage Include="@(_CompletedNativeWindowsPackageFile)" Condition="'%(Extension)' != '.pdb'" />
       <_TargetPathsToSymbols Remove="@(_TargetPathsToSymbols)" />

@@ -7,12 +7,6 @@ namespace SkiaSharp.Tests
 {
 	public class SKPixmapTest : SKTest
 	{
-		public static IEnumerable<object[]> GetAllColorTypes()
-		{
-			foreach (SKColorType ct in Enum.GetValues(typeof(SKColorType)))
-				yield return new object[] { ct };
-		}
-
 		[SkippableFact]
 		public void CanScalePixels()
 		{
@@ -267,6 +261,130 @@ namespace SkiaSharp.Tests
 			pixmap.Erase(rgb888);
 
 			Assert.Equal(gray8, pixmap.GetPixelSpan<byte>()[0]);
+		}
+
+		[SkippableTheory]
+		// Rgb565 => 2 bytes per pixel
+		[InlineData(SKColorType.Rgb565, 1, 1, 0, 0, 0)]
+		[InlineData(SKColorType.Rgb565, 2, 2, 0, 0, 0)]
+		[InlineData(SKColorType.Rgb565, 2, 2, 1, 0, 2)]
+		[InlineData(SKColorType.Rgb565, 2, 2, 1, 0, 2)]
+		[InlineData(SKColorType.Rgb565, 2, 2, 0, 1, 4)]
+		[InlineData(SKColorType.Rgb565, 2, 2, 0, 1, 4)]
+		[InlineData(SKColorType.Rgb565, 2, 2, 1, 1, 6)]
+		[InlineData(SKColorType.Rgb565, 2, 2, 1, 1, 6)]
+		// Rgba8888 => 4 bytes per pixel
+		[InlineData(SKColorType.Rgba8888, 1, 1, 0, 0, 0)]
+		[InlineData(SKColorType.Rgba8888, 2, 2, 0, 0, 0)]
+		[InlineData(SKColorType.Rgba8888, 2, 2, 1, 0, 4)]
+		[InlineData(SKColorType.Rgba8888, 2, 2, 1, 0, 4)]
+		[InlineData(SKColorType.Rgba8888, 2, 2, 0, 1, 8)]
+		[InlineData(SKColorType.Rgba8888, 2, 2, 0, 1, 8)]
+		[InlineData(SKColorType.Rgba8888, 2, 2, 1, 1, 12)]
+		[InlineData(SKColorType.Rgba8888, 2, 2, 1, 1, 12)]
+		public void GetPixelBytesOffsetIsCorrect(SKColorType ct, int w, int h, int x, int y, int offset)
+		{
+			var info = new SKImageInfo(w, h, ct);
+			Assert.Equal(offset, info.GetPixelBytesOffset(x, y));
+		}
+
+		[SkippableTheory]
+		[InlineData(0x00000000)]
+		[InlineData(0xFF000000)]
+		[InlineData(0xFFFF0000)]
+		[InlineData(0xFF00FF00)]
+		[InlineData(0xFF0000FF)]
+		[InlineData(0xFFFFFFFF)]
+		public void GetPixelSpanWithOffsetReadsValuesCorrectly(uint color)
+		{
+			var rgb888 = (SKColor)color;
+
+			// swizzle for some CPU endianness
+			var rawRgb888 = rgb888;
+			if (BitConverter.IsLittleEndian)
+				rawRgb888 = new SKColor(rgb888.Blue, rgb888.Green, rgb888.Red, rgb888.Alpha);
+
+			var info = new SKImageInfo(3, 3, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			pixmap.Erase(rgb888);
+
+			for (var x = 0; x < info.Width; x++)
+			{
+				for (var y = 0; y < info.Height; y++)
+				{
+					var expectedLength = (info.Width * info.Height) - (y * info.Height + x);
+
+					// no need for swizzle
+					Assert.Equal(rgb888, pixmap.GetPixelColor(x, y));
+
+					// may need a swizzle
+					var colors = pixmap.GetPixelSpan<SKColor>(x, y);
+					Assert.Equal(expectedLength, colors.Length);
+					Assert.Equal(rawRgb888, colors[0]);
+
+					var uints = pixmap.GetPixelSpan<uint>(x, y);
+					Assert.Equal(expectedLength, uints.Length);
+					Assert.Equal(rawRgb888, uints[0]);
+				}
+			}
+		}
+
+		[SkippableTheory]
+		[InlineData(0x00000000, 0x0000)]
+		[InlineData(0xFF000000, 0x0000)]
+		[InlineData(0xFFFF0000, 0xF800)]
+		[InlineData(0xFF00FF00, 0x07E0)]
+		[InlineData(0xFF0000FF, 0x001F)]
+		[InlineData(0xFFFFFFFF, 0xFFFF)]
+		public void GetPixelSpanWithOffsetReads565Correctly(uint rgb888, ushort rgb565)
+		{
+			var info = new SKImageInfo(3, 3, SKColorType.Rgb565);
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			pixmap.Erase(rgb888);
+
+			for (var x = 0; x < info.Width; x++)
+			{
+				for (var y = 0; y < info.Height; y++)
+				{
+					var expectedLength = (info.Width * info.Height) - (y * info.Height + x);
+
+					var ushorts = pixmap.GetPixelSpan<ushort>(x, y);
+					Assert.Equal(expectedLength, ushorts.Length);
+					Assert.Equal(rgb565, ushorts[0]);
+				}
+			}
+		}
+
+		[SkippableTheory]
+		[InlineData(0x00000000, 0)]
+		[InlineData(0xFF000000, 0)]
+		[InlineData(0xFFFF0000, 54)]
+		[InlineData(0xFF00FF00, 182)]
+		[InlineData(0xFF0000FF, 18)]
+		[InlineData(0xFFFFFFFF, 255)]
+		public void GetPixelSpanWithOffsetReadsGray8Correctly(uint rgb888, byte gray8)
+		{
+			var info = new SKImageInfo(3, 3, SKColorType.Gray8);
+			using var bmp = new SKBitmap(info);
+			using var pixmap = bmp.PeekPixels();
+
+			pixmap.Erase(rgb888);
+
+			for (var x = 0; x < info.Width; x++)
+			{
+				for (var y = 0; y < info.Height; y++)
+				{
+					var expectedLength = (info.Width * info.Height) - (y * info.Height + x);
+
+					var bytes = pixmap.GetPixelSpan<byte>(x, y);
+					Assert.Equal(expectedLength, bytes.Length);
+					Assert.Equal(gray8, bytes[0]);
+				}
+			}
 		}
 	}
 }

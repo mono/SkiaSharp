@@ -900,5 +900,30 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal((SKColor)color, pixmap.GetPixelColor(x, y));
 		}
+
+		[SkippableFact]
+		public void CanCreateRawShader()
+		{
+			var path = Path.Combine(PathToImages, "baboon.png");
+
+			using var image = SKImage.FromEncodedData(path);
+			Assert.NotNull(image);
+
+			using var shader = image.ToRawShader();
+			Assert.NotNull(shader);
+		}
+
+		[SkippableFact]
+		public void CannotCreateRawShaderWithBicubicSampling()
+		{
+			var path = Path.Combine(PathToImages, "baboon.png");
+
+			using var image = SKImage.FromEncodedData(path);
+			Assert.NotNull(image);
+
+			var sampling = new SKSamplingOptions(SKCubicResampler.Mitchell);
+			using var shader = image.ToRawShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, sampling);
+			Assert.Null(shader);
+		}
 	}
 }

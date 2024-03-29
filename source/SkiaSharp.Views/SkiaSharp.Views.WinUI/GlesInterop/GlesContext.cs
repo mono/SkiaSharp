@@ -19,6 +19,8 @@ using EGLDisplay = System.IntPtr;
 using EGLContext = System.IntPtr;
 using EGLConfig = System.IntPtr;
 using EGLSurface = System.IntPtr;
+using SkiaSharp.Views.WinUI.Native;
+using WinRT;
 
 namespace SkiaSharp.Views.GlesInterop
 {
@@ -102,7 +104,7 @@ namespace SkiaSharp.Views.GlesInterop
 				PropertySetExtensions.AddSingle(surfaceCreationProperties, Egl.EGLRenderResolutionScaleProperty, resolutionScale.Value);
 			}
 
-			surface = Egl.eglCreateWindowSurface(eglDisplay, eglConfig, surfaceCreationProperties, surfaceAttributes);
+			surface = Egl.eglCreateWindowSurface(eglDisplay, eglConfig, surfaceCreationProperties.As<IInspectable>().ThisPtr, surfaceAttributes);
 			if (surface == Egl.EGL_NO_SURFACE)
 			{
 				throw new Exception("Failed to create EGL surface");

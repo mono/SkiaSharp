@@ -156,7 +156,11 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
+			try {
+				return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
+			} finally {
+				GC.KeepAlive(stream);
+			}
 		}
 
 		public static SKData Create (SKStream stream, ulong length)
@@ -164,7 +168,11 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
+			try {
+				return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
+			} finally {
+				GC.KeepAlive(stream);
+			}
 		}
 
 		public static SKData Create (SKStream stream, long length)
@@ -172,7 +180,11 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
+			try {
+				return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));	
+			} finally {
+				GC.KeepAlive(stream);
+			}
 		}
 
 		public static SKData Create (IntPtr address, int length)
