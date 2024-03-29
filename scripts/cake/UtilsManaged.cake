@@ -120,7 +120,7 @@ void RunDotNetTest(
     } finally {
         var tfm = "";
         properties?.TryGetValue("TargetFramework", out tfm);
-        CopyFiles ($"{dir}/bin/{settings.Configuration}/{tfm}/TestExecutionOrder_*.csv", output);
+        MoveFiles ($"{dir}/bin/{settings.Configuration}/{tfm}/TestExecutionOrder_*.csv", output);
     }
 }
 
