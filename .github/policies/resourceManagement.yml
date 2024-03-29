@@ -1,0 +1,562 @@
+id: 
+name: GitOps.PullRequestIssueManagement
+description: GitOps.PullRequestIssueManagement primitive
+owner: 
+resource: repository
+disabled: false
+where: 
+configuration:
+  resourceManagementConfiguration:
+    scheduledSearches:
+    - description: '[Idle Issue Management] Close stale `status/needs-info` issues'
+      frequencies:
+      - weekday:
+          day: Monday
+          time: 0:0
+      - weekday:
+          day: Tuesday
+          time: 0:0
+      - weekday:
+          day: Wednesday
+          time: 0:0
+      - weekday:
+          day: Thursday
+          time: 0:0
+      - weekday:
+          day: Friday
+          time: 0:0
+      filters:
+      - isIssue
+      - isOpen
+      - hasLabel:
+          label: status/needs-info
+      - hasLabel:
+          label: status/no-recent-activity
+      - noActivitySince:
+          days: 3
+      actions:
+      - closeIssue
+    - description: '[Idle Issue Management] Close stale `status/needs-repro` issues'
+      frequencies:
+      - weekday:
+          day: Monday
+          time: 0:0
+      - weekday:
+          day: Tuesday
+          time: 0:0
+      - weekday:
+          day: Wednesday
+          time: 0:0
+      - weekday:
+          day: Thursday
+          time: 0:0
+      - weekday:
+          day: Friday
+          time: 0:0
+      filters:
+      - isIssue
+      - isOpen
+      - hasLabel:
+          label: status/needs-repro
+      - hasLabel:
+          label: status/no-recent-activity
+      - noActivitySince:
+          days: 3
+      actions:
+      - closeIssue
+    - description: '[Idle Issue Management] Add no recent activity label to `status/needs-info` issues'
+      frequencies:
+      - weekday:
+          day: Monday
+          time: 0:0
+      - weekday:
+          day: Tuesday
+          time: 0:0
+      - weekday:
+          day: Wednesday
+          time: 0:0
+      - weekday:
+          day: Thursday
+          time: 0:0
+      - weekday:
+          day: Friday
+          time: 0:0
+      filters:
+      - isIssue
+      - isOpen
+      - hasLabel:
+          label: status/needs-info
+      - noActivitySince:
+          days: 4
+      - isNotLabeledWith:
+          label: status/no-recent-activity
+      actions:
+      - addLabel:
+          label: status/no-recent-activity
+      - addReply:
+          reply: This issue has been automatically marked as stale because it has been marked as requiring author feedback but has not had any activity for **4 days**. It will be closed if no further activity occurs **within 3 days of this comment**. If it *is* closed, feel free to comment when you are able to provide the additional information and we will re-investigate.
+    - description: '[Idle Issue Management] Add no recent activity label to `status/needs-repro` issues'
+      frequencies:
+      - weekday:
+          day: Monday
+          time: 0:0
+      - weekday:
+          day: Tuesday
+          time: 0:0
+      - weekday:
+          day: Wednesday
+          time: 0:0
+      - weekday:
+          day: Thursday
+          time: 0:0
+      - weekday:
+          day: Friday
+          time: 0:0
+      filters:
+      - isIssue
+      - isOpen
+      - hasLabel:
+          label: status/needs-repro
+      - noActivitySince:
+          days: 4
+      - isNotLabeledWith:
+          label: status/no-recent-activity
+      actions:
+      - addLabel:
+          label: status/no-recent-activity
+      - addReply:
+          reply: This issue has been automatically marked as stale because it has been marked as requiring author feedback to reproduce the issue but has not had any activity for **4 days**. It will be closed if no further activity occurs **within 3 days of this comment**. If it *is* closed, feel free to comment when you are able to provide the additional information and we will re-investigate.
+    - description: Close `status/move-to-vs-feedback` after 3 days of no activity
+      frequencies:
+      - hourly:
+          hour: 6
+      filters:
+      - isOpen
+      - hasLabel:
+          label: status/move-to-vs-feedback
+      - noActivitySince:
+          days: 3
+      actions:
+      - addReply:
+          reply: This issue is being closed due to inactivity. If this issue is still affecting you, please follow the steps above to use the VS Feedback Tool to report the issue.
+      - closeIssue
+    - description: '[Idle Issue Management] Close stale `status/try-latest-version` issues'
+      frequencies:
+      - hourly:
+          hour: 12
+      filters:
+      - isOpen
+      - hasLabel:
+          label: status/try-latest-version
+      - noActivitySince:
+          days: 7
+      actions:
+      - closeIssue
+    - description: Stale PR reminder
+      frequencies:
+      - hourly:
+          hour: 3
+      filters:
+      - isOpen
+      - isPullRequest
+      - hasLabel:
+          label: status/pr-needs-author-input
+      - noActivitySince:
+          days: 10
+      - isNotLabeledWith:
+          label: stale
+      actions:
+      - addReply:
+          reply: >-
+            Hi @${issueAuthor}.
+
+            It seems you haven't touched this PR for the last two weeks. To avoid accumulating old PRs, we're marking it as `stale`.  As a result, it will be closed if no further activity occurs **within 4 days of this comment**.
+      - addLabel:
+          label: stale
+    - description: Close stale PRs
+      frequencies:
+      - hourly:
+          hour: 4
+      filters:
+      - isOpen
+      - isPullRequest
+      - hasLabel:
+          label: status/pr-needs-author-input
+      - hasLabel:
+          label: stale
+      - noActivitySince:
+          days: 4
+      actions:
+      - closeIssue
+    eventResponderTasks:
+    - if:
+      - payloadType: Issue_Comment
+      - isAction:
+          action: Created
+      - or:
+        - hasLabel:
+            label: status/needs-info
+        - hasLabel:
+            label: status/needs-repro
+      - isOpen
+      - or:
+        - and:
+          - not:
+              activitySenderHasPermission:
+                permission: Write
+          - not:
+              activitySenderHasPermission:
+                permission: Admin
+        - isActivitySender:
+            issueAuthor: True
+      then:
+      - addLabel:
+          label: status/needs-attention
+      - removeLabel:
+          label: status/needs-info
+      - removeLabel:
+          label: status/needs-repro
+      description: '[Idle Issue Management] Replace needs author feedback label with needs attention label when the author comments on an issue'
+    - if:
+      - payloadType: Issues
+      - not:
+          isAction:
+            action: Closed
+      - hasLabel:
+          label: status/no-recent-activity
+      then:
+      - removeLabel:
+          label: status/no-recent-activity
+      description: '[Closed Issue Management] Remove no recent activity label from issues'
+    - if:
+      - payloadType: Issue_Comment
+      - hasLabel:
+          label: status/no-recent-activity
+      then:
+      - removeLabel:
+          label: status/no-recent-activity
+      description: '[Idle Issue Management] Remove no recent activity label when an issue is commented on'
+    - if:
+      - payloadType: Pull_Request
+      - isAction:
+          action: Opened
+      - isActivitySender:
+          user: dotnet-maestro[bot]
+          issueAuthor: False
+      - titleContains:
+          pattern: Update dependencies
+          isRegex: False
+      then:
+      - addLabel:
+          label: "area/infrastructure \U0001F3D7️"
+      description: '[Infrastructure PRs] Add area-infrastructure label to dependency update Pull Requests'
+    - if:
+      - payloadType: Pull_Request
+      - labelAdded:
+          label: status/needs-info
+      then:
+      - addReply:
+          reply: >-
+            Hello. I see that you've just added `status/needs-info` label to this PR.
+
+            That label is for Issues and not for PRs. Don't worry, I'm going to replace it with the correct one.
+      - removeLabel:
+          label: status/needs-info
+      - addLabel:
+          label: status/pr-needs-author-input
+      description: Replace `status/needs-info` with `status/pr-needs-author-input` for PRs
+    - if:
+      - payloadType: Pull_Request
+      - labelAdded:
+          label: status/needs-repro
+      then:
+      - addReply:
+          reply: >-
+            Hello. I see that you've just added `status/needs-repro` label to this PR.
+
+            That label is for Issues and not for PRs, so I removed it.
+      - removeLabel:
+          label: status/needs-repro
+      description: Remove `status/needs-repro` from PRs
+    - if:
+      - payloadType: Issues
+      - labelAdded:
+          label: status/needs-info
+      then:
+      - addReply:
+          reply: Hi @${issueAuthor}. We have added the `status/needs-info` label to this issue, which indicates that we have an open question for you before we can take further action. This issue will be closed automatically in 7 days if we do not hear back from you by then - please feel free to re-open it if you come back to this issue after that time.
+      description: Add comment when `status/needs-info` is applied to issue
+    - if:
+      - payloadType: Issues
+      - labelAdded:
+          label: status/needs-repro
+      then:
+      - addReply:
+          reply: >-
+            Hi @${issueAuthor}. We have added the `status/needs-repro` label to this issue, which indicates that we require steps and sample code to reproduce the issue before we can take further action. Please try to create a minimal sample project/solution or code samples which reproduce the issue, ideally as a GitHub repo that we can clone.
+
+
+            This issue will be closed automatically in 7 days if we do not hear back from you by then - please feel free to re-open it if you come back to this issue after that time.
+      description: Add comment when `status/needs-repro` is applied to issue
+    - if:
+      - payloadType: Issues
+      - or:
+        - labelAdded:
+            label: control-newcontrol
+        - labelAdded:
+            label: control-general
+        - labelAdded:
+            label: control-webview
+        - labelAdded:
+            label: control-datetimepicker
+        - labelAdded:
+            label: control-picker
+        - labelAdded:
+            label: control-switch
+        - labelAdded:
+            label: control-dualscreen
+        - labelAdded:
+            label: control-checkbox
+        - labelAdded:
+            label: control-border
+        - labelAdded:
+            label: control-label
+        - labelAdded:
+            label: control-button
+        - labelAdded:
+            label: control-dialogalert
+        - labelAdded:
+            label: control-entry
+        - labelAdded:
+            label: control-frame
+        - labelAdded:
+            label: control-stepper
+        - labelAdded:
+            label: control-refreshview
+        - labelAdded:
+            label: control-image
+        - labelAdded:
+            label: control-activityindicator
+        - labelAdded:
+            label: control-radiobutton
+        - labelAdded:
+            label: control-slider
+        - labelAdded:
+            label: control-progressbar
+        - labelAdded:
+            label: control-pages
+        - labelAdded:
+            label: control-map
+      then:
+      - addLabel:
+          label: "area/controls \U0001F3AE"
+      description: Add area/controls label when any 'control-X' label is applied to the issue
+    - if:
+      - payloadType: Pull_Request
+      - or:
+        - labelAdded:
+            label: control-newcontrol
+        - labelAdded:
+            label: control-general
+        - labelAdded:
+            label: control-webview
+        - labelAdded:
+            label: control-datetimepicker
+        - labelAdded:
+            label: control-picker
+        - labelAdded:
+            label: control-switch
+        - labelAdded:
+            label: control-dualscreen
+        - labelAdded:
+            label: control-checkbox
+        - labelAdded:
+            label: control-border
+        - labelAdded:
+            label: control-label
+        - labelAdded:
+            label: control-button
+        - labelAdded:
+            label: control-dialogalert
+        - labelAdded:
+            label: control-entry
+        - labelAdded:
+            label: control-frame
+        - labelAdded:
+            label: control-stepper
+        - labelAdded:
+            label: control-refreshview
+        - labelAdded:
+            label: control-image
+        - labelAdded:
+            label: control-activityindicator
+        - labelAdded:
+            label: control-radiobutton
+        - labelAdded:
+            label: control-slider
+        - labelAdded:
+            label: control-progressbar
+        - labelAdded:
+            label: control-pages
+        - labelAdded:
+            label: control-map
+      then:
+      - addLabel:
+          label: "area/controls \U0001F3AE"
+      description: Add area/controls label when any 'control-X' label is applied to the PR
+    - if:
+      - payloadType: Issues
+      - isAction:
+          action: Opened
+      - or:
+        - isActivitySender:
+            user: alexeystrakh
+            issueAuthor: False
+        - isActivitySender:
+            user: alexkblount
+            issueAuthor: False
+        - isActivitySender:
+            user: BenBtg
+            issueAuthor: False
+        - isActivitySender:
+            user: DeanFaizal
+            issueAuthor: False
+        - isActivitySender:
+            user: jgold6
+            issueAuthor: False
+        - isActivitySender:
+            user: jmongaras
+            issueAuthor: False
+        - isActivitySender:
+            user: jonlipsky
+            issueAuthor: False
+        - isActivitySender:
+            user: JoonghyunCho
+            issueAuthor: False
+        - isActivitySender:
+            user: juanlao
+            issueAuthor: False
+        - isActivitySender:
+            user: migueBarrera
+            issueAuthor: False
+        - isActivitySender:
+            user: mikeparker104
+            issueAuthor: False
+        - isActivitySender:
+            user: myroot
+            issueAuthor: False
+        - isActivitySender:
+            user: rookiejava
+            issueAuthor: False
+        - isActivitySender:
+            user: shyunMin
+            issueAuthor: False
+        - isActivitySender:
+            user: sung-su
+            issueAuthor: False
+        - isActivitySender:
+            user: Sweekriti91
+            issueAuthor: False
+      then:
+      - addLabel:
+          label: partner
+      description: Add 'partner' label when issue is opened by a partner
+    - if:
+      - payloadType: Issues
+      - isOpen
+      - labelAdded:
+          label: status/move-to-vs-feedback
+      then:
+      - addReply:
+          reply: >-
+            Thanks for the issue report @${issueAuthor}! This issue appears to be a problem with Visual Studio, so we ask that you use the VS feedback tool to report the issue. That way it will get to the routed to the team that owns this experience in VS.
+
+
+            If you encounter a problem with Visual Studio, we want to know about it so that we can diagnose and fix it. By using the Report a Problem tool, you can collect detailed information about the problem, and send it to Microsoft with just a few button clicks.
+
+
+            1. Go to the [VS feedback tool](https://docs.microsoft.com/visualstudio/ide/how-to-report-a-problem-with-visual-studio?view=vs-2022) to report the issue
+
+            2. Close this bug, and consider adding a link to the VS Feedback issue so that others can follow its activity there.
+
+
+            This issue will be automatically closed in 3 days if there are no further comments.
+      description: Ask user to use VS Feedback for VS issues
+    - if:
+      - payloadType: Issues
+      - isAction:
+          action: Opened
+      - or:
+        - isActivitySender:
+            user: roubachof
+            issueAuthor: False
+        - isActivitySender:
+            user: davidbritch
+            issueAuthor: False
+      then:
+      - addLabel:
+          label: i/great-reporter
+      description: Add 'i/great-reporter' when issue is opened by an author we know opens high quality issues
+    - if:
+      - payloadType: Issues
+      - labelAdded:
+          label: status/try-latest-version
+      then:
+      - addReply:
+          reply: >-
+            Hi @${issueAuthor}. We have added the `status/try-latest-version` label to this issue, which indicates that we'd like you to try and reproduce this issue on the latest available public version. This can happen because we think that this issue was fixed in a version that has just been released, or the information provided by you indicates that you might be working with an older version.
+
+
+            If the issue still persists, please let us know with any additional details and ideally a reproduction project provided through a GitHub repository.
+
+
+            This issue will be closed automatically in 7 days if we do not hear back from you by then - please feel free to re-open it if you come back to this issue after that time.
+      description: Add comment when `status/try-latest-version` is applied to the issue
+    - if:
+      - payloadType: Pull_Request
+      - activitySenderHasPermission:
+          permission: Read
+      - not:
+          isActivitySender:
+            user: dotnet-maestro
+            issueAuthor: False
+      - not:
+          isActivitySender:
+            user: dotnet-maestro-bot
+            issueAuthor: False
+      - isAction:
+          action: Opened
+      then:
+      - addLabel:
+          label: community ✨
+      - addReply:
+          reply: Hey there @${issueAuthor}! Thank you so much for your PR! Someone from the team will get assigned to your PR shortly and we'll get it reviewed.
+      description: Add 'community ✨' label to community contributions
+    - if:
+      - payloadType: Pull_Request
+      - hasLabel:
+          label: stale
+      - hasLabel:
+          label: status/pr-needs-author-input
+      - isActivitySender:
+          issueAuthor: True
+      - not:
+          activitySenderHasPermission:
+            permission: Write
+      then:
+      - reopenIssue
+      - removeLabel:
+          label: stale
+      - removeLabel:
+          label: status/pr-needs-author-input
+      description: Revitalize stale PR and reopen
+    - if:
+      - payloadType: Pull_Request
+      - labelAdded:
+          label: status/pr-needs-author-input
+      then:
+      - addReply:
+          reply: Hi @${issueAuthor}. We have added the `status/pr-needs-author-input` label to this issue, which indicates that we have an open question/action for you before we can take further action. This PRwill be closed automatically in 14 days if we do not hear back from you by then - please feel free to re-open it if you come back to this PR after that time.
+      description: Add comment when `status/pr-needs-author-input` is applied to PR
+onFailure: 
+onSuccess: 

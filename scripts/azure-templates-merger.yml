@@ -5,12 +5,14 @@ parameters:
   buildPipelineType: 'both'                     # the type of build pipeline setup
   requiredArtifacts: []                         # the artifacts that this build needs to download
   matrixArtifacts: []                           # the artifacts that this build needs to download
+  sdl: []                                       # the SDL properties to use for this job
 
 jobs:
   - template: /scripts/azure-templates-bootstrapper.yml@self
     parameters:
       name: ${{ parameters.name }}
       displayName: ${{ parameters.displayName }}
+      sdl: ${{ parameters.sdl }}
       buildPipelineType: ${{ parameters.buildPipelineType }}
       buildAgent: ${{ parameters.buildAgent }}
       skipInstall: true

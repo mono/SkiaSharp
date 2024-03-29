@@ -46,7 +46,7 @@ parameters:
         image: 1ESPT-Ubuntu20.04
         os: linux
   - name: runCompliance
-    displayName: 'Run post-build compliance tasks (such as API Scan)'
+    displayName: 'Run post-build compliance tasks (such as API Scan and PoliCheck)'
     type: boolean
     default: false
 
@@ -76,7 +76,30 @@ extends:
         parameters:
           buildPipelineType: 'build'
           buildExternals: ${{ parameters.buildExternals }}
-          runCompliance: ${{ parameters.runCompliance }}
+          ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
+            enableSigning: true
+            ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+              sdl:
+                apiscan:
+                  enabled: true
+                binskim:
+                  enabled: true
+                  break: false
+                codeInspector:
+                  enabled: true
+                credscan:
+                  enabled: true
+                  # suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
+                policheck:
+                  enabled: true
+                  exclusionsFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
+                spotBugs:
+                  enabled: false
+                suppression:
+                  suppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
+                tsa:
+                  enabled: true
+                  configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
           use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
