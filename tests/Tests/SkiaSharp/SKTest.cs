@@ -11,6 +11,7 @@ using SkiaSharp.Extended;
 
 namespace SkiaSharp.Tests
 {
+	[LogTestExecution]
 	public abstract class SKTest : BaseTest
 	{
 		protected const float EPSILON = 0.0001f;
