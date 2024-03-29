@@ -115,7 +115,13 @@ void RunDotNetTest(
     if (!string.IsNullOrEmpty(filter)) {
         settings.Filter = filter;
     }
-    DotNetTest(MakeAbsolute(testProject).FullPath, settings);
+    try {
+        DotNetTest(MakeAbsolute(testProject).FullPath, settings);
+    } finally {
+        var tfm = "";
+        properties?.TryGetValue("TargetFramework", out tfm);
+        CopyFiles ($"{dir}/bin/{settings.Configuration}/{tfm}/TestExecutionOrder_*.csv", output);
+    }
 }
 
 void RunDotNetPublish(
