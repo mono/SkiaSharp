@@ -251,7 +251,7 @@ Task ("tests-netcore")
 
     var failedTests = 0;
 
-    var tfm = "net7.0";
+    var tfm = "net8.0";
     var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
     if (SUPPORT_VULKAN)
         testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
