@@ -83,7 +83,7 @@ Some of the notable removals are:
 
 If you are upgrading to SkiaSharp 3.x, you may be interested in using the [`api-tools` .NET CLI tool](https://nuget.org/packages/api-tools) to help identify any usages of removed types.
 
-Full documentation is available at, but the `api-tools` CLI tool can be used to find all usages of missing types and members:
+There is [full documentation available](https://github.com/mattleibow/Mono.ApiTools.NuGetDiff/blob/5c14bf43a6a587c2fd2878c7884ff1db6a9beca1/docs/api-tools.md#compat-command), but the `api-tools` CLI tool can be used to find all usages of missing types and members:
 
 ```sh
 dotnet api-tools compat Svg.Skia/Svg.Skia.dll SkiaSharp/v3/SkiaSharp.dll
