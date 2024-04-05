@@ -392,6 +392,10 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_imagefilter_new_image (image.Handle, &src, &dst, &sampling));
 		}
 
+		[Obsolete("Use CreateImage(SKImage, SKRect, SKRect, SKSamplingOptions) instead.", true)]
+		public static SKImageFilter CreateImage (SKImage image, SKRect src, SKRect dst, SKFilterQuality filterQuality) =>
+			CreateImage (image, src, dst, filterQuality.ToSamplingOptions ());
+
 		// CreateMagnifier
 
 		public static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling) =>
