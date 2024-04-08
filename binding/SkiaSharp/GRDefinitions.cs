@@ -74,24 +74,48 @@ namespace SkiaSharp
 		}
 	}
 
-#if __IOS__ || __MACOS__
-
 	public unsafe partial struct GRMtlTextureInfo
 	{
+		private IntPtr _textureHandle;
+
+		public GRMtlTextureInfo (IntPtr textureHandle)
+		{
+			TextureHandle = textureHandle;
+		}
+
+		public IntPtr TextureHandle {
+			get => _textureHandle;
+			set {
+				_textureHandle = value;
+#if __IOS__ || __MACOS__
+				_texture = null;
+#endif
+			}
+		}
+
+#if __IOS__ || __MACOS__
+		private Metal.IMTLTexture _texture;
 		public GRMtlTextureInfo (Metal.IMTLTexture texture)
 		{
 			Texture = texture;
 		}
 
-		public Metal.IMTLTexture Texture { get; set; }
+		public Metal.IMTLTexture Texture {
+			get => _texture;
+			set {
+				_texture = value;
+				_textureHandle = _texture.Handle;
+			}
+		}
+#endif
 
 		internal GRMtlTextureInfoNative ToNative () =>
 			new GRMtlTextureInfoNative {
-				fTexture = (void*)(IntPtr)Texture.Handle
+				fTexture = (void*)TextureHandle
 			};
 
 		public readonly bool Equals (GRMtlTextureInfo obj) =>
-			Texture == obj.Texture;
+			TextureHandle == obj.TextureHandle;
 
 		public readonly override bool Equals (object obj) =>
 			obj is GRMtlTextureInfo f && Equals (f);
@@ -105,12 +129,10 @@ namespace SkiaSharp
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
-			hash.Add (Texture);
+			hash.Add (TextureHandle);
 			return hash.ToHashCode ();
 		}
 	}
-
-#endif
 
 	public static partial class SkiaExtensions
 	{
