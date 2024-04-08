@@ -63,6 +63,18 @@ namespace SkiaSharp
 			}
 		}
 
+		public static GRContext CreateDirect3D (GRD3dBackendcontext backendContext, GRContextOptions options)
+		{
+			if (backendContext == null)
+				throw new ArgumentNullException (nameof (backendContext));
+			if (options == null) {
+				return GetObject (SkiaApi.gr_direct_context_make_direct3d (backendContext));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_direct_context_make_direct3d_with_options (backendContext, &opts));
+			}
+		}
+
 #if __IOS__ || __MACOS__
 
 		// CreateMetal

@@ -25,6 +25,12 @@ namespace SkiaSharp
 			CreateVulkan (width, height, vkInfo);
 		}
 
+		public GRBackendTexture (int width, int height, GRD3dTextureinfo d3dTextureInfo)
+			: this (IntPtr.Zero, true)
+		{
+			CreateDirect3D (width, height, d3dTextureInfo);
+		}
+
 #if __IOS__ || __MACOS__
 
 		public GRBackendTexture (int width, int height, bool mipmapped, GRMtlTextureInfo mtlInfo)
@@ -52,6 +58,15 @@ namespace SkiaSharp
 		private void CreateVulkan (int width, int height, GRVkImageInfo vkInfo)
 		{
 			Handle = SkiaApi.gr_backendtexture_new_vulkan (width, height, &vkInfo);
+
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
+			}
+		}
+
+		private void CreateDirect3D (int width, int height, GRD3dTextureinfo d3dTextureInfo)
+		{
+			Handle = SkiaApi.gr_backendtexture_new_direct3d (width, height, &d3dTextureInfo);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
