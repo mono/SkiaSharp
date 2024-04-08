@@ -181,8 +181,11 @@ namespace SkiaSharp
 		public void Offset (SKPoint offset) =>
 			Offset (offset.X, offset.Y);
 
-		public void Offset (float dx, float dy) =>
-			Transform (SKMatrix.CreateTranslation (dx, dy));
+		public void Offset (float dx, float dy)
+		{
+			var matrix = SKMatrix.CreateTranslation (dx, dy);
+			Transform (in matrix);
+		}
 
 		public void MoveTo (SKPoint point) =>
 			SkiaApi.sk_path_move_to (Handle, point.X, point.Y);
@@ -339,6 +342,14 @@ namespace SkiaSharp
 			fixed (SKMatrix* m = &matrix)
 				SkiaApi.sk_path_transform_to_dest (Handle, m, destination.Handle);
 		}
+
+		[Obsolete("Use Transform(in SKMatrix) instead.", true)]
+		public void Transform (SKMatrix matrix) =>
+			Transform (in matrix);
+
+		[Obsolete("Use Transform(in SKMatrix matrix, SKPath destination) instead.", true)]
+		public void Transform (SKMatrix matrix, SKPath destination) =>
+			Transform (in matrix, destination);
 
 		public void AddPath (SKPath other, float dx, float dy, SKPathAddMode mode = SKPathAddMode.Append)
 		{
