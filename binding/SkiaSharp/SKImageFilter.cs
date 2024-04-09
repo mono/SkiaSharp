@@ -14,6 +14,14 @@ namespace SkiaSharp
 
 		// CreateMatrix
 
+		[Obsolete("Use SetMatrix(in SKMatrix) instead.", true)]
+		public static SKImageFilter CreateMatrix (SKMatrix matrix) =>
+			CreateMatrix (in matrix);
+
+		[Obsolete("Use SetMatrix(in SKMatrix, SKSamplingOptions, SKImageFilter) instead.", true)]
+		public static SKImageFilter CreateMatrix (SKMatrix matrix, SKFilterQuality quality, SKImageFilter? input) =>
+			CreateMatrix (in matrix, quality.ToSamplingOptions (), input);
+
 		public static SKImageFilter CreateMatrix (in SKMatrix matrix) =>
 			CreateMatrix (matrix, SKSamplingOptions.Default, null);
 
@@ -28,6 +36,14 @@ namespace SkiaSharp
 
 
 		// CreateAlphaThreshold
+
+		[Obsolete("Use CreateAlphaThreshold(SKRegion, float, float, SKImageFilter) instead.", true)]
+		public static SKImageFilter CreateAlphaThreshold(SKRectI region, float innerThreshold, float outerThreshold, SKImageFilter? input)
+		{
+			var reg = new SKRegion ();
+			reg.SetRect (region);
+			return CreateAlphaThreshold (reg, innerThreshold, outerThreshold, input);
+		}
 
 		public static SKImageFilter CreateAlphaThreshold (SKRegion region, float innerThreshold, float outerThreshold) =>
 			CreateAlphaThreshold (region, innerThreshold, outerThreshold, null);
@@ -376,6 +392,10 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_imagefilter_new_image (image.Handle, &src, &dst, &sampling));
 		}
 
+		[Obsolete("Use CreateImage(SKImage, SKRect, SKRect, SKSamplingOptions) instead.", true)]
+		public static SKImageFilter CreateImage (SKImage image, SKRect src, SKRect dst, SKFilterQuality filterQuality) =>
+			CreateImage (image, src, dst, filterQuality.ToSamplingOptions ());
+
 		// CreateMagnifier
 
 		public static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling) =>
@@ -389,6 +409,22 @@ namespace SkiaSharp
 
 		private static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling, SKImageFilter? input, SKRect* cropRect) =>
 			GetObject (SkiaApi.sk_imagefilter_new_magnifier (&lensBounds, zoomAmount, inset, &sampling, input?.Handle ?? IntPtr.Zero, cropRect));
+
+		// CreatePaint
+
+		[Obsolete("Use CreateShader(SKShader) instead.", true)]
+		public static SKImageFilter CreatePaint (SKPaint paint)
+		{
+			_ = paint ?? throw new ArgumentNullException (nameof (paint));
+			return CreateShader(paint.Shader, paint.IsDither, null);
+		}
+
+		[Obsolete("Use CreateShader(SKShader, bool, SKRect) instead.", true)]
+		public static SKImageFilter CreatePaint (SKPaint paint, SKRect cropRect)
+		{
+			_ = paint ?? throw new ArgumentNullException (nameof (paint));
+			return CreateShader(paint.Shader, paint.IsDither, &cropRect);
+		}
 
 		// CreateShader
 

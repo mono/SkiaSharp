@@ -75,8 +75,6 @@ namespace SkiaSharp
 			}
 		}
 
-#if __IOS__ || __MACOS__
-
 		// CreateMetal
 
 		public static GRContext CreateMetal (GRMtlBackendContext backendContext) =>
@@ -87,18 +85,16 @@ namespace SkiaSharp
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));
 
-			var device = backendContext.Device;
-			var queue = backendContext.Queue;
+			var device = backendContext.DeviceHandle;
+			var queue = backendContext.QueueHandle;
 
 			if (options == null) {
-				return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)(IntPtr)device.Handle, (void*)(IntPtr)queue.Handle));
+				return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)device, (void*)queue));
 			} else {
 				var opts = options.ToNative ();
-				return GetObject (SkiaApi.gr_direct_context_make_metal_with_options ((void*)(IntPtr)device.Handle, (void*)(IntPtr)queue.Handle, &opts));
+				return GetObject (SkiaApi.gr_direct_context_make_metal_with_options ((void*)device, (void*)queue, &opts));
 			}
 		}
-
-#endif
 
 		//
 

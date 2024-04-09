@@ -31,8 +31,6 @@ namespace SkiaSharp
 			CreateDirect3D (width, height, d3dTextureInfo);
 		}
 
-#if __IOS__ || __MACOS__
-
 		public GRBackendTexture (int width, int height, bool mipmapped, GRMtlTextureInfo mtlInfo)
 			: this (IntPtr.Zero, true)
 		{
@@ -43,8 +41,6 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
 			}
 		}
-
-#endif
 
 		private void CreateGl (int width, int height, bool mipmapped, GRGlTextureInfo glInfo)
 		{

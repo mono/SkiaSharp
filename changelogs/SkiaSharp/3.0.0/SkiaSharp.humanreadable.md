@@ -1,22 +1,28 @@
-# API diff: SkiaSharp.dll
-
-## SkiaSharp.dll
-
-> Assembly Version Changed: 3.0.0.0 vs 2.88.0.0
-
-### Major Changes
+# SkiaSharp 3.x Changes
 
 The diff below contains all the changes that are in addition to the removal of obsolete types and members. The 3.x release is a major upgrade and many of the obsolete types and members needed to go away.
 
-#### Platform Reduction
+**Contents**
 
-SkiaSharp supports many platforms, however in 3.x we reduce the platforms to just the more modern ones:
+* [Improvements](#improvements)  
+  There are many new APIs and improvements to exisitng features.
+* [Breaking Changes](#breaking-changes)  
+  In order to update to the latest skia builds and to keep the library maintainable, we unfortunately had to make some hard choices and remove some old APIs.
+	* [Platform Reduction](#platform-reduction)  
+	  In order to move forward, we had to reduce our supported platforms. However, all the modern and supported .NET platforms are still there.
+	* [ABI Breaking Changes](#abi-breaking-changes)  
+	  Unfortunately several APIs had to be dropped. This could be that the new skia engine does not support a feature or it was not working previously.
+	* [Removed `[Obsolete]` Types and Members](#removed-obsolete-types-and-members)  
+	  Several obsolete APIs were removed as they have been marked for removal for several years now. In most cases, there are already alternatives that you can use instead.
+	* [Analysis and Tooling](#analysis-and-tooling)  
+	  Because some breaking changes are hard to detect and since SkiaSharp is so widely used, we have put together some tooling to help you detect those breaking APIs before you even update.
+* [Newly Obsoleted Types and Members](#newly-obsoleted-types-and-members)  
+  The new version of skia does things a bit differently in some places, so some existing APIs are no longer relevant or there are better APIs to use.
+* [API diff: SkiaSharp.dll](#api-diff-skiasharpdll)  
+  This is a more readable diff of SkiaSharp as the full diff is really long and has many changes that are not really relevant.
 
-* .NET Standard 2.0+
-* .NET Framework 4.6.2+
-* .NET 7+ (All the platforms: Android, iOS, Mac Catalyst, macOS, Tizen, tvOS, Windows)
 
-#### Improvements
+## Improvements
 
 There are some small improvements in the initial release of 3.x, and many more will be added with later builds.
 
@@ -30,9 +36,19 @@ There are some small improvements in the initial release of 3.x, and many more w
   * CPU is NOT accelerated and may be very slow.
 * `SKMatrix44` is now a high-performance struct that can be used on any `SKCanvas`.
 
-#### Breaking Changes
+## Breaking Changes
 
-With the major update from 2x to 3x, some APIs were broken to make maintainance easier as well as to simplify things for consumers.
+With the major update from 2.x to 3.x, some APIs were broken to make maintainance easier as well as to simplify things for consumers.
+
+### Platform Reduction
+
+SkiaSharp supports many platforms, however in 3.x we reduce the platforms to just the more modern ones:
+
+* .NET Standard 2.0+
+* .NET Framework 4.6.2+
+* .NET 7+ (All the platforms: Android, iOS, Mac Catalyst, macOS, Tizen, tvOS, Windows)
+
+### ABI Breaking Changes
 
 Below is a list of notable breaking changes.
 
@@ -45,7 +61,7 @@ Below is a list of notable breaking changes.
 * `SK3dView` was removed because it was expensive to use  
   The new `SKMatrix44` can do all the same things as well as just using `System.Numerics.Matrix4x4` and related `System.Numerics` types.
 
-##### Removed [Obsolete] Types and Members
+### Removed `[Obsolete]` Types and Members
 
 Many types and members were obsoleted at trhe start of the 2.x version (and some before). 
 The 3.x release will be removing all the members that were previously marked `[Obsolete]`.
@@ -63,9 +79,44 @@ Some of the notable removals are:
 * `SKMask` - All types and members relating to `SKMask` have been removed.
 * `SKXmlWriter` - All types and members relating to `SKXmlWriter` and `SKXmlStreamWriter` have been removed.
 
-#### Obsoleted Types and Members
+### Analysis and Tooling
 
-With the major update from 2x to 3x, several APIs are no longer the recommeneded way to do something. There might be a better or cleaner way of doing something. For all of these types and members, they will be marked `[Obsolete]` and removed in the next major release.
+If you are upgrading to SkiaSharp 3.x, you may be interested in using the [`api-tools` .NET CLI tool](https://nuget.org/packages/api-tools) to help identify any usages of removed types.
+
+There is [full documentation available](https://github.com/mattleibow/Mono.ApiTools.NuGetDiff/blob/5c14bf43a6a587c2fd2878c7884ff1db6a9beca1/docs/api-tools.md#compat-command), but the `api-tools` CLI tool can be used to find all usages of missing types and members:
+
+```sh
+dotnet api-tools compat Svg.Skia/Svg.Skia.dll SkiaSharp/v3/SkiaSharp.dll
+```
+
+This will produce an output similar to:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<assemblies>
+  <assembly>
+    <types>
+      <type fullname="SkiaSharp.SKImageFilter/CropRect" />
+      <type fullname="SkiaSharp.SKCropRectFlags" />
+    </types>
+    <members>
+      <member fullname="System.Void SkiaSharp.SKImageFilter/CropRect::.ctor(SkiaSharp.SKRect,SkiaSharp.SKCropRectFlags)" />
+      <member fullname="SkiaSharp.SKImageFilter SkiaSharp.SKImageFilter::CreateMerge(SkiaSharp.SKImageFilter[],SkiaSharp.SKImageFilter/CropRect)" />
+      <member fullname="SkiaSharp.SKImageFilter SkiaSharp.SKImageFilter::CreatePaint(SkiaSharp.SKPaint,SkiaSharp.SKImageFilter/CropRect)" />
+      <!-- several other items -->
+      <member fullname="System.Void SkiaSharp.SKPath::Transform(SkiaSharp.SKMatrix)" />
+      <member fullname="System.Void SkiaSharp.SKCanvas::SetMatrix(SkiaSharp.SKMatrix)" />
+    </members>
+  </assembly>
+</assemblies>
+```
+
+This output indicates that there are several usages of missing types and members. However, in many cases, there are overloads or alternate APIs that can be used that are present in both 2.x and 3.x versions of SkiaSharp.
+
+
+## Newly Obsoleted Types and Members
+
+With the major update from 2.x to 3.x, several APIs are no longer the recommeneded way to do something. There might be a better or cleaner way of doing something. For all of these types and members, they will be marked `[Obsolete]` and removed in the next major release.
 
 Some of the notable obsolete items are:
 
@@ -73,6 +124,10 @@ Some of the notable obsolete items are:
   There is now a brand new and far more flexible `SKSamplingOptions` which can produce the same result.
 * `SKFont` & `SKPaint` - All the "font-related" members on `SKPaint` have been marked obsolete and now exist on `SKFont`.  
   In previous skia versions, the `SKPaint` functionality was split into 2 objects: `SKPaint` and `SKFont`. SkiaSharp tried to maintain 100% backwards compatibility by re-merginf the types. However, this is getting hard to maintain. As a result, `SKFont` is now the correct replacement to work with typefaces and character styles. All APIs tha accepted just a `SKPaint` now also have an overload that accepts `SKFont` and `SKTextAlign`.
+
+## API diff: SkiaSharp.dll
+
+> Assembly Version Changed: 3.0.0.0 vs 2.88.0.0
 
 ### Namespace SkiaSharp
 

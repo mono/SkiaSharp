@@ -856,6 +856,10 @@ namespace SkiaSharp
 		public void SetMatrix (in SKMatrix matrix) =>
 			SetMatrix ((SKMatrix44)matrix);
 
+		[Obsolete("Use SetMatrix(in SKMatrix) instead.", true)]
+		public void SetMatrix (SKMatrix matrix) =>
+			SetMatrix (in matrix);
+
 		public void SetMatrix (in SKMatrix44 matrix)
 		{
 			fixed (SKMatrix44* ptr = &matrix) {
