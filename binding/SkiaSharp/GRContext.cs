@@ -63,7 +63,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static GRContext CreateDirect3D (GRD3dBackendcontext backendContext, GRContextOptions options)
+		public static GRContext CreateDirect3D (GRD3DBackendContext backendContext, GRContextOptions options)
 		{
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));

@@ -8,25 +8,15 @@ using Vortice.DXGI;
 
 namespace SkiaSharp
 {
-	public class GRDirect3DBackendContext
+	public class GRDirect3DBackendContext : GRD3DBackendContext
 	{
-		public IDXGIAdapter1 Adapter { get; set; }
+		private IDXGIAdapter1 _adapter;
+		public new IDXGIAdapter1 Adapter { get => _adapter; set { _adapter = value; base.Resource = value?.NativePointer ?? default; } }
 
-		public ID3D12Device2 Device { get; set; }
+		private ID3D12Device2 _device;
+		public new ID3D12Device2 Device { get => _device; set { _device = value; base.Device = value?.NativePointer ?? default; } }
 
-		public ID3D12CommandQueue Queue { get; set; }
-
-		public bool ProtectedContext { get; set; }
-
-		public static implicit operator GRD3dBackendcontext(GRDirect3DBackendContext context)
-		{
-			return new GRD3dBackendcontext
-			{
-				Adapter = context.Adapter.NativePointer,
-				Device = context.Device.NativePointer,
-				Queue = context.Queue.NativePointer,
-				ProtectedContext = context.ProtectedContext
-			};
-		}
+		private ID3D12CommandQueue _queue;
+		public new ID3D12CommandQueue Queue { get => _queue; set { _device = value; base.Queue = value?.NativePointer ?? default; } }
 	}
 }

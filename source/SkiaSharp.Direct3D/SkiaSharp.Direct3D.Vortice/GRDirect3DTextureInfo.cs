@@ -8,28 +8,12 @@ using Vortice.DXGI;
 
 namespace SkiaSharp
 {
-	public class GRDirect3DTextureInfo
+	public class GRDirect3DTextureInfo : GRD3DTextureResourceInfo
 	{
-		public ID3D12Resource Resource { get; set; }
-		public ResourceStates ResourceState { get; set; }
-		public Format Format { get; set; }
-		public uint SampleCount { get; set; }
-		public uint LevelCount { get; set; }
-		public uint SampleQualityPattern { get; set; }
-		public bool Protected { get; set; }
+		private ID3D12Resource _resource;
+		public new ID3D12Resource Resource { get => _resource; set { _resource = value; base.Resource = value?.NativePointer ?? default; } }
+		public new ResourceStates ResourceState { get => (ResourceStates)base.ResourceState; set => base.ResourceState = (uint)value; }
+		public new Format Format { get => (Format)base.Format; set => base.Format = (uint)value; }
 
-		public static implicit operator GRD3dTextureinfo(GRDirect3DTextureInfo textureInfo)
-		{
-			return new GRD3dTextureinfo
-			{
-				Resource = textureInfo.Resource.NativePointer,
-				ResourceState = (uint)textureInfo.ResourceState,
-				Format = (uint)textureInfo.Format,
-				SampleCount = textureInfo.SampleCount,
-				LevelCount = textureInfo.LevelCount,
-				SampleQualityPattern = textureInfo.SampleQualityPattern,
-				Protected = textureInfo.Protected
-			};
-		}
 	}
 }
