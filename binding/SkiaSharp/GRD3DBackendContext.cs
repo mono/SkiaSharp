@@ -6,9 +6,9 @@ namespace SkiaSharp
 {
 	public class GRD3DBackendContext
 	{
-		public nuint Adapter { get; set; }
-		public nuint Device { get; set; }
-		public nuint Queue { get; set; }
+		public nint Adapter { get; set; }
+		public nint Device { get; set; }
+		public nint Queue { get; set; }
 		public bool ProtectedContext { get; set; }
 
 		internal GrD3DBackendContextNative ToNative ()
@@ -17,7 +17,7 @@ namespace SkiaSharp
 				fAdapter = Adapter,
 				fDevice = Device,
 				fQueue = Queue,
-				fProtectedContext = ProtectedContext
+				fProtectedContext = ProtectedContext ? (byte)1 : (byte)0
 			};
 		}
 	}

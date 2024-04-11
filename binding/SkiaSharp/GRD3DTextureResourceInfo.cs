@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	public class GRD3DTextureResourceInfo
 	{
-		public nuint Resource { get; set; }
+		public nint Resource { get; set; }
 		public uint ResourceState { get; set; }
 		public uint Format { get; set; }
 		public uint SampleCount { get; set; }
@@ -23,7 +23,7 @@ namespace SkiaSharp
 				fSampleCount = SampleCount,
 				fLevelCount = LevelCount,
 				fSampleQualityPattern = SampleQualityPattern,
-				fProtected = Protected
+				fProtected = Protected ? (byte)1 : (byte)0
 			};
 		}
 	}
