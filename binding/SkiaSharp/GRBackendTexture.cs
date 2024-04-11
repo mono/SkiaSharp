@@ -60,9 +60,10 @@ namespace SkiaSharp
 			}
 		}
 
-		private void CreateDirect3D (int width, int height, GRD3dTextureinfo d3dTextureInfo)
+		private void CreateDirect3D (int width, int height, GRD3DTextureResourceInfo d3dTextureInfo)
 		{
-			Handle = SkiaApi.gr_backendtexture_new_direct3d (width, height, &d3dTextureInfo);
+			var native = d3dTextureInfo.ToNative ();
+			Handle = SkiaApi.gr_backendtexture_new_direct3d (width, height, &native);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
