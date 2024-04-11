@@ -24,7 +24,7 @@ namespace SkiaSharp
 			CreateVulkan (width, height, sampleCount, vkImageInfo);
 		}
 
-		public GRBackendRenderTarget (int width, int height, GRD3dTextureinfo d3dTextureInfo)
+		public GRBackendRenderTarget (int width, int height, GRD3DTextureResourceInfo d3dTextureInfo)
 			: this (IntPtr.Zero, true)
 		{
 			CreateDirect3D (width, height, d3dTextureInfo);
