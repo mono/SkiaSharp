@@ -18,6 +18,7 @@ using gr_vk_extensions_t = System.IntPtr;
 using gr_vk_memory_allocator_t = System.IntPtr;
 using gr_vkinterface_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
+using sk_blender_t = System.IntPtr;
 using sk_canvas_t = System.IntPtr;
 using sk_codec_t = System.IntPtr;
 using sk_colorfilter_t = System.IntPtr;

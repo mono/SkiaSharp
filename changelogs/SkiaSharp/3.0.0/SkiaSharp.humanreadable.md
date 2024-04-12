@@ -32,7 +32,7 @@ There are some small improvements in the initial release of 3.x, and many more w
   * `SKPoint3` is now implicitly compatible with `System.Numerics.Vector3` in both directions.
   * `SKPointI` is now implicitly cast to `System.Numerics.Vector3`.
 * `SKRuntimeEffect` now works on both CPU and GPU:
-  * GPU is accelerated and support more targets: `SKColorFilter` and `SKShader` (there is also a new `SKBlender` that is not yet exposed in SkiaSharp).
+  * GPU is accelerated and support more targets: `SKColorFilter`, `SKShader` and the new `SKBlender`.
   * CPU is NOT accelerated and may be very slow.
 * `SKMatrix44` is now a high-performance struct that can be used on any `SKCanvas`.
 
