@@ -20,7 +20,7 @@ namespace SkiaSharpGenerator
 
 		protected override OptionSet OnCreateOptions() => new OptionSet
 		{
-			{ "s|skia=", "The root of the skia source", v => SourceRoot = v },
+			{ "r|root=", "The root of the source", v => SourceRoot = v },
 			{ "c|config=", "The config file path", v => ConfigPath = v },
 			{ "o|output=", "The output path", v => OutputPath = v },
 		};
@@ -31,7 +31,7 @@ namespace SkiaSharpGenerator
 
 			if (string.IsNullOrEmpty(SourceRoot))
 			{
-				Program.Log.LogError($"{Program.Name}: Path to the skia source was not provided: `--skia=<path-to-skia>`.");
+				Program.Log.LogError($"{Program.Name}: Path to the skia source was not provided: `--root=<path-to-skia-or-root>`.");
 				hasError = true;
 			}
 			else if (!Directory.Exists(SourceRoot))
