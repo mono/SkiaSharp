@@ -490,6 +490,15 @@ stages:
       ${{ if eq(parameters.buildPipelineType, 'both') }}:
         dependsOn: native
       jobs:
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Validate Interop
+          parameters:
+            name: managed_interop_windows
+            displayName: Validate Interop
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: externals-interop
+            additionalArgs: --skipExternals="all"
+            installAndroidSdk: false
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Managed (Windows)
           parameters:
             name: managed_windows
