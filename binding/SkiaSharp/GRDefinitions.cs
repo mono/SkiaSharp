@@ -84,7 +84,7 @@ namespace SkiaSharp
 		}
 
 		public IntPtr TextureHandle {
-			get => _textureHandle;
+			readonly get => _textureHandle;
 			set {
 				_textureHandle = value;
 #if __IOS__ || __MACOS__
@@ -101,7 +101,7 @@ namespace SkiaSharp
 		}
 
 		public Metal.IMTLTexture Texture {
-			get => _texture;
+			readonly get => _texture;
 			set {
 				_texture = value;
 				_textureHandle = _texture.Handle;
