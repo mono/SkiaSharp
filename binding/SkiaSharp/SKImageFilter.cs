@@ -341,6 +341,23 @@ namespace SkiaSharp
 		private static SKImageFilter CreateBlendMode (SKBlendMode mode, SKImageFilter? background, SKImageFilter? foreground, SKRect* cropRect) =>
 			GetObject (SkiaApi.sk_imagefilter_new_blend (mode, background?.Handle ?? IntPtr.Zero, foreground?.Handle ?? IntPtr.Zero, cropRect));
 
+		// CreateBlendMode (Blender)
+
+		public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background) =>
+			CreateBlendMode (blender, background, null, null);
+
+		public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background, SKImageFilter? foreground) =>
+			CreateBlendMode (blender, background, foreground, null);
+
+		public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background, SKImageFilter? foreground, SKRect cropRect) =>
+			CreateBlendMode (blender, background, foreground, &cropRect);
+
+		private static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background, SKImageFilter? foreground, SKRect* cropRect)
+		{
+			_ = blender ?? throw new ArgumentNullException (nameof (blender));
+			return GetObject (SkiaApi.sk_imagefilter_new_blender (blender.Handle, background?.Handle ?? IntPtr.Zero, foreground?.Handle ?? IntPtr.Zero, cropRect));
+		}
+
 		// CreateArithmetic
 
 		public static SKImageFilter CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor, SKImageFilter? background) =>

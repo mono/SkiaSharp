@@ -408,6 +408,23 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle));
 		}
 
+		// CreateBlend
+
+		public static SKShader CreateBlend (SKBlendMode mode, SKShader shaderA, SKShader shaderB)
+		{
+			_ = shaderA ?? throw new ArgumentNullException (nameof (shaderA));
+			_ = shaderB ?? throw new ArgumentNullException (nameof (shaderB));
+			return GetObject (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle));
+		}
+
+		public static SKShader CreateBlend (SKBlender blender, SKShader shaderA, SKShader shaderB)
+		{
+			_ = shaderA ?? throw new ArgumentNullException (nameof (shaderA));
+			_ = shaderB ?? throw new ArgumentNullException (nameof (shaderB));
+			_ = blender ?? throw new ArgumentNullException (nameof (blender));
+			return GetObject (SkiaApi.sk_shader_new_blender (blender.Handle, shaderA.Handle, shaderB.Handle));
+		}
+
 		// CreateColorFilter
 
 		public static SKShader CreateColorFilter (SKShader shader, SKColorFilter filter)
