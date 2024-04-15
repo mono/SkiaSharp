@@ -34,26 +34,6 @@ namespace SkiaSharp
 				return GetObject (SkiaApi.sk_imagefilter_new_matrix_transform (m, &sampling, input?.Handle ?? IntPtr.Zero));
 		}
 
-
-		// CreateAlphaThreshold
-
-		[Obsolete("Use CreateAlphaThreshold(SKRegion, float, float, SKImageFilter) instead.", true)]
-		public static SKImageFilter CreateAlphaThreshold(SKRectI region, float innerThreshold, float outerThreshold, SKImageFilter? input)
-		{
-			var reg = new SKRegion ();
-			reg.SetRect (region);
-			return CreateAlphaThreshold (reg, innerThreshold, outerThreshold, input);
-		}
-
-		public static SKImageFilter CreateAlphaThreshold (SKRegion region, float innerThreshold, float outerThreshold) =>
-			CreateAlphaThreshold (region, innerThreshold, outerThreshold, null);
-
-		public static SKImageFilter CreateAlphaThreshold (SKRegion region, float innerThreshold, float outerThreshold, SKImageFilter? input)
-		{
-			_ = region ?? throw new ArgumentNullException (nameof (region));
-			return GetObject (SkiaApi.sk_imagefilter_new_alpha_threshold (region.Handle, innerThreshold, outerThreshold, input?.Handle ?? IntPtr.Zero));
-		}
-
 		// CreateBlur
 
 		public static SKImageFilter CreateBlur (float sigmaX, float sigmaY) =>
