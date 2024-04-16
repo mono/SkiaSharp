@@ -12,6 +12,11 @@ namespace SkiaSharp
 
 		static SKColorSpace ()
 		{
+			// TODO: This is not the best way to do this as it will create a lot of objects that
+			//       might not be needed, but it is the only way to ensure that the static
+			//       instances are created before any access is made to them.
+			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
+
 			srgb = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb ());
 			srgbLinear = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb_linear ());
 		}
