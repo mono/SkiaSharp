@@ -14,6 +14,9 @@
             <Visible>False</Visible>
         </NativeReference>
     </ItemGroup>
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' == 'False' or '$(_AppIsFullMac)' != 'True' ">
+        <NativeReference Remove="$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libSkiaSharp*.dylib" />
+    </ItemGroup>
 
     <!-- copy the native files to the output directory -->
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(_AppIsFullMac)' != 'True' ">
