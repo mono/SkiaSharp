@@ -6,8 +6,10 @@ FROM amd64/alpine:3.9
 RUN apk add -X https://dl-cdn.alpinelinux.org/alpine/v3.16/main -u alpine-keys --allow-untrusted
 RUN apk add --no-cache bash curl wget python python3 git build-base ninja fontconfig-dev libintl clang
 
+# use the specific commit before the tool switched to C++20 which is too new for this old alpine
 RUN git clone https://gn.googlesource.com/gn /usr/share/gn \
     && cd /usr/share/gn \
+    && git checkout d4be45bb28fbfc16a41a1e02c86137df6815f2dd \
     && python build/gen.py --allow-warning \
     && ninja -C out \
     && /usr/share/gn/out/gn --version

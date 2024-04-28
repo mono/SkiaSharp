@@ -1,27 +1,23 @@
 parameters:
-  artifactName: ''                              # the name of the artifact to merge this run into
   buildExternals: ''                            # the build number to download externals from
-  buildPipelineType: false
-  vmImage: ''                                   # the VM image
+  buildPipelineType: 'both'                     # the type of build pipeline setup
+  vmImage: ''                                   # the configuration for the build agent
+  use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
+  sdl: []                                       # the SDL properties to use for this job
   emscripten: [ ]
 
 jobs:
   - ${{ each version in parameters.emscripten }}:
-    - template: azure-templates-bootstrapper.yml
+    - template: /scripts/azure-templates-bootstrapper.yml@self
       parameters:
-        name: native_wasm_${{ replace(version, '.', '_') }}_linux
-        displayName: WASM (${{ version }})
+        name: native_wasm_${{ replace(version.displayName, '.', '_') }}_linux
+        displayName: WASM (${{ version.displayName }})
+        sdl: ${{ parameters.sdl }}
         buildExternals: ${{ parameters.buildExternals }}
         buildPipelineType: ${{ parameters.buildPipelineType }}
         vmImage: ${{ parameters.vmImage }}
+        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         docker: scripts/Docker/wasm
         target: externals-wasm
-        dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version }}
-        additionalArgs: --emscriptenVersion=${{ version }}
-        artifactName: ${{ parameters.artifactName }}
-        postBuildSteps:
-          - task: PublishBuildArtifacts@1
-            displayName: Publish the native_wasm_linux artifacts
-            inputs:
-              artifactName: native_wasm_linux
-              pathToPublish: 'output'
+        dockerArgs: --build-arg EMSCRIPTEN_VERSION=${{ version.version }}
+        additionalArgs: --emscriptenVersion=${{ version.version }} --emscriptenFeatures="${{ version.features }}"

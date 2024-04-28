@@ -542,7 +542,7 @@ namespace SkiaSharp.Tests
 			var textPath = paint.GetTextPath(text, 0, 0);
 			var pathWidth = textPath.TightBounds.Width;
 
-			Assert.Equal(pathWidth, diff, 2);
+			Assert.Equal((double)pathWidth, (double)diff, 2);
 		}
 
 		[SkippableFact]

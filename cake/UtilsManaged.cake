@@ -139,7 +139,7 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
     // try find any cross-platform frameworks
     foreach (var dir in platformDirs) {
         var d = dir.GetDirectoryName().ToLower();
-        if (d.StartsWith("netstandard") || d.StartsWith("portable") || d.Equals("net6.0")) {
+        if (d.StartsWith("netstandard") || d.StartsWith("portable") || d.Equals("net6.0") || d.Equals("net7.0")) {
             // we just want this single platform
             yield return (dir, null);
             yield break;
@@ -244,6 +244,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     comparer.SearchPaths.AddRange(GetDotNetPacksSearchPaths());
     comparer.SearchPaths.AddRange(GetReferenceSearchPaths());
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
+    comparer.IgnoreResolutionErrors = true;
 
     await AddDep("OpenTK.GLControl", "NET20");
     await AddDep("Tizen.NET", "netstandard2.0");

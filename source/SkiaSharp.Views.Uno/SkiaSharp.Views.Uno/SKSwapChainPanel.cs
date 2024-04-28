@@ -1,5 +1,4 @@
-﻿#if !__MACCATALYST__
-using System;
+﻿using System;
 using Uno;
 using Windows.ApplicationModel;
 using Windows.Graphics.Display;
@@ -154,4 +153,3 @@ namespace SkiaSharp.Views.UWP
 		partial void DoEnableRenderLoop(bool enable);
 	}
 }
-#endif

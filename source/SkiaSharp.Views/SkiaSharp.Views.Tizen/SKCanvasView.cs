@@ -47,19 +47,18 @@ namespace SkiaSharp.Views.Tizen
 				return;
 
 			// draw directly into the EFL image data
-			using (var surface = SKSurface.Create(info, Evas.evas_object_image_data_get(evasImage, true), info.RowBytes))
-			{
-				if (IgnorePixelScaling)
-				{
-					var skiaCanvas = surface.Canvas;
-					skiaCanvas.Scale((float)ScalingInfo.ScalingFactor);
-					skiaCanvas.Save();
-				}
+			using var surface = SKSurface.Create(info, Evas.evas_object_image_data_get(evasImage, true), info.RowBytes);
 
-				// draw using SkiaSharp
-				OnDrawFrame(new SKPaintSurfaceEventArgs(surface, info.WithSize(canvasSize), info));
-				surface.Canvas.Flush();
+			if (IgnorePixelScaling)
+			{
+				var skiaCanvas = surface.Canvas;
+				skiaCanvas.Scale((float)ScalingInfo.ScalingFactor);
+				skiaCanvas.Save();
 			}
+
+			// draw using SkiaSharp
+			OnDrawFrame(new SKPaintSurfaceEventArgs(surface, info.WithSize(canvasSize), info));
+			surface.Canvas.Flush();
 		}
 
 		protected sealed override bool UpdateSurfaceSize(Rect geometry)
@@ -72,8 +71,8 @@ namespace SkiaSharp.Views.Tizen
 
 			if (IgnorePixelScaling)
 			{
-				canvasSize.Width = (int)ScalingInfo.FromPixel(geometry.Width);
-				canvasSize.Height = (int)ScalingInfo.FromPixel(geometry.Height);
+				canvasSize.Width = (int)Math.Round(ScalingInfo.FromPixel(geometry.Width));
+				canvasSize.Height = (int)Math.Round(ScalingInfo.FromPixel(geometry.Height));
 			}
 			else
 			{

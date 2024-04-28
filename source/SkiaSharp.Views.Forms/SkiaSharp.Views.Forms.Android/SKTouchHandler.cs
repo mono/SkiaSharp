@@ -22,7 +22,7 @@ namespace SkiaSharp.Views.Forms
 
 		public void SetEnabled(View view, bool enableTouchEvents)
 		{
-			if (view != null)
+			if (view != null && view.Handle != IntPtr.Zero)
 			{
 				view.Touch -= OnTouch;
 				view.GenericMotion -= OnGenericMotion;

@@ -54,8 +54,8 @@
     <PackageReference Include="mdoc" Version="5.8.9" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Nullable" Version="1.3.0" PrivateAssets="all" />
+  <ItemGroup Condition="'$(TargetFramework)' != '' and $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
+    <Compile Include="$(MSBuildThisFileDirectory)Common\NullableAttributes.generated.cs" Visible="false" />
   </ItemGroup>
 
   <!-- HACK: Do not copy the native bootstrap files -->
@@ -187,11 +187,13 @@ internal partial class VersionConstants {
     <ItemGroup Condition=" '$(PackagingLocation)' == '' ">
       <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(PackagingPlatform)\$(TargetFileName)" />
       <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
+      <_CopyItems Include="$(TargetDir)$(TargetName).aar" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).aar" Condition=" Exists('$(TargetDir)$(TargetName).aar') " />
       <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).pdb" />
     </ItemGroup>
     <ItemGroup Condition=" '$(PackagingLocation)' != '' ">
       <_CopyItems Include="$(TargetPath)" Dest="nuget\$(PackagingLocation)\$(TargetFileName)" />
       <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\$(PackagingLocation)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
+      <_CopyItems Include="$(TargetDir)$(TargetName).aar" Dest="nuget\$(PackagingLocation)\$(TargetName).aar" Condition=" Exists('$(TargetDir)$(TargetName).aar') " />
       <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\$(PackagingLocation)\$(TargetName).pdb" />
     </ItemGroup>
     <ItemGroup>
@@ -260,5 +262,10 @@ internal partial class VersionConstants {
   </Target>
 
   <Import Project="SkiaSharp.Build.WinUI.NetCore.targets" Condition=" '$(EnablePriGenTooling)' != 'true' and '$(TargetPlatformIdentifier)' == 'windows' and '$(EnablePreviewMsixTooling)' == 'true' and '$(UseMaui)' != 'true' and '$(UseMauiCore)' != 'true' " />
+
+  <!-- Make sure we always build with a lower version of WinRT.Runtime.dll -->
+  <ItemGroup>
+    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" RuntimeFrameworkVersion="10.0.19041.24" TargetingPackVersion="10.0.19041.24" />
+  </ItemGroup>
 
 </Project>

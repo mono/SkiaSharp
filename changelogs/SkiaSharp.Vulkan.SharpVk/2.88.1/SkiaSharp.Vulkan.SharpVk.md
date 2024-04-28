@@ -9,7 +9,7 @@
 #### New Type: SkiaSharp.GRSharpVkBackendContext
 
 ```csharp
-public class GRSharpVkBackendContext : SkiaSharp.GRVkBackendContext, System.IDisposable {
+public class GRSharpVkBackendContext : SkiaSharp.GRVkBackendContext {
 	// constructors
 	public GRSharpVkBackendContext ();
 	// properties

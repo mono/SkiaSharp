@@ -1,69 +1,16 @@
 type = sharedLib
 profile = mobile-4.0
 
-harfbuzz_root = $(abspath ../../../externals/skia/third_party/externals/harfbuzz)
+src_root = $(abspath ../../../externals/skia/third_party/externals/harfbuzz/src)
+ext_root = $(abspath ../../../externals/skia/third_party/harfbuzz)
 
-APPNAME = HarfBuzzSharp
+APPNAME         = HarfBuzzSharp
 
-USER_INC_DIRS = .                            \
-                $(harfbuzz_root)/src         \
-                $(harfbuzz_root)
+USER_INC_DIRS   = . $(src_root) $(ext_root)
 
-USER_DEFS = HAVE_CONFIG_H NDEBUG
+USER_DEFS       = NDEBUG                                                            \
+                  HAVE_CONFIG_OVERRIDE_H HAVE_OT HB_NO_FALLBACK_SHAPE
 
-USER_CPP_DEFS = $(USER_DEFS)
+USER_CPP_DEFS   = $(USER_DEFS)
 
-USER_SRCS = $(harfbuzz_root)/src/hb-aat-layout.cc                            \
-            $(harfbuzz_root)/src/hb-aat-map.cc                               \
-            $(harfbuzz_root)/src/hb-blob.cc                                  \
-            $(harfbuzz_root)/src/hb-buffer-serialize.cc                      \
-            $(harfbuzz_root)/src/hb-buffer.cc                                \
-            $(harfbuzz_root)/src/hb-common.cc                                \
-            $(harfbuzz_root)/src/hb-draw.cc                                  \
-            $(harfbuzz_root)/src/hb-face.cc                                  \
-            $(harfbuzz_root)/src/hb-fallback-shape.cc                        \
-            $(harfbuzz_root)/src/hb-font.cc                                  \
-            $(harfbuzz_root)/src/hb-map.cc                                   \
-            $(harfbuzz_root)/src/hb-number.cc                                \
-            $(harfbuzz_root)/src/hb-ot-cff1-table.cc                         \
-            $(harfbuzz_root)/src/hb-ot-cff2-table.cc                         \
-            $(harfbuzz_root)/src/hb-ot-color.cc                              \
-            $(harfbuzz_root)/src/hb-ot-face.cc                               \
-            $(harfbuzz_root)/src/hb-ot-font.cc                               \
-            $(harfbuzz_root)/src/hb-ot-layout.cc                             \
-            $(harfbuzz_root)/src/hb-ot-map.cc                                \
-            $(harfbuzz_root)/src/hb-ot-math.cc                               \
-            $(harfbuzz_root)/src/hb-ot-meta.cc                               \
-            $(harfbuzz_root)/src/hb-ot-metrics.cc                            \
-            $(harfbuzz_root)/src/hb-ot-name.cc                               \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-arabic.cc               \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-default.cc              \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-hangul.cc               \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-hebrew.cc               \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-indic-table.cc          \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-indic.cc                \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-khmer.cc                \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-myanmar.cc              \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-syllabic.cc             \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-thai.cc                 \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-use.cc                  \
-            $(harfbuzz_root)/src/hb-ot-shape-complex-vowel-constraints.cc    \
-            $(harfbuzz_root)/src/hb-ot-shape-fallback.cc                     \
-            $(harfbuzz_root)/src/hb-ot-shape-normalize.cc                    \
-            $(harfbuzz_root)/src/hb-ot-shape.cc                              \
-            $(harfbuzz_root)/src/hb-ot-tag.cc                                \
-            $(harfbuzz_root)/src/hb-ot-var.cc                                \
-            $(harfbuzz_root)/src/hb-set.cc                                   \
-            $(harfbuzz_root)/src/hb-shape-plan.cc                            \
-            $(harfbuzz_root)/src/hb-shape.cc                                 \
-            $(harfbuzz_root)/src/hb-shaper.cc                                \
-            $(harfbuzz_root)/src/hb-static.cc                                \
-            $(harfbuzz_root)/src/hb-style.cc                                 \
-            $(harfbuzz_root)/src/hb-subset-cff-common.cc                     \
-            $(harfbuzz_root)/src/hb-subset-cff1.cc                           \
-            $(harfbuzz_root)/src/hb-subset-cff2.cc                           \
-            $(harfbuzz_root)/src/hb-subset-input.cc                          \
-            $(harfbuzz_root)/src/hb-subset-plan.cc                           \
-            $(harfbuzz_root)/src/hb-subset.cc                                \
-            $(harfbuzz_root)/src/hb-ucd.cc                                   \
-            $(harfbuzz_root)/src/hb-unicode.cc
+USER_SRCS       = $(src_root)/harfbuzz-subset.cc

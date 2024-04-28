@@ -40,7 +40,7 @@ steps:
       condition: ${{ parameters.condition }}
 
   - ${{ each artifact in parameters.artifacts }}:
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadBuildArtifacts@1
       displayName: Download the pre-built ${{ artifact.name }} artifacts
       condition: ${{ parameters.condition }}
       retryCountOnTaskFailure: 3
@@ -54,9 +54,10 @@ steps:
         downloadType: 'single'
         allowPartiallySucceededBuilds: true
         artifactName: ${{ artifact.name }}
-        downloadPath: 'download-temp'
+        downloadPath: 'download-temp/${{ artifact.name }}'
 
     - pwsh: |
+        Get-ChildItem '.\download-temp\'
         New-Item '.\output\${{ artifact.dir }}\' -Type Directory -Force | Out-Null
         Get-ChildItem '.\download-temp\${{ artifact.name }}\' | Copy-Item -Destination '.\output\${{ artifact.dir }}\' -Recurse -Force
         Remove-Item '.\download-temp\${{ artifact.name }}\' -Recurse -Force

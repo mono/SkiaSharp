@@ -21,7 +21,7 @@ $sdkmanager = Join-Path "$latest" "bin" "sdkmanager$ext"
 Set-Content -Value "y" -Path "yes.txt"
 try {
     if ($IsMacOS -or $IsLinux) {
-        sh -c "`"$sdkmanager`" `"$($Package.Replace(';', '\;'))`" < yes.txt"
+        sh -c "'$sdkmanager' '$Package' < yes.txt"
     } else {
         cmd /c "`"$sdkmanager`" `"$Package`" < yes.txt"
     }

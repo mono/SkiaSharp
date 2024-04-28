@@ -44,10 +44,9 @@ namespace SkiaSharp
 
 		public SKStreamAsset ToMemoryStream ()
 		{
-			using (var native = new SKDynamicMemoryWStream ()) {
-				CopyTo (native);
-				return native.DetachAsStream ();
-			}
+			using var native = new SKDynamicMemoryWStream ();
+			CopyTo (native);
+			return native.DetachAsStream ();
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -87,20 +86,22 @@ namespace SkiaSharp
 
 		private IntPtr OnReadManagedStream (IntPtr buffer, IntPtr size)
 		{
-			if (buffer == IntPtr.Zero)
-				throw new ArgumentNullException (nameof (buffer));
 			if ((int)size < 0)
 				throw new ArgumentOutOfRangeException (nameof (size));
 
 			if (size == IntPtr.Zero)
 				return IntPtr.Zero;
 
+			// NOTE: some skips still requires a read as some streams cannot seek
 			using var managedBuffer = Utils.RentArray<byte> ((int)size);
 			var len = stream.Read (managedBuffer.Array, 0, managedBuffer.Length);
 
-			var src = managedBuffer.Span.Slice (0, len);
-			var dst = buffer.AsSpan (managedBuffer.Length);
-			src.CopyTo (dst);
+			if (buffer != IntPtr.Zero) {
+				// read
+				var src = managedBuffer.Span.Slice (0, len);
+				var dst = buffer.AsSpan (managedBuffer.Length);
+				src.CopyTo (dst);
+			}
 
 			if (!stream.CanSeek && (int)size > 0 && len <= (int)size)
 				isAsEnd = true;

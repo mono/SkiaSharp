@@ -3,14 +3,14 @@
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 #addin nuget:?package=Cake.Json&version=6.0.1
 #addin nuget:?package=NuGet.Packaging.Core&version=5.11.0
-#addin nuget:?package=SharpCompress&version=0.28.3
+#addin nuget:?package=SharpCompress&version=0.32.2
 #addin nuget:?package=Mono.Cecil&version=0.10.0
 #addin nuget:?package=Mono.ApiTools&version=5.14.0.2
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.2
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
 #tool nuget:?package=mdoc&version=5.8.9
-#tool nuget:?package=xunit.runner.console&version=2.4.1
+#tool nuget:?package=xunit.runner.console&version=2.4.2
 #tool nuget:?package=vswhere&version=2.8.4
 
 using System.Linq;
@@ -81,6 +81,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.NativeAssets.watchOS",                new Version (1, 60, 0) },
     { "SkiaSharp.NativeAssets.Win32",                  new Version (1, 60, 0) },
     { "SkiaSharp.Views",                               new Version (1, 60, 0) },
+    { "SkiaSharp.Views.NativeAssets.UWP",              new Version (1, 60, 0) },
     { "SkiaSharp.Views.Desktop.Common",                new Version (1, 60, 0) },
     { "SkiaSharp.Views.Gtk2",                          new Version (1, 60, 0) },
     { "SkiaSharp.Views.Gtk3",                          new Version (1, 60, 0) },
@@ -162,13 +163,13 @@ Task ("libs")
         platform = ".Linux";
     }
 
-    var net6 = $"./source/SkiaSharpSource{platform}-net6.slnf";
+    var net = $"./source/SkiaSharpSource{platform}-net.slnf";
     var netfx = $"./source/SkiaSharpSource{platform}-netfx.slnf";
-    if (FileExists (net6) || FileExists (netfx)) {
-        if (FileExists (net6) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "net6"))
-            RunMSBuild (net6, properties: new Dictionary<string, string> { { "BuildingForNet6", "true" } });
+    if (FileExists (net) || FileExists (netfx)) {
+        if (FileExists (net) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "net"))
+            RunMSBuild (net, properties: new Dictionary<string, string> { { "BuildingForDotNet", "true" } });
         if (FileExists (netfx) && (string.IsNullOrEmpty(SOLUTION_TYPE) || SOLUTION_TYPE == "netfx"))
-            RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForNet6", "false" } });
+            RunMSBuild (netfx, properties: new Dictionary<string, string> { { "BuildingForDotNet", "false" } });
     } else {
         var slnf = $"./source/SkiaSharpSource{platform}.slnf";
         var sln = $"./source/SkiaSharpSource{platform}.sln";
@@ -301,7 +302,7 @@ Task ("tests-android")
         // package the app
         FilePath csproj = "./tests/SkiaSharp.Android.Tests/SkiaSharp.Android.Tests.csproj";
         RunMSBuild (csproj,
-            targets: new [] { "SignAndroidPackage" }, 
+            targets: new [] { "SignAndroidPackage" },
             properties: new Dictionary<string, string> {
                 { "BuildTestOnly", "true" },
             },
@@ -463,7 +464,7 @@ Task ("samples")
         { "xamarin.forms.windows", "x86" },
     };
 
-    void BuildSample (FilePath sln, bool dryrun)
+    void BuildSample (FilePath sln, bool useNetCore, bool dryrun)
     {
         var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
         var name = sln.GetFilenameWithoutExtension ();
@@ -484,11 +485,18 @@ Task ("samples")
             }
 
             if (dryrun) {
-                Information ($"    BUILD       {sln}");
+                if (useNetCore)
+                    Information ($"    BUILD  (DN) {sln}");
+                else
+                    Information ($"    BUILD  (FX) {sln}");
             } else {
                 Information ($"Building sample {sln} ({platform})...");
-                RunNuGetRestorePackagesConfig (sln);
-                RunMSBuild (sln, platform: buildPlatform);
+                if (useNetCore) {
+                    RunNetCoreBuild (sln);
+                } else {
+                    RunNuGetRestorePackagesConfig (sln);
+                    RunMSBuild (sln, platform: buildPlatform);
+                }
             }
         } else {
             if (dryrun) {
@@ -524,7 +532,11 @@ Task ("samples")
     var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
         ? "samples-preview"
         : "samples";
-    var solutions = GetFiles ($"./output/{actualSamples}/**/*.sln");
+    var solutions =
+        GetFiles ($"./output/{actualSamples}/**/*.sln").Union (
+        GetFiles ($"./output/{actualSamples}/**/*.slnf"))
+        .OrderBy (x => x.FullPath)
+        .ToArray ();
 
     Information ("Solutions found:");
     foreach (var sln in solutions) {
@@ -541,17 +553,24 @@ Task ("samples")
                 continue;
 
             var name = sln.GetFilenameWithoutExtension ();
+
+            // this is a IDE only solution
+            if (name.ToString ().EndsWith ("-vsmac"))
+                continue;
+
             var slnPlatform = name.GetExtension ();
 
             if (string.IsNullOrEmpty (slnPlatform)) {
                 // this is the main solution
-                var variants = GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln");
+                var variants =
+                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln").Union (
+                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf"));
                 if (!variants.Any ()) {
                     // there is no platform variant
-                    BuildSample (sln, dryrun);
+                    BuildSample (sln, false, dryrun);
                     // delete the built sample
                     if (!dryrun)
-                        CleanDirectories (sln.GetDirectory ().FullPath);
+                        CleanDir (sln.GetDirectory ().FullPath);
                 } else {
                     // skip as there is a platform variant
                     if (dryrun)
@@ -560,15 +579,20 @@ Task ("samples")
             } else {
                 // this is a platform variant
                 slnPlatform = slnPlatform.ToLower ();
+                var useNetCore = slnPlatform.EndsWith ("-net");
+                if (useNetCore)
+                    slnPlatform = slnPlatform.Substring (0, slnPlatform.Length - 4);
+
                 var shouldBuild =
                     (isLinux && slnPlatform == ".linux") ||
                     (isMac && slnPlatform == ".mac") ||
                     (isWin && slnPlatform == ".windows");
                 if (shouldBuild) {
-                    BuildSample (sln, dryrun);
+                    BuildSample (sln, useNetCore, dryrun);
                     // delete the built sample
-                    if (!dryrun)
-                        CleanDirectories (sln.GetDirectory ().FullPath);
+                    if (!dryrun) {
+                        CleanDir (sln.GetDirectory ().FullPath);
+                    }
                 } else {
                     // skip this as this is not the correct platform
                     if (dryrun)
@@ -578,10 +602,10 @@ Task ("samples")
         }
     }
 
-    CleanDirectory ("./output/samples/");
-    DeleteDirectory ("./output/samples/", new DeleteDirectorySettings { Recursive = true, Force = true });
-    CleanDirectory ("./output/samples-preview/");
-    DeleteDirectory ("./output/samples-preview/", new DeleteDirectorySettings { Recursive = true, Force = true });
+    CleanDir ("./output/samples/");
+    DeleteDir ("./output/samples/");
+    CleanDir ("./output/samples-preview/");
+    DeleteDir ("./output/samples-preview/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -930,8 +954,7 @@ Task ("clean-managed")
 
     DeleteFiles ("./nuget/*.prerelease.nuspec");
 
-    if (DirectoryExists ("./output"))
-        DeleteDirectory ("./output", new DeleteDirectorySettings { Recursive = true, Force = true });
+    DeleteDir ("./output");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

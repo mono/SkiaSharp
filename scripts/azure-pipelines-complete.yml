@@ -1,59 +1,67 @@
 trigger:
   - main
   - develop
-  - patch/*
+  - release/*
 
 pr:
   - main
   - develop
-  - patch/*
+  - release/*
 
 parameters:
   - name: buildExternals
-    displayName: 'The specific native artifacts to use for this build.'
+    displayName: 'The Build ID containing the specific native artifacts to use:'
     type: string
     default: 'latest'
   - name: VM_IMAGE_HOST
+    displayName: 'The generic host build agent configuration:'
     type: object
     default:
       pool:
         name: Azure Pipelines
-        vmImage: ubuntu-18.04
+        vmImage: ubuntu-20.04
+        os: windows
   - name: VM_IMAGE_WINDOWS
+    displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
         name: Azure Pipelines
         vmImage: windows-2022
+        os: windows
   - name: VM_IMAGE_MAC
+    displayName: 'The macOS build agent configuration:'
     type: object
     default:
       pool:
         name: Azure Pipelines
-        vmImage: macos-11
+        vmImage: macos-12
+        os: macos
   - name: VM_IMAGE_LINUX
+    displayName: 'The Linux build agent configuration:'
     type: object
     default:
       pool:
         name: Azure Pipelines
-        vmImage: ubuntu-18.04
-
-pool:
-  name: Azure Pipelines
-  vmImage: ubuntu-18.04
+        vmImage: ubuntu-20.04
+        os: linux
 
 variables:
-  - template: azure-pipelines-variables.yml
+  - template: /scripts/azure-pipelines-variables.yml@self
 
-stages:
-  - template: azure-templates-stages.yml
-    parameters:
-      buildPipelineType: 'both'
-      buildExternals: ${{ parameters.buildExternals }}
-      VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
-      VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
-      VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
-      VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
-      VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC }}
-      VM_IMAGE_LINUX: ${{ parameters.VM_IMAGE_LINUX }}
-      VM_IMAGE_LINUX_NATIVE: ${{ parameters.VM_IMAGE_LINUX }}
+extends:
+  template: /scripts/azure-template.yml@self
+  parameters:
+    pool: ${{ parameters.VM_IMAGE_HOST.pool }}
+    stages:
+      - template: /scripts/azure-templates-stages.yml@self
+        parameters:
+          buildPipelineType: 'both'
+          buildExternals: ${{ parameters.buildExternals }}
+          VM_IMAGE_HOST: ${{ parameters.VM_IMAGE_HOST }}
+          VM_IMAGE_WINDOWS: ${{ parameters.VM_IMAGE_WINDOWS }}
+          VM_IMAGE_WINDOWS_NATIVE: ${{ parameters.VM_IMAGE_WINDOWS }}
+          VM_IMAGE_MAC: ${{ parameters.VM_IMAGE_MAC }}
+          VM_IMAGE_MAC_NATIVE: ${{ parameters.VM_IMAGE_MAC }}
+          VM_IMAGE_LINUX: ${{ parameters.VM_IMAGE_LINUX }}
+          VM_IMAGE_LINUX_NATIVE: ${{ parameters.VM_IMAGE_LINUX }}

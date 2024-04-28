@@ -8,7 +8,7 @@
     <Nullable>Enable</Nullable>
     <SignAssembly>false</SignAssembly>
     <DefineConstants>$(DefineConstants);__MAUI__</DefineConstants>
-    <PackagingPlatform Condition="$(TargetFramework.Contains('-windows'))">net6.0-windows</PackagingPlatform>
+    <PackagingPlatform Condition="$(TargetFramework.Contains('-windows'))">net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-windows</PackagingPlatform>
     <UseMauiCore>true</UseMauiCore>
     <AndroidGenerateResourceDesigner>false</AndroidGenerateResourceDesigner>
     <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
@@ -78,11 +78,5 @@
   </ItemGroup>
   <ItemGroup Condition="!$(TargetFramework.Contains('-windows'))">
     <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.UWP\SKTouchHandler.cs" Link="Platform\Windows\SKTouchHandler.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
-    <Compile Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKTouchHandler.cs" Link="Platform\Tizen\SKTouchHandler.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="!$(TargetFramework.Contains('-tizen'))">
-    <None Include="..\..\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SKTouchHandler.cs" Link="Platform\Tizen\SKTouchHandler.cs" />
   </ItemGroup>
 </Project>

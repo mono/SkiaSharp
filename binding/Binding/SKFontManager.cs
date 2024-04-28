@@ -44,10 +44,9 @@ namespace SkiaSharp
 
 		public string GetFamilyName (int index)
 		{
-			using (var str = new SKString ()) {
-				SkiaApi.sk_fontmgr_get_family_name (Handle, index, str.Handle);
-				return (string)str;
-			}
+			using var str = new SKString ();
+			SkiaApi.sk_fontmgr_get_family_name (Handle, index, str.Handle);
+			return (string)str;
 		}
 
 		public string[] GetFontFamilies () => FontFamilies.ToArray ();
@@ -59,10 +58,9 @@ namespace SkiaSharp
 
 		public SKFontStyleSet GetFontStyles (string familyName)
 		{
-			var familyNameUtf8ByteList = StringUtilities.GetEncodedText(familyName,SKTextEncoding.Utf8, addNull: true);
-			fixed (byte* familyNamePointer = familyNameUtf8ByteList)
-			{
-				return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_match_family (Handle, new IntPtr(familyNamePointer)));
+			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull: true);
+			fixed (byte* familyNamePointer = familyNameUtf8ByteList) {
+				return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_match_family (Handle, new IntPtr (familyNamePointer)));
 			}
 		}
 
@@ -74,10 +72,9 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull: true);
-			fixed (byte* familyNamePointer = familyNameUtf8ByteList)
-			{
-				var tf = SKTypeface.GetObject(SkiaApi.sk_fontmgr_match_family_style(Handle, new IntPtr(familyNamePointer), style.Handle));
-				tf?.PreventPublicDisposal();
+			fixed (byte* familyNamePointer = familyNameUtf8ByteList) {
+				var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_family_style (Handle, new IntPtr (familyNamePointer), style.Handle));
+				tf?.PreventPublicDisposal ();
 				return tf;
 			}
 		}
@@ -191,8 +188,7 @@ namespace SkiaSharp
 				familyName = string.Empty;
 
 			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull: true);
-			fixed (byte* familyNamePointer = familyNameUtf8ByteList)
-			{
+			fixed (byte* familyNamePointer = familyNameUtf8ByteList) {
 				var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_family_style_character (Handle, new IntPtr (familyNamePointer), style.Handle, bcp47, bcp47?.Length ?? 0, character));
 				tf?.PreventPublicDisposal ();
 				return tf;

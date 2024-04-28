@@ -4,7 +4,7 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-$uri = "https://xamarin.azureedge.net/GTKforWindows/Windows/gtk-sharp-$Version.msi"
+$uri = "https://github.com/mono/gtk-sharp/releases/download/$Version/gtk-sharp-$Version.msi"
 
 $HOME_DIR = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
 $tempDir = Join-Path "$HOME_DIR" "gtk-sharp-temp"

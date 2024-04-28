@@ -22,6 +22,8 @@ namespace SkiaSharp.Views.UWP
 			Initialize();
 		}
 
+		public override bool IsOpaque => false;
+
 		partial void DoLoaded() =>
 			drawable = new SKCGSurfaceFactory();
 

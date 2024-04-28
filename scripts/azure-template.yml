@@ -1,0 +1,31 @@
+parameters:
+  - name: stages
+    type: stageList
+    default: []
+  - name: pool
+    type: object
+    default: {}
+  - name: customBuildTags
+    type: object
+    default: null
+
+stages:
+  - ${{ each stage in parameters.stages }}:
+    - ${{ each stageProperty in stage }}:
+        ${{ if notIn(stageProperty.key, 'jobs', 'pool') }}:
+          ${{ stageProperty.key }}: ${{ stageProperty.value }}
+      pool: ${{ parameters.pool }}
+      jobs:
+        - ${{ each job in stage.jobs }}:
+            - ${{ each jobProperty in job }}:
+                ${{ if notIn(jobProperty.key, 'steps', 'templateContext') }}:
+                  ${{ jobProperty.key }}: ${{ jobProperty.value }}
+              steps:
+                - ${{ job.steps }}
+                - ${{ each output in job.templateContext.outputs }}:
+                  - task: PublishPipelineArtifact@1
+                    displayName: ${{ output.displayName }}
+                    condition: ${{ coalesce(output.condition, 'succeeded()') }}
+                    inputs:
+                      artifactName: ${{ output.artifactName }}
+                      targetPath: ${{ output.targetPath }}

@@ -6,8 +6,15 @@
         (function (Windows) {
 
             class SKXamlCanvas {
+                static buffers = [];
+
                 static invalidateCanvas(pData, canvasId, width, height) {
                     var htmlCanvas = document.getElementById(canvasId);
+
+                    if (!htmlCanvas) {
+                        return false;
+                    }
+
                     htmlCanvas.width = width;
                     htmlCanvas.height = height;
 
@@ -15,11 +22,36 @@
                     if (!ctx)
                         return false;
 
-                    var buffer = new Uint8ClampedArray(Module.HEAPU8.buffer, pData, width * height * 4);
-                    var imageData = new ImageData(buffer, width, height);
-                    ctx.putImageData(imageData, 0, 0);
+                    var byteLength = width * height * 4;
+
+                    if (isSecureContext) {
+                        // In a secure context (e.g. with threading enabled), creating a view
+                        // from Module.HEAPU8.buffer is not supported, so we're making an
+                        // explicit copy of the wasm memory.
+                        var buffer = SKXamlCanvas.buffers[canvasId];
+
+                        if (!buffer || buffer.length != byteLength) {
+                            SKXamlCanvas.buffers[canvasId] = buffer = new Uint8ClampedArray(new ArrayBuffer(byteLength));
+                        }
+
+                        var slice = Module.HEAPU8.buffer.slice(pData, pData + byteLength);
+                        buffer.set(new Uint8ClampedArray(slice), 0);
+                        var imageData = new ImageData(buffer, width, height);
+                        ctx.putImageData(imageData, 0, 0);
+                    }
+                    else {
+                        var buffer = new Uint8ClampedArray(Module.HEAPU8.buffer, byteLength);
+                        var imageData = new ImageData(buffer, width, height);
+                        ctx.putImageData(imageData, 0, 0);
+                    }
 
                     return true;
+                }
+
+                static clearCanvas(canvasId) {
+                    if (isSecureContext) {
+                        delete SKXamlCanvas.buffers[canvasId];
+                    }
                 }
             }
 
@@ -29,20 +61,38 @@
                 constructor(managedHandle) {
                     this.managedHandle = managedHandle;
                     this.canvas = undefined;
-                    this.jsInfo = undefined;
                     this.renderLoop = false;
                     this.currentRequest = 0;
+                    this.requestRender = undefined;
+
+                    this.buildImports();
+                }
+
+                async buildImports() {
+                    if (Module.getAssemblyExports !== undefined) {
+                        const skiaSharpExports = await Module.getAssemblyExports("SkiaSharp.Views.Windows");
+
+                        this.requestRender = () => skiaSharpExports.SkiaSharp.Views.Windows.SKSwapChainPanel.RenderFrame(this.managedHandle);
+                    }
+                    else {
+                        this.requestRender =
+                            () => Uno.Foundation.Interop.ManagedObject.dispatch(this.managedHandle, 'RenderFrame', null);
+                    }
                 }
 
                 // JSObject
-                static createInstance(managedHandle, jsHandle) {
+                static createInstanceLegacy(managedHandle, jsHandle) {
                     SKSwapChainPanel.activeInstances[jsHandle] = new SKSwapChainPanel(managedHandle);
                 }
-                static getInstance(jsHandle) {
+                static getInstanceLegacy(jsHandle) {
                     return SKSwapChainPanel.activeInstances[jsHandle];
                 }
-                static destroyInstance(jsHandle) {
+                static destroyInstanceLegacy(jsHandle) {
                     delete SKSwapChainPanel.activeInstances[jsHandle];
+                }
+
+                static createInstance(managedHandle) {
+                    return new SKSwapChainPanel(managedHandle);
                 }
 
                 requestAnimationFrame(renderLoop) {
@@ -59,7 +109,13 @@
 
                     // add the draw to the next frame
                     this.currentRequest = window.requestAnimationFrame(() => {
-                        Uno.Foundation.Interop.ManagedObject.dispatch(this.managedHandle, 'RenderFrame', null);
+
+                        if (this.requestRender) {
+                            // make current for this canvas instance
+                            GL.makeContextCurrent(this.glCtx);
+
+                            this.requestRender();
+                        }
 
                         this.currentRequest = 0;
 
@@ -83,7 +139,11 @@
                         this.canvas.height = h;
                 }
 
-                setEnableRenderLoop(enable) {
+                static setEnableRenderLoop(instance, enable) {
+                    instance.setEnableRenderLoopInternal(enable);
+                }
+
+                setEnableRenderLoopInternal(enable) {
                     this.renderLoop = enable;
 
                     // either start the new frame or cancel the existing one
@@ -93,6 +153,26 @@
                         window.cancelAnimationFrame(this.currentRequest);
                         this.currentRequest = 0;
                     }
+                }
+
+                createContextLegacy(canvasOrCanvasId) {
+
+                    var jsInfo = this.createContext(canvasOrCanvasId);
+
+                    // format as array for nicer parsing
+                    jsInfo = [
+                        info.ctx,
+                        info.fbo ? info.fbo.id : 0,
+                        info.stencil,
+                        info.sample,
+                        info.depth,
+                    ];
+
+                    return jsInfo;
+                }
+
+                static createContextStatic(instance, canvasOrCanvasId) {
+                    return instance.createContext(canvasOrCanvasId);
                 }
 
                 createContext(canvasOrCanvasId) {
@@ -106,32 +186,31 @@
                             throw `No <canvas> with id ${canvasOrCanvasId} was found`;
                     }
 
-                    var ctx = SKSwapChainPanel.createWebGLContext(canvas);
-                    if (!ctx || ctx < 0)
+                    this.glCtx = SKSwapChainPanel.createWebGLContext(canvas);
+                    if (!this.glCtx || this.glCtx < 0)
                         throw `Failed to create WebGL context: err ${ctx}`;
 
                     // make current
-                    GL.makeContextCurrent(ctx);
+                    GL.makeContextCurrent(this.glCtx);
+
+                    // Starting from .NET 7 the GLctx is defined in an inaccessible scope
+                    // when the current GL context changes. We need to pick it up from the
+                    // GL.currentContext instead.
+                    let currentGLctx = GL.currentContext && GL.currentContext.GLctx;
+
+                    if (!currentGLctx)
+                        throw `Failed to get current WebGL context`;
 
                     // read values
                     this.canvas = canvas;
-                    var info = {
-                        ctx: ctx,
-                        fbo: GLctx.getParameter(GLctx.FRAMEBUFFER_BINDING),
-                        stencil: GLctx.getParameter(GLctx.STENCIL_BITS),
-                        sample: 0, // TODO: GLctx.getParameter(GLctx.SAMPLES)
-                        depth: GLctx.getParameter(GLctx.DEPTH_BITS),
+                    return {
+                        ctx: this.glCtx,
+                        fbo: currentGLctx.getParameter(currentGLctx.FRAMEBUFFER_BINDING),
+                        stencil: currentGLctx.getParameter(currentGLctx.STENCIL_BITS),
+                        sample: 0, // TODO: currentGLctx.getParameter(GLctx.SAMPLES)
+                        depth: currentGLctx.getParameter(currentGLctx.DEPTH_BITS),
                     };
 
-                    // format as array for nicer parsing
-                    this.jsInfo = [
-                        info.ctx,
-                        info.fbo ? info.fbo.id : 0,
-                        info.stencil,
-                        info.sample,
-                        info.depth,
-                    ];
-                    return this.jsInfo;
                 }
 
                 static createWebGLContext(canvas) {

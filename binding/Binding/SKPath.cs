@@ -50,7 +50,7 @@ namespace SkiaSharp
 			set { }
 		}
 
-		public bool IsConvex => SkiaApi.sk_path_is_convex(Handle);
+		public bool IsConvex => SkiaApi.sk_path_is_convex (Handle);
 
 		public bool IsConcave => !IsConvex;
 
@@ -466,10 +466,9 @@ namespace SkiaSharp
 
 		public string ToSvgPathData ()
 		{
-			using (var str = new SKString ()) {
-				SkiaApi.sk_path_to_svg_string (Handle, str.Handle);
-				return (string)str;
-			}
+			using var str = new SKString ();
+			SkiaApi.sk_path_to_svg_string (Handle, str.Handle);
+			return (string)str;
 		}
 
 		public static SKPath ParseSvgPathData (string svgPath)

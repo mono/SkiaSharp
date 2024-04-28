@@ -16,41 +16,51 @@ namespace SkiaSharp.Internals
 	{
 		private const string LibCLibrary = "libc";
 
-		public static bool IsUnix { get; }
+		public static bool IsUnix => IsMac || IsLinux;
 
-		public static bool IsWindows { get; }
-
-		public static bool IsMac { get; }
-
-		public static bool IsLinux { get; }
-
-		public static bool IsArm { get; }
-
-		public static bool Is64Bit { get; }
-
-		static PlatformConfiguration ()
-		{
+		public static bool IsWindows {
 #if WINDOWS_UWP
-			IsMac = false;
-			IsLinux = false;
-			IsUnix = false;
-			IsWindows = true;
-
-			var arch = Package.Current.Id.Architecture;
-			const ProcessorArchitecture arm64 = (ProcessorArchitecture)12;
-			IsArm = arch == ProcessorArchitecture.Arm || arch == arm64;
+			get => true;
+#elif NET6_0_OR_GREATER
+			get => OperatingSystem.IsWindows ();
 #else
-			IsMac = RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
-			IsLinux = RuntimeInformation.IsOSPlatform (OSPlatform.Linux);
-			IsUnix = IsMac || IsLinux;
-			IsWindows = RuntimeInformation.IsOSPlatform (OSPlatform.Windows);
-
-			var arch = RuntimeInformation.ProcessArchitecture;
-			IsArm = arch == Architecture.Arm || arch == Architecture.Arm64;
+			get => RuntimeInformation.IsOSPlatform (OSPlatform.Windows);
 #endif
-
-			Is64Bit = IntPtr.Size == 8;
 		}
+
+		public static bool IsMac {
+#if WINDOWS_UWP
+			get => false;
+#elif NET6_0_OR_GREATER
+			get => OperatingSystem.IsMacOS ();
+#else
+			get => RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
+#endif
+		}
+
+		public static bool IsLinux {
+#if WINDOWS_UWP
+			get => false;
+#elif NET6_0_OR_GREATER
+			get => OperatingSystem.IsLinux ();
+#else
+			get => RuntimeInformation.IsOSPlatform (OSPlatform.Linux);
+#endif
+		}
+
+		public static bool IsArm {
+#if WINDOWS_UWP
+			get {
+				var arch = Package.Current.Id.Architecture;
+				const ProcessorArchitecture arm64 = (ProcessorArchitecture)12;
+				return arch == ProcessorArchitecture.Arm || arch == arm64;
+			}
+#else
+			get => RuntimeInformation.ProcessArchitecture is Architecture.Arm or Architecture.Arm64;
+#endif
+		}
+
+		public static bool Is64Bit => IntPtr.Size == 8;
 
 		private static string linuxFlavor;
 
