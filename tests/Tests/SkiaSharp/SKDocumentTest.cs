@@ -167,7 +167,6 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-
 		[SkippableFact]
 		public void StreamIsNotCollectedPrematurely()
 		{
@@ -204,5 +203,64 @@ namespace SkiaSharp.Tests
 				return SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata());
 			}
 		}
+	
+		[SkippableFact]
+		public void CanCreateTaggedPdf()
+		{
+			var metadata = new SKPdfMetadata();
+			metadata.Title = "Example Tagged PDF With Links";
+			metadata.Creator = "Skia";
+			metadata.Creation = DateTime.Now;
+			metadata.Modified = DateTime.Now;
+
+			// The document tag.
+			var root = new SKPdfStructureElement();
+			root.NodeId = 1;
+			root.Type = "Document";
+			root.Language = "en-US";
+
+			// A link.
+			var l1 = new SKPdfStructureElement();
+			l1.NodeId = 2;
+			l1.Type = "Link";
+			root.Children.Add(l1);
+
+			metadata.Structure = root;
+
+            using var stream = new MemoryStream();
+            using (var doc = SKDocument.CreatePdf(stream, metadata))
+            {
+                Assert.NotNull(doc);
+
+				var canvas = doc.BeginPage(612, 792);  // U.S. Letter
+                Assert.NotNull(canvas);
+
+				var paint = new SKPaint();
+				paint.Color = SKColors.Blue;
+
+				var font = new SKFont();
+				font.Size = 20;
+
+				// The node ID should cover both the text and the annotation.
+				SkPDF::SetNodeId(canvas, 2);
+				canvas->drawString("Click to visit Google.com", 72, 72, font, paint);
+				SkRect linkRect = SkRect::MakeXYWH(
+					SkIntToScalar(72), SkIntToScalar(54),
+					SkIntToScalar(218), SkIntToScalar(24));
+				sk_sp<SkData> url(SkData::MakeWithCString("http://www.google.com"));
+				SkAnnotateRectWithURL(canvas, linkRect, url.get());
+
+				document->endPage();
+				document->close();
+				outputStream.flush();
+
+
+                doc.EndPage();
+                doc.Close();
+            }
+
+            Assert.True(stream.Length > 0);
+            Assert.True(stream.Position > 0);
+        }
 	}
 }

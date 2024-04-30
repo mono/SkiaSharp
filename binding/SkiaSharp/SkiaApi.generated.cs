@@ -467,6 +467,34 @@ namespace SkiaSharp
 			(gr_direct_context_flush_and_submit_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_and_submit> ("gr_direct_context_flush_and_submit")).Invoke (context, syncCpu);
 		#endif
 
+		// void gr_direct_context_flush_image(gr_direct_context_t* context, const sk_image_t* image)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image);
+		}
+		private static Delegates.gr_direct_context_flush_image gr_direct_context_flush_image_delegate;
+		internal static void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image) =>
+			(gr_direct_context_flush_image_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_image> ("gr_direct_context_flush_image")).Invoke (context, image);
+		#endif
+
+		// void gr_direct_context_flush_surface(gr_direct_context_t* context, sk_surface_t* surface)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface);
+		}
+		private static Delegates.gr_direct_context_flush_surface gr_direct_context_flush_surface_delegate;
+		internal static void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface) =>
+			(gr_direct_context_flush_surface_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_surface> ("gr_direct_context_flush_surface")).Invoke (context, surface);
+		#endif
+
 		// void gr_direct_context_free_gpu_resources(gr_direct_context_t* context)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -3691,17 +3719,17 @@ namespace SkiaSharp
 			(sk_document_create_pdf_from_stream_delegate ??= GetSymbol<Delegates.sk_document_create_pdf_from_stream> ("sk_document_create_pdf_from_stream")).Invoke (stream);
 		#endif
 
-		// sk_document_t* sk_document_create_pdf_from_stream_with_metadata(sk_wstream_t* stream, const sk_document_pdf_metadata_t* metadata)
+		// sk_document_t* sk_document_create_pdf_from_stream_with_metadata(sk_wstream_t* stream, const sk_pdf_metadata_t* metadata)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKDocumentPdfMetadataInternal* metadata);
+		internal static extern sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKPdfMetadataInternal* metadata);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKDocumentPdfMetadataInternal* metadata);
+			internal delegate sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKPdfMetadataInternal* metadata);
 		}
 		private static Delegates.sk_document_create_pdf_from_stream_with_metadata sk_document_create_pdf_from_stream_with_metadata_delegate;
-		internal static sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKDocumentPdfMetadataInternal* metadata) =>
+		internal static sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKPdfMetadataInternal* metadata) =>
 			(sk_document_create_pdf_from_stream_with_metadata_delegate ??= GetSymbol<Delegates.sk_document_create_pdf_from_stream_with_metadata> ("sk_document_create_pdf_from_stream_with_metadata")).Invoke (stream, metadata);
 		#endif
 
@@ -5011,20 +5039,6 @@ namespace SkiaSharp
 			(sk_image_make_raster_image_delegate ??= GetSymbol<Delegates.sk_image_make_raster_image> ("sk_image_make_raster_image")).Invoke (cimage);
 		#endif
 
-		// sk_shader_t* sk_image_make_shader(const sk_image_t* image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, const sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
-		}
-		private static Delegates.sk_image_make_shader sk_image_make_shader_delegate;
-		internal static sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix) =>
-			(sk_image_make_shader_delegate ??= GetSymbol<Delegates.sk_image_make_shader> ("sk_image_make_shader")).Invoke (image, tileX, tileY, sampling, cmatrix);
-		#endif
-
 		// sk_shader_t* sk_image_make_raw_shader(const sk_image_t* image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, const sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -5037,6 +5051,20 @@ namespace SkiaSharp
 		private static Delegates.sk_image_make_raw_shader sk_image_make_raw_shader_delegate;
 		internal static sk_shader_t sk_image_make_raw_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix) =>
 			(sk_image_make_raw_shader_delegate ??= GetSymbol<Delegates.sk_image_make_raw_shader> ("sk_image_make_raw_shader")).Invoke (image, tileX, tileY, sampling, cmatrix);
+		#endif
+
+		// sk_shader_t* sk_image_make_shader(const sk_image_t* image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, const sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		}
+		private static Delegates.sk_image_make_shader sk_image_make_shader_delegate;
+		internal static sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix) =>
+			(sk_image_make_shader_delegate ??= GetSymbol<Delegates.sk_image_make_shader> ("sk_image_make_shader")).Invoke (image, tileX, tileY, sampling, cmatrix);
 		#endif
 
 		// sk_image_t* sk_image_make_subset(const sk_image_t* cimage, gr_direct_context_t* context, const sk_irect_t* subset)
@@ -5344,20 +5372,6 @@ namespace SkiaSharp
 		#endregion
 
 		#region sk_imagefilter.h
-
-		// sk_imagefilter_t* sk_imagefilter_new_alpha_threshold(const sk_region_t* region, float innerThreshold, float outerThreshold, const sk_imagefilter_t* input)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_imagefilter_t sk_imagefilter_new_alpha_threshold (sk_region_t region, Single innerThreshold, Single outerThreshold, sk_imagefilter_t input);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_imagefilter_t sk_imagefilter_new_alpha_threshold (sk_region_t region, Single innerThreshold, Single outerThreshold, sk_imagefilter_t input);
-		}
-		private static Delegates.sk_imagefilter_new_alpha_threshold sk_imagefilter_new_alpha_threshold_delegate;
-		internal static sk_imagefilter_t sk_imagefilter_new_alpha_threshold (sk_region_t region, Single innerThreshold, Single outerThreshold, sk_imagefilter_t input) =>
-			(sk_imagefilter_new_alpha_threshold_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_alpha_threshold> ("sk_imagefilter_new_alpha_threshold")).Invoke (region, innerThreshold, outerThreshold, input);
-		#endif
 
 		// sk_imagefilter_t* sk_imagefilter_new_arithmetic(float k1, float k2, float k3, float k4, bool enforcePMColor, const sk_imagefilter_t* background, const sk_imagefilter_t* foreground, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
@@ -13733,73 +13747,6 @@ namespace SkiaSharp {
 
 	}
 
-	// sk_document_pdf_metadata_t
-	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKDocumentPdfMetadataInternal : IEquatable<SKDocumentPdfMetadataInternal> {
-		// public sk_string_t* fTitle
-		public sk_string_t fTitle;
-
-		// public sk_string_t* fAuthor
-		public sk_string_t fAuthor;
-
-		// public sk_string_t* fSubject
-		public sk_string_t fSubject;
-
-		// public sk_string_t* fKeywords
-		public sk_string_t fKeywords;
-
-		// public sk_string_t* fCreator
-		public sk_string_t fCreator;
-
-		// public sk_string_t* fProducer
-		public sk_string_t fProducer;
-
-		// public sk_time_datetime_t* fCreation
-		public SKTimeDateTimeInternal* fCreation;
-
-		// public sk_time_datetime_t* fModified
-		public SKTimeDateTimeInternal* fModified;
-
-		// public float fRasterDPI
-		public Single fRasterDPI;
-
-		// public bool fPDFA
-		public Byte fPDFA;
-
-		// public int fEncodingQuality
-		public Int32 fEncodingQuality;
-
-		public readonly bool Equals (SKDocumentPdfMetadataInternal obj) =>
-			fTitle == obj.fTitle && fAuthor == obj.fAuthor && fSubject == obj.fSubject && fKeywords == obj.fKeywords && fCreator == obj.fCreator && fProducer == obj.fProducer && fCreation == obj.fCreation && fModified == obj.fModified && fRasterDPI == obj.fRasterDPI && fPDFA == obj.fPDFA && fEncodingQuality == obj.fEncodingQuality;
-
-		public readonly override bool Equals (object obj) =>
-			obj is SKDocumentPdfMetadataInternal f && Equals (f);
-
-		public static bool operator == (SKDocumentPdfMetadataInternal left, SKDocumentPdfMetadataInternal right) =>
-			left.Equals (right);
-
-		public static bool operator != (SKDocumentPdfMetadataInternal left, SKDocumentPdfMetadataInternal right) =>
-			!left.Equals (right);
-
-		public readonly override int GetHashCode ()
-		{
-			var hash = new HashCode ();
-			hash.Add (fTitle);
-			hash.Add (fAuthor);
-			hash.Add (fSubject);
-			hash.Add (fKeywords);
-			hash.Add (fCreator);
-			hash.Add (fProducer);
-			hash.Add (fCreation);
-			hash.Add (fModified);
-			hash.Add (fRasterDPI);
-			hash.Add (fPDFA);
-			hash.Add (fEncodingQuality);
-			return hash.ToHashCode ();
-		}
-
-	}
-
 	// sk_fontmetrics_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKFontMetrics : IEquatable<SKFontMetrics> {
@@ -14637,6 +14584,187 @@ namespace SkiaSharp {
 			hash.Add (m31);
 			hash.Add (m32);
 			hash.Add (m33);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_pdf_attribute_item_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKPdfAttributeItemInternal : IEquatable<SKPdfAttributeItemInternal> {
+		// public sk_string_t* fOwner
+		public sk_string_t fOwner;
+
+		// public sk_string_t* fName
+		public sk_string_t fName;
+
+		// public void* fValue
+		public void* fValue;
+
+		// public int fValueSize
+		public Int32 fValueSize;
+
+		// public int fValueType
+		public Int32 fValueType;
+
+		public readonly bool Equals (SKPdfAttributeItemInternal obj) =>
+			fOwner == obj.fOwner && fName == obj.fName && fValue == obj.fValue && fValueSize == obj.fValueSize && fValueType == obj.fValueType;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKPdfAttributeItemInternal f && Equals (f);
+
+		public static bool operator == (SKPdfAttributeItemInternal left, SKPdfAttributeItemInternal right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKPdfAttributeItemInternal left, SKPdfAttributeItemInternal right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fOwner);
+			hash.Add (fName);
+			hash.Add (fValue);
+			hash.Add (fValueSize);
+			hash.Add (fValueType);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_pdf_metadata_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKPdfMetadataInternal : IEquatable<SKPdfMetadataInternal> {
+		// public sk_string_t* fTitle
+		public sk_string_t fTitle;
+
+		// public sk_string_t* fAuthor
+		public sk_string_t fAuthor;
+
+		// public sk_string_t* fSubject
+		public sk_string_t fSubject;
+
+		// public sk_string_t* fKeywords
+		public sk_string_t fKeywords;
+
+		// public sk_string_t* fCreator
+		public sk_string_t fCreator;
+
+		// public sk_string_t* fProducer
+		public sk_string_t fProducer;
+
+		// public sk_time_datetime_t* fCreation
+		public SKTimeDateTimeInternal* fCreation;
+
+		// public sk_time_datetime_t* fModified
+		public SKTimeDateTimeInternal* fModified;
+
+		// public float fRasterDPI
+		public Single fRasterDPI;
+
+		// public bool fPDFA
+		public Byte fPDFA;
+
+		// public int fEncodingQuality
+		public Int32 fEncodingQuality;
+
+		// public sk_pdf_compression_t fCompression
+		public SKPdfCompression fCompression;
+
+		// public sk_pdf_structure_element_t* fStructureElementTreeRoot
+		public SKPdfStructureElementInternal* fStructureElementTreeRoot;
+
+		public readonly bool Equals (SKPdfMetadataInternal obj) =>
+			fTitle == obj.fTitle && fAuthor == obj.fAuthor && fSubject == obj.fSubject && fKeywords == obj.fKeywords && fCreator == obj.fCreator && fProducer == obj.fProducer && fCreation == obj.fCreation && fModified == obj.fModified && fRasterDPI == obj.fRasterDPI && fPDFA == obj.fPDFA && fEncodingQuality == obj.fEncodingQuality && fCompression == obj.fCompression && fStructureElementTreeRoot == obj.fStructureElementTreeRoot;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKPdfMetadataInternal f && Equals (f);
+
+		public static bool operator == (SKPdfMetadataInternal left, SKPdfMetadataInternal right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKPdfMetadataInternal left, SKPdfMetadataInternal right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fTitle);
+			hash.Add (fAuthor);
+			hash.Add (fSubject);
+			hash.Add (fKeywords);
+			hash.Add (fCreator);
+			hash.Add (fProducer);
+			hash.Add (fCreation);
+			hash.Add (fModified);
+			hash.Add (fRasterDPI);
+			hash.Add (fPDFA);
+			hash.Add (fEncodingQuality);
+			hash.Add (fCompression);
+			hash.Add (fStructureElementTreeRoot);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_pdf_structure_element_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKPdfStructureElementInternal : IEquatable<SKPdfStructureElementInternal> {
+		// public sk_string_t* fTypeString
+		public sk_string_t fTypeString;
+
+		// public sk_pdf_structure_element_t* fChildren
+		public SKPdfStructureElementInternal* fChildren;
+
+		// public int fChildrenSize
+		public Int32 fChildrenSize;
+
+		// public int fNodeId
+		public Int32 fNodeId;
+
+		// public int* fAdditionalNodeIds
+		public Int32* fAdditionalNodeIds;
+
+		// public int fAdditionalNodeIdsSize
+		public Int32 fAdditionalNodeIdsSize;
+
+		// public sk_pdf_attribute_item_t* fAttributes
+		public SKPdfAttributeItemInternal* fAttributes;
+
+		// public int fAttributesSize
+		public Int32 fAttributesSize;
+
+		// public sk_string_t* fAlt
+		public sk_string_t fAlt;
+
+		// public sk_string_t* fLang
+		public sk_string_t fLang;
+
+		public readonly bool Equals (SKPdfStructureElementInternal obj) =>
+			fTypeString == obj.fTypeString && fChildren == obj.fChildren && fChildrenSize == obj.fChildrenSize && fNodeId == obj.fNodeId && fAdditionalNodeIds == obj.fAdditionalNodeIds && fAdditionalNodeIdsSize == obj.fAdditionalNodeIdsSize && fAttributes == obj.fAttributes && fAttributesSize == obj.fAttributesSize && fAlt == obj.fAlt && fLang == obj.fLang;
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKPdfStructureElementInternal f && Equals (f);
+
+		public static bool operator == (SKPdfStructureElementInternal left, SKPdfStructureElementInternal right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKPdfStructureElementInternal left, SKPdfStructureElementInternal right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fTypeString);
+			hash.Add (fChildren);
+			hash.Add (fChildrenSize);
+			hash.Add (fNodeId);
+			hash.Add (fAdditionalNodeIds);
+			hash.Add (fAdditionalNodeIdsSize);
+			hash.Add (fAttributes);
+			hash.Add (fAttributesSize);
+			hash.Add (fAlt);
+			hash.Add (fLang);
 			return hash.ToHashCode ();
 		}
 
@@ -15709,6 +15837,34 @@ namespace SkiaSharp {
 		Xor = 3,
 		// REVERSE_DIFFERENCE_SK_PATHOP = 4
 		ReverseDifference = 4,
+	}
+
+	// sk_pdf_attribute_item_type_t
+	internal enum SKPdfAttributeItemTypeInternal {
+		// INT_SK_PDF_ATTRIBUTE_ITEM_TYPE = 0
+		Int = 0,
+		// FLOAT_SK_PDF_ATTRIBUTE_ITEM_TYPE = 1
+		Float = 1,
+		// NAME_SK_PDF_ATTRIBUTE_ITEM_TYPE = 2
+		Name = 2,
+		// FLOAT_ARRAY_SK_PDF_ATTRIBUTE_ITEM_TYPE = 3
+		FloatArray = 3,
+		// NODE_ID_ARRAY_SK_PDF_ATTRIBUTE_ITEM_TYPE = 4
+		NodeIdArray = 4,
+	}
+
+	// sk_pdf_compression_t
+	public enum SKPdfCompression {
+		// DEFAULT_SK_PDF_COMPRESSION = -1
+		Default = -1,
+		// NONE_SK_PDF_COMPRESSION = 0
+		None = 0,
+		// LOW_SK_PDF_COMPRESSION = 1
+		Low = 1,
+		// AVERAGE_SK_PDF_COMPRESSION = 6
+		Average = 6,
+		// HIGH_SK_PDF_COMPRESSION = 9
+		High = 9,
 	}
 
 	// sk_pixelgeometry_t
