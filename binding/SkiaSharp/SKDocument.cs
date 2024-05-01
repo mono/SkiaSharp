@@ -1,12 +1,10 @@
-﻿#nullable disable
-
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.IO;
 
 namespace SkiaSharp
 {
-	public unsafe class SKDocument : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
+    public unsafe class SKDocument : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		public const float DefaultRasterDpi = 72.0f;
 
@@ -35,16 +33,16 @@ namespace SkiaSharp
 
 		// CreateXps
 
-		public static SKDocument CreateXps (string path) =>
+		public static SKDocument? CreateXps (string path) =>
 			CreateXps (path, DefaultRasterDpi);
 
-		public static SKDocument CreateXps (Stream stream) =>
+		public static SKDocument? CreateXps (Stream stream) =>
 			CreateXps (stream, DefaultRasterDpi);
 
-		public static SKDocument CreateXps (SKWStream stream) =>
+		public static SKDocument? CreateXps (SKWStream stream) =>
 			CreateXps (stream, DefaultRasterDpi);
 
-		public static SKDocument CreateXps (string path, float dpi)
+		public static SKDocument? CreateXps (string path, float dpi)
 		{
 			if (path == null) {
 				throw new ArgumentNullException (nameof (path));
@@ -54,7 +52,7 @@ namespace SkiaSharp
 			return Owned (CreateXps (stream, dpi), stream);
 		}
 
-		public static SKDocument CreateXps (Stream stream, float dpi)
+		public static SKDocument? CreateXps (Stream stream, float dpi)
 		{
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
@@ -64,7 +62,7 @@ namespace SkiaSharp
 			return Owned (CreateXps (managed, dpi), managed);
 		}
 
-		public static SKDocument CreateXps (SKWStream stream, float dpi)
+		public static SKDocument? CreateXps (SKWStream stream, float dpi)
 		{
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));

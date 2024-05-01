@@ -242,21 +242,62 @@ namespace SkiaSharp.Tests
 				font.Size = 20;
 
 				// The node ID should cover both the text and the annotation.
-				SkPDF::SetNodeId(canvas, 2);
-				canvas->drawString("Click to visit Google.com", 72, 72, font, paint);
-				SkRect linkRect = SkRect::MakeXYWH(
-					SkIntToScalar(72), SkIntToScalar(54),
-					SkIntToScalar(218), SkIntToScalar(24));
-				sk_sp<SkData> url(SkData::MakeWithCString("http://www.google.com"));
-				SkAnnotateRectWithURL(canvas, linkRect, url.get());
+				canvas.SetPdfNodeId(2);
+				canvasDrawText("Click to visit Google.com", 72, 72, font, paint);
+				var linkRect = SKRect.Create(72, 54, 218, 24);
+				canvas.DrawUrlAnnotation(linkRect, "http://www.google.com");
 
-				document->endPage();
-				document->close();
-				outputStream.flush();
+				document.EndPage();
+				document.Close();
+            }
 
+            Assert.True(stream.Length > 0);
+            Assert.True(stream.Position > 0);
+        }
 
-                doc.EndPage();
-                doc.Close();
+		[SkippableFact]
+		public void CanCreateTaggedPdfWithConstructorStructures()
+		{
+            var metadata = new SKPdfMetadata
+            {
+                Title = "Example Tagged PDF With Links",
+                Creator = "Skia",
+                Creation = DateTime.Now,
+                Modified = DateTime.Now,
+            	// The document tag.
+				Structure = new SKPdfStructureElement(1, "Document")
+				{
+					Language = "en-US",
+					Children =
+					{
+						// A link.
+						new SKPdfStructureElement(2, "Link")
+					}
+				}
+            };
+
+            using var stream = new MemoryStream();
+            using (var doc = SKDocument.CreatePdf(stream, metadata))
+            {
+                Assert.NotNull(doc);
+
+				var canvas = doc.BeginPage(612, 792);  // U.S. Letter
+                Assert.NotNull(canvas);
+
+				var paint = new SKPaint();
+				paint.Color = SKColors.Blue;
+
+				var font = new SKFont();
+				font.Size = 20;
+
+				// The node ID should cover both the text and the annotation.
+				canvas.SetPdfNodeId(2);
+				canvasDrawText("Click to visit Google.com", 72, 72, font, paint);
+				var linkRect = SKRect.Create(72, 54, 218, 24);
+				canvas.DrawUrlAnnotation(linkRect, "http://www.google.com");
+
+				document.EndPage();
+				document.Close();
             }
 
             Assert.True(stream.Length > 0);
