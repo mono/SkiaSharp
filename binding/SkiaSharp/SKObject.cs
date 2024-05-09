@@ -44,6 +44,7 @@ namespace SkiaSharp
 			SKData.EnsureStaticInstanceAreInitialized ();
 			SKFontManager.EnsureStaticInstanceAreInitialized ();
 			SKTypeface.EnsureStaticInstanceAreInitialized ();
+			SKBlender.EnsureStaticInstanceAreInitialized ();
 		}
 
 		internal SKObject (IntPtr handle, bool owns)
