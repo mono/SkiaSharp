@@ -141,7 +141,10 @@ namespace SkiaSharp.Views.UWP
 				return;
 
 #if WINDOWS
-			XamlRoot.Changed -= OnXamlRootChanged;
+			if(XamlRoot != null)
+			{
+				XamlRoot.Changed -= OnXamlRootChanged;
+			}
 #else
 			var display = DisplayInformation.GetForCurrentView();
 			display.DpiChanged -= OnDpiChanged;
