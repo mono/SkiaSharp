@@ -44,6 +44,7 @@ namespace SkiaSharp
 			SKData.EnsureStaticInstanceAreInitialized ();
 			SKFontManager.EnsureStaticInstanceAreInitialized ();
 			SKTypeface.EnsureStaticInstanceAreInitialized ();
+			SKBlender.EnsureStaticInstanceAreInitialized ();
 		}
 
 		internal SKObject (IntPtr handle, bool owns)
@@ -195,7 +196,7 @@ namespace SkiaSharp
 			return owner;
 		}
 
-		// indicate that the chile should not be garbage collected while
+		// indicate that the child should not be garbage collected while
 		// the owner still lives
 		internal static T Referenced<T> (T owner, SKObject child)
 			where T : SKObject
@@ -350,11 +351,19 @@ namespace SkiaSharp
 		}
 	}
 
+	/// <summary>
+	/// This should be implemented on all types that inherit directly or
+	/// indirectly from SkRefCnt or SkRefCntBase
+	/// </summary>
 	internal interface ISKReferenceCounted
 	{
 		IntPtr Handle { get; }
 	}
 
+	/// <summary>
+	/// This should be implemented on all types that inherit directly or
+	/// indirectly from SkNVRefCnt
+	/// </summary>
 	internal interface ISKNonVirtualReferenceCounted : ISKReferenceCounted
 	{
 		void ReferenceNative ();
@@ -362,6 +371,12 @@ namespace SkiaSharp
 		void UnreferenceNative ();
 	}
 
+	/// <summary>
+	/// This should be implemented on all types that can skip the expensive
+	/// registration in the global dictionary. Typically this would be the case
+	/// if the type os _only_ constructed by the user and not provided as a
+	/// return type for _any_ member.
+	/// </summary>
 	internal interface ISKSkipObjectRegistration
 	{
 	}

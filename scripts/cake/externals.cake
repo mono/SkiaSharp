@@ -41,6 +41,33 @@ Task("externals-download")
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXTERNALS INTEROP - re-generate the interop files
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task("externals-interop")
+    .IsDependentOn("git-sync-deps")
+    .Does(() =>
+{
+    RunProcess("pwsh", "./utils/generate.ps1");
+
+    RunProcess("git", "diff --name-only binding/*/*.generated.cs", out var files);
+
+    if (files.Any()) {
+        Information("Generated files have changed:");
+        foreach (var file in files) {
+            Information($" - {file}");
+        }
+
+        if (Argument("validateInterop", false)) {
+            throw new Exception("Generated interop files are out of date. Please run `pwsh ./utils/generate.ps1`.");
+        } else {
+            Warning("Generated interop files are out of date. Please run `pwsh ./utils/generate.ps1`.");
+            Warning("##vso[task.logissue type=warning]Generated interop files are out of date. Please run `pwsh ./utils/generate.ps1`.");
+        }
+    }
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

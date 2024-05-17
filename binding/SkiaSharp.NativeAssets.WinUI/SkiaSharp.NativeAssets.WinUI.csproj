@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(WindowsTargetFrameworks)</TargetFrameworks>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for Windows UI (WinUI 3)</Title>
+    <IsWindowsNativeAssets>true</IsWindowsNativeAssets>
+  </PropertyGroup>
+  <ItemGroup>
+    <NativeWindowsPackageFile Include="..\..\output\native\winui\any\*" RuntimeIdentifier="win-x64" Folder="lib\$(WindowsTargetFrameworksCurrent)" />
+    <NativeWindowsPackageFile Include="..\..\output\native\winui\x64\*" RuntimeIdentifier="win-x64" />
+    <NativeWindowsPackageFile Include="..\..\output\native\winui\any\*" RuntimeIdentifier="win-x86" Folder="lib\$(WindowsTargetFrameworksCurrent)" />
+    <NativeWindowsPackageFile Include="..\..\output\native\winui\x86\*" RuntimeIdentifier="win-x86" />
+    <NativeWindowsPackageFile Include="..\..\output\native\winui\any\*" RuntimeIdentifier="win-arm64" Folder="lib\$(WindowsTargetFrameworksCurrent)" />
+    <NativeWindowsPackageFile Include="..\..\output\native\winui\arm64\*" RuntimeIdentifier="win-arm64" />
+  </ItemGroup>
+</Project>

@@ -18,6 +18,7 @@ using gr_vk_extensions_t = System.IntPtr;
 using gr_vk_memory_allocator_t = System.IntPtr;
 using gr_vkinterface_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
+using sk_blender_t = System.IntPtr;
 using sk_canvas_t = System.IntPtr;
 using sk_codec_t = System.IntPtr;
 using sk_colorfilter_t = System.IntPtr;
@@ -85,6 +86,10 @@ using skottie_logger_t = System.IntPtr;
 using skottie_marker_observer_t = System.IntPtr;
 using skottie_property_observer_t = System.IntPtr;
 using skottie_resource_provider_t = System.IntPtr;
+using skresources_external_track_asset_t = System.IntPtr;
+using skresources_image_asset_t = System.IntPtr;
+using skresources_multi_frame_image_asset_t = System.IntPtr;
+using skresources_resource_provider_t = System.IntPtr;
 using sksg_invalidation_controller_t = System.IntPtr;
 using vk_device_t = System.IntPtr;
 using vk_instance_t = System.IntPtr;
@@ -102,6 +107,132 @@ namespace SkiaSharp
 	internal unsafe partial class SkottieApi
 	{
 		#region skottie_animation.h
+
+		// void skottie_animation_builder_delete(skottie_animation_builder_t* instance)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void skottie_animation_builder_delete (skottie_animation_builder_t instance);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void skottie_animation_builder_delete (skottie_animation_builder_t instance);
+		}
+		private static Delegates.skottie_animation_builder_delete skottie_animation_builder_delete_delegate;
+		internal static void skottie_animation_builder_delete (skottie_animation_builder_t instance) =>
+			(skottie_animation_builder_delete_delegate ??= GetSymbol<Delegates.skottie_animation_builder_delete> ("skottie_animation_builder_delete")).Invoke (instance);
+		#endif
+
+		// void skottie_animation_builder_get_stats(skottie_animation_builder_t* instance, skottie_animation_builder_stats_t* stats)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void skottie_animation_builder_get_stats (skottie_animation_builder_t instance, AnimationBuilderStats* stats);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void skottie_animation_builder_get_stats (skottie_animation_builder_t instance, AnimationBuilderStats* stats);
+		}
+		private static Delegates.skottie_animation_builder_get_stats skottie_animation_builder_get_stats_delegate;
+		internal static void skottie_animation_builder_get_stats (skottie_animation_builder_t instance, AnimationBuilderStats* stats) =>
+			(skottie_animation_builder_get_stats_delegate ??= GetSymbol<Delegates.skottie_animation_builder_get_stats> ("skottie_animation_builder_get_stats")).Invoke (instance, stats);
+		#endif
+
+		// skottie_animation_t* skottie_animation_builder_make_from_data(skottie_animation_builder_t* instance, const char* data, size_t length)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern skottie_animation_t skottie_animation_builder_make_from_data (skottie_animation_builder_t instance, /* char */ void* data, /* size_t */ IntPtr length);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate skottie_animation_t skottie_animation_builder_make_from_data (skottie_animation_builder_t instance, /* char */ void* data, /* size_t */ IntPtr length);
+		}
+		private static Delegates.skottie_animation_builder_make_from_data skottie_animation_builder_make_from_data_delegate;
+		internal static skottie_animation_t skottie_animation_builder_make_from_data (skottie_animation_builder_t instance, /* char */ void* data, /* size_t */ IntPtr length) =>
+			(skottie_animation_builder_make_from_data_delegate ??= GetSymbol<Delegates.skottie_animation_builder_make_from_data> ("skottie_animation_builder_make_from_data")).Invoke (instance, data, length);
+		#endif
+
+		// skottie_animation_t* skottie_animation_builder_make_from_file(skottie_animation_builder_t* instance, const char* path)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern skottie_animation_t skottie_animation_builder_make_from_file (skottie_animation_builder_t instance, /* char */ void* path);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate skottie_animation_t skottie_animation_builder_make_from_file (skottie_animation_builder_t instance, /* char */ void* path);
+		}
+		private static Delegates.skottie_animation_builder_make_from_file skottie_animation_builder_make_from_file_delegate;
+		internal static skottie_animation_t skottie_animation_builder_make_from_file (skottie_animation_builder_t instance, /* char */ void* path) =>
+			(skottie_animation_builder_make_from_file_delegate ??= GetSymbol<Delegates.skottie_animation_builder_make_from_file> ("skottie_animation_builder_make_from_file")).Invoke (instance, path);
+		#endif
+
+		// skottie_animation_t* skottie_animation_builder_make_from_stream(skottie_animation_builder_t* instance, sk_stream_t* stream)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern skottie_animation_t skottie_animation_builder_make_from_stream (skottie_animation_builder_t instance, sk_stream_t stream);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate skottie_animation_t skottie_animation_builder_make_from_stream (skottie_animation_builder_t instance, sk_stream_t stream);
+		}
+		private static Delegates.skottie_animation_builder_make_from_stream skottie_animation_builder_make_from_stream_delegate;
+		internal static skottie_animation_t skottie_animation_builder_make_from_stream (skottie_animation_builder_t instance, sk_stream_t stream) =>
+			(skottie_animation_builder_make_from_stream_delegate ??= GetSymbol<Delegates.skottie_animation_builder_make_from_stream> ("skottie_animation_builder_make_from_stream")).Invoke (instance, stream);
+		#endif
+
+		// skottie_animation_t* skottie_animation_builder_make_from_string(skottie_animation_builder_t* instance, const char* data, size_t length)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern skottie_animation_t skottie_animation_builder_make_from_string (skottie_animation_builder_t instance, /* char */ void* data, /* size_t */ IntPtr length);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate skottie_animation_t skottie_animation_builder_make_from_string (skottie_animation_builder_t instance, /* char */ void* data, /* size_t */ IntPtr length);
+		}
+		private static Delegates.skottie_animation_builder_make_from_string skottie_animation_builder_make_from_string_delegate;
+		internal static skottie_animation_t skottie_animation_builder_make_from_string (skottie_animation_builder_t instance, /* char */ void* data, /* size_t */ IntPtr length) =>
+			(skottie_animation_builder_make_from_string_delegate ??= GetSymbol<Delegates.skottie_animation_builder_make_from_string> ("skottie_animation_builder_make_from_string")).Invoke (instance, data, length);
+		#endif
+
+		// skottie_animation_builder_t* skottie_animation_builder_new(skottie_animation_builder_flags_t flags)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern skottie_animation_builder_t skottie_animation_builder_new (AnimationBuilderFlags flags);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate skottie_animation_builder_t skottie_animation_builder_new (AnimationBuilderFlags flags);
+		}
+		private static Delegates.skottie_animation_builder_new skottie_animation_builder_new_delegate;
+		internal static skottie_animation_builder_t skottie_animation_builder_new (AnimationBuilderFlags flags) =>
+			(skottie_animation_builder_new_delegate ??= GetSymbol<Delegates.skottie_animation_builder_new> ("skottie_animation_builder_new")).Invoke (flags);
+		#endif
+
+		// void skottie_animation_builder_set_font_manager(skottie_animation_builder_t* instance, sk_fontmgr_t* fontManager)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void skottie_animation_builder_set_font_manager (skottie_animation_builder_t instance, sk_fontmgr_t fontManager);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void skottie_animation_builder_set_font_manager (skottie_animation_builder_t instance, sk_fontmgr_t fontManager);
+		}
+		private static Delegates.skottie_animation_builder_set_font_manager skottie_animation_builder_set_font_manager_delegate;
+		internal static void skottie_animation_builder_set_font_manager (skottie_animation_builder_t instance, sk_fontmgr_t fontManager) =>
+			(skottie_animation_builder_set_font_manager_delegate ??= GetSymbol<Delegates.skottie_animation_builder_set_font_manager> ("skottie_animation_builder_set_font_manager")).Invoke (instance, fontManager);
+		#endif
+
+		// void skottie_animation_builder_set_resource_provider(skottie_animation_builder_t* instance, skottie_resource_provider_t* resourceProvider)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void skottie_animation_builder_set_resource_provider (skottie_animation_builder_t instance, skottie_resource_provider_t resourceProvider);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void skottie_animation_builder_set_resource_provider (skottie_animation_builder_t instance, skottie_resource_provider_t resourceProvider);
+		}
+		private static Delegates.skottie_animation_builder_set_resource_provider skottie_animation_builder_set_resource_provider_delegate;
+		internal static void skottie_animation_builder_set_resource_provider (skottie_animation_builder_t instance, skottie_resource_provider_t resourceProvider) =>
+			(skottie_animation_builder_set_resource_provider_delegate ??= GetSymbol<Delegates.skottie_animation_builder_set_resource_provider> ("skottie_animation_builder_set_resource_provider")).Invoke (instance, resourceProvider);
+		#endif
 
 		// void skottie_animation_delete(skottie_animation_t* instance)
 		#if !USE_DELEGATES
@@ -199,20 +330,6 @@ namespace SkiaSharp
 		private static Delegates.skottie_animation_get_version skottie_animation_get_version_delegate;
 		internal static void skottie_animation_get_version (skottie_animation_t instance, sk_string_t version) =>
 			(skottie_animation_get_version_delegate ??= GetSymbol<Delegates.skottie_animation_get_version> ("skottie_animation_get_version")).Invoke (instance, version);
-		#endif
-
-		// void skottie_animation_keepalive()
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void skottie_animation_keepalive ();
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void skottie_animation_keepalive ();
-		}
-		private static Delegates.skottie_animation_keepalive skottie_animation_keepalive_delegate;
-		internal static void skottie_animation_keepalive () =>
-			(skottie_animation_keepalive_delegate ??= GetSymbol<Delegates.skottie_animation_keepalive> ("skottie_animation_keepalive")).Invoke ();
 		#endif
 
 		// skottie_animation_t* skottie_animation_make_from_data(const char* data, size_t length)
@@ -382,11 +499,67 @@ namespace SkiaSharp
 
 #region Structs
 
+namespace SkiaSharp.Skottie {
+
+	// skottie_animation_builder_stats_t
+	[StructLayout (LayoutKind.Sequential)]
+	public readonly unsafe partial struct AnimationBuilderStats : IEquatable<AnimationBuilderStats> {
+		// public float fTotalLoadTimeMS
+		private readonly Single fTotalLoadTimeMS;
+
+		// public float fJsonParseTimeMS
+		private readonly Single fJsonParseTimeMS;
+
+		// public float fSceneParseTimeMS
+		private readonly Single fSceneParseTimeMS;
+
+		// public size_t fJsonSize
+		private readonly /* size_t */ IntPtr fJsonSize;
+
+		// public size_t fAnimatorCount
+		private readonly /* size_t */ IntPtr fAnimatorCount;
+
+		public readonly bool Equals (AnimationBuilderStats obj) =>
+			fTotalLoadTimeMS == obj.fTotalLoadTimeMS && fJsonParseTimeMS == obj.fJsonParseTimeMS && fSceneParseTimeMS == obj.fSceneParseTimeMS && fJsonSize == obj.fJsonSize && fAnimatorCount == obj.fAnimatorCount;
+
+		public readonly override bool Equals (object obj) =>
+			obj is AnimationBuilderStats f && Equals (f);
+
+		public static bool operator == (AnimationBuilderStats left, AnimationBuilderStats right) =>
+			left.Equals (right);
+
+		public static bool operator != (AnimationBuilderStats left, AnimationBuilderStats right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fTotalLoadTimeMS);
+			hash.Add (fJsonParseTimeMS);
+			hash.Add (fSceneParseTimeMS);
+			hash.Add (fJsonSize);
+			hash.Add (fAnimatorCount);
+			return hash.ToHashCode ();
+		}
+
+	}
+}
+
 #endregion
 
 #region Enums
 
 namespace SkiaSharp.Skottie {
+
+	// skottie_animation_builder_flags_t
+	public enum AnimationBuilderFlags {
+		// NONE_SKOTTIE_ANIMATION_BUILDER_FLAGS = 0
+		None = 0,
+		// DEFER_IMAGE_LOADING_SKOTTIE_ANIMATION_BUILDER_FLAGS = 0x01
+		DeferImageLoading = 1,
+		// PREFER_EMBEDDED_FONTS_SKOTTIE_ANIMATION_BUILDER_FLAGS = 0x02
+		PreferEmbeddedFonts = 2,
+	}
 
 	// skottie_animation_renderflags_t
 	[Flags]

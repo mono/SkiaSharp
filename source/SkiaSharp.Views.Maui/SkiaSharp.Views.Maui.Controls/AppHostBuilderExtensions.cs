@@ -13,6 +13,7 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 				.ConfigureMauiHandlers(handlers =>
 				{
 					handlers.AddHandler<SKCanvasView, SKCanvasViewHandler>();
+					handlers.AddHandler<SKGLView, SKGLViewHandler>();
 				})
 				.ConfigureImageSources(sources =>
 				{

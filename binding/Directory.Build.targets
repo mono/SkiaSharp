@@ -4,6 +4,10 @@
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
 
+  <ItemGroup Condition=" ('$(TargetFramework)' == 'netstandard2.1') and (!$(MSBuildProjectName.Contains('.NativeAssets.'))) ">
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" />
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(PackagingGroup)' == 'SkiaSharp'">
     <PackageDescription Condition="'$(PackageDescription)' == ''">SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's Skia Graphics Library.
 It provides a comprehensive 2D API that can be used across mobile, server and desktop models to render images.</PackageDescription>

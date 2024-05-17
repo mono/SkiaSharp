@@ -1,0 +1,86 @@
+// configuration for the libSkiaSharp binary
+{
+  "dllName": "SKIA",
+  "namespace": "SkiaSharp",
+  "namespaces": {
+    "sk_": {
+      "prefix": "SK",
+      "exclude": true
+    },
+    "gr_": {
+      "exclude": true
+    },
+    "vk_": {
+      "exclude": true
+    },
+    "sksg_": {
+      "exclude": true
+    },
+    "skottie_": {
+      "exclude": true
+    },
+    "skresources_": {
+      "cs": "Resources",
+      "prefix": ""
+    }
+  },
+  "className": "ResourcesApi",
+  "includeDirs": [
+    "."
+  ],
+  "headers": {
+    "include/c": [ "sk_*", "gr_*", "skottie*", "sksg_*", "skresources_*" ],
+    "include/xamarin": [ "sk_*" ]
+  },
+  "source": {
+    "src/c": [ "sk_*", "gr_*", "skottie*", "sksg_*" ],
+    "src/xamarin": [ "sk_*" ]
+  },
+  "mappings": {
+    "types": {
+      "skottie_animation_builder_flags_t": {
+        "flags": true
+      }
+    },
+    "functions": {
+      "skottie_animation_builder_make_from_string": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "1": "int"
+
+        }
+      },
+      "skottie_animation_builder_make_from_file": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "skresources_resource_provider_load": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "2": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "skresources_resource_provider_load_audio_asset": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "2": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "3": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "skresources_resource_provider_load_image_asset": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "2": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "3": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "skresources_resource_provider_load_typeface": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "2": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      }
+    }
+  }
+}
