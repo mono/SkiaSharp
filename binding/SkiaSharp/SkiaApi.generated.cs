@@ -4032,70 +4032,70 @@ namespace SkiaSharp
 		// void sk_pdf_structure_element_add_float_array_attribute(sk_pdf_structure_element_t* element, const char* owner, const char* name, float* values, size_t count)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_pdf_structure_element_add_float_array_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Single* values, /* size_t */ IntPtr count);
+		internal static extern void sk_pdf_structure_element_add_float_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single* values, /* size_t */ IntPtr count);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_pdf_structure_element_add_float_array_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Single* values, /* size_t */ IntPtr count);
+			internal delegate void sk_pdf_structure_element_add_float_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single* values, /* size_t */ IntPtr count);
 		}
 		private static Delegates.sk_pdf_structure_element_add_float_array_attribute sk_pdf_structure_element_add_float_array_attribute_delegate;
-		internal static void sk_pdf_structure_element_add_float_array_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Single* values, /* size_t */ IntPtr count) =>
+		internal static void sk_pdf_structure_element_add_float_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single* values, /* size_t */ IntPtr count) =>
 			(sk_pdf_structure_element_add_float_array_attribute_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_float_array_attribute> ("sk_pdf_structure_element_add_float_array_attribute")).Invoke (element, owner, name, values, count);
 		#endif
 
 		// void sk_pdf_structure_element_add_float_attribute(sk_pdf_structure_element_t* element, const char* owner, const char* name, float value)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_pdf_structure_element_add_float_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Single value);
+		internal static extern void sk_pdf_structure_element_add_float_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single value);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_pdf_structure_element_add_float_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Single value);
+			internal delegate void sk_pdf_structure_element_add_float_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single value);
 		}
 		private static Delegates.sk_pdf_structure_element_add_float_attribute sk_pdf_structure_element_add_float_attribute_delegate;
-		internal static void sk_pdf_structure_element_add_float_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Single value) =>
+		internal static void sk_pdf_structure_element_add_float_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single value) =>
 			(sk_pdf_structure_element_add_float_attribute_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_float_attribute> ("sk_pdf_structure_element_add_float_attribute")).Invoke (element, owner, name, value);
 		#endif
 
 		// void sk_pdf_structure_element_add_int_attribute(sk_pdf_structure_element_t* element, const char* owner, const char* name, int value)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_pdf_structure_element_add_int_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Int32 value);
+		internal static extern void sk_pdf_structure_element_add_int_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32 value);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_pdf_structure_element_add_int_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Int32 value);
+			internal delegate void sk_pdf_structure_element_add_int_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32 value);
 		}
 		private static Delegates.sk_pdf_structure_element_add_int_attribute sk_pdf_structure_element_add_int_attribute_delegate;
-		internal static void sk_pdf_structure_element_add_int_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Int32 value) =>
+		internal static void sk_pdf_structure_element_add_int_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32 value) =>
 			(sk_pdf_structure_element_add_int_attribute_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_int_attribute> ("sk_pdf_structure_element_add_int_attribute")).Invoke (element, owner, name, value);
 		#endif
 
 		// void sk_pdf_structure_element_add_name_attribute(sk_pdf_structure_element_t* element, const char* owner, const char* name, const char* value)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_pdf_structure_element_add_name_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, /* char */ void* value);
+		internal static extern void sk_pdf_structure_element_add_name_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, [MarshalAs (UnmanagedType.LPStr)] String value);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_pdf_structure_element_add_name_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, /* char */ void* value);
+			internal delegate void sk_pdf_structure_element_add_name_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, [MarshalAs (UnmanagedType.LPStr)] String value);
 		}
 		private static Delegates.sk_pdf_structure_element_add_name_attribute sk_pdf_structure_element_add_name_attribute_delegate;
-		internal static void sk_pdf_structure_element_add_name_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, /* char */ void* value) =>
+		internal static void sk_pdf_structure_element_add_name_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, [MarshalAs (UnmanagedType.LPStr)] String value) =>
 			(sk_pdf_structure_element_add_name_attribute_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_name_attribute> ("sk_pdf_structure_element_add_name_attribute")).Invoke (element, owner, name, value);
 		#endif
 
 		// void sk_pdf_structure_element_add_node_id_array_attribute(sk_pdf_structure_element_t* element, const char* owner, const char* name, int* values, size_t count)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_pdf_structure_element_add_node_id_array_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Int32* values, /* size_t */ IntPtr count);
+		internal static extern void sk_pdf_structure_element_add_node_id_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32* values, /* size_t */ IntPtr count);
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_pdf_structure_element_add_node_id_array_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Int32* values, /* size_t */ IntPtr count);
+			internal delegate void sk_pdf_structure_element_add_node_id_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32* values, /* size_t */ IntPtr count);
 		}
 		private static Delegates.sk_pdf_structure_element_add_node_id_array_attribute sk_pdf_structure_element_add_node_id_array_attribute_delegate;
-		internal static void sk_pdf_structure_element_add_node_id_array_attribute (sk_pdf_structure_element_t element, /* char */ void* owner, /* char */ void* name, Int32* values, /* size_t */ IntPtr count) =>
+		internal static void sk_pdf_structure_element_add_node_id_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32* values, /* size_t */ IntPtr count) =>
 			(sk_pdf_structure_element_add_node_id_array_attribute_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_node_id_array_attribute> ("sk_pdf_structure_element_add_node_id_array_attribute")).Invoke (element, owner, name, values, count);
 		#endif
 

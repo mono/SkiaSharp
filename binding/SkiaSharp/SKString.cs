@@ -1,5 +1,8 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.Diagnostics.CodeAnalysis;
+#if NETSTANDARD1_3 || WINDOWS_UWP
+using System.Reflection;
+#endif
 
 namespace SkiaSharp
 {
@@ -17,7 +20,7 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new SKString instance.");
 			}
 		}
-		
+
 		public SKString (ReadOnlySpan<byte> src, long length)
 			: base (CreateCopy (src, length), true)
 		{
@@ -25,11 +28,9 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to copy the SKString instance.");
 			}
 		}
-		
+
 		private static IntPtr CreateCopy (ReadOnlySpan<byte> src, long length)
 		{
-			if (src is null)
-				throw new ArgumentNullException (nameof (src));
 			if (length > src.Length)
 				throw new ArgumentOutOfRangeException (nameof (length));
 
@@ -42,12 +43,12 @@ namespace SkiaSharp
 			: this (src, src.Length)
 		{
 		}
-		
+
 		public SKString (string str)
 			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf8))
 		{
 		}
-		
+
 		public override string ToString ()
 		{
 			var cstr = SkiaApi.sk_string_get_c_str (Handle);
@@ -59,8 +60,8 @@ namespace SkiaSharp
 		{
 			return skString.ToString ();
 		}
-		
-		[return: NotNullIfNotNull(nameof(str))]
+
+		[return: NotNullIfNotNull (nameof (str))]
 		internal static SKString? Create (string? str)
 		{
 			if (str is null) {
@@ -69,7 +70,7 @@ namespace SkiaSharp
 			return new SKString (str);
 		}
 
-		internal SKStringRaw CreateRaw (string? str) =>
+		internal static SKStringRaw CreateRaw (string? str) =>
 			new SKStringRaw (str);
 
 		protected override void Dispose (bool disposing) =>
@@ -78,22 +79,22 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_string_destructor (Handle);
 
-		internal static SKString GetObject (IntPtr handle) =>
+		internal static SKString? GetObject (IntPtr handle) =>
 			handle == IntPtr.Zero ? null : new SKString (handle, true);
 
 		internal readonly ref struct SKStringRaw
 		{
-			internal SKStringRaw ()
+			public SKStringRaw ()
 			{
 				Handle = IntPtr.Zero;
 			}
 
-			internal SKStringRaw (string? text)
+			public SKStringRaw (string? text)
 				: this (text.AsSpan ())
 			{
 			}
 
-			internal SKStringRaw (ReadOnlySpan<char> text)
+			public SKStringRaw (ReadOnlySpan<char> text)
 			{
 				if (text.Length == 0) {
 					Handle = IntPtr.Zero;
@@ -101,11 +102,12 @@ namespace SkiaSharp
 				}
 
 				var bufferSize = StringUtilities.GetMaxByteCount (text, SKTextEncoding.Utf8);
-				var buffer = stackalloc byte [bufferSize];		
+				var buffer = stackalloc byte[bufferSize];
+				var bufferSpan = new Span<byte> (buffer, bufferSize);
 
-				var bytesSize = StringUtilities.GetEncodedText (text, buffer, SKTextEncoding.Utf8);
+				var bytesSize = StringUtilities.GetEncodedText (text, bufferSpan, SKTextEncoding.Utf8);
 
-				Handle = SkiaApi.sk_string_new_with_copy (buffer, bytesSize);
+				Handle = SkiaApi.sk_string_new_with_copy (buffer, (IntPtr)bytesSize);
 			}
 
 			public readonly IntPtr Handle;

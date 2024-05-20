@@ -2,6 +2,7 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 #if NETSTANDARD1_3 || WINDOWS_UWP
@@ -60,6 +61,16 @@ namespace SkiaSharp
 			}
 		}
 
+#if NET45_OR_GREATER || NETSTANDARD2_0
+		public static int GetBytes (this Encoding encoding, ReadOnlySpan<char> text, Span<byte> bytes)
+		{
+			fixed (char* t = text)
+			fixed (byte* b = bytes) {
+				return encoding.GetBytes (t, text.Length, b, bytes.Length);
+			}
+		}
+#endif
+
 		public static RentedArray<T> RentArray<T> (int length, bool nullIfEmpty = false) =>
 			nullIfEmpty && length <= 0
 				? default
@@ -77,8 +88,8 @@ namespace SkiaSharp
 		public static RentedArray<T> ToRentedArray<T> (IList<T> list)
 		{
 			var rented = new RentedArray<T> (list.Count);
-			for	(var idx = 0; idx < list.Count; idx++) {
-				rented [idx] = list [idx];
+			for (var idx = 0; idx < list.Count; idx++) {
+				rented[idx] = list[idx];
 			}
 			return rented;
 		}
