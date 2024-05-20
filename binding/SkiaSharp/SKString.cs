@@ -63,11 +63,14 @@ namespace SkiaSharp
 		[return: NotNullIfNotNull(nameof(str))]
 		internal static SKString? Create (string? str)
 		{
-			if (str == null) {
+			if (str is null) {
 				return null;
 			}
 			return new SKString (str);
 		}
+
+		internal SKStringRaw CreateRaw (string? str) =>
+			new SKStringRaw (str);
 
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
@@ -77,6 +80,42 @@ namespace SkiaSharp
 
 		internal static SKString GetObject (IntPtr handle) =>
 			handle == IntPtr.Zero ? null : new SKString (handle, true);
+
+		internal readonly ref struct SKStringRaw
+		{
+			internal SKStringRaw ()
+			{
+				Handle = IntPtr.Zero;
+			}
+
+			internal SKStringRaw (string? text)
+				: this (text.AsSpan ())
+			{
+			}
+
+			internal SKStringRaw (ReadOnlySpan<char> text)
+			{
+				if (text.Length == 0) {
+					Handle = IntPtr.Zero;
+					return;
+				}
+
+				var bufferSize = StringUtilities.GetMaxByteCount (text, SKTextEncoding.Utf8);
+				var buffer = stackalloc byte [bufferSize];		
+
+				var bytesSize = StringUtilities.GetEncodedText (text, buffer, SKTextEncoding.Utf8);
+
+				Handle = SkiaApi.sk_string_new_with_copy (buffer, bytesSize);
+			}
+
+			public readonly IntPtr Handle;
+
+			public void Dispose ()
+			{
+				if (Handle != IntPtr.Zero)
+					SkiaApi.sk_string_destructor (Handle);
+			}
+		}
 	}
 }
 

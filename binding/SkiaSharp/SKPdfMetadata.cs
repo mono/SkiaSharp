@@ -99,8 +99,8 @@ public class SKPdfAttributeList
 		attributes.Add ((owner, name, value));
 
 	public void Add (string owner, string name, IEnumerable<int> value) =>
-		attributes.Add ((owner, name, value));
+		attributes.Add ((owner, name, value.ToArray ()));
 
 	public void Add (string owner, string name, IEnumerable<float> value) =>
-		attributes.Add ((owner, name, value));
+		attributes.Add ((owner, name, value.ToArray ()));
 }

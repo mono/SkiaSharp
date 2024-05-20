@@ -215,13 +215,13 @@ namespace SkiaSharp.Tests
 
 			// The document tag.
 			var root = new SKPdfStructureElement();
-			root.NodeId = 1;
+			root.Id = 1;
 			root.Type = "Document";
 			root.Language = "en-US";
 
 			// A link.
 			var l1 = new SKPdfStructureElement();
-			l1.NodeId = 2;
+			l1.Id = 2;
 			l1.Type = "Link";
 			root.Children.Add(l1);
 

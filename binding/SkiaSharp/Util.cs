@@ -74,6 +74,15 @@ namespace SkiaSharp
 			return handles;
 		}
 
+		public static RentedArray<T> ToRentedArray<T> (IList<T> list)
+		{
+			var rented = new RentedArray<T> (list.Count);
+			for	(var idx = 0; idx < list.Count; idx++) {
+				rented [idx] = list [idx];
+			}
+			return rented;
+		}
+
 		internal readonly ref struct RentedArray<T>
 		{
 			internal RentedArray (int length)
@@ -174,6 +183,24 @@ namespace SkiaSharp
 				SKTextEncoding.Utf8 => Encoding.UTF8.GetBytes (text),
 				SKTextEncoding.Utf16 => Encoding.Unicode.GetBytes (text),
 				SKTextEncoding.Utf32 => Encoding.UTF32.GetBytes (text),
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
+
+		public static int GetEncodedText (ReadOnlySpan<char> text, Span<byte> bytes, SKTextEncoding encoding) =>
+			encoding switch {
+				SKTextEncoding.Utf8 => Encoding.UTF8.GetBytes (text, bytes),
+				SKTextEncoding.Utf16 => Encoding.Unicode.GetBytes (text, bytes),
+				SKTextEncoding.Utf32 => Encoding.UTF32.GetBytes (text, bytes),
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
+
+		// GetMaxByteCount
+
+		public static int GetMaxByteCount (ReadOnlySpan<char> text, SKTextEncoding encoding) =>
+			encoding switch {
+				SKTextEncoding.Utf8 => Encoding.UTF8.GetMaxByteCount (text.Length),
+				SKTextEncoding.Utf16 => Encoding.Unicode.GetMaxByteCount (text.Length),
+				SKTextEncoding.Utf32 => Encoding.UTF32.GetMaxByteCount (text.Length),
 				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
 			};
 
