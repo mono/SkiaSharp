@@ -1,6 +1,4 @@
-﻿#nullable disable
-
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -20,7 +18,7 @@ namespace SkiaSharp
 			}
 		}
 		
-		public SKString (byte [] src, long length)
+		public SKString (ReadOnlySpan<byte> src, long length)
 			: base (CreateCopy (src, length), true)
 		{
 			if (Handle == IntPtr.Zero) {
@@ -28,14 +26,19 @@ namespace SkiaSharp
 			}
 		}
 		
-		private static IntPtr CreateCopy (byte [] src, long length)
+		private static IntPtr CreateCopy (ReadOnlySpan<byte> src, long length)
 		{
+			if (src is null)
+				throw new ArgumentNullException (nameof (src));
+			if (length > src.Length)
+				throw new ArgumentOutOfRangeException (nameof (length));
+
 			fixed (byte* s = src) {
 				return SkiaApi.sk_string_new_with_copy (s, (IntPtr)length);
 			}
 		}
 
-		public SKString (byte [] src)
+		public SKString (ReadOnlySpan<byte> src)
 			: this (src, src.Length)
 		{
 		}
@@ -57,7 +60,8 @@ namespace SkiaSharp
 			return skString.ToString ();
 		}
 		
-		internal static SKString Create (string str)
+		[return: NotNullIfNotNull(nameof(str))]
+		internal static SKString? Create (string? str)
 		{
 			if (str == null) {
 				return null;
