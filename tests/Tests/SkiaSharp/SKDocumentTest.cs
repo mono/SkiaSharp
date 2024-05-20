@@ -237,6 +237,48 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void MetadataIsAddedToFile()
+		{
+			var now = DateTime.Now;
+			var metadata = new SKPdfMetadata
+			{
+				Title = "A1",
+				Author = "A2",
+				Subject = "A3",
+				Keywords = "A4",
+				Creator = "A5",
+				Creation = now,
+				Modified = now,
+			};
+
+			using var pdf = new MemoryStream();
+			using (var doc = SKDocument.CreatePdf(pdf, metadata))
+			{
+				doc.BeginPage(612.0f, 792.0f);
+				doc.Close();
+			}
+
+			pdf.Position = 0;
+			using var reader = new StreamReader(pdf);
+			var data = reader.ReadToEnd();
+
+			var expectations = new string[] {
+				"/Title (A1)",
+				"/Author (A2)",
+				"/Subject (A3)",
+				"/Keywords (A4)",
+				"/Creator (A5)",
+				"/Producer (Skia/PDF ",
+				"/CreationDate (D:",
+				"/ModDate (D:"
+			};
+			foreach (var expectation in expectations)
+			{
+				Assert.Contains(expectation, data);
+			}
+		}
+
+		[SkippableFact]
 		public void CanCreateTaggedLinkPdf()
 		{
 			var metadata = new SKPdfMetadata();
@@ -281,9 +323,6 @@ namespace SkiaSharp.Tests
 
 			Assert.True(stream.Length > 0);
 			Assert.True(stream.Position > 0);
-
-			stream.Position = 0;
-			SaveStream(stream, "test.pdf");
 		}
 
 		[SkippableFact]

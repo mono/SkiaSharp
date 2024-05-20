@@ -55,6 +55,8 @@ namespace SkiaSharp.Tests
 
 		protected static void SaveStream(Stream stream, string filename)
 		{
+			stream.Position = 0;
+
 			using var file = File.Create(Path.Combine(PathToImages, filename));
 			stream.CopyTo(file);
 		}
