@@ -81,11 +81,43 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Obsolete]
 		[SkippableFact]
-		public void CanCreatePdfWithMetadata()
+		public void CanCreatePdfWithObsoleteMetadata()
 		{
 			var metadata = SKDocumentPdfMetadata.Default;
 			metadata.Author = "SkiaSharp Team";
+
+			using (var stream = new MemoryStream())
+			{
+				using (var doc = SKDocument.CreatePdf(stream, metadata))
+				{
+					Assert.NotNull(doc);
+					Assert.NotNull(doc.BeginPage(100, 100));
+
+					doc.EndPage();
+					doc.Close();
+				}
+
+				Assert.True(stream.Length > 0);
+				Assert.True(stream.Position > 0);
+
+				stream.Position = 0;
+				using (var reader = new StreamReader(stream))
+				{
+					var contents = reader.ReadToEnd();
+					Assert.Contains("/Author (SkiaSharp Team)", contents);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void CanCreatePdfWithMetadata()
+		{
+			var metadata = new SKPdfMetadata
+			{
+				Author = "SkiaSharp Team"
+			};
 
 			using (var stream = new MemoryStream())
 			{
@@ -200,12 +232,12 @@ namespace SkiaSharp.Tests
 				var stream = new SKDynamicMemoryWStream();
 				streamHandle = stream.Handle;
 
-				return SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata());
+				return SKDocument.CreatePdf(stream, new SKPdfMetadata());
 			}
 		}
-	
+
 		[SkippableFact]
-		public void CanCreateTaggedPdf()
+		public void CanCreateTaggedLinkPdf()
 		{
 			var metadata = new SKPdfMetadata();
 			metadata.Title = "Example Tagged PDF With Links";
@@ -214,26 +246,22 @@ namespace SkiaSharp.Tests
 			metadata.Modified = DateTime.Now;
 
 			// The document tag.
-			var root = new SKPdfStructureElement();
-			root.Id = 1;
-			root.Type = "Document";
+			var root = new SKPdfStructureElementNode(1, "Document");
 			root.Language = "en-US";
 
 			// A link.
-			var l1 = new SKPdfStructureElement();
-			l1.Id = 2;
-			l1.Type = "Link";
+			var l1 = new SKPdfStructureElementNode(2, "Link");
 			root.Children.Add(l1);
 
 			metadata.Structure = root;
 
-            using var stream = new MemoryStream();
-            using (var doc = SKDocument.CreatePdf(stream, metadata))
-            {
-                Assert.NotNull(doc);
+			using var stream = new MemoryStream();
+			using (var doc = SKDocument.CreatePdf(stream, metadata))
+			{
+				Assert.NotNull(doc);
 
 				var canvas = doc.BeginPage(612, 792);  // U.S. Letter
-                Assert.NotNull(canvas);
+				Assert.NotNull(canvas);
 
 				var paint = new SKPaint();
 				paint.Color = SKColors.Blue;
@@ -242,47 +270,50 @@ namespace SkiaSharp.Tests
 				font.Size = 20;
 
 				// The node ID should cover both the text and the annotation.
-				canvas.SetPdfNodeId(2);
-				canvasDrawText("Click to visit Google.com", 72, 72, font, paint);
+				canvas.DrawPdfNodeAnnotation(2);
+				canvas.DrawText("Click to visit Google.com", 72, 72, font, paint);
 				var linkRect = SKRect.Create(72, 54, 218, 24);
 				canvas.DrawUrlAnnotation(linkRect, "http://www.google.com");
 
-				document.EndPage();
-				document.Close();
-            }
+				doc.EndPage();
+				doc.Close();
+			}
 
-            Assert.True(stream.Length > 0);
-            Assert.True(stream.Position > 0);
-        }
+			Assert.True(stream.Length > 0);
+			Assert.True(stream.Position > 0);
+
+			stream.Position = 0;
+			SaveStream(stream, "test.pdf");
+		}
 
 		[SkippableFact]
-		public void CanCreateTaggedPdfWithConstructorStructures()
+		public void CanCreateTaggedLinkPdfWithConstructorStructures()
 		{
-            var metadata = new SKPdfMetadata
-            {
-                Title = "Example Tagged PDF With Links",
-                Creator = "Skia",
-                Creation = DateTime.Now,
-                Modified = DateTime.Now,
-            	// The document tag.
-				Structure = new SKPdfStructureElement(1, "Document")
+			var metadata = new SKPdfMetadata
+			{
+				Title = "Example Tagged PDF With Links",
+				Creator = "Skia",
+				Creation = DateTime.Now,
+				Modified = DateTime.Now,
+				// The document tag.
+				Structure = new SKPdfStructureElementNode(1, "Document")
 				{
 					Language = "en-US",
 					Children =
 					{
 						// A link.
-						new SKPdfStructureElement(2, "Link")
+						new SKPdfStructureElementNode(2, "Link")
 					}
 				}
-            };
+			};
 
-            using var stream = new MemoryStream();
-            using (var doc = SKDocument.CreatePdf(stream, metadata))
-            {
-                Assert.NotNull(doc);
+			using var stream = new MemoryStream();
+			using (var doc = SKDocument.CreatePdf(stream, metadata))
+			{
+				Assert.NotNull(doc);
 
 				var canvas = doc.BeginPage(612, 792);  // U.S. Letter
-                Assert.NotNull(canvas);
+				Assert.NotNull(canvas);
 
 				var paint = new SKPaint();
 				paint.Color = SKColors.Blue;
@@ -291,17 +322,17 @@ namespace SkiaSharp.Tests
 				font.Size = 20;
 
 				// The node ID should cover both the text and the annotation.
-				canvas.SetPdfNodeId(2);
-				canvasDrawText("Click to visit Google.com", 72, 72, font, paint);
+				canvas.DrawPdfNodeAnnotation(2);
+				canvas.DrawText("Click to visit Google.com", 72, 72, font, paint);
 				var linkRect = SKRect.Create(72, 54, 218, 24);
 				canvas.DrawUrlAnnotation(linkRect, "http://www.google.com");
 
-				document.EndPage();
-				document.Close();
-            }
+				doc.EndPage();
+				doc.Close();
+			}
 
-            Assert.True(stream.Length > 0);
-            Assert.True(stream.Position > 0);
-        }
+			Assert.True(stream.Length > 0);
+			Assert.True(stream.Position > 0);
+		}
 	}
 }

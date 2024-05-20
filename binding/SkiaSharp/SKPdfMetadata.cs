@@ -53,16 +53,16 @@ public class SKPdfMetadata
 
 	public SKPdfCompression Compression { get; set; } = SKPdfCompression.Default;
 
-	public SKPdfStructureElement? Structure { get; set; }
+	public SKPdfStructureElementNode? Structure { get; set; }
 }
 
-public class SKPdfStructureElement
+public class SKPdfStructureElementNode
 {
-	private List<SKPdfStructureElement>? children;
+	private List<SKPdfStructureElementNode>? children;
 	private List<int>? additionalNodeIds;
 	private SKPdfAttributeList? attributes;
 
-	public SKPdfStructureElement (int id, string type)
+	public SKPdfStructureElementNode (int id, string type)
 	{
 		Id = id;
 		Type = type;
@@ -76,7 +76,7 @@ public class SKPdfStructureElement
 
 	public string? Language { get; set; }
 
-	public IList<SKPdfStructureElement> Children => children ??= new ();
+	public IList<SKPdfStructureElementNode> Children => children ??= new ();
 
 	public IList<int> AdditionalNodeIds => additionalNodeIds ??= new ();
 

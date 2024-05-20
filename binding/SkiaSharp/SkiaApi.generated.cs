@@ -3665,6 +3665,20 @@ namespace SkiaSharp
 
 		#region sk_document.h
 
+		// void sk_canvas_draw_pdf_node_id_annotation(sk_canvas_t* t, int nodeId)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_draw_pdf_node_id_annotation (sk_canvas_t t, Int32 nodeId);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_canvas_draw_pdf_node_id_annotation (sk_canvas_t t, Int32 nodeId);
+		}
+		private static Delegates.sk_canvas_draw_pdf_node_id_annotation sk_canvas_draw_pdf_node_id_annotation_delegate;
+		internal static void sk_canvas_draw_pdf_node_id_annotation (sk_canvas_t t, Int32 nodeId) =>
+			(sk_canvas_draw_pdf_node_id_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_pdf_node_id_annotation> ("sk_canvas_draw_pdf_node_id_annotation")).Invoke (t, nodeId);
+		#endif
+
 		// void sk_document_abort(sk_document_t* document)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

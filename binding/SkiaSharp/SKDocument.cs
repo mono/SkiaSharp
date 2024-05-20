@@ -220,7 +220,7 @@ public unsafe class SKDocument : SKObject, ISKReferenceCounted, ISKSkipObjectReg
 		return (metadataHandle, structureHandle);
 	}
 
-	private static IntPtr ToNative (SKPdfStructureElement? structure)
+	private static IntPtr ToNative (SKPdfStructureElementNode? structure)
 	{
 		if (structure is null)
 			return IntPtr.Zero;
@@ -293,5 +293,16 @@ public unsafe class SKDocument : SKObject, ISKReferenceCounted, ISKSkipObjectReg
 		}
 
 		return handle;
+	}
+}
+
+public static class SkPdfDocumentExtensions
+{
+	public static void DrawPdfNodeAnnotation (this SKCanvas canvas, int nodeId)
+	{
+		if (canvas is null)
+			throw new ArgumentNullException (nameof (canvas));
+
+		SkiaApi.sk_canvas_draw_pdf_node_id_annotation (canvas.Handle, nodeId);
 	}
 }

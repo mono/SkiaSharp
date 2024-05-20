@@ -53,6 +53,12 @@ namespace SkiaSharp.Tests
 			return new SKMemoryStream(bytes);
 		}
 
+		protected static void SaveStream(Stream stream, string filename)
+		{
+			using var file = File.Create(Path.Combine(PathToImages, filename));
+			stream.CopyTo(file);
+		}
+
 		protected static void SaveSurface(SKSurface surface, string filename = "output.png")
 		{
 			using var image = surface.Snapshot();
