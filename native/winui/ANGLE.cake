@@ -49,17 +49,13 @@ void InitializeAngle(string branch, DirectoryPath ANGLE_PATH, DirectoryPath WINA
         RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
     }
 
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("build/toolchain/win/rc/win/rc.exe"))) {
-        var oldPath = EnvironmentVariable("PATH");
-        try {
-            System.Environment.SetEnvironmentVariable("PATH", DEPOT_PATH.FullPath + System.IO.Path.PathSeparator + oldPath);
-
-            RunPython(ANGLE_PATH,
-                DEPOT_PATH.CombineWithFilePath("download_from_google_storage.py"),
-                $"--no_resume --no_auth --bucket chromium-browser-clang/rc -s build/toolchain/win/rc/win/rc.exe.sha1");
-        } finally {
-            System.Environment.SetEnvironmentVariable("PATH", oldPath);
-        }
+    var rc_exe = "build/toolchain/win/rc/win/rc.exe";
+    var rcPath = ANGLE_PATH.CombineWithFilePath(rc_exe);
+    if (!FileExists(rcPath)) {
+        var shaPath = ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1");
+        var sha = System.IO.File.ReadAllText(shaPath.FullPath);
+        var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
+        DownloadFile(url, rcPath);
     }
 
     if (!FileExists(ANGLE_PATH.CombineWithFilePath("third_party/llvm-build/Release+Asserts/cr_build_revision"))) {
