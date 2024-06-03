@@ -151,7 +151,7 @@ internal partial class VersionConstants {
 	<Target Name="_RemoveObsoleteItemsFromReferenceAssembly"
           AfterTargets="CoreCompile"
           Condition="'$(ProduceReferenceAssembly)' == 'true'">
-		<RemoveObsoleteSymbols Assembly="@(IntermediateRefAssembly)" />
+		<RemoveObsoleteSymbols Assembly="@(IntermediateRefAssembly)" Condition="Exists('@(IntermediateRefAssembly)')" />
 	</Target>
 
   <!--
