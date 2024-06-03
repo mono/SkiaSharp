@@ -27,7 +27,7 @@ namespace SkiaSharp
 		}
 
 		public int ApproximateBytesUsed =>
-			SkiaApi.sk_picture_approximate_bytes_used (Handle);
+			(int)SkiaApi.sk_picture_approximate_bytes_used (Handle);
 
 		public int ApproximateOperationCount =>
 			GetApproximateOperationCount (false);

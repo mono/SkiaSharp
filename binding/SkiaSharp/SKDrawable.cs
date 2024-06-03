@@ -66,7 +66,7 @@ namespace SkiaSharp
 		}
 
 		public int ApproximateBytesUsed =>
-			SkiaApi.sk_drawable_approximate_bytes_used (Handle);
+			(int)SkiaApi.sk_drawable_approximate_bytes_used (Handle);
 
 		public void Draw (SKCanvas canvas, in SKMatrix matrix)
 		{
