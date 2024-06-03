@@ -3751,6 +3751,20 @@ namespace SkiaSharp
 
 		#region sk_drawable.h
 
+		// size_t sk_drawable_approximate_bytes_used(const sk_drawable_t* drawable)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_drawable_approximate_bytes_used (sk_drawable_t drawable);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_drawable_approximate_bytes_used (sk_drawable_t drawable);
+		}
+		private static Delegates.sk_drawable_approximate_bytes_used sk_drawable_approximate_bytes_used_delegate;
+		internal static /* size_t */ IntPtr sk_drawable_approximate_bytes_used (sk_drawable_t drawable) =>
+			(sk_drawable_approximate_bytes_used_delegate ??= GetSymbol<Delegates.sk_drawable_approximate_bytes_used> ("sk_drawable_approximate_bytes_used")).Invoke (drawable);
+		#endif
+
 		// void sk_drawable_draw(sk_drawable_t*, sk_canvas_t*, const sk_matrix_t*)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -7937,6 +7951,34 @@ namespace SkiaSharp
 
 		#region sk_picture.h
 
+		// size_t sk_picture_approximate_bytes_used(const sk_picture_t* picture)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_picture_approximate_bytes_used (sk_picture_t picture);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_picture_approximate_bytes_used (sk_picture_t picture);
+		}
+		private static Delegates.sk_picture_approximate_bytes_used sk_picture_approximate_bytes_used_delegate;
+		internal static /* size_t */ IntPtr sk_picture_approximate_bytes_used (sk_picture_t picture) =>
+			(sk_picture_approximate_bytes_used_delegate ??= GetSymbol<Delegates.sk_picture_approximate_bytes_used> ("sk_picture_approximate_bytes_used")).Invoke (picture);
+		#endif
+
+		// int sk_picture_approximate_op_count(const sk_picture_t* picture, bool nested)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_picture_approximate_op_count (sk_picture_t picture, [MarshalAs (UnmanagedType.I1)] bool nested);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_picture_approximate_op_count (sk_picture_t picture, [MarshalAs (UnmanagedType.I1)] bool nested);
+		}
+		private static Delegates.sk_picture_approximate_op_count sk_picture_approximate_op_count_delegate;
+		internal static Int32 sk_picture_approximate_op_count (sk_picture_t picture, [MarshalAs (UnmanagedType.I1)] bool nested) =>
+			(sk_picture_approximate_op_count_delegate ??= GetSymbol<Delegates.sk_picture_approximate_op_count> ("sk_picture_approximate_op_count")).Invoke (picture, nested);
+		#endif
+
 		// sk_picture_t* sk_picture_deserialize_from_data(sk_data_t* data)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -8033,6 +8075,20 @@ namespace SkiaSharp
 		private static Delegates.sk_picture_make_shader sk_picture_make_shader_delegate;
 		internal static sk_shader_t sk_picture_make_shader (sk_picture_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode mode, SKMatrix* localMatrix, SKRect* tile) =>
 			(sk_picture_make_shader_delegate ??= GetSymbol<Delegates.sk_picture_make_shader> ("sk_picture_make_shader")).Invoke (src, tmx, tmy, mode, localMatrix, tile);
+		#endif
+
+		// void sk_picture_playback(const sk_picture_t* picture, sk_canvas_t* canvas)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_picture_playback (sk_picture_t picture, sk_canvas_t canvas);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_picture_playback (sk_picture_t picture, sk_canvas_t canvas);
+		}
+		private static Delegates.sk_picture_playback sk_picture_playback_delegate;
+		internal static void sk_picture_playback (sk_picture_t picture, sk_canvas_t canvas) =>
+			(sk_picture_playback_delegate ??= GetSymbol<Delegates.sk_picture_playback> ("sk_picture_playback")).Invoke (picture, canvas);
 		#endif
 
 		// sk_canvas_t* sk_picture_recorder_begin_recording(sk_picture_recorder_t*, const sk_rect_t*)
