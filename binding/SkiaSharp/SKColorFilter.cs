@@ -4,8 +4,6 @@ using System;
 
 namespace SkiaSharp
 {
-	// TODO: `FilterColor` may be useful
-
 	public unsafe class SKColorFilter : SKObject, ISKReferenceCounted
 	{
 		public const int ColorMatrixSize = 20;
@@ -42,6 +40,11 @@ namespace SkiaSharp
 		{
 			if (matrix == null)
 				throw new ArgumentNullException(nameof(matrix));
+			return CreateColorMatrix(matrix.AsSpan());
+		}
+
+		public static SKColorFilter CreateColorMatrix(ReadOnlySpan<float> matrix)
+		{
 			if (matrix.Length != 20)
 				throw new ArgumentException("Matrix must have a length of 20.", nameof(matrix));
 			fixed (float* m = matrix) {
@@ -58,6 +61,11 @@ namespace SkiaSharp
 		{
 			if (table == null)
 				throw new ArgumentNullException(nameof(table));
+			return CreateTable(table.AsSpan());
+		}
+
+		public static SKColorFilter CreateTable(ReadOnlySpan<byte> table)
+		{
 			if (table.Length != TableMaxLength)
 				throw new ArgumentException($"Table must have a length of {TableMaxLength}.", nameof(table));
 			fixed (byte* t = table) {
@@ -67,13 +75,26 @@ namespace SkiaSharp
 
 		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB)
 		{
-			if (tableA != null && tableA.Length != TableMaxLength)
+			if (tableA == null)
+				throw new ArgumentNullException(nameof(tableA));
+			if (tableR == null)
+				throw new ArgumentNullException(nameof(tableR));
+			if (tableG == null)
+				throw new ArgumentNullException(nameof(tableG));
+			if (tableB == null)
+				throw new ArgumentNullException(nameof(tableB));
+			return CreateTable(tableA.AsSpan(), tableR.AsSpan(), tableG.AsSpan(), tableB.AsSpan());
+		}
+
+		public static SKColorFilter CreateTable(ReadOnlySpan<byte> tableA, ReadOnlySpan<byte> tableR, ReadOnlySpan<byte> tableG, ReadOnlySpan<byte> tableB)
+		{
+			if (tableA.Length != TableMaxLength)
 				throw new ArgumentException($"Table A must have a length of {TableMaxLength}.", nameof(tableA));
-			if (tableR != null && tableR.Length != TableMaxLength)
+			if (tableR.Length != TableMaxLength)
 				throw new ArgumentException($"Table R must have a length of {TableMaxLength}.", nameof(tableR));
-			if (tableG != null && tableG.Length != TableMaxLength)
+			if (tableG.Length != TableMaxLength)
 				throw new ArgumentException($"Table G must have a length of {TableMaxLength}.", nameof(tableG));
-			if (tableB != null && tableB.Length != TableMaxLength)
+			if (tableB.Length != TableMaxLength)
 				throw new ArgumentException($"Table B must have a length of {TableMaxLength}.", nameof(tableB));
 
 			fixed (byte* a = tableA)
