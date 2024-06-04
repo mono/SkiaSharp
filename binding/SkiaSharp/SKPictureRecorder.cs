@@ -30,6 +30,25 @@ namespace SkiaSharp
 			return OwnedBy (SKCanvas.GetObject (SkiaApi.sk_picture_recorder_begin_recording (Handle, &cullRect), false), this);
 		}
 
+		public SKCanvas BeginRecording (SKRect cullRect, bool useRTree)
+		{
+			// no R-Tree is being used, so use the default path
+			if (!useRTree) {
+				return BeginRecording (cullRect);
+			}
+
+			// an R-Tree was requested, so create the R-Tree BBH factory
+			var rtreeHandle = IntPtr.Zero;
+			try {
+				rtreeHandle = SkiaApi.sk_rtree_factory_new ();
+				return OwnedBy (SKCanvas.GetObject (SkiaApi.sk_picture_recorder_begin_recording_with_bbh_factory (Handle, &cullRect, rtreeHandle), false), this);
+			} finally {
+				if (rtreeHandle != IntPtr.Zero) {
+					SkiaApi.sk_rtree_factory_delete (rtreeHandle);
+				}
+			}
+		}
+
 		public SKPicture EndRecording ()
 		{
 			return SKPicture.GetObject (SkiaApi.sk_picture_recorder_end_recording (Handle));
