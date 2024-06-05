@@ -66,23 +66,20 @@ namespace SkiaSharp.Tests
 			Assert.Equal(cullRect, drawable.Bounds);
 		}
 
-		[InlineData(false, 5)]
-		[InlineData(true, 4)]
+		[InlineData(false, 0, 0, 100, 100)]
+		[InlineData(true, 20, 20, 60, 60)]
 		[SkippableTheory]
-		public void XXX(bool useRTree, int expectedCount)
+		public void UsingRTreeClipsOperations(bool useRTree, int x, int y, int w, int h)
 		{
 			using var recorder = new SKPictureRecorder();
 			var canvas = recorder.BeginRecording(SKRect.Create(100, 100), useRTree);
 
-			canvas.Save();
-			canvas.ClipRect(SKRect.Create(50, 50, 50, 50));
-			canvas.DrawRect(60, 60, 20, 20, new()); // inside clip
-			canvas.DrawRect(20, 20, 20, 20, new()); // outside clip
-			canvas.Restore();
+			canvas.DrawRect(60, 60, 20, 20, new());
+			canvas.DrawRect(20, 20, 20, 20, new());
 			
 			using var picture = recorder.EndRecording();
 
-			Assert.Equal(expectedCount, picture.ApproximateOperationCount);
+			Assert.Equal(SKRect.Create(x, y, w, h), picture.CullRect);
 		}
 	}
 }
