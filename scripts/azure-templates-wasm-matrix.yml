@@ -3,6 +3,7 @@ parameters:
   buildPipelineType: 'both'                     # the type of build pipeline setup
   buildAgent: ''                                # the configuration for the build agent
   use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
+  sdl: []                                       # the SDL properties to use for this job
   emscripten: [ ]
 
 jobs:
@@ -11,6 +12,7 @@ jobs:
       parameters:
         name: native_wasm_${{ replace(version.displayName, '.', '_') }}_linux
         displayName: WASM (${{ version.displayName }})
+        sdl: ${{ parameters.sdl }}
         buildExternals: ${{ parameters.buildExternals }}
         buildPipelineType: ${{ parameters.buildPipelineType }}
         buildAgent: ${{ parameters.buildAgent }}

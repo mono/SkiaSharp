@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 var TARGET = Argument("t", Argument("target", "Default"));
-var VERBOSITY = Argument("v", Argument("verbosity", Verbosity.Normal));
+var VERBOSITY = Context.Log.Verbosity;
 var CONFIGURATION = Argument("c", Argument("configuration", "Release"));
 
 var VS_INSTALL = Argument("vsinstall", EnvironmentVariable("VS_INSTALL"));
@@ -28,6 +28,7 @@ void RunCake(FilePath cake, string target = null, Dictionary<string, string> arg
     var args = Arguments().ToDictionary(a => a.Key, a => a.Value.LastOrDefault());
 
     args["target"] = target;
+    args["verbosity"] = VERBOSITY.ToString();
 
     if (arguments != null) {
         foreach (var arg in arguments) {

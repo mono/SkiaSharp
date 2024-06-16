@@ -14,6 +14,14 @@ namespace SkiaSharp
 
 		// CreateMatrix
 
+		[Obsolete("Use SetMatrix(in SKMatrix) instead.", true)]
+		public static SKImageFilter CreateMatrix (SKMatrix matrix) =>
+			CreateMatrix (in matrix);
+
+		[Obsolete("Use SetMatrix(in SKMatrix, SKSamplingOptions, SKImageFilter) instead.", true)]
+		public static SKImageFilter CreateMatrix (SKMatrix matrix, SKFilterQuality quality, SKImageFilter? input) =>
+			CreateMatrix (in matrix, quality.ToSamplingOptions (), input);
+
 		public static SKImageFilter CreateMatrix (in SKMatrix matrix) =>
 			CreateMatrix (matrix, SKSamplingOptions.Default, null);
 
@@ -24,18 +32,6 @@ namespace SkiaSharp
 		{
 			fixed (SKMatrix* m = &matrix)
 				return GetObject (SkiaApi.sk_imagefilter_new_matrix_transform (m, &sampling, input?.Handle ?? IntPtr.Zero));
-		}
-
-
-		// CreateAlphaThreshold
-
-		public static SKImageFilter CreateAlphaThreshold (SKRegion region, float innerThreshold, float outerThreshold) =>
-			CreateAlphaThreshold (region, innerThreshold, outerThreshold, null);
-
-		public static SKImageFilter CreateAlphaThreshold (SKRegion region, float innerThreshold, float outerThreshold, SKImageFilter? input)
-		{
-			_ = region ?? throw new ArgumentNullException (nameof (region));
-			return GetObject (SkiaApi.sk_imagefilter_new_alpha_threshold (region.Handle, innerThreshold, outerThreshold, input?.Handle ?? IntPtr.Zero));
 		}
 
 		// CreateBlur
@@ -345,6 +341,23 @@ namespace SkiaSharp
 		private static SKImageFilter CreateBlendMode (SKBlendMode mode, SKImageFilter? background, SKImageFilter? foreground, SKRect* cropRect) =>
 			GetObject (SkiaApi.sk_imagefilter_new_blend (mode, background?.Handle ?? IntPtr.Zero, foreground?.Handle ?? IntPtr.Zero, cropRect));
 
+		// CreateBlendMode (Blender)
+
+		public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background) =>
+			CreateBlendMode (blender, background, null, null);
+
+		public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background, SKImageFilter? foreground) =>
+			CreateBlendMode (blender, background, foreground, null);
+
+		public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background, SKImageFilter? foreground, SKRect cropRect) =>
+			CreateBlendMode (blender, background, foreground, &cropRect);
+
+		private static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background, SKImageFilter? foreground, SKRect* cropRect)
+		{
+			_ = blender ?? throw new ArgumentNullException (nameof (blender));
+			return GetObject (SkiaApi.sk_imagefilter_new_blender (blender.Handle, background?.Handle ?? IntPtr.Zero, foreground?.Handle ?? IntPtr.Zero, cropRect));
+		}
+
 		// CreateArithmetic
 
 		public static SKImageFilter CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor, SKImageFilter? background) =>
@@ -376,6 +389,10 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_imagefilter_new_image (image.Handle, &src, &dst, &sampling));
 		}
 
+		[Obsolete("Use CreateImage(SKImage, SKRect, SKRect, SKSamplingOptions) instead.", true)]
+		public static SKImageFilter CreateImage (SKImage image, SKRect src, SKRect dst, SKFilterQuality filterQuality) =>
+			CreateImage (image, src, dst, filterQuality.ToSamplingOptions ());
+
 		// CreateMagnifier
 
 		public static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling) =>
@@ -389,6 +406,22 @@ namespace SkiaSharp
 
 		private static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling, SKImageFilter? input, SKRect* cropRect) =>
 			GetObject (SkiaApi.sk_imagefilter_new_magnifier (&lensBounds, zoomAmount, inset, &sampling, input?.Handle ?? IntPtr.Zero, cropRect));
+
+		// CreatePaint
+
+		[Obsolete("Use CreateShader(SKShader) instead.", true)]
+		public static SKImageFilter CreatePaint (SKPaint paint)
+		{
+			_ = paint ?? throw new ArgumentNullException (nameof (paint));
+			return CreateShader(paint.Shader, paint.IsDither, null);
+		}
+
+		[Obsolete("Use CreateShader(SKShader, bool, SKRect) instead.", true)]
+		public static SKImageFilter CreatePaint (SKPaint paint, SKRect cropRect)
+		{
+			_ = paint ?? throw new ArgumentNullException (nameof (paint));
+			return CreateShader(paint.Shader, paint.IsDither, &cropRect);
+		}
 
 		// CreateShader
 

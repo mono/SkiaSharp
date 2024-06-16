@@ -140,6 +140,22 @@ internal partial class VersionConstants {
 
   <!--
     ===================================================================================================================
+    _RemoveObsoleteItemsFromReferenceAssembly
+
+    Remove all the [Obsolete(error: true)] symbols from the reference assembly.
+    ===================================================================================================================
+  -->
+	<ItemGroup Condition="'$(ProduceReferenceAssembly)' == 'true'">
+		<PackageReference Include="Mono.ApiTools.MSBuildTasks" Version="0.3.0" PrivateAssets="all" />
+	</ItemGroup>
+	<Target Name="_RemoveObsoleteItemsFromReferenceAssembly"
+          AfterTargets="CoreCompile"
+          Condition="'$(ProduceReferenceAssembly)' == 'true'">
+		<RemoveObsoleteSymbols Assembly="@(IntermediateRefAssembly)" Condition="Exists('@(IntermediateRefAssembly)')" />
+	</Target>
+
+  <!--
+    ===================================================================================================================
     _SignAssembly
 
     Sign the assembly using sn.
@@ -157,6 +173,7 @@ internal partial class VersionConstants {
           AfterTargets="$(_SignAssemblyAfterTargets)"
           Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
+    <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateRefAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" Condition="'$(ProduceReferenceAssembly)' == 'true'" />
   </Target>
 
   <!--
@@ -175,6 +192,7 @@ internal partial class VersionConstants {
           AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
           Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" StandardOutputImportance="Normal" />
+    <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetRefPath)&quot;" StandardOutputImportance="Normal" Condition="'$(ProduceReferenceAssembly)' == 'true'" />
   </Target>
 
   <!--

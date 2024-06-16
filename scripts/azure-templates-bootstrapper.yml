@@ -35,6 +35,7 @@ parameters:
   skipInstall: false                            # whether or not to install any tools
   skipSteps: false                              # whether or not to run any steps
   use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
+  sdl: []                                       # the SDL properties to use for this job
 
 jobs:
   - job: ${{ parameters.name }}
@@ -49,11 +50,7 @@ jobs:
       ${{ if ne(length(parameters.variables), 0) }}:
         ${{ parameters.variables }}
     templateContext:
-      sdl:
-        spotBugs:
-          enabled: false
-        binskim:
-          break: false
+      sdl: ${{ parameters.sdl }}
       outputParentDirectory: 'output'
       outputs:
         - ${{ if eq(parameters.shouldPublish, 'true') }}:
@@ -191,13 +188,6 @@ jobs:
             - pwsh: Remove-Item "$env:AGENT_TOOLSDIRECTORY/dotnet" -Recurse -Force -ErrorAction SilentlyContinue
               displayName: Cleanup existing versions of .NET
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - task: UseDotNet@2
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-            inputs:
-              packageType: 'sdk'
-              version: 3.1.x
-            retryCountOnTaskFailure: 3
-            displayName: Install .NET 3.1.x
           - task: UseDotNet@2
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             inputs:

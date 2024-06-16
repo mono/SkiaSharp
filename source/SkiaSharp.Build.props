@@ -160,9 +160,13 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <!-- Setup debug symbols -->
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <!-- We have a lot of unsafe code -->
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <!-- We don't use the build output so don't do extra work -->
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true' or '$(CI)' == 'true' ">

@@ -22,6 +22,16 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableFact]
+		public void CanAccessApproxBytes()
+		{
+			using (var drawable = new TestDrawable())
+			{
+				Assert.Equal(123, drawable.ApproximateBytesUsed);
+				Assert.Equal(1, drawable.ApproxBytesCount);
+			}
+		}
+
 		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
 		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
 		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
@@ -95,6 +105,7 @@ namespace SkiaSharp.Tests
 		public int DrawFireCount;
 		public int BoundsFireCount;
 		public int SnapshotFireCount;
+		public int ApproxBytesCount;
 
 		protected override void OnDraw(SKCanvas canvas)
 		{
@@ -115,6 +126,13 @@ namespace SkiaSharp.Tests
 			SnapshotFireCount++;
 
 			return base.OnSnapshot();
+		}
+
+		protected override int OnGetApproximateBytesUsed ()
+		{
+			ApproxBytesCount++;
+
+			return 123;
 		}
 	}
 }
