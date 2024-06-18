@@ -16,6 +16,7 @@ using gr_recording_context_t = System.IntPtr;
 using gr_vk_extensions_t = System.IntPtr;
 using gr_vk_memory_allocator_t = System.IntPtr;
 using gr_vkinterface_t = System.IntPtr;
+using sk_bbh_factory_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
 using sk_blender_t = System.IntPtr;
 using sk_canvas_t = System.IntPtr;
@@ -58,6 +59,7 @@ using sk_region_iterator_t = System.IntPtr;
 using sk_region_spanerator_t = System.IntPtr;
 using sk_region_t = System.IntPtr;
 using sk_rrect_t = System.IntPtr;
+using sk_rtree_factory_t = System.IntPtr;
 using sk_runtimeeffect_t = System.IntPtr;
 using sk_shader_t = System.IntPtr;
 using sk_stream_asset_t = System.IntPtr;
@@ -8119,6 +8121,20 @@ namespace SkiaSharp
 			(sk_picture_recorder_begin_recording_delegate ??= GetSymbol<Delegates.sk_picture_recorder_begin_recording> ("sk_picture_recorder_begin_recording")).Invoke (param0, param1);
 		#endif
 
+		// sk_canvas_t* sk_picture_recorder_begin_recording_with_bbh_factory(sk_picture_recorder_t*, const sk_rect_t*, sk_bbh_factory_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_canvas_t sk_picture_recorder_begin_recording_with_bbh_factory (sk_picture_recorder_t param0, SKRect* param1, sk_bbh_factory_t param2);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_canvas_t sk_picture_recorder_begin_recording_with_bbh_factory (sk_picture_recorder_t param0, SKRect* param1, sk_bbh_factory_t param2);
+		}
+		private static Delegates.sk_picture_recorder_begin_recording_with_bbh_factory sk_picture_recorder_begin_recording_with_bbh_factory_delegate;
+		internal static sk_canvas_t sk_picture_recorder_begin_recording_with_bbh_factory (sk_picture_recorder_t param0, SKRect* param1, sk_bbh_factory_t param2) =>
+			(sk_picture_recorder_begin_recording_with_bbh_factory_delegate ??= GetSymbol<Delegates.sk_picture_recorder_begin_recording_with_bbh_factory> ("sk_picture_recorder_begin_recording_with_bbh_factory")).Invoke (param0, param1, param2);
+		#endif
+
 		// void sk_picture_recorder_delete(sk_picture_recorder_t*)
 		#if !USE_DELEGATES
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -8229,6 +8245,34 @@ namespace SkiaSharp
 		private static Delegates.sk_picture_unref sk_picture_unref_delegate;
 		internal static void sk_picture_unref (sk_picture_t param0) =>
 			(sk_picture_unref_delegate ??= GetSymbol<Delegates.sk_picture_unref> ("sk_picture_unref")).Invoke (param0);
+		#endif
+
+		// void sk_rtree_factory_delete(sk_rtree_factory_t*)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_rtree_factory_delete (sk_rtree_factory_t param0);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_rtree_factory_delete (sk_rtree_factory_t param0);
+		}
+		private static Delegates.sk_rtree_factory_delete sk_rtree_factory_delete_delegate;
+		internal static void sk_rtree_factory_delete (sk_rtree_factory_t param0) =>
+			(sk_rtree_factory_delete_delegate ??= GetSymbol<Delegates.sk_rtree_factory_delete> ("sk_rtree_factory_delete")).Invoke (param0);
+		#endif
+
+		// sk_rtree_factory_t* sk_rtree_factory_new()
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_rtree_factory_t sk_rtree_factory_new ();
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_rtree_factory_t sk_rtree_factory_new ();
+		}
+		private static Delegates.sk_rtree_factory_new sk_rtree_factory_new_delegate;
+		internal static sk_rtree_factory_t sk_rtree_factory_new () =>
+			(sk_rtree_factory_new_delegate ??= GetSymbol<Delegates.sk_rtree_factory_new> ("sk_rtree_factory_new")).Invoke ();
 		#endif
 
 		#endregion
