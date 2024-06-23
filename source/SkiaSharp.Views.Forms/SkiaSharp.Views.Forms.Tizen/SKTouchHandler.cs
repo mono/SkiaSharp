@@ -86,6 +86,7 @@ namespace SkiaSharp.Views.Forms
 
 			public void OnStarted()
 			{
+				// TODO: id is always increasing
 				++currentId;
 				PostEvent(SKTouchAction.Pressed);
 			}
@@ -112,7 +113,7 @@ namespace SkiaSharp.Views.Forms
 
 				var p = handler.gestureLayer.EvasCanvas.Pointer;
 				var coords = handler.scalePixels(p.X, p.Y);
-				var inContact = (action == SKTouchAction.Pressed || action == SKTouchAction.Moved) ? true : false;
+				var inContact = action == SKTouchAction.Pressed || action == SKTouchAction.Moved;
 
 				handler.onTouchAction(new SKTouchEventArgs(currentId, action, coords, inContact));
 			}
