@@ -720,5 +720,13 @@ namespace SkiaSharp.Tests
 
 			Assert.Same(typeface, paint.Typeface);
 		}
+
+		[SkippableFact]
+		public void Clone()
+		{
+			using var paint = new SKPaint();
+			using var clonedPaint = paint.Clone();
+			using var clonedPaint2 = paint.Clone();
+		}
 	}
 }
