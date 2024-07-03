@@ -191,6 +191,35 @@ namespace SkiaSharpGenerator
 			return config ?? throw new InvalidOperationException("Unable to parse json config file.");
 		}
 
+		protected string? GetFunctionPointerType(CppType type)
+		{
+			type = (type as CppQualifiedType)?.ElementType as CppTypedef ?? type;
+			type = (type as CppTypedef)?.ElementType as CppTypedef ?? type;
+			if (type is CppTypedef { ElementType: CppPointerType pointer }
+			    && pointer.ElementType is CppFunctionType { CallingConvention: CppCallingConvention.C } function)
+			{
+				functionMappings.TryGetValue(type.GetDisplayName(), out var map);
+
+				var parameters = string.Join(", ", function.Parameters
+					.Select((p, i) => (p.Type, i))
+					.Concat(new[] { (function.ReturnType, -1) })
+					.Select(tuple =>
+					{
+						var (cppType, i) = tuple;
+						var t = GetType(cppType);
+						var cppT = GetCppType(cppType);
+						if (t == "Boolean" || cppT == "bool")
+							t = "bool";
+						if (map != null && map.Parameters.TryGetValue(i.ToString(), out var newT))
+							t = newT;
+						return t;
+					}));
+				return $"delegate* unmanaged[Cdecl] <{parameters}>";
+			}
+
+			return null;
+		}
+
 		protected string GetType(CppType type)
 		{
 			var typeName = GetCppType(type);
