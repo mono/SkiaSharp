@@ -81,7 +81,7 @@ namespace SkiaSharp.Views.UWP
 		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)
 		{
 			var size = CreateSize(out unscaledSize, out dpi);
-			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.Bgra8888, SKAlphaType.Premul);
+			var info = new SKImageInfo(size.Width, size.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
 
 			if (bitmap?.PixelWidth != info.Width || bitmap?.PixelHeight != info.Height)
 				FreeBitmap();
