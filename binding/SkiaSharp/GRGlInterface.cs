@@ -205,13 +205,13 @@ namespace SkiaSharp
 			private readonly EvasGlApi api;
 
 			[LibraryImport (libevas)]
-			internal static extern IntPtr evas_gl_api_get (IntPtr evas_gl);
+			internal static partial IntPtr evas_gl_api_get (IntPtr evas_gl);
 
 			[LibraryImport (libevas)]
-			internal static extern IntPtr evas_gl_context_api_get (IntPtr evas_gl, IntPtr ctx);
+			internal static partial IntPtr evas_gl_context_api_get (IntPtr evas_gl, IntPtr ctx);
 
 			[LibraryImport (libevas)]
-			internal static extern IntPtr evas_gl_current_context_get (IntPtr evas_gl);
+			internal static partial IntPtr evas_gl_current_context_get (IntPtr evas_gl);
 
 			[LibraryImport(libevas, StringMarshalling = StringMarshalling.Utf8)]
 			internal static partial IntPtr evas_gl_proc_address_get (IntPtr evas_gl, string name);
