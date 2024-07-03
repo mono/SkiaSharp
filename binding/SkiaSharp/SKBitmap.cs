@@ -609,7 +609,8 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKBitmapReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKBitmapReleaseDelegateProxy, out _, out var ctx);
+			DelegateProxies.Create (del, out _, out var ctx);
+			var proxy = del is not null ? DelegateProxies.SKBitmapReleaseDelegateProxy : null;
 			return SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
 		}
 

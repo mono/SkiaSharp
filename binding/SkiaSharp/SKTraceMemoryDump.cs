@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -13,8 +14,13 @@ namespace SkiaSharp
 		static SKTraceMemoryDump ()
 		{
 			delegates = new SKManagedTraceMemoryDumpDelegates {
+#if USE_LIBRARY_IMPORT
+				fDumpNumericValue = &DumpNumericValueInternal,
+				fDumpStringValue = &DumpStringValueInternal,
+#else
 				fDumpNumericValue = DumpNumericValueInternal,
 				fDumpStringValue = DumpStringValueInternal,
+#endif
 			};
 
 			SkiaApi.sk_managedtracememorydump_set_procs (delegates);
@@ -49,7 +55,11 @@ namespace SkiaSharp
 
 		// impl
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate))]
+#endif
 		private static void DumpNumericValueInternal (IntPtr d, void* context, void* dumpName, void* valueName, void* units, ulong value)
 		{
 			var dump = DelegateProxies.GetUserData<SKTraceMemoryDump> ((IntPtr)context, out _);
@@ -60,7 +70,11 @@ namespace SkiaSharp
 				value);
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpStringValueProxyDelegate))]
+#endif
 		private static void DumpStringValueInternal (IntPtr d, void* context, void* dumpName, void* valueName, void* value)
 		{
 			var dump = DelegateProxies.GetUserData<SKTraceMemoryDump> ((IntPtr)context, out _);

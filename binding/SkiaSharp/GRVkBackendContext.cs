@@ -12,7 +12,6 @@ namespace SkiaSharp
 	public unsafe class GRVkBackendContext : IDisposable
 	{
 		private GRVkGetProcedureAddressDelegate getProc;
-		private GRVkGetProcProxyDelegate getProcProxy;
 		private GCHandle getProcHandle;
 		private void* getProcContext;
 
@@ -58,12 +57,11 @@ namespace SkiaSharp
 				if (getProcHandle.IsAllocated)
 					getProcHandle.Free ();
 
-				getProcProxy = null;
 				getProcHandle = default;
 				getProcContext = null;
 
 				if (value != null) {
-					getProcProxy = DelegateProxies.Create (value, DelegateProxies.GRVkGetProcDelegateProxy, out var gch, out var ctx);
+					DelegateProxies.Create (value, out var gch, out var ctx);
 					getProcHandle = gch;
 					getProcContext = (void*)ctx;
 				}
@@ -84,7 +82,7 @@ namespace SkiaSharp
 				fDeviceFeatures = VkPhysicalDeviceFeatures,
 				fDeviceFeatures2 = VkPhysicalDeviceFeatures2,
 				fGetProcUserData = getProcContext,
-				fGetProc = getProcProxy,
+				fGetProc = getProcContext is not null ? DelegateProxies.GRVkGetProcDelegateProxy : null,
 				fProtectedContext = ProtectedContext ? (byte)1 : (byte)0
 			};
 	}

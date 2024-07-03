@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -15,11 +16,19 @@ namespace SkiaSharp
 		static SKDrawable ()
 		{
 			delegates = new SKManagedDrawableDelegates {
+#if USE_LIBRARY_IMPORT
+				fDraw = &DrawInternal,
+				fGetBounds = &GetBoundsInternal,
+				fApproximateBytesUsed = &ApproximateBytesUsedInternal,
+				fMakePictureSnapshot = &MakePictureSnapshotInternal,
+				fDestroy = &DestroyInternal,
+#else
 				fDraw = DrawInternal,
 				fGetBounds = GetBoundsInternal,
 				fApproximateBytesUsed = ApproximateBytesUsedInternal,
 				fMakePictureSnapshot = MakePictureSnapshotInternal,
 				fDestroy = DestroyInternal,
+#endif
 			};
 
 			SkiaApi.sk_manageddrawable_set_procs (delegates);
@@ -103,14 +112,22 @@ namespace SkiaSharp
 			return recorder.EndRecording ();
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedDrawableDrawProxyDelegate))]
+#endif
 		private static void DrawInternal (IntPtr d, void* context, IntPtr canvas)
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			drawable.OnDraw (SKCanvas.GetObject (canvas, false));
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedDrawableGetBoundsProxyDelegate))]
+#endif
 		private static void GetBoundsInternal (IntPtr d, void* context, SKRect* rect)
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
@@ -118,21 +135,33 @@ namespace SkiaSharp
 			*rect = bounds;
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedDrawableApproximateBytesUsedProxyDelegate))]
+#endif
 		private static IntPtr ApproximateBytesUsedInternal (IntPtr d, void* context)
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			return (IntPtr)drawable.OnGetApproximateBytesUsed ();
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedDrawableMakePictureSnapshotProxyDelegate))]
+#endif
 		private static IntPtr MakePictureSnapshotInternal (IntPtr d, void* context)
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
 			return drawable.OnSnapshot ()?.Handle ?? IntPtr.Zero;
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedDrawableDestroyProxyDelegate))]
+#endif
 		private static void DestroyInternal (IntPtr d, void* context)
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out var gch);

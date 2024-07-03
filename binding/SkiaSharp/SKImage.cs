@@ -148,7 +148,8 @@ namespace SkiaSharp
 			var del = releaseProc != null && releaseContext != null
 				? new SKImageRasterReleaseDelegate ((addr, _) => releaseProc (addr, releaseContext))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageRasterReleaseDelegateProxy, out _, out var ctx);
+			DelegateProxies.Create (del, out _, out var ctx);
+			var proxy = del is not null ? DelegateProxies.SKImageRasterReleaseDelegateProxy : null;
 			return GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, proxy, (void*)ctx));
 		}
 
@@ -289,7 +290,8 @@ namespace SkiaSharp
 			var del = releaseProc != null && releaseContext != null
 				? new SKImageTextureReleaseDelegate ((_) => releaseProc (releaseContext))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageTextureReleaseDelegateProxy, out _, out var ctx);
+			DelegateProxies.Create (del, out _, out var ctx);
+			var proxy = del is not null ? DelegateProxies.SKImageTextureReleaseDelegateProxy : null;
 			return GetObject (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType.ToNative (), alpha, cs, proxy, (void*)ctx));
 		}
 

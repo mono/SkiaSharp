@@ -46,7 +46,8 @@ namespace SkiaSharp
 
 		public static GRGlInterface Create (GRGlGetProcedureAddressDelegate get)
 		{
-			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			DelegateProxies.Create (get, out var gch, out var ctx);
+			var proxy = get != null ? DelegateProxies.GRGlGetProcDelegateProxy : null;
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_interface ((void*)ctx, proxy));
 			} finally {
@@ -59,7 +60,8 @@ namespace SkiaSharp
 
 		public static GRGlInterface CreateOpenGl (GRGlGetProcedureAddressDelegate get)
 		{
-			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			DelegateProxies.Create (get, out var gch, out var ctx);
+			var proxy = get != null ? DelegateProxies.GRGlGetProcDelegateProxy : null;
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_gl_interface ((void*)ctx, proxy));
 			} finally {
@@ -69,7 +71,8 @@ namespace SkiaSharp
 
 		public static GRGlInterface CreateGles (GRGlGetProcedureAddressDelegate get)
 		{
-			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			DelegateProxies.Create (get, out var gch, out var ctx);
+			var proxy = get != null ? DelegateProxies.GRGlGetProcDelegateProxy : null;
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_gles_interface ((void*)ctx, proxy));
 			} finally {
@@ -79,7 +82,8 @@ namespace SkiaSharp
 
 		public static GRGlInterface CreateWebGl (GRGlGetProcedureAddressDelegate get)
 		{
-			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			DelegateProxies.Create (get, out var gch, out var ctx);
+			var proxy = get != null ? DelegateProxies.GRGlGetProcDelegateProxy : null;
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_webgl_interface ((void*)ctx, proxy));
 			} finally {

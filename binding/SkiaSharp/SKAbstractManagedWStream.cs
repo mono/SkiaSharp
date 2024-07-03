@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -15,10 +16,17 @@ namespace SkiaSharp
 		static SKAbstractManagedWStream ()
 		{
 			delegates = new SKManagedWStreamDelegates {
+#if USE_LIBRARY_IMPORT
+				fWrite = &WriteInternal,
+				fFlush = &FlushInternal,
+				fBytesWritten = &BytesWrittenInternal,
+				fDestroy = &DestroyInternal
+#else
 				fWrite = WriteInternal,
 				fFlush = FlushInternal,
 				fBytesWritten = BytesWrittenInternal,
 				fDestroy = DestroyInternal,
+#endif
 			};
 
 			SkiaApi.sk_managedwstream_set_procs (delegates);
@@ -51,28 +59,44 @@ namespace SkiaSharp
 
 		protected abstract IntPtr OnBytesWritten ();
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedWStreamWriteProxyDelegate))]
+#endif
 		private static bool WriteInternal (IntPtr s, void* context, void* buffer, IntPtr size)
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
 			return stream.OnWrite ((IntPtr)buffer, size);
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedWStreamFlushProxyDelegate))]
+#endif
 		private static void FlushInternal (IntPtr s, void* context)
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
 			stream.OnFlush ();
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedWStreamBytesWrittenProxyDelegate))]
+#endif
 		private static IntPtr BytesWrittenInternal (IntPtr s, void* context)
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
 			return stream.OnBytesWritten ();
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (SKManagedWStreamDestroyProxyDelegate))]
+#endif
 		private static void DestroyInternal (IntPtr s, void* context)
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out var gch);
