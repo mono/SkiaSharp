@@ -25,7 +25,7 @@ namespace HarfBuzzSharp
 
 		// internal proxy implementations
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (DestroyProxyDelegate))]
 #endif
@@ -40,7 +40,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (ReferenceTableProxyDelegate))]
 #endif
@@ -52,7 +52,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (DestroyProxyDelegate))]
 #endif

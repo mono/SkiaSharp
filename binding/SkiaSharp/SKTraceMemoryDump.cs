@@ -56,7 +56,7 @@ namespace SkiaSharp
 		// impl
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate))]
 #endif
@@ -71,7 +71,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpStringValueProxyDelegate))]
 #endif

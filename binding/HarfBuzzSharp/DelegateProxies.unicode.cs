@@ -37,7 +37,7 @@ namespace HarfBuzzSharp
 #endif
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (UnicodeCombiningClassProxyDelegate))]
 #endif
@@ -48,7 +48,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (UnicodeGeneralCategoryProxyDelegate))]
 #endif
@@ -59,7 +59,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (UnicodeMirroringProxyDelegate))]
 #endif
@@ -70,7 +70,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (UnicodeScriptProxyDelegate))]
 #endif
@@ -81,7 +81,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (UnicodeComposeProxyDelegate))]
 #endif
@@ -95,7 +95,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (UnicodeDecomposeProxyDelegate))]
 #endif

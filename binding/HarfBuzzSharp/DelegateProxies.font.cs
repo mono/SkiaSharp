@@ -64,7 +64,7 @@ namespace HarfBuzzSharp
 		// internal proxy implementations
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetFontExtentsProxyDelegate))]
 #endif
@@ -79,7 +79,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetNominalGlyphProxyDelegate))]
 #endif
@@ -94,7 +94,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetNominalGlyphsProxyDelegate))]
 #endif
@@ -108,7 +108,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetVariationGlyphProxyDelegate))]
 #endif
@@ -123,7 +123,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetGlyphAdvanceProxyDelegate))]
 #endif
@@ -135,7 +135,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetGlyphAdvancesProxyDelegate))]
 #endif
@@ -149,7 +149,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetGlyphOriginProxyDelegate))]
 #endif
@@ -166,7 +166,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetGlyphKerningProxyDelegate))]
 #endif
@@ -178,7 +178,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetGlyphExtentsProxyDelegate))]
 #endif
@@ -193,7 +193,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetGlyphContourPointProxyDelegate))]
 #endif
@@ -210,7 +210,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetGlyphNameProxyDelegate))]
 #endif
@@ -228,7 +228,7 @@ namespace HarfBuzzSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (FontGetGlyphFromNameProxyDelegate))]
 #endif

@@ -53,7 +53,7 @@ namespace SkiaSharp
 		// internal proxy implementations
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKBitmapReleaseProxyDelegate))]
 #endif
@@ -68,7 +68,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKDataReleaseProxyDelegate))]
 #endif
@@ -83,7 +83,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKImageRasterReleaseProxyDelegate))]
 #endif
@@ -93,7 +93,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKImageRasterReleaseProxyDelegate))]
 #endif
@@ -108,7 +108,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKImageTextureReleaseProxyDelegate))]
 #endif
@@ -123,7 +123,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKSurfaceRasterReleaseProxyDelegate))]
 #endif
@@ -138,7 +138,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (GRGlGetProcProxyDelegate))]
 #endif
@@ -149,7 +149,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (GRVkGetProcProxyDelegate))]
 #endif
@@ -161,7 +161,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]
 #endif

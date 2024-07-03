@@ -60,7 +60,7 @@ namespace SkiaSharp
 		protected abstract IntPtr OnBytesWritten ();
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKManagedWStreamWriteProxyDelegate))]
 #endif
@@ -71,7 +71,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKManagedWStreamFlushProxyDelegate))]
 #endif
@@ -82,7 +82,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKManagedWStreamBytesWrittenProxyDelegate))]
 #endif
@@ -93,7 +93,7 @@ namespace SkiaSharp
 		}
 
 #if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 		[MonoPInvokeCallback (typeof (SKManagedWStreamDestroyProxyDelegate))]
 #endif
