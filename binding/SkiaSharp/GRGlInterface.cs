@@ -7,6 +7,7 @@ using SkiaSharp.Internals;
 
 #if __TIZEN__
 using System.Reflection;
+using System.Runtime.CompilerServices;
 #endif
 
 namespace SkiaSharp
@@ -192,7 +193,7 @@ namespace SkiaSharp
 		}
 
 #if __TIZEN__
-		private class EvasGlLoader
+		private partial class EvasGlLoader
 		{
 			private const string libevas = "libevas.so.1";
 
@@ -203,17 +204,17 @@ namespace SkiaSharp
 			private readonly IntPtr glEvas;
 			private readonly EvasGlApi api;
 
-			[DllImport (libevas)]
+			[LibraryImport (libevas)]
 			internal static extern IntPtr evas_gl_api_get (IntPtr evas_gl);
 
-			[DllImport (libevas)]
+			[LibraryImport (libevas)]
 			internal static extern IntPtr evas_gl_context_api_get (IntPtr evas_gl, IntPtr ctx);
 
-			[DllImport (libevas)]
+			[LibraryImport (libevas)]
 			internal static extern IntPtr evas_gl_current_context_get (IntPtr evas_gl);
 
-			[DllImport (libevas)]
-			internal static extern IntPtr evas_gl_proc_address_get (IntPtr evas_gl, string name);
+			[LibraryImport(libevas, StringMarshalling = StringMarshalling.Utf8)]
+			internal static partial IntPtr evas_gl_proc_address_get (IntPtr evas_gl, string name);
 
 			static EvasGlLoader ()
 			{
@@ -222,7 +223,7 @@ namespace SkiaSharp
 				apiFields = EvasGlApiType.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 			}
 
-			public EvasGlLoader (IntPtr evas)
+			public unsafe EvasGlLoader (IntPtr evas)
 			{
 				glEvas = evas;
 				var glContext = evas_gl_current_context_get (glEvas);
@@ -231,7 +232,7 @@ namespace SkiaSharp
 					? evas_gl_context_api_get (glEvas, glContext)
 					: evas_gl_api_get (glEvas);
 
-				api = Marshal.PtrToStructure<EvasGlApi> (apiPtr);
+				api = *(EvasGlApi*)apiPtr;
 			}
 
 			public IntPtr GetFunctionPointer (string name)
