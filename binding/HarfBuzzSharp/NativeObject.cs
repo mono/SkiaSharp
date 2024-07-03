@@ -62,17 +62,6 @@ namespace HarfBuzzSharp
 			GC.SuppressFinalize (this);
 		}
 
-		internal static IntPtr StructureArrayToPtr<T> (IReadOnlyList<T> items)
-		{
-			var size = Marshal.SizeOf<T> ();
-			var memory = Marshal.AllocCoTaskMem (size * items.Count);
-			for (var i = 0; i < items.Count; i++) {
-				var ptr = new IntPtr (memory.ToInt64 () + (i * size));
-				Marshal.StructureToPtr (items[i], ptr, true);
-			}
-			return memory;
-		}
-
 		internal static IEnumerable<string> PtrToStringArray (IntPtr intPtr)
 		{
 			if (intPtr != IntPtr.Zero) {
