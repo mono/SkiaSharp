@@ -1,7 +1,6 @@
 ﻿#nullable disable
 
 using System;
-using System.ComponentModel;
 using System.IO;
 
 namespace HarfBuzzSharp
@@ -84,7 +83,8 @@ namespace HarfBuzzSharp
 
 		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseProc)
 		{
-			var proxy = DelegateProxies.Create (releaseProc, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
+			DelegateProxies.Create (releaseProc, out _, out var ctx);
+			var proxy = releaseProc != null ? DelegateProxies.ReleaseDelegateProxy : null;
 			return HarfBuzzApi.hb_blob_create ((void*)data, (uint)length, mode, (void*)ctx, proxy);
 		}
 

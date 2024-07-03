@@ -1,7 +1,8 @@
 ﻿#nullable disable
 
 using System;
-using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
@@ -12,13 +13,22 @@ namespace HarfBuzzSharp
 	internal static unsafe partial class DelegateProxies
 	{
 		// references to the proxy implementations
+#if USE_LIBRARY_IMPORT
+		public static readonly delegate* unmanaged[Cdecl] <void*, void> ReleaseDelegateProxy = &ReleaseDelegateProxyImplementation;
+		public static readonly delegate* unmanaged[Cdecl] <void*, void> ReleaseDelegateProxyForMulti = &ReleaseDelegateProxyImplementationForMulti;
+		public static readonly delegate* unmanaged[Cdecl] <IntPtr, uint, void*, IntPtr> GetTableDelegateProxy = &GetTableDelegateProxyImplementation;
+#else
 		public static readonly DestroyProxyDelegate ReleaseDelegateProxy = ReleaseDelegateProxyImplementation;
 		public static readonly DestroyProxyDelegate ReleaseDelegateProxyForMulti = ReleaseDelegateProxyImplementationForMulti;
 		public static readonly ReferenceTableProxyDelegate GetTableDelegateProxy = GetTableDelegateProxyImplementation;
+#endif
 
 		// internal proxy implementations
-
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (DestroyProxyDelegate))]
+#endif
 		private static void ReleaseDelegateProxyImplementation (void* context)
 		{
 			var del = Get<ReleaseDelegate> ((IntPtr)context, out var gch);
@@ -29,7 +39,11 @@ namespace HarfBuzzSharp
 			}
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (ReferenceTableProxyDelegate))]
+#endif
 		private static IntPtr GetTableDelegateProxyImplementation (IntPtr face, uint tag, void* context)
 		{
 			GetMultiUserData<GetTableDelegate, Face> ((IntPtr)context, out var getTable, out var userData, out _);
@@ -37,7 +51,11 @@ namespace HarfBuzzSharp
 			return blob?.Handle ?? IntPtr.Zero;
 		}
 
+#if USE_LIBRARY_IMPORT
+		[UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+#else
 		[MonoPInvokeCallback (typeof (DestroyProxyDelegate))]
+#endif
 		private static void ReleaseDelegateProxyImplementationForMulti (void* context)
 		{
 			var del = GetMulti<ReleaseDelegate> ((IntPtr)context, out var gch);
