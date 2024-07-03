@@ -11,7 +11,7 @@ using System.Reflection;
 
 namespace SkiaSharp
 {
-	public unsafe class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
+	public unsafe partial class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal GRGlInterface (IntPtr h, bool owns)
 			: base (h, owns)
@@ -116,7 +116,7 @@ namespace SkiaSharp
 
 		//
 
-		private static class AngleLoader
+		private static partial class AngleLoader
 		{
 			private static readonly IntPtr libEGL;
 			private static readonly IntPtr libGLESv2;
@@ -131,6 +131,12 @@ namespace SkiaSharp
 			private static extern IntPtr GetProcAddress (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
 
 			private static IntPtr LoadLibrary (string lpFileName) => LoadPackagedLibrary(lpFileName, 0);
+#elif USE_LIBRARY_IMPORT
+			[LibraryImport ("Kernel32.dll", SetLastError = true)]
+			private static partial IntPtr LoadLibrary ([MarshalAs (UnmanagedType.LPStr)] string lpFileName);
+
+			[LibraryImport ("Kernel32.dll", SetLastError = true)]
+			private static partial IntPtr GetProcAddress (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
 #else
 			[DllImport ("Kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
 			private static extern IntPtr LoadLibrary ([MarshalAs (UnmanagedType.LPStr)] string lpFileName);
@@ -139,8 +145,13 @@ namespace SkiaSharp
 			private static extern IntPtr GetProcAddress (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
 #endif
 
+#if USE_LIBRARY_IMPORT
+			[LibraryImport ("libEGL.dll")]
+			private static partial IntPtr eglGetProcAddress ([MarshalAs (UnmanagedType.LPStr)] string procname);
+#else
 			[DllImport ("libEGL.dll")]
 			private static extern IntPtr eglGetProcAddress ([MarshalAs (UnmanagedType.LPStr)] string procname);
+#endif
 
 			static AngleLoader()
 			{
