@@ -213,8 +213,8 @@ namespace SkiaSharp
 			[LibraryImport (libevas)]
 			internal static partial IntPtr evas_gl_current_context_get (IntPtr evas_gl);
 
-			[LibraryImport(libevas, StringMarshalling = StringMarshalling.Utf8)]
-			internal static partial IntPtr evas_gl_proc_address_get (IntPtr evas_gl, string name);
+			[LibraryImport(libevas)]
+			internal static partial IntPtr evas_gl_proc_address_get (IntPtr evas_gl, [MarshalAs (UnmanagedType.LPStr)] string name);
 
 			static EvasGlLoader ()
 			{
