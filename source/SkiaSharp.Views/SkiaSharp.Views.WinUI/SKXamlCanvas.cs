@@ -233,7 +233,7 @@ namespace SkiaSharp.Views.UWP
 					ImageSource = bitmap,
 					AlignmentX = AlignmentX.Left,
 					AlignmentY = AlignmentY.Top,
-					Stretch = Stretch.Fill
+					Stretch = Stretch.None
 				};
 				Background = brush;
 			}
