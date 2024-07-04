@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Storage.Streams;
 using WinRT;
@@ -8,7 +9,7 @@ namespace SkiaSharp.Views.Windows
 {
 	[WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
 	[Guid("905a0fef-bc53-11df-8c49-001e4fc686da")]
-	[WindowsRuntimeHelperType(typeof(ABI.SkiaSharp.Views.Windows))]
+	[WindowsRuntimeHelperType(typeof(global::ABI.SkiaSharp.Views.Windows.IBufferByteAccess))]
 	internal interface IBufferByteAccess
 	{
 		IntPtr Buffer { get; }
