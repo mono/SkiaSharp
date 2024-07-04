@@ -67,7 +67,32 @@ namespace ABI.SkiaSharp.Views.Windows
 				return 0;
 			}
 		}
-		internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID.IID_IBufferByteAccess);
+
+  		internal static ref readonly Guid IID
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get
+			{
+				ReadOnlySpan<byte> data = new byte[]
+				{
+					0xEF, 0x0F, 0x5A, 0x90,
+					0x53, 0xBC,
+					0xDF, 0x11,
+					0x8C,
+					0x49,
+					0x00,
+					0x1E,
+					0x4F,
+					0xC6,
+					0x86,
+					0xDA
+				};
+
+				return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+			}
+		}
+
+		internal static ObjectReference<IUnknownVftbl> FromAbi(IntPtr thisPtr) => ObjectReference<IUnknownVftbl>.FromAbi(thisPtr, IID);
 
 		IntPtr global::SkiaSharp.Views.Windows.IBufferByteAccess.Buffer
 		{
