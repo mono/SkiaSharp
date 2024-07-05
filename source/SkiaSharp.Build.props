@@ -40,10 +40,14 @@
   <PropertyGroup>
     <DotNetSdkManifestVersionRegex>\d+\.\d+\.\d+(-[a-z]+\.\d+)?</DotNetSdkManifestVersionRegex>
     <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' == 'Core'">$([System.Text.RegularExpressions.Regex]::Match('$(MSBuildExtensionsPath)', '$(DotNetSdkManifestVersionRegex)'))</DotNetSdkManifestVersion>
-    <!-- TODO: find a way to detect the installed SDK version -->
     <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' != 'Core'"></DotNetSdkManifestVersion>
-    <TFMCurrent>net7.0</TFMCurrent>
+    <!-- The previous/lowest version of .NET we want to support (just the base TFM and then Windows/macOS native binaries) -->
+    <TFMPrevious>net6.0</TFMPrevious>
+    <!-- The current version of .NET that we are shipping for (all the TFMs) -->
+    <TFMCurrent>net8.0</TFMCurrent>
+    <!-- The next version (typically a preview) that we are building for (all the TFMs) -->
     <TFMNext></TFMNext>
+    <!-- The Windows OS version we are building against -->
     <TFMWindowsVersion>10.0.19041.0</TFMWindowsVersion>
   </PropertyGroup>
 
@@ -105,6 +109,10 @@
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-macos</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="$(IsWindows)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-windows$(TFMWindowsVersion)</PlatformTargetFrameworksCurrent>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TFMPrevious)' != ''">
+    <BasicTargetFrameworksPrevious>$(TFMPrevious)</BasicTargetFrameworksPrevious>
+    <PlatformTargetFrameworksPrevious Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(TFMNext)-macos</PlatformTargetFrameworksPrevious>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(TFMNext)' != ''">
     <BasicTargetFrameworksNext>$(TFMNext)</BasicTargetFrameworksNext>
     <PlatformTargetFrameworksNext Condition="!$(IsLinux)">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</PlatformTargetFrameworksNext>
@@ -114,16 +122,17 @@
     <PlatformTargetFrameworksNext Condition="$(IsWindows)">$(PlatformTargetFrameworksNext);$(TFMNext)-windows$(TFMWindowsVersion)</PlatformTargetFrameworksNext>
   </PropertyGroup>
   <PropertyGroup>
-    <BasicTargetFrameworks>$(BasicTargetFrameworksCurrent);$(BasicTargetFrameworksNext)</BasicTargetFrameworks>
-    <PlatformTargetFrameworks>$(PlatformTargetFrameworksCurrent);$(PlatformTargetFrameworksNext)</PlatformTargetFrameworks>
+    <BasicTargetFrameworks>$(BasicTargetFrameworksCurrent);$(BasicTargetFrameworksPrevious);$(BasicTargetFrameworksNext)</BasicTargetFrameworks>
+    <PlatformTargetFrameworks>$(PlatformTargetFrameworksCurrent);$(PlatformTargetFrameworksPrevious);$(PlatformTargetFrameworksNext)</PlatformTargetFrameworks>
     <AllTargetFrameworks>$(BasicTargetFrameworks);$(PlatformTargetFrameworks)</AllTargetFrameworks>
   </PropertyGroup>
 
   <!-- Windows TFMs -->
   <PropertyGroup>
     <WindowsTargetFrameworksCurrent Condition="$(IsWindows)">$(TFMCurrent)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksCurrent>
+    <WindowsTargetFrameworksPrevious Condition="$(IsWindows) and '$(TFMPrevious)' != ''">$(TFMPrevious)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksPrevious>
     <WindowsTargetFrameworksNext Condition="$(IsWindows) and '$(TFMNext)' != ''">$(TFMNext)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksNext>
-    <WindowsTargetFrameworks Condition="$(IsWindows)">$(WindowsTargetFrameworksCurrent);$(WindowsTargetFrameworksNext)</WindowsTargetFrameworks>
+    <WindowsTargetFrameworks Condition="$(IsWindows)">$(WindowsTargetFrameworksCurrent);$(WindowsTargetFrameworksPrevious);$(WindowsTargetFrameworksNext)</WindowsTargetFrameworks>
   </PropertyGroup>
 
   <!-- Windows Desktop TFMs -->
@@ -177,7 +186,7 @@
     <DefineConstants>$(DefineConstants);THROW_OBJECT_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(TFMCurrent)' or ('$(TargetFramework)' == '$(TFMNext)' and '$(TFMNext)' != '') ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(TFMCurrent)' or ('$(TargetFramework)' == '$(TFMPrevious)' and '$(TFMPrevious)' != '') or ('$(TargetFramework)' == '$(TFMNext)' and '$(TFMNext)' != '') ">
     <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
   </PropertyGroup>
 

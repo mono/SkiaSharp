@@ -251,7 +251,7 @@ Task ("tests-netcore")
 
     var failedTests = 0;
 
-    var tfm = "net7.0";
+    var tfm = "net8.0";
     var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
     if (SUPPORT_VULKAN)
         testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
@@ -297,7 +297,7 @@ Task ("tests-android")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Release";
-    var tfm = "net7.0-android";
+    var tfm = "net8.0-android";
     var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
 
@@ -329,7 +329,7 @@ Task ("tests-ios")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net7.0-ios";
+    var tfm = "net8.0-ios";
     var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 
@@ -361,7 +361,7 @@ Task ("tests-maccatalyst")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net7.0-maccatalyst";
+    var tfm = "net8.0-maccatalyst";
     var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 
@@ -397,7 +397,7 @@ Task ("tests-wasm")
     try {
         serverProc = RunAndReturnProcess (PYTHON_EXE, new ProcessSettings {
             Arguments = MakeAbsolute (File ("./tests/SkiaSharp.Tests.Wasm/server.py")).FullPath,
-            WorkingDirectory = "./tests/SkiaSharp.Tests.Wasm/bin/Release/net7.0/dist",
+            WorkingDirectory = "./tests/SkiaSharp.Tests.Wasm/bin/Release/net8.0/dist",
         });
         DotNetRun ("./utils/WasmTestRunner/WasmTestRunner.csproj",
             $"--output=\"./output/logs/testlogs/SkiaSharp.Tests.Wasm/{DATE_TIME_STR}/\" " +

@@ -12,6 +12,7 @@ namespace SkiaSharp.Benchmarks;
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net472)]
 [SimpleJob(RuntimeMoniker.Net70)]
+[SimpleJob(RuntimeMoniker.Net80)]
 public class TheBenchmark
 {
 	[GlobalSetup]
