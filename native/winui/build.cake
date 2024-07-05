@@ -34,8 +34,8 @@ Task("SkiaSharp.Views.WinUI.Native")
 
         var anyOutDir = OUTPUT_PATH.Combine("any");
         EnsureDirectoryExists(anyOutDir);
-        CopyFileToDirectory($"{name}/{name}.Projection/bin/{CONFIGURATION}/net7.0-windows10.0.19041.0/{name}.Projection.dll", anyOutDir);
-        CopyFileToDirectory($"{name}/{name}.Projection/bin/{CONFIGURATION}/net7.0-windows10.0.19041.0/{name}.Projection.pdb", anyOutDir);
+        CopyFileToDirectory($"{name}/{name}.Projection/bin/{CONFIGURATION}/net8.0-windows10.0.19041.0/{name}.Projection.dll", anyOutDir);
+        CopyFileToDirectory($"{name}/{name}.Projection/bin/{CONFIGURATION}/net8.0-windows10.0.19041.0/{name}.Projection.pdb", anyOutDir);
     }
 });
 

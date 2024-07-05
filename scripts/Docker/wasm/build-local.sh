@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 VERSION_ARGS=""
-EMSCRIPTEN_VERSION=2.0.23
+EMSCRIPTEN_VERSION=3.1.34
 if [ "$1" ]; then
     VERSION_ARGS="--build-arg EMSCRIPTEN_VERSION=$1"
     EMSCRIPTEN_VERSION=$1
