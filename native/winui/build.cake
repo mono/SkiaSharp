@@ -68,7 +68,12 @@ Task("SkiaSharp.Views.WinUI.Native")
     {
         if (Skip(arch)) return;
 
-        RunProcess("nuget", "restore SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.sln");
+        RunMSBuild("SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.sln",
+            restore: false,
+            targets: new[] { "Restore" },
+            properties: new Dictionary<string, string> {
+                { "RestorePackagesConfig", "true" }
+            });
         RunMSBuild("SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.sln", arch);
 
         var name = "SkiaSharp.Views.WinUI.Native";

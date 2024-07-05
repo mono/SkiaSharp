@@ -2,8 +2,9 @@
 using Windows.Foundation;
 using Windows.UI;
 using Windows.Storage.Streams;
+#if !HAS_UNO
 using SkiaSharp.Views.WinUI.Native;
-
+#endif
 
 #if WINDOWS || WINUI
 using Microsoft.UI.Xaml.Media.Imaging;
