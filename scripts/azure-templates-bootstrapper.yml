@@ -192,9 +192,9 @@ jobs:
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             inputs:
               packageType: 'sdk'
-              version: 7.0.x
+              version: $(DOTNET_VERSION)
             retryCountOnTaskFailure: 3
-            displayName: Install .NET 7.0.x
+            displayName: Install .NET $(DOTNET_VERSION)
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET
             retryCountOnTaskFailure: 3

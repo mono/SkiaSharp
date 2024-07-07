@@ -41,7 +41,7 @@
     <DotNetSdkManifestVersionRegex>\d+\.\d+\.\d+(-[a-z]+\.\d+)?</DotNetSdkManifestVersionRegex>
     <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' == 'Core'">$([System.Text.RegularExpressions.Regex]::Match('$(MSBuildExtensionsPath)', '$(DotNetSdkManifestVersionRegex)'))</DotNetSdkManifestVersion>
     <DotNetSdkManifestVersion Condition="'$(MSBuildRuntimeType)' != 'Core'"></DotNetSdkManifestVersion>
-    <!-- The previous/lowest version of .NET we want to support (just the base TFM and then Windows/macOS native binaries) -->
+    <!-- The previous/lowest version of .NET we want to support (just the base TFM/no platforms) -->
     <TFMPrevious>net6.0</TFMPrevious>
     <!-- The current version of .NET that we are shipping for (all the TFMs) -->
     <TFMCurrent>net8.0</TFMCurrent>
@@ -95,11 +95,6 @@
     <IsNetMacOSSupported Condition="'$(DotNetMacOSWorkloadIsInstalled)' != 'true'">false</IsNetMacOSSupported>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- Force the use of Uno Roslyn generators to reduce memory usage on CI -->
-    <UnoUIUseRoslynSourceGenerators>True</UnoUIUseRoslynSourceGenerators>
-  </PropertyGroup>
-
   <!-- .NET Standard, .NET Framework and .NET -->
   <PropertyGroup>
     <BasicTargetFrameworksCurrent>netstandard2.0;netstandard2.1;net462;$(TFMCurrent)</BasicTargetFrameworksCurrent>
@@ -111,7 +106,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMPrevious)' != ''">
     <BasicTargetFrameworksPrevious>$(TFMPrevious)</BasicTargetFrameworksPrevious>
-    <PlatformTargetFrameworksPrevious Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(TFMNext)-macos</PlatformTargetFrameworksPrevious>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMNext)' != ''">
     <BasicTargetFrameworksNext>$(TFMNext)</BasicTargetFrameworksNext>
