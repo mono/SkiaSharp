@@ -50,7 +50,7 @@ jobs:
         ${{ parameters.variables }}
     templateContext:
       sdl: ${{ parameters.sdl }}
-      ${{ if and(eq(parameters.docker, ''), eq(parameters.use1ESPipelineTemplates, 'true')) }}:
+      ${{ if and(ne(parameters.docker, ''), eq(parameters.use1ESPipelineTemplates, 'true')) }}:
         authenticatedContainerRegistries:
           - serviceConnection: skiasharp-docker
       outputParentDirectory: 'output'
