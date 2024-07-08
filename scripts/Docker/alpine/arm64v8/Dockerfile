@@ -1,7 +1,7 @@
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
 
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.17
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.17-arm64v8-local
 
 # Install the skia build dependencies
 RUN apk add --no-cache fontconfig-dev gn ninja
