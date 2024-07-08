@@ -50,6 +50,9 @@ jobs:
         ${{ parameters.variables }}
     templateContext:
       sdl: ${{ parameters.sdl }}
+      ${{ if eq(parameters.docker, '') }}:
+        authenticatedContainerRegistries:
+          - serviceConnection: skiasharp-docker
       outputParentDirectory: 'output'
       outputs:
         - ${{ if eq(parameters.shouldPublish, 'true') }}:
