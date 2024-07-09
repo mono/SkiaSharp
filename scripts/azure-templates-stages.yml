@@ -34,6 +34,9 @@ parameters:
   - name: enableSigning
     type: boolean
     default: false
+  - name: forceRealSigning
+    type: boolean
+    default: false
 
 stages:
   - stage: prepare
@@ -686,14 +689,15 @@ stages:
       displayName: Sign NuGets
       dependsOn: package
       jobs:
-        - template: sign-artifacts/jobs/v2.yml@xamarin-templates
+        - template: sign-artifacts/jobs/v3.yml@xamarin-templates
           parameters:
-            ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+            ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
               signType: 'Real'
-            ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
+            ${{ else }}:
               signType: 'Test'
             use1ESTemplate: ${{ parameters.use1ESPipelineTemplates }}
             usePipelineArtifactTasks: true
+            templateBranch: dev/mattleibow/macdev
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: tests
