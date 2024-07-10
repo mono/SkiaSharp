@@ -345,6 +345,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentLinuxNative }}
             packages: $(TIZEN_LINUX_PACKAGES)
             target: externals-tizen
+            condition: false # https://github.com/mono/SkiaSharp/issues/2933
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_wasm
