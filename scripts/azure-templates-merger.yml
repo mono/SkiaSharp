@@ -23,29 +23,13 @@ jobs:
           displayName: Configure the az CLI tool
         - ${{ each artifact in parameters.matrixArtifacts }}:
           - pwsh: |
-              $artifactJson=@'
+              $json=@'
               ${{ artifact.jobs }}
               '@
-
-              echo $artifactJson
-
-              $json = ConvertFrom-Json $artifactJson
-              $objects = $json | Get-Member -MemberType NoteProperty
-              $names = $objects | ForEach-Object { $json."$($_.Name)".name }
-
-              Write-Host "Found $($names.Length) items:"
-              $names | ForEach-Object { Write-Host " - $_" }
-
-              $dir = "$(Build.SourcesDirectory)/output"
-              New-Item "$dir" -Type Directory -Force | Out-Null
-
-              $id = "$(Build.BuildId)"
-              foreach ($name in $names) {
-                Write-Host "Downloading '$name'..."
-                az pipelines runs artifact download --artifact-name "$name" --path "$dir" --run-id "$id" --verbose
-              }
-              Write-Host "Downloads complete."
-              Get-ChildItem "$dir"
+              .\scripts\download-artifact.ps1 `
+                -ArtifactsJson $json `
+                -BuildId "$(Build.BuildId)" `
+                -OutputDirectory "$(Build.SourcesDirectory)/output" `
             env:
               AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
             displayName: Download the pre-built ${{ artifact.name }} artifacts
