@@ -1,11 +1,13 @@
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
 
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:debian-11-arm64v8
+FROM arm64v8/debian:10
 
-# Install the skia build dependencies
+# Install the required packages
 RUN apt-get update \
-    && apt-get install -y libfontconfig1-dev ninja-build \
+    && apt-get install -y \
+        curl python3 git clang-13 ninja-build \
+        libfontconfig1-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the .NET SDK
@@ -15,8 +17,9 @@ RUN curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh \
     && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm dotnet-install.sh \
-    && dotnet help
+    && dotnet help \
+    && dotnet --info
 
-ENV CC=clang CXX=clang++
+ENV CC=clang-13 CXX=clang++-13
 
 WORKDIR /work

@@ -7,15 +7,16 @@
 #   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.13.1-2 | * ]
 
 ARG IMAGE_ARCH=amd64
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:debian-11-${IMAGE_ARCH}
+FROM ${IMAGE_ARCH}/debian:10
 
-# Install the skia build dependencies
+# Install the required packages
 RUN apt-get update \
-    && apt-get install -y ninja-build \
+    && apt-get install -y \
+        curl python3 git clang-13 ninja-build \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the cross-compilation GCC toolchain
-ARG TOOLCHAIN_VERSION=9
+ARG TOOLCHAIN_VERSION=8
 ARG TOOLCHAIN_ARCH=arm-linux-gnueabihf
 ARG TOOLCHAIN_ARCH_SHORT=armhf
 RUN apt-get update \
@@ -55,8 +56,9 @@ RUN curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh \
     && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm dotnet-install.sh \
-    && dotnet help
+    && dotnet help \
+    && dotnet --info
 
-ENV CC=clang CXX=clang++
+ENV CC=clang-13 CXX=clang++-13
 
 WORKDIR /work
