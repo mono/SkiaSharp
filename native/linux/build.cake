@@ -64,7 +64,7 @@ Task("libSkiaSharp")
         // so we are forced to for dng_sdk. If this ever becomes a problem
         // for other libraries, we will need to find a better solution.
         var wordSize = ReduceArch(arch).EndsWith("64") ? "64" : "32";
-        var wordSizeDefine = VARIANT.ToLower() == "alpine"
+        var wordSizeDefine = VARIANT.ToLower().StartsWith("alpine")
             ? $", '-D__WORDSIZE={wordSize}'"
             : $"";
 
