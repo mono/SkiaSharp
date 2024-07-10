@@ -414,9 +414,6 @@ stages:
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native
       displayName: Native
-      variables:
-        nativeLinuxJobs: $[ convertToJson(stageDependencies.native_linux) ]
-        nativeWasmJobs: $[ convertToJson(stageDependencies.native_wasm) ]
       dependsOn:
         - native_windows
         - native_macos
@@ -458,9 +455,9 @@ stages:
               - name: native_tvos_macos
             matrixArtifacts:
               - name: native_linux
-                jobs: $(nativeLinuxJobs)
+                jobs: $[ convertToJson(stageDependencies.native_linux) ]
               - name: native_wasm
-                jobs: $(nativeWasmJobs)
+                jobs: $[ convertToJson(stageDependencies.native_wasm) ]
         - template: /scripts/azure-templates-merger.yml@self # Merge Native WASM Artifacts
           parameters:
             name: native_wasm
@@ -470,7 +467,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentHost }}
             matrixArtifacts:
               - name: native_wasm
-                jobs: $(nativeWasmJobs)
+                jobs: $[ convertToJson(stageDependencies.native_wasm) ]
         - template: /scripts/azure-templates-merger.yml@self # Merge Native MSVC Artifacts
           parameters:
             name: native_msvc
