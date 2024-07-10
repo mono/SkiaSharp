@@ -29,7 +29,7 @@ jobs:
               .\scripts\download-artifact.ps1 `
                 -ArtifactsJson $json `
                 -BuildId "$(Build.BuildId)" `
-                -OutputDirectory "$(Build.SourcesDirectory)/output" `
+                -OutputDirectory "$(Build.SourcesDirectory)/output"
             env:
               AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
             displayName: Download the pre-built ${{ artifact.name }} artifacts
