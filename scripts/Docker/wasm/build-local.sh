@@ -10,9 +10,9 @@ if [ "$1" ]; then
     EMSCRIPTEN_VERSION=$1
 fi
 
-(cd $DIR && docker build --tag skiasharp-wasm $VERSION_ARGS .)
+(cd $DIR && docker build --tag skiasharp-wasm:$EMSCRIPTEN_VERSION $VERSION_ARGS .)
 (cd $DIR/../../../ && \
-    docker run --rm --name skiasharp-wasm --volume $(pwd):/work skiasharp-wasm /bin/bash -c "\
+    docker run --rm --name skiasharp-wasm-$EMSCRIPTEN_VERSION --volume $(pwd):/work skiasharp-wasm:$EMSCRIPTEN_VERSION /bin/bash -c "\
         dotnet tool restore ; \
         dotnet cake --target=externals-wasm --emscriptenVersion=$EMSCRIPTEN_VERSION")
 

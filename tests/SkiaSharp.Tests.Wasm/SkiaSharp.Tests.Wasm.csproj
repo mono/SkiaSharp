@@ -1,25 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>$(TFMCurrent)</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Tests</AssemblyName>
-    <WasmShellILLinkerEnabled>true</WasmShellILLinkerEnabled>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
   </PropertyGroup>
 
   <ItemGroup>
-    <WasmShellExtraEmccFlags Include="-s ASSERTIONS=1" />
-    <Content Include="..\..\output\native\wasm\libSkiaSharp.a\3.1.34\st\libSkiaSharp.*" Visible="false" />
-    <Content Include="..\..\output\native\wasm\libHarfBuzzSharp.a\3.1.34\st\libHarfBuzzSharp.*" Visible="false" />
-    <LinkerDescriptor Include="LinkerConfig.xml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Uno.Wasm.Bootstrap" Version="8.0.17" />
-    <PackageReference Include="Uno.Wasm.Bootstrap.DevServer" Version="8.0.17" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.extensibility.core" Version="2.4.2" />
     <PackageReference Include="xunit.runner.utility" Version="2.4.2" />
@@ -33,5 +25,8 @@
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
+
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+  <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
 
 </Project>

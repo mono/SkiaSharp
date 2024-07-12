@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0
+FROM mcr.microsoft.com/dotnet/sdk:8.0
 
 # Arguments:
 #   EMSCRIPTEN_VERSION   - the version of the emscripten SDK                [ 3.1.34 | * ]
@@ -7,10 +7,10 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0
 ARG EMSCRIPTEN_VERSION=3.1.34
 
 RUN apt-get update \
-    && apt-get install -y apt-transport-https curl wget python python3 git make xz-utils ninja-build \
+    && apt-get install -y apt-transport-https curl wget python3 git make xz-utils ninja-build lbzip2 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone --branch ${EMSCRIPTEN_VERSION} https://github.com/emscripten-core/emsdk ~/emsdk && \
+RUN git clone https://github.com/emscripten-core/emsdk ~/emsdk && \
     cd ~/emsdk && \
     ./emsdk install ${EMSCRIPTEN_VERSION} && \
     ./emsdk activate ${EMSCRIPTEN_VERSION}
