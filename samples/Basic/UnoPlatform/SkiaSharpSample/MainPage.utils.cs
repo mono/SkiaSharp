@@ -9,6 +9,8 @@ public partial class MainPage
 {
 	public void InitializeVersionsContextMenu()
 	{
+		Console.WriteLine($"libSkiaSharp loaded: {SkiaSharpVersion.Native}");
+
 		if (Content is not UIElement rootControl)
 			return;
 
