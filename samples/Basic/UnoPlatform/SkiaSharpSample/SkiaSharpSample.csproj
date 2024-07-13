@@ -1,0 +1,53 @@
+﻿<Project Sdk="Uno.Sdk/5.2.175">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst;net8.0-windows10.0.19041;net8.0-desktop;net8.0-browserwasm</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UnoSingleProject>true</UnoSingleProject>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ApplicationId>com.companyname.skiasharpsample</ApplicationId>
+    <ApplicationTitle>SkiaSharp</ApplicationTitle>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="2.88.7" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.WinUI" Version="2.88.7" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.7" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="2.88.7" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.Desktop.Common" Version="2.88.7" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="2.88.7" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="2.88.7" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp" Version="7.3.0.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Android" Version="7.3.0.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-android'))" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.iOS" Version="7.3.0.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-ios'))" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.MacCatalyst" Version="7.3.0.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-maccatalyst'))" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="7.3.0.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.macOS" Version="7.3.0.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Win32" Version="7.3.0.1" ExcludeAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" Condition="$(TargetFramework.Contains('-windows'))" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI\SkiaSharp.Views.Uno.WinUI.csproj" Condition="!$(TargetFramework.Contains('-windows')) and !$(TargetFramework.Contains('-desktop')) and !$(TargetFramework.Contains('-browserwasm'))" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Skia\SkiaSharp.Views.Uno.WinUI.Skia.csproj" Condition="$(TargetFramework.Contains('-desktop'))" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Wasm\SkiaSharp.Views.Uno.WinUI.Wasm.csproj" Condition="$(TargetFramework.Contains('-browserwasm'))" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="MainPage.utils.cs" DependentUpon="MainPage.xaml" />
+  </ItemGroup>
+
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.WinUI.targets" Condition="$(TargetFramework.Contains('-windows'))" />
+
+</Project>
