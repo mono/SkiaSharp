@@ -81,6 +81,14 @@ IProcess RunAndReturnProcess(FilePath process, ProcessSettings settings)
     return proc;
 }
 
+IProcess RunAndReturnProcess(FilePath process, string arguments)
+{
+    var proc = RunAndReturnProcess(process, new ProcessSettings {
+        Arguments = arguments,
+    });
+    return proc;
+}
+
 string GetVersion(string lib, string type = "nuget")
 {
     return GetRegexValue($@"^{lib}\s*{type}\s*(.*)$", ROOT_PATH.CombineWithFilePath("scripts/VERSIONS.txt"));

@@ -395,10 +395,8 @@ Task ("tests-wasm")
 
     IProcess serverProc = null;
     try {
-        serverProc = RunAndReturnProcess (PYTHON_EXE, new ProcessSettings {
-            Arguments = MakeAbsolute (File ("./tests/SkiaSharp.Tests.Wasm/server.py")).FullPath,
-            WorkingDirectory = "./tests/SkiaSharp.Tests.Wasm/bin/Release/net8.0/dist",
-        });
+        var wasmProj = MakeAbsolute (File ("./tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj")).FullPath;
+        serverProc = RunAndReturnProcess ("dotnet", $"run --project {wasmProj} --no-build -c {CONFIGURATION}");
         DotNetRun ("./utils/WasmTestRunner/WasmTestRunner.csproj",
             $"--output=\"./output/logs/testlogs/SkiaSharp.Tests.Wasm/{DATE_TIME_STR}/\" " +
             (string.IsNullOrEmpty (CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +
