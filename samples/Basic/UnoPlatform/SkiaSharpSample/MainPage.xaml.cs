@@ -8,10 +8,20 @@ public sealed partial class MainPage : Page
 	public MainPage()
 	{
 		InitializeComponent();
+
+		// TODO: workaround for this not loading from XAML
+		if (Content is not SKXamlCanvas skiaCanvas)
+		{
+			skiaCanvas = new SKXamlCanvas();
+			skiaCanvas.PaintSurface += OnPaintSurface;
+			skiaCanvas.IgnorePixelScaling = true;
+			Content = skiaCanvas;
+		}
+
 		InitializeVersionsContextMenu();
 	}
 
-	private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
 		// the the canvas and properties
 		var canvas = e.Surface.Canvas;
