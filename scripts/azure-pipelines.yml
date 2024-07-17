@@ -49,6 +49,10 @@ parameters:
     displayName: 'Run post-build compliance tasks (such as API Scan and PoliCheck)'
     type: boolean
     default: false
+  - name: forceRealSigning
+    displayName: 'Ignore all logic and force Real signing on binaries'
+    type: boolean
+    default: false
 
 variables:
   - template: /scripts/azure-pipelines-variables.yml@self
@@ -78,6 +82,7 @@ extends:
           buildExternals: ${{ parameters.buildExternals }}
           ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
             enableSigning: true
+            forceRealSigning: ${{ parameters.forceRealSigning }}
             ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
               sdl:
                 apiscan:
