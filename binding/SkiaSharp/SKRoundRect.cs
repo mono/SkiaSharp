@@ -122,12 +122,8 @@ namespace SkiaSharp
 		{
 			if (radii == null)
 				throw new ArgumentNullException (nameof (radii));
-			if (radii.Length != 4)
-				throw new ArgumentException ("Radii must have a length of 4.", nameof (radii));
 
-			fixed (SKPoint* r = radii) {
-				SkiaApi.sk_rrect_set_rect_radii (Handle, &rect, r);
-			}
+			SetRectRadii(rect, radii.AsSpan());
 		}
 
 		public void SetRectRadii (SKRect rect, Span<SKPoint> radii)
