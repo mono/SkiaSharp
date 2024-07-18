@@ -130,6 +130,16 @@ namespace SkiaSharp
 			}
 		}
 
+		public void SetRectRadii (SKRect rect, Span<SKPoint> radii)
+		{
+			if (radii.Length != 4)
+				throw new ArgumentException ("Radii must have a length of 4.", nameof (radii));
+
+			fixed (SKPoint* r = radii) {
+				SkiaApi.sk_rrect_set_rect_radii (Handle, &rect, r);
+			}
+		}
+
 		public bool Contains (SKRect rect)
 		{
 			return SkiaApi.sk_rrect_contains (Handle, &rect);
