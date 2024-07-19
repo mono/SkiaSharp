@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 #region Namespaces
 
@@ -7733,6 +7734,236 @@ namespace HarfBuzzSharp {
 		// HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR = 29
 		SpaceSeparator = 29,
 	}
+}
+
+#endregion
+
+#region DelegateProxies
+
+namespace HarfBuzzSharp {
+internal static unsafe partial class DelegateProxies { 
+	/// Proxy for hb_destroy_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void> DestroyProxy = &DestroyProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly DestroyProxyDelegate DestroyProxy = DestroyProxyImplementation;
+	[MonoPInvokeCallback (typeof (DestroyProxyDelegate))]
+#endif
+	private static partial void DestroyProxyImplementation(void* user_data);
+
+	/// Proxy for hb_destroy_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void> DestroyProxyForMulti = &DestroyProxyImplementationForMulti;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly DestroyProxyDelegate DestroyProxyForMulti = DestroyProxyImplementationForMulti;
+	[MonoPInvokeCallback (typeof (DestroyProxyDelegate))]
+#endif
+	private static partial void DestroyProxyImplementationForMulti(void* user_data);
+
+	/// Proxy for hb_font_get_font_extents_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, FontExtents*, void*, bool> FontGetFontExtentsProxy = &FontGetFontExtentsProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetFontExtentsProxyDelegate FontGetFontExtentsProxy = FontGetFontExtentsProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetFontExtentsProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool FontGetFontExtentsProxyImplementation(hb_font_t font,void* font_data,FontExtents* extents,void* user_data);
+
+	/// Proxy for hb_font_get_glyph_advance_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, void*, Int32> FontGetGlyphAdvanceProxy = &FontGetGlyphAdvanceProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetGlyphAdvanceProxyDelegate FontGetGlyphAdvanceProxy = FontGetGlyphAdvanceProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetGlyphAdvanceProxyDelegate))]
+#endif
+	private static partial Int32 FontGetGlyphAdvanceProxyImplementation(hb_font_t font,void* font_data,UInt32 glyph,void* user_data);
+
+	/// Proxy for hb_font_get_glyph_advances_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, UInt32*, UInt32, Int32*, UInt32, void*, void> FontGetGlyphAdvancesProxy = &FontGetGlyphAdvancesProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetGlyphAdvancesProxyDelegate FontGetGlyphAdvancesProxy = FontGetGlyphAdvancesProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetGlyphAdvancesProxyDelegate))]
+#endif
+	private static partial void FontGetGlyphAdvancesProxyImplementation(hb_font_t font,void* font_data,UInt32 count,UInt32* first_glyph,UInt32 glyph_stride,Int32* first_advance,UInt32 advance_stride,void* user_data);
+
+	/// Proxy for hb_font_get_glyph_contour_point_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, UInt32, Int32*, Int32*, void*, bool> FontGetGlyphContourPointProxy = &FontGetGlyphContourPointProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetGlyphContourPointProxyDelegate FontGetGlyphContourPointProxy = FontGetGlyphContourPointProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetGlyphContourPointProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool FontGetGlyphContourPointProxyImplementation(hb_font_t font,void* font_data,UInt32 glyph,UInt32 point_index,Int32* x,Int32* y,void* user_data);
+
+	/// Proxy for hb_font_get_glyph_extents_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, GlyphExtents*, void*, bool> FontGetGlyphExtentsProxy = &FontGetGlyphExtentsProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetGlyphExtentsProxyDelegate FontGetGlyphExtentsProxy = FontGetGlyphExtentsProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetGlyphExtentsProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool FontGetGlyphExtentsProxyImplementation(hb_font_t font,void* font_data,UInt32 glyph,GlyphExtents* extents,void* user_data);
+
+	/// Proxy for hb_font_get_glyph_from_name_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, /* char */ void*, Int32, UInt32*, void*, bool> FontGetGlyphFromNameProxy = &FontGetGlyphFromNameProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetGlyphFromNameProxyDelegate FontGetGlyphFromNameProxy = FontGetGlyphFromNameProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetGlyphFromNameProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool FontGetGlyphFromNameProxyImplementation(hb_font_t font,void* font_data,/* char */ void* name,Int32 len,UInt32* glyph,void* user_data);
+
+	/// Proxy for hb_font_get_glyph_kerning_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, UInt32, void*, Int32> FontGetGlyphKerningProxy = &FontGetGlyphKerningProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetGlyphKerningProxyDelegate FontGetGlyphKerningProxy = FontGetGlyphKerningProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetGlyphKerningProxyDelegate))]
+#endif
+	private static partial Int32 FontGetGlyphKerningProxyImplementation(hb_font_t font,void* font_data,UInt32 first_glyph,UInt32 second_glyph,void* user_data);
+
+	/// Proxy for hb_font_get_glyph_name_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, /* char */ void*, UInt32, void*, bool> FontGetGlyphNameProxy = &FontGetGlyphNameProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetGlyphNameProxyDelegate FontGetGlyphNameProxy = FontGetGlyphNameProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetGlyphNameProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool FontGetGlyphNameProxyImplementation(hb_font_t font,void* font_data,UInt32 glyph,/* char */ void* name,UInt32 size,void* user_data);
+
+	/// Proxy for hb_font_get_glyph_origin_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, Int32*, Int32*, void*, bool> FontGetGlyphOriginProxy = &FontGetGlyphOriginProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetGlyphOriginProxyDelegate FontGetGlyphOriginProxy = FontGetGlyphOriginProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetGlyphOriginProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool FontGetGlyphOriginProxyImplementation(hb_font_t font,void* font_data,UInt32 glyph,Int32* x,Int32* y,void* user_data);
+
+	/// Proxy for hb_font_get_nominal_glyph_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, UInt32*, void*, bool> FontGetNominalGlyphProxy = &FontGetNominalGlyphProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetNominalGlyphProxyDelegate FontGetNominalGlyphProxy = FontGetNominalGlyphProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetNominalGlyphProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool FontGetNominalGlyphProxyImplementation(hb_font_t font,void* font_data,UInt32 unicode,UInt32* glyph,void* user_data);
+
+	/// Proxy for hb_font_get_nominal_glyphs_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, UInt32*, UInt32, UInt32*, UInt32, void*, UInt32> FontGetNominalGlyphsProxy = &FontGetNominalGlyphsProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetNominalGlyphsProxyDelegate FontGetNominalGlyphsProxy = FontGetNominalGlyphsProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetNominalGlyphsProxyDelegate))]
+#endif
+	private static partial UInt32 FontGetNominalGlyphsProxyImplementation(hb_font_t font,void* font_data,UInt32 count,UInt32* first_unicode,UInt32 unicode_stride,UInt32* first_glyph,UInt32 glyph_stride,void* user_data);
+
+	/// Proxy for hb_font_get_variation_glyph_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_font_t, void*, UInt32, UInt32, UInt32*, void*, bool> FontGetVariationGlyphProxy = &FontGetVariationGlyphProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly FontGetVariationGlyphProxyDelegate FontGetVariationGlyphProxy = FontGetVariationGlyphProxyImplementation;
+	[MonoPInvokeCallback (typeof (FontGetVariationGlyphProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool FontGetVariationGlyphProxyImplementation(hb_font_t font,void* font_data,UInt32 unicode,UInt32 variation_selector,UInt32* glyph,void* user_data);
+
+// TODO: typedef const hb_language_impl_t* hb_language_t
+	/// Proxy for hb_reference_table_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_face_t, UInt32, void*, hb_blob_t> ReferenceTableProxy = &ReferenceTableProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly ReferenceTableProxyDelegate ReferenceTableProxy = ReferenceTableProxyImplementation;
+	[MonoPInvokeCallback (typeof (ReferenceTableProxyDelegate))]
+#endif
+	private static partial hb_blob_t ReferenceTableProxyImplementation(hb_face_t face,UInt32 tag,void* user_data);
+
+	/// Proxy for hb_unicode_combining_class_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_unicode_funcs_t, UInt32, void*, int> UnicodeCombiningClassProxy = &UnicodeCombiningClassProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly UnicodeCombiningClassProxyDelegate UnicodeCombiningClassProxy = UnicodeCombiningClassProxyImplementation;
+	[MonoPInvokeCallback (typeof (UnicodeCombiningClassProxyDelegate))]
+#endif
+	private static partial int UnicodeCombiningClassProxyImplementation(hb_unicode_funcs_t ufuncs,UInt32 unicode,void* user_data);
+
+	/// Proxy for hb_unicode_compose_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_unicode_funcs_t, UInt32, UInt32, UInt32*, void*, bool> UnicodeComposeProxy = &UnicodeComposeProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly UnicodeComposeProxyDelegate UnicodeComposeProxy = UnicodeComposeProxyImplementation;
+	[MonoPInvokeCallback (typeof (UnicodeComposeProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool UnicodeComposeProxyImplementation(hb_unicode_funcs_t ufuncs,UInt32 a,UInt32 b,UInt32* ab,void* user_data);
+
+	/// Proxy for hb_unicode_decompose_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_unicode_funcs_t, UInt32, UInt32*, UInt32*, void*, bool> UnicodeDecomposeProxy = &UnicodeDecomposeProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly UnicodeDecomposeProxyDelegate UnicodeDecomposeProxy = UnicodeDecomposeProxyImplementation;
+	[MonoPInvokeCallback (typeof (UnicodeDecomposeProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool UnicodeDecomposeProxyImplementation(hb_unicode_funcs_t ufuncs,UInt32 ab,UInt32* a,UInt32* b,void* user_data);
+
+	/// Proxy for hb_unicode_general_category_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_unicode_funcs_t, UInt32, void*, int> UnicodeGeneralCategoryProxy = &UnicodeGeneralCategoryProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly UnicodeGeneralCategoryProxyDelegate UnicodeGeneralCategoryProxy = UnicodeGeneralCategoryProxyImplementation;
+	[MonoPInvokeCallback (typeof (UnicodeGeneralCategoryProxyDelegate))]
+#endif
+	private static partial int UnicodeGeneralCategoryProxyImplementation(hb_unicode_funcs_t ufuncs,UInt32 unicode,void* user_data);
+
+	/// Proxy for hb_unicode_mirroring_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_unicode_funcs_t, UInt32, void*, UInt32> UnicodeMirroringProxy = &UnicodeMirroringProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly UnicodeMirroringProxyDelegate UnicodeMirroringProxy = UnicodeMirroringProxyImplementation;
+	[MonoPInvokeCallback (typeof (UnicodeMirroringProxyDelegate))]
+#endif
+	private static partial UInt32 UnicodeMirroringProxyImplementation(hb_unicode_funcs_t ufuncs,UInt32 unicode,void* user_data);
+
+	/// Proxy for hb_unicode_script_func_t native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <hb_unicode_funcs_t, UInt32, void*, UInt32> UnicodeScriptProxy = &UnicodeScriptProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly UnicodeScriptProxyDelegate UnicodeScriptProxy = UnicodeScriptProxyImplementation;
+	[MonoPInvokeCallback (typeof (UnicodeScriptProxyDelegate))]
+#endif
+	private static partial UInt32 UnicodeScriptProxyImplementation(hb_unicode_funcs_t ufuncs,UInt32 unicode,void* user_data);
+
+}
 }
 
 #endregion

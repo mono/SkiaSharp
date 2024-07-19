@@ -69,7 +69,7 @@ namespace SkiaSharp
 				? new SKSurfaceReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
 			DelegateProxies.Create (del, out _, out var ctx);
-			var proxy = del != null ? DelegateProxies.SKSurfaceReleaseDelegateProxy : null;
+			var proxy = del != null ? DelegateProxies.SKSurfaceRasterReleaseProxy : null;
 			return GetObject (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
 		}
 

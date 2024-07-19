@@ -82,7 +82,7 @@ namespace SkiaSharp
 				fDeviceFeatures = VkPhysicalDeviceFeatures,
 				fDeviceFeatures2 = VkPhysicalDeviceFeatures2,
 				fGetProcUserData = getProcContext,
-				fGetProc = getProcContext is not null ? DelegateProxies.GRVkGetProcDelegateProxy : null,
+				fGetProc = getProcContext is not null ? DelegateProxies.GRVkGetProcProxy : null,
 				fProtectedContext = ProtectedContext ? (byte)1 : (byte)0
 			};
 	}

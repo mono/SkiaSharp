@@ -1,4 +1,5 @@
 ﻿#nullable disable
+// ReSharper disable PartialMethodParameterNameMismatch
 
 using System;
 using System.Runtime.CompilerServices;
@@ -20,72 +21,31 @@ namespace HarfBuzzSharp
 
 	internal static unsafe partial class DelegateProxies
 	{
-#if USE_LIBRARY_IMPORT
-		public static readonly delegate* unmanaged[Cdecl] <nint, uint, void*, int> CombiningClassProxy = &CombiningClassProxyImplementation;
-		public static readonly delegate* unmanaged[Cdecl] <nint, uint, void*, int> GeneralCategoryProxy = &GeneralCategoryProxyImplementation;
-		public static readonly delegate* unmanaged[Cdecl] <nint, uint, void*, uint> MirroringProxy = &MirroringProxyImplementation;
-		public static readonly delegate* unmanaged[Cdecl] <nint, uint, void*, uint> ScriptProxy = &ScriptProxyImplementation;
-		public static readonly delegate* unmanaged[Cdecl] <nint, uint, uint, uint*, void*, bool> ComposeProxy = &ComposeProxyImplementation;
-		public static readonly delegate* unmanaged[Cdecl] <nint, uint, uint*, uint*, void*, bool> DecomposeProxy = &DecomposeProxyImplementation;
-#else
-		public static readonly UnicodeCombiningClassProxyDelegate CombiningClassProxy = CombiningClassProxyImplementation;
-		public static readonly UnicodeGeneralCategoryProxyDelegate GeneralCategoryProxy = GeneralCategoryProxyImplementation;
-		public static readonly UnicodeMirroringProxyDelegate MirroringProxy = MirroringProxyImplementation;
-		public static readonly UnicodeScriptProxyDelegate ScriptProxy = ScriptProxyImplementation;
-		public static readonly UnicodeComposeProxyDelegate ComposeProxy = ComposeProxyImplementation;
-		public static readonly UnicodeDecomposeProxyDelegate DecomposeProxy = DecomposeProxyImplementation;
-#endif
-
-#if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
-#else
-		[MonoPInvokeCallback (typeof (UnicodeCombiningClassProxyDelegate))]
-#endif
-		private static int CombiningClassProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
+		private static partial int UnicodeCombiningClassProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
 		{
 			GetMultiUserData<CombiningClassDelegate, UnicodeFunctions> ((IntPtr)context, out var del, out var functions, out _);
 			return (int)del.Invoke (functions, unicode);
 		}
 
-#if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
-#else
-		[MonoPInvokeCallback (typeof (UnicodeGeneralCategoryProxyDelegate))]
-#endif
-		private static int GeneralCategoryProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
+		private static partial int UnicodeGeneralCategoryProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
 		{
 			GetMultiUserData<GeneralCategoryDelegate, UnicodeFunctions> ((IntPtr)context, out var del, out var functions, out _);
 			return (int)del.Invoke (functions, unicode);
 		}
 
-#if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
-#else
-		[MonoPInvokeCallback (typeof (UnicodeMirroringProxyDelegate))]
-#endif
-		private static uint MirroringProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
+		private static partial uint UnicodeMirroringProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
 		{
 			GetMultiUserData<MirroringDelegate, UnicodeFunctions> ((IntPtr)context, out var del, out var functions, out _);
 			return del.Invoke (functions, unicode);
 		}
 
-#if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
-#else
-		[MonoPInvokeCallback (typeof (UnicodeScriptProxyDelegate))]
-#endif
-		private static uint ScriptProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
+		private static partial uint UnicodeScriptProxyImplementation (IntPtr ufuncs, uint unicode, void* context)
 		{
 			GetMultiUserData<ScriptDelegate, UnicodeFunctions> ((IntPtr)context, out var del, out var functions, out _);
 			return del.Invoke (functions, unicode);
 		}
 
-#if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
-#else
-		[MonoPInvokeCallback (typeof (UnicodeComposeProxyDelegate))]
-#endif
-		private static bool ComposeProxyImplementation (IntPtr ufuncs, uint a, uint b, uint* ab, void* context)
+		private static partial bool UnicodeComposeProxyImplementation (IntPtr ufuncs, uint a, uint b, uint* ab, void* context)
 		{
 			GetMultiUserData<ComposeDelegate, UnicodeFunctions> ((IntPtr)context, out var del, out var functions, out _);
 			var result = del.Invoke (functions, a, b, out var abManaged);
@@ -94,12 +54,7 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-#if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
-#else
-		[MonoPInvokeCallback (typeof (UnicodeDecomposeProxyDelegate))]
-#endif
-		private static bool DecomposeProxyImplementation (IntPtr ufuncs, uint ab, uint* a, uint* b, void* context)
+		private static partial bool UnicodeDecomposeProxyImplementation (IntPtr ufuncs, uint ab, uint* a, uint* b, void* context)
 		{
 			GetMultiUserData<DecomposeDelegate, UnicodeFunctions> ((IntPtr)context, out var del, out var functions, out _);
 			var result = del.Invoke (functions, ab, out var aManaged, out var bManaged);

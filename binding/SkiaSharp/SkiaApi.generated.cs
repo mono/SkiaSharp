@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 #region Namespaces
 
@@ -20720,6 +20721,352 @@ namespace SkiaSharp {
 		// LOSSLESS_SK_WEBPENCODER_COMPTRESSION = 1
 		Lossless = 1,
 	}
+}
+
+#endregion
+
+#region DelegateProxies
+
+namespace SkiaSharp {
+internal static unsafe partial class DelegateProxies { 
+	/// Proxy for gr_gl_get_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, /* char */ void*, IntPtr> GRGlGetProcProxy = &GRGlGetProcProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly GRGlGetProcProxyDelegate GRGlGetProcProxy = GRGlGetProcProxyImplementation;
+	[MonoPInvokeCallback (typeof (GRGlGetProcProxyDelegate))]
+#endif
+	private static partial IntPtr GRGlGetProcProxyImplementation(void* ctx,/* char */ void* name);
+
+	/// Proxy for gr_vk_get_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, /* char */ void*, vk_instance_t, vk_device_t, IntPtr> GRVkGetProcProxy = &GRVkGetProcProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly GRVkGetProcProxyDelegate GRVkGetProcProxy = GRVkGetProcProxyImplementation;
+	[MonoPInvokeCallback (typeof (GRVkGetProcProxyDelegate))]
+#endif
+	private static partial IntPtr GRVkGetProcProxyImplementation(void* ctx,/* char */ void* name,vk_instance_t instance,vk_device_t device);
+
+	/// Proxy for sk_bitmap_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void*, void> SKBitmapReleaseProxy = &SKBitmapReleaseProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKBitmapReleaseProxyDelegate SKBitmapReleaseProxy = SKBitmapReleaseProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKBitmapReleaseProxyDelegate))]
+#endif
+	private static partial void SKBitmapReleaseProxyImplementation(void* addr,void* context);
+
+	/// Proxy for sk_data_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void*, void> SKDataReleaseProxy = &SKDataReleaseProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKDataReleaseProxyDelegate SKDataReleaseProxy = SKDataReleaseProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKDataReleaseProxyDelegate))]
+#endif
+	private static partial void SKDataReleaseProxyImplementation(void* ptr,void* context);
+
+	/// Proxy for sk_glyph_path_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_path_t, SKMatrix*, void*, void> SKGlyphPathProxy = &SKGlyphPathProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKGlyphPathProxyDelegate SKGlyphPathProxy = SKGlyphPathProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]
+#endif
+	private static partial void SKGlyphPathProxyImplementation(sk_path_t pathOrNull,SKMatrix* matrix,void* context);
+
+	/// Proxy for sk_image_raster_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void*, void> SKImageRasterReleaseProxy = &SKImageRasterReleaseProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKImageRasterReleaseProxyDelegate SKImageRasterReleaseProxy = SKImageRasterReleaseProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKImageRasterReleaseProxyDelegate))]
+#endif
+	private static partial void SKImageRasterReleaseProxyImplementation(void* addr,void* context);
+
+	/// Proxy for sk_image_raster_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void*, void> SKImageRasterReleaseProxyForCoTaskMem = &SKImageRasterReleaseProxyImplementationForCoTaskMem;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKImageRasterReleaseProxyDelegate SKImageRasterReleaseProxyForCoTaskMem = SKImageRasterReleaseProxyImplementationForCoTaskMem;
+	[MonoPInvokeCallback (typeof (SKImageRasterReleaseProxyDelegate))]
+#endif
+	private static partial void SKImageRasterReleaseProxyImplementationForCoTaskMem(void* addr,void* context);
+
+	/// Proxy for sk_image_texture_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void> SKImageTextureReleaseProxy = &SKImageTextureReleaseProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKImageTextureReleaseProxyDelegate SKImageTextureReleaseProxy = SKImageTextureReleaseProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKImageTextureReleaseProxyDelegate))]
+#endif
+	private static partial void SKImageTextureReleaseProxyImplementation(void* context);
+
+	/// Proxy for sk_manageddrawable_approximateBytesUsed_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, /* size_t */ IntPtr> SKManagedDrawableApproximateBytesUsedProxy = &SKManagedDrawableApproximateBytesUsedProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedDrawableApproximateBytesUsedProxyDelegate SKManagedDrawableApproximateBytesUsedProxy = SKManagedDrawableApproximateBytesUsedProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedDrawableApproximateBytesUsedProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedDrawableApproximateBytesUsedProxyImplementation(sk_manageddrawable_t d,void* context);
+
+	/// Proxy for sk_manageddrawable_destroy_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, void> SKManagedDrawableDestroyProxy = &SKManagedDrawableDestroyProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedDrawableDestroyProxyDelegate SKManagedDrawableDestroyProxy = SKManagedDrawableDestroyProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedDrawableDestroyProxyDelegate))]
+#endif
+	private static partial void SKManagedDrawableDestroyProxyImplementation(sk_manageddrawable_t d,void* context);
+
+	/// Proxy for sk_manageddrawable_draw_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, sk_canvas_t, void> SKManagedDrawableDrawProxy = &SKManagedDrawableDrawProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedDrawableDrawProxyDelegate SKManagedDrawableDrawProxy = SKManagedDrawableDrawProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedDrawableDrawProxyDelegate))]
+#endif
+	private static partial void SKManagedDrawableDrawProxyImplementation(sk_manageddrawable_t d,void* context,sk_canvas_t ccanvas);
+
+	/// Proxy for sk_manageddrawable_getBounds_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, SKRect*, void> SKManagedDrawableGetBoundsProxy = &SKManagedDrawableGetBoundsProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedDrawableGetBoundsProxyDelegate SKManagedDrawableGetBoundsProxy = SKManagedDrawableGetBoundsProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedDrawableGetBoundsProxyDelegate))]
+#endif
+	private static partial void SKManagedDrawableGetBoundsProxyImplementation(sk_manageddrawable_t d,void* context,SKRect* rect);
+
+	/// Proxy for sk_manageddrawable_makePictureSnapshot_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, sk_picture_t> SKManagedDrawableMakePictureSnapshotProxy = &SKManagedDrawableMakePictureSnapshotProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedDrawableMakePictureSnapshotProxyDelegate SKManagedDrawableMakePictureSnapshotProxy = SKManagedDrawableMakePictureSnapshotProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedDrawableMakePictureSnapshotProxyDelegate))]
+#endif
+	private static partial sk_picture_t SKManagedDrawableMakePictureSnapshotProxyImplementation(sk_manageddrawable_t d,void* context);
+
+	/// Proxy for sk_managedstream_destroy_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, void> SKManagedStreamDestroyProxy = &SKManagedStreamDestroyProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamDestroyProxyDelegate SKManagedStreamDestroyProxy = SKManagedStreamDestroyProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamDestroyProxyDelegate))]
+#endif
+	private static partial void SKManagedStreamDestroyProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_duplicate_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, sk_stream_managedstream_t> SKManagedStreamDuplicateProxy = &SKManagedStreamDuplicateProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamDuplicateProxyDelegate SKManagedStreamDuplicateProxy = SKManagedStreamDuplicateProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamDuplicateProxyDelegate))]
+#endif
+	private static partial sk_stream_managedstream_t SKManagedStreamDuplicateProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_fork_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, sk_stream_managedstream_t> SKManagedStreamForkProxy = &SKManagedStreamForkProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamForkProxyDelegate SKManagedStreamForkProxy = SKManagedStreamForkProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamForkProxyDelegate))]
+#endif
+	private static partial sk_stream_managedstream_t SKManagedStreamForkProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_getLength_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr> SKManagedStreamGetLengthProxy = &SKManagedStreamGetLengthProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamGetLengthProxyDelegate SKManagedStreamGetLengthProxy = SKManagedStreamGetLengthProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamGetLengthProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedStreamGetLengthProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_getPosition_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr> SKManagedStreamGetPositionProxy = &SKManagedStreamGetPositionProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamGetPositionProxyDelegate SKManagedStreamGetPositionProxy = SKManagedStreamGetPositionProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamGetPositionProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedStreamGetPositionProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_hasLength_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> SKManagedStreamHasLengthProxy = &SKManagedStreamHasLengthProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamHasLengthProxyDelegate SKManagedStreamHasLengthProxy = SKManagedStreamHasLengthProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamHasLengthProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamHasLengthProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_hasPosition_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> SKManagedStreamHasPositionProxy = &SKManagedStreamHasPositionProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamHasPositionProxyDelegate SKManagedStreamHasPositionProxy = SKManagedStreamHasPositionProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamHasPositionProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamHasPositionProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_isAtEnd_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> SKManagedStreamIsAtEndProxy = &SKManagedStreamIsAtEndProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamIsAtEndProxyDelegate SKManagedStreamIsAtEndProxy = SKManagedStreamIsAtEndProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamIsAtEndProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamIsAtEndProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_move_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, Int32, bool> SKManagedStreamMoveProxy = &SKManagedStreamMoveProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamMoveProxyDelegate SKManagedStreamMoveProxy = SKManagedStreamMoveProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamMoveProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamMoveProxyImplementation(sk_stream_managedstream_t s,void* context,Int32 offset);
+
+	/// Proxy for sk_managedstream_peek_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, void*, /* size_t */ IntPtr, /* size_t */ IntPtr> SKManagedStreamPeekProxy = &SKManagedStreamPeekProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamPeekProxyDelegate SKManagedStreamPeekProxy = SKManagedStreamPeekProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamPeekProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedStreamPeekProxyImplementation(sk_stream_managedstream_t s,void* context,void* buffer,/* size_t */ IntPtr size);
+
+	/// Proxy for sk_managedstream_read_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, void*, /* size_t */ IntPtr, /* size_t */ IntPtr> SKManagedStreamReadProxy = &SKManagedStreamReadProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamReadProxyDelegate SKManagedStreamReadProxy = SKManagedStreamReadProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamReadProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedStreamReadProxyImplementation(sk_stream_managedstream_t s,void* context,void* buffer,/* size_t */ IntPtr size);
+
+	/// Proxy for sk_managedstream_rewind_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> SKManagedStreamRewindProxy = &SKManagedStreamRewindProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamRewindProxyDelegate SKManagedStreamRewindProxy = SKManagedStreamRewindProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamRewindProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamRewindProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_seek_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr, bool> SKManagedStreamSeekProxy = &SKManagedStreamSeekProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamSeekProxyDelegate SKManagedStreamSeekProxy = SKManagedStreamSeekProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamSeekProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamSeekProxyImplementation(sk_stream_managedstream_t s,void* context,/* size_t */ IntPtr position);
+
+	/// Proxy for sk_managedtraceMemoryDump_dumpNumericValue_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_managedtracememorydump_t, void*, /* char */ void*, /* char */ void*, /* char */ void*, UInt64, void> SKManagedTraceMemoryDumpDumpNumericValueProxy = &SKManagedTraceMemoryDumpDumpNumericValueProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate SKManagedTraceMemoryDumpDumpNumericValueProxy = SKManagedTraceMemoryDumpDumpNumericValueProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate))]
+#endif
+	private static partial void SKManagedTraceMemoryDumpDumpNumericValueProxyImplementation(sk_managedtracememorydump_t d,void* context,/* char */ void* dumpName,/* char */ void* valueName,/* char */ void* units,UInt64 value);
+
+	/// Proxy for sk_managedtraceMemoryDump_dumpStringValue_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_managedtracememorydump_t, void*, /* char */ void*, /* char */ void*, /* char */ void*, void> SKManagedTraceMemoryDumpDumpStringValueProxy = &SKManagedTraceMemoryDumpDumpStringValueProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedTraceMemoryDumpDumpStringValueProxyDelegate SKManagedTraceMemoryDumpDumpStringValueProxy = SKManagedTraceMemoryDumpDumpStringValueProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpStringValueProxyDelegate))]
+#endif
+	private static partial void SKManagedTraceMemoryDumpDumpStringValueProxyImplementation(sk_managedtracememorydump_t d,void* context,/* char */ void* dumpName,/* char */ void* valueName,/* char */ void* value);
+
+	/// Proxy for sk_managedwstream_bytesWritten_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, /* size_t */ IntPtr> SKManagedWStreamBytesWrittenProxy = &SKManagedWStreamBytesWrittenProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedWStreamBytesWrittenProxyDelegate SKManagedWStreamBytesWrittenProxy = SKManagedWStreamBytesWrittenProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedWStreamBytesWrittenProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedWStreamBytesWrittenProxyImplementation(sk_wstream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedwstream_destroy_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void> SKManagedWStreamDestroyProxy = &SKManagedWStreamDestroyProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedWStreamDestroyProxyDelegate SKManagedWStreamDestroyProxy = SKManagedWStreamDestroyProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedWStreamDestroyProxyDelegate))]
+#endif
+	private static partial void SKManagedWStreamDestroyProxyImplementation(sk_wstream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedwstream_flush_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void> SKManagedWStreamFlushProxy = &SKManagedWStreamFlushProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedWStreamFlushProxyDelegate SKManagedWStreamFlushProxy = SKManagedWStreamFlushProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedWStreamFlushProxyDelegate))]
+#endif
+	private static partial void SKManagedWStreamFlushProxyImplementation(sk_wstream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedwstream_write_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void*, /* size_t */ IntPtr, bool> SKManagedWStreamWriteProxy = &SKManagedWStreamWriteProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedWStreamWriteProxyDelegate SKManagedWStreamWriteProxy = SKManagedWStreamWriteProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedWStreamWriteProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedWStreamWriteProxyImplementation(sk_wstream_managedstream_t s,void* context,void* buffer,/* size_t */ IntPtr size);
+
+	/// Proxy for sk_surface_raster_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void*, void> SKSurfaceRasterReleaseProxy = &SKSurfaceRasterReleaseProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKSurfaceRasterReleaseProxyDelegate SKSurfaceRasterReleaseProxy = SKSurfaceRasterReleaseProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKSurfaceRasterReleaseProxyDelegate))]
+#endif
+	private static partial void SKSurfaceRasterReleaseProxyImplementation(void* addr,void* context);
+
+}
 }
 
 #endregion

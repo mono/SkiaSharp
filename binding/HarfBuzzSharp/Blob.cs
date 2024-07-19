@@ -84,7 +84,7 @@ namespace HarfBuzzSharp
 		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseProc)
 		{
 			DelegateProxies.Create (releaseProc, out _, out var ctx);
-			var proxy = releaseProc != null ? DelegateProxies.ReleaseDelegateProxy : null;
+			var proxy = releaseProc != null ? DelegateProxies.DestroyProxy : null;
 			return HarfBuzzApi.hb_blob_create ((void*)data, (uint)length, mode, (void*)ctx, proxy);
 		}
 

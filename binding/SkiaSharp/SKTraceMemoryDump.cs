@@ -1,8 +1,6 @@
 ﻿#nullable disable
 
 using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -14,13 +12,8 @@ namespace SkiaSharp
 		static SKTraceMemoryDump ()
 		{
 			delegates = new SKManagedTraceMemoryDumpDelegates {
-#if USE_LIBRARY_IMPORT
-				fDumpNumericValue = &DumpNumericValueInternal,
-				fDumpStringValue = &DumpStringValueInternal,
-#else
-				fDumpNumericValue = DumpNumericValueInternal,
-				fDumpStringValue = DumpStringValueInternal,
-#endif
+				fDumpNumericValue = DelegateProxies.SKManagedTraceMemoryDumpDumpNumericValueProxy,
+				fDumpStringValue = DelegateProxies.SKManagedTraceMemoryDumpDumpStringValueProxy,
 			};
 
 			SkiaApi.sk_managedtracememorydump_set_procs (delegates);
@@ -45,43 +38,12 @@ namespace SkiaSharp
 			gch.Free ();
 		}
 
-		protected virtual void OnDumpNumericValue (string dumpName, string valueName, string units, ulong value)
+		protected internal virtual void OnDumpNumericValue (string dumpName, string valueName, string units, ulong value)
 		{
 		}
 
-		protected virtual void OnDumpStringValue (string dumpName, string valueName, string value)
+		protected internal virtual void OnDumpStringValue (string dumpName, string valueName, string value)
 		{
-		}
-
-		// impl
-
-#if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
-#else
-		[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate))]
-#endif
-		private static void DumpNumericValueInternal (IntPtr d, void* context, void* dumpName, void* valueName, void* units, ulong value)
-		{
-			var dump = DelegateProxies.GetUserData<SKTraceMemoryDump> ((IntPtr)context, out _);
-			dump.OnDumpNumericValue (
-				Marshal.PtrToStringAnsi ((IntPtr)dumpName),
-				Marshal.PtrToStringAnsi ((IntPtr)valueName),
-				Marshal.PtrToStringAnsi ((IntPtr)units),
-				value);
-		}
-
-#if USE_LIBRARY_IMPORT
-		[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
-#else
-		[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpStringValueProxyDelegate))]
-#endif
-		private static void DumpStringValueInternal (IntPtr d, void* context, void* dumpName, void* valueName, void* value)
-		{
-			var dump = DelegateProxies.GetUserData<SKTraceMemoryDump> ((IntPtr)context, out _);
-			dump.OnDumpStringValue (
-				Marshal.PtrToStringAnsi ((IntPtr)dumpName),
-				Marshal.PtrToStringAnsi ((IntPtr)valueName),
-				Marshal.PtrToStringAnsi ((IntPtr)value));
 		}
 	}
 }

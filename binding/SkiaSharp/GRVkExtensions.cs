@@ -31,7 +31,7 @@ namespace SkiaSharp
 			try {
 				var ie = instanceExtensions;
 				var de = deviceExtensions;
-				var proxy = getProc != null ? DelegateProxies.GRVkGetProcDelegateProxy : null;
+				var proxy = getProc != null ? DelegateProxies.GRVkGetProcProxy : null;
 				SkiaApi.gr_vk_extensions_init (Handle, proxy, (void*)ctx, vkInstance, vkPhysicalDevice, (uint)(ie?.Length ?? 0), ie, (uint)(de?.Length ?? 0), de);
 			} finally {
 				gch.Free ();
