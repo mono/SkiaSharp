@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 #region Namespaces
 
@@ -261,5 +262,9 @@ namespace SkiaSharp
 #endregion
 
 #region Enums
+
+#endregion
+
+#region DelegateProxies
 
 #endregion

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 #region Namespaces
 
@@ -711,5 +712,9 @@ namespace SkiaSharp.Skottie {
 		DisableTopLevelClipping = 2,
 	}
 }
+
+#endregion
+
+#region DelegateProxies
 
 #endregion
