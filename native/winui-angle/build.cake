@@ -91,6 +91,7 @@ Task("sync-ANGLE")
 
 Task("ANGLE")
     .IsDependentOn("sync-ANGLE")
+    .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
