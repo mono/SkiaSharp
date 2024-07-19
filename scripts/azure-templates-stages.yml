@@ -206,6 +206,36 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-winui
             additionalArgs: --buildarch=arm64
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native ANGLE WinUI|x86 (Win)
+          parameters:
+            name: native_winui_angle_x86_windows
+            displayName: ANGLE WinUI x86
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
+            target: externals-winui-angle
+            additionalArgs: --buildarch=x86
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native ANGLE WinUI|x64 (Win)
+          parameters:
+            name: native_winui_angle_x64_windows
+            displayName: ANGLE WinUI x64
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
+            target: externals-winui-angle
+            additionalArgs: --buildarch=x64
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native ANGLE WinUI|arm64 (Win)
+          parameters:
+            name: native_winui_angle_arm64_windows
+            displayName: ANGLE WinUI arm64
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
+            target: externals-winui-angle
+            additionalArgs: --buildarch=arm64
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native NanoServer|x64 (Win)
           parameters:
             name: native_win32_x64_nanoserver_windows
