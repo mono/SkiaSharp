@@ -6,7 +6,7 @@
 #addin nuget:?package=SharpCompress&version=0.32.2
 #addin nuget:?package=Mono.Cecil&version=0.10.0
 #addin nuget:?package=Mono.ApiTools&version=5.14.0.2
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.5
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.4.0
 
 #tool nuget:?package=mdoc&version=5.8.9
 #tool nuget:?package=xunit.runner.console&version=2.4.2
