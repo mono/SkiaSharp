@@ -40,6 +40,7 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine("using System;");
 			writer.WriteLine("using System.Runtime.InteropServices;");
+			writer.WriteLine("using System.Runtime.CompilerServices;");
 			writer.WriteLine();
 			WriteNamespaces(writer);
 			writer.WriteLine();
@@ -62,6 +63,8 @@ namespace SkiaSharpGenerator
 			WriteStructs(writer);
 			writer.WriteLine();
 			WriteEnums(writer);
+			writer.WriteLine();
+			WriteDelegateProxies(writer);
 		}
 
 		private void WriteDelegates(TextWriter writer)
@@ -115,28 +118,9 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"\t// {del}");
 			writer.WriteLine($"\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
 
-			var paramsList = new List<string>();
-			for (var i = 0; i < function.Parameters.Count; i++)
+			var (paramsList, returnType) = GetManagedFunctionArguments(function, map);
+			if (returnType == "bool")
 			{
-				var p = function.Parameters[i];
-				var n = string.IsNullOrEmpty(p.Name) ? $"param{i}" : p.Name;
-				var t = GetType(p.Type);
-				var cppT = GetCppType(p.Type);
-				if (t == "Boolean" || cppT == "bool")
-					t = "[MarshalAs (UnmanagedType.I1)] bool";
-				if (map != null && map.Parameters.TryGetValue(i.ToString(), out var newT))
-					t = newT;
-				paramsList.Add($"{t} {n}");
-			}
-
-			var returnType = GetType(function.ReturnType);
-			if (map != null && map.Parameters.TryGetValue("-1", out var newR))
-			{
-				returnType = newR;
-			}
-			else if (returnType == "Boolean" || GetCppType(function.ReturnType) == "bool")
-			{
-				returnType = "bool";
 				writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
 			}
 
@@ -568,6 +552,87 @@ namespace SkiaSharpGenerator
 				}
 				writer.WriteLine();
 				writer.WriteLine($"\t\t#endregion");
+				writer.WriteLine();
+			}
+		}
+
+		public void WriteDelegateProxies(TextWriter writer)
+		{
+			Log?.LogVerbose("  Writing delegate proxies...");
+
+			writer.WriteLine($"#region DelegateProxies");
+
+			var delegates = compilation.Typedefs
+				.Where(t => t.ElementType.TypeKind == CppTypeKind.Pointer)
+				.Where(t => IncludeNamespace(t.GetDisplayName()))
+				.OrderBy(t => t.GetDisplayName())
+				.GroupBy(t => GetNamespace(t.GetDisplayName()));
+
+			foreach (var group in delegates)
+			{
+				writer.WriteLine();
+				writer.WriteLine($"namespace {group.Key} {{");
+				writer.WriteLine($"internal static unsafe partial class DelegateProxies {{ ");
+
+				foreach (var del in group)
+				{
+					WriteDelegateProxy(writer, del);
+				}
+
+				writer.WriteLine($"}}");
+				writer.WriteLine($"}}");
+			}
+
+			writer.WriteLine();
+			writer.WriteLine($"#endregion");
+		}
+
+		private void WriteDelegateProxy(TextWriter writer, CppTypedef del)
+		{
+			if (!(((CppPointerType)del.ElementType).ElementType is CppFunctionType function))
+			{
+				Log?.LogWarning($"Unknown delegate type {del}");
+
+				writer.WriteLine($"// TODO: {del}");
+				return;
+			}
+
+			var nativeName = del.GetDisplayName();
+
+			Log?.LogVerbose($"    {nativeName}");
+
+			functionMappings.TryGetValue(nativeName, out var map);
+			var name = map?.CsType ?? CleanName(nativeName);
+
+			if (map?.GenerateProxy == false)
+			{
+				return;
+			}
+
+			var functionPointerType = GetFunctionPointerType(del, map);
+
+			var (paramsList, returnType) = GetManagedFunctionArguments(function, map);
+
+			var proxies = map?.ProxySuffixes ?? new List<string> { "" };
+
+			foreach (var proxyPrefix in proxies)
+			{
+				var proxyName = name.EndsWith("ProxyDelegate") ? name.Replace("ProxyDelegate", "Proxy") : name;
+				var implName = name.EndsWith("ProxyDelegate") ? name.Replace("ProxyDelegate", "ProxyImplementation") : name + "Implementation";
+
+				proxyName += proxyPrefix;
+				implName += proxyPrefix;
+
+				writer.WriteLine($"\t/// Proxy for {nativeName} native function.");
+				writer.WriteLine($"#if USE_LIBRARY_IMPORT");
+				writer.WriteLine($"\tpublic static readonly {functionPointerType} {proxyName} = &{implName};");
+				writer.WriteLine($"\t[UnmanagedCallersOnly(CallConvs = new [] {{typeof(CallConvCdecl)}})]");
+				writer.WriteLine($"#else");
+				writer.WriteLine($"\tpublic static readonly {name} {proxyName} = {implName};");
+				writer.WriteLine($"\t[MonoPInvokeCallback (typeof ({name}))]");
+				writer.WriteLine($"#endif");
+				if (returnType == "bool") writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
+				writer.WriteLine($"\tprivate static partial {returnType} {implName}({string.Join(",", paramsList)});");
 				writer.WriteLine();
 			}
 		}

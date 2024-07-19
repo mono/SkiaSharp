@@ -191,15 +191,47 @@ namespace SkiaSharpGenerator
 			return config ?? throw new InvalidOperationException("Unable to parse json config file.");
 		}
 
-		protected string? GetFunctionPointerType(CppType type)
+		protected (List<string> args, string returnType) GetManagedFunctionArguments(CppFunctionType function, FunctionMapping? map)
 		{
+			var paramsList = new List<string>();
+			for (var i = 0; i < function.Parameters.Count; i++)
+			{
+				var p = function.Parameters[i];
+				var n = string.IsNullOrEmpty(p.Name) ? $"param{i}" : p.Name;
+				var t = GetType(p.Type);
+				var cppT = GetCppType(p.Type);
+				if (t == "Boolean" || cppT == "bool")
+					t = "[MarshalAs (UnmanagedType.I1)] bool";
+				if (map != null && map.Parameters.TryGetValue(i.ToString(), out var newT))
+					t = newT;
+				paramsList.Add($"{t} {n}");
+			}
+
+			var returnType = GetType(function.ReturnType);
+			if (map != null && map.Parameters.TryGetValue("-1", out var newR))
+			{
+				returnType = newR;
+			}
+			else if (returnType == "Boolean" || GetCppType(function.ReturnType) == "bool")
+			{
+				returnType = "bool";
+			}
+			return (paramsList, returnType);
+		}
+
+		protected string? GetFunctionPointerType(CppType type, FunctionMapping? map = null)
+		{
+			if (map is null)
+			{
+				functionMappings.TryGetValue(type.GetDisplayName(), out map);
+			}
+
 			type = (type as CppQualifiedType)?.ElementType as CppTypedef ?? type;
 			type = (type as CppTypedef)?.ElementType as CppTypedef ?? type;
-			if (type is CppTypedef { ElementType: CppPointerType pointer }
-			    && pointer.ElementType is CppFunctionType { CallingConvention: CppCallingConvention.C } function)
+			type = (type as CppTypedef)?.ElementType as CppPointerType ?? type;
+			type = (type as CppPointerType)?.ElementType as CppFunctionType ?? type;
+			if (type is CppFunctionType { CallingConvention: CppCallingConvention.C } function)
 			{
-				functionMappings.TryGetValue(type.GetDisplayName(), out var map);
-
 				var parameters = string.Join(", ", function.Parameters
 					.Select((p, i) => (p.Type, i))
 					.Concat(new[] { (function.ReturnType, -1) })
