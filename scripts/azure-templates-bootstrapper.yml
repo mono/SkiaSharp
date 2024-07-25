@@ -30,6 +30,7 @@ parameters:
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
+  installXcode: true                            # whether or not to install Xcode
   publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
   skipInstall: false                            # whether or not to install any tools
@@ -105,7 +106,7 @@ jobs:
         - ${{ parameters.provisioningSteps }}
 
       # install any packages on linux
-      - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux'), ne(parameters.skipInstall, 'true')) }}:
+      - ${{ if and(eq(parameters.docker, ''), eq(parameters.buildAgent.pool.os, 'linux'), ne(parameters.skipInstall, 'true')) }}:
         - bash: |
             sudo apt update
             sudo apt install -y ${{ parameters.packages }}
@@ -161,7 +162,7 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         # install the bits needed for Android on macOS and Windows
-        - ${{ if and(eq(parameters.installAndroidSdk, 'true'), not(endsWith(parameters.name, '_linux'))) }}:
+        - ${{ if and(eq(parameters.installAndroidSdk, 'true'), ne(parameters.buildAgent.pool.os, 'linux')) }}:
           # install the correct version of the JDK
           - pwsh: .\scripts\install-openjdk.ps1
             displayName: Install OpenJDK
@@ -187,7 +188,7 @@ jobs:
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
-          - ${{ if endsWith(parameters.name, '_macos') }}:
+          - ${{ if eq(parameters.buildAgent.pool.os, 'macos') }}:
             - pwsh: Remove-Item "$env:AGENT_TOOLSDIRECTORY/dotnet" -Recurse -Force -ErrorAction SilentlyContinue
               displayName: Cleanup existing versions of .NET
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
@@ -202,7 +203,7 @@ jobs:
             displayName: Install the preview version of .NET
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
-          - ${{ if endsWith(parameters.name, '_linux') }}:
+          - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
             - pwsh: .\scripts\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
               displayName: Fix the Microsoft.WinFX.* file
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
@@ -227,7 +228,7 @@ jobs:
             displayName: Install the .NET workloads
 
       # install the mac tools
-      - ${{ if and(endsWith(parameters.name, '_macos'), ne(parameters.skipInstall, 'true')) }}:
+      - ${{ if and(eq(parameters.installXcode, 'true'), ne(parameters.buildAgent.parameters.installXcode, 'false'), eq(parameters.buildAgent.pool.os, 'macos'), ne(parameters.skipInstall, 'true')) }}:
         - ${{ if not(startsWith(parameters.name, 'native_')) }}:
           - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
             displayName: Switch to the latest Xcode
@@ -238,14 +239,14 @@ jobs:
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install the linux tools
-      - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux'), ne(parameters.skipInstall, 'true')) }}:
+      - ${{ if and(eq(parameters.installEmsdk, 'true'), eq(parameters.buildAgent.pool.os, 'linux'), ne(parameters.skipInstall, 'true')) }}:
         - bash: ./scripts/install-emsdk.sh $(EMSCRIPTEN_VERSION)
           displayName: Install the Emscripten SDK
           retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install the Windows tools
-      - ${{ if and(endsWith(parameters.name, '_windows'), ne(parameters.skipInstall, 'true')) }}:
+      - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
         # select the correct/latest version of Visual Studio
         - pwsh: .\scripts\select-vs.ps1
           displayName: Select Visual Studio
@@ -299,7 +300,7 @@ jobs:
       # actual build
       - ${{ if ne(parameters.skipSteps, 'true') }}:
         - ${{ if eq(parameters.docker, '') }}:
-          - ${{ if endsWith(parameters.name, '_windows') }}:
+          - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
             - pwsh: |
                 Get-Content $PSCommandPath
                 dotnet tool restore
@@ -314,7 +315,7 @@ jobs:
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - ${{ if not(endsWith(parameters.name, '_windows')) }}:
+          - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
             - bash: |
                 cat ${BASH_SOURCE[0]}
                 dotnet tool restore

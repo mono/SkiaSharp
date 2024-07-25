@@ -122,3 +122,14 @@ void CleanDir(DirectoryPath dir)
 
     EnsureDirectoryExists(dir);
 }
+
+void TakeSnapshot(DirectoryPath output, string name)
+{
+    if (IsRunningOnWindows())
+        return;
+
+    var fname = $"screenshot-{DateTime.Now:yyyyMMdd_hhmmss}-{name}.jpg";
+    var dest = output.CombineWithFilePath(fname);
+
+    RunProcess("screencapture", dest.FullPath);
+}
