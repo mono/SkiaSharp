@@ -45,6 +45,19 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-20.04
         os: linux
+  - name: buildAgentAndroidTests
+    displayName: 'The build agent configuration for building the Android tests:'
+    type: object
+    default:
+      pool:
+        name: MAUI
+        vmImage: MAUI
+        os: macos
+        demands:
+          - macOS.Name -equals Ventura
+          - macOS.Architecture -equals x64
+      parameters:
+        installXcode: false
 
 variables:
   - template: /scripts/azure-pipelines-variables.yml@self
@@ -65,4 +78,4 @@ extends:
           buildAgentMacNative: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinux }}
-          buildAgentAndroidTests: ${{ parameters.buildAgentMac }}
+          buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
