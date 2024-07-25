@@ -18,6 +18,15 @@ var DEVICE_NAME = Argument("skin", EnvironmentVariable("ANDROID_TEST_SKIN") ?? "
 var DEVICE_ID = "";
 var DEVICE_ARCH = "";
 
+if (string.IsNullOrEmpty(TEST_APP)) {
+    throw new Exception("A path to a test app is required.");
+}
+if (string.IsNullOrEmpty(TEST_RESULTS)) {
+    TEST_RESULTS = TEST_APP + "-results";
+}
+Information("Test Results Directory: {0}", TEST_RESULTS);
+CleanDir(TEST_RESULTS);
+
 // set up env
 var ANDROID_SDK_ROOT = Argument("android", EnvironmentVariable("ANDROID_SDK_ROOT") ?? EnvironmentVariable("ANDROID_SDK_HOME"));
 if (string.IsNullOrEmpty(ANDROID_SDK_ROOT)) {
@@ -46,7 +55,15 @@ var adbSettings = new AdbToolSettings {
 var emuSettings = new AndroidEmulatorToolSettings {
     SdkRoot = ANDROID_SDK_ROOT,
     ToolPath = $"{ANDROID_SDK_ROOT}/emulator/emulator{exe}",
-    ArgumentCustomization = args => args.Append("-no-window")
+    Verbose = true,
+    ArgumentCustomization = args => args.Append(
+        "-no-boot-anim " +
+        "-no-snapshot " +
+        "-gpu host " +
+        "-no-audio " +
+        "-camera-back none " +
+        "-camera-front none " +
+        "-qemu -m 2048")
 };
 
 AndroidEmulatorProcess emulatorProcess = null;
@@ -115,20 +132,26 @@ Setup(context =>
     Information("Starting Emulator: {0}...", ANDROID_AVD);
     emulatorProcess = AndroidEmulatorStart(ANDROID_AVD, emuSettings);
 
-    // wait for it to finish booting (10 mins)
+    // wait for it to finish booting (4 mins)
     var waited = 0;
-    var total = 60 * 10;
+    var interval = 10;
+    var totalMins = 4;
+    var total = 60 * totalMins / interval;
     while (AdbShell("getprop sys.boot_completed", adbSettings).FirstOrDefault() != "1") {
-        System.Threading.Thread.Sleep(1000);
-        Information("Wating {0}/{1} seconds for the emulator to boot up.", waited, total);
+        TakeSnapshot(TEST_RESULTS, $"boot-{waited:000}");
+        System.Threading.Thread.Sleep(interval * 1000);
+        Information("Wating {0}/{1} seconds for the emulator to boot up.", waited * interval, total);
         if (waited++ > total)
             break;
     }
+    TakeSnapshot(TEST_RESULTS, "boot-complete");
     Information("Waited {0} seconds for the emulator to boot up.", waited);
 });
 
 Teardown(context =>
 {
+    TakeSnapshot(TEST_RESULTS, "teardown");
+
     // no virtual device was used
     if (emulatorProcess == null)
         return;
@@ -150,9 +173,6 @@ Teardown(context =>
 Task("Default")
     .Does(() =>
 {
-    if (string.IsNullOrEmpty(TEST_APP)) {
-        throw new Exception("A path to a test app is required.");
-    }
     if (string.IsNullOrEmpty(TEST_APP_PACKAGE_NAME)) {
         var appFile = (FilePath)TEST_APP;
         appFile = appFile.GetFilenameWithoutExtension();
@@ -161,23 +181,34 @@ Task("Default")
     if (string.IsNullOrEmpty(TEST_APP_INSTRUMENTATION)) {
         TEST_APP_INSTRUMENTATION = TEST_APP_PACKAGE_NAME + ".TestInstrumentation";
     }
-    if (string.IsNullOrEmpty(TEST_RESULTS)) {
-        TEST_RESULTS = TEST_APP + "-results";
-    }
 
     Information("Test App: {0}", TEST_APP);
     Information("Test App Package Name: {0}", TEST_APP_PACKAGE_NAME);
     Information("Test App Instrumentation: {0}", TEST_APP_INSTRUMENTATION);
     Information("Test Results Directory: {0}", TEST_RESULTS);
 
-    CleanDirectories(TEST_RESULTS);
+    TakeSnapshot(TEST_RESULTS, "starting-tests");
+
+    var complete = false;
+    System.Threading.Tasks.Task.Run(() => {
+        while (!complete) {
+            TakeSnapshot(TEST_RESULTS, "running-tests");
+            System.Threading.Thread.Sleep(5000);
+        }
+    });
 
     DotNetTool("xharness android test " +
         $"--app=\"{TEST_APP}\" " +
         $"--package-name=\"{TEST_APP_PACKAGE_NAME}\" " +
         $"--instrumentation=\"{TEST_APP_INSTRUMENTATION}\" " +
         $"--output-directory=\"{TEST_RESULTS}\" " +
+        $"--timeout=00:15:00 " +
+        $"--launch-timeout=00:05:00 " +
         $"--verbosity=\"Debug\" ");
+
+    complete = true;
+
+    TakeSnapshot(TEST_RESULTS, "finished-tests");
 
     var failed = XmlPeek($"{TEST_RESULTS}/TestResults.xml", "/assemblies/assembly[@failed > 0 or @errors > 0]/@failed");
     if (!string.IsNullOrEmpty(failed)) {

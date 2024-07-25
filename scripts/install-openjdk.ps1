@@ -6,7 +6,7 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-if (Test-Path (Join-Path "$env:JAVA_HOME_17_X64" "bin")) {
+if ("$env:JAVA_HOME_17_X64" -and (Test-Path (Join-Path "$env:JAVA_HOME_17_X64" "bin"))) {
     Write-Host "Java is already installed to '$env:JAVA_HOME_17_X64'..."
     $java_home = $env:JAVA_HOME_17_X64
 } else {

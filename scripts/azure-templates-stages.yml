@@ -19,6 +19,8 @@ parameters:
     type: object
   - name: buildAgentLinuxNative
     type: object
+  - name: buildAgentAndroidTests
+    type: object
   - name: sdl
     type: object
     default:
@@ -358,15 +360,15 @@ stages:
                 gnArgs: skia_use_fontconfig=false
             matrix:
               - arch: x64
-                docker: scripts/Docker/debian9/amd64
+                docker: scripts/Docker/debian/amd64
               - arch: x64
                 variant: alpine
                 docker: scripts/Docker/alpine/amd64
               - arch: arm
-                docker: scripts/Docker/debian9/clang-cross
+                docker: scripts/Docker/debian/clang-cross
                 target: externals-linux-clang-cross
               - arch: arm64
-                docker: scripts/Docker/debian9/clang-cross
+                docker: scripts/Docker/debian/clang-cross
                 dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
                 target: externals-linux-clang-cross
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Linux)
@@ -821,7 +823,7 @@ stages:
             name: tests_android_macos
             displayName: Android (macOS)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentMac }}
+            buildAgent: ${{ parameters.buildAgentAndroidTests }}
             target: tests-android
             additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
