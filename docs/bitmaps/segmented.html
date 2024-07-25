@@ -1,0 +1,281 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Segmented display of SkiaSharp bitmaps | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Segmented display of SkiaSharp bitmaps | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="segmented-display-of-skiasharp-bitmaps">Segmented display of SkiaSharp bitmaps</h1>
+
+<p>The SkiaSharp <code>SKCanvas</code> object defines a method named <code>DrawBitmapNinePatch</code> and two methods named <code>DrawBitmapLattice</code> that are very similar. Both these methods render a bitmap to the size of a destination rectangle, but instead of stretching the bitmap uniformly, they display portions of the bitmap in its pixel dimensions and stretch other parts of the bitmap so that it fits the rectangle:</p>
+<p><img src="segmented-images/SegmentedSample.png" alt="Segmented Samples" title="Segmented Sample"></p>
+<p>These methods are generally used for rendering bitmaps that form part of user-interface objects such as buttons. When designing a button, generally you want the size of a button to be based on the content of the button, but you probably want the button's border to be the same width regardless of the button's content. That's an ideal application of <code>DrawBitmapNinePatch</code>.</p>
+<p><code>DrawBitmapNinePatch</code> is a special case of <code>DrawBitmapLattice</code> but it is the easier of the two methods to use and understand.</p>
+<h2 id="the-nine-patch-display">The nine-patch display</h2>
+<p>Conceptually, <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmapninepatch#skiasharp-skcanvas-drawbitmapninepatch(skiasharp-skbitmap-skiasharp-skrecti-skiasharp-skrect-skiasharp-skpaint)"><code>DrawBitmapNinePatch</code></a> divides a bitmap into nine rectangles:</p>
+<p><img src="segmented-images/NinePatch.png" alt="Nine Patch" title="Nine Patch"></p>
+<p>The rectangles at the four corners are displayed in their pixel sizes. As the arrows indicate, the other areas on the edges of the bitmap are stretched horizontally or vertically to the area of the destination rectangle. The rectangle in the center is stretched both horizontally and vertically.</p>
+<p>If there is not enough space in the destination rectangle to display even the four corners in their pixel dimensions, then they are scaled down to the available size and nothing but the four corners are displayed.</p>
+<p>To divide a bitmap into these nine rectangles, it is only necessary to specify the rectangle in the center. This is the syntax of the <code>DrawBitmapNinePatch</code> method:</p>
+<pre><code class="lang-csharp">canvas.DrawBitmapNinePatch(bitmap, centerRectangle, destRectangle, paint);
+</code></pre>
+<p>The center rectangle is relative to the bitmap. It is an <code>SKRectI</code> value (the integer version of <code>SKRect</code>) and all the coordinates and sizes are in units of pixels. The destination rectangle is relative to the display surface. The <code>paint</code> argument is optional.</p>
+<p>The <strong>Nine Patch Display</strong> page in the sample first uses a static constructor to create a public static property of type <code>SKBitmap</code>:</p>
+<pre><code class="lang-csharp">public partial class NinePatchDisplayPage : ContentPage
+{
+    static NinePatchDisplayPage()
+    {
+        using (SKCanvas canvas = new SKCanvas(FiveByFiveBitmap))
+        using (SKPaint paint = new SKPaint
+        {
+            Style = SKPaintStyle.Stroke,
+            Color = SKColors.Red,
+            StrokeWidth = 10
+        })
+        {
+            for (int x = 50; x &lt; 500; x += 100)
+                for (int y = 50; y &lt; 500; y += 100)
+                {
+                    canvas.DrawCircle(x, y, 40, paint);
+                }
+        }
+    }
+
+    public static SKBitmap FiveByFiveBitmap { get; } = new SKBitmap(500, 500);
+    ···
+}
+</code></pre>
+<p>Two other pages in this article use that same bitmap. The bitmap is 500 pixels square, and consists of an array of 25 circles, all the same size, each occupying a 100-pixel square area:</p>
+<p><img src="segmented-images/CircleGrid.png" alt="Circle Grid" title="Circle Grid"></p>
+<p>The program's instance constructor creates an <code>SKCanvasView</code> with a <code>PaintSurface</code> handler that uses <code>DrawBitmapNinePatch</code> to display the bitmap stretched to its entire display surface:</p>
+<pre><code class="lang-csharp">public class NinePatchDisplayPage : ContentPage
+{
+    ···
+    public NinePatchDisplayPage()
+    {
+        Title = &quot;Nine-Patch Display&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        SKRectI centerRect = new SKRectI(100, 100, 400, 400);
+        canvas.DrawBitmapNinePatch(FiveByFiveBitmap, centerRect, info.Rect);
+    }
+}
+</code></pre>
+<p>The <code>centerRect</code> rectangle encompasses the central array of 16 circles. The circles in the corners are displayed in their pixel dimensions, and everything else is stretched accordingly:</p>
+<p><a href="segmented-images/NinePatchDisplay-Large.png#lightbox"><img src="segmented-images/NinePatchDisplay.png" alt="Nine-Patch Display" title="Nine-Patch Display"></a></p>
+<p>The UWP page happens to be 500 pixels wide, and hence displays the top and bottom rows as a series of circles of the same size. Otherwise, all the circles that are not in the corners are stretched to form ellipses.</p>
+<p>For a strange display of objects consisting of a combination of circles and ellipses, try defining the center rectangle so that it overlaps rows and columns of circles:</p>
+<pre><code class="lang-csharp">SKRectI centerRect = new SKRectI(150, 150, 350, 350);
+</code></pre>
+<h2 id="the-lattice-display">The lattice display</h2>
+<p>The two <code>DrawBitmapLattice</code> methods are similar to <code>DrawBitmapNinePatch</code>, but they are generalized for any number of horizontal or vertical divisions. These divisions are defined by arrays of integers corresponding to pixels.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmaplattice#skiasharp-skcanvas-drawbitmaplattice(skiasharp-skbitmap-system-int32()-system-int32()-skiasharp-skrect-skiasharp-skpaint)"><code>DrawBitmapLattice</code></a> method with parameters for these arrays of integers does not seem to work. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmaplattice#skiasharp-skcanvas-drawbitmaplattice(skiasharp-skbitmap-skiasharp-sklattice-skiasharp-skrect-skiasharp-skpaint)"><code>DrawBitmapLattice</code></a> method with a parameter of type <code>SKLattice</code> does work, and that's the one used in the samples shown below.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklattice"><code>SKLattice</code></a> structure defines four properties:</p>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklattice.xdivs#skiasharp-sklattice-xdivs"><code>XDivs</code></a>, an array of integers</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklattice.ydivs#skiasharp-sklattice-ydivs"><code>YDivs</code></a>, an array of integers</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklattice.flags#skiasharp-sklattice-flags"><code>Flags</code></a>, an array of <code>SKLatticeFlags</code>, an enumeration type</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklattice.bounds#skiasharp-sklattice-bounds"><code>Bounds</code></a> of type <code>Nullable&lt;SKRectI&gt;</code> to specify an optional source rectangle within the bitmap</li>
+</ul>
+<p>The <code>XDivs</code> array divides the width of the bitmap into vertical strips. The first strip extends from pixel 0 at the left to <code>XDivs[0]</code>. This strip is rendered in its pixel width. The second strip extends from <code>XDivs[0]</code> to <code>XDivs[1]</code>, and is stretched. The third strip extends from <code>XDivs[1]</code> to <code>XDivs[2]</code> and is rendered in its pixel width. The last strip extends from the last element of the array to the right edge of the bitmap. If the array has an even number of elements, then it's displayed in its pixel width. Otherwise, it's stretched. The total number of vertical strips is one more than the number of elements in the array.</p>
+<p>The <code>YDivs</code> array is similar. It divides the height of the array into horizontal strips.</p>
+<p>Together, the <code>XDivs</code> and <code>YDivs</code> array divide the bitmap into rectangles. The number of rectangles is equal to the product of the number of horizontal strips and the number of vertical strips.</p>
+<p>According to Skia documentation, the <code>Flags</code> array contains one element for each rectangle, first the top row of rectangles, then the second row, and so forth. The <code>Flags</code> array is of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklatticeflags"><code>SKLatticeFlags</code></a>, an enumeration with the following members:</p>
+<ul>
+<li><code>Default</code> with value 0</li>
+<li><code>Transparent</code> with value 1</li>
+</ul>
+<p>However, these flags don't seem to work as they are supposed to, and it's best to ignore them. But don't set the <code>Flags</code> property to <code>null</code>. Set it to an array of <code>SKLatticeFlags</code> values large enough to encompass the total number of rectangles.</p>
+<p>The <strong>Lattice Nine Patch</strong> page uses <code>DrawBitmapLattice</code> to mimic <code>DrawBitmapNinePatch</code>. It uses the same bitmap created in <code>NinePatchDisplayPage</code>:</p>
+<pre><code class="lang-csharp">public class LatticeNinePatchPage : ContentPage
+{
+    SKBitmap bitmap = NinePatchDisplayPage.FiveByFiveBitmap;
+
+    public LatticeNinePatchPage ()
+    {
+        Title = &quot;Lattice Nine-Patch&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+    `
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        SKLattice lattice = new SKLattice();
+        lattice.XDivs = new int[] { 100, 400 };
+        lattice.YDivs = new int[] { 100, 400 };
+        lattice.Flags = new SKLatticeFlags[9];
+
+        canvas.DrawBitmapLattice(bitmap, lattice, info.Rect);
+    }
+}
+</code></pre>
+<p>Both the <code>XDivs</code> and <code>YDivs</code> properties are set to arrays of just two integers, dividing the bitmap into three strips both horizontally and vertically: from pixel 0 to pixel 100 (rendered in the pixel size), from pixel 100 to pixel 400 (stretched), and from pixel 400 to pixel 500 (pixel size). Together, <code>XDivs</code> and <code>YDivs</code> define a total of 9 rectangles, which is the size of the <code>Flags</code> array. Simply creating the array is sufficient to create an array of <code>SKLatticeFlags.Default</code> values.</p>
+<p>The display is identical to the previous program:</p>
+<p><a href="segmented-images/LatticeNinePatch-Large.png#lightbox"><img src="segmented-images/LatticeNinePatch.png" alt="Lattice Nine-Patch" title="Lattice Nine-Patch"></a></p>
+<p>The <strong>Lattice Display</strong> page divides the bitmap into 16 rectangles:</p>
+<pre><code class="lang-csharp">public class LatticeDisplayPage : ContentPage
+{
+    SKBitmap bitmap = NinePatchDisplayPage.FiveByFiveBitmap;
+
+    public LatticeDisplayPage()
+    {
+        Title = &quot;Lattice Display&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        SKLattice lattice = new SKLattice();
+        lattice.XDivs = new int[] { 100, 200, 400 };
+        lattice.YDivs = new int[] { 100, 300, 400 };
+
+        int count = (lattice.XDivs.Length + 1) * (lattice.YDivs.Length + 1);
+        lattice.Flags = new SKLatticeFlags[count];
+
+        canvas.DrawBitmapLattice(bitmap, lattice, info.Rect);
+    }
+}
+</code></pre>
+<p>The <code>XDivs</code> and <code>YDivs</code> arrays are somewhat different, causing the display to be not quite as symmetrical as the previous examples:</p>
+<p><a href="segmented-images/LatticeDisplay-Large.png#lightbox"><img src="segmented-images/LatticeDisplay.png" alt="Lattice Display" title="Lattice Display"></a></p>
+<p>In the iOS and Android images on the left, only the smaller circles are rendered in their pixel sizes. Everything else is stretched.</p>
+<p>The <strong>Lattice Display</strong> page generalizes the creation of the <code>Flags</code> array, allowing you to experiment with <code>XDivs</code> and <code>YDivs</code> more easily. In particular, you'll want to see what happens when you set the first element of the <code>XDivs</code> or <code>YDivs</code> array to 0.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

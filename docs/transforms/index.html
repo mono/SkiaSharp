@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>SkiaSharp Transforms | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="SkiaSharp Transforms | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="skiasharp-transforms">SkiaSharp Transforms</h1>
+
+<p><em>Learn about transforms for displaying SkiaSharp graphics</em></p>
+<p>SkiaSharp supports traditional graphics transforms that are implemented as methods of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas"><code>SKCanvas</code></a> object. Mathematically, transforms alter the coordinates and sizes that you specify in <code>SKCanvas</code> drawing functions as the graphical objects are rendered. Transforms are often convenient for drawing repetitive graphics or for animation. Some techniques — such as rotating bitmaps or text — are not possible without the use of transforms.</p>
+<p>SkiaSharp transforms support the following operations:</p>
+<ul>
+<li><em>Translate</em> to shift coordinates from one location to another</li>
+<li><em>Scale</em> to increase or decrease coordinates and sizes</li>
+<li><em>Rotate</em> to rotate coordinates around a point</li>
+<li><em>Skew</em> to shift coordinates horizontally or vertically so that a rectangle becomes a parallelogram</li>
+</ul>
+<p>These are known as <em>affine</em> transforms. Affine transforms always preserve parallel lines and never cause a coordinate or size to become infinite. A square is never transformed into anything other than a parallelogram, and a circle is never transformed into anything other than an ellipse.</p>
+<p>SkiaSharp also supports non-affine transforms (also called <em>projective</em> or <em>perspective</em> transforms) based on a standard 3-by-3 transform matrix. A non-affine transform allows a square to be transformed into any convex quadrilateral, which is a four-sided figure with all interior angles less than 180 degrees. Non-affine transforms can cause coordinates or sizes to become infinite, but they are vital for 3D effects.</p>
+<h2 id="differences-between-skiasharp-and-xamarinforms-transforms">Differences between SkiaSharp and Xamarin.Forms Transforms</h2>
+<p>Xamarin.Forms also supports transforms that are similar to those in SkiaSharp. The Xamarin.Forms <a href="xref:Xamarin.Forms.VisualElement"><code>VisualElement</code></a> class defines the following transform properties:</p>
+<ul>
+<li><a href="xref:Xamarin.Forms.VisualElement.TranslationX"><code>TranslationX</code></a> and <a href="xref:Xamarin.Forms.VisualElement.TranslationY"><code>TranslationY</code></a></li>
+<li><a href="xref:Xamarin.Forms.VisualElement.Scale"><code>Scale</code></a></li>
+<li><a href="xref:Xamarin.Forms.VisualElement.Rotation"><code>Rotation</code></a>, <a href="xref:Xamarin.Forms.VisualElement.RotationX"><code>RotationX</code></a>, and <a href="xref:Xamarin.Forms.VisualElement.RotationY"><code>RotationY</code></a></li>
+</ul>
+<p>The <code>RotationX</code> and <code>RotationY</code> properties are perspective transforms that create quasi-3D effects.</p>
+<p>There are several crucial differences between SkiaSharp transforms and Xamarin.Forms transforms:</p>
+<p>The first difference is that SkiaSharp transforms are applied to the entire <code>SKCanvas</code> object while the Xamarin.Forms transforms are applied to individual <code>VisualElement</code> derivatives. (You can apply the Xamarin.Forms transforms to the <code>SKCanvasView</code> object itself, because <code>SKCanvasView</code> derives from <code>VisualElement</code>, but within that <code>SKCanvasView</code>, the SkiaSkarp transforms apply.)</p>
+<p>The SkiaSharp transforms are relative to the upper-left corner of the <code>SKCanvas</code> while Xamarin.Forms transforms are relative to the upper-left corner of the <code>VisualElement</code> to which they are applied. This difference is important when applying scaling and rotation transforms because these transforms are always relative to a particular point.</p>
+<p>The really big difference is that SKiaSharp transforms are <em>methods</em> while the Xamarin.Forms transforms are <em>properties</em>. This is a semantic difference beyond the syntactical difference: SkiaSharp transforms perform an operation while Xamarin.Forms transforms set a state. SkiaSharp transforms apply to subsequently drawn graphics objects, but not to graphics objects that are drawn before the transform is applied. In contrast, a Xamarin.Forms transform applies to a previously rendered element as soon as the property is set. SkiaSharp transforms are cumulative as the methods are called; Xamarin.Forms transforms are replaced when the property is set with another value.</p>
+<p>All the sample programs in this section appear in the <strong>SkiaSharp Transforms</strong> section of the sample program. Source code can be found in the <a href="https://github.com/xamarin/xamarin-forms-samples/tree/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms"><strong>Transforms</strong></a> folder of the solution.</p>
+<h2 id="the-translate-transform"><a href="translate.html">The Translate Transform</a></h2>
+<p>Learn how to use the translate transform to shift SkiaSharp graphics.</p>
+<h2 id="the-scale-transform"><a href="scale.html">The Scale Transform</a></h2>
+<p>Discover the SkiaSharp scale transform for scaling objects to various sizes.</p>
+<h2 id="the-rotate-transform"><a href="rotate.html">The Rotate Transform</a></h2>
+<p>Explore the effects and animations possible with the SkiaSharp rotate transform.</p>
+<h2 id="the-skew-transform"><a href="skew.html">The Skew Transform</a></h2>
+<p>See how the skew transform can create tilted graphical object.</p>
+<h2 id="matrix-transforms"><a href="matrix.html">Matrix Transforms</a></h2>
+<p>Dive deeper into SkiaSharp transforms with the versatile transform matrix.</p>
+<h2 id="touch-manipulations"><a href="touch.html">Touch Manipulations</a></h2>
+<p>Use matrix transforms to implement touch manipulations for dragging, scaling, and rotation.</p>
+<h2 id="non-affine-transforms"><a href="non-affine.html">Non-Affine Transforms</a></h2>
+<p>Go beyond the oridinary with non-affine transform effects.</p>
+<h2 id="3d-rotation"><a href="3d-rotation.html">3D Rotation</a></h2>
+<p>Use non-affine transforms to rotate 2D objects in 3D space.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

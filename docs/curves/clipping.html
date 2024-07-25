@@ -1,0 +1,544 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Clipping with Paths and Regions | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Clipping with Paths and Regions | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="clipping-with-paths-and-regions">Clipping with Paths and Regions</h1>
+
+<p><em>Use paths to clip graphics to specific areas, and to create regions</em></p>
+<p>It's sometimes necessary to restrict the rendering of graphics to a particular area. This is known as <em>clipping</em>. You can use clipping for special effects, such as this image of a monkey seen through a keyhole:</p>
+<p><img src="clipping-images/clippingsample.png" alt="Monkey through a keyhole"></p>
+<p>The <em>clipping area</em> is the area of the screen in which graphics are rendered. Anything that is displayed outside of the clipping area is not rendered. The clipping area is usually defined by a rectangle or an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath"><code>SKPath</code></a> object, but you can alternatively define a clipping area using an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skregion"><code>SKRegion</code></a> object. These two types of objects at first seem related because you can create a region from a path. However, you cannot create a path from a region, and they are very different internally: A path comprises a series of lines and curves, while a region is defined by a series of horizontal scan lines.</p>
+<p>The image above was created by the <strong>Monkey through Keyhole</strong> page. The  <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/MonkeyThroughKeyholePage.cs"><code>MonkeyThroughKeyholePage</code></a> class defines a path using SVG data and uses the constructor to load a bitmap from program resources:</p>
+<pre><code class="lang-csharp">public class MonkeyThroughKeyholePage : ContentPage
+{
+    SKBitmap bitmap;
+    SKPath keyholePath = SKPath.ParseSvgPathData(
+        &quot;M 300 130 L 250 350 L 450 350 L 400 130 A 70 70 0 1 0 300 130 Z&quot;);
+
+    public MonkeyThroughKeyholePage()
+    {
+        Title = &quot;Monkey through Keyhole&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+
+        string resourceID = &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;;
+        Assembly assembly = GetType().GetTypeInfo().Assembly;
+
+        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+        {
+            bitmap = SKBitmap.Decode(stream);
+        }
+    }
+    ...
+}
+</code></pre>
+<p>Although the <code>keyholePath</code> object describes the outline of a keyhole, the coordinates are completely arbitrary and reflect what was convenient when the path data was devised. For this reason, the <code>PaintSurface</code> handler obtains the bounds of this path and calls <code>Translate</code> and <code>Scale</code> to move the path to the center of the screen and to make it nearly as tall as the screen:</p>
+<pre><code class="lang-csharp">public class MonkeyThroughKeyholePage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Set transform to center and enlarge clip path to window height
+        SKRect bounds;
+        keyholePath.GetTightBounds(out bounds);
+
+        canvas.Translate(info.Width / 2, info.Height / 2);
+        canvas.Scale(0.98f * info.Height / bounds.Height);
+        canvas.Translate(-bounds.MidX, -bounds.MidY);
+
+        // Set the clip path
+        canvas.ClipPath(keyholePath);
+
+        // Reset transforms
+        canvas.ResetMatrix();
+
+        // Display monkey to fill height of window but maintain aspect ratio
+        canvas.DrawBitmap(bitmap,
+            new SKRect((info.Width - info.Height) / 2, 0,
+                       (info.Width + info.Height) / 2, info.Height));
+    }
+}
+</code></pre>
+<p>But the path is not rendered. Instead, following the transforms, the path is used to set a clipping area with this statement:</p>
+<pre><code class="lang-csharp">canvas.ClipPath(keyholePath);
+</code></pre>
+<p>The <code>PaintSurface</code> handler then resets the transforms with a call to <code>ResetMatrix</code> and draws the bitmap to extend to the full height of the screen. This code assumes that the bitmap is square, which this particular bitmap is. The bitmap is rendered only within the area defined by the clipping path:</p>
+<p><a href="clipping-images/monkeythroughkeyhole-large.png#lightbox"><img src="clipping-images/monkeythroughkeyhole-small.png" alt="Triple screenshot of the Monkey through Keyhole page"></a></p>
+<p>The clipping path is subject to the transforms in effect when the <code>ClipPath</code> method is called, and not to the transforms in effect when a graphical object (such as a bitmap) is displayed. The clipping path is part of the canvas state that is saved with the <code>Save</code> method and restored with the <code>Restore</code> method.</p>
+<h2 id="combining-clipping-paths">Combining Clipping Paths</h2>
+<p>Strictly speaking, the clipping area is not &quot;set&quot; by the <code>ClipPath</code> method. Instead, it is combined with the existing clipping path, which begins as a rectangle equal in size to the canvas. You can obtain the rectangular bounds of the clipping area using the <a href="/dotnet/api/SkiaSharp.SKCanvas.LocalClipBounds"><code>LocalClipBounds</code></a> property or the <a href="/dotnet/api/SkiaSharp.SKCanvas.DeviceClipBounds"><code>DeviceClipBounds</code></a> property. The <code>LocalClipBounds</code> property returns an <code>SKRect</code> value that reflects any transforms that might be in effect. The <code>DeviceClipBounds</code> property returns a <code>RectI</code> value. This is a rectangle with integer dimensions, and describes the clipping area in actual pixel dimensions.</p>
+<p>Any call to <code>ClipPath</code> reduces the clipping area by combining the clipping area with a new area. The full syntax of the <a href="/dotnet/api/skiasharp.skcanvas.clippath"><code>ClipPath</code></a> method that combines the clipping area with a rectangle:</p>
+<pre><code class="lang-csharp">public Void ClipRect(SKRect rect, SKClipOperation operation = SKClipOperation.Intersect, Boolean antialias = false);
+</code></pre>
+<p>By default, the resultant clipping area is an intersection of the existing clipping area and the <code>SKPath</code> or <code>SKRect</code> that is specified in the <code>ClipPath</code> or <code>ClipRect</code> method. This is demonstrated in the <strong>Four Circles Intersect Clip</strong> page. The <code>PaintSurface</code> handler in the  <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/FourCircleIntersectClipPage.cs"><code>FourCircleInteresectClipPage</code></a> class reuses the same <code>SKPath</code> object to create four overlapping circles, each of which reduces the clipping area through successive calls to <code>ClipPath</code>:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    float size = Math.Min(info.Width, info.Height);
+    float radius = 0.4f * size;
+    float offset = size / 2 - radius;
+
+    // Translate to center
+    canvas.Translate(info.Width / 2, info.Height / 2);
+
+    using (SKPath path = new SKPath())
+    {
+        path.AddCircle(-offset, -offset, radius);
+        canvas.ClipPath(path, SKClipOperation.Intersect);
+
+        path.Reset();
+        path.AddCircle(-offset, offset, radius);
+        canvas.ClipPath(path, SKClipOperation.Intersect);
+
+        path.Reset();
+        path.AddCircle(offset, -offset, radius);
+        canvas.ClipPath(path, SKClipOperation.Intersect);
+
+        path.Reset();
+        path.AddCircle(offset, offset, radius);
+        canvas.ClipPath(path, SKClipOperation.Intersect);
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Fill;
+            paint.Color = SKColors.Blue;
+            canvas.DrawPaint(paint);
+        }
+    }
+}
+</code></pre>
+<p>What's left is the intersection of these four circles:</p>
+<p><a href="clipping-images/fourcircleintersectclip-large.png#lightbox"><img src="clipping-images/fourcircleintersectclip-small.png" alt="Triple screenshot of the Four Circle Intersect Clip page"></a></p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skclipoperation"><code>SKClipOperation</code></a> enumeration has only two members:</p>
+<ul>
+<li><p><code>Difference</code> removes the specified path or rectangle from the existing clipping area</p>
+</li>
+<li><p><code>Intersect</code> intersects the specified path or rectangle with the existing clipping area</p>
+</li>
+</ul>
+<p>If you replace the four <code>SKClipOperation.Intersect</code> arguments in the <code>FourCircleIntersectClipPage</code> class with <code>SKClipOperation.Difference</code>, you'll see the following:</p>
+<p><a href="clipping-images/fourcircledifferenceclip-large.png#lightbox"><img src="clipping-images/fourcircledifferenceclip-small.png" alt="Triple screenshot of the Four Circle Intersect Clip page with difference operation"></a></p>
+<p>Four overlapping circles have been removed from the clipping area.</p>
+<p>The <strong>Clip Operations</strong> page illustrates the difference between these two operations with just a pair of circles. The first circle on the left is added to the clipping area with the default clip operation of <code>Intersect</code>, while the second circle on the right is added to the clipping area with the clip operation indicated by the text label:</p>
+<p><a href="clipping-images/clipoperations-large.png#lightbox"><img src="clipping-images/clipoperations-small.png" alt="Triple screenshot of the Clip Operations page"></a></p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ClipOperationsPage.cs"><code>ClipOperationsPage</code></a> class defines two <code>SKPaint</code> objects as fields, and then divides the screen up into two rectangular areas. These areas are different depending on whether the phone is in portrait or landscape mode. The <code>DisplayClipOp</code> class then displays the text and calls <code>ClipPath</code> with the two circle paths to illustrate each clip operation:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    float x = 0;
+    float y = 0;
+
+    foreach (SKClipOperation clipOp in Enum.GetValues(typeof(SKClipOperation)))
+    {
+        // Portrait mode
+        if (info.Height &gt; info.Width)
+        {
+            DisplayClipOp(canvas, new SKRect(x, y, x + info.Width, y + info.Height / 2), clipOp);
+            y += info.Height / 2;
+        }
+        // Landscape mode
+        else
+        {
+            DisplayClipOp(canvas, new SKRect(x, y, x + info.Width / 2, y + info.Height), clipOp);
+            x += info.Width / 2;
+        }
+    }
+}
+
+void DisplayClipOp(SKCanvas canvas, SKRect rect, SKClipOperation clipOp)
+{
+    float textSize = textPaint.TextSize;
+    canvas.DrawText(clipOp.ToString(), rect.MidX, rect.Top + textSize, textPaint);
+    rect.Top += textSize;
+
+    float radius = 0.9f * Math.Min(rect.Width / 3, rect.Height / 2);
+    float xCenter = rect.MidX;
+    float yCenter = rect.MidY;
+
+    canvas.Save();
+
+    using (SKPath path1 = new SKPath())
+    {
+        path1.AddCircle(xCenter - radius / 2, yCenter, radius);
+        canvas.ClipPath(path1);
+
+        using (SKPath path2 = new SKPath())
+        {
+            path2.AddCircle(xCenter + radius / 2, yCenter, radius);
+            canvas.ClipPath(path2, clipOp);
+
+            canvas.DrawPaint(fillPaint);
+        }
+    }
+
+    canvas.Restore();
+}
+</code></pre>
+<p>Calling <code>DrawPaint</code> normally causes the entire canvas to be filled with that <code>SKPaint</code> object, but in this case, the method just paints within the clipping area.</p>
+<h2 id="exploring-regions">Exploring Regions</h2>
+<p>You can also define a clipping area in terms of an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skregion"><code>SKRegion</code></a> object.</p>
+<p>A newly created <code>SKRegion</code> object describes an empty area. Usually the first call on the object is <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skregion.setrect#skiasharp-skregion-setrect(skiasharp-skrecti)"><code>SetRect</code></a> so that the region describes a rectangular area. The parameter to <code>SetRect</code> is an <code>SKRectI</code> value — a rectangle with integer coordinates because it specifies the rectangle in terms of pixels. You can then call <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skregion.setpath#skiasharp-skregion-setpath(skiasharp-skpath-skiasharp-skregion)"><code>SetPath</code></a> with an <code>SKPath</code> object. This creates a region that is the same as the interior of the path, but clipped to the initial rectangular region.</p>
+<p>The region can also be modified by calling one of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skregion.op"><code>Op</code></a> method overloads, such as this one:</p>
+<pre><code class="lang-csharp">public Boolean Op(SKRegion region, SKRegionOperation op)
+</code></pre>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skregionoperation"><code>SKRegionOperation</code></a> enumeration is similar to <code>SKClipOperation</code> but it has more members:</p>
+<ul>
+<li><p><code>Difference</code></p>
+</li>
+<li><p><code>Intersect</code></p>
+</li>
+<li><p><code>Union</code></p>
+</li>
+<li><p><code>XOR</code></p>
+</li>
+<li><p><code>ReverseDifference</code></p>
+</li>
+<li><p><code>Replace</code></p>
+</li>
+</ul>
+<p>The region that you're making the <code>Op</code> call on is combined with the region specified as a parameter based on the <code>SKRegionOperation</code> member. When you finally get a region suitable for clipping, you can set that as the clipping area of the canvas using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.clipregion#skiasharp-skcanvas-clipregion(skiasharp-skregion-skiasharp-skclipoperation)"><code>ClipRegion</code></a> method of <code>SKCanvas</code>:</p>
+<pre><code class="lang-csharp">public void ClipRegion(SKRegion region, SKClipOperation operation = SKClipOperation.Intersect)
+</code></pre>
+<p>The following screenshot shows clipping areas based on the six region operations. The left circle is the region that the <code>Op</code> method is called on, and the right circle is the region passed to the <code>Op</code> method:</p>
+<p><a href="clipping-images/regionoperations-large.png#lightbox"><img src="clipping-images/regionoperations-small.png" alt="Triple screenshot of the Region Operations page"></a></p>
+<p>Are these all the possibilities of combining these two circles? Consider the resultant image as a combination of three components, which by themselves are seen in the <code>Difference</code>, <code>Intersect</code>, and <code>ReverseDifference</code> operations. The total number of combinations is two to the third power, or eight. The two that are missing are the original region (which results from not calling <code>Op</code> at all) and an entirely empty region.</p>
+<p>It's harder to use regions for clipping because you need to first create a path, and then a region from that path, and then combine multiple regions. The overall structure of the <strong>Region Operations</strong> page is very similar to <strong>Clip Operations</strong> but the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/RegionOperationsPage.cs"><code>RegionOperationsPage</code></a> class divides the screen up into six areas and shows the extra work required to use regions for this job:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    float x = 0;
+    float y = 0;
+    float width = info.Height &gt; info.Width ? info.Width / 2 : info.Width / 3;
+    float height = info.Height &gt; info.Width ? info.Height / 3 : info.Height / 2;
+
+    foreach (SKRegionOperation regionOp in Enum.GetValues(typeof(SKRegionOperation)))
+    {
+        DisplayClipOp(canvas, new SKRect(x, y, x + width, y + height), regionOp);
+
+        if ((x += width) &gt;= info.Width)
+        {
+            x = 0;
+            y += height;
+        }
+    }
+}
+
+void DisplayClipOp(SKCanvas canvas, SKRect rect, SKRegionOperation regionOp)
+{
+    float textSize = textPaint.TextSize;
+    canvas.DrawText(regionOp.ToString(), rect.MidX, rect.Top + textSize, textPaint);
+    rect.Top += textSize;
+
+    float radius = 0.9f * Math.Min(rect.Width / 3, rect.Height / 2);
+    float xCenter = rect.MidX;
+    float yCenter = rect.MidY;
+
+    SKRectI recti = new SKRectI((int)rect.Left, (int)rect.Top,
+                                (int)rect.Right, (int)rect.Bottom);
+
+    using (SKRegion wholeRectRegion = new SKRegion())
+    {
+        wholeRectRegion.SetRect(recti);
+
+        using (SKRegion region1 = new SKRegion(wholeRectRegion))
+        using (SKRegion region2 = new SKRegion(wholeRectRegion))
+        {
+            using (SKPath path1 = new SKPath())
+            {
+                path1.AddCircle(xCenter - radius / 2, yCenter, radius);
+                region1.SetPath(path1);
+            }
+
+            using (SKPath path2 = new SKPath())
+            {
+                path2.AddCircle(xCenter + radius / 2, yCenter, radius);
+                region2.SetPath(path2);
+            }
+
+            region1.Op(region2, regionOp);
+
+            canvas.Save();
+            canvas.ClipRegion(region1);
+            canvas.DrawPaint(fillPaint);
+            canvas.Restore();
+        }
+    }
+}
+</code></pre>
+<p>Here's a big difference between the <code>ClipPath</code> method and the <code>ClipRegion</code> method:</p>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>Unlike the <code>ClipPath</code> method, the <code>ClipRegion</code> method is not affected by transforms.</p>
+</div>
+<p>To understand the rationale for this difference, it's helpful to understand what a region is. If you've thought about how the clip operations or region operations might be implemented internally, it probably seems very complicated. Several potentially very complex paths are being combined, and the outline of the resultant path is likely an algorithmic nightmare.</p>
+<p>This job is simplified considerably if each path is reduced to a series of horizontal scan lines, such as those in old-fashioned vacuum tube TVs. Each scan line is simply a horizontal line with a start point and an end point. For example, a circle with a radius of 10 pixels can be decomposed into 20 horizontal scan lines, each of which starts at the left part of the circle and ends at the right part. Combining two circles with any region operation becomes very simple because it's simply a matter of examining the start and end coordinates of each pair of corresponding scan lines.</p>
+<p>This is what a region is: A series of horizontal scan lines that define an area.</p>
+<p>However, when an area is reduced to a series of scan lines, these scan lines are based on a particular pixel dimension. Strictly speaking, the region is not a vector graphics object. It is closer in nature to a compressed monochrome bitmap than to a path. Consequently, regions cannot be scaled or rotated without losing fidelity, and for this reason they are not transformed when used for clipping areas.</p>
+<p>However, you can apply transforms to regions for painting purposes. The <strong>Region Paint</strong> program vividly demonstrates the inner nature of regions. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/RegionPaintPage.cs"><code>RegionPaintPage</code></a> class creates an <code>SKRegion</code> object based on an <code>SKPath</code> of a 10-unit radius circle. A transform then expands that circle to fill the page:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    int radius = 10;
+
+    // Create circular path
+    using (SKPath circlePath = new SKPath())
+    {
+        circlePath.AddCircle(0, 0, radius);
+
+        // Create circular region
+        using (SKRegion circleRegion = new SKRegion())
+        {
+            circleRegion.SetRect(new SKRectI(-radius, -radius, radius, radius));
+            circleRegion.SetPath(circlePath);
+
+            // Set transform to move it to center and scale up
+            canvas.Translate(info.Width / 2, info.Height / 2);
+            canvas.Scale(Math.Min(info.Width / 2, info.Height / 2) / radius);
+
+            // Fill region
+            using (SKPaint fillPaint = new SKPaint())
+            {
+                fillPaint.Style = SKPaintStyle.Fill;
+                fillPaint.Color = SKColors.Orange;
+
+                canvas.DrawRegion(circleRegion, fillPaint);
+            }
+
+            // Stroke path for comparison
+            using (SKPaint strokePaint = new SKPaint())
+            {
+                strokePaint.Style = SKPaintStyle.Stroke;
+                strokePaint.Color = SKColors.Blue;
+                strokePaint.StrokeWidth = 0.1f;
+
+                canvas.DrawPath(circlePath, strokePaint);
+            }
+        }
+    }
+}
+</code></pre>
+<p>The <code>DrawRegion</code> call fills the region in orange, while the <code>DrawPath</code> call strokes the original path in blue for comparison:</p>
+<p><a href="clipping-images/regionpaint-large.png#lightbox"><img src="clipping-images/regionpaint-small.png" alt="Triple screenshot of the Region Paint page"></a></p>
+<p>The region is clearly a series of discrete coordinates.</p>
+<p>If you don't need to use transforms in connection with your clipping areas, you can use regions for clipping, as the <strong>Four-Leaf Clover</strong> page demonstrates. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/FourLeafCloverPage.cs"><code>FourLeafCloverPage</code></a> class constructs a composite region from four circular regions, sets that composite region as the clipping area, and then draws a series of 360 straight lines emanating from the center of the page:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    float xCenter = info.Width / 2;
+    float yCenter = info.Height / 2;
+    float radius = 0.24f * Math.Min(info.Width, info.Height);
+
+    using (SKRegion wholeScreenRegion = new SKRegion())
+    {
+        wholeScreenRegion.SetRect(new SKRectI(0, 0, info.Width, info.Height));
+
+        using (SKRegion leftRegion = new SKRegion(wholeScreenRegion))
+        using (SKRegion rightRegion = new SKRegion(wholeScreenRegion))
+        using (SKRegion topRegion = new SKRegion(wholeScreenRegion))
+        using (SKRegion bottomRegion = new SKRegion(wholeScreenRegion))
+        {
+            using (SKPath circlePath = new SKPath())
+            {
+                // Make basic circle path
+                circlePath.AddCircle(xCenter, yCenter, radius);
+
+                // Left leaf
+                circlePath.Transform(SKMatrix.MakeTranslation(-radius, 0));
+                leftRegion.SetPath(circlePath);
+
+                // Right leaf
+                circlePath.Transform(SKMatrix.MakeTranslation(2 * radius, 0));
+                rightRegion.SetPath(circlePath);
+
+                // Make union of right with left
+                leftRegion.Op(rightRegion, SKRegionOperation.Union);
+
+                // Top leaf
+                circlePath.Transform(SKMatrix.MakeTranslation(-radius, -radius));
+                topRegion.SetPath(circlePath);
+
+                // Combine with bottom leaf
+                circlePath.Transform(SKMatrix.MakeTranslation(0, 2 * radius));
+                bottomRegion.SetPath(circlePath);
+
+                // Make union of top with bottom
+                bottomRegion.Op(topRegion, SKRegionOperation.Union);
+
+                // Exclusive-OR left and right with top and bottom
+                leftRegion.Op(bottomRegion, SKRegionOperation.XOR);
+
+                // Set that as clip region
+                canvas.ClipRegion(leftRegion);
+
+                // Set transform for drawing lines from center
+                canvas.Translate(xCenter, yCenter);
+
+                // Draw 360 lines
+                for (double angle = 0; angle &lt; 360; angle++)
+                {
+                    float x = 2 * radius * (float)Math.Cos(Math.PI * angle / 180);
+                    float y = 2 * radius * (float)Math.Sin(Math.PI * angle / 180);
+
+                    using (SKPaint strokePaint = new SKPaint())
+                    {
+                        strokePaint.Color = SKColors.Green;
+                        strokePaint.StrokeWidth = 2;
+
+                        canvas.DrawLine(0, 0, x, y, strokePaint);
+                    }
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<p>It doesn't really look like a four-leaf clover, but it's an image that might otherwise be hard to render without clipping:</p>
+<p><a href="clipping-images/fourleafclover-large.png#lightbox"><img src="clipping-images/fourleafclover-small.png" alt="Triple screenshot of the Four-Leaf Clover page"></a></p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

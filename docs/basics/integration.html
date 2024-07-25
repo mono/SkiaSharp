@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Integrating with Xamarin.Forms | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Integrating with Xamarin.Forms | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="integrating-with-xamarinforms">Integrating with Xamarin.Forms</h1>
+
+<p><em>Create SkiaSharp graphics that respond to touch and Xamarin.Forms elements</em></p>
+<p>SkiaSharp graphics can integrate with the rest of Xamarin.Forms in several ways. You can combine a SkiaSharp canvas and Xamarin.Forms elements on the same page, and even position Xamarin.Forms elements on top of a SkiaSharp canvas:</p>
+<p><img src="integration-images/integrationexample.png" alt="Selecting a color with sliders"></p>
+<p>Another approach to creating interactive SkiaSharp graphics in Xamarin.Forms is through touch.</p>
+<p>The second page in the sample program is entitled <strong>Tap Toggle Fill</strong>. It draws a simple circle two ways — without a fill and with a fill — toggled by a tap. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml.cs"><code>TapToggleFillPage</code></a> class shows how you can alter SkiaSharp graphics in response to user input.</p>
+<p>For this page, the <code>SKCanvasView</code> class is instantiated in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml">TapToggleFill.xaml</a> file, which also sets a Xamarin.Forms <a href="xref:Xamarin.Forms.TapGestureRecognizer"><code>TapGestureRecognizer</code></a> on the view:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.TapToggleFillPage&quot;
+             Title=&quot;Tap Toggle Fill&quot;&gt;
+
+    &lt;skia:SKCanvasView PaintSurface=&quot;OnCanvasViewPaintSurface&quot;&gt;
+        &lt;skia:SKCanvasView.GestureRecognizers&gt;
+            &lt;TapGestureRecognizer Tapped=&quot;OnCanvasViewTapped&quot; /&gt;
+        &lt;/skia:SKCanvasView.GestureRecognizers&gt;
+    &lt;/skia:SKCanvasView&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>Notice the <code>skia</code> XML namespace declaration.</p>
+<p>The <code>Tapped</code> handler for the <code>TapGestureRecognizer</code> object simply toggles the value of a Boolean field and calls the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skcanvasview.invalidatesurface#skiasharp-views-forms-skcanvasview-invalidatesurface"><code>InvalidateSurface</code></a> method of <code>SKCanvasView</code>:</p>
+<pre><code class="lang-csharp">bool showFill = true;
+...
+void OnCanvasViewTapped(object sender, EventArgs args)
+{
+    showFill ^= true;
+    (sender as SKCanvasView).InvalidateSurface();
+}
+</code></pre>
+<p>The call to <code>InvalidateSurface</code> effectively generates a call to the <code>PaintSurface</code> handler, which uses the <code>showFill</code> field to fill or not fill the circle:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = Color.Red.ToSKColor(),
+        StrokeWidth = 50
+    };
+    canvas.DrawCircle(info.Width / 2, info.Height / 2, 100, paint);
+
+    if (showFill)
+    {
+        paint.Style = SKPaintStyle.Fill;
+        paint.Color = SKColors.Blue;
+        canvas.DrawCircle(info.Width / 2, info.Height / 2, 100, paint);
+    }
+}
+</code></pre>
+<p>The <code>StrokeWidth</code> property has been set to 50 to accentuate the difference. You can also see the whole line width by drawing the interior first and then the outline. By default, graphics figures that are drawn later in the <code>PaintSurface</code> event handler obscure those drawn earlier in the handler.</p>
+<p>The <strong>Color Explore</strong> page demonstrates how you can also integrate SkiaSharp graphics with other Xamarin.Forms elements, and also demonstrates the difference between two alternative methods for defining colors in SkiaSharp. The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.fromhsl#skiasharp-skcolor-fromhsl(system-single-system-single-system-single-system-byte)"><code>SKColor.FromHsl</code></a> method creates an <code>SKColor</code> value based on the Hue-Saturation-Lightness model:</p>
+<pre><code class="lang-csharp">public static SKColor FromHsl (Single h, Single s, Single l, Byte a)
+</code></pre>
+<p>The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.fromhsv#skiasharp-skcolor-fromhsv(system-single-system-single-system-single-system-byte)"><code>SKColor.FromHsv</code></a> method creates an <code>SKColor</code> value based on the similar Hue-Saturation-Value model:</p>
+<pre><code class="lang-csharp">public static SKColor FromHsv (Single h, Single s, Single v, Byte a)
+</code></pre>
+<p>In both cases, the <code>h</code> argument ranges from 0 to 360. The <code>s</code>, <code>l</code>, and <code>v</code> arguments range from 0 to 100. The <code>a</code> (alpha or opacity) argument ranges from 0 to 255.</p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml"><strong>ColorExplorePage.xaml</strong></a> file creates two <code>SKCanvasView</code> objects in a <code>StackLayout</code> side by side with <code>Slider</code> and <code>Label</code> views that allow the user to select HSL and HSV color values:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Basics.ColorExplorePage&quot;
+             Title=&quot;Color Explore&quot;&gt;
+    &lt;StackLayout&gt;
+        &lt;!-- Hue slider --&gt;
+        &lt;Slider x:Name=&quot;hueSlider&quot;
+                Maximum=&quot;360&quot;
+                Margin=&quot;20, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label HorizontalTextAlignment=&quot;Center&quot;
+               Text=&quot;{Binding Source={x:Reference hueSlider},
+                              Path=Value,
+                              StringFormat='Hue = {0:F0}'}&quot; /&gt;
+
+        &lt;!-- Saturation slider --&gt;
+        &lt;Slider x:Name=&quot;saturationSlider&quot;
+                Maximum=&quot;100&quot;
+                Margin=&quot;20, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label HorizontalTextAlignment=&quot;Center&quot;
+               Text=&quot;{Binding Source={x:Reference saturationSlider},
+                              Path=Value,
+                              StringFormat='Saturation = {0:F0}'}&quot; /&gt;
+
+        &lt;!-- Lightness slider --&gt;
+        &lt;Slider x:Name=&quot;lightnessSlider&quot;
+                Maximum=&quot;100&quot;
+                Margin=&quot;20, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label HorizontalTextAlignment=&quot;Center&quot;
+               Text=&quot;{Binding Source={x:Reference lightnessSlider},
+                              Path=Value,
+                              StringFormat='Lightness = {0:F0}'}&quot; /&gt;
+
+        &lt;!-- HSL canvas view --&gt;
+        &lt;Grid VerticalOptions=&quot;FillAndExpand&quot;&gt;
+            &lt;skia:SKCanvasView x:Name=&quot;hslCanvasView&quot;
+                               PaintSurface=&quot;OnHslCanvasViewPaintSurface&quot; /&gt;
+
+            &lt;Label x:Name=&quot;hslLabel&quot;
+                   HorizontalOptions=&quot;Center&quot;
+                   VerticalOptions=&quot;Center&quot;
+                   BackgroundColor=&quot;Black&quot;
+                   TextColor=&quot;White&quot; /&gt;
+        &lt;/Grid&gt;
+
+        &lt;!-- Value slider --&gt;
+        &lt;Slider x:Name=&quot;valueSlider&quot;
+                Maximum=&quot;100&quot;
+                Margin=&quot;20, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label HorizontalTextAlignment=&quot;Center&quot;
+               Text=&quot;{Binding Source={x:Reference valueSlider},
+                              Path=Value,
+                              StringFormat='Value = {0:F0}'}&quot; /&gt;
+
+        &lt;!-- HSV canvas view --&gt;
+        &lt;Grid VerticalOptions=&quot;FillAndExpand&quot;&gt;
+            &lt;skia:SKCanvasView x:Name=&quot;hsvCanvasView&quot;
+                               PaintSurface=&quot;OnHsvCanvasViewPaintSurface&quot; /&gt;
+
+            &lt;Label x:Name=&quot;hsvLabel&quot;
+                   HorizontalOptions=&quot;Center&quot;
+                   VerticalOptions=&quot;Center&quot;
+                   BackgroundColor=&quot;Black&quot;
+                   TextColor=&quot;White&quot; /&gt;
+        &lt;/Grid&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The two <code>SKCanvasView</code> elements are in a single-cell <code>Grid</code> with a <code>Label</code> sitting on top for displaying the resultant RGB color value.</p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml.cs"><strong>ColorExplorePage.xaml.cs</strong></a> code-behind file is relatively simple. The shared <code>ValueChanged</code> handler for the three <code>Slider</code> elements simply invalidates both <code>SKCanvasView</code> elements. The <code>PaintSurface</code> handlers clear the canvas with the color indicated by the <code>Slider</code> elements, and also set the <code>Label</code> sitting on top of the <code>SKCanvasView</code> elements:</p>
+<pre><code class="lang-csharp">public partial class ColorExplorePage : ContentPage
+{
+    public ColorExplorePage()
+    {
+        InitializeComponent();
+
+        hueSlider.Value = 0;
+        saturationSlider.Value = 100;
+        lightnessSlider.Value = 50;
+        valueSlider.Value = 100;
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        hslCanvasView.InvalidateSurface();
+        hsvCanvasView.InvalidateSurface();
+    }
+
+    void OnHslCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKColor color = SKColor.FromHsl((float)hueSlider.Value,
+                                        (float)saturationSlider.Value,
+                                        (float)lightnessSlider.Value);
+        args.Surface.Canvas.Clear(color);
+
+        hslLabel.Text = String.Format(&quot; RGB = {0:X2}-{1:X2}-{2:X2} &quot;,
+                                      color.Red, color.Green, color.Blue);
+    }
+
+    void OnHsvCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKColor color = SKColor.FromHsv((float)hueSlider.Value,
+                                        (float)saturationSlider.Value,
+                                        (float)valueSlider.Value);
+        args.Surface.Canvas.Clear(color);
+
+        hsvLabel.Text = String.Format(&quot; RGB = {0:X2}-{1:X2}-{2:X2} &quot;,
+                                      color.Red, color.Green, color.Blue);
+    }
+}
+</code></pre>
+<p>In both the HSL and HSV color models, the Hue value ranges from 0 to 360 and indicates the dominant hue of the color. These are the traditional colors of the rainbow: red, orange, yellow, green, blue, indigo, violet, and back in a circle to red.</p>
+<p>In the HSL model, a 0 value for Lightness is always black, and a 100 value is always white. When the Saturation value is 0, Lightness values between 0 and 100 are shades of gray. Increasing the Saturation adds more color. Pure colors (which are RGB values with one component equal to 255, another equal to 0, and the third ranging from 0 to 255) occur when the Saturation is 100 and the Lightness is 50.</p>
+<p>In the HSV model, pure colors result when both the Saturation and Value are 100. When Value is 0, regardless of any other settings, the color is black. Gray shades occur when the Saturation is 0 and Value ranges from 0 to 100.</p>
+<p>But the best way to get a feel for the two models is to experiment with them yourself:</p>
+<p><a href="integration-images/colorexplore-small.png#lightbox" title="Triple screenshot of the Color Explore page"><img src="integration-images/colorexplore-large.png" alt="Triple screenshot of the Color Explore page"></a></p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,687 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Animating SkiaSharp bitmaps | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Animating SkiaSharp bitmaps | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="animating-skiasharp-bitmaps">Animating SkiaSharp bitmaps</h1>
+
+<p>Applications that animate SkiaSharp graphics generally call <code>InvalidateSurface</code> on the <code>SKCanvasView</code> at a fixed rate, often every 16 milliseconds. Invalidating the surface triggers a call to the <code>PaintSurface</code> handler to redraw the display. As the visuals are redrawn 60 times a second, they appear to be smoothly animated.</p>
+<p>However, if the graphics are too complex to be rendered in 16 milliseconds, the animation can become jittery. The programmer might choose to reduce the refresh rate to 30 times or 15 times a second, but sometimes even that's not enough. Sometimes graphics are so complex that they simply can't be rendered in real time.</p>
+<p>One solution is to prepare for the animation beforehand by rendering the individual frames of the animation on a series of bitmaps. To display the animation, it's only necessary to display these bitmaps sequentially 60 times a second.</p>
+<p>Of course, that's potentially a lot of bitmaps, but that is how big-budget 3D animated movies are made. The 3D graphics are much too complex to be rendered in real time. A lot of processing time is required to render each frame. What you see when you watch the movie is essentially a series of bitmaps.</p>
+<p>You can do something similar in SkiaSharp. This article demonstrates two types of bitmap animation. The first example is an animation of the Mandelbrot Set:</p>
+<p><img src="animating-images/AnimatingSample.png" alt="Animating Sample" title="Animating Sample"></p>
+<p>The second example shows how to use SkiaSharp to render an animated GIF file.</p>
+<h2 id="bitmap-animation">Bitmap animation</h2>
+<p>The Mandelbrot Set is visually fascinating but computionally lengthy. (For a discussion of the Mandelbrot Set and the mathematics used here, see <a href="/xamarin/xamarin-forms/creating-mobile-apps-xamarin-forms/summaries/chapter20">Chapter 20 of <em>Creating Mobile Apps with Xamarin.Forms</em></a> starting on page 666. The following description assumes that background knowledge.)</p>
+<p>The sample uses bitmap animation to simulate a continuous zoom of a fixed point in the Mandelbrot Set. Zooming in is followed by zooming out, and then the cycle repeats forever or until you end the program.</p>
+<p>The program prepares for this animation by creating up to 50 bitmaps that it stores in application local storage. Each bitmap encompasses half the width and height of the complex plane as the previous bitmap. (In the program, these bitmaps are said to represent integral <em>zoom levels</em>.) The bitmaps are then displayed in sequence. The scaling of each bitmap is animated to provide a smooth progression from one bitmap to another.</p>
+<p>Like the final program described in Chapter 20 of <em>Creating Mobile Apps with Xamarin.Forms</em>, the calculation of the Mandelbrot Set in <strong>Mandelbrot Animation</strong> is an asynchronous method with eight parameters. The parameters include a complex center point, and a width and height of the complex plane surrounding that center point. The next three parameters are the pixel width and height of the bitmap to be created, and a maximum number of iterations for the recursive calculation. The <code>progress</code> parameter is used to display the progress of this calculation. The <code>cancelToken</code> parameter is not used in this program:</p>
+<pre><code class="lang-csharp">static class Mandelbrot
+{
+    public static Task&lt;BitmapInfo&gt; CalculateAsync(Complex center,
+                                                  double width, double height,
+                                                  int pixelWidth, int pixelHeight,
+                                                  int iterations,
+                                                  IProgress&lt;double&gt; progress,
+                                                  CancellationToken cancelToken)
+    {
+        return Task.Run(() =&gt;
+        {
+            int[] iterationCounts = new int[pixelWidth * pixelHeight];
+            int index = 0;
+
+            for (int row = 0; row &lt; pixelHeight; row++)
+            {
+                progress.Report((double)row / pixelHeight);
+                cancelToken.ThrowIfCancellationRequested();
+
+                double y = center.Imaginary + height / 2 - row * height / pixelHeight;
+
+                for (int col = 0; col &lt; pixelWidth; col++)
+                {
+                    double x = center.Real - width / 2 + col * width / pixelWidth;
+                    Complex c = new Complex(x, y);
+
+                    if ((c - new Complex(-1, 0)).Magnitude &lt; 1.0 / 4)
+                    {
+                        iterationCounts[index++] = -1;
+                    }
+                    // http://www.reenigne.org/blog/algorithm-for-mandelbrot-cardioid/
+                    else if (c.Magnitude * c.Magnitude * (8 * c.Magnitude * c.Magnitude - 3) &lt; 3.0 / 32 - c.Real)
+                    {
+                        iterationCounts[index++] = -1;
+                    }
+                    else
+                    {
+                        Complex z = 0;
+                        int iteration = 0;
+
+                        do
+                        {
+                            z = z * z + c;
+                            iteration++;
+                        }
+                        while (iteration &lt; iterations &amp;&amp; z.Magnitude &lt; 2);
+
+                        if (iteration == iterations)
+                        {
+                            iterationCounts[index++] = -1;
+                        }
+                        else
+                        {
+                            iterationCounts[index++] = iteration;
+                        }
+                    }
+                }
+            }
+            return new BitmapInfo(pixelWidth, pixelHeight, iterationCounts);
+        }, cancelToken);
+    }
+}
+</code></pre>
+<p>The method returns an object of type <code>BitmapInfo</code> that provides information for creating a bitmap:</p>
+<pre><code class="lang-csharp">class BitmapInfo
+{
+    public BitmapInfo(int pixelWidth, int pixelHeight, int[] iterationCounts)
+    {
+        PixelWidth = pixelWidth;
+        PixelHeight = pixelHeight;
+        IterationCounts = iterationCounts;
+    }
+
+    public int PixelWidth { private set; get; }
+
+    public int PixelHeight { private set; get; }
+
+    public int[] IterationCounts { private set; get; }
+}
+</code></pre>
+<p>The <strong>Mandelbrot Animation</strong> XAML file includes two <code>Label</code> views, a <code>ProgressBar</code>, and a <code>Button</code> as well as the <code>SKCanvasView</code>:</p>
+<pre><code class="lang-csharp">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;MandelAnima.MainPage&quot;
+             Title=&quot;Mandelbrot Animation&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;Label x:Name=&quot;statusLabel&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+        &lt;ProgressBar x:Name=&quot;progressBar&quot; /&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;StackLayout Orientation=&quot;Horizontal&quot;
+                     Padding=&quot;5&quot;&gt;
+            &lt;Label x:Name=&quot;storageLabel&quot;
+                   VerticalOptions=&quot;Center&quot; /&gt;
+
+            &lt;Button x:Name=&quot;deleteButton&quot;
+                    Text=&quot;Delete All&quot;
+                    HorizontalOptions=&quot;EndAndExpand&quot;
+                    Clicked=&quot;OnDeleteButtonClicked&quot; /&gt;
+        &lt;/StackLayout&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file begins by defining three crucial constants and an array of bitmaps:</p>
+<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+{
+    const int COUNT = 10;           // The number of bitmaps in the animation.
+                                    // This can go up to 50!
+
+    const int BITMAP_SIZE = 1000;   // Program uses square bitmaps exclusively
+
+    // Uncomment just one of these, or define your own
+    static readonly Complex center = new Complex(-1.17651152924355, 0.298520986549558);
+    //   static readonly Complex center = new Complex(-0.774693089457127, 0.124226621261617);
+    //   static readonly Complex center = new Complex(-0.556624880053304, 0.634696788141351);
+
+    SKBitmap[] bitmaps = new SKBitmap[COUNT];   // array of bitmaps
+    ···
+}
+</code></pre>
+<p>At some point, you'll probably want to change the <code>COUNT</code> value to 50 to see the full range of the animation. Values above 50 are not useful. Around a zoom level of 48 or so, the resolution of double-precision floating-point numbers becomes insufficient for the Mandelbrot Set calculation. This problem is discussed on page 684 of <em>Creating Mobile Apps with Xamarin.Forms</em>.</p>
+<p>The <code>center</code> value is very important. This is the focus of the animation zoom. The three values in the file are those used in the three final screenshots in Chapter 20 of <em>Creating Mobile Apps with Xamarin.Forms</em> on page 684, but you can experiment with the program in that chapter to come up with one of your own values.</p>
+<p>The <strong>Mandelbrot Animation</strong> sample stores these <code>COUNT</code> bitmaps in local application storage. Fifty bitmaps require over 20 megabytes of storage on your device, so you might want to know how much storage these bitmaps are occupying, and at some point you might want to delete them all. That's the purpose of these two methods at the bottom of the <code>MainPage</code> class:</p>
+<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+{
+    ···
+    void TallyBitmapSizes()
+    {
+        long fileSize = 0;
+
+        foreach (string filename in Directory.EnumerateFiles(FolderPath()))
+        {
+            fileSize += new FileInfo(filename).Length;
+        }
+
+        storageLabel.Text = $&quot;Total storage: {fileSize:N0} bytes&quot;;
+    }
+
+    void OnDeleteButtonClicked(object sender, EventArgs args)
+    {
+        foreach (string filepath in Directory.EnumerateFiles(FolderPath()))
+        {
+            File.Delete(filepath);
+        }
+
+        TallyBitmapSizes();
+    }
+}
+</code></pre>
+<p>You can delete the bitmaps in local storage while the program is animating those same bitmaps because the program retains them in memory. But the next time you run the program, it will need to recreate the bitmaps.</p>
+<p>The bitmaps stored in local application storage incorporate the <code>center</code> value in their filenames, so if you change the <code>center</code> setting, the existing bitmaps will not be replaced in storage, and will continue to occupy space.</p>
+<p>Here are the methods that <code>MainPage</code> uses for constructing the filenames, as well as a <code>MakePixel</code> method for defining a pixel value based on color components:</p>
+<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+{
+    ···
+    // File path for storing each bitmap in local storage
+    string FolderPath() =&gt;
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+    string FilePath(int zoomLevel) =&gt;
+        Path.Combine(FolderPath(),
+                     String.Format(&quot;R{0}I{1}Z{2:D2}.png&quot;, center.Real, center.Imaginary, zoomLevel));
+
+    // Form bitmap pixel for Rgba8888 format
+    uint MakePixel(byte alpha, byte red, byte green, byte blue) =&gt;
+        (uint)((alpha &lt;&lt; 24) | (blue &lt;&lt; 16) | (green &lt;&lt; 8) | red);
+    ···
+}
+</code></pre>
+<p>The <code>zoomLevel</code> parameter to <code>FilePath</code> ranges from 0 to the <code>COUNT</code> constant minus 1.</p>
+<p>The <code>MainPage</code> constructor calls the <code>LoadAndStartAnimation</code> method:</p>
+<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+{
+    ···
+    public MainPage()
+    {
+        InitializeComponent();
+
+        LoadAndStartAnimation();
+    }
+    ···
+}
+</code></pre>
+<p>The <code>LoadAndStartAnimation</code> method is responsible for accessing application local storage to load any bitmaps that might have been created when the program was run previously. It loops through <code>zoomLevel</code> values from 0 to <code>COUNT</code>. If the file exists, it loads it into the <code>bitmaps</code> array. Otherwise, it needs to create a bitmap for the particular <code>center</code> and <code>zoomLevel</code> values by calling <code>Mandelbrot.CalculateAsync</code>. That method obtains the iteration counts for each pixel, which this method converts into colors:</p>
+<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+{
+    ···
+    async void LoadAndStartAnimation()
+    {
+        // Show total bitmap storage
+        TallyBitmapSizes();
+
+        // Create progressReporter for async operation
+        Progress&lt;double&gt; progressReporter =
+            new Progress&lt;double&gt;((double progress) =&gt; progressBar.Progress = progress);
+
+        // Create (unused) CancellationTokenSource for async operation
+        CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+
+        // Loop through all the zoom levels
+        for (int zoomLevel = 0; zoomLevel &lt; COUNT; zoomLevel++)
+        {
+            // If the file exists, load it
+            if (File.Exists(FilePath(zoomLevel)))
+            {
+                statusLabel.Text = $&quot;Loading bitmap for zoom level {zoomLevel}&quot;;
+
+                using (Stream stream = File.OpenRead(FilePath(zoomLevel)))
+                {
+                    bitmaps[zoomLevel] = SKBitmap.Decode(stream);
+                }
+            }
+            // Otherwise, create a new bitmap
+            else
+            {
+                statusLabel.Text = $&quot;Creating bitmap for zoom level {zoomLevel}&quot;;
+
+                CancellationToken cancelToken = cancelTokenSource.Token;
+
+                // Do the (generally lengthy) Mandelbrot calculation
+                BitmapInfo bitmapInfo =
+                    await Mandelbrot.CalculateAsync(center,
+                                                    4 / Math.Pow(2, zoomLevel),
+                                                    4 / Math.Pow(2, zoomLevel),
+                                                    BITMAP_SIZE, BITMAP_SIZE,
+                                                    (int)Math.Pow(2, 10), progressReporter, cancelToken);
+
+                // Create bitmap &amp; get pointer to the pixel bits
+                SKBitmap bitmap = new SKBitmap(BITMAP_SIZE, BITMAP_SIZE, SKColorType.Rgba8888, SKAlphaType.Opaque);
+                IntPtr basePtr = bitmap.GetPixels();
+
+                // Set pixel bits to color based on iteration count
+                for (int row = 0; row &lt; bitmap.Width; row++)
+                    for (int col = 0; col &lt; bitmap.Height; col++)
+                    {
+                        int iterationCount = bitmapInfo.IterationCounts[row * bitmap.Width + col];
+                        uint pixel = 0xFF000000;            // black
+
+                        if (iterationCount != -1)
+                        {
+                            double proportion = (iterationCount / 32.0) % 1;
+                            byte red = 0, green = 0, blue = 0;
+
+                            if (proportion &lt; 0.5)
+                            {
+                                red = (byte)(255 * (1 - 2 * proportion));
+                                blue = (byte)(255 * 2 * proportion);
+                            }
+                            else
+                            {
+                                proportion = 2 * (proportion - 0.5);
+                                green = (byte)(255 * proportion);
+                                blue = (byte)(255 * (1 - proportion));
+                            }
+
+                            pixel = MakePixel(0xFF, red, green, blue);
+                        }
+
+                        // Calculate pointer to pixel
+                        IntPtr pixelPtr = basePtr + 4 * (row * bitmap.Width + col);
+
+                        unsafe     // requires compiling with unsafe flag
+                        {
+                            *(uint*)pixelPtr.ToPointer() = pixel;
+                        }
+                    }
+
+                // Save as PNG file
+                SKData data = SKImage.FromBitmap(bitmap).Encode();
+
+                try
+                {
+                    File.WriteAllBytes(FilePath(zoomLevel), data.ToArray());
+                }
+                catch
+                {
+                    // Probably out of space, but just ignore
+                }
+
+                // Store in array
+                bitmaps[zoomLevel] = bitmap;
+
+                // Show new bitmap sizes
+                TallyBitmapSizes();
+            }
+
+            // Display the bitmap
+            bitmapIndex = zoomLevel;
+            canvasView.InvalidateSurface();
+        }
+
+        // Now start the animation
+        stopwatch.Start();
+        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+    }
+    ···
+}
+</code></pre>
+<p>Notice that the program stores these bitmaps in local application storage rather than in the device's photo library. The .NET Standard 2.0 library allows using the familiar <code>File.OpenRead</code> and <code>File.WriteAllBytes</code> methods for this task.</p>
+<p>After all the bitmaps have been created or loaded into memory, the method starts a <code>Stopwatch</code> object and calls <code>Device.StartTimer</code>. The <code>OnTimerTick</code> method is called every 16 milliseconds.</p>
+<p><code>OnTimerTick</code> calculates a <code>time</code> value in milliseconds that ranges from 0 to 6000 times <code>COUNT</code>, which apportions six seconds for the display of each bitmap. The <code>progress</code> value uses the <code>Math.Sin</code> value to create a sinusoidal animation that will be slower at the beginning of the cycle, and slower at the end as it reverses direction.</p>
+<p>The <code>progress</code> value ranges from 0 to <code>COUNT</code>. This means that the integer part of <code>progress</code> is an index into the <code>bitmaps</code> array, while the fractional part of <code>progress</code> indicates a zoom level for that particular bitmap. These values are stored in the <code>bitmapIndex</code> and <code>bitmapProgress</code> fields, and are displayed by the <code>Label</code> and <code>Slider</code> in the XAML file. The <code>SKCanvasView</code> is invalidated to update the bitmap display:</p>
+<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+{
+    ···
+    Stopwatch stopwatch = new Stopwatch();      // for the animation
+    int bitmapIndex;
+    double bitmapProgress = 0;
+    ···
+    bool OnTimerTick()
+    {
+        int cycle = 6000 * COUNT;       // total cycle length in milliseconds
+
+        // Time in milliseconds from 0 to cycle
+        int time = (int)(stopwatch.ElapsedMilliseconds % cycle);
+
+        // Make it sinusoidal, including bitmap index and gradation between bitmaps
+        double progress = COUNT * 0.5 * (1 + Math.Sin(2 * Math.PI * time / cycle - Math.PI / 2));
+
+        // These are the field values that the PaintSurface handler uses
+        bitmapIndex = (int)progress;
+        bitmapProgress = progress - bitmapIndex;
+
+        // It doesn't often happen that we get up to COUNT, but an exception would be raised
+        if (bitmapIndex &lt; COUNT)
+        {
+            // Show progress in UI
+            statusLabel.Text = $&quot;Displaying bitmap for zoom level {bitmapIndex}&quot;;
+            progressBar.Progress = bitmapProgress;
+
+            // Update the canvas
+            canvasView.InvalidateSurface();
+        }
+
+        return true;
+    }
+    ···
+}
+</code></pre>
+<p>Finally, the <code>PaintSurface</code> handler of the <code>SKCanvasView</code> calculates a destination rectangle to display the bitmap as large as possible while maintaining the aspect ratio. A source rectangle is based on the <code>bitmapProgress</code> value. The <code>fraction</code> value calculated here ranges from 0 when <code>bitmapProgress</code> is 0 to display the entire bitmap, to 0.25 when <code>bitmapProgress</code> is 1 to display half the width and height of the bitmap, effectively zooming in:</p>
+<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+{
+    ···
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        if (bitmaps[bitmapIndex] != null)
+        {
+            // Determine destination rect as square in canvas
+            int dimension = Math.Min(info.Width, info.Height);
+            float x = (info.Width - dimension) / 2;
+            float y = (info.Height - dimension) / 2;
+            SKRect destRect = new SKRect(x, y, x + dimension, y + dimension);
+
+            // Calculate source rectangle based on fraction:
+            //  bitmapProgress == 0: full bitmap
+            //  bitmapProgress == 1: half of length and width of bitmap
+            float fraction = 0.5f * (1 - (float)Math.Pow(2, -bitmapProgress));
+            SKBitmap bitmap = bitmaps[bitmapIndex];
+            int width = bitmap.Width;
+            int height = bitmap.Height;
+            SKRect sourceRect = new SKRect(fraction * width, fraction * height,
+                                           (1 - fraction) * width, (1 - fraction) * height);
+
+            // Display the bitmap
+            canvas.DrawBitmap(bitmap, sourceRect, destRect);
+        }
+    }
+    ···
+}
+</code></pre>
+<p>Here's the program running:</p>
+<p><a href="animating-images/MandelbrotAnimation-Large.png#lightbox"><img src="animating-images/MandelbrotAnimation.png" alt="Mandelbrot Animation" title="Mandelbrot Animation"></a></p>
+<h2 id="gif-animation">GIF animation</h2>
+<p>The Graphics Interchange Format (GIF) specification includes a feature that allows a single GIF file to contain multiple sequential frames of a scene that can be displayed in succession, often in a loop. These files are known as <em>animated GIFs</em>. Web browsers can play animated GIFs, and SkiaSharp allows an application to extract the frames from an animated GIF file and to display them sequentially.</p>
+<p>The sample includes an animated GIF resource named <strong>Newtons_cradle_animation_book_2.gif</strong> created by DemonDeLuxe and downloaded from the <a href="https://en.wikipedia.org/wiki/Newton%27s_cradle">Newton's Cradle</a> page in Wikipedia. The <strong>Animated GIF</strong> page includes a XAML file that provides that information and instantiates an <code>SKCanvasView</code>:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.AnimatedGifPage&quot;
+             Title=&quot;Animated GIF&quot;&gt;
+
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           Grid.Row=&quot;0&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Label Text=&quot;GIF file by DemonDeLuxe from Wikipedia Newton's Cradle page&quot;
+               Grid.Row=&quot;1&quot;
+               Margin=&quot;0, 5&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file is not generalized to play any animated GIF file. It ignores some of the information that is available, in particular a repetition count, and simply plays the animated GIF in a loop.</p>
+<p>The use of SkisSharp to extract the frames of an animated GIF file does not seem to be documented anywhere, so the description of the code that follows is more detailed than usual:</p>
+<p>The decoding of the animated GIF file occurs in the page's constructor, and requires that the <code>Stream</code> object referencing the bitmap be used to create an <code>SKManagedStream</code> object and then an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec"><code>SKCodec</code></a> object. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec.framecount#skiasharp-skcodec-framecount"><code>FrameCount</code></a> property indicates the number of frames that make up the animation.</p>
+<p>These frames are eventually saved as individual bitmaps, so the constructor uses <code>FrameCount</code> to allocate an array of type <code>SKBitmap</code> as well as two <code>int</code> arrays for the duration of each frame and (to ease the animation logic) the accumulated durations.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec.frameinfo#skiasharp-skcodec-frameinfo"><code>FrameInfo</code></a> property of <code>SKCodec</code> class is an array of <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodecframeinfo"><code>SKCodecFrameInfo</code></a> values, one for each frame, but the only thing this program takes from that structure is the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodecframeinfo.duration#skiasharp-skcodecframeinfo-duration"><code>Duration</code></a> of the frame in milliseconds.</p>
+<p><code>SKCodec</code> defines a property named <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec.info#skiasharp-skcodec-info"><code>Info</code></a> of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo"><code>SKImageInfo</code></a>, but that <code>SKImageInfo</code> value indicates (at least for this image) that the color type is <code>SKColorType.Index8</code>, which means that each pixel is an index into a color type. To avoid bothering with color tables, the program uses the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo.width#skiasharp-skimageinfo-width"><code>Width</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo.height#skiasharp-skimageinfo-height"><code>Height</code></a> information from that structure to construct it's own full-color <code>ImageInfo</code> value. Each <code>SKBitmap</code> is created from that.</p>
+<p>The <code>GetPixels</code> method of <code>SKBitmap</code> returns an <code>IntPtr</code> referencing the pixel bits of that bitmap. These pixel bits have not been set yet. That <code>IntPtr</code> is passed to one of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec.getpixels#skiasharp-skcodec-getpixels(skiasharp-skimageinfo-system-intptr-skiasharp-skcodecoptions)"><code>GetPixels</code></a> methods of <code>SKCodec</code>. That method copies the frame from the GIF file into the memory space referenced by the <code>IntPtr</code>. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodecoptions"><code>SKCodecOptions</code></a> constructor indicates the frame number:</p>
+<pre><code class="lang-csharp">public partial class AnimatedGifPage : ContentPage
+{
+    SKBitmap[] bitmaps;
+    int[] durations;
+    int[] accumulatedDurations;
+    int totalDuration;
+    ···
+
+    public AnimatedGifPage ()
+    {
+        InitializeComponent ();
+
+        string resourceID = &quot;SkiaSharpFormsDemos.Media.Newtons_cradle_animation_book_2.gif&quot;;
+        Assembly assembly = GetType().GetTypeInfo().Assembly;
+
+        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+        using (SKManagedStream skStream = new SKManagedStream(stream))
+        using (SKCodec codec = SKCodec.Create(skStream))
+        {
+            // Get frame count and allocate bitmaps
+            int frameCount = codec.FrameCount;
+            bitmaps = new SKBitmap[frameCount];
+            durations = new int[frameCount];
+            accumulatedDurations = new int[frameCount];
+
+            // Note: There's also a RepetitionCount property of SKCodec not used here
+
+            // Loop through the frames
+            for (int frame = 0; frame &lt; frameCount; frame++)
+            {
+                // From the FrameInfo collection, get the duration of each frame
+                durations[frame] = codec.FrameInfo[frame].Duration;
+
+                // Create a full-color bitmap for each frame
+                SKImageInfo imageInfo = code.new SKImageInfo(codec.Info.Width, codec.Info.Height);
+                bitmaps[frame] = new SKBitmap(imageInfo);
+
+                // Get the address of the pixels in that bitmap
+                IntPtr pointer = bitmaps[frame].GetPixels();
+
+                // Create an SKCodecOptions value to specify the frame
+                SKCodecOptions codecOptions = new SKCodecOptions(frame, false);
+
+                // Copy pixels from the frame into the bitmap
+                codec.GetPixels(imageInfo, pointer, codecOptions);
+            }
+
+            // Sum up the total duration
+            for (int frame = 0; frame &lt; durations.Length; frame++)
+            {
+                totalDuration += durations[frame];
+            }
+
+            // Calculate the accumulated durations
+            for (int frame = 0; frame &lt; durations.Length; frame++)
+            {
+                accumulatedDurations[frame] = durations[frame] +
+                    (frame == 0 ? 0 : accumulatedDurations[frame - 1]);
+            }
+        }
+    }
+    ···
+}
+</code></pre>
+<p>Despite the <code>IntPtr</code> value, no <code>unsafe</code> code is required because the <code>IntPtr</code> is never converted to a C# pointer value.</p>
+<p>After each frame has been extracted, the constructor totals up the durations of all the frames, and then initializes another array with the accumulated durations.</p>
+<p>The remainder of the code-behind file is dedicated to animation. The <code>Device.StartTimer</code> method is used to start a timer going, and the <code>OnTimerTick</code> callback uses a <code>Stopwatch</code> object to determine the elapsed time in milliseconds. Looping through the accumulated durations array is sufficient to find the current frame:</p>
+<pre><code class="lang-csharp">public partial class AnimatedGifPage : ContentPage
+{
+    SKBitmap[] bitmaps;
+    int[] durations;
+    int[] accumulatedDurations;
+    int totalDuration;
+
+    Stopwatch stopwatch = new Stopwatch();
+    bool isAnimating;
+
+    int currentFrame;
+    ···
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        isAnimating = true;
+        stopwatch.Start();
+        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+
+        stopwatch.Stop();
+        isAnimating = false;
+    }
+
+    bool OnTimerTick()
+    {
+        int msec = (int)(stopwatch.ElapsedMilliseconds % totalDuration);
+        int frame = 0;
+
+        // Find the frame based on the elapsed time
+        for (frame = 0; frame &lt; accumulatedDurations.Length; frame++)
+        {
+            if (msec &lt; accumulatedDurations[frame])
+            {
+                break;
+            }
+        }
+
+        // Save in a field and invalidate the SKCanvasView.
+        if (currentFrame != frame)
+        {
+            currentFrame = frame;
+            canvasView.InvalidateSurface();
+        }
+
+        return isAnimating;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear(SKColors.Black);
+
+        // Get the bitmap and center it
+        SKBitmap bitmap = bitmaps[currentFrame];
+        canvas.DrawBitmap(bitmap,info.Rect, BitmapStretch.Uniform);
+    }
+}
+</code></pre>
+<p>Each time the <code>currentframe</code> variable changes, the <code>SKCanvasView</code> is invalidated and the new frame is displayed:</p>
+<p><a href="animating-images/AnimatedGif-Large.png#lightbox"><img src="animating-images/AnimatedGif.png" alt="Animated GIF" title="Animated GIF"></a></p>
+<p>Of course, you'll want to run the program yourself to see the animation.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

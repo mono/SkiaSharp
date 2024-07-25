@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>SkiaSharp Transparency | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="SkiaSharp Transparency | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="skiasharp-transparency">SkiaSharp transparency</h1>
+
+<p>As you've seen, the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint"><code>SKPaint</code></a> class includes a <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.color#skiasharp-skpaint-color"><code>Color</code></a> property of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor"><code>SKColor</code></a>. <code>SKColor</code> includes an alpha channel, so anything that you color with an <code>SKColor</code> value can be partially transparent.</p>
+<p>Some transparency was demonstrated in the <a href="animation.html"><strong>Basic Animation in SkiaSharp</strong></a> article. This article goes somewhat deeper into transparency to combine multiple objects in a single scene, a technique sometimes known as <em>blending</em>. More advanced blending techniques are discussed in the articles in the <a href="../effects/shaders/index.html"><strong>SkiaSharp shaders</strong></a> section.</p>
+<p>You can set the transparency level when you first create a color using the four-parameter <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.-ctor#skiasharp-skcolor-ctor(system-byte-system-byte-system-byte-system-byte)"><code>SKColor</code></a> constructor:</p>
+<pre><code class="lang-csharp">SKColor (byte red, byte green, byte blue, byte alpha);
+</code></pre>
+<p>An alpha value of 0 is fully transparent and an alpha value of 0xFF is fully opaque. Values between those two extremes create colors that are partially transparent.</p>
+<p>In addition, <code>SKColor</code> defines a handy <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.withalpha"><code>WithAlpha</code></a> method that creates a new color from an existing color but with the specified alpha level:</p>
+<pre><code class="lang-csharp">SKColor halfTransparentBlue = SKColors.Blue.WithAlpha(0x80);
+</code></pre>
+<p>The use of partially transparent text is demonstrated in the <strong>Code More Code</strong> page in the sample. This page fades two text strings in and out by incorporating transparency in the <code>SKColor</code> values:</p>
+<pre><code class="lang-csharp">public class CodeMoreCodePage : ContentPage
+{
+    SKCanvasView canvasView;
+    bool isAnimating;
+    Stopwatch stopwatch = new Stopwatch();
+    double transparency;
+
+    public CodeMoreCodePage ()
+    {
+        Title = &quot;Code More Code&quot;;
+
+        canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        isAnimating = true;
+        stopwatch.Start();
+        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+
+        stopwatch.Stop();
+        isAnimating = false;
+    }
+
+    bool OnTimerTick()
+    {
+        const int duration = 5;     // seconds
+        double progress = stopwatch.Elapsed.TotalSeconds % duration / duration;
+        transparency = 0.5 * (1 + Math.Sin(progress * 2 * Math.PI));
+        canvasView.InvalidateSurface();
+
+        return isAnimating;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        const string TEXT1 = &quot;CODE&quot;;
+        const string TEXT2 = &quot;MORE&quot;;
+
+        using (SKPaint paint = new SKPaint())
+        {
+            // Set text width to fit in width of canvas
+            paint.TextSize = 100;
+            float textWidth = paint.MeasureText(TEXT1);
+            paint.TextSize *= 0.9f * info.Width / textWidth;
+
+            // Center first text string
+            SKRect textBounds = new SKRect();
+            paint.MeasureText(TEXT1, ref textBounds);
+
+            float xText = info.Width / 2 - textBounds.MidX;
+            float yText = info.Height / 2 - textBounds.MidY;
+
+            paint.Color = SKColors.Blue.WithAlpha((byte)(0xFF * (1 - transparency)));
+            canvas.DrawText(TEXT1, xText, yText, paint);
+
+            // Center second text string
+            textBounds = new SKRect();
+            paint.MeasureText(TEXT2, ref textBounds);
+
+            xText = info.Width / 2 - textBounds.MidX;
+            yText = info.Height / 2 - textBounds.MidY;
+
+            paint.Color = SKColors.Blue.WithAlpha((byte)(0xFF * transparency));
+            canvas.DrawText(TEXT2, xText, yText, paint);
+        }
+    }
+}
+</code></pre>
+<p>The <code>transparency</code> field is animated to vary from 0 to 1 and back again in a sinusoidal rhythm. The first text string is displayed with an alpha value calculated by subtracting the <code>transparency</code> value from 1:</p>
+<pre><code class="lang-csharp">paint.Color = SKColors.Blue.WithAlpha((byte)(0xFF * (1 - transparency)));
+</code></pre>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.withalpha"><code>WithAlpha</code></a> method sets the alpha component on an existing color, which here is <code>SKColors.Blue</code>. The second text string uses an alpha value calculated from the <code>transparency</code> value itself:</p>
+<pre><code class="lang-csharp">paint.Color = SKColors.Blue.WithAlpha((byte)(0xFF * transparency));
+</code></pre>
+<p>The animation alternates between the two words, urging the user to &quot;code more&quot; (or perhaps requesting &quot;more code&quot;):</p>
+<p><a href="transparency-images/CodeMoreCode-Large.png#lightbox"><img src="transparency-images/CodeMoreCode.png" alt="Code More Code" title="Code More Code"></a></p>
+<p>In the previous article on <a href="bitmaps.html"><strong>Bitmap Basics in SkiaSharp</strong></a>, you saw how to display bitmaps using one of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmap"><code>DrawBitmap</code></a> methods of <code>SKCanvas</code>. All the <code>DrawBitmap</code> methods include an <code>SKPaint</code> object as the last parameter. By default, this parameter is set to <code>null</code> and you can ignore it.</p>
+<p>Alternatively, you can set the <code>Color</code> property of this <code>SKPaint</code> object to display a bitmap with some level of transparency. Setting a level of transparency in the <code>Color</code> property of <code>SKPaint</code> allows you to fade bitmaps in and out, or to dissolve one bitmap into another.</p>
+<p>Bitmap transparency is demonstrated in the <strong>Bitmap Dissolve</strong> page. The XAML file instantiates an <code>SKCanvasView</code> and a <code>Slider</code>:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.BitmapDissolvePage&quot;
+             Title=&quot;Bitmap Dissolve&quot;&gt;
+    &lt;StackLayout&gt;
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;progressSlider&quot;
+                Margin=&quot;10&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file loads two bitmap resources. These bitmaps are not the same size, but they are the same aspect ratio:</p>
+<pre><code class="lang-csharp">public partial class BitmapDissolvePage : ContentPage
+{
+    SKBitmap bitmap1;
+    SKBitmap bitmap2;
+
+    public BitmapDissolvePage()
+    {
+        InitializeComponent();
+
+        // Load two bitmaps
+        Assembly assembly = GetType().GetTypeInfo().Assembly;
+
+        using (Stream stream = assembly.GetManifestResourceStream(
+                                &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;))
+        {
+            bitmap1 = SKBitmap.Decode(stream);
+        }
+        using (Stream stream = assembly.GetManifestResourceStream(
+                                &quot;SkiaSharpFormsDemos.Media.FacePalm.jpg&quot;))
+        {
+            bitmap2 = SKBitmap.Decode(stream);
+        }
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Find rectangle to fit bitmap
+        float scale = Math.Min((float)info.Width / bitmap1.Width,
+                                (float)info.Height / bitmap1.Height);
+        SKRect rect = SKRect.Create(scale * bitmap1.Width,
+                                    scale * bitmap1.Height);
+        float x = (info.Width - rect.Width) / 2;
+        float y = (info.Height - rect.Height) / 2;
+        rect.Offset(x, y);
+
+        // Get progress value from Slider
+        float progress = (float)progressSlider.Value;
+
+        // Display two bitmaps with transparency
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Color = paint.Color.WithAlpha((byte)(0xFF * (1 - progress)));
+            canvas.DrawBitmap(bitmap1, rect, paint);
+
+            paint.Color = paint.Color.WithAlpha((byte)(0xFF * progress));
+            canvas.DrawBitmap(bitmap2, rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>The <code>Color</code> property of the <code>SKPaint</code> object is set to two complementary alpha levels for the two bitmaps. When using <code>SKPaint</code> with bitmaps, it doesn't matter what the rest of the <code>Color</code> value is. All that matters is the alpha channel. The code here simply calls the <code>WithAlpha</code> method on the default value of the <code>Color</code> property.</p>
+<p>Moving the <code>Slider</code> dissolves between one bitmap and the other:</p>
+<p><a href="transparency-images/BitmapDissolve-Large.png#lightbox"><img src="transparency-images/BitmapDissolve.png" alt="Bitmap Dissolve" title="Bitmap Dissolve"></a></p>
+<p>In the past several articles, you have seen how to use SkiaSharp to draw text, circles, ellipses, rounded rectangles, and bitmaps. The next step is <a href="../paths/index.html">SkiaSharp Lines and Paths</a> in which you will learn how to draw connected lines in a graphics path.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

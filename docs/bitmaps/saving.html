@@ -1,0 +1,745 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Saving SkiaSharp bitmaps to files | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Saving SkiaSharp bitmaps to files | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="saving-skiasharp-bitmaps-to-files">Saving SkiaSharp bitmaps to files</h1>
+
+<p>After a SkiaSharp application has created or modified a bitmap, the application might want to save the bitmap to the user's photo library:</p>
+<p><img src="saving-images/SavingSample.png" alt="Saving Bitmaps" title="Saving Bitmaps"></p>
+<p>This task encompasses two steps:</p>
+<ul>
+<li>Converting the SkiaSharp bitmap to data in a particular file format, such as JPEG or PNG.</li>
+<li>Saving the result to the photo library using platform-specific code.</li>
+</ul>
+<h2 id="file-formats-and-codecs">File formats and codecs</h2>
+<p>Most of today's popular bitmap file formats use compression to reduce storage space. The two broad categories of compression techniques are called <em>lossy</em> and <em>lossless</em>. These terms indicate whether or not the compression algorithm results in the loss of data.</p>
+<p>The most popular lossy format was developed by the Joint Photographic Experts Group and is called JPEG. The JPEG compression algorithm analyzes the image using a mathematical tool called the <em>discrete cosine transform</em>, and attempts to remove data that is not crucial to preserving the image's visual fidelity. The degree of compression can be controlled with a setting generally referred to as <em>quality</em>. Higher quality settings result in larger files.</p>
+<p>In contrast, a lossless compression algorithm analyzes the image for repetition and patterns of pixels that can be encoded in a way that reduces the data but does not result in the loss of any information. The original bitmap data can be restored entirely from the compressed file. The primary lossless compressed file format in use today is Portable Network Graphics (PNG).</p>
+<p>Generally, JPEG is used for photographs, while PNG is used for images that have been manually or algorithmically generated. Any lossless compression algorithm that reduces the size of some files must necessarily increase the size of others. Fortunately, this increase in size generally only occurs for data that contains a lot of random (or seemingly random) information.</p>
+<p>The compression algorithms are complex enough to warrant two terms that describe the compression and decompression processes:</p>
+<ul>
+<li><em>decode</em> — read a bitmap file format and decompress it</li>
+<li><em>encode</em> — compress the bitmap and write to a bitmap file format</li>
+</ul>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap"><code>SKBitmap</code></a> class contains several methods named <code>Decode</code> that create an <code>SKBitmap</code> from a compressed source. All that's required is to supply a filename, stream, or array of bytes. The decoder can determine the file format and hand it off to the proper internal decoding function.</p>
+<p>In addition, the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec"><code>SKCodec</code></a> class has two methods named <code>Create</code> that can create an <code>SKCodec</code> object from a compressed source and allow an application to get more involved in the decoding process. (The <code>SKCodec</code> class is shown in the article <a href="animating.html#gif-animation"><strong>Animating SkiaSharp Bitmaps</strong></a> in connection with decoding an animated GIF file.)</p>
+<p>When encoding a bitmap, more information is required: The encoder must know the particular file format the application wants to use (JPEG or PNG or something else). If a lossy format is desired, the encode must also know the desired level of quality.</p>
+<p>The <code>SKBitmap</code> class defines one <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.encode#skiasharp-skbitmap-encode(skiasharp-skwstream-skiasharp-skencodedimageformat-system-int32)"><code>Encode</code></a> method with the following syntax:</p>
+<pre><code class="lang-csharp">public Boolean Encode (SKWStream dst, SKEncodedImageFormat format, Int32 quality)
+</code></pre>
+<p>This method is described in more detail shortly. The encoded bitmap is written to a writable stream. (The 'W' in <code>SKWStream</code> stands for &quot;writable&quot;.) The second and third arguments specify the file format and (for lossy formats) the desired quality ranging from 0 to 100.</p>
+<p>In addition, the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimage"><code>SKImage</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpixmap"><code>SKPixmap</code></a> classes also define <code>Encode</code> methods that are somewhat more versatile, and which you might prefer. You can easily create an <code>SKImage</code> object from an <code>SKBitmap</code> object using the static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimage.frombitmap#skiasharp-skimage-frombitmap(skiasharp-skbitmap)"><code>SKImage.FromBitmap</code></a> method. You can obtain an <code>SKPixmap</code> object from an <code>SKBitmap</code> object using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.peekpixels#skiasharp-skbitmap-peekpixels"><code>PeekPixels</code></a> method.</p>
+<p>One of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimage.encode#skiasharp-skimage-encode"><code>Encode</code></a> methods defined by <code>SKImage</code> has no parameters and automatically saves to a PNG format. That parameterless method is very easy to use.</p>
+<h2 id="platform-specific-code-for-saving-bitmap-files">Platform-specific code for saving bitmap files</h2>
+<p>When you encode an <code>SKBitmap</code> object into a particular file format, generally you'll be left with a stream object of some sort, or an array of data. Some of the <code>Encode</code> methods (including the one with no parameters defined by <code>SKImage</code>) return an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skdata"><code>SKData</code></a> object, which can be converted to an array of bytes using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skdata.toarray#skiasharp-skdata-toarray"><code>ToArray</code></a> method. This data must then be saved to a file.</p>
+<p>Saving to a file in application local storage is quite easy because you can use standard <code>System.IO</code> classes and methods for this task. This technique is demonstrated in the article <a href="animating.html#bitmap-animation"><strong>Animating SkiaSharp Bitmaps</strong></a> in connection with animating a series of bitmaps of the Mandelbrot set.</p>
+<p>If you want the file to be shared by other applications, it must be saved to the user's photo library. This task requires platform-specific code and the use of the Xamarin.Forms <a href="xref:Xamarin.Forms.DependencyService"><code>DependencyService</code></a>.</p>
+<p>The <strong>SkiaSharpFormsDemo</strong> project in the sample application defines an <code>IPhotoLibrary</code> interface used with the <code>DependencyService</code> class. This defines the syntax of a <code>SavePhotoAsync</code> method:</p>
+<pre><code class="lang-csharp">public interface IPhotoLibrary
+{
+    Task&lt;Stream&gt; PickPhotoAsync();
+
+    Task&lt;bool&gt; SavePhotoAsync(byte[] data, string folder, string filename);
+}
+</code></pre>
+<p>This interface also defines the <code>PickPhotoAsync</code> method, which is used to open the platform-specific file-picker for the device's photo library.</p>
+<p>For <code>SavePhotoAsync</code>, the first argument is an array of bytes that contains the bitmap already encoded into a particular file format, such as JPEG or PNG. It's possible that an application might want to isolate all the bitmaps it creates into a particular folder, which is specified in the next parameter, followed by the file name. The method returns a Boolean indicating success or not.</p>
+<p>The following sections discuss how <code>SavePhotoAsync</code> is implemented on each platform.</p>
+<h3 id="the-ios-implementation">The iOS implementation</h3>
+<p>The iOS implementation of <code>SavePhotoAsync</code> uses the <a href="xref:UIKit.UIImage.SaveToPhotosAlbum*"><code>SaveToPhotosAlbum</code></a> method of <code>UIImage</code>:</p>
+<pre><code class="lang-csharp">public class PhotoLibrary : IPhotoLibrary
+{
+    ···
+    public Task&lt;bool&gt; SavePhotoAsync(byte[] data, string folder, string filename)
+    {
+        NSData nsData = NSData.FromArray(data);
+        UIImage image = new UIImage(nsData);
+        TaskCompletionSource&lt;bool&gt; taskCompletionSource = new TaskCompletionSource&lt;bool&gt;();
+
+        image.SaveToPhotosAlbum((UIImage img, NSError error) =&gt;
+        {
+            taskCompletionSource.SetResult(error == null);
+        });
+
+        return taskCompletionSource.Task;
+    }
+}
+</code></pre>
+<p>Unfortunately, there is no way to specify a file name or folder for the image.</p>
+<p>The <strong>Info.plist</strong> file in the iOS project requires a key indicating that it adds images to the photo library:</p>
+<pre><code class="lang-xml">&lt;key&gt;NSPhotoLibraryAddUsageDescription&lt;/key&gt;
+&lt;string&gt;SkiaSharp Forms Demos adds images to your photo library&lt;/string&gt;
+</code></pre>
+<p>Watch out! The permission key for simply accessing the photo library is very similar but not the same:</p>
+<pre><code class="lang-xml">&lt;key&gt;NSPhotoLibraryUsageDescription&lt;/key&gt;
+&lt;string&gt;SkiaSharp Forms Demos accesses your photo library&lt;/string&gt;
+</code></pre>
+<h3 id="the-android-implementation">The Android implementation</h3>
+<p>The Android implementation of <code>SavePhotoAsync</code> first checks if the <code>folder</code> argument is <code>null</code> or an empty string. If so, then the bitmap is saved in the root directory of the photo library. Otherwise, the folder is obtained, and if it doesn't exist, it is created:</p>
+<pre><code class="lang-csharp">public class PhotoLibrary : IPhotoLibrary
+{
+    ···
+    public async Task&lt;bool&gt; SavePhotoAsync(byte[] data, string folder, string filename)
+    {
+        try
+        {
+            File picturesDirectory = Environment.GetExternalStoragePublicDirectory(Environment.DirectoryPictures);
+            File folderDirectory = picturesDirectory;
+
+            if (!string.IsNullOrEmpty(folder))
+            {
+                folderDirectory = new File(picturesDirectory, folder);
+                folderDirectory.Mkdirs();
+            }
+
+            using (File bitmapFile = new File(folderDirectory, filename))
+            {
+                bitmapFile.CreateNewFile();
+
+                using (FileOutputStream outputStream = new FileOutputStream(bitmapFile))
+                {
+                    await outputStream.WriteAsync(data);
+                }
+
+                // Make sure it shows up in the Photos gallery promptly.
+                MediaScannerConnection.ScanFile(MainActivity.Instance,
+                                                new string[] { bitmapFile.Path },
+                                                new string[] { &quot;image/png&quot;, &quot;image/jpeg&quot; }, null);
+            }
+        }
+        catch
+        {
+            return false;
+        }
+
+        return true;
+    }
+}
+</code></pre>
+<p>The call to <code>MediaScannerConnection.ScanFile</code> isn't strictly required, but if you're testing your program by immediately checking the photo library, it helps a lot by updating the library gallery view.</p>
+<p>The <strong>AndroidManifest.xml</strong> file requires the following permission tag:</p>
+<pre><code class="lang-xml">&lt;uses-permission android:name=&quot;android.permission.WRITE_EXTERNAL_STORAGE&quot; /&gt;
+</code></pre>
+<h3 id="the-uwp-implementation">The UWP implementation</h3>
+<p>The UWP implementation of <code>SavePhotoAsync</code> is very similar in structure to the Android implementation:</p>
+<pre><code class="lang-csharp">public class PhotoLibrary : IPhotoLibrary
+{
+    ···
+    public async Task&lt;bool&gt; SavePhotoAsync(byte[] data, string folder, string filename)
+    {
+        StorageFolder picturesDirectory = KnownFolders.PicturesLibrary;
+        StorageFolder folderDirectory = picturesDirectory;
+
+        // Get the folder or create it if necessary
+        if (!string.IsNullOrEmpty(folder))
+        {
+            try
+            {
+                folderDirectory = await picturesDirectory.GetFolderAsync(folder);
+            }
+            catch
+            { }
+
+            if (folderDirectory == null)
+            {
+                try
+                {
+                    folderDirectory = await picturesDirectory.CreateFolderAsync(folder);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        try
+        {
+            // Create the file.
+            StorageFile storageFile = await folderDirectory.CreateFileAsync(filename,
+                                                CreationCollisionOption.GenerateUniqueName);
+
+            // Convert byte[] to Windows buffer and write it out.
+            IBuffer buffer = WindowsRuntimeBuffer.Create(data, 0, data.Length, data.Length);
+            await FileIO.WriteBufferAsync(storageFile, buffer);
+        }
+        catch
+        {
+            return false;
+        }
+
+        return true;
+    }
+}
+</code></pre>
+<p>The <strong>Capabilities</strong> section of the <strong>Package.appxmanifest</strong> file requires <strong>Pictures Library</strong>.</p>
+<h2 id="exploring-the-image-formats">Exploring the image formats</h2>
+<p>Here's the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.encode#skiasharp-skbitmap-encode(skiasharp-skwstream-skiasharp-skencodedimageformat-system-int32)"><code>Encode</code></a> method of <code>SKImage</code> again:</p>
+<pre><code class="lang-csharp">public Boolean Encode (SKWStream dst, SKEncodedImageFormat format, Int32 quality)
+</code></pre>
+<p><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skencodedimageformat"><code>SKEncodedImageFormat</code></a> is an enumeration with members that refer to eleven bitmap file formats, some of which are rather obscure:</p>
+<ul>
+<li><code>Astc</code> — Adaptive Scalable Texture Compression</li>
+<li><code>Bmp</code> — Windows Bitmap</li>
+<li><code>Dng</code> — Adobe Digital Negative</li>
+<li><code>Gif</code> — Graphics Interchange Format</li>
+<li><code>Ico</code> — Windows icon images</li>
+<li><code>Jpeg</code> — Joint Photographic Experts Group</li>
+<li><code>Ktx</code> — Khronos texture format for OpenGL</li>
+<li><code>Pkm</code> — Custom format for GrafX2</li>
+<li><code>Png</code> — Portable Network Graphics</li>
+<li><code>Wbmp</code> — Wireless Application Protocol Bitmap Format (1 bit per pixel)</li>
+<li><code>Webp</code> — Google WebP format</li>
+</ul>
+<p>As you'll see shortly, only three of these file formats (<code>Jpeg</code>, <code>Png</code>, and <code>Webp</code>) are actually supported by SkiaSharp.</p>
+<p>To save an <code>SKBitmap</code> object named <code>bitmap</code> to the user's photo library, you also need a member of the <code>SKEncodedImageFormat</code> enumeration named <code>imageFormat</code> and (for lossy formats) an integer <code>quality</code> variable. You can use the following code to save that bitmap to a file with the name <code>filename</code> in the <code>folder</code> folder:</p>
+<pre><code class="lang-csharp">using (MemoryStream memStream = new MemoryStream())
+using (SKManagedWStream wstream = new SKManagedWStream(memStream))
+{
+    bitmap.Encode(wstream, imageFormat, quality);
+    byte[] data = memStream.ToArray();
+
+    // Check the data array for content!
+
+    bool success = await DependencyService.Get&lt;IPhotoLibrary&gt;().SavePhotoAsync(data, folder, filename);
+
+    // Check return value for success!
+}
+</code></pre>
+<p>The <code>SKManagedWStream</code> class derives from <code>SKWStream</code> (which stands for &quot;writable stream&quot;). The <code>Encode</code> method writes the encoded bitmap file into that stream. The comments in that code refer to some error checking you might need to perform.</p>
+<p>The <strong>Save File Formats</strong> page in the sample application uses similar code to allow you to experiment with saving a bitmap in the various formats.</p>
+<p>The XAML file contains an <code>SKCanvasView</code> that displays a bitmap, while the rest of the page contains everything the application needs to call the <code>Encode</code> method of <code>SKBitmap</code>. It has a <code>Picker</code> for a member of the <code>SKEncodedImageFormat</code> enumeration, a <code>Slider</code> for the quality argument for lossy bitmap formats, two <code>Entry</code> views for a filename and folder name, and a <code>Button</code> for saving the file.</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.SaveFileFormatsPage&quot;
+             Title=&quot;Save Bitmap Formats&quot;&gt;
+
+    &lt;StackLayout Margin=&quot;10&quot;&gt;
+        &lt;skiaforms:SKCanvasView PaintSurface=&quot;OnCanvasViewPaintSurface&quot;
+                                VerticalOptions=&quot;FillAndExpand&quot; /&gt;
+
+        &lt;Picker x:Name=&quot;formatPicker&quot;
+                Title=&quot;image format&quot;
+                SelectedIndexChanged=&quot;OnFormatPickerChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKEncodedImageFormat}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Astc&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Bmp&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Dng&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Gif&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Ico&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Jpeg&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Ktx&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Pkm&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Png&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Wbmp&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKEncodedImageFormat.Webp&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+        &lt;/Picker&gt;
+
+        &lt;Slider x:Name=&quot;qualitySlider&quot;
+                Maximum=&quot;100&quot;
+                Value=&quot;50&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference qualitySlider},
+                              Path=Value,
+                              StringFormat='Quality = {0:F0}'}&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+
+        &lt;StackLayout Orientation=&quot;Horizontal&quot;&gt;
+            &lt;Label Text=&quot;Folder Name: &quot;
+                   VerticalOptions=&quot;Center&quot; /&gt;
+
+            &lt;Entry x:Name=&quot;folderNameEntry&quot;
+                   Text=&quot;SaveFileFormats&quot;
+                   HorizontalOptions=&quot;FillAndExpand&quot; /&gt;
+        &lt;/StackLayout&gt;
+
+        &lt;StackLayout Orientation=&quot;Horizontal&quot;&gt;
+            &lt;Label Text=&quot;File Name: &quot;
+                   VerticalOptions=&quot;Center&quot; /&gt;
+
+            &lt;Entry x:Name=&quot;fileNameEntry&quot;
+                   Text=&quot;Sample.xxx&quot;
+                   HorizontalOptions=&quot;FillAndExpand&quot; /&gt;
+        &lt;/StackLayout&gt;
+
+        &lt;Button Text=&quot;Save&quot;
+                Clicked=&quot;OnButtonClicked&quot;&gt;
+            &lt;Button.Triggers&gt;
+                &lt;DataTrigger TargetType=&quot;Button&quot;
+                             Binding=&quot;{Binding Source={x:Reference formatPicker},
+                                               Path=SelectedIndex}&quot;
+                             Value=&quot;-1&quot;&gt;
+                    &lt;Setter Property=&quot;IsEnabled&quot; Value=&quot;False&quot; /&gt;
+                &lt;/DataTrigger&gt;
+
+                &lt;DataTrigger TargetType=&quot;Button&quot;
+                             Binding=&quot;{Binding Source={x:Reference fileNameEntry},
+                                               Path=Text.Length}&quot;
+                             Value=&quot;0&quot;&gt;
+                    &lt;Setter Property=&quot;IsEnabled&quot; Value=&quot;False&quot; /&gt;
+                &lt;/DataTrigger&gt;
+            &lt;/Button.Triggers&gt;
+        &lt;/Button&gt;
+
+        &lt;Label x:Name=&quot;statusLabel&quot;
+               Text=&quot;OK&quot;
+               Margin=&quot;10, 0&quot; /&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file loads a bitmap resource and uses the <code>SKCanvasView</code> to display it. That bitmap never changes. The <code>SelectedIndexChanged</code> handler for the <code>Picker</code> modifies the filename with an extension that is the same as the enumeration member:</p>
+<pre><code class="lang-csharp">public partial class SaveFileFormatsPage : ContentPage
+{
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(typeof(SaveFileFormatsPage),
+        &quot;SkiaSharpFormsDemos.Media.MonkeyFace.png&quot;);
+
+    public SaveFileFormatsPage ()
+    {
+        InitializeComponent ();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        args.Surface.Canvas.DrawBitmap(bitmap, args.Info.Rect, BitmapStretch.Uniform);
+    }
+
+    void OnFormatPickerChanged(object sender, EventArgs args)
+    {
+        if (formatPicker.SelectedIndex != -1)
+        {
+            SKEncodedImageFormat imageFormat = (SKEncodedImageFormat)formatPicker.SelectedItem;
+            fileNameEntry.Text = Path.ChangeExtension(fileNameEntry.Text, imageFormat.ToString());
+            statusLabel.Text = &quot;OK&quot;;
+        }
+    }
+
+    async void OnButtonClicked(object sender, EventArgs args)
+    {
+        SKEncodedImageFormat imageFormat = (SKEncodedImageFormat)formatPicker.SelectedItem;
+        int quality = (int)qualitySlider.Value;
+
+        using (MemoryStream memStream = new MemoryStream())
+        using (SKManagedWStream wstream = new SKManagedWStream(memStream))
+        {
+            bitmap.Encode(wstream, imageFormat, quality);
+            byte[] data = memStream.ToArray();
+
+            if (data == null)
+            {
+                statusLabel.Text = &quot;Encode returned null&quot;;
+            }
+            else if (data.Length == 0)
+            {
+                statusLabel.Text = &quot;Encode returned empty array&quot;;
+            }
+            else
+            {
+                bool success = await DependencyService.Get&lt;IPhotoLibrary&gt;().
+                    SavePhotoAsync(data, folderNameEntry.Text, fileNameEntry.Text);
+
+                if (!success)
+                {
+                    statusLabel.Text = &quot;SavePhotoAsync return false&quot;;
+                }
+                else
+                {
+                    statusLabel.Text = &quot;Success!&quot;;
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<p>The <code>Clicked</code> handler for the <code>Button</code> does all the real work. It obtains two arguments for <code>Encode</code> from the <code>Picker</code> and <code>Slider</code>, and then uses the code shown earlier to create an <code>SKManagedWStream</code> for the <code>Encode</code> method. The two <code>Entry</code> views furnish folder and file names for the <code>SavePhotoAsync</code> method.</p>
+<p>Most of this method is devoted to handling problems or errors. If <code>Encode</code> creates an empty array, it means that the particular file format isn't supported. If <code>SavePhotoAsync</code> returns <code>false</code>, then the file wasn't successfully saved.</p>
+<p>Here is the program running:</p>
+<p><a href="saving-images/SaveFileFormats-Large.png#lightbox"><img src="saving-images/SaveFileFormats.png" alt="Save File Formats" title="Save File Formats"></a></p>
+<p>That screenshot shows the only three formats that are supported on these platforms:</p>
+<ul>
+<li>JPEG</li>
+<li>PNG</li>
+<li>WebP</li>
+</ul>
+<p>For all the other formats, the <code>Encode</code> method writes nothing into the stream and the resultant byte array is empty.</p>
+<p>The bitmap that the <strong>Save File Formats</strong> page saves is 600-pixels square. With 4 bytes per pixel, that's a total of 1,440,000 bytes in memory. The following table shows the file size for various combinations of file format and quality:</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th style="text-align: right;">Quality</th>
+<th style="text-align: right;">Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PNG</td>
+<td style="text-align: right;">N/A</td>
+<td style="text-align: right;">492K</td>
+</tr>
+<tr>
+<td>JPEG</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.95K</td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">22.1K</td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">206K</td>
+</tr>
+<tr>
+<td>WebP</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.71K</td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">11.9K</td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">101K</td>
+</tr>
+</tbody>
+</table>
+<p>You can experiment with various quality settings and examine the results.</p>
+<h2 id="saving-finger-paint-art">Saving finger-paint art</h2>
+<p>One common use of a bitmap is in drawing programs, where it functions as something called a <em>shadow bitmap</em>. All the drawing is retained on the bitmap, which is then displayed by the program. The bitmap also comes in handy for saving the drawing.</p>
+<p>The <a href="../paths/finger-paint.html"><strong>Finger Painting in SkiaSharp</strong></a> article demonstrated how to use touch tracking to implement a primitive finger-painting program. The program supported only one color and only one stroke width, but it retained the entire drawing in a collection of <code>SKPath</code> objects.</p>
+<p>The <strong>Finger Paint with Save</strong> page in the sample also retains the entire drawing in a collection of <code>SKPath</code> objects, but it also renders the drawing on a bitmap, which it can save to your photo library.</p>
+<p>Much of this program is similar to the original <strong>Finger Paint</strong> program. One enhancement is that the XAML file now instantiates buttons labeled <strong>Clear</strong> and <strong>Save</strong>:</p>
+<pre><code class="lang-xaml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:tt=&quot;clr-namespace:TouchTracking&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.FingerPaintSavePage&quot;
+             Title=&quot;Finger Paint Save&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;Grid BackgroundColor=&quot;White&quot;
+              VerticalOptions=&quot;FillAndExpand&quot;&gt;
+            &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                               PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+            &lt;Grid.Effects&gt;
+                &lt;tt:TouchEffect Capture=&quot;True&quot;
+                                TouchAction=&quot;OnTouchEffectAction&quot; /&gt;
+            &lt;/Grid.Effects&gt;
+        &lt;/Grid&gt;
+
+        &lt;Grid&gt;
+            &lt;Grid.ColumnDefinitions&gt;
+                &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+                &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+            &lt;/Grid.ColumnDefinitions&gt;
+        &lt;/Grid&gt;
+
+        &lt;Button Text=&quot;Clear&quot;
+                Grid.Row=&quot;0&quot;
+                Margin=&quot;50, 5&quot;
+                Clicked=&quot;OnClearButtonClicked&quot; /&gt;
+
+        &lt;Button Text=&quot;Save&quot;
+                Grid.Row=&quot;1&quot;
+                Margin=&quot;50, 5&quot;
+                Clicked=&quot;OnSaveButtonClicked&quot; /&gt;
+
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file maintains a field of type <code>SKBitmap</code> named <code>saveBitmap</code>. This bitmap is created or recreated in the <code>PaintSurface</code> handler whenever the size of the display surface changes. If the bitmap needs to be recreated, the contents of the existing bitmap are copied to the new bitmap so that everything is retained no matter how the display surface changes in size:</p>
+<pre><code class="lang-csharp">public partial class FingerPaintSavePage : ContentPage
+{
+    ···
+    SKBitmap saveBitmap;
+
+    public FingerPaintSavePage ()
+    {
+        InitializeComponent ();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        // Create bitmap the size of the display surface
+        if (saveBitmap == null)
+        {
+            saveBitmap = new SKBitmap(info.Width, info.Height);
+        }
+        // Or create new bitmap for a new size of display surface
+        else if (saveBitmap.Width &lt; info.Width || saveBitmap.Height &lt; info.Height)
+        {
+            SKBitmap newBitmap = new SKBitmap(Math.Max(saveBitmap.Width, info.Width),
+                                              Math.Max(saveBitmap.Height, info.Height));
+
+            using (SKCanvas newCanvas = new SKCanvas(newBitmap))
+            {
+                newCanvas.Clear();
+                newCanvas.DrawBitmap(saveBitmap, 0, 0);
+            }
+
+            saveBitmap = newBitmap;
+        }
+
+        // Render the bitmap
+        canvas.Clear();
+        canvas.DrawBitmap(saveBitmap, 0, 0);
+    }
+    ···
+}
+</code></pre>
+<p>The drawing done by the <code>PaintSurface</code> handler occurs at the very end, and consists solely of rendering the bitmap.</p>
+<p>The touch processing is similar to the earlier program. The program maintains two collections, <code>inProgressPaths</code> and <code>completedPaths</code>, that contain everything the user has drawn since the last time the display was cleared. For each touch event, the <code>OnTouchEffectAction</code> handler calls <code>UpdateBitmap</code>:</p>
+<pre><code class="lang-csharp">public partial class FingerPaintSavePage : ContentPage
+{
+    Dictionary&lt;long, SKPath&gt; inProgressPaths = new Dictionary&lt;long, SKPath&gt;();
+    List&lt;SKPath&gt; completedPaths = new List&lt;SKPath&gt;();
+
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Blue,
+        StrokeWidth = 10,
+        StrokeCap = SKStrokeCap.Round,
+        StrokeJoin = SKStrokeJoin.Round
+    };
+    ···
+    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    {
+        switch (args.Type)
+        {
+            case TouchActionType.Pressed:
+                if (!inProgressPaths.ContainsKey(args.Id))
+                {
+                    SKPath path = new SKPath();
+                    path.MoveTo(ConvertToPixel(args.Location));
+                    inProgressPaths.Add(args.Id, path);
+                    UpdateBitmap();
+                }
+                break;
+
+            case TouchActionType.Moved:
+                if (inProgressPaths.ContainsKey(args.Id))
+                {
+                    SKPath path = inProgressPaths[args.Id];
+                    path.LineTo(ConvertToPixel(args.Location));
+                    UpdateBitmap();
+                }
+                break;
+
+            case TouchActionType.Released:
+                if (inProgressPaths.ContainsKey(args.Id))
+                {
+                    completedPaths.Add(inProgressPaths[args.Id]);
+                    inProgressPaths.Remove(args.Id);
+                    UpdateBitmap();
+                }
+                break;
+
+            case TouchActionType.Cancelled:
+                if (inProgressPaths.ContainsKey(args.Id))
+                {
+                    inProgressPaths.Remove(args.Id);
+                    UpdateBitmap();
+                }
+                break;
+        }
+    }
+
+    SKPoint ConvertToPixel(Point pt)
+    {
+        return new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
+                            (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+    }
+
+    void UpdateBitmap()
+    {
+        using (SKCanvas saveBitmapCanvas = new SKCanvas(saveBitmap))
+        {
+            saveBitmapCanvas.Clear();
+
+            foreach (SKPath path in completedPaths)
+            {
+                saveBitmapCanvas.DrawPath(path, paint);
+            }
+
+            foreach (SKPath path in inProgressPaths.Values)
+            {
+                saveBitmapCanvas.DrawPath(path, paint);
+            }
+        }
+
+        canvasView.InvalidateSurface();
+    }
+    ···
+}
+</code></pre>
+<p>The <code>UpdateBitmap</code> method redraws <code>saveBitmap</code> by creating a new <code>SKCanvas</code>, clearing it, and then rendering all the paths on the bitmap. It concludes by invalidating <code>canvasView</code> so that the bitmap can be drawn on the display.</p>
+<p>Here are the handlers for the two buttons. The <strong>Clear</strong> button clears both path collections, updates <code>saveBitmap</code> (which results in clearing the bitmap), and invalidates the <code>SKCanvasView</code>:</p>
+<pre><code class="lang-csharp">public partial class FingerPaintSavePage : ContentPage
+{
+    ···
+    void OnClearButtonClicked(object sender, EventArgs args)
+    {
+        completedPaths.Clear();
+        inProgressPaths.Clear();
+        UpdateBitmap();
+        canvasView.InvalidateSurface();
+    }
+
+    async void OnSaveButtonClicked(object sender, EventArgs args)
+    {
+        using (SKImage image = SKImage.FromBitmap(saveBitmap))
+        {
+            SKData data = image.Encode();
+            DateTime dt = DateTime.Now;
+            string filename = String.Format(&quot;FingerPaint-{0:D4}{1:D2}{2:D2}-{3:D2}{4:D2}{5:D2}{6:D3}.png&quot;,
+                                            dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Millisecond);
+
+            IPhotoLibrary photoLibrary = DependencyService.Get&lt;IPhotoLibrary&gt;();
+            bool result = await photoLibrary.SavePhotoAsync(data.ToArray(), &quot;FingerPaint&quot;, filename);
+
+            if (!result)
+            {
+                await DisplayAlert(&quot;FingerPaint&quot;, &quot;Artwork could not be saved. Sorry!&quot;, &quot;OK&quot;);
+            }
+        }
+    }
+}
+</code></pre>
+<p>The <strong>Save</strong> button handler uses the simplified <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimage.encode#skiasharp-skimage-encode"><code>Encode</code></a> method from <code>SKImage</code>. This method encodes using the PNG format. The <code>SKImage</code> object is created based on <code>saveBitmap</code>, and the <code>SKData</code> object contains the encoded PNG file.</p>
+<p>The <code>ToArray</code> method of <code>SKData</code> obtains an array of bytes. This is what is passed to the <code>SavePhotoAsync</code> method, along with a fixed folder name, and a unique filename constructed from the current date and time.</p>
+<p>Here's the program in action:</p>
+<p><a href="saving-images/FingerPaintSave-Large.png#lightbox"><img src="saving-images/FingerPaintSave.png" alt="Finger Paint Save" title="Finger Paint Save"></a></p>
+<p>A very similar technique is used in the sample. This is also a finger-painting program except that the user paints on a spinning disk that then reproduces the designs on its other four quadrants. The color of the finger paint changes as the disk is spinning:</p>
+<p><a href="saving-images/SpinPaint-Large.png#lightbox"><img src="saving-images/SpinPaint.png" alt="Spin Paint" title="Spin Paint"></a></p>
+<p>The <strong>Save</strong> button of <code>SpinPaint</code> class is similar to <strong>Finger Paint</strong> in that it saves the image to a fixed folder name (<strong>SpainPaint</strong>) and a filename constructed from the date and time.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,495 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Non-Affine Transforms | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Non-Affine Transforms | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="non-affine-transforms">Non-Affine Transforms</h1>
+
+<p><em>Create perspective and taper effects with the third column of the transform matrix</em></p>
+<p>Translation, scaling, rotation, and skewing are all classified as <em>affine</em> transforms. Affine transforms preserve parallel lines. If two lines are parallel prior to the transform, they remain parallel after the transform. Rectangles are always transformed to parallelograms.</p>
+<p>However, SkiaSharp is also capable of non-affine transforms, which have the capability to transform a rectangle into any convex quadrilateral:</p>
+<p><img src="non-affine-images/nonaffinetransformexample.png" alt="A bitmap transformed into a convex quadrilateral"></p>
+<p>A convex quadrilateral is a four-sided figure with interior angles always less than 180 degrees and sides that don't cross each other.</p>
+<p>Non-affine transforms result when the third row of the transform matrix is set to values other than 0, 0, and 1. The full <code>SKMatrix</code> multiplication is:</p>
+<pre>
+              │ ScaleX  SkewY   Persp0 │
+| x  y  1 | × │ SkewX   ScaleY  Persp1 │ = | x'  y'  z' |
+              │ TransX  TransY  Persp2 │
+</pre>
+<p>The resultant transform formulas are:</p>
+<p>x' = ScaleX·x + SkewX·y + TransX</p>
+<p>y' = SkewY·x + ScaleY·y + TransY</p>
+<p>z` = Persp0·x + Persp1·y + Persp2</p>
+<p>The fundamental rule of using a 3-by-3 matrix for two-dimensional transforms is that everything remains on the plane where Z equals 1. Unless <code>Persp0</code> and <code>Persp1</code> are 0, and <code>Persp2</code> equals 1, the transform has moved the Z coordinates off that plane.</p>
+<p>To restore this to a two-dimensional transform, the coordinates must be moved back to that plane. Another step is required. The x', y', and z` values must be divided by z':</p>
+<p>x&quot; = x' / z'</p>
+<p>y&quot; = y' / z'</p>
+<p>z&quot; = z' / z' = 1</p>
+<p>These are known as <em>homogeneous coordinates</em> and they were developed by mathematician August Ferdinand Möbius, much better known for his topological oddity, the Möbius Strip.</p>
+<p>If z' is 0, the division results in infinite coordinates. In fact, one of Möbius's motivations for developing homogeneous coordinates was the ability to represent infinite values with finite numbers.</p>
+<p>When displaying graphics, however, you want to avoid rendering something with coordinates that transform to infinite values. Those coordinates won't be rendered. Everything in the vicinity of those coordinates will be very large and probably not visually coherent.</p>
+<p>In this equation, you do not want the value of z' becoming zero:</p>
+<p>z` = Persp0·x + Persp1·y + Persp2</p>
+<p>Consequently, these values have some practical restrictions:</p>
+<p>The <code>Persp2</code> cell can either be zero or not zero. If <code>Persp2</code> is zero, then z' is zero for the point (0, 0), and that's usually not desirable because that point is very common in two-dimensional graphics. If <code>Persp2</code> is not equal to zero, then there is no loss of generality if <code>Persp2</code> is fixed at 1. For example, if you determine that <code>Persp2</code> should be 5, then you can simply divide all the cells in the matrix by 5, which makes <code>Persp2</code> equal to 1, and the result will be the same.</p>
+<p>For these reasons, <code>Persp2</code> is often fixed at 1, which is the same value in the identity matrix.</p>
+<p>Generally, <code>Persp0</code> and <code>Persp1</code> are small numbers. For example, suppose you begin with an identity matrix but set <code>Persp0</code> to 0.01:</p>
+<pre>
+| 1  0   0.01 |
+| 0  1    0   |
+| 0  0    1   |
+</pre>
+<p>The transform formulas are:</p>
+<p>x` = x / (0.01·x + 1)</p>
+<p>y' = y / (0.01·x + 1)</p>
+<p>Now use this transform to render a 100-pixel square box positioned at the origin. Here's how the four corners are transformed:</p>
+<p>(0, 0) → (0, 0)</p>
+<p>(0, 100) → (0, 100)</p>
+<p>(100, 0) → (50, 0)</p>
+<p>(100, 100) → (50, 50)</p>
+<p>When x is 100, then the z' denominator is 2, so the x and y coordinates are effectively halved. The right side of the box becomes shorter than the left side:</p>
+<p><img src="non-affine-images/nonaffinetransform.png" alt="A box subjected to a non-affine transform"></p>
+<p>The <code>Persp</code> part of these cell names refers to &quot;perspective&quot; because the foreshortening suggests that the box is now tilted with the right side further from the viewer.</p>
+<p>The <strong>Test Perspective</strong> page allows you to experiment with values of <code>Persp0</code> and <code>Pers1</code> to get a feel for how they work. Reasonable values of these matrix cells are so small that the <code>Slider</code> in the Universal Windows Platform can't properly handle them. To accommodate the UWP problem, the two <code>Slider</code> elements in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/TestPerspectivePage.xaml"><strong>TestPerspective.xaml</strong></a> need to be initialized to range from –1 to 1:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Transforms.TestPerspectivePage&quot;
+             Title=&quot;Test Perpsective&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Grid.Resources&gt;
+            &lt;ResourceDictionary&gt;
+                &lt;Style TargetType=&quot;Label&quot;&gt;
+                    &lt;Setter Property=&quot;HorizontalTextAlignment&quot; Value=&quot;Center&quot; /&gt;
+                &lt;/Style&gt;
+
+                &lt;Style TargetType=&quot;Slider&quot;&gt;
+                    &lt;Setter Property=&quot;Minimum&quot; Value=&quot;-1&quot; /&gt;
+                    &lt;Setter Property=&quot;Maximum&quot; Value=&quot;1&quot; /&gt;
+                    &lt;Setter Property=&quot;Margin&quot; Value=&quot;20, 0&quot; /&gt;
+                &lt;/Style&gt;
+            &lt;/ResourceDictionary&gt;
+        &lt;/Grid.Resources&gt;
+
+        &lt;Slider x:Name=&quot;persp0Slider&quot;
+                Grid.Row=&quot;0&quot;
+                ValueChanged=&quot;OnPersp0SliderValueChanged&quot; /&gt;
+
+        &lt;Label x:Name=&quot;persp0Label&quot;
+               Text=&quot;Persp0 = 0.0000&quot;
+               Grid.Row=&quot;1&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;persp1Slider&quot;
+                Grid.Row=&quot;2&quot;
+                ValueChanged=&quot;OnPersp1SliderValueChanged&quot; /&gt;
+
+        &lt;Label x:Name=&quot;persp1Label&quot;
+               Text=&quot;Persp1 = 0.0000&quot;
+               Grid.Row=&quot;3&quot; /&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           Grid.Row=&quot;4&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The event handlers for the sliders in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/TestPerspectivePage.xaml.cs"><code>TestPerspectivePage</code></a> code-behind file divide the values by 100 so that they range between –0.01 and 0.01. In addition, the constructor loads in a bitmap:</p>
+<pre><code class="lang-csharp">public partial class TestPerspectivePage : ContentPage
+{
+    SKBitmap bitmap;
+
+    public TestPerspectivePage()
+    {
+        InitializeComponent();
+
+        string resourceID = &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;;
+        Assembly assembly = GetType().GetTypeInfo().Assembly;
+
+        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+        {
+            bitmap = SKBitmap.Decode(stream);
+        }
+    }
+
+    void OnPersp0SliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        Slider slider = (Slider)sender;
+        persp0Label.Text = String.Format(&quot;Persp0 = {0:F4}&quot;, slider.Value / 100);
+        canvasView.InvalidateSurface();
+    }
+
+    void OnPersp1SliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        Slider slider = (Slider)sender;
+        persp1Label.Text = String.Format(&quot;Persp1 = {0:F4}&quot;, slider.Value / 100);
+        canvasView.InvalidateSurface();
+    }
+    ...
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler calculates an <code>SKMatrix</code> value named <code>perspectiveMatrix</code> based on the values of these two sliders divided by 100. This is combined with two translate transforms that put the center of this transform in the center of the bitmap:</p>
+<pre><code class="lang-csharp">public partial class TestPerspectivePage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Calculate perspective matrix
+        SKMatrix perspectiveMatrix = SKMatrix.MakeIdentity();
+        perspectiveMatrix.Persp0 = (float)persp0Slider.Value / 100;
+        perspectiveMatrix.Persp1 = (float)persp1Slider.Value / 100;
+
+        // Center of screen
+        float xCenter = info.Width / 2;
+        float yCenter = info.Height / 2;
+
+        SKMatrix matrix = SKMatrix.MakeTranslation(-xCenter, -yCenter);
+        SKMatrix.PostConcat(ref matrix, perspectiveMatrix);
+        SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(xCenter, yCenter));
+
+        // Coordinates to center bitmap on canvas
+        float x = xCenter - bitmap.Width / 2;
+        float y = yCenter - bitmap.Height / 2;
+
+        canvas.SetMatrix(matrix);
+        canvas.DrawBitmap(bitmap, x, y);
+    }
+}
+</code></pre>
+<p>Here are some sample images:</p>
+<p><a href="non-affine-images/testperspective-large.png#lightbox" title="Triple screenshot of the Test Perspective page"><img src="non-affine-images/testperspective-small.png" alt="Triple screenshot of the Test Perspective page"></a></p>
+<p>As you experiment with the sliders, you'll find that values beyond 0.0066 or below –0.0066 cause the image to suddenly become fractured and incoherent. The bitmap being transformed is 300-pixels square. It is transformed relative to its center, so the coordinates of the bitmap range from –150 to 150. Recall that the value of z' is:</p>
+<p>z` = Persp0·x + Persp1·y + 1</p>
+<p>If <code>Persp0</code> or <code>Persp1</code> is greater than 0.0066 or below –0.0066, then there is always some coordinate of the bitmap that results in a z' value of zero. That causes division by zero, and the rendering becomes a mess. When using non-affine transforms, you want to avoid rendering anything with coordinates that cause division by zero.</p>
+<p>Generally, you won't be setting <code>Persp0</code> and <code>Persp1</code> in isolation. It's also often necessary to set other cells in the matrix to achieve certain types of non-affine transforms.</p>
+<p>One such non-affine transform is a <em>taper transform</em>. This type of non-affine transform retains the overall dimensions of a rectangle but tapers one side:</p>
+<p><img src="non-affine-images/tapertransform.png" alt="A box subjected to a taper transform"></p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/TaperTransform.cs"><code>TaperTransform</code></a> class performs a generalized calculation of a non-affine transform based on these parameters:</p>
+<ul>
+<li>the rectangular size of the image being transformed,</li>
+<li>an enumeration that indicates the side of the rectangle that tapers,</li>
+<li>another enumeration that indicates how it tapers, and</li>
+<li>the extent of the tapering.</li>
+</ul>
+<p>Here's the code:</p>
+<pre><code class="lang-csharp">enum TaperSide { Left, Top, Right, Bottom }
+
+enum TaperCorner { LeftOrTop, RightOrBottom, Both }
+
+static class TaperTransform
+{
+    public static SKMatrix Make(SKSize size, TaperSide taperSide, TaperCorner taperCorner, float taperFraction)
+    {
+        SKMatrix matrix = SKMatrix.MakeIdentity();
+
+        switch (taperSide)
+        {
+            case TaperSide.Left:
+                matrix.ScaleX = taperFraction;
+                matrix.ScaleY = taperFraction;
+                matrix.Persp0 = (taperFraction - 1) / size.Width;
+
+                switch (taperCorner)
+                {
+                    case TaperCorner.RightOrBottom:
+                        break;
+
+                    case TaperCorner.LeftOrTop:
+                        matrix.SkewY = size.Height * matrix.Persp0;
+                        matrix.TransY = size.Height * (1 - taperFraction);
+                        break;
+
+                    case TaperCorner.Both:
+                        matrix.SkewY = (size.Height / 2) * matrix.Persp0;
+                        matrix.TransY = size.Height * (1 - taperFraction) / 2;
+                        break;
+                }
+                break;
+
+            case TaperSide.Top:
+                matrix.ScaleX = taperFraction;
+                matrix.ScaleY = taperFraction;
+                matrix.Persp1 = (taperFraction - 1) / size.Height;
+
+                switch (taperCorner)
+                {
+                    case TaperCorner.RightOrBottom:
+                        break;
+
+                    case TaperCorner.LeftOrTop:
+                        matrix.SkewX = size.Width * matrix.Persp1;
+                        matrix.TransX = size.Width * (1 - taperFraction);
+                        break;
+
+                    case TaperCorner.Both:
+                        matrix.SkewX = (size.Width / 2) * matrix.Persp1;
+                        matrix.TransX = size.Width * (1 - taperFraction) / 2;
+                        break;
+                }
+                break;
+
+            case TaperSide.Right:
+                matrix.ScaleX = 1 / taperFraction;
+                matrix.Persp0 = (1 - taperFraction) / (size.Width * taperFraction);
+
+                switch (taperCorner)
+                {
+                    case TaperCorner.RightOrBottom:
+                        break;
+
+                    case TaperCorner.LeftOrTop:
+                        matrix.SkewY = size.Height * matrix.Persp0;
+                        break;
+
+                    case TaperCorner.Both:
+                        matrix.SkewY = (size.Height / 2) * matrix.Persp0;
+                        break;
+                }
+                break;
+
+            case TaperSide.Bottom:
+                matrix.ScaleY = 1 / taperFraction;
+                matrix.Persp1 = (1 - taperFraction) / (size.Height * taperFraction);
+
+                switch (taperCorner)
+                {
+                    case TaperCorner.RightOrBottom:
+                        break;
+
+                    case TaperCorner.LeftOrTop:
+                        matrix.SkewX = size.Width * matrix.Persp1;
+                        break;
+
+                    case TaperCorner.Both:
+                        matrix.SkewX = (size.Width / 2) * matrix.Persp1;
+                        break;
+                }
+                break;
+        }
+        return matrix;
+    }
+}
+</code></pre>
+<p>This class is used in the <strong>Taper Transform</strong> page. The XAML file instantiates two <code>Picker</code> elements to select the enumeration values, and a <code>Slider</code> for choosing the taper fraction. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/TaperTransformPage.xaml.cs#L55"><code>PaintSurface</code></a> handler combines the taper transform with two translate transforms to make the transform relative to the upper-left corner of the bitmap:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    TaperSide taperSide = (TaperSide)taperSidePicker.SelectedItem;
+    TaperCorner taperCorner = (TaperCorner)taperCornerPicker.SelectedItem;
+    float taperFraction = (float)taperFractionSlider.Value;
+
+    SKMatrix taperMatrix =
+        TaperTransform.Make(new SKSize(bitmap.Width, bitmap.Height),
+                            taperSide, taperCorner, taperFraction);
+
+    // Display the matrix in the lower-right corner
+    SKSize matrixSize = matrixDisplay.Measure(taperMatrix);
+
+    matrixDisplay.Paint(canvas, taperMatrix,
+        new SKPoint(info.Width - matrixSize.Width,
+                    info.Height - matrixSize.Height));
+
+    // Center bitmap on canvas
+    float x = (info.Width - bitmap.Width) / 2;
+    float y = (info.Height - bitmap.Height) / 2;
+
+    SKMatrix matrix = SKMatrix.MakeTranslation(-x, -y);
+    SKMatrix.PostConcat(ref matrix, taperMatrix);
+    SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(x, y));
+
+    canvas.SetMatrix(matrix);
+    canvas.DrawBitmap(bitmap, x, y);
+}
+</code></pre>
+<p>Here are some examples:</p>
+<p><a href="non-affine-images/tapertransform-large.png#lightbox" title="Triple screenshot of the Taper Transform page"><img src="non-affine-images/tapertransform-small.png" alt="Triple screenshot of the Taper Transform page"></a></p>
+<p>Another type of generalized non-affine transforms is 3D rotation, which is demonstrated in the next article, <a href="3d-rotation.html"><strong>3D Rotations</strong></a>.</p>
+<p>The non-affine transform can transform a rectangle into any convex quadrilateral. This is demonstrated by the <strong>Show Non-Affine Matrix</strong> page. It is very similar to the <strong>Show Affine Matrix</strong> page from the <a href="matrix.html"><strong>Matrix Transforms</strong></a> article except that it has a fourth <code>TouchPoint</code> object to manipulate the fourth corner of the bitmap:</p>
+<p><a href="non-affine-images/shownonaffinematrix-large.png#lightbox" title="Triple screenshot of the Show Non-Affine Matrix page"><img src="non-affine-images/shownonaffinematrix-small.png" alt="Triple screenshot of the Show Non-Affine Matrix page"></a></p>
+<p>As long as you don't attempt to make an interior angle of one of the corners of the bitmap greater than 180 degrees, or make two sides cross each other, the program successfully calculates the transform using this method from the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowNonAffineMatrixPage.xaml.cs"><code>ShowNonAffineMatrixPage</code></a> class:</p>
+<pre><code class="lang-csharp">static SKMatrix ComputeMatrix(SKSize size, SKPoint ptUL, SKPoint ptUR, SKPoint ptLL, SKPoint ptLR)
+{
+    // Scale transform
+    SKMatrix S = SKMatrix.MakeScale(1 / size.Width, 1 / size.Height);
+
+    // Affine transform
+    SKMatrix A = new SKMatrix
+    {
+        ScaleX = ptUR.X - ptUL.X,
+        SkewY = ptUR.Y - ptUL.Y,
+        SkewX = ptLL.X - ptUL.X,
+        ScaleY = ptLL.Y - ptUL.Y,
+        TransX = ptUL.X,
+        TransY = ptUL.Y,
+        Persp2 = 1
+    };
+
+    // Non-Affine transform
+    SKMatrix inverseA;
+    A.TryInvert(out inverseA);
+    SKPoint abPoint = inverseA.MapPoint(ptLR);
+    float a = abPoint.X;
+    float b = abPoint.Y;
+
+    float scaleX = a / (a + b - 1);
+    float scaleY = b / (a + b - 1);
+
+    SKMatrix N = new SKMatrix
+    {
+        ScaleX = scaleX,
+        ScaleY = scaleY,
+        Persp0 = scaleX - 1,
+        Persp1 = scaleY - 1,
+        Persp2 = 1
+    };
+
+    // Multiply S * N * A
+    SKMatrix result = SKMatrix.MakeIdentity();
+    SKMatrix.PostConcat(ref result, S);
+    SKMatrix.PostConcat(ref result, N);
+    SKMatrix.PostConcat(ref result, A);
+
+    return result;
+}
+</code></pre>
+<p>For ease of calculation, this method obtains the total transform as a product of three separate transforms, which are symbolized here with arrows showing how these transforms modify the four corners of the bitmap:</p>
+<p>(0, 0) → (0, 0) → (0, 0) → (x0, y0) (upper-left)</p>
+<p>(0, H) → (0, 1) → (0, 1) → (x1, y1) (lower-left)</p>
+<p>(W, 0) → (1, 0) → (1, 0) → (x2, y2) (upper-right)</p>
+<p>(W, H) → (1, 1) → (a, b) → (x3, y3) (lower-right)</p>
+<p>The final coordinates at the right are the four points associated with the four touch points. These are the final coordinates of the corners of the bitmap.</p>
+<p>W and H represent the width and height of the bitmap. The first transform <code>S</code> simply scales the bitmap to a 1-pixel square. The second transform is the non-affine transform <code>N</code>, and the third is the affine transform <code>A</code>. That affine transform is based on three points, so it's just like the earlier affine <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml.cs#L68"><code>ComputeMatrix</code></a> method and doesn't involve the fourth row with the (a, b) point.</p>
+<p>The <code>a</code> and <code>b</code> values are calculated so that the third transform is affine. The code obtains the inverse of the affine transform and then uses that to map the lower-right corner. That's the point (a, b).</p>
+<p>Another use of non-affine transforms is to mimic three-dimensional graphics. In the next article, <a href="3d-rotation.html"><strong>3D Rotations</strong></a> you see how to rotate a two-dimensional graphic in 3D space.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

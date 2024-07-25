@@ -1,0 +1,575 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Matrix Transforms in SkiaSharp | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Matrix Transforms in SkiaSharp | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="matrix-transforms-in-skiasharp">Matrix Transforms in SkiaSharp</h1>
+
+<p><em>Dive deeper into SkiaSharp transforms with the versatile transform matrix</em></p>
+<p>All the transforms applied to the <code>SKCanvas</code> object are consolidated in a single instance of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix"><code>SKMatrix</code></a> structure. This is a standard 3-by-3 transform matrix similar to those in all modern 2D graphics systems.</p>
+<p>As you've seen, you can use transforms in SkiaSharp without knowing about the transform matrix, but the transform matrix is important from a theoretical perspective, and it is crucial when using transforms to modify paths or for handling complex touch input, both of which are demonstrated in this article and the next.</p>
+<p><img src="matrix-images/matrixtransformexample.png" alt="A bitmap subjected to an affine transform"></p>
+<p>The current transform matrix applied to the <code>SKCanvas</code> is available at any time by accessing the read-only <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.totalmatrix#skiasharp-skcanvas-totalmatrix"><code>TotalMatrix</code></a> property. You can set a new transform matrix using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.setmatrix#skiasharp-skcanvas-setmatrix(skiasharp-skmatrix)"><code>SetMatrix</code></a> method, and you can restore that transform matrix to default values by calling <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.resetmatrix#skiasharp-skcanvas-resetmatrix"><code>ResetMatrix</code></a>.</p>
+<p>The only other <code>SKCanvas</code> member that directly works with the canvas's matrix transform is <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.concat#skiasharp-skcanvas-concat(skiasharp-skmatrix@)"><code>Concat</code></a> which concatenates two matrices by multiplying them together.</p>
+<p>The default transform matrix is the identity matrix and consists of 1's in the diagonal cells and 0's everywhere else:</p>
+<pre>
+| 1  0  0 |
+| 0  1  0 |
+| 0  0  1 |
+</pre>
+<p>You can create an identity matrix using the static  <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.makeidentity#skiasharp-skmatrix-makeidentity"><code>SKMatrix.MakeIdentity</code></a> method:</p>
+<pre><code class="lang-csharp">SKMatrix matrix = SKMatrix.MakeIdentity();
+</code></pre>
+<p>The <code>SKMatrix</code> default constructor does <em>not</em> return an identity matrix. It returns a matrix with all of the cells set to zero. Do not use the <code>SKMatrix</code> constructor unless you plan to set those cells manually.</p>
+<p>When SkiaSharp renders a graphical object, each point (x, y) is effectively converted to a 1-by-3 matrix with a 1 in the third column:</p>
+<pre>
+| x  y  1 |
+</pre>
+<p>This 1-by-3 matrix represents a three-dimensional point with the Z coordinate set to 1. There are mathematical reasons (discussed later) why a two-dimensional matrix transform requires working in three dimensions. You can think of this 1-by-3 matrix as representing a point in a 3D coordinate system, but always on the 2D plane where Z equals 1.</p>
+<p>This 1-by-3 matrix is then multiplied by the transform matrix, and the result is the point rendered on the canvas:</p>
+<pre>
+              | 1  0  0 |
+| x  y  1 | × | 0  1  0 | = | x'  y'  z' |
+              | 0  0  1 |
+</pre>
+<p>Using standard matrix multiplication, the converted points are as follows:</p>
+<p><code>x' = x</code></p>
+<p><code>y' = y</code></p>
+<p><code>z' = 1</code></p>
+<p>That's the default transform.</p>
+<p>When the <code>Translate</code> method is called on the <code>SKCanvas</code> object, the <code>tx</code> and <code>ty</code> arguments to the <code>Translate</code> method become the first two cells in the third row of the transform matrix:</p>
+<pre>
+|  1   0   0 |
+|  0   1   0 |
+| tx  ty   1 |
+</pre>
+<p>The multiplication is now as follows:</p>
+<pre>
+              |  1   0   0 |
+| x  y  1 | × |  0   1   0 | = | x'  y'  z' |
+              | tx  ty   1 |
+</pre>
+<p>Here are the transform formulas:</p>
+<p><code>x' = x + tx</code></p>
+<p><code>y' = y + ty</code></p>
+<p>Scaling factors have a default value of 1. When you call the <code>Scale</code> method on a new <code>SKCanvas</code> object, the resultant transform matrix contains the <code>sx</code> and <code>sy</code> arguments in the diagonal cells:</p>
+<pre>
+              | sx   0   0 |
+| x  y  1 | × |  0  sy   0 | = | x'  y'  z' |
+              |  0   0   1 |
+</pre>
+<p>The transform formulas are as follows:</p>
+<p><code>x' = sx · x</code></p>
+<p><code>y' = sy · y</code></p>
+<p>The transform matrix after calling <code>Skew</code> contains the two arguments in the matrix cells adjacent to the scaling factors:</p>
+<pre>
+              │   1   ySkew   0 │
+| x  y  1 | × │ xSkew   1     0 │ = | x'  y'  z' |
+              │   0     0     1 │
+</pre>
+<p>The transform formulas are:</p>
+<p><code>x' = x + xSkew · y</code></p>
+<p><code>y' = ySkew · x + y</code></p>
+<p>For a call to <code>RotateDegrees</code> or <code>RotateRadians</code> for an angle of α, the transform matrix is as follows:</p>
+<pre>
+              │  cos(α)  sin(α)  0 │
+| x  y  1 | × │ –sin(α)  cos(α)  0 │ = | x'  y'  z' |
+              │    0       0     1 │
+</pre>
+<p>Here are the transform formulas:</p>
+<p><code>x' = cos(α) · x - sin(α) · y</code></p>
+<p><code>y' = sin(α) · x - cos(α) · y</code></p>
+<p>When α is 0 degrees, it's the identity matrix. When α is 180 degrees, the transform matrix is as follows:</p>
+<pre>
+| –1   0   0 |
+|  0  –1   0 |
+|  0   0   1 |
+</pre>
+<p>A 180-degree rotation is equivalent to flipping an object horizontally and vertically, which is also accomplished by setting scale factors of –1.</p>
+<p>All these types of transforms are classified as <em>affine</em> transforms. Affine transforms never involve the third column of the matrix, which remains at the default values of 0, 0, and 1. The article <a href="non-affine.html"><strong>Non-Affine Transforms</strong></a> discusses non-affine transforms.</p>
+<h2 id="matrix-multiplication">Matrix Multiplication</h2>
+<p>One significant advantage with using the transform matrix is that composite transforms can be obtained by matrix multiplication, which is often referred to in the SkiaSharp documentation as <em>concatenation</em>. Many of the transform-related methods in <code>SKCanvas</code> refer to &quot;pre-concatenation&quot; or &quot;pre-concat.&quot; This refers to the order of multiplication, which is important because matrix multiplication is not commutative.</p>
+<p>For example, the documentation for the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.translate#skiasharp-skcanvas-translate(system-single-system-single)"><code>Translate</code></a> method says that it &quot;Pre-concats the current matrix with the specified translation,&quot;
+while the documentation for the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.scale#skiasharp-skcanvas-scale(system-single-system-single)"><code>Scale</code></a> method says that it &quot;Pre-concats the current matrix with the specified scale.&quot;</p>
+<p>This means that the transform specified by the method call is the multiplier (the left-hand operand) and the current transform matrix is the multiplicand (the right-hand operand).</p>
+<p>Suppose that <code>Translate</code> is called followed by <code>Scale</code>:</p>
+<pre><code class="lang-csharp">canvas.Translate(tx, ty);
+canvas.Scale(sx, sy);
+</code></pre>
+<p>The <code>Scale</code> transform is multiplied by the <code>Translate</code> transform for the composite transform matrix:</p>
+<pre>
+| sx   0   0 |   |  1   0   0 |   | sx   0   0 |
+|  0  sy   0 | × |  0   1   0 | = |  0  sy   0 |
+|  0   0   1 |   | tx  ty   1 |   | tx  ty   1 |
+</pre>
+<p><code>Scale</code> could be called before <code>Translate</code> like this:</p>
+<pre><code class="lang-csharp">canvas.Scale(sx, sy);
+canvas.Translate(tx, ty);
+</code></pre>
+<p>In that case, the order of the multiplication is reversed, and the scaling factors are effectively applied to the translation factors:</p>
+<pre>
+|  1   0   0 |   | sx   0   0 |   |  sx      0    0 |
+|  0   1   0 | × |  0  sy   0 | = |   0     sy    0 |
+| tx  ty   1 |   |  0   0   1 |   | tx·sx  ty·sy  1 |
+</pre>
+<p>Here is the <code>Scale</code> method with a pivot point:</p>
+<pre><code class="lang-csharp">canvas.Scale(sx, sy, px, py);
+</code></pre>
+<p>This is equivalent to the following translate and scale calls:</p>
+<pre><code class="lang-csharp">canvas.Translate(px, py);
+canvas.Scale(sx, sy);
+canvas.Translate(–px, –py);
+</code></pre>
+<p>The three transform matrices are multiplied in reverse order from how the methods appear in code:</p>
+<pre>
+|  1    0   0 |   | sx   0   0 |   |  1   0  0 |   |    sx         0     0 |
+|  0    1   0 | × |  0  sy   0 | × |  0   1  0 | = |     0        sy     0 |
+| –px  –py  1 |   |  0   0   1 |   | px  py  1 |   | px–px·sx  py–py·sy  1 |
+</pre>
+<h2 id="the-skmatrix-structure">The SKMatrix Structure</h2>
+<p>The <code>SKMatrix</code> structure defines nine read/write properties of type <code>float</code> corresponding to the nine cells of the transform matrix:</p>
+<pre>
+│ ScaleX  SkewY   Persp0 │
+│ SkewX   ScaleY  Persp1 │
+│ TransX  TransY  Persp2 │
+</pre>
+<p><code>SKMatrix</code> also defines a property named <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.values#skiasharp-skmatrix-values"><code>Values</code></a> of type <code>float[]</code>. This property can be used to set or obtain the nine values in one shot in the order <code>ScaleX</code>, <code>SkewX</code>, <code>TransX</code>, <code>SkewY</code>, <code>ScaleY</code>, <code>TransY</code>, <code>Persp0</code>, <code>Persp1</code>, and <code>Persp2</code>.</p>
+<p>The <code>Persp0</code>, <code>Persp1</code>, and <code>Persp2</code> cells are discussed in the article <a href="../../xamarin-forms/user-interface/graphics/skiasharp/transforms/non-affine.md"><strong>Non-Affine Transforms</strong></a>. If these cells have their default values of 0, 0, and 1, then the transform is multiplied by a coordinate point like this:</p>
+<pre>
+              │ ScaleX  SkewY   0 │
+| x  y  1 | × │ SkewX   ScaleY  0 │ = | x'  y'  z' |
+              │ TransX  TransY  1 │
+</pre>
+<p><code>x' = ScaleX · x + SkewX · y + TransX</code></p>
+<p><code>y' = SkewX · x + ScaleY · y + TransY</code></p>
+<p><code>z' = 1</code></p>
+<p>This is the complete two-dimensional affine transform. The affine transform preserves parallel lines, which means that a rectangle is never transformed into anything other than a parallelogram.</p>
+<p>The <code>SKMatrix</code> structure defines several static methods to create <code>SKMatrix</code> values. These all return <code>SKMatrix</code> values:</p>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.maketranslation#skiasharp-skmatrix-maketranslation(system-single-system-single)"><code>MakeTranslation</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.makescale#skiasharp-skmatrix-makescale(system-single-system-single)"><code>MakeScale</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.makescale#skiasharp-skmatrix-makescale(system-single-system-single-system-single-system-single)"><code>MakeScale</code></a> with a pivot point</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.makerotation#skiasharp-skmatrix-makerotation(system-single)"><code>MakeRotation</code></a> for an angle in radians</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.makerotation#skiasharp-skmatrix-makerotation(system-single-system-single-system-single)"><code>MakeRotation</code></a> for an angle in radians with a pivot point</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.makerotationdegrees#skiasharp-skmatrix-makerotationdegrees(system-single)"><code>MakeRotationDegrees</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.makerotationdegrees#skiasharp-skmatrix-makerotationdegrees(system-single-system-single-system-single)"><code>MakeRotationDegrees</code></a> with a pivot point</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.makeskew#skiasharp-skmatrix-makeskew(system-single-system-single)"><code>MakeSkew</code></a></li>
+</ul>
+<p><code>SKMatrix</code> also defines several static methods that concatenate two matrices, which means to multiply them. These methods are named <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.concat"><code>Concat</code></a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.postconcat"><code>PostConcat</code></a>, and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.preconcat"><code>PreConcat</code></a>, and there are two versions of each. These methods have no return values; instead, they reference existing <code>SKMatrix</code> values through <code>ref</code> arguments. In the following example, <code>A</code>, <code>B</code>, and <code>R</code> (for &quot;result&quot;) are all <code>SKMatrix</code> values.</p>
+<p>The two <code>Concat</code> methods are called like this:</p>
+<pre><code class="lang-csharp">SKMatrix.Concat(ref R, A, B);
+
+SKMatrix.Concat(ref R, ref A, ref B);
+</code></pre>
+<p>These perform the following multiplication:</p>
+<p><code>R = B × A</code></p>
+<p>The other methods have only two parameters. The first parameter is modified, and on return from the method call, contains the product of the two matrices. The two <code>PostConcat</code> methods are called like this:</p>
+<pre><code class="lang-csharp">SKMatrix.PostConcat(ref A, B);
+
+SKMatrix.PostConcat(ref A, ref B);
+</code></pre>
+<p>These calls perform the following operation:</p>
+<p><code>A = A × B</code></p>
+<p>The two <code>PreConcat</code> methods are similar:</p>
+<pre><code class="lang-csharp">SKMatrix.PreConcat(ref A, B);
+
+SKMatrix.PreConcat(ref A, ref B);
+</code></pre>
+<p>These calls perform the following operation:</p>
+<p><code>A = B × A</code></p>
+<p>The versions of these methods with all <code>ref</code> arguments are slightly more efficient in calling the underlying implementations, but it might be confusing to someone reading your code and assuming that anything with a <code>ref</code> argument is modified by the method. Moreover, it's often convenient to pass an argument that is a result of one of the <code>Make</code> methods, for example:</p>
+<pre><code class="lang-csharp">SKMatrix result;
+SKMatrix.Concat(result, SKMatrix.MakeTranslation(100, 100),
+                        SKMatrix.MakeScale(3, 3));
+</code></pre>
+<p>This creates the following matrix:</p>
+<pre>
+│   3    0  0 │
+│   0    3  0 │
+│ 100  100  1 │
+</pre>
+<p>This is the scale transform multiplied by the translate transform. In this particular case, the <code>SKMatrix</code> structure provides a shortcut with a method named <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.setscaletranslate#skiasharp-skmatrix-setscaletranslate(system-single-system-single-system-single-system-single)"><code>SetScaleTranslate</code></a>:</p>
+<pre><code class="lang-csharp">SKMatrix R = new SKMatrix();
+R.SetScaleTranslate(3, 3, 100, 100);
+</code></pre>
+<p>This is one of the few times when it's safe to use the <code>SKMatrix</code> constructor. The <code>SetScaleTranslate</code> method sets all nine cells of the matrix. It is also safe to use the <code>SKMatrix</code> constructor with the static <code>Rotate</code> and <code>RotateDegrees</code> methods:</p>
+<pre><code class="lang-csharp">SKMatrix R = new SKMatrix();
+
+SKMatrix.Rotate(ref R, radians);
+
+SKMatrix.Rotate(ref R, radians, px, py);
+
+SKMatrix.RotateDegrees(ref R, degrees);
+
+SKMatrix.RotateDegrees(ref R, degrees, px, py);
+</code></pre>
+<p>These methods do <em>not</em> concatenate a rotate transform to an existing transform. The methods set all the cells of the matrix. They are functionally identical to the <code>MakeRotation</code> and <code>MakeRotationDegrees</code> methods except that they don't instantiate the <code>SKMatrix</code> value.</p>
+<p>Suppose you have an <code>SKPath</code> object that you want to display, but you would prefer that it have a somewhat different orientation, or a different center point. You can modify all the coordinates of that path by calling the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.transform#skiasharp-skpath-transform(skiasharp-skmatrix)"><code>Transform</code></a> method of <code>SKPath</code> with an <code>SKMatrix</code> argument. The <strong>Path Transform</strong> page demonstrates how to do this. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/PathTransformPage.cs"><code>PathTransform</code></a> class references the <code>HendecagramPath</code> object in a field but uses its constructor to apply a transform to that path:</p>
+<pre><code class="lang-csharp">public class PathTransformPage : ContentPage
+{
+    SKPath transformedPath = HendecagramArrayPage.HendecagramPath;
+
+    public PathTransformPage()
+    {
+        Title = &quot;Path Transform&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+
+        SKMatrix matrix = SKMatrix.MakeScale(3, 3);
+        SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(360f / 22));
+        SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(300, 300));
+
+        transformedPath.Transform(matrix);
+    }
+    ...
+}
+</code></pre>
+<p>The <code>HendecagramPath</code> object has a center at (0, 0), and the 11 points of the star extend outward from that center by 100 units in all directions. This means that the path has both positive and negative coordinates. The <strong>Path Transform</strong> page prefers to work with a star three times as large, and with all positive coordinates. Moreover, it doesn't want one point of the star to point straight up. It wants instead for one point of the star to point straight down. (Because the star has 11 points, it can't have both.) This requires rotating the star by 360 degrees divided by 22.</p>
+<p>The constructor builds an <code>SKMatrix</code> object from three separate transforms using the <code>PostConcat</code> method with the following pattern, where A, B, and C are instances of <code>SKMatrix</code>:</p>
+<pre><code class="lang-csharp">SKMatrix matrix = A;
+SKMatrix.PostConcat(ref A, B);
+SKMatrix.PostConcat(ref A, C);
+</code></pre>
+<p>This is a series of successive multiplications, so the result is as follows:</p>
+<p><code>A × B × C</code></p>
+<p>The consecutive multiplications aid in understanding what each transform does. The scale transform increases the size of the path coordinates by a factor of 3, so the coordinates range from –300 to 300. The rotate transform rotates the star around its origin. The translate transform then shifts it by 300 pixels right and down, so all the coordinates become positive.</p>
+<p>There are other sequences that produce the same matrix. Here's another one:</p>
+<pre><code class="lang-csharp">SKMatrix matrix = SKMatrix.MakeRotationDegrees(360f / 22);
+SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(100, 100));
+SKMatrix.PostConcat(ref matrix, SKMatrix.MakeScale(3, 3));
+</code></pre>
+<p>This rotates the path around its center first, and then translates it 100 pixels to the right and down so all the coordinates are positive. The star is then increased in size relative to its new upper-left corner, which is the point (0, 0).</p>
+<p>The <code>PaintSurface</code> handler can simply render this path:</p>
+<pre><code class="lang-csharp">public class PathTransformPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = SKColors.Magenta;
+            paint.StrokeWidth = 5;
+
+            canvas.DrawPath(transformedPath, paint);
+        }
+    }
+}
+
+</code></pre>
+<p>It appears in the upper-left corner of the canvas:</p>
+<p><a href="matrix-images/pathtransform-large.png#lightbox" title="Triple screenshot of the Path Transform page"><img src="matrix-images/pathtransform-small.png" alt="Triple screenshot of the Path Transform page"></a></p>
+<p>The constructor of this program applies the matrix to the path with the following call:</p>
+<pre><code class="lang-csharp">transformedPath.Transform(matrix);
+</code></pre>
+<p>The path does <em>not</em> retain this matrix as a property. Instead, it applies the transform to all of the coordinates of the path. If <code>Transform</code> is called again, the transform is applied again, and the only way you can go back is by applying another matrix that undoes the transform. Fortunately, the <code>SKMatrix</code> structure defines a <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix.tryinvert"><code>TryInvert</code></a> method that obtains the matrix that reverses a given matrix:</p>
+<pre><code class="lang-csharp">SKMatrix inverse;
+bool success = matrix.TryInverse(out inverse);
+</code></pre>
+<p>The method is called <code>TryInverse</code> because not all matrices are invertible, but a non-invertible matrix is not likely to be used for a graphics transform.</p>
+<p>You can also apply a matrix transform to an <code>SKPoint</code> value, an array of points, an <code>SKRect</code>, or even just a single number within your program. The <code>SKMatrix</code> structure supports these operations with a collection of methods that begin with the word <code>Map</code>, such as these:</p>
+<pre><code class="lang-csharp">SKPoint transformedPoint = matrix.MapPoint(point);
+
+SKPoint transformedPoint = matrix.MapPoint(x, y);
+
+SKPoint[] transformedPoints = matrix.MapPoints(pointArray);
+
+float transformedValue = matrix.MapRadius(floatValue);
+
+SKRect transformedRect = matrix.MapRect(rect);
+</code></pre>
+<p>If you use that last method, keep in mind that the <code>SKRect</code> structure is not capable of representing a rotated rectangle. The method only makes sense for an <code>SKMatrix</code> value representing translation and scaling.</p>
+<h2 id="interactive-experimentation">Interactive Experimentation</h2>
+<p>One way to get a feel for the affine transform is by interactively moving three corners of a bitmap around the screen and seeing what transform results. This is the idea behind the <strong>Show Affine Matrix</strong> page. This page requires two other classes that are also used in other demonstrations:</p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/TouchPoint.cs"><code>TouchPoint</code></a> class displays a translucent circle that can be dragged around the screen. <code>TouchPoint</code> requires that an <code>SKCanvasView</code> or an element that is a parent of an <code>SKCanvasView</code> have the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/TouchEffect.cs"><code>TouchEffect</code></a> attached. Set the <code>Capture</code> property to <code>true</code>. In the <code>TouchAction</code> event handler, the program must call the <code>ProcessTouchEvent</code> method in <code>TouchPoint</code> for each <code>TouchPoint</code> instance. The method returns <code>true</code> if the touch event resulted in the touch point moving. Also, the <code>PaintSurface</code> handler must call the <code>Paint</code> method in each <code>TouchPoint</code> instance, passing to it the <code>SKCanvas</code> object.</p>
+<p><code>TouchPoint</code> demonstrates a common way that a SkiaSharp visual can be encapsulated in a separate class. The class can define properties for specifying characteristics of the visual, and a method named <code>Paint</code> with an <code>SKCanvas</code> argument can render it.</p>
+<p>The <code>Center</code> property of <code>TouchPoint</code> indicates the location of the object. This property can be set to initialize the location; the property changes when the user drags the circle around the canvas.</p>
+<p>The <strong>Show Affine Matrix Page</strong> also requires the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/MatrixDisplay.cs"><code>MatrixDisplay</code></a> class. This class displays the cells of an <code>SKMatrix</code> object. It has two public methods: <code>Measure</code> to obtain the dimensions of the rendered matrix, and <code>Paint</code> to display it. The class contains a <code>MatrixPaint</code> property of type <code>SKPaint</code> that can be replaced for a different font size or color.</p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml"><strong>ShowAffineMatrixPage.xaml</strong></a> file instantiates the <code>SKCanvasView</code> and attaches a <code>TouchEffect</code>. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml.cs"><strong>ShowAffineMatrixPage.xaml.cs</strong></a> code-behind file creates three <code>TouchPoint</code> objects and then sets them to positions corresponding to three corners of a bitmap that it loads from an embedded resource:</p>
+<pre><code class="lang-csharp">public partial class ShowAffineMatrixPage : ContentPage
+{
+    SKMatrix matrix;
+    SKBitmap bitmap;
+    SKSize bitmapSize;
+
+    TouchPoint[] touchPoints = new TouchPoint[3];
+
+    MatrixDisplay matrixDisplay = new MatrixDisplay();
+
+    public ShowAffineMatrixPage()
+    {
+        InitializeComponent();
+
+        string resourceID = &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;;
+        Assembly assembly = GetType().GetTypeInfo().Assembly;
+
+        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+        {
+            bitmap = SKBitmap.Decode(stream);
+        }
+
+        touchPoints[0] = new TouchPoint(100, 100);                  // upper-left corner
+        touchPoints[1] = new TouchPoint(bitmap.Width + 100, 100);   // upper-right corner
+        touchPoints[2] = new TouchPoint(100, bitmap.Height + 100);  // lower-left corner
+
+        bitmapSize = new SKSize(bitmap.Width, bitmap.Height);
+        matrix = ComputeMatrix(bitmapSize, touchPoints[0].Center,
+                                           touchPoints[1].Center,
+                                           touchPoints[2].Center);
+    }
+    ...
+}
+</code></pre>
+<p>An affine matrix is uniquely defined by three points. The three <code>TouchPoint</code> objects correspond to the upper-left, upper-right, and lower-left corners of the bitmap. Because an affine matrix is only capable of transforming a rectangle into a parallelogram, the fourth point is implied by the other three. The constructor concludes with a call to <code>ComputeMatrix</code>, which calculates the cells of an <code>SKMatrix</code> object from these three points.</p>
+<p>The <code>TouchAction</code> handler calls the <code>ProcessTouchEvent</code> method of each <code>TouchPoint</code>. The <code>scale</code> value converts from Xamarin.Forms coordinates to pixels:</p>
+<pre><code class="lang-csharp">public partial class ShowAffineMatrixPage : ContentPage
+{
+    ...
+    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    {
+        bool touchPointMoved = false;
+
+        foreach (TouchPoint touchPoint in touchPoints)
+        {
+            float scale = canvasView.CanvasSize.Width / (float)canvasView.Width;
+            SKPoint point = new SKPoint(scale * (float)args.Location.X,
+                                        scale * (float)args.Location.Y);
+            touchPointMoved |= touchPoint.ProcessTouchEvent(args.Id, args.Type, point);
+        }
+
+        if (touchPointMoved)
+        {
+            matrix = ComputeMatrix(bitmapSize, touchPoints[0].Center,
+                                               touchPoints[1].Center,
+                                               touchPoints[2].Center);
+            canvasView.InvalidateSurface();
+        }
+    }
+    ...
+}
+</code></pre>
+<p>If any <code>TouchPoint</code> has moved, then the method calls <code>ComputeMatrix</code> again and invalidates the surface.</p>
+<p>The <code>ComputeMatrix</code> method determines the matrix implied by those three points. The matrix called <code>A</code> transforms a one-pixel square rectangle into a parallelogram based on the three points, while the scale transform called <code>S</code> scales the bitmap to a one-pixel square rectangle. The composite matrix is <code>S</code> × <code>A</code>:</p>
+<pre><code class="lang-csharp">public partial class ShowAffineMatrixPage : ContentPage
+{
+    ...
+    static SKMatrix ComputeMatrix(SKSize size, SKPoint ptUL, SKPoint ptUR, SKPoint ptLL)
+    {
+        // Scale transform
+        SKMatrix S = SKMatrix.MakeScale(1 / size.Width, 1 / size.Height);
+
+        // Affine transform
+        SKMatrix A = new SKMatrix
+        {
+            ScaleX = ptUR.X - ptUL.X,
+            SkewY = ptUR.Y - ptUL.Y,
+            SkewX = ptLL.X - ptUL.X,
+            ScaleY = ptLL.Y - ptUL.Y,
+            TransX = ptUL.X,
+            TransY = ptUL.Y,
+            Persp2 = 1
+        };
+
+        SKMatrix result = SKMatrix.MakeIdentity();
+        SKMatrix.Concat(ref result, A, S);
+        return result;
+    }
+    ...
+}
+</code></pre>
+<p>Finally, the <code>PaintSurface</code> method renders the bitmap based on that matrix, displays the matrix at the bottom of the screen, and renders the touch points at the three corners of the bitmap:</p>
+<pre><code class="lang-csharp">public partial class ShowAffineMatrixPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Display the bitmap using the matrix
+        canvas.Save();
+        canvas.SetMatrix(matrix);
+        canvas.DrawBitmap(bitmap, 0, 0);
+        canvas.Restore();
+
+        // Display the matrix in the lower-right corner
+        SKSize matrixSize = matrixDisplay.Measure(matrix);
+
+        matrixDisplay.Paint(canvas, matrix,
+            new SKPoint(info.Width - matrixSize.Width,
+                        info.Height - matrixSize.Height));
+
+        // Display the touchpoints
+        foreach (TouchPoint touchPoint in touchPoints)
+        {
+            touchPoint.Paint(canvas);
+        }
+    }
+  }
+</code></pre>
+<p>The iOS screen below shows the bitmap when the page is first loaded, while the two other screens show it after some manipulation:</p>
+<p><a href="matrix-images/showaffinematrix-large.png#lightbox" title="Triple screenshot of the Show Affine Matrix page"><img src="matrix-images/showaffinematrix-small.png" alt="Triple screenshot of the Show Affine Matrix page"></a></p>
+<p>Although it seems as if the touch points drag the corners of the bitmap, that's only an illusion. The matrix calculated from the touch points transforms the bitmap so that the corners coincide with the touch points.</p>
+<p>It is more natural for users to move, resize, and rotate bitmaps not by dragging the corners, but by using one or two fingers directly on the object to drag, pinch, and rotate. This is covered in the next article <a href="../../xamarin-forms/user-interface/graphics/skiasharp/transforms/touch.md"><strong>Touch Manipulation</strong></a>.</p>
+<h2 id="the-reason-for-the-3-by-3-matrix">The Reason for the 3-by-3 Matrix</h2>
+<p>It might be expected that a two-dimensional graphics system would require only a 2-by-2 transform matrix:</p>
+<pre>
+           │ ScaleX  SkewY  │
+| x  y | × │                │ = | x'  y' |
+           │ SkewX   ScaleY │
+</pre>
+<p>This works for scaling, rotation, and even skewing, but it is not capable of the most basic of transforms, which is translation.</p>
+<p>The problem is that the 2-by-2 matrix represents a <em>linear</em> transform in two dimensions. A linear transform preserves some basic arithmetic operations, but one of the implications is that a linear transform never alters the point (0, 0). A linear transform makes translation impossible.</p>
+<p>In three dimensions, a linear transform matrix looks like this:</p>
+<pre>
+              │ ScaleX  SkewYX  SkewZX │
+| x  y  z | × │ SkewXY  ScaleY  SkewZY │ = | x'  y'  z' |
+              │ SkewXZ  SkewYZ  ScaleZ │
+</pre>
+<p>The cell labeled <code>SkewXY</code> means that the value skews the X coordinate based on values of Y; the cell <code>SkewXZ</code> means that the value skews the X coordinate based on values of Z; and values skew similarly for the other <code>Skew</code> cells.</p>
+<p>It's possible to restrict this 3D transform matrix to a two-dimensional plane by setting <code>SkewZX</code> and <code>SkewZY</code> to 0, and <code>ScaleZ</code> to 1:</p>
+<pre>
+              │ ScaleX  SkewYX   0 │
+| x  y  z | × │ SkewXY  ScaleY   0 │ = | x'  y'  z' |
+              │ SkewXZ  SkewYZ   1 │
+</pre>
+<p>If the two-dimensional graphics are drawn entirely on the plane in 3D space where Z equals 1, the transform multiplication looks like this:</p>
+<pre>
+              │ ScaleX  SkewYX   0 │
+| x  y  1 | × │ SkewXY  ScaleY   0 │ = | x'  y'  1 |
+              │ SkewXZ  SkewYZ   1 │
+</pre>
+<p>Everything stays on the two-dimensional plane where Z equals 1, but the <code>SkewXZ</code> and <code>SkewYZ</code> cells effectively become two-dimensional translation factors.</p>
+<p>This is how a three-dimensional linear transform serves as a two-dimensional non-linear transform. (By analogy, transforms in 3D graphics are based on a 4-by-4 matrix.)</p>
+<p>The <code>SKMatrix</code> structure in SkiaSharp defines properties for that third row:</p>
+<pre>
+              │ ScaleX  SkewY   Persp0 │
+| x  y  1 | × │ SkewX   ScaleY  Persp1 │ = | x'  y'  z` |
+              │ TransX  TransY  Persp2 │
+</pre>
+<p>Non-zero values of <code>Persp0</code> and <code>Persp1</code> result in transforms that move objects off the two-dimensional plane where Z equals 1. What happens when those objects are moved back to that plane is covered in the article on <a href="../../xamarin-forms/user-interface/graphics/skiasharp/transforms/non-affine.md"><strong>Non-Affine Transforms</strong></a>.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

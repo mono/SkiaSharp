@@ -1,0 +1,541 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>The separable blend modes | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="The separable blend modes | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../../images/logo.ico">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../TOC.html">
+    <meta property="docfx:tocrel" content="../../TOC.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="the-separable-blend-modes">The separable blend modes</h1>
+
+<p>As you saw in the article <a href="porter-duff.html"><strong>SkiaSharp Porter-Duff blend modes</strong></a>, the Porter-Duff blend modes generally perform clipping operations. The separable blend modes are different. The separable modes alter the individual red, green, and blue color components of an image. Separable blend modes can mix color to demonstrate that the combination of red, green, and blue is indeed white:</p>
+<p><img src="separable-images/SeparableSample.png" alt="Primary Colors" title="Primary Colors"></p>
+<h2 id="lighten-and-darken-two-ways">Lighten and darken two ways</h2>
+<p>It is common to have a bitmap that is somewhat too dark or too light. You can use separable blend modes to lighten or darken the image.  Indeed, two of the separable blend modes in the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skblendmode"><code>SKBlendMode</code></a> enumeration are named <code>Lighten</code> and <code>Darken</code>.</p>
+<p>These two modes are demonstrated in the <strong>Lighten and Darken</strong> page. The XAML file instantiates two <code>SKCanvasView</code> objects and two <code>Slider</code> views:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.LightenAndDarkenPage&quot;
+             Title=&quot;Lighten and Darken&quot;&gt;
+    &lt;StackLayout&gt;
+        &lt;skia:SKCanvasView x:Name=&quot;lightenCanvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;lightenSlider&quot;
+                Margin=&quot;10&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;darkenCanvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;darkenSlider&quot;
+                Margin=&quot;10&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The first <code>SKCanvasView</code> and <code>Slider</code> demonstrate <code>SKBlendMode.Lighten</code> and the second pair demonstrates <code>SKBlendMode.Darken</code>. The two <code>Slider</code> views share the same <code>ValueChanged</code> handler, and the two <code>SKCanvasView</code> share the same <code>PaintSurface</code> handler. Both event handlers check which object is firing the event:</p>
+<pre><code class="lang-csharp">public partial class LightenAndDarkenPage : ContentPage
+{
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+                typeof(SeparableBlendModesPage),
+                &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+
+    public LightenAndDarkenPage ()
+    {
+        InitializeComponent ();
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        if ((Slider)sender == lightenSlider)
+        {
+            lightenCanvasView.InvalidateSurface();
+        }
+        else
+        {
+            darkenCanvasView.InvalidateSurface();
+        }
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Find largest size rectangle in canvas
+        float scale = Math.Min((float)info.Width / bitmap.Width,
+                               (float)info.Height / bitmap.Height);
+        SKRect rect = SKRect.Create(scale * bitmap.Width, scale * bitmap.Height);
+        float x = (info.Width - rect.Width) / 2;
+        float y = (info.Height - rect.Height) / 2;
+        rect.Offset(x, y);
+
+        // Display bitmap
+        canvas.DrawBitmap(bitmap, rect);
+
+        // Display gray rectangle with blend mode
+        using (SKPaint paint = new SKPaint())
+        {
+            if ((SKCanvasView)sender == lightenCanvasView)
+            {
+                byte value = (byte)(255 * lightenSlider.Value);
+                paint.Color = new SKColor(value, value, value);
+                paint.BlendMode = SKBlendMode.Lighten;
+            }
+            else
+            {
+                byte value = (byte)(255 * (1 - darkenSlider.Value));
+                paint.Color = new SKColor(value, value, value);
+                paint.BlendMode = SKBlendMode.Darken;
+            }
+
+            canvas.DrawRect(rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler calculates a rectangle suitable for the bitmap. The handler displays that bitmap and then displays a rectangle over the bitmap using an <code>SKPaint</code> object with its <code>BlendMode</code> property set to <code>SKBlendMode.Lighten</code> or <code>SKBlendMode.Darken</code>. The <code>Color</code> property is a gray shade based on the <code>Slider</code>. For the <code>Lighten</code> mode, the color ranges from black to white, but for the <code>Darken</code> mode it ranges from white to black.</p>
+<p>The screenshots from left to right show increasingly larger <code>Slider</code> values as the top image gets lighter and the bottom image gets darker:</p>
+<p><a href="separable-images/LightenAndDarken-Large.png#lightbox"><img src="separable-images/LightenAndDarken.png" alt="Lighten and Darken" title="Lighten and Darken"></a></p>
+<p>This program demonstrates the normal way in which the separable blend modes are used: The destination is an image of some sort, very often a bitmap. The source is a rectangle displayed using an <code>SKPaint</code> object with its <code>BlendMode</code> property set to a separable blend mode. The rectangle can be a solid color (as it is here) or a gradient. Transparency is <em>not</em> generally used with the separable blend modes.</p>
+<p>As you experiment with this program, you'll discover that these two blend modes do not lighten and darken the image uniformly. Instead, the <code>Slider</code> seems to set a threshold of some sort. For example, as you increase the <code>Slider</code> for the <code>Lighten</code> mode, the darker areas of the image get light first while the lighter areas remain the same.</p>
+<p>For the <code>Lighten</code> mode, if the destination pixel is the RGB color value (Dr, Dg, Db), and the source pixel is the color (Sr, Sg, Sb), then the output is (Or, Og, Ob) calculated as follows:</p>
+<p><code>Or = max(Dr, Sr)</code>
+<code>Og = max(Dg, Sg)</code>
+<code>Ob = max(Db, Sb)</code></p>
+<p>For red, green, and blue separately, the result is the greater of the destination and source. This produces the effect of lightening the dark areas of the destination first.</p>
+<p>The <code>Darken</code> mode is similar except that the result is the lesser of the destination and source:</p>
+<p><code>Or = min(Dr, Sr)</code>
+<code>Og = min(Dg, Sg)</code>
+<code>Ob = min(Db, Sb)</code></p>
+<p>The red, green, and blue components are each handled separately, which is why these blend modes are referred to as the <em>separable</em> blend modes. For this reason, the abbreviations <strong>Dc</strong> and <strong>Sc</strong> can be used for the destination and source colors, and it's understood that calculations apply to each of the red, green, and blue components separately.</p>
+<p>The following table shows all the separable blend modes with brief explanations of what they do. The second column shows the source color that produces no change:</p>
+<table>
+<thead>
+<tr>
+<th>Blend Mode</th>
+<th>No change</th>
+<th>Operation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Plus</code></td>
+<td>Black</td>
+<td>Lightens by adding colors: Sc + Dc</td>
+</tr>
+<tr>
+<td><code>Modulate</code></td>
+<td>White</td>
+<td>Darkens by multiplying colors: Sc·Dc</td>
+</tr>
+<tr>
+<td><code>Screen</code></td>
+<td>Black</td>
+<td>Complements product of complements: Sc + Dc – Sc·Dc</td>
+</tr>
+<tr>
+<td><code>Overlay</code></td>
+<td>Gray</td>
+<td>Inverse of <code>HardLight</code></td>
+</tr>
+<tr>
+<td><code>Darken</code></td>
+<td>White</td>
+<td>Minimum of colors: min(Sc, Dc)</td>
+</tr>
+<tr>
+<td><code>Lighten</code></td>
+<td>Black</td>
+<td>Maximum of colors: max(Sc, Dc)</td>
+</tr>
+<tr>
+<td><code>ColorDodge</code></td>
+<td>Black</td>
+<td>Brightens destination based on source</td>
+</tr>
+<tr>
+<td><code>ColorBurn</code></td>
+<td>White</td>
+<td>Darkens destination based on source</td>
+</tr>
+<tr>
+<td><code>HardLight</code></td>
+<td>Gray</td>
+<td>Similar to effect of harsh spotlight</td>
+</tr>
+<tr>
+<td><code>SoftLight</code></td>
+<td>Gray</td>
+<td>Similar to effect of soft spotlight</td>
+</tr>
+<tr>
+<td><code>Difference</code></td>
+<td>Black</td>
+<td>Subtracts the darker from the lighter: Abs(Dc – Sc)</td>
+</tr>
+<tr>
+<td><code>Exclusion</code></td>
+<td>Black</td>
+<td>Similar to <code>Difference</code> but lower contrast</td>
+</tr>
+<tr>
+<td><code>Multiply</code></td>
+<td>White</td>
+<td>Darkens by multiplying colors: Sc·Dc</td>
+</tr>
+</tbody>
+</table>
+<p>More detailed algorithms can be found in the W3C <a href="https://www.w3.org/TR/compositing-1/"><strong>Compositing and Blending Level 1</strong></a> specification and the Skia <a href="https://skia.googlesource.com/skia.git/+/dfec731dbfcf2565007ca94d85f7297f4f468aee/site/user/api/SkBlendMode_Reference.md"><strong>SkBlendMode Reference</strong></a>, although the notation in these two sources is not the same. Keep in mind that <code>Plus</code> is commonly regarded as a Porter-Duff blend mode, and <code>Modulate</code> is not part of the W3C specification.</p>
+<p>If the source is transparent, then for all the separable blend modes except <code>Modulate</code>, the blend mode has no effect. As you've seen earlier, the <code>Modulate</code> blend mode incorporates the alpha channel in the multiplication. Otherwise, <code>Modulate</code> has the same effect as <code>Multiply</code>.</p>
+<p>Notice the two modes named <code>ColorDodge</code> and <code>ColorBurn</code>. The words <em>dodge</em> and <em>burn</em> originated in photographic darkroom practices. An enlarger makes a photographic print by shining light through a negative. With no light, the print is white. The print gets darker as more light falls on the print for a longer period of time. Print-makers often used a hand or small object to block some of the light from falling on a certain part of the print, making that area lighter. This is known as <em>dodging</em>. Conversely, opaque material with a hole in it (or hands blocking most of the light) could be used to direct more light in a particular spot to darken it, called <em>burning</em>.</p>
+<p>The <strong>Dodge and Burn</strong> program is very similar to <strong>Lighten and Darken</strong>. The XAML file is structured the same but with different element names, and the code-behind file is likewise quite similar, but the effect of these two blend modes is quite different:</p>
+<p><a href="separable-images/DodgeAndBurn-Large.png#lightbox"><img src="separable-images/DodgeAndBurn.png" alt="Dodge and Burn" title="Dodge and Burn"></a></p>
+<p>For small <code>Slider</code> values, the <code>Lighten</code> mode lightens dark areas first, while <code>ColorDodge</code> lightens more uniformly.</p>
+<p>Image-processing application programs often allow dodging and burning to be restricted to specific areas, just like in a darkroom. This can be accomplished by gradients, or by a bitmap with varying shades of gray.</p>
+<h2 id="exploring-the-separable-blend-modes">Exploring the separable blend modes</h2>
+<p>The <strong>Separable Blend Modes</strong> page allows you to examine all the separable blend modes. It displays a bitmap destination and a colored rectangle source using one of the blend modes.</p>
+<p>The XAML file defines a <code>Picker</code> (to select the blend mode) and four sliders. The first three sliders let you set the red, green, and blue components of the source. The fourth slider is intended to override those values by setting a gray shade. The individual sliders are not identified, but colors indicate their function:</p>
+<pre><code class="lang-xaml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
+             xmlns:skiaviews=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.SeparableBlendModesPage&quot;
+             Title=&quot;Separable Blend Modes&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;skiaviews:SKCanvasView x:Name=&quot;canvasView&quot;
+                                VerticalOptions=&quot;FillAndExpand&quot;
+                                PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Picker x:Name=&quot;blendModePicker&quot;
+                Title=&quot;Blend Mode&quot;
+                Margin=&quot;10, 0&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKBlendMode}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Plus&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Modulate&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Screen&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Overlay&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Darken&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Lighten&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.ColorDodge&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.ColorBurn&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.HardLight&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.SoftLight&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Difference&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Exclusion&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Multiply&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;Slider x:Name=&quot;redSlider&quot;
+                MinimumTrackColor=&quot;Red&quot;
+                MaximumTrackColor=&quot;Red&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;greenSlider&quot;
+                MinimumTrackColor=&quot;Green&quot;
+                MaximumTrackColor=&quot;Green&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;blueSlider&quot;
+                MinimumTrackColor=&quot;Blue&quot;
+                MaximumTrackColor=&quot;Blue&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;graySlider&quot;
+                MinimumTrackColor=&quot;Gray&quot;
+                MaximumTrackColor=&quot;Gray&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label x:Name=&quot;colorLabel&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file loads one of the bitmap resources and draws it twice, once in the top half of the canvas and again in the bottom half of the canvas:</p>
+<pre><code class="lang-csharp">public partial class SeparableBlendModesPage : ContentPage
+{
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+                        typeof(SeparableBlendModesPage),
+                        &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;); 
+
+    public SeparableBlendModesPage()
+    {
+        InitializeComponent();
+    }
+
+    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs e)
+    {
+        if (sender == graySlider)
+        {
+            redSlider.Value = greenSlider.Value = blueSlider.Value = graySlider.Value;
+        }
+
+        colorLabel.Text = String.Format(&quot;Color = {0:X2} {1:X2} {2:X2}&quot;,
+                                        (byte)(255 * redSlider.Value),
+                                        (byte)(255 * greenSlider.Value),
+                                        (byte)(255 * blueSlider.Value));
+
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Draw bitmap in top half
+        SKRect rect = new SKRect(0, 0, info.Width, info.Height / 2);
+        canvas.DrawBitmap(bitmap, rect, BitmapStretch.Uniform);
+
+        // Draw bitmap in bottom halr
+        rect = new SKRect(0, info.Height / 2, info.Width, info.Height);
+        canvas.DrawBitmap(bitmap, rect, BitmapStretch.Uniform);
+
+        // Get values from XAML controls
+        SKBlendMode blendMode =
+            (SKBlendMode)(blendModePicker.SelectedIndex == -1 ?
+                                        0 : blendModePicker.SelectedItem);
+
+        SKColor color = new SKColor((byte)(255 * redSlider.Value),
+                                    (byte)(255 * greenSlider.Value),
+                                    (byte)(255 * blueSlider.Value));
+
+        // Draw rectangle with blend mode in bottom half
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Color = color;
+            paint.BlendMode = blendMode;
+            canvas.DrawRect(rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>Towards the bottom of the <code>PaintSurface</code> handler, a rectangle is drawn over the second bitmap with the selected blend mode and the selected color. You can compare the modified bitmap at the bottom with the original bitmap at the top:</p>
+<p><a href="separable-images/SeparableBlendModes-Large.png#lightbox"><img src="separable-images/SeparableBlendModes.png" alt="Separable Blend Modes" title="Separable Blend Modes"></a></p>
+<h2 id="additive-and-subtractive-primary-colors">Additive and subtractive primary colors</h2>
+<p>The <strong>Primary Colors</strong> page draws three overlapping circles of red, green, and blue:</p>
+<p><a href="separable-images/PrimaryColors-Additive.png#lightbox"><img src="separable-images/PrimaryColors-Additive.png" alt="Additive Primary Colors" title="Additive Primary Colors"></a></p>
+<p>These are the additive primary colors. Combinations of any two produce cyan, magenta, and yellow, and a combination of all three is white.</p>
+<p>These three circles are drawn with the <code>SKBlendMode.Plus</code> mode, but you can also use <code>Screen</code>, <code>Lighten</code>, or <code>Difference</code> for the same effect. Here's the program:</p>
+<pre><code class="lang-csharp">public class PrimaryColorsPage : ContentPage
+{
+    bool isSubtractive;
+
+    public PrimaryColorsPage ()
+    {
+        Title = &quot;Primary Colors&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+
+        // Switch between additive and subtractive primaries at tap
+        TapGestureRecognizer tap = new TapGestureRecognizer();
+        tap.Tapped += (sender, args) =&gt;
+        {
+            isSubtractive ^= true;
+            canvasView.InvalidateSurface();
+        };
+        canvasView.GestureRecognizers.Add(tap);
+
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        SKPoint center = new SKPoint(info.Rect.MidX, info.Rect.MidY);
+        float radius = Math.Min(info.Width, info.Height) / 4;
+        float distance = 0.8f * radius;     // from canvas center to circle center
+        SKPoint center1 = center + 
+            new SKPoint(distance * (float)Math.Cos(9 * Math.PI / 6),
+                        distance * (float)Math.Sin(9 * Math.PI / 6));
+        SKPoint center2 = center +
+            new SKPoint(distance * (float)Math.Cos(1 * Math.PI / 6),
+                        distance * (float)Math.Sin(1 * Math.PI / 6));
+        SKPoint center3 = center +
+            new SKPoint(distance * (float)Math.Cos(5 * Math.PI / 6),
+                        distance * (float)Math.Sin(5 * Math.PI / 6));
+
+        using (SKPaint paint = new SKPaint())
+        {
+            if (!isSubtractive)
+            {
+                paint.BlendMode = SKBlendMode.Plus; 
+                System.Diagnostics.Debug.WriteLine(paint.BlendMode);
+
+                paint.Color = SKColors.Red;
+                canvas.DrawCircle(center1, radius, paint);
+
+                paint.Color = SKColors.Lime;    // == (00, FF, 00)
+                canvas.DrawCircle(center2, radius, paint);
+
+                paint.Color = SKColors.Blue;
+                canvas.DrawCircle(center3, radius, paint);
+            }
+            else
+            {
+                paint.BlendMode = SKBlendMode.Multiply
+                System.Diagnostics.Debug.WriteLine(paint.BlendMode);
+
+                paint.Color = SKColors.Cyan;
+                canvas.DrawCircle(center1, radius, paint);
+
+                paint.Color = SKColors.Magenta;
+                canvas.DrawCircle(center2, radius, paint);
+
+                paint.Color = SKColors.Yellow;
+                canvas.DrawCircle(center3, radius, paint);
+            }
+        }
+    }
+}
+</code></pre>
+<p>The program includes a <code>TabGestureRecognizer</code>. When you tap or click the screen, the program uses <code>SKBlendMode.Multiply</code> to display the three subtractive primaries:</p>
+<p><a href="separable-images/PrimaryColors-Subtractive-Large.png#lightbox"><img src="separable-images/PrimaryColors-Subtractive.png" alt="Subtractive Primary Colors" title="Subtractive Primary Colors"></a></p>
+<p>The <code>Darken</code> mode also works for this same effect.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

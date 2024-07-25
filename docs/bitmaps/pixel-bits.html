@@ -1,0 +1,813 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Accessing SkiaSharp bitmap pixel bits | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Accessing SkiaSharp bitmap pixel bits | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="accessing-skiasharp-bitmap-pixel-bits">Accessing SkiaSharp bitmap pixel bits</h1>
+
+<p>As you saw in the article <a href="saving.html"><strong>Saving SkiaSharp bitmaps to files</strong></a>, bitmaps are generally stored in files in a compressed format, such as JPEG or PNG. In constrast, a SkiaSharp bitmap stored in memory is not compressed. It is stored as a sequential series of pixels. This uncompressed format facilitates the transfer of bitmaps to a display surface.</p>
+<p>The memory block occupied by a SkiaSharp bitmap is organized in a very straightforward manner: It begins with the first row of pixels, from left to right, and then continues with the second row. For full-color bitmaps, each pixel consists of four bytes, which means that the total memory space required by the bitmap is four times the product of its width and height.</p>
+<p>This article describes how an application can get access to those pixels, either directly by accessing the bitmap's pixel memory block, or indirectly. In some instances, a program might want to analyze the pixels of an image and construct a histogram of some sort. More commonly, applications can construct unique images by algorithmically creating the pixels that make up the bitmap:</p>
+<p><img src="pixel-bits-images/PixelBitsSample.png" alt="Pixel Bits Samples" title="Pixel Bits Sample"></p>
+<h2 id="the-techniques">The techniques</h2>
+<p>SkiaSharp provides several techniques for accessing a bitmap's pixel bits. Which one you choose is usually a compromise between coding convenience (which is related to maintenance and ease of debugging) and performance. In most cases, you'll use one of the following methods and properties of <code>SKBitmap</code> for accessing the bitmap's pixels:</p>
+<ul>
+<li>The <code>GetPixel</code> and <code>SetPixel</code> methods allow you to obtain or set the color of a single pixel.</li>
+<li>The <code>Pixels</code> property obtains an array of pixel colors for the entire bitmap, or sets the array of colors.</li>
+<li><code>GetPixels</code> returns the address of the pixel memory used by the bitmap.</li>
+<li><code>SetPixels</code> replaces the address of the pixel memory used by the bitmap.</li>
+</ul>
+<p>You can think of the first two techniques as &quot;high level&quot; and the second two as &quot;low level.&quot; There are some other methods and properties that you can use, but these are the most valuable.</p>
+<p>To allow you to see the performance differences between these techniques, the sample application contains a page named <strong>Gradient Bitmap</strong> that creates a bitmap with pixels that combine red and blue shades to create a gradient. The program creates eight different copies of this bitmap, all using different techniques for setting the bitmap pixels. Each of these eight bitmaps is created in a separate method that also sets a brief text description of the technique and calculates the time required to set all the pixels. Each method loops through the pixel-setting logic 100 times to get a better estimate of the performance.</p>
+<h3 id="the-setpixel-method">The SetPixel method</h3>
+<p>If you only need to set or get several individual pixels, the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.setpixel#skiasharp-skbitmap-setpixel(system-int32-system-int32-skiasharp-skcolor)"><code>SetPixel</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.getpixel#skiasharp-skbitmap-getpixel(system-int32-system-int32)"><code>GetPixel</code></a> methods are ideal. For each of these two methods, you specify the integer column and row. Regardless of the pixel format, these two methods let you obtain or set the pixel as an <code>SKColor</code> value:</p>
+<pre><code class="lang-csharp">bitmap.SetPixel(col, row, color);
+
+SKColor color = bitmap.GetPixel(col, row);
+</code></pre>
+<p>The <code>col</code> argument must range from 0 to one less than the <code>Width</code> property of the bitmap, and <code>row</code> ranges from 0 to one less than the <code>Height</code> property.</p>
+<p>Here's the method in <strong>Gradient Bitmap</strong> that sets the contents of a bitmap using the <code>SetPixel</code> method. The bitmap is 256 by 256 pixels, and the <code>for</code> loops are hard-coded with the range of values:</p>
+<pre><code class="lang-csharp">public class GradientBitmapPage : ContentPage
+{
+    const int REPS = 100;
+
+    Stopwatch stopwatch = new Stopwatch();
+    ···
+    SKBitmap FillBitmapSetPixel(out string description, out int milliseconds)
+    {
+        description = &quot;SetPixel&quot;;
+        SKBitmap bitmap = new SKBitmap(256, 256);
+
+        stopwatch.Restart();
+
+        for (int rep = 0; rep &lt; REPS; rep++)
+            for (int row = 0; row &lt; 256; row++)
+                for (int col = 0; col &lt; 256; col++)
+                {
+                    bitmap.SetPixel(col, row, new SKColor((byte)col, 0, (byte)row));
+                }
+
+        milliseconds = (int)stopwatch.ElapsedMilliseconds;
+        return bitmap;
+    }
+    ···
+}
+</code></pre>
+<p>The color set for each pixel has a red component equal to the bitmap column, and a blue component equal to the row. The resultant bitmap is black at the upper-left, red at the upper-right, blue at the lower-left, and magenta at the lower-right, with gradients elsewhere.</p>
+<p>The <code>SetPixel</code> method is called 65,536 times, and regardless how efficient this method might be, it's generally not a good idea to make that many API calls if an alternative is available. Fortunately, there are several alternatives.</p>
+<h3 id="the-pixels-property">The Pixels property</h3>
+<p><code>SKBitmap</code> defines a <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.pixels#skiasharp-skbitmap-pixels"><code>Pixels</code></a> property that returns an array of <code>SKColor</code> values for the entire bitmap. You can also use <code>Pixels</code> to set an array of color values for the bitmap:</p>
+<pre><code class="lang-csharp">SKColor[] pixels = bitmap.Pixels;
+
+bitmap.Pixels = pixels;
+</code></pre>
+<p>The pixels are arranged in the array starting with the first row, from left to right, then the second row, and so forth. The total number of colors in the array is equal to the product of the bitmap width and height.</p>
+<p>Although this property appears to be efficient, keep in mind that the pixels are being copied from the bitmap into the array, and from the array back into the bitmap, and the pixels are converted from and to <code>SKColor</code> values.</p>
+<p>Here's the method in the <code>GradientBitmapPage</code> class that sets the bitmap using the <code>Pixels</code> property. The method allocates an <code>SKColor</code> array of the required size, but it could have used the <code>Pixels</code> property to create that array:</p>
+<pre><code class="lang-csharp">SKBitmap FillBitmapPixelsProp(out string description, out int milliseconds)
+{
+    description = &quot;Pixels property&quot;;
+    SKBitmap bitmap = new SKBitmap(256, 256);
+
+    stopwatch.Restart();
+
+    SKColor[] pixels = new SKColor[256 * 256];
+
+    for (int rep = 0; rep &lt; REPS; rep++)
+        for (int row = 0; row &lt; 256; row++)
+            for (int col = 0; col &lt; 256; col++)
+            {
+                pixels[256 * row + col] = new SKColor((byte)col, 0, (byte)row);
+            }
+
+    bitmap.Pixels = pixels;
+
+    milliseconds = (int)stopwatch.ElapsedMilliseconds;
+    return bitmap;
+}
+</code></pre>
+<p>Notice that the index of the <code>pixels</code> array needs to be calculated from the <code>row</code> and <code>col</code> variables. The row is multiplied by the number of pixels in each row (256 in this case), and then the column is added.</p>
+<p><code>SKBitmap</code> also defines a similar <code>Bytes</code> property, which returns a byte array for the entire bitmap, but it is more cumbersome for full-color bitmaps.</p>
+<h3 id="the-getpixels-pointer">The GetPixels pointer</h3>
+<p>Potentially the most powerful technique to access the bitmap pixels is <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.getpixels#skiasharp-skbitmap-getpixels"><code>GetPixels</code></a>, not to be confused with the <code>GetPixel</code> method or the <code>Pixels</code> property. You'll immediately notice a difference with <code>GetPixels</code> in that it returns something not very common in C# programming:</p>
+<pre><code class="lang-csharp">IntPtr pixelsAddr = bitmap.GetPixels();
+</code></pre>
+<p>The .NET <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr"><code>IntPtr</code></a> type represents a pointer. It is called <code>IntPtr</code> because it is the length of an integer on the native processor of the machine on which the program is run, generally either 32 bits or 64 bits in length. The <code>IntPtr</code> that <code>GetPixels</code> returns is the address of the actual block of memory that the bitmap object is using to store its pixels.</p>
+<p>You can convert the <code>IntPtr</code> into a C# pointer type using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr.topointer#system-intptr-topointer"><code>ToPointer</code></a> method. The C# pointer syntax is the same as C and C++:</p>
+<pre><code class="lang-csharp">byte* ptr = (byte*)pixelsAddr.ToPointer();
+</code></pre>
+<p>The <code>ptr</code> variable is of type <em>byte pointer</em>. This <code>ptr</code> variable allows you to access the individual bytes of memory that are used to store the bitmap's pixels. You use code like this to read a byte from this memory or write a byte to the memory:</p>
+<pre><code class="lang-csharp">byte pixelComponent = *ptr;
+
+*ptr = pixelComponent;
+</code></pre>
+<p>In this context, the asterisk is the C# <em>indirection operator</em> and is used to reference the contents of the memory pointed to by <code>ptr</code>. Initially, <code>ptr</code> points to the first byte of the first pixel of the first row of the bitmap, but you can perform arithmetic on the <code>ptr</code> variable to move it to other locations within the bitmap.</p>
+<p>One drawback is that you can use this <code>ptr</code> variable only in a code block marked with the <code>unsafe</code> keyword. In addition, the assembly must be flagged as allowing unsafe blocks. This is done in the project's properties.</p>
+<p>Using pointers in C# is very powerful, but also very dangerous. You need to be careful that you don't access memory beyond what the pointer is supposed to reference. This is why pointer use is associated with the word &quot;unsafe.&quot;</p>
+<p>Here's the method in the <code>GradientBitmapPage</code> class that uses the <code>GetPixels</code> method. Notice the <code>unsafe</code> block that encompasses all the code using the byte pointer:</p>
+<pre><code class="lang-csharp">SKBitmap FillBitmapBytePtr(out string description, out int milliseconds)
+{
+    description = &quot;GetPixels byte ptr&quot;;
+    SKBitmap bitmap = new SKBitmap(256, 256);
+
+    stopwatch.Restart();
+
+    IntPtr pixelsAddr = bitmap.GetPixels();
+
+    unsafe
+    {
+        for (int rep = 0; rep &lt; REPS; rep++)
+        {
+            byte* ptr = (byte*)pixelsAddr.ToPointer();
+
+            for (int row = 0; row &lt; 256; row++)
+                for (int col = 0; col &lt; 256; col++)
+                {
+                    *ptr++ = (byte)(col);   // red
+                    *ptr++ = 0;             // green
+                    *ptr++ = (byte)(row);   // blue
+                    *ptr++ = 0xFF;          // alpha
+                }
+        }
+    }
+
+    milliseconds = (int)stopwatch.ElapsedMilliseconds;
+    return bitmap;
+}
+</code></pre>
+<p>When the <code>ptr</code> variable is first obtained from the <code>ToPointer</code> method, it points to the first byte of the leftmost pixel of the first row of the bitmap. The <code>for</code> loops for <code>row</code> and <code>col</code> are set up so that <code>ptr</code> can be incremented with the <code>++</code> operator after each byte of each pixel is set. For the other 99 loops through the pixels, the <code>ptr</code> must be set back to the beginning of the bitmap.</p>
+<p>Each pixel is four bytes of memory, so each byte has to be set separately. The code here assumes that the bytes are in the order red, green, blue, and alpha, which is consistent with the <code>SKColorType.Rgba8888</code> color type. You might recall that this is the default color type for iOS and Android, but not for the Universal Windows Platform. By default, the UWP creates bitmaps with the <code>SKColorType.Bgra8888</code> color type. For this reason, expect to see some different results on that platform!</p>
+<p>It's possible to cast the value returned from <code>ToPointer</code> to a <code>uint</code> pointer rather than a <code>byte</code> pointer. This allows an entire pixel to be accessed in one statement. Applying the <code>++</code> operator to that pointer increments it by four bytes to point to the next pixel:</p>
+<pre><code class="lang-csharp">public class GradientBitmapPage : ContentPage
+{
+    ···
+    SKBitmap FillBitmapUintPtr(out string description, out int milliseconds)
+    {
+        description = &quot;GetPixels uint ptr&quot;;
+        SKBitmap bitmap = new SKBitmap(256, 256);
+
+        stopwatch.Restart();
+
+        IntPtr pixelsAddr = bitmap.GetPixels();
+
+        unsafe
+        {
+            for (int rep = 0; rep &lt; REPS; rep++)
+            {
+                uint* ptr = (uint*)pixelsAddr.ToPointer();
+
+                for (int row = 0; row &lt; 256; row++)
+                    for (int col = 0; col &lt; 256; col++)
+                    {
+                        *ptr++ = MakePixel((byte)col, 0, (byte)row, 0xFF);
+                    }
+            }
+        }
+
+        milliseconds = (int)stopwatch.ElapsedMilliseconds;
+        return bitmap;
+    }
+    ···
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    uint MakePixel(byte red, byte green, byte blue, byte alpha) =&gt;
+            (uint)((alpha &lt;&lt; 24) | (blue &lt;&lt; 16) | (green &lt;&lt; 8) | red);
+    ···
+}
+</code></pre>
+<p>The pixel is set using the <code>MakePixel</code> method, which constructs an integer pixel from red, green, blue, and alpha components. Keep in mind that the <code>SKColorType.Rgba8888</code> format has a pixel byte ordering like this:</p>
+<p>RR GG BB AA</p>
+<p>But the integer corresponding to those bytes is:</p>
+<p>AABBGGRR</p>
+<p>The least significant byte of the integer is stored first in accordance with little-endian architecture. This <code>MakePixel</code> method will not work correctly for bitmaps with the <code>Bgra8888</code> color type.</p>
+<p>The <code>MakePixel</code> method is flagged with the <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.methodimploptions"><code>MethodImplOptions.AggressiveInlining</code></a> option to encourage the compiler to avoid making this a separate method, but instead to compile the code where the method is called. This should improve performance.</p>
+<p>Interestingly, the <code>SKColor</code> structure defines an explicit conversion from <code>SKColor</code> to an unsigned integer, which means that an <code>SKColor</code> value can be created, and a conversion to <code>uint</code> can be used instead of <code>MakePixel</code>:</p>
+<pre><code class="lang-csharp">SKBitmap FillBitmapUintPtrColor(out string description, out int milliseconds)
+{
+    description = &quot;GetPixels SKColor&quot;;
+    SKBitmap bitmap = new SKBitmap(256, 256);
+
+    stopwatch.Restart();
+
+    IntPtr pixelsAddr = bitmap.GetPixels();
+
+    unsafe
+    {
+        for (int rep = 0; rep &lt; REPS; rep++)
+        {
+            uint* ptr = (uint*)pixelsAddr.ToPointer();
+
+            for (int row = 0; row &lt; 256; row++)
+                for (int col = 0; col &lt; 256; col++)
+                {
+                    *ptr++ = (uint)new SKColor((byte)col, 0, (byte)row);
+                }
+        }
+    }
+
+    milliseconds = (int)stopwatch.ElapsedMilliseconds;
+    return bitmap;
+}
+</code></pre>
+<p>The only question is this: Is the integer format of the <code>SKColor</code> value in the order of the <code>SKColorType.Rgba8888</code> color type, or the <code>SKColorType.Bgra8888</code> color type, or is it something else entirely? The answer to that question shall be revealed shortly.</p>
+<h3 id="the-setpixels-method">The SetPixels Method</h3>
+<p><code>SKBitmap</code> also defines a method named <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.setpixels#skiasharp-skbitmap-setpixels(system-intptr)"><code>SetPixels</code></a>, which you call like this:</p>
+<pre><code class="lang-csharp">bitmap.SetPixels(intPtr);
+</code></pre>
+<p>Recall that <code>GetPixels</code> obtains an <code>IntPtr</code> referencing the memory block used by the bitmap to store its pixels. The <code>SetPixels</code> call <em>replaces</em> that memory block with the memory block referenced by the <code>IntPtr</code> specified as the <code>SetPixels</code> argument. The bitmap then frees up the memory block it was using previously. The next time <code>GetPixels</code> is called, it obtains the memory block set with <code>SetPixels</code>.</p>
+<p>At first, it seems as if <code>SetPixels</code> gives you no more power and performance than <code>GetPixels</code> while being less convenient. With <code>GetPixels</code> you obtain the bitmap memory block and access it. With <code>SetPixels</code> you allocate and access some memory, and then set that as the bitmap memory block.</p>
+<p>But using <code>SetPixels</code> offers a distinct syntactic advantage: It allows you to access the bitmap pixel bits using an array. Here's the method in <code>GradientBitmapPage</code> that demonstrates this technique. The method first defines a multi-dimensional byte array corresponding to the bytes of the bitmap's pixels. The first dimension is the row, the second dimension is the column, and the third dimension corresonds to the four components of each pixel:</p>
+<pre><code class="lang-csharp">SKBitmap FillBitmapByteBuffer(out string description, out int milliseconds)
+{
+    description = &quot;SetPixels byte buffer&quot;;
+    SKBitmap bitmap = new SKBitmap(256, 256);
+
+    stopwatch.Restart();
+
+    byte[,,] buffer = new byte[256, 256, 4];
+
+    for (int rep = 0; rep &lt; REPS; rep++)
+        for (int row = 0; row &lt; 256; row++)
+            for (int col = 0; col &lt; 256; col++)
+            {
+                buffer[row, col, 0] = (byte)col;   // red
+                buffer[row, col, 1] = 0;           // green
+                buffer[row, col, 2] = (byte)row;   // blue
+                buffer[row, col, 3] = 0xFF;        // alpha
+            }
+
+    unsafe
+    {
+        fixed (byte* ptr = buffer)
+        {
+            bitmap.SetPixels((IntPtr)ptr);
+        }
+    }
+
+    milliseconds = (int)stopwatch.ElapsedMilliseconds;
+    return bitmap;
+}
+</code></pre>
+<p>Then, after the array has been filled with pixels, an <code>unsafe</code> block and a <code>fixed</code> statement is used to obtain a byte pointer that points to this array. That byte pointer can then be cast to an <code>IntPtr</code> to pass to <code>SetPixels</code>.</p>
+<p>The array that you create doesn't have to be a byte array. It can be an integer array with only two dimensions for the row and column:</p>
+<pre><code class="lang-csharp">SKBitmap FillBitmapUintBuffer(out string description, out int milliseconds)
+{
+    description = &quot;SetPixels uint buffer&quot;;
+    SKBitmap bitmap = new SKBitmap(256, 256);
+
+    stopwatch.Restart();
+
+    uint[,] buffer = new uint[256, 256];
+
+    for (int rep = 0; rep &lt; REPS; rep++)
+        for (int row = 0; row &lt; 256; row++)
+            for (int col = 0; col &lt; 256; col++)
+            {
+                buffer[row, col] = MakePixel((byte)col, 0, (byte)row, 0xFF);
+            }
+
+    unsafe
+    {
+        fixed (uint* ptr = buffer)
+        {
+            bitmap.SetPixels((IntPtr)ptr);
+        }
+    }
+
+    milliseconds = (int)stopwatch.ElapsedMilliseconds;
+    return bitmap;
+}
+</code></pre>
+<p>The <code>MakePixel</code> method is again used to combine the color components into a 32-bit pixel.</p>
+<p>Just for completeness, here's the same code but with an <code>SKColor</code> value cast to an unsigned integer:</p>
+<pre><code class="lang-csharp">SKBitmap FillBitmapUintBufferColor(out string description, out int milliseconds)
+{
+    description = &quot;SetPixels SKColor&quot;;
+    SKBitmap bitmap = new SKBitmap(256, 256);
+
+    stopwatch.Restart();
+
+    uint[,] buffer = new uint[256, 256];
+
+    for (int rep = 0; rep &lt; REPS; rep++)
+        for (int row = 0; row &lt; 256; row++)
+            for (int col = 0; col &lt; 256; col++)
+            {
+                buffer[row, col] = (uint)new SKColor((byte)col, 0, (byte)row);
+            }
+
+    unsafe
+    {
+        fixed (uint* ptr = buffer)
+        {
+            bitmap.SetPixels((IntPtr)ptr);
+        }
+    }
+
+    milliseconds = (int)stopwatch.ElapsedMilliseconds;
+    return bitmap;
+}
+</code></pre>
+<h3 id="comparing-the-techniques">Comparing the techniques</h3>
+<p>The constructor of the <strong>Gradient Color</strong> page calls all eight of the methods shown above, and saves the results:</p>
+<pre><code class="lang-csharp">public class GradientBitmapPage : ContentPage
+{
+    ···
+    string[] descriptions = new string[8];
+    SKBitmap[] bitmaps = new SKBitmap[8];
+    int[] elapsedTimes = new int[8];
+
+    SKCanvasView canvasView;
+
+    public GradientBitmapPage ()
+    {
+        Title = &quot;Gradient Bitmap&quot;;
+
+        bitmaps[0] = FillBitmapSetPixel(out descriptions[0], out elapsedTimes[0]);
+        bitmaps[1] = FillBitmapPixelsProp(out descriptions[1], out elapsedTimes[1]);
+        bitmaps[2] = FillBitmapBytePtr(out descriptions[2], out elapsedTimes[2]);
+        bitmaps[4] = FillBitmapUintPtr(out descriptions[4], out elapsedTimes[4]);
+        bitmaps[6] = FillBitmapUintPtrColor(out descriptions[6], out elapsedTimes[6]);
+        bitmaps[3] = FillBitmapByteBuffer(out descriptions[3], out elapsedTimes[3]);
+        bitmaps[5] = FillBitmapUintBuffer(out descriptions[5], out elapsedTimes[5]);
+        bitmaps[7] = FillBitmapUintBufferColor(out descriptions[7], out elapsedTimes[7]);
+
+        canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+    ···
+}
+</code></pre>
+<p>The constructor concludes by creating an <code>SKCanvasView</code> to display the resultant bitmaps. The <code>PaintSurface</code> handler divides its surface into eight rectangles and calls <code>Display</code> to display each one:</p>
+<pre><code class="lang-csharp">public class GradientBitmapPage : ContentPage
+{
+    ···
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        int width = info.Width;
+        int height = info.Height;
+
+        canvas.Clear();
+
+        Display(canvas, 0, new SKRect(0, 0, width / 2, height / 4));
+        Display(canvas, 1, new SKRect(width / 2, 0, width, height / 4));
+        Display(canvas, 2, new SKRect(0, height / 4, width / 2, 2 * height / 4));
+        Display(canvas, 3, new SKRect(width / 2, height / 4, width, 2 * height / 4));
+        Display(canvas, 4, new SKRect(0, 2 * height / 4, width / 2, 3 * height / 4));
+        Display(canvas, 5, new SKRect(width / 2, 2 * height / 4, width, 3 * height / 4));
+        Display(canvas, 6, new SKRect(0, 3 * height / 4, width / 2, height));
+        Display(canvas, 7, new SKRect(width / 2, 3 * height / 4, width, height));
+    }
+
+    void Display(SKCanvas canvas, int index, SKRect rect)
+    {
+        string text = String.Format(&quot;{0}: {1:F1} msec&quot;, descriptions[index],
+                                    (double)elapsedTimes[index] / REPS);
+
+        SKRect bounds = new SKRect();
+
+        using (SKPaint textPaint = new SKPaint())
+        {
+            textPaint.TextSize = (float)(12 * canvasView.CanvasSize.Width / canvasView.Width);
+            textPaint.TextAlign = SKTextAlign.Center;
+            textPaint.MeasureText(&quot;Tly&quot;, ref bounds);
+
+            canvas.DrawText(text, new SKPoint(rect.MidX, rect.Bottom - bounds.Bottom), textPaint);
+            rect.Bottom -= bounds.Height;
+            canvas.DrawBitmap(bitmaps[index], rect, BitmapStretch.Uniform);
+        }
+    }
+}
+</code></pre>
+<p>To allow the compiler to optimize the code, this page was run in <strong>Release</strong> mode. Here's that page running on an iPhone 8 simulator on a MacBook Pro, a Nexus 5 Android phone, and Surface Pro 3 running Windows 10. Because of the hardware differences, avoid comparing the performance times between the devices, but instead look at the relative times on each device:</p>
+<p><a href="pixel-bits-images/GradientBitmap-Large.png#lightbox"><img src="pixel-bits-images/GradientBitmap.png" alt="Gradient Bitmap" title="Gradient Bitmap"></a></p>
+<p>Here is a table that consolidates the execution times in milliseconds:</p>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Data type</th>
+<th style="text-align: right;">iOS</th>
+<th style="text-align: right;">Android</th>
+<th style="text-align: right;">UWP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SetPixel</td>
+<td></td>
+<td style="text-align: right;">3.17</td>
+<td style="text-align: right;">10.77</td>
+<td style="text-align: right;">3.49</td>
+</tr>
+<tr>
+<td>Pixels</td>
+<td></td>
+<td style="text-align: right;">0.32</td>
+<td style="text-align: right;">1.23</td>
+<td style="text-align: right;">0.07</td>
+</tr>
+<tr>
+<td>GetPixels</td>
+<td>byte</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: right;">0.24</td>
+<td style="text-align: right;">0.10</td>
+</tr>
+<tr>
+<td></td>
+<td>uint</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: right;">0.05</td>
+</tr>
+<tr>
+<td></td>
+<td>SKColor</td>
+<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">0.99</td>
+<td style="text-align: right;">0.07</td>
+</tr>
+<tr>
+<td>SetPixels</td>
+<td>byte</td>
+<td style="text-align: right;">1.33</td>
+<td style="text-align: right;">6.78</td>
+<td style="text-align: right;">0.11</td>
+</tr>
+<tr>
+<td></td>
+<td>uint</td>
+<td style="text-align: right;">0.14</td>
+<td style="text-align: right;">0.69</td>
+<td style="text-align: right;">0.06</td>
+</tr>
+<tr>
+<td></td>
+<td>SKColor</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: right;">1.93</td>
+<td style="text-align: right;">0.10</td>
+</tr>
+</tbody>
+</table>
+<p>As expected, calling <code>SetPixel</code> 65,536 times is the least effeicient way to set a bitmap's pixels. Filling an <code>SKColor</code> array and setting the <code>Pixels</code> property is much better, and even compares favorably with some of the <code>GetPixels</code> and <code>SetPixels</code> techniques. Working with <code>uint</code> pixel values is generally faster than setting separate <code>byte</code> components, and converting the <code>SKColor</code> value to an unsigned integer adds some overhead to the process.</p>
+<p>It's also interesting to compare the various gradients: The top rows of each platform are the same, and show the gradient as it was intended. This means that the <code>SetPixel</code> method and the <code>Pixels</code> property correctly create pixels from colors regardless of the underlying pixel format.</p>
+<p>The next two rows of the iOS and Android screenshots are also the same, which confirms that the little <code>MakePixel</code> method is correctly defined for the default <code>Rgba8888</code> pixel format for these platforms.</p>
+<p>The bottom row of the iOS and Android screenshots is backwards, which indicates that the unsigned integer obtained by casting an <code>SKColor</code> value is in the form:</p>
+<p>AARRGGBB</p>
+<p>The bytes are in the order:</p>
+<p>BB GG RR AA</p>
+<p>This is the <code>Bgra8888</code> ordering rather than the <code>Rgba8888</code> ordering. The <code>Brga8888</code> format is the default for the Universal Windows platform, which is why the gradients on the last row of that screenshot are the same as the first row. But the middle two rows are incorrect because the code creating those bitmaps assumed an <code>Rgba8888</code> ordering.</p>
+<p>If you want to use the same code for accessing pixel bits on each platform, you can explicitly create an <code>SKBitmap</code> using either the <code>Rgba8888</code> or <code>Bgra8888</code> format. If you want to cast <code>SKColor</code> values to bitmap pixels, use <code>Bgra8888</code>.</p>
+<h2 id="random-access-of-pixels">Random access of pixels</h2>
+<p>The <code>FillBitmapBytePtr</code> and <code>FillBitmapUintPtr</code> methods in the <strong>Gradient Bitmap</strong> page benefited from <code>for</code> loops designed to fill the bitmap sequentially, from top row to bottom row, and in each row from left to right. The pixel could be set with the same statement that incremented the pointer.</p>
+<p>Sometimes it's necessary to access the pixels randomly rather than sequentially. If you're using the <code>GetPixels</code> approach, you'll need to calculate pointers based on the row and column. This is demonstrated in the <strong>Rainbow Sine</strong> page, which creates a bitmap showing a rainbow in the form of one cycle of a sine curve.</p>
+<p>The colors of the rainbow are easiest to create using the HSL (hue, saturation, luminosity) color model. The <code>SKColor.FromHsl</code> method creates an <code>SKColor</code> value using hue values that range from 0 to 360 (like the angles of a circle but going from red, through green and blue, and back to red), and saturation and luminosity values ranging from 0 to 100. For the colors of a rainbow, the saturation should be set to a maximum of 100, and the luminosity to a midpoint of 50.</p>
+<p><strong>Rainbow Sine</strong> creates this image by looping through the rows of the bitmap, and then looping through 360 hue values. From each hue value, it calculates a bitmap column that is also based on a sine value:</p>
+<pre><code class="lang-csharp">public class RainbowSinePage : ContentPage
+{
+    SKBitmap bitmap;
+
+    public RainbowSinePage()
+    {
+        Title = &quot;Rainbow Sine&quot;;
+
+        bitmap = new SKBitmap(360 * 3, 1024, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+
+        unsafe
+        {
+            // Pointer to first pixel of bitmap
+            uint* basePtr = (uint*)bitmap.GetPixels().ToPointer();
+
+            // Loop through the rows
+            for (int row = 0; row &lt; bitmap.Height; row++)
+            {
+                // Calculate the sine curve angle and the sine value
+                double angle = 2 * Math.PI * row / bitmap.Height;
+                double sine = Math.Sin(angle);
+
+                // Loop through the hues
+                for (int hue = 0; hue &lt; 360; hue++)
+                {
+                    // Calculate the column
+                    int col = (int)(360 + 360 * sine + hue);
+
+                    // Calculate the address
+                    uint* ptr = basePtr + bitmap.Width * row + col;
+
+                    // Store the color value
+                    *ptr = (uint)SKColor.FromHsl(hue, 100, 50);
+                }
+            }
+        }
+
+        // Create the SKCanvasView
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.DrawBitmap(bitmap, info.Rect);
+    }
+}
+</code></pre>
+<p>Notice that the constructor creates the bitmap based on the <code>SKColorType.Bgra8888</code> format:</p>
+<pre><code class="lang-csharp">bitmap = new SKBitmap(360 * 3, 1024, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+</code></pre>
+<p>This allows the program to use the conversion of <code>SKColor</code> values into <code>uint</code> pixels without worry. Although it doesn't play a role in this particular program, whenever you use the <code>SKColor</code> conversion to set pixels, you should also specify <code>SKAlphaType.Unpremul</code> because <code>SKColor</code> doesn't premultiply its color components by the alpha value.</p>
+<p>The constructor then uses the <code>GetPixels</code> method to obtain a pointer to the first pixel of the bitmap:</p>
+<pre><code class="lang-csharp">uint* basePtr = (uint*)bitmap.GetPixels().ToPointer();
+</code></pre>
+<p>For any particular row and column, an offset value must be added to <code>basePtr</code>. This offset is the row times the bitmap width, plus the column:</p>
+<pre><code class="lang-csharp">uint* ptr = basePtr + bitmap.Width * row + col;
+</code></pre>
+<p>The <code>SKColor</code> value is stored in memory using this pointer:</p>
+<pre><code class="lang-csharp">*ptr = (uint)SKColor.FromHsl(hue, 100, 50);
+</code></pre>
+<p>In the <code>PaintSurface</code> handler of the <code>SKCanvasView</code>, the bitmap is stretched to fill the display area:</p>
+<p><a href="pixel-bits-images/RainbowSine-Large.png#lightbox"><img src="pixel-bits-images/RainbowSine.png" alt="Rainbow Sine" title="Rainbow Sine"></a></p>
+<h2 id="from-one-bitmap-to-another">From one bitmap to another</h2>
+<p>Very many image-processing tasks involve modifying pixels as they are transferred from one bitmap to another. This technique is demonstrated in the <strong>Color Adjustment</strong> page. The page loads one of the bitmap resources and then allows you to modify the image using three <code>Slider</code> views:</p>
+<p><a href="pixel-bits-images/ColorAdjustment-Large.png#lightbox"><img src="pixel-bits-images/ColorAdjustment.png" alt="Color Adjustment" title="Color Adjustment"></a></p>
+<p>For each pixel color, the first <code>Slider</code> adds a value from 0 to 360 to the hue, but then uses the modulo operator to keep the result between 0 and 360, effectively shifting the colors along the spectrum (as the UWP screenshot demonstrates). The second <code>Slider</code> lets you select a multiplicative factor between 0.5 and 2 to apply to the saturation, and the third <code>Slider</code> does the same for the luminosity, as demonstrated in the Android screenshot.</p>
+<p>The program maintains two bitmaps, the original source bitmap named <code>srcBitmap</code> and the adjusted destination bitmap named <code>dstBitmap</code>. Each time a <code>Slider</code> is moved, the program calculates all new pixels in <code>dstBitmap</code>. Of course, users will experiment by moving the <code>Slider</code> views very quickly, so you want the best performance you can manage. This involves the <code>GetPixels</code> method for both the source and destination bitmaps.</p>
+<p>The <strong>Color Adjustment</strong> page doesn't control the color format of the source and destination bitmaps. Instead, it contains slightly different logic for <code>SKColorType.Rgba8888</code> and <code>SKColorType.Bgra8888</code> formats. The source and destination can be different formats, and the program will still work.</p>
+<p>Here's the program except for the crucial <code>TransferPixels</code> method that transfers the pixels form the source to the destination. The constructor sets <code>dstBitmap</code> equal to <code>srcBitmap</code>. The <code>PaintSurface</code> handler displays <code>dstBitmap</code>:</p>
+<pre><code class="lang-csharp">public partial class ColorAdjustmentPage : ContentPage
+{
+    SKBitmap srcBitmap =
+        BitmapExtensions.LoadBitmapResource(typeof(FillRectanglePage),
+                                            &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+    SKBitmap dstBitmap;
+
+    public ColorAdjustmentPage()
+    {
+        InitializeComponent();
+
+        dstBitmap = new SKBitmap(srcBitmap.Width, srcBitmap.Height);
+        OnSliderValueChanged(null, null);
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        float hueAdjust = (float)hueSlider.Value;
+        hueLabel.Text = $&quot;Hue Adjustment: {hueAdjust:F0}&quot;;
+
+        float saturationAdjust = (float)Math.Pow(2, saturationSlider.Value);
+        saturationLabel.Text = $&quot;Saturation Adjustment: {saturationAdjust:F2}&quot;;
+
+        float luminosityAdjust = (float)Math.Pow(2, luminositySlider.Value);
+        luminosityLabel.Text = $&quot;Luminosity Adjustment: {luminosityAdjust:F2}&quot;;
+
+        TransferPixels(hueAdjust, saturationAdjust, luminosityAdjust);
+        canvasView.InvalidateSurface();
+    }
+    ···
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.DrawBitmap(dstBitmap, info.Rect, BitmapStretch.Uniform);
+    }
+}
+</code></pre>
+<p>The <code>ValueChanged</code> handler for the <code>Slider</code> views calculates the adjustment values and calls <code>TransferPixels</code>.</p>
+<p>The entire <code>TransferPixels</code> method is marked as <code>unsafe</code>. It begins by obtaining byte pointers to the pixel bits of both bitmaps, and then loops through all the rows and columns. From the source bitmap, the method obtains four bytes for each pixel. These could be in either the <code>Rgba8888</code> or <code>Bgra8888</code> order. Checking for the color type allows an <code>SKColor</code> value to be created. The HSL components are then extracted, adjusted, and used to recreate the <code>SKColor</code> value. Depending on whether the destination bitmap is <code>Rgba8888</code> or <code>Bgra8888</code>, the bytes are stored in the destination bitmp:</p>
+<pre><code class="lang-csharp">public partial class ColorAdjustmentPage : ContentPage
+{
+    ···
+    unsafe void TransferPixels(float hueAdjust, float saturationAdjust, float luminosityAdjust)
+    {
+        byte* srcPtr = (byte*)srcBitmap.GetPixels().ToPointer();
+        byte* dstPtr = (byte*)dstBitmap.GetPixels().ToPointer();
+
+        int width = srcBitmap.Width;       // same for both bitmaps
+        int height = srcBitmap.Height;
+
+        SKColorType typeOrg = srcBitmap.ColorType;
+        SKColorType typeAdj = dstBitmap.ColorType;
+
+        for (int row = 0; row &lt; height; row++)
+        {
+            for (int col = 0; col &lt; width; col++)
+            {
+                // Get color from original bitmap
+                byte byte1 = *srcPtr++;         // red or blue
+                byte byte2 = *srcPtr++;         // green
+                byte byte3 = *srcPtr++;         // blue or red
+                byte byte4 = *srcPtr++;         // alpha
+
+                SKColor color = new SKColor();
+
+                if (typeOrg == SKColorType.Rgba8888)
+                {
+                    color = new SKColor(byte1, byte2, byte3, byte4);
+                }
+                else if (typeOrg == SKColorType.Bgra8888)
+                {
+                    color = new SKColor(byte3, byte2, byte1, byte4);
+                }
+
+                // Get HSL components
+                color.ToHsl(out float hue, out float saturation, out float luminosity);
+
+                // Adjust HSL components based on adjustments
+                hue = (hue + hueAdjust) % 360;
+                saturation = Math.Max(0, Math.Min(100, saturationAdjust * saturation));
+                luminosity = Math.Max(0, Math.Min(100, luminosityAdjust * luminosity));
+
+                // Recreate color from HSL components
+                color = SKColor.FromHsl(hue, saturation, luminosity);
+
+                // Store the bytes in the adjusted bitmap
+                if (typeAdj == SKColorType.Rgba8888)
+                {
+                    *dstPtr++ = color.Red;
+                    *dstPtr++ = color.Green;
+                    *dstPtr++ = color.Blue;
+                    *dstPtr++ = color.Alpha;
+                }
+                else if (typeAdj == SKColorType.Bgra8888)
+                {
+                    *dstPtr++ = color.Blue;
+                    *dstPtr++ = color.Green;
+                    *dstPtr++ = color.Red;
+                    *dstPtr++ = color.Alpha;
+                }
+            }
+        }
+    }
+    ···
+}
+</code></pre>
+<p>It's likely that the performance of this method could be improved even more by creating separate methods for the various combinations of color types of the source and destination bitmaps, and avoid checking the type for every pixel. Another option is to have multiple <code>for</code> loops for the <code>col</code> variable based on the color type.</p>
+<h2 id="posterization">Posterization</h2>
+<p>Another common job that involves accessing pixel bits is <em>posterization</em>. The number if colors encoded in a bitmap's pixels is reduced so that the result resembles a hand-drawn poster using a limited color palette.</p>
+<p>The <strong>Posterize</strong> page performs this process on one of the monkey images:</p>
+<pre><code class="lang-csharp">public class PosterizePage : ContentPage
+{
+    SKBitmap bitmap =
+        BitmapExtensions.LoadBitmapResource(typeof(FillRectanglePage),
+                                            &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+    public PosterizePage()
+    {
+        Title = &quot;Posterize&quot;;
+
+        unsafe
+        {
+            uint* ptr = (uint*)bitmap.GetPixels().ToPointer();
+            int pixelCount = bitmap.Width * bitmap.Height;
+
+            for (int i = 0; i &lt; pixelCount; i++)
+            {
+                *ptr++ &amp;= 0xE0E0E0FF;
+            }
+        }
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform;
+    }
+}
+</code></pre>
+<p>The code in the constructor accesses each pixel, performs a bitwise AND operation with the value 0xE0E0E0FF, and then stores the result back in the bitmap. The values 0xE0E0E0FF keeps the high 3 bits of each color component and sets the lower 5 bits to 0. Rather than 2<sup>24</sup> or 16,777,216 colors, the bitmap is reduced to 2<sup>9</sup> or 512 colors:</p>
+<p><a href="pixel-bits-images/Posterize-Large.png#lightbox"><img src="pixel-bits-images/Posterize.png" alt="Screenshot shows a posterize image of a toy monkey on two mobile devices and a desktop window." title="Posterize"></a></p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

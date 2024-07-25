@@ -1,0 +1,292 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Dots and Dashes in SkiaSharp | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Dots and Dashes in SkiaSharp | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="dots-and-dashes-in-skiasharp">Dots and Dashes in SkiaSharp</h1>
+
+<p><em>Master the intricacies of drawing dotted and dashed lines in SkiaSharp</em></p>
+<p>SkiaSharp lets you draw lines that are not solid but instead are composed of dots and dashes:</p>
+<p><img src="dots-images/dottedlinesample.png" alt="Dotted line"></p>
+<p>You do this with a <em>path effect</em>, which is an instance of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect"><code>SKPathEffect</code></a> class that you set to the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.patheffect#skiasharp-skpaint-patheffect"><code>PathEffect</code></a> property of <code>SKPaint</code>. You can create a path effect (or combine path effects) using one of the static creation methods defined by <code>SKPathEffect</code>. (<code>SKPathEffect</code> is one of six effects supported by SkiaSharp; the others are described in the section <a href="../effects/index.html"><strong>SkiaSharp Effect</strong></a>.)</p>
+<p>To draw dotted or dashed lines, you use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.createdash#skiasharp-skpatheffect-createdash(system-single()-system-single)"><code>SKPathEffect.CreateDash</code></a> static method. There are two arguments: This first is an array of <code>float</code> values that indicate the lengths of the dots and dashes and the length of the spaces between them. This array must have an even number of elements, and there should be at least two elements. (There can be zero elements in the array but that results in a solid line.) If there are two elements, the first is the length of a dot or dash, and the second is the length of the gap before the next dot or dash. If there are more than two elements, then they are in this order: dash length, gap length, dash length, gap length, and so on.</p>
+<p>Generally, you'll want to make the dash and gap lengths a multiple of the stroke width. If the stroke width is 10 pixels, for example, then the array { 10, 10 } will draw a dotted line where the dots and gaps are the same length as the stroke thickness.</p>
+<p>However, the <code>StrokeCap</code> setting of the <code>SKPaint</code> object also affects these dots and dashes. As you'll see shortly, that has an impact on the elements of this array.</p>
+<p>Dotted and dashed lines are demonstrated on the <strong>Dots and Dashes</strong> page. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/DotsAndDashesPage.xaml"><strong>DotsAndDashesPage.xaml</strong></a> file instantiates two <code>Picker</code> views, one for letting you select a stroke cap and the second to select a dash array:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Paths.DotsAndDashesPage&quot;
+             Title=&quot;Dots and Dashes&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Grid.ColumnDefinitions&gt;
+            &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+            &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+        &lt;/Grid.ColumnDefinitions&gt;
+
+        &lt;Picker x:Name=&quot;strokeCapPicker&quot;
+                Title=&quot;Stroke Cap&quot;
+                Grid.Row=&quot;0&quot;
+                Grid.Column=&quot;0&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKStrokeCap}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKStrokeCap.Butt&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKStrokeCap.Round&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKStrokeCap.Square&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;Picker x:Name=&quot;dashArrayPicker&quot;
+                Title=&quot;Dash Array&quot;
+                Grid.Row=&quot;0&quot;
+                Grid.Column=&quot;1&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type x:String}&quot;&gt;
+                    &lt;x:String&gt;10, 10&lt;/x:String&gt;
+                    &lt;x:String&gt;30, 10&lt;/x:String&gt;
+                    &lt;x:String&gt;10, 10, 30, 10&lt;/x:String&gt;
+                    &lt;x:String&gt;0, 20&lt;/x:String&gt;
+                    &lt;x:String&gt;20, 20&lt;/x:String&gt;
+                    &lt;x:String&gt;0, 20, 20, 20&lt;/x:String&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;skiaforms:SKCanvasView x:Name=&quot;canvasView&quot;
+                                PaintSurface=&quot;OnCanvasViewPaintSurface&quot;
+                                Grid.Row=&quot;1&quot;
+                                Grid.Column=&quot;0&quot;
+                                Grid.ColumnSpan=&quot;2&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The first three items in the <code>dashArrayPicker</code> assume that the stroke width is 10 pixels. The { 10, 10 } array is for a dotted line, { 30, 10 } is for a dashed line, and { 10, 10, 30, 10 } is for a dot-and-dash line. (The other three will be discussed shortly.)</p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/DotsAndDashesPage.xaml.cs"><code>DotsAndDashesPage</code></a> code-behind file contains the <code>PaintSurface</code> event handler and a couple of helper routines for accessing the <code>Picker</code> views:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Blue,
+        StrokeWidth = 10,
+        StrokeCap = (SKStrokeCap)strokeCapPicker.SelectedItem,
+        PathEffect = SKPathEffect.CreateDash(GetPickerArray(dashArrayPicker), 20)
+    };
+
+    SKPath path = new SKPath();
+    path.MoveTo(0.2f * info.Width, 0.2f * info.Height);
+    path.LineTo(0.8f * info.Width, 0.8f * info.Height);
+    path.LineTo(0.2f * info.Width, 0.8f * info.Height);
+    path.LineTo(0.8f * info.Width, 0.2f * info.Height);
+
+    canvas.DrawPath(path, paint);
+}
+
+float[] GetPickerArray(Picker picker)
+{
+    if (picker.SelectedIndex == -1)
+    {
+        return new float[0];
+    }
+
+    string str = (string)picker.SelectedItem;
+    string[] strs = str.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+    float[] array = new float[strs.Length];
+
+    for (int i = 0; i &lt; strs.Length; i++)
+    {
+        array[i] = Convert.ToSingle(strs[i]);
+    }
+    return array;
+}
+</code></pre>
+<p>In the following screenshots, the iOS screen on the far left shows a dotted line:</p>
+<p><a href="dots-images/dotsanddashes-large.png#lightbox" title="Triple screenshot of the Dots and Dashes page"><img src="dots-images/dotsanddashes-small.png" alt="Triple screenshot of the Dots and Dashes page"></a></p>
+<p>However, the Android screen is also supposed to show a dotted line using the array { 10, 10 } but instead the line is solid. What happened? The problem is that the Android screen also has a stroke caps setting of <code>Square</code>. This extends all the dashes by half the stroke width, causing them to fill up the gaps.</p>
+<p>To get around this problem when using a stroke cap of <code>Square</code> or <code>Round</code>, you must decrease the dash lengths in the array by the stroke length (sometimes resulting in a dash length of 0), and increase the gap lengths by the stroke length. This is how the final three dash arrays in the <code>Picker</code> in the XAML file were calculated:</p>
+<ul>
+<li>{ 10, 10 } becomes { 0, 20 } for a dotted line</li>
+<li>{ 30, 10 } becomes { 20, 20 } for a dashed line</li>
+<li>{ 10, 10, 30, 10 } becomes { 0, 20, 20, 20} for a dotted and dashed line</li>
+</ul>
+<p>The UWP screen shows that dotted and dashed line for a stroke cap of <code>Round</code>. The <code>Round</code> stroke cap often gives the best appearance of dots and dashes in thick lines.</p>
+<p>So far no mention has been made of the second parameter to the <code>SKPathEffect.CreateDash</code> method. This parameter is named <code>phase</code> and it refers to an offset within the dot-and-dash pattern for the beginning of the line. For example, if the dash array is { 10, 10 } and the <code>phase</code> is 10, then the line begins with a gap rather than a dot.</p>
+<p>One interesting application of the <code>phase</code> parameter is in an animation. The <strong>Animated Spiral</strong> page is similar to the <strong>Archimedean Spiral</strong> page, except that the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/AnimatedSpiralPage.cs"><code>AnimatedSpiralPage</code></a> class animates the <code>phase</code> parameter using the Xamarin.Forms <code>Device.Timer</code> method:</p>
+<pre><code class="lang-csharp">public class AnimatedSpiralPage : ContentPage
+{
+    const double cycleTime = 250;       // in milliseconds
+
+    SKCanvasView canvasView;
+    Stopwatch stopwatch = new Stopwatch();
+    bool pageIsActive;
+    float dashPhase;
+
+    public AnimatedSpiralPage()
+    {
+        Title = &quot;Animated Spiral&quot;;
+
+        canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        pageIsActive = true;
+        stopwatch.Start();
+
+        Device.StartTimer(TimeSpan.FromMilliseconds(33), () =&gt;
+        {
+            double t = stopwatch.Elapsed.TotalMilliseconds % cycleTime / cycleTime;
+            dashPhase = (float)(10 * t);
+            canvasView.InvalidateSurface();
+
+            if (!pageIsActive)
+            {
+                stopwatch.Stop();
+            }
+
+            return pageIsActive;
+        });
+    }
+    ···  
+}
+</code></pre>
+<p>Of course, you'll have to actually run the program to see the animation:</p>
+<p><a href="dots-images/animatedspiral-large.png#lightbox" title="Triple screenshot of the Animated Spiral page"><img src="dots-images/animatedspiral-small.png" alt="Triple screenshot of the Animated Spiral page"></a></p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

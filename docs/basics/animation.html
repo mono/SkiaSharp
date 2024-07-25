@@ -1,0 +1,317 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Basic Animation in SkiaSharp | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Basic Animation in SkiaSharp | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="basic-animation-in-skiasharp">Basic Animation in SkiaSharp</h1>
+
+<p><em>Discover how to animate your SkiaSharp graphics</em></p>
+<p>You can animate SkiaSharp graphics in Xamarin.Forms by causing the <code>PaintSurface</code> method to be called periodically, each time drawing the graphics a little differently. Here's an animation shown later in this article with concentric circles that seemingly expand from the center:</p>
+<p><img src="animation-images/animationexample.png" alt="Several concentric circles seemingly expanding from the center"></p>
+<p>The <strong>Pulsating Ellipse</strong> page in the sample program animates the two axes of an ellipse so that it appears to be pulsating, and you can even control the rate of this pulsation. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/PulsatingEllipsePage.xaml"><strong>PulsatingEllipsePage.xaml</strong></a> file instantiates a Xamarin.Forms <code>Slider</code> and a <code>Label</code> to display the current value of the slider. This is a common way to integrate an <code>SKCanvasView</code> with other Xamarin.Forms views:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.PulsatingEllipsePage&quot;
+             Title=&quot;Pulsating Ellipse&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Slider x:Name=&quot;slider&quot;
+                Grid.Row=&quot;0&quot;
+                Maximum=&quot;10&quot;
+                Minimum=&quot;0.1&quot;
+                Value=&quot;5&quot;
+                Margin=&quot;20, 0&quot; /&gt;
+
+        &lt;Label Grid.Row=&quot;1&quot;
+               Text=&quot;{Binding Source={x:Reference slider},
+                              Path=Value,
+                              StringFormat='Cycle time = {0:F1} seconds'}&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           Grid.Row=&quot;2&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file instantiates a <code>Stopwatch</code> object to serve as a high-precision clock. The <code>OnAppearing</code> override sets the <code>pageIsActive</code> field to <code>true</code> and calls a method named <code>AnimationLoop</code>. The <code>OnDisappearing</code> override sets that <code>pageIsActive</code> field to <code>false</code>:</p>
+<pre><code class="lang-csharp">Stopwatch stopwatch = new Stopwatch();
+bool pageIsActive;
+float scale;            // ranges from 0 to 1 to 0
+
+public PulsatingEllipsePage()
+{
+    InitializeComponent();
+}
+
+protected override void OnAppearing()
+{
+    base.OnAppearing();
+    pageIsActive = true;
+    AnimationLoop();
+}
+
+protected override void OnDisappearing()
+{
+    base.OnDisappearing();
+    pageIsActive = false;
+}
+</code></pre>
+<p>The <code>AnimationLoop</code> method starts the <code>Stopwatch</code> and then loops while <code>pageIsActive</code> is <code>true</code>. This is essentially an &quot;infinite loop&quot; while the page is active, but it doesn't cause the program to hang because the loop concludes with a call to <code>Task.Delay</code> with the <code>await</code> operator, which lets other parts of the program function. The argument to <code>Task.Delay</code> causes it to complete after 1/30th second. This defines the frame rate of the animation.</p>
+<pre><code class="lang-csharp">async Task AnimationLoop()
+{
+    stopwatch.Start();
+
+    while (pageIsActive)
+    {
+        double cycleTime = slider.Value;
+        double t = stopwatch.Elapsed.TotalSeconds % cycleTime / cycleTime;
+        scale = (1 + (float)Math.Sin(2 * Math.PI * t)) / 2;
+        canvasView.InvalidateSurface();
+        await Task.Delay(TimeSpan.FromSeconds(1.0 / 30));
+    }
+
+    stopwatch.Stop();
+}
+
+</code></pre>
+<p>The <code>while</code> loop begins by obtaining a cycle time from the <code>Slider</code>. This is a time in seconds, for example, 5. The second statement calculates a value of <code>t</code> for <em>time</em>. For a <code>cycleTime</code> of 5, <code>t</code> increases from 0 to 1 every 5 seconds. The argument to the <code>Math.Sin</code> function in the second statement ranges from 0 to 2π every 5 seconds. The <code>Math.Sin</code> function returns a value ranging from 0 to 1 back to 0 and then to –1 and 0 every 5 seconds, but with values that change more slowly when the value is near 1 or –1. The value 1 is added so the values are always positive, and then it's divided by 2, so the values range from ½ to 1 to ½ to 0 to ½, but slower when the value is around 1 and 0. This is stored in the <code>scale</code> field, and the <code>SKCanvasView</code> is invalidated.</p>
+<p>The <code>PaintSurface</code> method uses this <code>scale</code> value to calculate the two axes of the ellipse:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    float maxRadius = 0.75f * Math.Min(info.Width, info.Height) / 2;
+    float minRadius = 0.25f * maxRadius;
+
+    float xRadius = minRadius * scale + maxRadius * (1 - scale);
+    float yRadius = maxRadius * scale + minRadius * (1 - scale);
+
+    using (SKPaint paint = new SKPaint())
+    {
+        paint.Style = SKPaintStyle.Stroke;
+        paint.Color = SKColors.Blue;
+        paint.StrokeWidth = 50;
+        canvas.DrawOval(info.Width / 2, info.Height / 2, xRadius, yRadius, paint);
+
+        paint.Style = SKPaintStyle.Fill;
+        paint.Color = SKColors.SkyBlue;
+        canvas.DrawOval(info.Width / 2, info.Height / 2, xRadius, yRadius, paint);
+    }
+}
+</code></pre>
+<p>The method calculates a maximum radius based on the size of the display area, and a minimum radius based on the maximum radius. The <code>scale</code> value is animated between 0 and 1 and back to 0, so the method uses that to compute an <code>xRadius</code> and <code>yRadius</code> that ranges between <code>minRadius</code> and <code>maxRadius</code>. These values are used to draw and fill an ellipse:</p>
+<p><a href="animation-images/pulsatingellipse-large.png#lightbox" title="Triple screenshot of the Pulsating Ellipse page"><img src="animation-images/pulsatingellipse-small.png" alt="Triple screenshot of the Pulsating Ellipse page"></a></p>
+<p>Notice that the <code>SKPaint</code> object is created in a <code>using</code> block. Like many SkiaSharp classes <code>SKPaint</code> derives from <code>SKObject</code>, which derives from <code>SKNativeObject</code>, which implements the <a href="xref:System.IDisposable"><code>IDisposable</code></a> interface. <code>SKPaint</code> overrides the <code>Dispose</code> method to release unmanaged resources.</p>
+<p>Putting <code>SKPaint</code> in a <code>using</code> block ensures that <code>Dispose</code> is called at the end of the block to free these unmanaged resources. This happens anyway when memory used by the <code>SKPaint</code> object is freed by the .NET garbage collector, but in animation code, it's best to be proactive in freeing memory in a more orderly way.</p>
+<p>A better solution in this particular case would be to create two <code>SKPaint</code> objects once and save them as fields.</p>
+<p>That's what the <strong>Expanding Circles</strong> animation does. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/ExpandingCirclesPage.cs"><code>ExpandingCirclesPage</code></a> class begins by defining several fields, including an <code>SKPaint</code> object:</p>
+<pre><code class="lang-csharp">public class ExpandingCirclesPage : ContentPage
+{
+    const double cycleTime = 1000;       // in milliseconds
+
+    SKCanvasView canvasView;
+    Stopwatch stopwatch = new Stopwatch();
+    bool pageIsActive;
+    float t;
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke
+    };
+
+    public ExpandingCirclesPage()
+    {
+        Title = &quot;Expanding Circles&quot;;
+
+        canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+    ...
+}
+</code></pre>
+<p>This program uses a different approach to animation based on the Xamarin.Forms <code>Device.StartTimer</code> method. The <code>t</code> field is animated from 0 to 1 every <code>cycleTime</code> milliseconds:</p>
+<pre><code class="lang-csharp">public class ExpandingCirclesPage : ContentPage
+{
+    ...
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        pageIsActive = true;
+        stopwatch.Start();
+
+        Device.StartTimer(TimeSpan.FromMilliseconds(33), () =&gt;
+        {
+            t = (float)(stopwatch.Elapsed.TotalMilliseconds % cycleTime / cycleTime);
+            canvasView.InvalidateSurface();
+
+            if (!pageIsActive)
+            {
+                stopwatch.Stop();
+            }
+            return pageIsActive;
+        });
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        pageIsActive = false;
+    }
+    ...
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler draws five concentric circles with animated radii. If the <code>baseRadius</code> variable is calculated as 100, then as <code>t</code> is animated from 0 to 1, the radii of the five circles increase from 0 to 100, 100 to 200, 200 to 300, 300 to 400, and 400 to 500. For most of the circles the <code>strokeWidth</code> is 50 but for the first circle, the <code>strokeWidth</code> animates from 0 to 50. For most of the circles, the color is blue, but for the last circle, the color is animated from blue to transparent. Notice the fourth argument to the <code>SKColor</code> constructor that specifies the opacity:</p>
+<pre><code class="lang-csharp">public class ExpandingCirclesPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        SKPoint center = new SKPoint(info.Width / 2, info.Height / 2);
+        float baseRadius = Math.Min(info.Width, info.Height) / 12;
+
+        for (int circle = 0; circle &lt; 5; circle++)
+        {
+            float radius = baseRadius * (circle + t);
+
+            paint.StrokeWidth = baseRadius / 2 * (circle == 0 ? t : 1);
+            paint.Color = new SKColor(0, 0, 255,
+                (byte)(255 * (circle == 4 ? (1 - t) : 1)));
+
+            canvas.DrawCircle(center.X, center.Y, radius, paint);
+        }
+    }
+}
+</code></pre>
+<p>The result is that the image looks the same when <code>t</code> equals 0 as when <code>t</code> equals 1, and the circles seem to continue expanding forever:</p>
+<p><a href="animation-images/expandingcircles-large.png#lightbox" title="Triple screenshot of the Expanding Circles page"><img src="animation-images/expandingcircles-small.png" alt="Triple screenshot of the Expanding Circles page"></a></p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

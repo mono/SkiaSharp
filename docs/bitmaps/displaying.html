@@ -1,0 +1,660 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Displaying SkiaSharp bitmaps | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Displaying SkiaSharp bitmaps | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="displaying-skiasharp-bitmaps">Displaying SkiaSharp bitmaps</h1>
+
+<p>The subject of SkiaSharp bitmaps was introduced in the article <strong><a href="../basics/bitmaps.html">Bitmap Basics in SkiaSharp</a></strong>. That article showed three ways to load bitmaps and three ways to display bitmaps. This article reviews the techniques to load bitmaps and goes deeper into the use of the <code>DrawBitmap</code> methods of <code>SKCanvas</code>.</p>
+<p><img src="displaying-images/DisplayingSample.png" alt="Displaying Sample" title="Displaying Sample"></p>
+<p>The <code>DrawBitmapLattice</code> and <code>DrawBitmapNinePatch</code> methods are discussed in the article <strong><a href="segmented.html">Segmented display of SkiaSharp bitmaps</a></strong>.</p>
+<p>Samples on this page are from the sample application. From the home page of that application, choose <strong>SkiaSharp Bitmaps</strong>, and then go to the <strong>Displaying Bitmaps</strong> section.</p>
+<h2 id="loading-a-bitmap">Loading a bitmap</h2>
+<p>A bitmap used by a SkiaSharp application generally comes from one of three different sources:</p>
+<ul>
+<li>From over the Internet</li>
+<li>From a resource embedded in the executable</li>
+<li>From the user's photo library</li>
+</ul>
+<p>It is also possible for a SkiaSharp application to create a new bitmap, and then draw on it or set the bitmap bits algorithmically. Those techniques are discussed in the articles <strong><a href="drawing.html">Creating and Drawing on SkiaSharp Bitmaps</a></strong> and <strong><a href="pixel-bits.html">Accessing SkiaSharp Bitmap Pixels</a></strong>.</p>
+<p>In the following three code examples of loading a bitmap, the class is assumed to contain a field of type <code>SKBitmap</code>:</p>
+<pre><code class="lang-csharp">SKBitmap bitmap;
+</code></pre>
+<p>As the article <strong><a href="../basics/bitmaps.html">Bitmap Basics in SkiaSharp</a></strong> stated, the best way to load a bitmap over the Internet is with the <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.net.http.httpclient"><code>HttpClient</code></a> class. A single instance of the class can be defined as a field:</p>
+<pre><code class="lang-csharp">HttpClient httpClient = new HttpClient();
+</code></pre>
+<p>When using <code>HttpClient</code> with iOS and Android applications, you'll want to set project properties as described in the documents on <strong><a href="../../cross-platform/app-fundamentals/transport-layer-security.md">Transport Layer Security (TLS) 1.2</a></strong>.</p>
+<p>Code that uses <code>HttpClient</code> often involves the <code>await</code> operator, so it must reside in an <code>async</code> method:</p>
+<pre><code class="lang-csharp">try
+{
+    using (Stream stream = await httpClient.GetStreamAsync(&quot;https:// ··· &quot;))
+    using (MemoryStream memStream = new MemoryStream())
+    {
+        await stream.CopyToAsync(memStream);
+        memStream.Seek(0, SeekOrigin.Begin);
+
+        bitmap = SKBitmap.Decode(memStream);
+        ···
+    };
+}
+catch
+{
+    ···
+}
+</code></pre>
+<p>Notice that the <code>Stream</code> object obtained from <code>GetStreamAsync</code> is copied into a <code>MemoryStream</code>. Android does not allow the <code>Stream</code> from <code>HttpClient</code> to be processed by the main thread except in asynchronous methods.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.decode#skiasharp-skbitmap-decode(system-io-stream)"><code>SKBitmap.Decode</code></a> does a lot of work: The <code>Stream</code> object passed to it references a block of memory containing an entire bitmap in one of the common bitmap file formats, generally JPEG, PNG, or GIF. The <code>Decode</code> method must determine the format, and then decode the bitmap file into SkiaSharp's own internal bitmap format.</p>
+<p>After your code calls <code>SKBitmap.Decode</code>, it will probably invalidate the <code>CanvasView</code> so that the <code>PaintSurface</code> handler can display the newly loaded bitmap.</p>
+<p>The second way to load a bitmap is by including the bitmap as an embedded resource in the .NET Standard library referenced by the individual platform projects. A resource ID is passed to the <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.assembly.getmanifestresourcestream#system-reflection-assembly-getmanifestresourcestream(system-string)"><code>GetManifestResourceStream</code></a> method. This resource ID consists of the assembly name, folder name, and filename of the resource separated by periods:</p>
+<pre><code class="lang-csharp">string resourceID = &quot;assemblyName.folderName.fileName&quot;;
+Assembly assembly = GetType().GetTypeInfo().Assembly;
+
+using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+{
+    bitmap = SKBitmap.Decode(stream);
+    ···
+}
+</code></pre>
+<p>Bitmap files can also be stored as resources in the individual platform project for iOS, Android, and the Universal Windows Platform (UWP). However, loading those bitmaps requires code that is located in the platform project.</p>
+<p>A third approach to obtaining a bitmap is from the user's picture library. The following code uses a dependency service that is included in the sample application. The <strong>SkiaSharpFormsDemo</strong> .NET Standard Library includes the <code>IPhotoLibrary</code> interface, while each of the platform projects contains a <code>PhotoLibrary</code> class that implements that interface.</p>
+<pre><code class="lang-csharp">IPhotoicturePicker picturePicker = DependencyService.Get&lt;IPhotoLibrary&gt;();
+
+using (Stream stream = await picturePicker.GetImageStreamAsync())
+{
+    if (stream != null)
+    {
+        bitmap = SKBitmap.Decode(stream);
+        ···
+    }
+}
+</code></pre>
+<p>Generally, such code also invalidates the <code>CanvasView</code> so that the <code>PaintSurface</code> handler can display the new bitmap.</p>
+<p>The <code>SKBitmap</code> class defines several useful properties, including <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.width#skiasharp-skbitmap-width"><code>Width</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.height#skiasharp-skbitmap-height"><code>Height</code></a>, that reveal the pixel dimensions of the bitmap, as well as many methods, including methods to create bitmaps, to copy them, and to expose the pixel bits.</p>
+<h2 id="displaying-in-pixel-dimensions">Displaying in pixel dimensions</h2>
+<p>The SkiaSharp <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas"><code>Canvas</code></a> class defines four <code>DrawBitmap</code> methods. These methods allow bitmaps to be displayed in two fundamentally different ways:</p>
+<ul>
+<li>Specifying an <code>SKPoint</code> value (or separate <code>x</code> and <code>y</code> values) displays the bitmap in its pixel dimensions. The pixels of the bitmap are mapped directly to pixels of the video display.</li>
+<li>Specifying a rectangle causes the bitmap to be stretched to the size and shape of the rectangle.</li>
+</ul>
+<p>You display a bitmap in its pixel dimensions using <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmap#skiasharp-skcanvas-drawbitmap(skiasharp-skbitmap-skiasharp-skpoint-skiasharp-skpaint)"><code>DrawBitmap</code></a> with an <code>SKPoint</code> parameter or <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmap#skiasharp-skcanvas-drawbitmap(skiasharp-skbitmap-system-single-system-single-skiasharp-skpaint)"><code>DrawBitmap</code></a> with separate <code>x</code> and <code>y</code> parameters:</p>
+<pre><code class="lang-csharp">DrawBitmap(SKBitmap bitmap, SKPoint pt, SKPaint paint = null)
+
+DrawBitmap(SKBitmap bitmap, float x, float y, SKPaint paint = null)
+</code></pre>
+<p>These two methods are functionally identical. The specified point indicates the location of the upper-left corner of the bitmap relative to the canvas. Because the pixel resolution of mobile devices is so high, smaller bitmaps usually appear quite tiny on these devices.</p>
+<p>The optional <code>SKPaint</code> parameter allows you to display the bitmap using transparency. To do this, create an <code>SKPaint</code> object and set the <code>Color</code> property to any <code>SKColor</code> value with an alpha channel less than 1. For example:</p>
+<pre><code class="lang-csharp">paint.Color = new SKColor(0, 0, 0, 0x80);
+</code></pre>
+<p>The 0x80 passed as the last argument indicates 50% transparency. You can also set an alpha channel on one of the pre-defined colors:</p>
+<pre><code class="lang-csharp">paint.Color = SKColors.Red.WithAlpha(0x80);
+</code></pre>
+<p>However, the color itself is irrelevant. Only the alpha channel is examined when you use the <code>SKPaint</code> object in a <code>DrawBitmap</code> call.</p>
+<p>The <code>SKPaint</code> object also plays a role when displaying bitmaps using blend modes or filter effects. These are demonstrated in the articles <a href="../effects/blend-modes/index.html">SkiaSharp compositing and blend modes</a> and <a href="../effects/image-filters.html">SkiaSharp image filters</a>.</p>
+<p>The <strong>Pixel Dimensions</strong> page in the sample program displays a bitmap resource that is 320 pixels wide by 240 pixels high:</p>
+<pre><code class="lang-csharp">public class PixelDimensionsPage : ContentPage
+{
+    SKBitmap bitmap;
+
+    public PixelDimensionsPage()
+    {
+        Title = &quot;Pixel Dimensions&quot;;
+
+        // Load the bitmap from a resource
+        string resourceID = &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;;
+        Assembly assembly = GetType().GetTypeInfo().Assembly;
+
+        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+        {
+            bitmap = SKBitmap.Decode(stream);
+        }
+
+        // Create the SKCanvasView and set the PaintSurface handler
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        float x = (info.Width - bitmap.Width) / 2;
+        float y = (info.Height - bitmap.Height) / 2;
+
+        canvas.DrawBitmap(bitmap, x, y);
+    }
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler centers the bitmap by calculating <code>x</code> and <code>y</code> values based on the pixel dimensions of the display surface and the pixel dimensions of the bitmap:</p>
+<p><a href="displaying-images/PixelDimensions-Large.png#lightbox"><img src="displaying-images/PixelDimensions.png" alt="Pixel Dimensions" title="Pixel Dimensions"></a></p>
+<p>If the application wishes to display the bitmap in its upper-left corner, it would simply pass coordinates of (0, 0).</p>
+<h2 id="a-method-for-loading-resource-bitmaps">A method for loading resource bitmaps</h2>
+<p>Many of the samples coming up will need to load bitmap resources. The static <code>BitmapExtensions</code> class in the sample solution contains a method to help out:</p>
+<pre><code class="lang-csharp">static class BitmapExtensions
+{
+    public static SKBitmap LoadBitmapResource(Type type, string resourceID)
+    {
+        Assembly assembly = type.GetTypeInfo().Assembly;
+
+        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+        {
+            return SKBitmap.Decode(stream);
+        }
+    }
+    ···
+}
+</code></pre>
+<p>Notice the <code>Type</code> parameter. This can be the <code>Type</code> object associated with any type in the assembly that stores the bitmap resource.</p>
+<p>This <code>LoadBitmapResource</code> method will be used in all subsequent samples that require bitmap resources.</p>
+<h2 id="stretching-to-fill-a-rectangle">Stretching to fill a rectangle</h2>
+<p>The <code>SKCanvas</code> class also defines a <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmap#skiasharp-skcanvas-drawbitmap(skiasharp-skbitmap-skiasharp-skrect-skiasharp-skpaint)"><code>DrawBitmap</code></a> method that renders the bitmap to a rectangle, and another <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmap#skiasharp-skcanvas-drawbitmap(skiasharp-skbitmap-skiasharp-skrect-skiasharp-skrect-skiasharp-skpaint)"><code>DrawBitmap</code></a> method that renders a rectangular subset of the bitmap to a rectangle:</p>
+<pre><code>DrawBitmap(SKBitmap bitmap, SKRect dest, SKPaint paint = null)
+
+DrawBitmap(SKBitmap bitmap, SKRect source, SKRect dest, SKPaint paint = null)
+</code></pre>
+<p>In both cases, the bitmap is stretched to fill the rectangle named <code>dest</code>. In the second method, the <code>source</code> rectangle allows you to select a subset of the bitmap. The <code>dest</code> rectangle is relative to the output device; the <code>source</code> rectangle is relative to the bitmap.</p>
+<p>The <strong>Fill Rectangle</strong> page demonstrates the first of these two methods by displaying the same bitmap used in the earlier example in a rectangle the same size as the canvas:</p>
+<pre><code class="lang-csharp">public class FillRectanglePage : ContentPage
+{
+    SKBitmap bitmap =
+        BitmapExtensions.LoadBitmapResource(typeof(FillRectanglePage),
+                                            &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+    public FillRectanglePage ()
+    {
+        Title = &quot;Fill Rectangle&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        canvas.DrawBitmap(bitmap, info.Rect);
+    }
+}
+</code></pre>
+<p>Notice the use of the new <code>BitmapExtensions.LoadBitmapResource</code> method to set the <code>SKBitmap</code> field. The destination rectangle is obtained from the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo.rect#skiasharp-skimageinfo-rect"><code>Rect</code></a> property of <code>SKImageInfo</code>, which desribes the size of the display surface:</p>
+<p><a href="displaying-images/FillRectangle-Large.png#lightbox"><img src="displaying-images/FillRectangle.png" alt="Fill Rectangle" title="Fill Rectangle"></a></p>
+<p>This is usually <em>not</em> what you want. The image is distorted by being stretched differently in the horizontal and vertical directions. When displaying a bitmap in something other than its pixel size, usually you want to preserve the bitmap's original aspect ratio.</p>
+<h2 id="stretching-while-preserving-the-aspect-ratio">Stretching while preserving the aspect ratio</h2>
+<p>Stretching a bitmap while preserving the aspect ratio is a process also known as <em>uniform scaling</em>. That term suggests an algorithmic approach. One possible solution is shown in the <strong>Uniform Scaling</strong> page:</p>
+<pre><code class="lang-csharp">public class UniformScalingPage : ContentPage
+{
+    SKBitmap bitmap =
+        BitmapExtensions.LoadBitmapResource(typeof(UniformScalingPage),
+                                            &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+    public UniformScalingPage()
+    {
+        Title = &quot;Uniform Scaling&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        float scale = Math.Min((float)info.Width / bitmap.Width,
+                               (float)info.Height / bitmap.Height);
+        float x = (info.Width - scale * bitmap.Width) / 2;
+        float y = (info.Height - scale * bitmap.Height) / 2;
+        SKRect destRect = new SKRect(x, y, x + scale * bitmap.Width,
+                                           y + scale * bitmap.Height);
+
+        canvas.DrawBitmap(bitmap, destRect);
+    }
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler calculates a <code>scale</code> factor that is the minimum of the ratio of the display width and height to the bitmap width and height. The <code>x</code> and <code>y</code> values can then be calculated for centering the scaled bitmap within the display width and height. The destination rectangle has an upper-left corner of <code>x</code> and <code>y</code> and a lower-right corner of those values plus the scaled width and height of the bitmap:</p>
+<p><a href="displaying-images/UniformScaling-Large.png#lightbox"><img src="displaying-images/UniformScaling.png" alt="Uniform Scaling" title="Uniform Scaling"></a></p>
+<p>Turn the phone sideways to see the bitmap stretched to that area:</p>
+<p><a href="displaying-images/UniformScaling-Landscape-Large.png#lightbox"><img src="displaying-images/UniformScaling-Landscape.png" alt="Uniform Scaling landscape" title="Uniform Scaling landscape"></a></p>
+<p>The advantage of using this <code>scale</code> factor becomes obvious when you want to implement a slightly different algorithm. Suppose you want to preserve the bitmap's aspect ratio but also fill the destination rectangle. The only way this is possible is by cropping part of the image, but you can implement that algorithm simply by changing <code>Math.Min</code> to <code>Math.Max</code> in the above code. Here's the result:</p>
+<p><a href="displaying-images/UniformScaling-Alternative-Large.png#lightbox"><img src="displaying-images/UniformScaling-Alternative.png" alt="Uniform Scaling alternative" title="Uniform Scaling alternative"></a></p>
+<p>The bitmap's aspect ratio is preserved but areas on the left and right of the bitmap are cropped.</p>
+<h2 id="a-versatile-bitmap-display-function">A versatile bitmap display function</h2>
+<p>XAML-based programming environments (such as UWP and Xamarin.Forms) have a facility to expand or shrink the size of bitmaps while preserving their aspect ratios. Although SkiaSharp does not include this feature, you can implement it yourself.</p>
+<p>The <code>BitmapExtensions</code> class included in the sample application shows how. The class defines two new <code>DrawBitmap</code> methods that perform the aspect ratio calculation. These new methods are extension methods of <code>SKCanvas</code>.</p>
+<p>The new <code>DrawBitmap</code> methods include a parameter of type <code>BitmapStretch</code>, an enumeration defined in the <strong>BitmapExtensions.cs</strong> file:</p>
+<pre><code class="lang-csharp">public enum BitmapStretch
+{
+    None,
+    Fill,
+    Uniform,
+    UniformToFill,
+    AspectFit = Uniform,
+    AspectFill = UniformToFill
+}
+</code></pre>
+<p>The <code>None</code>, <code>Fill</code>, <code>Uniform</code>, and <code>UniformToFill</code> members are the same as those in the UWP <a href="/uwp/api/Windows.UI.Xaml.Media.Stretch"><code>Stretch</code></a> enumeration. The similar Xamarin.Forms <a href="xref:Xamarin.Forms.Aspect"><code>Aspect</code></a> enumeration defines members <code>Fill</code>, <code>AspectFit</code>, and <code>AspectFill</code>.</p>
+<p>The <strong>Uniform Scaling</strong> page shown above centers the bitmap within the rectangle, but you might want other options, such as positioning the bitmap at the left or right side of the rectangle, or the top or bottom. That's the purpose of the <code>BitmapAlignment</code> enumeration:</p>
+<pre><code class="lang-csharp">public enum BitmapAlignment
+{
+    Start,
+    Center,
+    End
+}
+</code></pre>
+<p>Alignment settings have no effect when used with <code>BitmapStretch.Fill</code>.</p>
+<p>The first <code>DrawBitmap</code> extension function contains a destination rectangle but no source rectangle. Defaults are defined so that if you want the bitmap centered, you need only specify a <code>BitmapStretch</code> member:</p>
+<pre><code class="lang-csharp">static class BitmapExtensions
+{
+    ···
+    public static void DrawBitmap(this SKCanvas canvas, SKBitmap bitmap, SKRect dest,
+                                  BitmapStretch stretch,
+                                  BitmapAlignment horizontal = BitmapAlignment.Center,
+                                  BitmapAlignment vertical = BitmapAlignment.Center,
+                                  SKPaint paint = null)
+    {
+        if (stretch == BitmapStretch.Fill)
+        {
+            canvas.DrawBitmap(bitmap, dest, paint);
+        }
+        else
+        {
+            float scale = 1;
+
+            switch (stretch)
+            {
+                case BitmapStretch.None:
+                    break;
+
+                case BitmapStretch.Uniform:
+                    scale = Math.Min(dest.Width / bitmap.Width, dest.Height / bitmap.Height);
+                    break;
+
+                case BitmapStretch.UniformToFill:
+                    scale = Math.Max(dest.Width / bitmap.Width, dest.Height / bitmap.Height);
+                    break;
+            }
+
+            SKRect display = CalculateDisplayRect(dest, scale * bitmap.Width, scale * bitmap.Height,
+                                                  horizontal, vertical);
+
+            canvas.DrawBitmap(bitmap, display, paint);
+        }
+    }
+    ···
+}
+</code></pre>
+<p>The primary purpose of this method is to calculate a scaling factor named <code>scale</code> that is then applied to the bitmap width and height when calling the <code>CalculateDisplayRect</code> method. This is the method that calculates a rectangle for displaying the bitmap based on the horizontal and vertical alignment:</p>
+<pre><code class="lang-csharp">static class BitmapExtensions
+{
+    ···
+    static SKRect CalculateDisplayRect(SKRect dest, float bmpWidth, float bmpHeight,
+                                       BitmapAlignment horizontal, BitmapAlignment vertical)
+    {
+        float x = 0;
+        float y = 0;
+
+        switch (horizontal)
+        {
+            case BitmapAlignment.Center:
+                x = (dest.Width - bmpWidth) / 2;
+                break;
+
+            case BitmapAlignment.Start:
+                break;
+
+            case BitmapAlignment.End:
+                x = dest.Width - bmpWidth;
+                break;
+        }
+
+        switch (vertical)
+        {
+            case BitmapAlignment.Center:
+                y = (dest.Height - bmpHeight) / 2;
+                break;
+
+            case BitmapAlignment.Start:
+                break;
+
+            case BitmapAlignment.End:
+                y = dest.Height - bmpHeight;
+                break;
+        }
+
+        x += dest.Left;
+        y += dest.Top;
+
+        return new SKRect(x, y, x + bmpWidth, y + bmpHeight);
+    }
+}
+</code></pre>
+<p>The <code>BitmapExtensions</code> class contains an additional <code>DrawBitmap</code> method with a source rectangle for specifying a subset of the bitmap. This method is similar to the first one except that the scaling factor is calculated based on the <code>source</code> rectangle, and then applied to the <code>source</code> rectangle in the call to <code>CalculateDisplayRect</code>:</p>
+<pre><code class="lang-csharp">static class BitmapExtensions
+{
+    ···
+    public static void DrawBitmap(this SKCanvas canvas, SKBitmap bitmap, SKRect source, SKRect dest,
+                                  BitmapStretch stretch,
+                                  BitmapAlignment horizontal = BitmapAlignment.Center,
+                                  BitmapAlignment vertical = BitmapAlignment.Center,
+                                  SKPaint paint = null)
+    {
+        if (stretch == BitmapStretch.Fill)
+        {
+            canvas.DrawBitmap(bitmap, source, dest, paint);
+        }
+        else
+        {
+            float scale = 1;
+
+            switch (stretch)
+            {
+                case BitmapStretch.None:
+                    break;
+
+                case BitmapStretch.Uniform:
+                    scale = Math.Min(dest.Width / source.Width, dest.Height / source.Height);
+                    break;
+
+                case BitmapStretch.UniformToFill:
+                    scale = Math.Max(dest.Width / source.Width, dest.Height / source.Height);
+                    break;
+            }
+
+            SKRect display = CalculateDisplayRect(dest, scale * source.Width, scale * source.Height,
+                                                  horizontal, vertical);
+
+            canvas.DrawBitmap(bitmap, source, display, paint);
+        }
+    }
+    ···
+}
+</code></pre>
+<p>The first of these two new <code>DrawBitmap</code> methods is demonstrated in the <strong>Scaling Modes</strong> page. The XAML file contains three <code>Picker</code> elements that let you select members of the <code>BitmapStretch</code> and <code>BitmapAlignment</code> enumerations:</p>
+<pre><code class="lang-xaml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:local=&quot;clr-namespace:SkiaSharpFormsDemos&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.ScalingModesPage&quot;
+             Title=&quot;Scaling Modes&quot;&gt;
+
+    &lt;Grid Padding=&quot;10&quot;&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Grid.ColumnDefinitions&gt;
+            &lt;ColumnDefinition Width=&quot;Auto&quot; /&gt;
+            &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+        &lt;/Grid.ColumnDefinitions&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           Grid.Row=&quot;0&quot; Grid.Column=&quot;0&quot; Grid.ColumnSpan=&quot;2&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Label Text=&quot;Stretch:&quot;
+               Grid.Row=&quot;1&quot; Grid.Column=&quot;0&quot;
+               VerticalOptions=&quot;Center&quot; /&gt;
+
+        &lt;Picker x:Name=&quot;stretchPicker&quot;
+                Grid.Row=&quot;1&quot; Grid.Column=&quot;1&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type local:BitmapStretch}&quot;&gt;
+                    &lt;x:Static Member=&quot;local:BitmapStretch.None&quot; /&gt;
+                    &lt;x:Static Member=&quot;local:BitmapStretch.Fill&quot; /&gt;
+                    &lt;x:Static Member=&quot;local:BitmapStretch.Uniform&quot; /&gt;
+                    &lt;x:Static Member=&quot;local:BitmapStretch.UniformToFill&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;Label Text=&quot;Horizontal Alignment:&quot;
+               Grid.Row=&quot;2&quot; Grid.Column=&quot;0&quot;
+               VerticalOptions=&quot;Center&quot; /&gt;
+
+        &lt;Picker x:Name=&quot;horizontalPicker&quot;
+                Grid.Row=&quot;2&quot; Grid.Column=&quot;1&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type local:BitmapAlignment}&quot;&gt;
+                    &lt;x:Static Member=&quot;local:BitmapAlignment.Start&quot; /&gt;
+                    &lt;x:Static Member=&quot;local:BitmapAlignment.Center&quot; /&gt;
+                    &lt;x:Static Member=&quot;local:BitmapAlignment.End&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;Label Text=&quot;Vertical Alignment:&quot;
+               Grid.Row=&quot;3&quot; Grid.Column=&quot;0&quot;
+               VerticalOptions=&quot;Center&quot; /&gt;
+
+        &lt;Picker x:Name=&quot;verticalPicker&quot;
+                Grid.Row=&quot;3&quot; Grid.Column=&quot;1&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type local:BitmapAlignment}&quot;&gt;
+                    &lt;x:Static Member=&quot;local:BitmapAlignment.Start&quot; /&gt;
+                    &lt;x:Static Member=&quot;local:BitmapAlignment.Center&quot; /&gt;
+                    &lt;x:Static Member=&quot;local:BitmapAlignment.End&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file simply invalidates the <code>CanvasView</code> when any <code>Picker</code> item has changed. The <code>PaintSurface</code> handler accesses the three <code>Picker</code> views for calling the <code>DrawBitmap</code> extension method:</p>
+<pre><code class="lang-csharp">public partial class ScalingModesPage : ContentPage
+{
+    SKBitmap bitmap =
+        BitmapExtensions.LoadBitmapResource(typeof(ScalingModesPage),
+                                            &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+    public ScalingModesPage()
+    {
+        InitializeComponent();
+    }
+
+    private void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        SKRect dest = new SKRect(0, 0, info.Width, info.Height);
+
+        BitmapStretch stretch = (BitmapStretch)stretchPicker.SelectedItem;
+        BitmapAlignment horizontal = (BitmapAlignment)horizontalPicker.SelectedItem;
+        BitmapAlignment vertical = (BitmapAlignment)verticalPicker.SelectedItem;
+
+        canvas.DrawBitmap(bitmap, dest, stretch, horizontal, vertical);
+    }
+}
+</code></pre>
+<p>Here are some combinations of options:</p>
+<p><a href="displaying-images/ScalingModes-Large.png#lightbox"><img src="displaying-images/ScalingModes.png" alt="Scaling Modes" title="Scaling Modes"></a></p>
+<p>The <strong>Rectangle Subset</strong> page has virtually the same XAML file as <strong>Scaling Modes</strong>, but the code-behind file defines a rectangular subset of the bitmap given by the <code>SOURCE</code> field:</p>
+<pre><code class="lang-csharp">public partial class ScalingModesPage : ContentPage
+{
+    SKBitmap bitmap =
+        BitmapExtensions.LoadBitmapResource(typeof(ScalingModesPage),
+                                            &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+
+    static readonly SKRect SOURCE = new SKRect(94, 12, 212, 118);
+
+    public RectangleSubsetPage()
+    {
+        InitializeComponent();
+    }
+
+    private void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        SKRect dest = new SKRect(0, 0, info.Width, info.Height);
+
+        BitmapStretch stretch = (BitmapStretch)stretchPicker.SelectedItem;
+        BitmapAlignment horizontal = (BitmapAlignment)horizontalPicker.SelectedItem;
+        BitmapAlignment vertical = (BitmapAlignment)verticalPicker.SelectedItem;
+
+        canvas.DrawBitmap(bitmap, SOURCE, dest, stretch, horizontal, vertical);
+    }
+}
+</code></pre>
+<p>This rectangle source isolates the monkey's head, as shown in these screenshots:</p>
+<p><a href="displaying-images/RectangleSubset-Large.png#lightbox"><img src="displaying-images/RectangleSubset.png" alt="Rectangle Subset" title="Rectangle Subset"></a></p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

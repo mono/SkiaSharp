@@ -1,0 +1,554 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Three Types of B&#233;zier Curves | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Three Types of B&#233;zier Curves | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="three-types-of-bézier-curves">Three Types of Bézier Curves</h1>
+
+<p><em>Explore how to use SkiaSharp to render cubic, quadratic, and conic Bézier curves</em></p>
+<p>The Bézier curve is named after Pierre Bézier (1910 – 1999), a French engineer at the automotive company Renault, who used the curve for the computer-assisted design of car bodies.</p>
+<p>Bézier curves are known for being well-suited to interactive design: They are well behaved — in other words, there aren't singularities that cause the curve to become infinite or unwieldy — and they are generally aesthetically pleasing:</p>
+<p><img src="beziers-images/beziersample.png" alt="A sample Bezier curve"></p>
+<p>Character outlines of computer-based fonts are usually defined with Bézier curves.</p>
+<p>The Wikipedia article on <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve"><strong>Bézier curve</strong></a> contains some useful background information. The term <em>Bézier curve</em> actually refers to a family of similar curves. SkiaSharp supports three types of Bézier curves, called the <em>cubic</em>, the <em>quadratic</em>, and the <em>conic</em>. The conic is also known as the <em>rational quadratic</em>.</p>
+<h2 id="the-cubic-bézier-curve">The Cubic Bézier Curve</h2>
+<p>The cubic is the type of Bézier curve that most developers think of when the subject of Bézier curves comes up.</p>
+<p>You can add a cubic Bézier curve to an <code>SKPath</code> object using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.cubicto#skiasharp-skpath-cubicto(skiasharp-skpoint-skiasharp-skpoint-skiasharp-skpoint)"><code>CubicTo</code></a> method with three <code>SKPoint</code> parameters, or the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.cubicto#skiasharp-skpath-cubicto(system-single-system-single-system-single-system-single-system-single-system-single)"><code>CubicTo</code></a> overload with separate <code>x</code> and <code>y</code> parameters:</p>
+<pre><code class="lang-csharp">public void CubicTo (SKPoint point1, SKPoint point2, SKPoint point3)
+
+public void CubicTo (Single x1, Single y1, Single x2, Single y2, Single x3, Single y3)
+</code></pre>
+<p>The curve begins at the current point of the contour. The complete cubic Bezier curve is defined by four points:</p>
+<ul>
+<li>start point: current point in the contour, or (0, 0) if <code>MoveTo</code> has not been called</li>
+<li>first control point: <code>point1</code> in the <code>CubicTo</code> call</li>
+<li>second control point: <code>point2</code> in the <code>CubicTo</code> call</li>
+<li>end point: <code>point3</code> in the <code>CubicTo</code> call</li>
+</ul>
+<p>The resultant curve begins at the start point and ends at the end point. The curve generally does not pass through the two control points; instead the control points function much like magnets to pull the curve towards them.</p>
+<p>The best way to get a feel for the cubic Bézier curve is by experimentation. This is the purpose of the <strong>Bezier Curve</strong> page, which derives from <code>InteractivePage</code>. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCurvePage.xaml"><strong>BezierCurvePage.xaml</strong></a> file instantiates the <code>SKCanvasView</code> and a <code>TouchEffect</code>. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCurvePage.xaml.cs"><strong>BezierCurvePage.xaml.cs</strong></a> code-behind file creates four <code>TouchPoint</code> objects in its constructor. The <code>PaintSurface</code> event handler creates an <code>SKPath</code> to render a Bézier curve based on the four <code>TouchPoint</code> objects, and also draws dotted tangent lines from the control points to the end points:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    // Draw path with cubic Bezier curve
+    using (SKPath path = new SKPath())
+    {
+        path.MoveTo(touchPoints[0].Center);
+        path.CubicTo(touchPoints[1].Center,
+                     touchPoints[2].Center,
+                     touchPoints[3].Center);
+
+        canvas.DrawPath(path, strokePaint);
+    }
+
+    // Draw tangent lines
+    canvas.DrawLine(touchPoints[0].Center.X,
+                    touchPoints[0].Center.Y,
+                    touchPoints[1].Center.X,
+                    touchPoints[1].Center.Y, dottedStrokePaint);
+
+    canvas.DrawLine(touchPoints[2].Center.X,
+                    touchPoints[2].Center.Y,
+                    touchPoints[3].Center.X,
+                    touchPoints[3].Center.Y, dottedStrokePaint);
+
+    foreach (TouchPoint touchPoint in touchPoints)
+    {
+       touchPoint.Paint(canvas);
+    }
+}
+</code></pre>
+<p>Here it is running:</p>
+<p><a href="beziers-images/beziercurve-large.png#lightbox"><img src="beziers-images/beziercurve-small.png" alt="Triple screenshot of the Bezier Curve page"></a></p>
+<p>Mathematically, the curve is a cubic polynomial. The curve intersects a straight line at three points at most. At the start point, the curve is always tangent to, and in the same direction as, a straight line from the start point to the first control point. At the end point, the curve is always tangent to, and in the same direction as, a straight line from the second control point to the end point.</p>
+<p>The cubic Bézier curve is always bounded by a convex quadrilateral connecting the four points. This is called a <em>convex hull</em>. If the control points lie on the straight line between the start and end point, then the Bézier curve renders as a straight line. But the curve can also cross itself, as the third screenshot demonstrates.</p>
+<p>A path contour can contain multiple connected cubic Bézier curves, but the connection between two cubic Bézier curves will be smooth only if the following three points are colinear (that is, lie on a straight line):</p>
+<ul>
+<li>the second control point of the first curve</li>
+<li>the end point of the first curve, which is also the start point of the second curve</li>
+<li>the first control point of the second curve</li>
+</ul>
+<p>In the next article on <a href="../../xamarin-forms/user-interface/graphics/skiasharp/curves/path-data.md"><strong>SVG Path Data</strong></a>, you'll discover a facility to ease the definition of smooth connected Bézier curves.</p>
+<p>It is sometimes useful to know the underlying parametric equations that render a cubic Bézier curve. For <em>t</em> ranging from 0 to 1, the parametric equations are as follows:</p>
+<p>x(t) = (1 – t)³x₀ + 3t(1 – t)²x₁ + 3t²(1 – t)x₂ + t³x₃</p>
+<p>y(t) = (1 – t)³y₀ + 3t(1 – t)²y₁ + 3t²(1 – t)y₂ + t³y₃</p>
+<p>The highest exponent of 3 confirms that these are cubic polynomials. It is easy to verify that when <code>t</code> equals 0, the point is (x₀, y₀), which is the start point, and when <code>t</code> equals 1, the point is (x₃, y₃), which is the end point. Near the start point (for low values of <code>t</code>), the first control point (x₁, y₁) has a strong effect, and near the end point (high values of 't') the second control point (x₂, y₂) has a strong effect.</p>
+<h2 id="bezier-curve-approximation-to-circular-arcs">Bezier Curve Approximation to Circular Arcs</h2>
+<p>It is sometimes convenient to use a Bézier curve to render a circular arc. A cubic Bézier curve can approximate a circular arc very well up to a quarter circle, so four connected Bézier curves can define a whole circle. This approximation is discussed in two articles published over 25 years ago:</p>
+<blockquote>
+<p>Tor Dokken, et al, &quot;Good Approximation of Circles by Curvature-Continuous Bézier curves,&quot; <em>Computer Aided Geometric Design 7</em> (1990), 33-41.</p>
+</blockquote>
+<blockquote>
+<p>Michael Goldapp, &quot;Approximation of Circular Arcs by Cubic Polynomials,&quot; <em>Computer Aided Geometric Design 8</em> (1991), 227-238.</p>
+</blockquote>
+<p>The following diagram shows four points labeled <code>pto</code>, <code>pt1</code>, <code>pt2</code>, and <code>pt3</code> defining a Bézier curve (shown in red) that approximates a circular arc:</p>
+<p><img src="beziers-images/bezierarc45.png" alt="Approximation of a circular arc with a Bézier curve"></p>
+<p>The lines from the start and end points to the control points are tangent to the circle and to the Bézier curve, and they have a length of <em>L</em>. The first article cited above indicates that the Bézier curve best approximates a circular arc when that length <em>L</em> is calculated like this:</p>
+<p>L = 4 × tan(α / 4) / 3</p>
+<p>The illustration shows an angle of 45 degrees, so L equals 0.265. In code, that value would be multiplied by the desired radius of the circle.</p>
+<p>The <strong>Bezier Circular Arc</strong> page allows you to experiment with defining a Bézier curve to approximate a circular arc for angles ranging up to 180 degrees. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCircularArcPage.xaml"><strong>BezierCircularArcPage.xaml</strong></a> file instantiates the <code>SKCanvasView</code> and a <code>Slider</code> for selecting the angle. The <code>PaintSurface</code> event handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCircularArcPage.xaml.cs"><strong>BezierCircularArgPage.xaml.cs</strong></a> code-behind file uses a transform to set the point (0, 0) to the center of the canvas. It draws a circle centered on that point for comparison, and then calculates the two control points for the Bézier curve:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    // Translate to center
+    canvas.Translate(info.Width / 2, info.Height / 2);
+
+    // Draw the circle
+    float radius = Math.Min(info.Width, info.Height) / 3;
+    canvas.DrawCircle(0, 0, radius, blackStroke);
+
+    // Get the value of the Slider
+    float angle = (float)angleSlider.Value;
+
+    // Calculate length of control point line
+    float length = radius * 4 * (float)Math.Tan(Math.PI * angle / 180 / 4) / 3;
+
+    // Calculate sin and cosine for half that angle
+    float sin = (float)Math.Sin(Math.PI * angle / 180 / 2);
+    float cos = (float)Math.Cos(Math.PI * angle / 180 / 2);
+
+    // Find the end points
+    SKPoint point0 = new SKPoint(-radius * sin, radius * cos);
+    SKPoint point3 = new SKPoint(radius * sin, radius * cos);
+
+    // Find the control points
+    SKPoint point0Normalized = Normalize(point0);
+    SKPoint point1 = point0 + new SKPoint(length * point0Normalized.Y,
+                                          -length * point0Normalized.X);
+
+    SKPoint point3Normalized = Normalize(point3);
+    SKPoint point2 = point3 + new SKPoint(-length * point3Normalized.Y,
+                                          length * point3Normalized.X);
+
+    // Draw the points
+    canvas.DrawCircle(point0.X, point0.Y, 10, blackFill);
+    canvas.DrawCircle(point1.X, point1.Y, 10, blackFill);
+    canvas.DrawCircle(point2.X, point2.Y, 10, blackFill);
+    canvas.DrawCircle(point3.X, point3.Y, 10, blackFill);
+
+    // Draw the tangent lines
+    canvas.DrawLine(point0.X, point0.Y, point1.X, point1.Y, dottedStroke);
+    canvas.DrawLine(point3.X, point3.Y, point2.X, point2.Y, dottedStroke);
+
+    // Draw the Bezier curve
+    using (SKPath path = new SKPath())
+    {
+        path.MoveTo(point0);
+        path.CubicTo(point1, point2, point3);
+        canvas.DrawPath(path, redStroke);
+    }
+}
+
+// Vector methods
+SKPoint Normalize(SKPoint v)
+{
+    float magnitude = Magnitude(v);
+    return new SKPoint(v.X / magnitude, v.Y / magnitude);
+}
+
+float Magnitude(SKPoint v)
+{
+    return (float)Math.Sqrt(v.X * v.X + v.Y * v.Y);
+}
+
+</code></pre>
+<p>The start and end points (<code>point0</code> and <code>point3</code>) are calculated based on the normal parametric equations for the circle. Because the circle is centered at (0, 0), these points can also be treated as radial vectors from the center of the circle to the circumference. The control points are on lines that are tangent to the circle, so they are at right angles to these radial vectors. A vector at a right angle to another is simply the original vector with the X and Y coordinates swapped and one of them made negative.</p>
+<p>Here's the program running with different angles:</p>
+<p><a href="beziers-images/beziercirculararc-large.png#lightbox"><img src="beziers-images/beziercirculararc-small.png" alt="Triple screenshot of the Bezier Circular Arc page"></a></p>
+<p>Look closely at the third screenshot, and you'll see that the Bézier curve notably deviates from a semicircle when the angle is 180 degrees, but the iOS screen shows that it seems to fit a quarter-circle just fine when the angle is 90 degrees.</p>
+<p>Calculating the coordinates of the two control points is quite easy when the quarter circle is oriented like this:</p>
+<p><img src="beziers-images/bezierarc90.png" alt="Approximation of a quarter circle with a Bézier curve"></p>
+<p>If the radius of the circle is 100, then <em>L</em> is 55, and that's an easy number to remember.</p>
+<p>The <strong>Squaring the Circle</strong> page animates a figure between a circle and a square. The circle is approximated by four Bézier curves whose coordinates are shown in the first column of this array definition in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/SquaringTheCirclePage.cs"><code>SquaringTheCirclePage</code></a> class:</p>
+<pre><code class="lang-csharp">public class SquaringTheCirclePage : ContentPage
+{
+    SKPoint[,] points =
+    {
+        { new SKPoint(   0,  100), new SKPoint(     0,    125), new SKPoint() },
+        { new SKPoint(  55,  100), new SKPoint( 62.5f,  62.5f), new SKPoint() },
+        { new SKPoint( 100,   55), new SKPoint( 62.5f,  62.5f), new SKPoint() },
+        { new SKPoint( 100,    0), new SKPoint(   125,      0), new SKPoint() },
+        { new SKPoint( 100,  -55), new SKPoint( 62.5f, -62.5f), new SKPoint() },
+        { new SKPoint(  55, -100), new SKPoint( 62.5f, -62.5f), new SKPoint() },
+        { new SKPoint(   0, -100), new SKPoint(     0,   -125), new SKPoint() },
+        { new SKPoint( -55, -100), new SKPoint(-62.5f, -62.5f), new SKPoint() },
+        { new SKPoint(-100,  -55), new SKPoint(-62.5f, -62.5f), new SKPoint() },
+        { new SKPoint(-100,    0), new SKPoint(  -125,      0), new SKPoint() },
+        { new SKPoint(-100,   55), new SKPoint(-62.5f,  62.5f), new SKPoint() },
+        { new SKPoint( -55,  100), new SKPoint(-62.5f,  62.5f), new SKPoint() },
+        { new SKPoint(   0,  100), new SKPoint(     0,    125), new SKPoint() }
+    };
+    ...
+}
+</code></pre>
+<p>The second column contains the coordinates of four Bézier curves that define a square whose area is approximately the same as the area of the circle. (Drawing a square with the <em>exact</em> area as a given circle is the classic unsolvable geometric problem of <a href="https://en.wikipedia.org/wiki/Squaring_the_circle">squaring the circle</a>.) For rendering a square with Bézier curves, the two control points for each curve are the same, and they are colinear with the start and end points, so the Bézier curve is rendered as a straight line.</p>
+<p>The third column of the array is for interpolated values for an animation. The page sets a timer for 16 milliseconds, and the <code>PaintSurface</code> handler is called at that rate:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    canvas.Translate(info.Width / 2, info.Height / 2);
+    canvas.Scale(Math.Min(info.Width / 300, info.Height / 300));
+
+    // Interpolate
+    TimeSpan timeSpan = new TimeSpan(DateTime.Now.Ticks);
+    float t = (float)(timeSpan.TotalSeconds % 3 / 3);   // 0 to 1 every 3 seconds
+    t = (1 + (float)Math.Sin(2 * Math.PI * t)) / 2;     // 0 to 1 to 0 sinusoidally
+
+    for (int i = 0; i &lt; 13; i++)
+    {
+        points[i, 2] = new SKPoint(
+            (1 - t) * points[i, 0].X + t * points[i, 1].X,
+            (1 - t) * points[i, 0].Y + t * points[i, 1].Y);
+    }
+
+    // Create the path and draw it
+    using (SKPath path = new SKPath())
+    {
+        path.MoveTo(points[0, 2]);
+
+        for (int i = 1; i &lt; 13; i += 3)
+        {
+            path.CubicTo(points[i, 2], points[i + 1, 2], points[i + 2, 2]);
+        }
+        path.Close();
+
+        canvas.DrawPath(path, cyanFill);
+        canvas.DrawPath(path, blueStroke);
+    }
+}
+</code></pre>
+<p>The points are interpolated based on a sinusoidally oscillating value of <code>t</code>. The interpolated points are then used to construct a series of four connected Bézier curves. Here's the animation running:</p>
+<p><a href="beziers-images/squaringthecircle-large.png#lightbox"><img src="beziers-images/squaringthecircle-small.png" alt="Triple screenshot of the Squaring the Circle page"></a></p>
+<p>Such an animation would be impossible without curves that are algorithmically flexible enough to be rendered as both circular arcs and straight lines.</p>
+<p>The <strong>Bezier Infinity</strong> page also takes advantage of the ability of a Bézier curve to approximate a circular arc. Here's the <code>PaintSurface</code> handler from the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierInfinityPage.cs"><code>BezierInfinityPage</code></a> class:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    using (SKPath path = new SKPath())
+    {
+        path.MoveTo(0, 0);                                // Center
+        path.CubicTo(  50,  -50,   95, -100,  150, -100); // To top of right loop
+        path.CubicTo( 205, -100,  250,  -55,  250,    0); // To far right of right loop
+        path.CubicTo( 250,   55,  205,  100,  150,  100); // To bottom of right loop
+        path.CubicTo(  95,  100,   50,   50,    0,    0); // Back to center  
+        path.CubicTo( -50,  -50,  -95, -100, -150, -100); // To top of left loop
+        path.CubicTo(-205, -100, -250,  -55, -250,    0); // To far left of left loop
+        path.CubicTo(-250,   55, -205,  100, -150,  100); // To bottom of left loop
+        path.CubicTo( -95,  100,  -50,   50,    0,    0); // Back to center
+        path.Close();
+
+        SKRect pathBounds = path.Bounds;
+        canvas.Translate(info.Width / 2, info.Height / 2);
+        canvas.Scale(0.9f * Math.Min(info.Width / pathBounds.Width,
+                                     info.Height / pathBounds.Height));
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = SKColors.Blue;
+            paint.StrokeWidth = 5;
+
+            canvas.DrawPath(path, paint);
+        }
+    }
+}
+</code></pre>
+<p>It might be a good exercise to plot these coordinates on graph paper to see how they are related. The infinity sign is centered around the point (0, 0), and the two loops have centers of (–150, 0) and (150, 0) and radii of 100. In the series of <code>CubicTo</code> commands, you can see X coordinates of control points taking on values of –95 and –205 (those values are –150 plus and minus 55), 205 and 95 (150 plus and minus 55), as well as 250 and –250 for the right and left sides. The only exception is when the infinity sign crosses itself in the center. In that case, control points have coordinates with a combination of 50 and –50 to straighten out the curve near the center.</p>
+<p>Here's the infinity sign:</p>
+<p><a href="beziers-images/bezierinfinity-large.png#lightbox"><img src="beziers-images/bezierinfinity-small.png" alt="Triple screenshot of the Bézier Infinity page"></a></p>
+<p>It is somewhat smoother towards the center than the infinity sign rendered by the <strong>Arc Infinity</strong> page from the <a href="../../xamarin-forms/user-interface/graphics/skiasharp/curves/arcs.md"><strong>Three Ways to Draw an Arc</strong></a> article.</p>
+<h2 id="the-quadratic-bézier-curve">The Quadratic Bézier Curve</h2>
+<p>The quadratic Bézier curve has only one control point, and the curve is defined by just three points: the start point, the control point, and the end point. The parametric equations are very similar to the cubic Bézier curve, except that the highest exponent is 2, so the curve is a quadratic polynomial:</p>
+<p>x(t) = (1 – t)²x₀ + 2t(1 – t)x₁ + t²x₂</p>
+<p>y(t) = (1 – t)²y₀ + 2t(1 – t)y₁ + t²y₂</p>
+<p>To add a quadratic Bézier curve to a path, use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.quadto#skiasharp-skpath-quadto(skiasharp-skpoint-skiasharp-skpoint)"><code>QuadTo</code></a> method or the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.quadto#skiasharp-skpath-quadto(system-single-system-single-system-single-system-single)"><code>QuadTo</code></a> overload with separate <code>x</code> and <code>y</code> coordinates:</p>
+<pre><code class="lang-csharp">public void QuadTo (SKPoint point1, SKPoint point2)
+
+public void QuadTo (Single x1, Single y1, Single x2, Single y2)
+</code></pre>
+<p>The methods add a curve from the current position to <code>point2</code> with <code>point1</code> as the control point.</p>
+<p>You can experiment with quadratic Bézier curves with the <strong>Quadratic Curve</strong> page, which is very similar to the <strong>Bezier Curve</strong> page except it has only three touch points. Here's the <code>PaintSurface</code> handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/QuadraticCurvePage.xaml.cs"><strong>QuadraticCurve.xaml.cs</strong></a> code-behind file:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    // Draw path with quadratic Bezier
+    using (SKPath path = new SKPath())
+    {
+        path.MoveTo(touchPoints[0].Center);
+        path.QuadTo(touchPoints[1].Center,
+                    touchPoints[2].Center);
+
+        canvas.DrawPath(path, strokePaint);
+    }
+
+    // Draw tangent lines
+    canvas.DrawLine(touchPoints[0].Center.X,
+                    touchPoints[0].Center.Y,
+                    touchPoints[1].Center.X,
+                    touchPoints[1].Center.Y, dottedStrokePaint);
+
+    canvas.DrawLine(touchPoints[1].Center.X,
+                    touchPoints[1].Center.Y,
+                    touchPoints[2].Center.X,
+                    touchPoints[2].Center.Y, dottedStrokePaint);
+
+    foreach (TouchPoint touchPoint in touchPoints)
+    {
+        touchPoint.Paint(canvas);
+    }
+}
+</code></pre>
+<p>And here it is running:</p>
+<p><a href="beziers-images/quadraticcurve-large.png#lightbox"><img src="beziers-images/quadraticcurve-small.png" alt="Triple screenshot of the Quadratic Curve page"></a></p>
+<p>The dotted lines are tangent to the curve at the start point and end point, and meet at the control point.</p>
+<p>The quadratic Bézier is good if you need a curve of a general shape, but you prefer the convenience of just one control point rather than two. The quadratic Bézier renders more efficiently than any other curve, which is why it's used internally in Skia to render elliptical arcs.</p>
+<p>However, the shape of a quadratic Bézier curve is not elliptical, which is why multiple quadratic Béziers are required to approximate an elliptical arc. The quadratic Bézier is instead a segment of a parabola.</p>
+<h2 id="the-conic-bézier-curve">The Conic Bézier Curve</h2>
+<p>The conic Bézier curve — also known as the rational quadratic Bézier curve — is a relatively recent addition to the family of Bézier curves. Like the quadratic Bézier curve, the rational quadratic Bézier curve involves a start point, an end point, and one control point. But the rational quadratic Bézier curve also requires a <em>weight</em> value. It's called a <em>rational</em> quadratic because the parametric formulas involve ratios.</p>
+<p>The parametric equations for X and Y are ratios that share the same denominator. Here is the equation for the denominator for <em>t</em> ranging from 0 to 1 and a weight value of <em>w</em>:</p>
+<p>d(t) = (1 – t)² + 2wt(1 – t) + t²</p>
+<p>In theory, a rational quadratic can involve three separate weight values, one for each of the three terms, but these can be simplified to just one weight value on the middle term.</p>
+<p>The parametric equations for the X and Y coordinates are similar to the parametric equations for the quadratic Bézier except that the middle term also includes the weight value, and the expression is divided by the denominator:</p>
+<p>x(t) = ((1 – t)²x₀ + 2wt(1 – t)x₁ + t²x₂)) ÷ d(t)</p>
+<p>y(t) = ((1 – t)²y₀ + 2wt(1 – t)y₁ + t²y₂)) ÷ d(t)</p>
+<p>Rational quadratic Bézier curves are also called <em>conics</em> because they can exactly represent segments of any conic section — hyperbolas, parabolas, ellipses, and circles.</p>
+<p>To add a rational quadratic Bézier curve to a path, use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.conicto#skiasharp-skpath-conicto(skiasharp-skpoint-skiasharp-skpoint-system-single)"><code>ConicTo</code></a> method or the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.conicto#skiasharp-skpath-conicto(system-single-system-single-system-single-system-single-system-single)"><code>ConicTo</code></a> overload with separate <code>x</code> and <code>y</code> coordinates:</p>
+<pre><code class="lang-csharp">public void ConicTo (SKPoint point1, SKPoint point2, Single weight)
+
+public void ConicTo (Single x1, Single y1, Single x2, Single y2, Single weight)
+</code></pre>
+<p>Notice the final <code>weight</code> parameter.</p>
+<p>The <strong>Conic Curve</strong> page allows you to experiment with these curves. The <code>ConicCurvePage</code> class derives from <code>InteractivePage</code>. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCurvePage.xaml"><strong>ConicCurvePage.xaml</strong></a> file instantiates a <code>Slider</code> to select a weight value between –2 and 2. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCurvePage.xaml.cs"><strong>ConicCurvePage.xaml.cs</strong></a> code-behind file creates three <code>TouchPoint</code> objects, and the <code>PaintSurface</code> handler simply renders the resultant curve with the tangent lines to the control points:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    // Draw path with conic curve
+    using (SKPath path = new SKPath())
+    {
+        path.MoveTo(touchPoints[0].Center);
+        path.ConicTo(touchPoints[1].Center,
+                     touchPoints[2].Center,
+                     (float)weightSlider.Value);
+
+        canvas.DrawPath(path, strokePaint);
+    }
+
+    // Draw tangent lines
+    canvas.DrawLine(touchPoints[0].Center.X,
+                    touchPoints[0].Center.Y,
+                    touchPoints[1].Center.X,
+                    touchPoints[1].Center.Y, dottedStrokePaint);
+
+    canvas.DrawLine(touchPoints[1].Center.X,
+                    touchPoints[1].Center.Y,
+                    touchPoints[2].Center.X,
+                    touchPoints[2].Center.Y, dottedStrokePaint);
+
+    foreach (TouchPoint touchPoint in touchPoints)
+    {
+        touchPoint.Paint(canvas);
+    }
+}
+</code></pre>
+<p>Here it is running:</p>
+<p><a href="beziers-images/coniccurve-large.png#lightbox"><img src="beziers-images/coniccurve-small.png" alt="Triple screenshot of the Conic Curve page"></a></p>
+<p>As you can see, the control point seems to pull the curve towards it more when the weight is higher. When the weight is zero, the curve becomes a straight line from the start point to the end point.</p>
+<p>In theory, negative weights are allowed, and cause the curve to bend <em>away</em> from the control point. However, weights of –1 or below cause the denominator in the parametric equations to become negative for particular values of <em>t</em>. Probably for this reason, negative weights are ignored in the <code>ConicTo</code> methods. The <strong>Conic Curve</strong> program lets you set negative weights, but as you can see by experimenting, negative weights have the same effect as a weight of zero, and cause a straight line to be rendered.</p>
+<p>It is very easy to derive the control point and weight to use the <code>ConicTo</code> method to draw a circular arc up to (but not including) a semicircle. In the following diagram, tangent lines from the start and end points meet at the control point.</p>
+<p><img src="beziers-images/conicarc.png" alt="A conic arc rendering of a circular arc"></p>
+<p>You can use trigonometry to determine the distance of the control point from the circle's center: It is the radius of the circle divided by the cosine of half the angle α. To draw a circular arc between the start and end points, set the weight to that same cosine of half the angle. Notice that if the angle is 180 degrees, then the tangent lines never meet and the weight is zero. But for angles less than 180 degrees, the math works fine.</p>
+<p>The <strong>Conic Circular Arc</strong> page demonstrates this. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCircularArcPage.xaml"><strong>ConicCircularArc.xaml</strong></a> file instantiates a <code>Slider</code> for selecting the angle. The <code>PaintSurface</code> handler in the  <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCircularArcPage.xaml.cs"><strong>ConicCircularArc.xaml.cs</strong></a> code-behind file calculates the control point and the weight:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    // Translate to center
+    canvas.Translate(info.Width / 2, info.Height / 2);
+
+    // Draw the circle
+    float radius = Math.Min(info.Width, info.Height) / 4;
+    canvas.DrawCircle(0, 0, radius, blackStroke);
+
+    // Get the value of the Slider
+    float angle = (float)angleSlider.Value;
+
+    // Calculate sin and cosine for half that angle
+    float sin = (float)Math.Sin(Math.PI * angle / 180 / 2);
+    float cos = (float)Math.Cos(Math.PI * angle / 180 / 2);
+
+    // Find the points and weight
+    SKPoint point0 = new SKPoint(-radius * sin, radius * cos);
+    SKPoint point1 = new SKPoint(0, radius / cos);
+    SKPoint point2 = new SKPoint(radius * sin, radius * cos);
+    float weight = cos;
+
+    // Draw the points
+    canvas.DrawCircle(point0.X, point0.Y, 10, blackFill);
+    canvas.DrawCircle(point1.X, point1.Y, 10, blackFill);
+    canvas.DrawCircle(point2.X, point2.Y, 10, blackFill);
+
+    // Draw the tangent lines
+    canvas.DrawLine(point0.X, point0.Y, point1.X, point1.Y, dottedStroke);
+    canvas.DrawLine(point2.X, point2.Y, point1.X, point1.Y, dottedStroke);
+
+    // Draw the conic
+    using (SKPath path = new SKPath())
+    {
+        path.MoveTo(point0);
+        path.ConicTo(point1, point2, weight);
+        canvas.DrawPath(path, redStroke);
+    }
+}
+</code></pre>
+<p>As you can see, there is no visual difference between the <code>ConicTo</code> path shown in red and the underlying circle displayed for reference:</p>
+<p><a href="beziers-images/coniccirculararc-large.png#lightbox"><img src="beziers-images/coniccirculararc-small.png" alt="Triple screenshot of the Conic Circular Arc page"></a></p>
+<p>But set the angle to 180 degrees, and the mathematics fail.</p>
+<p>It is unfortunate in this case that <code>ConicTo</code> does not support negative weights, because in theory (based on the parametric equations), the circle can be completed with another call to <code>ConicTo</code> with the same points but a negative value of the weight. This would allow creating a whole circle with just two <code>ConicTo</code> curves based on any angle between (but not including) zero degrees and 180 degrees.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

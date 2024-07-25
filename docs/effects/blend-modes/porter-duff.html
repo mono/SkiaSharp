@@ -1,0 +1,998 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Porter-Duff blend modes | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Porter-Duff blend modes | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../../images/logo.ico">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../TOC.html">
+    <meta property="docfx:tocrel" content="../../TOC.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="porter-duff-blend-modes">Porter-Duff blend modes</h1>
+
+<p>The Porter-Duff blend modes are named after Thomas Porter and Tom Duff, who developed an algebra of compositing while working for Lucasfilm. Their paper <a href="https://graphics.pixar.com/library/Compositing/paper.pdf"><em>Compositing Digital Images</em></a> was published in the July 1984 issue of <em>Computer Graphics</em>, pages 253 to 259. These blend modes are essential for compositing, which is assembling various images into a composite scene:</p>
+<p><img src="porter-duff-images/PorterDuffSample.png" alt="Porter-Duff Sample" title="Porter-Duff Sample"></p>
+<h2 id="porter-duff-concepts">Porter-Duff concepts</h2>
+<p>Suppose a brownish rectangle occupies the left and top two-thirds of your display surface:</p>
+<p><img src="porter-duff-images/PorterDuffDst.png" alt="Porter-Duff Destination" title="Porter-Duff Destination"></p>
+<p>This area is called the <em>destination</em> or sometimes the <em>background</em> or <em>backdrop</em>.</p>
+<p>You wish to draw the following rectangle, which is the same size of the destination. The rectangle is transparent except for a bluish area that occupies the right and bottom two-thirds:</p>
+<p><img src="porter-duff-images/PorterDuffSrc.png" alt="Porter-Duff Source" title="Porter-Duff Source"></p>
+<p>This is called the <em>source</em> or sometimes the <em>foreground</em>.</p>
+<p>When you display the source on the destination, here's what you expect:</p>
+<p><img src="porter-duff-images/PorterDuffSrcOver.png" alt="Porter-Duff Source Over" title="Porter-Duff Source Over"></p>
+<p>The transparent pixels of the source allow the background to show through, while the bluish source pixels obscure the background. That's the normal case, and it is referred to in SkiaSharp as <code>SKBlendMode.SrcOver</code>. That value is the default setting of the <code>BlendMode</code> property when an <code>SKPaint</code> object is first instantiated.</p>
+<p>However, it's possible to specify a different blend mode for a different effect. If you specify <code>SKBlendMode.DstOver</code>, then in the area where the source and destination intersect, the destination appears instead of the source:</p>
+<p><img src="porter-duff-images/PorterDuffDstOver.png" alt="Porter-Duff Destination Over" title="Porter-Duff Destination Over"></p>
+<p>The <code>SKBlendMode.DstIn</code> blend mode displays only the area where the destination and source intersect using the destination color:</p>
+<p><img src="porter-duff-images/PorterDuffDstIn.png" alt="Porter-Duff Destination In" title="Porter-Duff Destination In"></p>
+<p>The blend mode of <code>SKBlendMode.Xor</code> (exclusive OR) causes nothing to appear where the two areas overlap:</p>
+<p><img src="porter-duff-images/PorterDuffXor.png" alt="Porter-Duff Exclusive Or" title="Porter-Duff Exclusive Or"></p>
+<p>The colored destination and source rectangles effectively divide the display surface into four unique areas that can be colored in various ways corresponding to the presence of the destination and source rectangles:</p>
+<p><img src="porter-duff-images/PorterDuff.png" alt="Porter-Duff" title="Porter-Duff"></p>
+<p>The upper-right and lower-left rectangles are always blank because both the destination and source are transparent in those areas. The destination color occupies the upper-left area, so that area can either be colored with the destination color or not at all. Similarly, the source color occupies the lower-right area, so that area can be colored with the source color or not at all. The intersection of the destination and source in the middle can be colored with the destination color, the source color, or not at all.</p>
+<p>The total number of combinations is 2 (for the upper-left) times 2 (for the lower-right) times 3 (for the center), or 12. These are the 12 basic Porter-Duff compositing modes.</p>
+<p>Towards the end of <em>Compositing Digital Images</em> (page 256), Porter and Duff add a 13th mode called <em>plus</em> (corresponding to the SkiaSharp <code>SKBlendMode.Plus</code> member and the W3C <em>Lighter</em> mode (which is not to be confused with the W3C <em>Lighten</em> mode.) This <code>Plus</code> mode adds the destination and source colors, a process that will be described in more detail shortly.</p>
+<p>Skia adds a 14th mode called <code>Modulate</code> that is very similar to <code>Plus</code> except that the destination and source colors are multiplied. It can be treated as an additional Porter-Duff blend mode.</p>
+<p>Here are the 14 Porter-Duff modes as defined in SkiaSharp. The table shows how they color each of the three non-blank areas in the diagram above:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th style="text-align: center;">Destination</th>
+<th style="text-align: center;">Intersection</th>
+<th style="text-align: center;">Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Clear</code></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td><code>Src</code></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">Source</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>Dst</code></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">Destination</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td><code>SrcOver</code></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">Source</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>DstOver</code></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">Destination</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>SrcIn</code></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">Source</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td><code>DstIn</code></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">Destination</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td><code>SrcOut</code></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>DstOut</code></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td><code>SrcATop</code></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">Source</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td><code>DstATop</code></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">Destination</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>Xor</code></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>Plus</code></td>
+<td style="text-align: center;">X</td>
+<td style="text-align: center;">Sum</td>
+<td style="text-align: center;">X</td>
+</tr>
+<tr>
+<td><code>Modulate</code></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">Product</td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+<p>These blend modes are symmetrical. The source and destination can be exchanged and all the modes are still available.</p>
+<p>The naming convention of the modes follows a few simple rules:</p>
+<ul>
+<li><strong>Src</strong> or <strong>Dst</strong> by itself means that only the source or destination pixels are visible.</li>
+<li>The <strong>Over</strong> suffix indicates what is visible in the intersection. Either the source or destination is drawn &quot;over&quot; the other.</li>
+<li>The <strong>In</strong> suffix means that only the intersection is colored. The output is restricted to only the part of the source or destination that is &quot;in&quot; the other.</li>
+<li>The <strong>Out</strong> suffix means that the intersection is not colored. The output is only the part of the source or destination that is &quot;out&quot; of the intersection.</li>
+<li>The <strong>ATop</strong> suffix is the union of <strong>In</strong> and <strong>Out</strong>. It includes the area where the source or destination is &quot;atop&quot; of the other.</li>
+</ul>
+<p>Notice the difference with the <code>Plus</code> and <code>Modulate</code> modes. These modes are performing a different type of calculation on the source and destination pixels. They are described in more detail shortly.</p>
+<p>The <strong>Porter-Duff Grid</strong> page shows all 14 modes on one screen in the form of a grid. Each mode is a separate instance of <code>SKCanvasView</code>. For that reason, a class is derived from <code>SKCanvasView</code> named <code>PorterDuffCanvasView</code>. The static constructor creates two bitmaps of the same size, one with a brownish rectangle in its upper-left area and another with a bluish rectangle:</p>
+<pre><code class="lang-csharp">class PorterDuffCanvasView : SKCanvasView
+{
+    static SKBitmap srcBitmap, dstBitmap;
+
+    static PorterDuffCanvasView()
+    {
+        dstBitmap = new SKBitmap(300, 300);
+        srcBitmap = new SKBitmap(300, 300);
+
+        using (SKPaint paint = new SKPaint())
+        {
+            using (SKCanvas canvas = new SKCanvas(dstBitmap))
+            {
+                canvas.Clear();
+                paint.Color = new SKColor(0xC0, 0x80, 0x00);
+                canvas.DrawRect(new SKRect(0, 0, 200, 200), paint);
+            }
+            using (SKCanvas canvas = new SKCanvas(srcBitmap))
+            {
+                canvas.Clear();
+                paint.Color = new SKColor(0x00, 0x80, 0xC0);
+                canvas.DrawRect(new SKRect(100, 100, 300, 300), paint);
+            }
+        }
+    }
+    ···
+}
+</code></pre>
+<p>The instance constructor has a parameter of type <code>SKBlendMode</code>. It saves this parameter in a field.</p>
+<pre><code class="lang-csharp">class PorterDuffCanvasView : SKCanvasView
+{
+    ···
+    SKBlendMode blendMode;
+
+    public PorterDuffCanvasView(SKBlendMode blendMode)
+    {
+        this.blendMode = blendMode;
+    }
+
+    protected override void OnPaintSurface(SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Find largest square that fits
+        float rectSize = Math.Min(info.Width, info.Height);
+        float x = (info.Width - rectSize) / 2;
+        float y = (info.Height - rectSize) / 2;
+        SKRect rect = new SKRect(x, y, x + rectSize, y + rectSize);
+
+        // Draw destination bitmap
+        canvas.DrawBitmap(dstBitmap, rect);
+
+        // Draw source bitmap
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.BlendMode = blendMode;
+            canvas.DrawBitmap(srcBitmap, rect, paint);
+        }
+
+        // Draw outline
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = SKColors.Black;
+            paint.StrokeWidth = 2;
+            rect.Inflate(-1, -1);
+            canvas.DrawRect(rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>The <code>OnPaintSurface</code> override draws the two bitmaps. The first is drawn normally:</p>
+<pre><code class="lang-csharp">canvas.DrawBitmap(dstBitmap, rect);
+</code></pre>
+<p>The second is drawn with an <code>SKPaint</code> object where the <code>BlendMode</code> property has been set to the constructor argument:</p>
+<pre><code class="lang-csharp">using (SKPaint paint = new SKPaint())
+{
+    paint.BlendMode = blendMode;
+    canvas.DrawBitmap(srcBitmap, rect, paint);
+}
+</code></pre>
+<p>The remainder of the <code>OnPaintSurface</code> override draws a rectangle around the bitmap to indicate their sizes.</p>
+<p>The <code>PorterDuffGridPage</code> class creates fourteen instances of <code>PorterDurffCanvasView</code>, one for each member of the <code>blendModes</code> array. The order of the <code>SKBlendModes</code> members in the array is a little different than the table in order to position similar modes adjacent to each other. The 14 instances of <code>PorterDuffCanvasView</code> are organized along with labels in a <code>Grid</code>:</p>
+<pre><code class="lang-csharp">public class PorterDuffGridPage : ContentPage
+{
+    public PorterDuffGridPage()
+    {
+        Title = &quot;Porter-Duff Grid&quot;;
+
+        SKBlendMode[] blendModes =
+        {
+            SKBlendMode.Src, SKBlendMode.Dst, SKBlendMode.SrcOver, SKBlendMode.DstOver,
+            SKBlendMode.SrcIn, SKBlendMode.DstIn, SKBlendMode.SrcOut, SKBlendMode.DstOut,
+            SKBlendMode.SrcATop, SKBlendMode.DstATop, SKBlendMode.Xor, SKBlendMode.Plus,
+            SKBlendMode.Modulate, SKBlendMode.Clear
+        };
+
+        Grid grid = new Grid
+        {
+            Margin = new Thickness(5)
+        };
+
+        for (int row = 0; row &lt; 4; row++)
+        {
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Star });
+        }
+
+        for (int col = 0; col &lt; 3; col++)
+        {
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+        }
+
+        for (int i = 0; i &lt; blendModes.Length; i++)
+        {
+            SKBlendMode blendMode = blendModes[i];
+            int row = 2 * (i / 4);
+            int col = i % 4;
+
+            Label label = new Label
+            {
+                Text = blendMode.ToString(),
+                HorizontalTextAlignment = TextAlignment.Center
+            };
+            Grid.SetRow(label, row);
+            Grid.SetColumn(label, col);
+            grid.Children.Add(label);
+
+            PorterDuffCanvasView canvasView = new PorterDuffCanvasView(blendMode);
+
+            Grid.SetRow(canvasView, row + 1);
+            Grid.SetColumn(canvasView, col);
+            grid.Children.Add(canvasView);
+        }
+
+        Content = grid;
+    }
+}
+</code></pre>
+<p>Here's the result:</p>
+<p><a href="porter-duff-images/PorterDuffGrid-Large.png#lightbox"><img src="porter-duff-images/PorterDuffGrid.png" alt="Porter-Duff Grid" title="Porter-Duff Grid"></a></p>
+<p>You'll want to convince yourself that transparency is crucial to the proper functioning of the Porter-Duff blend modes. The <code>PorterDuffCanvasView</code> class contains a total of three calls to the <code>Canvas.Clear</code> method. All of them use the parameterless method, which sets all the pixels to transparent:</p>
+<pre><code class="lang-csharp">canvas.Clear();
+</code></pre>
+<p>Try changing any of those calls so that the pixels are set to opaque white:</p>
+<pre><code class="lang-csharp">canvas.Clear(SKColors.White);
+</code></pre>
+<p>Following that change, some of the blend modes will seem to work, but others will not. If you set the background of the source bitmap to white, then the <code>SrcOver</code> mode doesn't work because there's no transparent pixels in the source bitmap to let the destination show through. If you set the background of the destination bitmap or the canvas to white, then <code>DstOver</code> doesn't work because the destination doesn't have any transparent pixels.</p>
+<p>There might be a temptation to replace the bitmaps in the <strong>Porter-Duff Grid</strong> page with simpler <code>DrawRect</code> calls. That will work for the destination rectangle but not for the source rectangle. The source rectangle must encompass more than just the bluish-colored area. The source rectangle must include a transparent area that corresponds to the colored area of the destination. Only then will these blend modes work.</p>
+<h2 id="using-mattes-with-porter-duff">Using mattes with Porter-Duff</h2>
+<p>The <strong>Brick-Wall Compositing</strong> page shows an example of a classic compositing task: A picture needs to be assembled from several pieces, including a bitmap with a background that needs to be eliminated. Here's the <strong>SeatedMonkey.jpg</strong> bitmap with the problematic background:</p>
+<p><img src="porter-duff-images/SeatedMonkey.jpg" alt="Seated Monkey" title="Seated Monkey"></p>
+<p>In preparation for compositing, a corresponding <em>matte</em> was created, which is another bitmap that is black where you want the image to appear and transparent otherwise. This file is named <strong>SeatedMonkeyMatte.png</strong> and is among the resources in the <strong>Media</strong> folder in the sample:</p>
+<p><img src="porter-duff-images/SeatedMonkeyMatte.png" alt="Seated Monkey Matte" title="Seated Monkey Matte"></p>
+<p>This is <em>not</em> an expertly created matte. Optimally, the matte should include partially transparent pixels around the edge of the black pixels, and this matte does not.</p>
+<p>The XAML file for the <strong>Brick-Wall Compositing</strong> page instantiates an <code>SKCanvasView</code> and a <code>Button</code> that guides the user through the process of composing the final image:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.BrickWallCompositingPage&quot;
+             Title=&quot;Brick-Wall Compositing&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Button Text=&quot;Show sitting monkey&quot;
+                HorizontalOptions=&quot;Center&quot;
+                Margin=&quot;0, 10&quot;
+                Clicked=&quot;OnButtonClicked&quot; /&gt;
+
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file loads the two bitmaps that it needs and handles the <code>Clicked</code> event of the <code>Button</code>. For every <code>Button</code> click, the <code>step</code> field is incremented and a new <code>Text</code> property is set for the <code>Button</code>. When <code>step</code> reaches 5, it is set back to 0:</p>
+<pre><code class="lang-csharp">public partial class BrickWallCompositingPage : ContentPage
+{
+    SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmapResource(
+        typeof(BrickWallCompositingPage),
+        &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+
+    SKBitmap matteBitmap = BitmapExtensions.LoadBitmapResource(
+        typeof(BrickWallCompositingPage),
+        &quot;SkiaSharpFormsDemos.Media.SeatedMonkeyMatte.png&quot;);
+
+    int step = 0;
+
+    public BrickWallCompositingPage ()
+    {
+        InitializeComponent ();
+    }
+
+    void OnButtonClicked(object sender, EventArgs args)
+    {
+        Button btn = (Button)sender;
+        step = (step + 1) % 5;
+
+        switch (step)
+        {
+            case 0: btn.Text = &quot;Show sitting monkey&quot;; break;
+            case 1: btn.Text = &quot;Draw matte with DstIn&quot;; break;
+            case 2: btn.Text = &quot;Draw sidewalk with DstOver&quot;; break;
+            case 3: btn.Text = &quot;Draw brick wall with DstOver&quot;; break;
+            case 4: btn.Text = &quot;Reset&quot;; break;
+        }
+
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        ···
+    }
+}
+</code></pre>
+<p>When the program first runs, nothing is visible except the <code>Button</code>:</p>
+<p><a href="porter-duff-images/BrickWallCompositing0-Large.png#lightbox"><img src="porter-duff-images/BrickWallCompositing0.png" alt="Brick-Wall Compositing Step 0" title="Brick-Wall Compositing Step 0"></a></p>
+<p>Pressing the <code>Button</code> once causes <code>step</code> to increment to 1, and the <code>PaintSurface</code> handler now displays <strong>SeatedMonkey.jpg</strong>:</p>
+<pre><code class="lang-csharp">public partial class BrickWallCompositingPage : ContentPage
+{
+    ···
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        ···
+        float x = (info.Width - monkeyBitmap.Width) / 2;
+        float y = info.Height - monkeyBitmap.Height;
+
+        // Draw monkey bitmap
+        if (step &gt;= 1)
+        {
+            canvas.DrawBitmap(monkeyBitmap, x, y);
+        }
+        ···
+    }
+}
+</code></pre>
+<p>There's no <code>SKPaint</code> object and hence no blend mode. The bitmap appears at the bottom of the screen:</p>
+<p><a href="porter-duff-images/BrickWallCompositing1-Large.png#lightbox"><img src="porter-duff-images/BrickWallCompositing1.png" alt="Brick-Wall Compositing Step 1" title="Brick-Wall Compositing Step 1"></a></p>
+<p>Press the <code>Button</code> again and <code>step</code> increments to 2. This is the crucial step of displaying the <strong>SeatedMonkeyMatte.png</strong> file:</p>
+<pre><code class="lang-csharp">public partial class BrickWallCompositingPage : ContentPage
+{
+    ···
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        ···
+        // Draw matte to exclude monkey's surroundings
+        if (step &gt;= 2)
+        {
+            using (SKPaint paint = new SKPaint())
+            {
+                paint.BlendMode = SKBlendMode.DstIn;
+                canvas.DrawBitmap(matteBitmap, x, y, paint);
+            }
+        }
+        ···
+    }
+}
+</code></pre>
+<p>The blend mode is <code>SKBlendMode.DstIn</code>, which means that the destination will be preserved in areas corresponding to non-transparent areas of the source. The remainder of the destination rectangle corresponding to the original bitmap becomes transparent:</p>
+<p><a href="porter-duff-images/BrickWallCompositing2-Large.png#lightbox"><img src="porter-duff-images/BrickWallCompositing2.png" alt="Brick-Wall Compositing Step 2" title="Brick-Wall Compositing Step 2"></a></p>
+<p>The background has been removed.</p>
+<p>The next step is to draw a rectangle that resembles a sidewalk that the monkey is sitting on. The appearance of this sidewalk is based on a composition of two shaders: a solid color shader and a Perlin noise shader:</p>
+<pre><code class="lang-csharp">public partial class BrickWallCompositingPage : ContentPage
+{
+    ···
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        ···
+        const float sidewalkHeight = 80;
+        SKRect rect = new SKRect(info.Rect.Left, info.Rect.Bottom - sidewalkHeight,
+                                 info.Rect.Right, info.Rect.Bottom);
+
+        // Draw gravel sidewalk for monkey to sit on
+        if (step &gt;= 3)
+        {
+            using (SKPaint paint = new SKPaint())
+            {
+                paint.Shader = SKShader.CreateCompose(
+                                    SKShader.CreateColor(SKColors.SandyBrown),
+                                    SKShader.CreatePerlinNoiseTurbulence(0.1f, 0.3f, 1, 9));
+
+                paint.BlendMode = SKBlendMode.DstOver;
+                canvas.DrawRect(rect, paint);
+            }
+        }
+        ···
+    }
+}
+</code></pre>
+<p>Because this sidewalk must go behind the monkey, the blend mode is <code>DstOver</code>. The destination appears only where the background is transparent:</p>
+<p><a href="porter-duff-images/BrickWallCompositing3-Large.png#lightbox"><img src="porter-duff-images/BrickWallCompositing3.png" alt="Brick-Wall Compositing Step 3" title="Brick-Wall Compositing Step 3"></a></p>
+<p>The final step is adding a brick wall. The program uses the brick-wall bitmap tile available as the static property <code>BrickWallTile</code> in the <code>AlgorithmicBrickWallPage</code> class. A translation transform is added to the <code>SKShader.CreateBitmap</code> call to shift the tiles so that the bottom row is a full tile:</p>
+<pre><code class="lang-csharp">public partial class BrickWallCompositingPage : ContentPage
+{
+    ···
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        ···
+        // Draw bitmap tiled brick wall behind monkey
+        if (step &gt;= 4)
+        {
+            using (SKPaint paint = new SKPaint())
+            {
+                SKBitmap bitmap = AlgorithmicBrickWallPage.BrickWallTile;
+                float yAdjust = (info.Height - sidewalkHeight) % bitmap.Height;
+
+                paint.Shader = SKShader.CreateBitmap(bitmap,
+                                                     SKShaderTileMode.Repeat,
+                                                     SKShaderTileMode.Repeat,
+                                                     SKMatrix.MakeTranslation(0, yAdjust));
+                paint.BlendMode = SKBlendMode.DstOver;
+                canvas.DrawRect(info.Rect, paint);
+            }
+        }
+    }
+}
+</code></pre>
+<p>For convenience, the <code>DrawRect</code> call displays this shader over the entire canvas, but the <code>DstOver</code> mode limits the output to only the area of the canvas that is still transparent:</p>
+<p><a href="porter-duff-images/BrickWallCompositing4-Large.png#lightbox"><img src="porter-duff-images/BrickWallCompositing4.png" alt="Brick-Wall Compositing Step 4" title="Brick-Wall Compositing Step 4"></a></p>
+<p>Obviously there are other ways to compose this scene. It could be built up starting at the background and progressing to the foreground. But using the blend modes gives you more flexibility. In particular, the use of the matte allows the background of a bitmap to be excluded from the composed scene.</p>
+<p>As you learned in the article <a href="../../curves/clipping.html">Clipping with Paths and Regions</a>, the <code>SKCanvas</code> class defines three types of clipping, corresponding to the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.cliprect"><code>ClipRect</code></a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.clippath"><code>ClipPath</code></a>, and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.clipregion"><code>ClipRegion</code></a> methods. The Porter-Duff blend modes add another type of clipping, which allows restricting an image to anything that you can draw, including bitmaps. The matte used in <strong>Brick-Wall Compositing</strong> essentially defines a clipping area.</p>
+<h2 id="gradient-transparency-and-transitions">Gradient transparency and transitions</h2>
+<p>The examples of the Porter-Duff blend modes shown earlier in this article have all involved images that consisted of opaque pixels and transparent pixels, but not partially transparent pixels. The blend-mode functions are defined for those pixels as well. The following table is a more formal definition of the Porter-Duff blend modes that uses notation found in the Skia <a href="https://skia.googlesource.com/skia.git/+/dfec731dbfcf2565007ca94d85f7297f4f468aee/site/user/api/SkBlendMode_Reference.md"><strong>SkBlendMode Reference</strong></a>. (Because <strong>SkBlendMode Reference</strong> is a Skia reference, C++ syntax is used.)</p>
+<p>Conceptually, the red, green, blue, and alpha components of each pixel are converted from bytes to floating-point numbers in the range of 0 to 1. For the alpha channel, 0 is fully transparent and 1 is fully opaque</p>
+<p>The notation in the table below uses the following abbreviations:</p>
+<ul>
+<li><strong>Da</strong> is the destination alpha channel</li>
+<li><strong>Dc</strong> is the destination RGB color</li>
+<li><strong>Sa</strong> is the source alpha channel</li>
+<li><strong>Sc</strong> is the source RGB color</li>
+</ul>
+<p>The RGB colors are pre-multiplied by the alpha value. For example, if <strong>Sc</strong> represents pure red but <strong>Sa</strong> is 0x80, then the RGB color is <strong>(0x80, 0, 0)</strong>. If <strong>Sa</strong> is 0, then all the RGB components are also zero.</p>
+<p>The result is shown in brackets with the alpha channel and the RGB color separated by a comma: <strong>[alpha, color]</strong>. For the color, the calculation is performed separately for the red, green, and blue components:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Operation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Clear</code></td>
+<td>[0, 0]</td>
+</tr>
+<tr>
+<td><code>Src</code></td>
+<td>[Sa, Sc]</td>
+</tr>
+<tr>
+<td><code>Dst</code></td>
+<td>[Da, Dc]</td>
+</tr>
+<tr>
+<td><code>SrcOver</code></td>
+<td>[Sa + Da·(1 – Sa), Sc + Dc·(1 – Sa)</td>
+</tr>
+<tr>
+<td><code>DstOver</code></td>
+<td>[Da + Sa·(1 – Da), Dc + Sc·(1 – Da)</td>
+</tr>
+<tr>
+<td><code>SrcIn</code></td>
+<td>[Sa·Da, Sc·Da]</td>
+</tr>
+<tr>
+<td><code>DstIn</code></td>
+<td>[Da·Sa, Dc·Sa]</td>
+</tr>
+<tr>
+<td><code>SrcOut</code></td>
+<td>[Sa·(1 – Da), Sc·(1 – Da)]</td>
+</tr>
+<tr>
+<td><code>DstOut</code></td>
+<td>[Da·(1 – Sa), Dc·(1 – Sa)]</td>
+</tr>
+<tr>
+<td><code>SrcATop</code></td>
+<td>[Da, Sc·Da + Dc·(1 – Sa)]</td>
+</tr>
+<tr>
+<td><code>DstATop</code></td>
+<td>[Sa, Dc·Sa + Sc·(1 – Da)]</td>
+</tr>
+<tr>
+<td><code>Xor</code></td>
+<td>[Sa + Da – 2·Sa·Da, Sc·(1 – Da) + Dc·(1 – Sa)]</td>
+</tr>
+<tr>
+<td><code>Plus</code></td>
+<td>[Sa + Da, Sc + Dc]</td>
+</tr>
+<tr>
+<td><code>Modulate</code></td>
+<td>[Sa·Da, Sc·Dc]</td>
+</tr>
+</tbody>
+</table>
+<p>These operations are easier to analyze when <strong>Da</strong> and <strong>Sa</strong> are either 0 or 1. For example, for the default <code>SrcOver</code> mode, if <strong>Sa</strong> is 0, then <strong>Sc</strong> is also 0, and the result is <strong>[Da, Dc]</strong>, the destination alpha and color. If <strong>Sa</strong> is 1, then the result is <strong>[Sa, Sc]</strong>, the source alpha and color, or <strong>[1, Sc]</strong>.</p>
+<p>The <code>Plus</code> and <code>Modulate</code> modes are a little different from the others in that new colors can result from the combination of the source and the destination. The <code>Plus</code> mode can be interpreted either with byte components or floating-point components. In the <strong>Porter-Duff Grid</strong> page shown earlier, the destination color is <strong>(0xC0, 0x80, 0x00)</strong> and the source color is <strong>(0x00, 0x80, 0xC0)</strong>. Each pair of components is added but the sum is clamped at 0xFF. The result is the color <strong>(0xC0, 0xFF, 0xC0)</strong>. That's the color shown in the intersection.</p>
+<p>For the <code>Modulate</code> mode, the RGB values must be converted to floating-point. The destination color is <strong>(0.75, 0.5, 0)</strong> and the source is <strong>(0, 0.5, 0.75)</strong>. The RGB components are each multiplied together, and the result is <strong>(0, 0.25, 0)</strong>. That's the color shown in the intersection in the <strong>Porter-Duff Grid</strong> page for this mode.</p>
+<p>The <strong>Porter-Duff Transparency</strong> page allows you to examine how the Porter-Duff blend modes operate on graphical objects that are partially transparent. The XAML file includes a <code>Picker</code> with the Porter-Duff modes:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
+             xmlns:skiaviews=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.PorterDuffTransparencyPage&quot;
+             Title=&quot;Porter-Duff Transparency&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;skiaviews:SKCanvasView x:Name=&quot;canvasView&quot;
+                                VerticalOptions=&quot;FillAndExpand&quot;
+                                PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Picker x:Name=&quot;blendModePicker&quot;
+                Title=&quot;Blend Mode&quot;
+                Margin=&quot;10&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKBlendMode}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Clear&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Src&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Dst&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.SrcOver&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.DstOver&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.SrcIn&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.DstIn&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.SrcOut&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.DstOut&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.SrcATop&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.DstATop&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Xor&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Plus&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Modulate&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+
+            &lt;Picker.SelectedIndex&gt;
+                3
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file fills two rectangles of the same size using a linear gradient. The destination gradient is from the upper right to the lower left. It is brownish in the upper-right corner but then towards the center begins fading to transparent, and is transparent in the lower-left corner.</p>
+<p>The source rectangle has a gradient from the upper left to the lower right. The upper-left corner is bluish but again fades to transparent, and is transparent in the lower-right corner.</p>
+<pre><code class="lang-csharp">public partial class PorterDuffTransparencyPage : ContentPage
+{
+    public PorterDuffTransparencyPage()
+    {
+        InitializeComponent();
+    }
+
+    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Make square display rectangle smaller than canvas
+        float size = 0.9f * Math.Min(info.Width, info.Height);
+        float x = (info.Width - size) / 2;
+        float y = (info.Height - size) / 2;
+        SKRect rect = new SKRect(x, y, x + size, y + size);
+
+        using (SKPaint paint = new SKPaint())
+        {
+            // Draw destination
+            paint.Shader = SKShader.CreateLinearGradient(
+                                new SKPoint(rect.Right, rect.Top),
+                                new SKPoint(rect.Left, rect.Bottom),
+                                new SKColor[] { new SKColor(0xC0, 0x80, 0x00),
+                                                new SKColor(0xC0, 0x80, 0x00, 0) },
+                                new float[] { 0.4f, 0.6f },
+                                SKShaderTileMode.Clamp);
+
+            canvas.DrawRect(rect, paint);
+
+            // Draw source
+            paint.Shader = SKShader.CreateLinearGradient(
+                                new SKPoint(rect.Left, rect.Top),
+                                new SKPoint(rect.Right, rect.Bottom),
+                                new SKColor[] { new SKColor(0x00, 0x80, 0xC0),
+                                                new SKColor(0x00, 0x80, 0xC0, 0) },
+                                new float[] { 0.4f, 0.6f },
+                                SKShaderTileMode.Clamp);
+
+            // Get the blend mode from the picker
+            paint.BlendMode = blendModePicker.SelectedIndex == -1 ? 0 :
+                                    (SKBlendMode)blendModePicker.SelectedItem;
+
+            canvas.DrawRect(rect, paint);
+
+            // Stroke surrounding rectangle
+            paint.Shader = null;
+            paint.BlendMode = SKBlendMode.SrcOver;
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = SKColors.Black;
+            paint.StrokeWidth = 3;
+            canvas.DrawRect(rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>This program demonstrates that the Porter-Duff blend modes can be used with graphic objects other than bitmaps. However, the source must include a transparent area. This is the case here because the gradient fills the rectangle, but part of the gradient is transparent.</p>
+<p>Here are three examples:</p>
+<p><a href="porter-duff-images/PorterDuffTransparency-Large.png#lightbox"><img src="porter-duff-images/PorterDuffTransparency.png" alt="Porter-Duff Transparency" title="Porter-Duff Transparency"></a></p>
+<p>The configuration of the destination and source is very similar to the diagrams shown in page 255 of the original Porter-Duff <a href="https://graphics.pixar.com/library/Compositing/paper.pdf"><em>Compositing Digital Images</em></a> paper, but this page demonstrates that the blend modes are well-behaved for areas of partial transparency.</p>
+<p>You can use transparent gradients for some different effects. One possibility is masking, which is similar to the technique shown in the <a href="../shaders/circular-gradients.html#radial-gradients-for-masking"><strong>Radial gradients for masking</strong></a> section of the <strong>SkiaSharp circular gradients page</strong>. Much of the <strong>Compositing Mask</strong> page is similar to that earlier program. It loads a bitmap resource and determines a rectangle in which to display it. A radial gradient is created based on a pre-determined center and radius:</p>
+<pre><code class="lang-csharp">public class CompositingMaskPage : ContentPage
+{
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+        typeof(CompositingMaskPage),
+        &quot;SkiaSharpFormsDemos.Media.MountainClimbers.jpg&quot;);
+
+    static readonly SKPoint CENTER = new SKPoint(180, 300);
+    static readonly float RADIUS = 120;
+
+    public CompositingMaskPage ()
+    {
+        Title = &quot;Compositing Mask&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Find rectangle to display bitmap
+        float scale = Math.Min((float)info.Width / bitmap.Width,
+                               (float)info.Height / bitmap.Height);
+
+        SKRect rect = SKRect.Create(scale * bitmap.Width, scale * bitmap.Height);
+
+        float x = (info.Width - rect.Width) / 2;
+        float y = (info.Height - rect.Height) / 2;
+        rect.Offset(x, y);
+
+        // Display bitmap in rectangle
+        canvas.DrawBitmap(bitmap, rect);
+
+        // Adjust center and radius for scaled and offset bitmap
+        SKPoint center = new SKPoint(scale * CENTER.X + x,
+                                        scale * CENTER.Y + y);
+        float radius = scale * RADIUS;
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Shader = SKShader.CreateRadialGradient(
+                                center,
+                                radius,
+                                new SKColor[] { SKColors.Black,
+                                                SKColors.Transparent },
+                                new float[] { 0.6f, 1 },
+                                SKShaderTileMode.Clamp);
+
+            paint.BlendMode = SKBlendMode.DstIn;
+
+            // Display rectangle using that gradient and blend mode
+            canvas.DrawRect(rect, paint);
+        }
+
+        canvas.DrawColor(SKColors.Pink, SKBlendMode.DstOver);
+    }
+}
+</code></pre>
+<p>The difference with this program is that the gradient begins with black in the center and ends with transparency. It is displayed on the bitmap with a blend mode of <code>DstIn</code>, which shows the destination only in the areas of the source that are not transparent.</p>
+<p>After the <code>DrawRect</code> call, the entire surface of the canvas is transparent except for the circle defined by the radial gradient. A final call is made:</p>
+<pre><code class="lang-csharp">canvas.DrawColor(SKColors.Pink, SKBlendMode.DstOver);
+</code></pre>
+<p>All the transparent areas of the canvas are colored pink:</p>
+<p><a href="porter-duff-images/CompositingMask-Large.png#lightbox"><img src="porter-duff-images/CompositingMask.png" alt="Compositing Mask" title="Compositing Mask"></a></p>
+<p>You can also use Porter-Duff modes and partially transparent gradients for transitions from one image to another. The <strong>Gradient Transitions</strong> page includes a <code>Slider</code> to indicate a progress level in the transition from 0 to 1, and a <code>Picker</code> to choose the type of transition you want:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.GradientTransitionsPage&quot;
+             Title=&quot;Gradient Transitions&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;progressSlider&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference progressSlider},
+                              Path=Value,
+                              StringFormat='Progress = {0:F2}'}&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+
+        &lt;Picker x:Name=&quot;transitionPicker&quot;
+                Title=&quot;Transition&quot;
+                Margin=&quot;10&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot; /&gt;
+
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file loads two bitmap resources to demonstrate the transition. These are the same two images used in the <strong>Bitmap Dissolve</strong> page earlier in this article. The code also defines an enumeration with three members corresponding to three types of gradients — linear, radial, and sweep. These values are loaded into the <code>Picker</code>:</p>
+<pre><code class="lang-csharp">public partial class GradientTransitionsPage : ContentPage
+{
+    SKBitmap bitmap1 = BitmapExtensions.LoadBitmapResource(
+        typeof(GradientTransitionsPage),
+        &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+
+    SKBitmap bitmap2 = BitmapExtensions.LoadBitmapResource(
+        typeof(GradientTransitionsPage),
+        &quot;SkiaSharpFormsDemos.Media.FacePalm.jpg&quot;);
+
+    enum TransitionMode
+    {
+        Linear,
+        Radial,
+        Sweep
+    };
+
+    public GradientTransitionsPage ()
+    {
+        InitializeComponent ();
+
+        foreach (TransitionMode mode in Enum.GetValues(typeof(TransitionMode)))
+        {
+            transitionPicker.Items.Add(mode.ToString());
+        }
+
+        transitionPicker.SelectedIndex = 0;
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+    ···
+}
+</code></pre>
+<p>The code-behind file creates three <code>SKPaint</code> objects. The <code>paint0</code> object doesn't use a blend mode. This paint object is used to draw a rectangle with a gradient that goes from black to transparent as indicated in the <code>colors</code> array. The <code>positions</code> array is based on the position of the <code>Slider</code>, but adjusted somewhat. If the <code>Slider</code> is at its minimum or maximum, the <code>progress</code> values are 0 or 1, and one of the two bitmaps should be fully visible. The <code>positions</code> array must be set accordingly for those values.</p>
+<p>If the <code>progress</code> value is 0, then the <code>positions</code> array contains the values -0.1 and 0. SkiaSharp will adjust that first value to be equal to 0, which means that the gradient is black only at 0 and transparent otherwise. When <code>progress</code> is 0.5, then the array contains the values 0.45 and 0.55. The gradient is black from 0 to 0.45, then transitions to transparent, and is fully transparent from 0.55 to 1. When <code>progress</code> is 1, the <code>positions</code> array is 1 and 1.1, which means the gradient is black from 0 to 1.</p>
+<p>The <code>colors</code> and <code>position</code> arrays are both used in the three methods of <code>SKShader</code> that create a gradient. Only one of these shaders is created based on the <code>Picker</code> selection:</p>
+<pre><code class="lang-csharp">public partial class GradientTransitionsPage : ContentPage
+{
+    ···
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Assume both bitmaps are square for display rectangle
+        float size = Math.Min(info.Width, info.Height);
+        SKRect rect = SKRect.Create(size, size);
+        float x = (info.Width - size) / 2;
+        float y = (info.Height - size) / 2;
+        rect.Offset(x, y);
+
+        using (SKPaint paint0 = new SKPaint())
+        using (SKPaint paint1 = new SKPaint())
+        using (SKPaint paint2 = new SKPaint())
+        {
+            SKColor[] colors = new SKColor[] { SKColors.Black,
+                                               SKColors.Transparent };
+
+            float progress = (float)progressSlider.Value;
+
+            float[] positions = new float[]{ 1.1f * progress - 0.1f,
+                                             1.1f * progress };
+
+            switch ((TransitionMode)transitionPicker.SelectedIndex)
+            {
+                case TransitionMode.Linear:
+                    paint0.Shader = SKShader.CreateLinearGradient(
+                                        new SKPoint(rect.Left, 0),
+                                        new SKPoint(rect.Right, 0),
+                                        colors,
+                                        positions,
+                                        SKShaderTileMode.Clamp);
+                    break;
+
+                case TransitionMode.Radial:
+                    paint0.Shader = SKShader.CreateRadialGradient(
+                                        new SKPoint(rect.MidX, rect.MidY),
+                                        (float)Math.Sqrt(Math.Pow(rect.Width / 2, 2) +
+                                                         Math.Pow(rect.Height / 2, 2)),
+                                        colors,
+                                        positions,
+                                        SKShaderTileMode.Clamp);
+                    break;
+
+                case TransitionMode.Sweep:
+                    paint0.Shader = SKShader.CreateSweepGradient(
+                                        new SKPoint(rect.MidX, rect.MidY),
+                                        colors,
+                                        positions);
+                    break;
+            }
+
+            canvas.DrawRect(rect, paint0);
+
+            paint1.BlendMode = SKBlendMode.SrcOut;
+            canvas.DrawBitmap(bitmap1, rect, paint1);
+
+            paint2.BlendMode = SKBlendMode.DstOver;
+            canvas.DrawBitmap(bitmap2, rect, paint2);
+        }
+    }
+}
+</code></pre>
+<p>That gradient is displayed in the rectangle without a blend mode. After that <code>DrawRect</code> call, the canvas simply contains a gradient from black to transparent. The amount of black increases with higher <code>Slider</code> values.</p>
+<p>In the final four statements of the <code>PaintSurface</code> handler, the two bitmaps are displayed. The <code>SrcOut</code> blend mode means that the first bitmap is displayed only in the transparent areas of the background. The <code>DstOver</code> mode for the second bitmap means that the second bitmap is displayed only in those areas where the first bitmap is not displayed.</p>
+<p>The following screenshots show the three different transitions types, each at the 50% mark:</p>
+<p><a href="porter-duff-images/GradientTransitions-Large.png#lightbox"><img src="porter-duff-images/GradientTransitions.png" alt="Gradient Transitions" title="Gradient Transitions"></a></p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

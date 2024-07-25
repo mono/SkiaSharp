@@ -1,0 +1,630 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>The SkiaSharp circular gradients | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="The SkiaSharp circular gradients | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../../images/logo.ico">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../TOC.html">
+    <meta property="docfx:tocrel" content="../../TOC.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="the-skiasharp-circular-gradients">The SkiaSharp circular gradients</h1>
+
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader"><code>SKShader</code></a> class defines static methods to create four different types of gradients. The <a href="linear-gradient.html"><strong>SkiaSharp linear gradient</strong></a> article discusses the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createlineargradient"><code>CreateLinearGradient</code></a> method. This article covers the other three types of gradients, all of which are based on circles.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createradialgradient"><code>CreateRadialGradient</code></a> method creates a gradient that emanates from the center of a circle:</p>
+<p><img src="circular-gradients-images/RadialGradientSample.png" alt="Radial Gradient Sample"></p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createsweepgradient"><code>CreateSweepGradient</code></a> method creates a gradient that sweeps around the center of a circle:</p>
+<p><img src="circular-gradients-images/SweepGradientSample.png" alt="Sweep Gradient Sample"></p>
+<p>The third type of gradient is quite unusual. It is called the two-point conical gradient and is defined by the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createtwopointconicalgradient"><code>CreateTwoPointConicalGradient</code></a> method. The gradient extends from one circle to another:</p>
+<p><img src="circular-gradients-images/ConicalGradientSample.png" alt="Conical Gradient Sample"></p>
+<p>If the two circles are different sizes, then the gradient takes the form of a cone.</p>
+<p>This article explores these gradients in more detail.</p>
+<h2 id="the-radial-gradient">The radial gradient</h2>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createradialgradient#skiasharp-skshader-createradialgradient(skiasharp-skpoint-system-single-skiasharp-skcolor()-system-single()-skiasharp-skshadertilemode)"><code>CreateRadialGradient</code></a> method has the following syntax:</p>
+<pre><code class="lang-csharp">public static SKShader CreateRadialGradient (SKPoint center,
+                                             Single radius,
+                                             SKColor[] colors,
+                                             Single[] colorPos,
+                                             SKShaderTileMode mode)
+</code></pre>
+<p>A <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createradialgradient#skiasharp-skshader-createradialgradient(skiasharp-skpoint-system-single-skiasharp-skcolor()-system-single()-skiasharp-skshadertilemode-skiasharp-skmatrix)"><code>CreateRadialGradient</code></a> overload also includes a transform matrix parameter.</p>
+<p>The first two arguments specify the center of a circle and a radius. The gradient begins at that center and extends outward for <code>radius</code> pixels. What happens beyond <code>radius</code> depends on the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshadertilemode"><code>SKShaderTileMode</code></a> argument. The <code>colors</code> parameter is an array of two or more colors (just as in the linear gradient methods), and <code>colorPos</code> is an array of integers in the range of 0 to 1. These integers indicate the relative positions of the colors along that <code>radius</code> line. You can set that argument to <code>null</code> to equally space the colors.</p>
+<p>If you use <code>CreateRadialGradient</code> to fill a circle, you can set the center of the gradient to the center of the circle, and the radius of the gradient to the radius of the circle. In that case, the <code>SKShaderTileMode</code> argument has no effect on the rendering of the gradient. But if the area filled by the gradient is larger than the circle defined by the gradient, then the <code>SKShaderTileMode</code> argument has a profound effect on what happens outside the circle.</p>
+<p>The effect of <code>SKShaderMode</code> is demonstrated in the <strong>Radial Gradient</strong> page in the sample. The XAML file for this page instantiates a <code>Picker</code> that allows you to select one of the three members of the <code>SKShaderTileMode</code> enumeration:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.RadialGradientPage&quot;
+             Title=&quot;Radial Gradient&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;skiaforms:SKCanvasView x:Name=&quot;canvasView&quot;
+                                Grid.Row=&quot;0&quot;
+                                PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Picker x:Name=&quot;tileModePicker&quot;
+                Grid.Row=&quot;1&quot;
+                Title=&quot;Shader Tile Mode&quot;
+                Margin=&quot;10&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKShaderTileMode}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKShaderTileMode.Clamp&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKShaderTileMode.Repeat&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKShaderTileMode.Mirror&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file colors the entire canvas with a radial gradient. The center of the gradient is set to the center of the canvas, and the radius is set to 100 pixels. The gradient consists of just two colors, black and white:</p>
+<pre><code class="lang-csharp">public partial class RadialGradientPage : ContentPage
+{
+    public RadialGradientPage ()
+    {
+        InitializeComponent ();
+    }
+
+    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        SKShaderTileMode tileMode =
+            (SKShaderTileMode)(tileModePicker.SelectedIndex == -1 ?
+                                        0 : tileModePicker.SelectedItem);
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Shader = SKShader.CreateRadialGradient(
+                                new SKPoint(info.Rect.MidX, info.Rect.MidY),
+                                100,
+                                new SKColor[] { SKColors.Black, SKColors.White },
+                                null,
+                                tileMode);
+
+            canvas.DrawRect(info.Rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>This code creates a gradient with black at the center, gradually fading to white 100 pixels from the center. What happens beyond that radius depends on the <code>SKShaderTileMode</code> argument:</p>
+<p><a href="circular-gradients-images/RadialGradient-Large.png#lightbox"><img src="circular-gradients-images/RadialGradient.png" alt="Radial Gradient" title="Radial Gradient"></a></p>
+<p>In all three cases, the gradient fills the canvas. On the iOS screen at the left, the gradient beyond the radius continues with the last color, which is white. That's the result of <code>SKShaderTileMode.Clamp</code>. The Android screen shows the effect of <code>SKShaderTileMode.Repeat</code>: At 100 pixels from the center, the gradient begins again with the first color, which is black. The gradient repeats every 100 pixels of radius.</p>
+<p>The Universal Windows Platform screen at the right shows how <code>SKShaderTileMode.Mirror</code> causes the gradients to alternate directions. The first gradient is from black at the center to white at a radius of 100 pixels. The next is white from the 100-pixel radius to black at a 200-pixel radius, and the next gradient is reversed again.</p>
+<p>You can use more than two colors in a radial gradient. The <strong>Rainbow Arc Gradient</strong> sample creates an array of eight colors corresponding to the colors of the rainbow and ending with red, and also an array of eight position values:</p>
+<pre><code class="lang-csharp">public class RainbowArcGradientPage : ContentPage
+{
+    public RainbowArcGradientPage ()
+    {
+        Title = &quot;Rainbow Arc Gradient&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPaint paint = new SKPaint())
+        {
+            float rainbowWidth = Math.Min(info.Width, info.Height) / 4f;
+
+            // Center of arc and gradient is lower-right corner
+            SKPoint center = new SKPoint(info.Width, info.Height);
+
+            // Find outer, inner, and middle radius
+            float outerRadius = Math.Min(info.Width, info.Height);
+            float innerRadius = outerRadius - rainbowWidth;
+            float radius = outerRadius - rainbowWidth / 2;
+
+            // Calculate the colors and positions
+            SKColor[] colors = new SKColor[8];
+            float[] positions = new float[8];
+
+            for (int i = 0; i &lt; colors.Length; i++)
+            {
+                colors[i] = SKColor.FromHsl(i * 360f / 7, 100, 50);
+                positions[i] = (i + (7f - i) * innerRadius / outerRadius) / 7f;
+            }
+
+            // Create sweep gradient based on center and outer radius
+            paint.Shader = SKShader.CreateRadialGradient(center,
+                                                         outerRadius,
+                                                         colors,
+                                                         positions,
+                                                         SKShaderTileMode.Clamp);
+            // Draw a circle with a wide line
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = rainbowWidth;
+
+            canvas.DrawCircle(center, radius, paint);
+        }
+    }
+}
+</code></pre>
+<p>Suppose the minimum of the width and height of the canvas is 1000, which means that the <code>rainbowWidth</code> value is 250. The <code>outerRadius</code> and <code>innerRadius</code> values are set to 1000 and 750, respectively. These values are used for calculating the <code>positions</code> array; the eight values range from 0.75f to 1. The <code>radius</code> value is used for stroking the circle. The value of 875 means that the 250-pixel stroke width extends between the radius of 750 pixels and the radius of 1000 pixels:</p>
+<p><a href="circular-gradients-images/RainbowArcGradient-Large.png#lightbox"><img src="circular-gradients-images/RainbowArcGradient.png" alt="Rainbow Arc Gradient" title="Rainbow Arc Gradient"></a></p>
+<p>If you filled the whole canvas with this gradient, you'd see that it's red within the inner radius. This is because the <code>positions</code> array doesn't start with 0. The first color is used for offsets of 0 through the first array value. The gradient is also red beyond the outer radius. That's the result of the <code>Clamp</code> tile mode. Because the gradient is used for stroking a thick line, these red areas aren't visible.</p>
+<h2 id="radial-gradients-for-masking">Radial gradients for masking</h2>
+<p>Like linear gradients, radial gradients can incorporate transparent or partially transparent colors. This feature is useful for a process called <em>masking</em>, which hides part of an image to accentuate another part of the image.</p>
+<p>The <strong>Radial Gradient Mask</strong> page shows an example. The program loads one of the resource bitmaps. The <code>CENTER</code> and <code>RADIUS</code> fields were determined from an examination of the bitmap and reference an area that should be highlighted. The <code>PaintSurface</code> handler begins by calculating a rectangle to display the bitmap and then displays it in that rectangle:</p>
+<pre><code class="lang-csharp">public class RadialGradientMaskPage : ContentPage
+{
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+        typeof(RadialGradientMaskPage),
+        &quot;SkiaSharpFormsDemos.Media.MountainClimbers.jpg&quot;);
+
+    static readonly SKPoint CENTER = new SKPoint(180, 300);
+    static readonly float RADIUS = 120;
+
+    public RadialGradientMaskPage ()
+    {
+        Title = &quot;Radial Gradient Mask&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Find rectangle to display bitmap
+        float scale = Math.Min((float)info.Width / bitmap.Width,
+                                (float)info.Height / bitmap.Height);
+
+        SKRect rect = SKRect.Create(scale * bitmap.Width, scale * bitmap.Height);
+
+        float x = (info.Width - rect.Width) / 2;
+        float y = (info.Height - rect.Height) / 2;
+        rect.Offset(x, y);
+
+        // Display bitmap in rectangle
+        canvas.DrawBitmap(bitmap, rect);
+
+        // Adjust center and radius for scaled and offset bitmap
+        SKPoint center = new SKPoint(scale * CENTER.X + x,
+                                     scale * CENTER.Y + y);
+        float radius = scale * RADIUS;
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Shader = SKShader.CreateRadialGradient(
+                                center,
+                                radius,
+                                new SKColor[] { SKColors.Transparent,
+                                                SKColors.White },
+                                new float[] { 0.6f, 1 },
+                                SKShaderTileMode.Clamp);
+
+            // Display rectangle using that gradient
+            canvas.DrawRect(rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>After drawing the bitmap, some simple code converts <code>CENTER</code> and <code>RADIUS</code> to <code>center</code> and <code>radius</code>, which refer to the highlighted area in the bitmap that has been scaled and shifted for display. These values are used to create a radial gradient with that center and radius. The two colors begin at transparent in the center and for the first 60% of the radius. The gradient then fades to white:</p>
+<p><a href="circular-gradients-images/RadialGradientMask-Large.png#lightbox"><img src="circular-gradients-images/RadialGradientMask.png" alt="Radial Gradient Mask" title="Radial Gradient Mask"></a></p>
+<p>This approach is not the best way to mask a bitmap. The problem is that the mask mostly has a color of white, which was chosen to match the background of the canvas. If the background is some other color — or perhaps a gradient itself — it won't match. A better approach to masking is shown in the article <a href="../blend-modes/porter-duff.html">SkiaSharp Porter-Duff blend modes</a>.</p>
+<h2 id="radial-gradients-for-specular-highlights">Radial gradients for specular highlights</h2>
+<p>When a light strikes a rounded surface, it reflects light in many directions, but some of the light bounces directly into the viewer's eye. This often creates the appearance of a fuzzy white area on the surface called a <em>specular highlight</em>.</p>
+<p>In three-dimensional graphics, specular highlights often result from the algorithms used to determine light paths and shading. In two-dimensional graphics, specular highlights are sometimes added to suggest the appearance of a 3D surface. A specular highlight can transform a flat red circle into a round red ball.</p>
+<p>The <strong>Radial Specular Highlight</strong> page uses a radial gradient to do precisely that. The <code>PaintSurface</code> handler beings by calculating a radius for the circle, and two <code>SKPoint</code> values — a <code>center</code> and an <code>offCenter</code> that is halfway between the center and the upper-left edge of the circle:</p>
+<pre><code class="lang-csharp">public class RadialSpecularHighlightPage : ContentPage
+{
+    public RadialSpecularHighlightPage()
+    {
+        Title = &quot;Radial Specular Highlight&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        float radius = 0.4f * Math.Min(info.Width, info.Height);
+        SKPoint center = new SKPoint(info.Rect.MidX, info.Rect.MidY);
+        SKPoint offCenter = center - new SKPoint(radius / 2, radius / 2);
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Shader = SKShader.CreateRadialGradient(
+                                offCenter,
+                                radius / 2,
+                                new SKColor[] { SKColors.White, SKColors.Red },
+                                null,
+                                SKShaderTileMode.Clamp);
+
+            canvas.DrawCircle(center, radius, paint);
+        }
+    }
+}
+</code></pre>
+<p>The <code>CreateRadialGradient</code> call creates a gradient that begins at that <code>offCenter</code> point with white and ends with red at a distance of half the radius. Here's what it looks like:</p>
+<p><a href="circular-gradients-images/RadialSpecularHighlight-Large.png#lightbox"><img src="circular-gradients-images/RadialSpecularHighlight.png" alt="Radial Specular Highlight" title="Radial Specular Highlight"></a></p>
+<p>If you look closely at this gradient, you might decide that it is flawed. The gradient is centered around a particular point, and you might wish it were a little less symmetrical to reflect the rounded surface. In that case, you might prefer the specular highlight shown below in the section <a href="#conical-gradients-for-specular-highlights"><strong>Conical gradients for specular highlights</strong></a>.</p>
+<h2 id="the-sweep-gradient">The sweep gradient</h2>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createsweepgradient#skiasharp-skshader-createsweepgradient(skiasharp-skpoint-skiasharp-skcolor()-system-single())"><code>CreateSweepGradient</code></a> method has the simplest syntax of all the gradient-creation methods:</p>
+<pre><code class="lang-csharp">public static SKShader CreateSweepGradient (SKPoint center,
+                                            SKColor[] colors,
+                                            Single[] colorPos)
+</code></pre>
+<p>It's just a center, an array of colors, and the color positions. The gradient begins at the right of the center point and sweeps 360 degrees clockwise around the center. Notice that there's no <code>SKShaderTileMode</code> parameter.</p>
+<p>A <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createsweepgradient#skiasharp-skshader-createsweepgradient(skiasharp-skpoint-skiasharp-skcolor()-system-single()-skiasharp-skmatrix)"><code>CreateSweepGradient</code></a> overload with a matrix transform parameter is also available. You can apply a rotation transform to the gradient to change the starting point. You can also apply a scale transform to change the direction from clockwise to counter-clockwise.</p>
+<p>The <strong>Sweep Gradient</strong> page uses a sweep gradient to color a circle with a stroke width of 50 pixels:</p>
+<p><a href="circular-gradients-images/SweepGradient-Large.png#lightbox"><img src="circular-gradients-images/SweepGradient.png" alt="Sweep Gradient" title="Sweep Gradient"></a></p>
+<p>The <code>SweepGradientPage</code> class defines an array of eight colors with different hue values. Notice that the array begins and ends with red (a hue value of 0 or 360), which appears at the far right in the screenshots:</p>
+<pre><code class="lang-csharp">public class SweepGradientPage : ContentPage
+{
+    bool drawBackground;
+
+    public SweepGradientPage ()
+    {
+        Title = &quot;Sweep Gradient&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+
+        TapGestureRecognizer tap = new TapGestureRecognizer();
+        tap.Tapped += (sender, args) =&gt;
+        {
+            drawBackground ^= true;
+            canvasView.InvalidateSurface();
+        };
+        canvasView.GestureRecognizers.Add(tap);
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPaint paint = new SKPaint())
+        {
+            // Define an array of rainbow colors
+            SKColor[] colors = new SKColor[8];
+
+            for (int i = 0; i &lt; colors.Length; i++)
+            {
+                colors[i] = SKColor.FromHsl(i * 360f / 7, 100, 50);
+            }
+
+            SKPoint center = new SKPoint(info.Rect.MidX, info.Rect.MidY);
+
+            // Create sweep gradient based on center of canvas
+            paint.Shader = SKShader.CreateSweepGradient(center, colors, null);
+
+            // Draw a circle with a wide line
+            const int strokeWidth = 50;
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = strokeWidth;
+
+            float radius = (Math.Min(info.Width, info.Height) - strokeWidth) / 2;
+            canvas.DrawCircle(center, radius, paint);
+
+            if (drawBackground)
+            {
+                // Draw the gradient on the whole canvas
+                paint.Style = SKPaintStyle.Fill;
+                canvas.DrawRect(info.Rect, paint);
+            }
+        }
+    }
+}
+</code></pre>
+<p>The program also implements a <code>TapGestureRecognizer</code> that enables some code at the end of the <code>PaintSurface</code> handler. This code uses the same gradient to fill the canvas:</p>
+<p><a href="circular-gradients-images/SweepGradientFull-Large.png#lightbox"><img src="circular-gradients-images/SweepGradientFull.png" alt="Sweep Gradient Full" title="Sweep Gradient Full"></a></p>
+<p>These screenshots demonstrate that the gradient fills whatever area is colored by it. If the gradient does not begin and end with the same color, there will be a discontinuity to the right of the center point.</p>
+<h2 id="the-two-point-conical-gradient">The two-point conical gradient</h2>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createtwopointconicalgradient#skiasharp-skshader-createtwopointconicalgradient(skiasharp-skpoint-system-single-skiasharp-skpoint-system-single-skiasharp-skcolor()-system-single()-skiasharp-skshadertilemode)"><code>CreateTwoPointConicalGradient</code></a> method has the following syntax:</p>
+<pre><code class="lang-csharp">public static SKShader CreateTwoPointConicalGradient (SKPoint startCenter,
+                                                      Single startRadius,
+                                                      SKPoint endCenter,
+                                                      Single endRadius,
+                                                      SKColor[] colors,
+                                                      Single[] colorPos,
+                                                      SKShaderTileMode mode)
+</code></pre>
+<p>The parameters begin with center points and radii for two circles, referred to as the <em>start</em> circle and <em>end</em> circle. The remaining three parameters are the same as for <code>CreateLinearGradient</code> and <code>CreateRadialGradient</code>. A <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createtwopointconicalgradient#skiasharp-skshader-createtwopointconicalgradient(skiasharp-skpoint-system-single-skiasharp-skpoint-system-single-skiasharp-skcolor()-system-single()-skiasharp-skshadertilemode-skiasharp-skmatrix)"><code>CreateTwoPointConicalGradient</code></a> overload includes a matrix transform.</p>
+<p>The gradient begins at the start circle and ends at the end circle. The <code>SKShaderTileMode</code> parameter governs what happens beyond the two circles. The two-point conical gradient is the only gradient that doesn't entirely fill an area. If the two circles have the same radius, the gradient is restricted to a rectangle with a width that is the same as the diameter of the circles. If the two circles have different radii, the gradient forms a cone.</p>
+<p>It's likely you'll want to experiment with the two-point conical gradient, so the <strong>Conical Gradient</strong> page derives from <code>InteractivePage</code> to allow two touch points to be moved around for the two circle radii:</p>
+<pre><code class="lang-xaml">&lt;local:InteractivePage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+                       xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+                       xmlns:local=&quot;clr-namespace:SkiaSharpFormsDemos&quot;
+                       xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
+                       xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+                       xmlns:tt=&quot;clr-namespace:TouchTracking&quot;
+                       x:Class=&quot;SkiaSharpFormsDemos.Effects.ConicalGradientPage&quot;
+                       Title=&quot;Conical Gradient&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Grid BackgroundColor=&quot;White&quot;
+              Grid.Row=&quot;0&quot;&gt;
+            &lt;skiaforms:SKCanvasView x:Name=&quot;canvasView&quot;
+                                    PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+            &lt;Grid.Effects&gt;
+                &lt;tt:TouchEffect Capture=&quot;True&quot;
+                                TouchAction=&quot;OnTouchEffectAction&quot; /&gt;
+            &lt;/Grid.Effects&gt;
+        &lt;/Grid&gt;
+
+        &lt;Picker x:Name=&quot;tileModePicker&quot;
+                Grid.Row=&quot;1&quot;
+                Title=&quot;Shader Tile Mode&quot;
+                Margin=&quot;10&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKShaderTileMode}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKShaderTileMode.Clamp&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKShaderTileMode.Repeat&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKShaderTileMode.Mirror&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+    &lt;/Grid&gt;
+&lt;/local:InteractivePage&gt;
+</code></pre>
+<p>The code-behind file defines the two <code>TouchPoint</code> objects with fixed radii of 50 and 100:</p>
+<pre><code class="lang-csharp">public partial class ConicalGradientPage : InteractivePage
+{
+    const int RADIUS1 = 50;
+    const int RADIUS2 = 100;
+
+    public ConicalGradientPage ()
+    {
+        touchPoints = new TouchPoint[2];
+
+        touchPoints[0] = new TouchPoint
+        {
+            Center = new SKPoint(100, 100),
+            Radius = RADIUS1
+        };
+
+        touchPoints[1] = new TouchPoint
+        {
+            Center = new SKPoint(300, 300),
+            Radius = RADIUS2
+        };
+
+        InitializeComponent();
+        baseCanvasView = canvasView;
+    }
+
+    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        SKColor[] colors = { SKColors.Red, SKColors.Green, SKColors.Blue };
+        SKShaderTileMode tileMode =
+            (SKShaderTileMode)(tileModePicker.SelectedIndex == -1 ?
+                                        0 : tileModePicker.SelectedItem);
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Shader = SKShader.CreateTwoPointConicalGradient(touchPoints[0].Center,
+                                                                  RADIUS1,
+                                                                  touchPoints[1].Center,
+                                                                  RADIUS2,
+                                                                  colors,
+                                                                  null,
+                                                                  tileMode);
+            canvas.DrawRect(info.Rect, paint);
+        }
+
+        // Display the touch points here rather than by TouchPoint
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = SKColors.Black;
+            paint.StrokeWidth = 3;
+
+            foreach (TouchPoint touchPoint in touchPoints)
+            {
+                canvas.DrawCircle(touchPoint.Center, touchPoint.Radius, paint);
+            }
+        }
+    }
+}
+</code></pre>
+<p>The <code>colors</code> array is red, green, and blue. The code towards the bottom of the <code>PaintSurface</code> handler draws the two touch points as black circles so that they don't obstruct the gradient.</p>
+<p>Notice that <code>DrawRect</code> call uses the gradient to color the entire canvas. In the general case, however, much of the canvas remains uncolored by the gradient. Here's the program showing three possible configurations:</p>
+<p><a href="circular-gradients-images/ConicalGradient-Large.png#lightbox"><img src="circular-gradients-images/ConicalGradient.png" alt="Conical Gradient" title="Conical Gradient"></a></p>
+<p>The iOS screen at the left shows the effect of the <code>SKShaderTileMode</code> setting of <code>Clamp</code>. The gradient begins with red inside the edge of the smaller circle that is opposite the side closest to the second circle. The <code>Clamp</code> value also causes red to continue to the point of the cone. The gradient ends with blue at the outer edge of the larger circle that is closest to the first circle, but continues with blue within that circle and beyond.</p>
+<p>The Android screen is similar but with an <code>SKShaderTileMode</code> of <code>Repeat</code>. Now it's clearer that the gradient begins inside the first circle and ends outside the second circle. The <code>Repeat</code> setting causes the gradient to repeat again with red inside the larger circle.</p>
+<p>The UWP screen shows what happens when the smaller circle is moved entirely inside the larger circle. The gradient stops being a cone and instead fills the whole area. The effect is similar to the radial gradient, but it's asymmetrical if the smaller circle is not exactly centered within the larger circle.</p>
+<p>You might doubt the practical usefulness of the gradient when one circle is nested in another, but it's ideal for a specular highlight.</p>
+<h2 id="conical-gradients-for-specular-highlights">Conical gradients for specular highlights</h2>
+<p>Earlier in this article you saw how to use a radial gradient to create a specular highlight. You can also use the two-point conical gradient for this purpose, and you might prefer how it looks:</p>
+<p><a href="circular-gradients-images/ConicalSpecularHighlight-Large.png#lightbox"><img src="circular-gradients-images/ConicalSpecularHighlight.png" alt="Conical Specular Highlight" title="Conical Specular Highlight"></a></p>
+<p>The asymmetrical appearance better suggests the rounded surface of the object.</p>
+<p>The drawing code in the <strong>Conical Specular Highlight</strong> page is the same as the <strong>Radial Specular Highlight</strong> page except for the shader:</p>
+<pre><code class="lang-csharp">public class ConicalSpecularHighlightPage : ContentPage
+{
+    ···
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        ···
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Shader = SKShader.CreateTwoPointConicalGradient(
+                                offCenter,
+                                1,
+                                center,
+                                radius,
+                                new SKColor[] { SKColors.White, SKColors.Red },
+                                null,
+                                SKShaderTileMode.Clamp);
+
+            canvas.DrawCircle(center, radius, paint);
+        }
+    }
+}
+</code></pre>
+<p>The two circles have centers of <code>offCenter</code> and <code>center</code>. The circle centered at <code>center</code> is associated with a radius that encompasses the entire ball, but the circle centered at <code>offCenter</code> has a radius of just one pixel. The gradient effectively begins at that point and ends at the edge of the ball.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

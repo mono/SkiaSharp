@@ -1,0 +1,229 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Pixels and Device-Independent Units | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Pixels and Device-Independent Units | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="pixels-and-device-independent-units">Pixels and Device-Independent Units</h1>
+
+<p><em>Explore the differences between SkiaSharp coordinates and Xamarin.Forms coordinates</em></p>
+<p>This article explores the differences in the coordinate system used in SkiaSharp and Xamarin.Forms. You can obtain information to convert between the two coordinate systems and also draw graphics that fill a particular area:</p>
+<p><img src="pixels-images/screenfillexample.png" alt="An oval that fills the screen"></p>
+<p>If you've been programming in Xamarin.Forms for a while, you might have a feel for Xamarin.Forms coordinates and sizes. The circles drawn in the two previous articles might seem a little small to you.</p>
+<p>Those circles <em>are</em> small in comparison with Xamarin.Forms sizes. By default, SkiaSharp draws in units of pixels while Xamarin.Forms bases coordinates and sizes on a device-independent unit established by the underlying platform. (More information on the Xamarin.Forms coordinate system can be found in <a href="../../xamarin-forms/creating-mobile-apps-xamarin-forms/summaries/chapter05.md">Chapter 5. Dealing with Sizes</a> of the book <em>Creating Mobile Apps with Xamarin.Forms</em>.)</p>
+<p>The page in the sample program entitled <strong>Surface Size</strong> uses SkiaSharp text output to show the size of the display surface from three different sources:</p>
+<ul>
+<li>The normal Xamarin.Forms <a href="xref:Xamarin.Forms.VisualElement.Width"><code>Width</code></a> and <a href="xref:Xamarin.Forms.VisualElement.Height"><code>Height</code></a> properties of the <code>SKCanvasView</code> object.</li>
+<li>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skcanvasview.canvassize#skiasharp-views-forms-skcanvasview-canvassize"><code>CanvasSize</code></a> property of the <code>SKCanvasView</code> object.</li>
+<li>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo.size#skiasharp-skimageinfo-size"><code>Size</code></a> property of the <code>SKImageInfo</code> value, which is consistent with the <code>Width</code> and <code>Height</code> properties used in the two previous pages.</li>
+</ul>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/SurfaceSizePage.cs"><code>SurfaceSizePage</code></a> class shows how to display these values. The constructor saves the <code>SKCanvasView</code> object as a field, so it can be accessed in the <code>PaintSurface</code> event handler:</p>
+<pre><code class="lang-csharp">SKCanvasView canvasView;
+
+public SurfaceSizePage()
+{
+    Title = &quot;Surface Size&quot;;
+
+    canvasView = new SKCanvasView();
+    canvasView.PaintSurface += OnCanvasViewPaintSurface;
+    Content = canvasView;
+}
+</code></pre>
+<p><code>SKCanvas</code> includes six different <code>DrawText</code> methods, but this <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawtext#skiasharp-skcanvas-drawtext(system-string-system-single-system-single-skiasharp-skpaint)"><code>DrawText</code></a> method is the simplest:</p>
+<pre><code class="lang-csharp">public void DrawText (String text, Single x, Single y, SKPaint paint)
+</code></pre>
+<p>You specify the text string, the X and Y coordinates where the text is to begin, and an <code>SKPaint</code> object. The X coordinate specifies where the left side of the text is positioned, but watch out: The Y coordinate specifies the position of the <em>baseline</em> of the text. If you've ever written by hand on lined paper, the baseline is the line on which characters sit, and below which descenders (such as those on the letters g, p, q, and y) descend.</p>
+<p>The <code>SKPaint</code> object allows you to specify the color of the text, the font family, and the text size. By default, the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.textsize#skiasharp-skpaint-textsize"><code>TextSize</code></a> property has a value of 12, which results in tiny text on high-resolution devices such as phones. In anything but the simplest applications, you'll also need some information on the size of the text you're displaying. The <code>SKPaint</code> class defines a <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.fontmetrics#skiasharp-skpaint-fontmetrics"><code>FontMetrics</code></a> property and several <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.measuretext#skiasharp-skpaint-measuretext(system-string)"><code>MeasureText</code></a> methods, but for less fancy needs, the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.fontspacing#skiasharp-skpaint-fontspacing"><code>FontSpacing</code></a> property provides a recommended value for spacing successive lines of text.</p>
+<p>The following <code>PaintSurface</code> handler creates an <code>SKPaint</code> object for a <code>TextSize</code> of 40 pixels, which is the desired vertical height of the text from the top of ascenders to the bottom of descenders. The <code>FontSpacing</code> value that the <code>SKPaint</code> object returns is a little larger than that, about 47 pixels.</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    SKPaint paint = new SKPaint
+    {
+        Color = SKColors.Black,
+        TextSize = 40
+    };
+
+    float fontSpacing = paint.FontSpacing;
+    float x = 20;               // left margin
+    float y = fontSpacing;      // first baseline
+    float indent = 100;
+
+    canvas.DrawText(&quot;SKCanvasView Height and Width:&quot;, x, y, paint);
+    y += fontSpacing;
+    canvas.DrawText(String.Format(&quot;{0:F2} x {1:F2}&quot;,
+                                  canvasView.Width, canvasView.Height),
+                    x + indent, y, paint);
+    y += fontSpacing * 2;
+    canvas.DrawText(&quot;SKCanvasView CanvasSize:&quot;, x, y, paint);
+    y += fontSpacing;
+    canvas.DrawText(canvasView.CanvasSize.ToString(), x + indent, y, paint);
+    y += fontSpacing * 2;
+    canvas.DrawText(&quot;SKImageInfo Size:&quot;, x, y, paint);
+    y += fontSpacing;
+    canvas.DrawText(info.Size.ToString(), x + indent, y, paint);
+}
+</code></pre>
+<p>The method begins the first line of text with an X coordinate of 20 (for a little margin at the left) and a Y coordinate of <code>fontSpacing</code>, which is a little more than what's necessary to display the full height of the first line of text at the top of the display surface. After each call to <code>DrawText</code>, the Y coordinate is increased by one or two increments of <code>fontSpacing</code>.</p>
+<p>Here's the program running:</p>
+<p><a href="pixels-images/surfacesize-large.png#lightbox" title="Triple screenshot of the Surface Size  page"><img src="pixels-images/surfacesize-small.png" alt="Screenshots show the Surface Size app running on two mobile devices."></a></p>
+<p>As you can see, the <code>CanvasSize</code> property of the <code>SKCanvasView</code> and the <code>Size</code> property of the <code>SKImageInfo</code> value are consistent in reporting the pixel dimensions. The <code>Height</code> and <code>Width</code> properties of the <code>SKCanvasView</code> are Xamarin.Forms properties, and report the size of the view in the device-independent units defined by the platform.</p>
+<p>The iOS seven simulator on the left has two pixels per device-independent unit, and the Android Nexus 5 in the center has three pixels per unit. That's why the simple circle shown earlier has different sizes on different platforms.</p>
+<p>If you'd prefer to work entirely in device-independent units, you can do so by setting the <code>IgnorePixelScaling</code> property of the <code>SKCanvasView</code> to <code>true</code>. However, you might not like the results. SkiaSharp renders the graphics on a smaller device surface, with a pixel size equal to the size of the view in device-independent units. (For example, SkiaSharp would use a display surface of 360 x 512 pixels on the Nexus 5.) It then scales up that image in size, resulting in noticeable bitmap jaggies.</p>
+<p>To maintain the same image resolution, a better solution is to write your own simple functions to convert between the two coordinate systems.</p>
+<p>In addition to the <code>DrawCircle</code> method, <code>SKCanvas</code> also defines two <code>DrawOval</code> methods that draw an ellipse. An ellipse is defined by two radii rather than a single radius. These are known as the <em>major radius</em> and the <em>minor radius</em>. The <code>DrawOval</code> method draws an ellipse with the two radii parallel to the X and Y axes. (If you need to draw an ellipse with axes that are not parallel to the X and Y axes, you can use a rotation transform as discussed in the article <a href="../transforms/rotate.html"><strong>The Rotate Transform</strong></a> or a graphics path as discussed in the article <a href="../curves/arcs.html"><strong>Three Ways to Draw an Arc</strong></a>). This overload of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawoval#skiasharp-skcanvas-drawoval(system-single-system-single-system-single-system-single-skiasharp-skpaint)"><code>DrawOval</code></a> method names the two radii parameters <code>rx</code> and <code>ry</code> to indicate that they are parallel to the X and Y axes:</p>
+<pre><code class="lang-csharp">public void DrawOval (Single cx, Single cy, Single rx, Single ry, SKPaint paint)
+</code></pre>
+<p>Is it possible to draw an ellipse that fills the display surface? The <strong>Ellipse Fill</strong> page demonstrates how. The <code>PaintSurface</code> event handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/EllipseFillPage.xaml.cs"><strong>EllipseFillPage.xaml.cs</strong></a> class subtracts half the stroke width from the <code>xRadius</code> and <code>yRadius</code> values to fit the whole ellipse and its outline within the display surface:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    float strokeWidth = 50;
+    float xRadius = (info.Width - strokeWidth) / 2;
+    float yRadius = (info.Height - strokeWidth) / 2;
+
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Blue,
+        StrokeWidth = strokeWidth
+    };
+    canvas.DrawOval(info.Width / 2, info.Height / 2, xRadius, yRadius, paint);
+}
+</code></pre>
+<p>Here it is running:</p>
+<p><a href="pixels-images/ellipsefill-large.png#lightbox" title="Triple screenshot of the Surface Size  page"><img src="pixels-images/ellipsefill-small.png" alt="Screenshots show the Ellipse Fill app running on two mobile devices."></a></p>
+<p>The other <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawoval#skiasharp-skcanvas-drawoval(skiasharp-skrect-skiasharp-skpaint)"><code>DrawOval</code></a> method has an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skrect"><code>SKRect</code></a> argument, which is a rectangle defined in terms of the X and Y coordinates of its upper-left corner and lower-right corner. The oval fills that rectangle, which suggests that it might be possible to use it in the <strong>Ellipse Fill</strong> page like this:</p>
+<pre><code class="lang-csharp">SKRect rect = new SKRect(0, 0, info.Width, info.Height);
+canvas.DrawOval(rect, paint);
+</code></pre>
+<p>However, that truncates all the edges of the outline of the ellipse on the four sides. You need to adjust all the <code>SKRect</code> constructor arguments based on the <code>strokeWidth</code> to make this work right:</p>
+<pre><code class="lang-csharp">SKRect rect = new SKRect(strokeWidth / 2,
+                         strokeWidth / 2,
+                         info.Width - strokeWidth / 2,
+                         info.Height - strokeWidth / 2);
+canvas.DrawOval(rect, paint);
+</code></pre>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

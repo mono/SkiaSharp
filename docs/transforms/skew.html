@@ -1,0 +1,293 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>The Skew Transform | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="The Skew Transform | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="the-skew-transform">The Skew Transform</h1>
+
+<p><em>See how the skew transform can create tilted graphical objects in SkiaSharp</em></p>
+<p>In SkiaSharp, the skew transform tilts graphical objects, such as the shadow in this image:</p>
+<p><img src="skew-images/skewexample.png" alt="An example of skewing from the Skew Shadow Text program"></p>
+<p>The skew turns a rectangle into a parallelogram, but a skewed ellipse is still an ellipse.</p>
+<p>Although Xamarin.Forms defines properties for translation, scaling, and rotations, there is no corresponding property in Xamarin.Forms for skew.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.skew#skiasharp-skcanvas-skew(system-single-system-single)"><code>Skew</code></a> method of <code>SKCanvas</code> accepts two arguments for horizontal skew and vertical skew:</p>
+<pre><code class="lang-csharp">public void Skew (Single xSkew, Single ySkew)
+</code></pre>
+<p>A second <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.skew#skiasharp-skcanvas-skew(skiasharp-skpoint)"><code>Skew</code></a> method combines those arguments in a single <code>SKPoint</code> value:</p>
+<pre><code class="lang-csharp">public void Skew (SKPoint skew)
+</code></pre>
+<p>However, it's unlikely that you'll be using either of these two methods in isolation.</p>
+<p>The <strong>Skew Experiment</strong> page lets you experiment with skew values that range between –10 and 10. A text string is positioned in the upper-left corner of the page, with skew values obtained from two <code>Slider</code> elements. Here is the <code>PaintSurface</code> handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewExperimentPage.xaml.cs"><code>SkewExperimentPage</code></a> class:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    using (SKPaint textPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Fill,
+        Color = SKColors.Blue,
+        TextSize = 200
+    })
+    {
+        string text = &quot;SKEW&quot;;
+        SKRect textBounds = new SKRect();
+        textPaint.MeasureText(text, ref textBounds);
+
+        canvas.Skew((float)xSkewSlider.Value, (float)ySkewSlider.Value);
+        canvas.DrawText(text, 0, -textBounds.Top, textPaint);
+    }
+}
+</code></pre>
+<p>Values of the <code>xSkew</code> argument shift the bottom of the text right for positive values or left for negative values. Values of <code>ySkew</code> shift the right of the text down for positive values or up for negative values:</p>
+<p><a href="skew-images/skewexperiment-large.png#lightbox" title="Triple screenshot of the Skew Experiment page"><img src="skew-images/skewexperiment-small.png" alt="Triple screenshot of the Skew Experiment page"></a></p>
+<p>If the <code>xSkew</code> value is the negative of the <code>ySkew</code> value, the result is rotation, but also scaled somewhat.</p>
+<p>The transform formulas are as follows:</p>
+<p>x' = x + xSkew · y</p>
+<p>y' = ySkew · x + y</p>
+<p>For example, for a positive <code>xSkew</code> value, the transformed <code>x'</code> value increases as <code>y</code> increases. That's what causes the tilt.</p>
+<p>If a triangle 200 pixels wide and 100 pixels high is positioned with its upper-left corner at the point (0, 0) and is rendered with an <code>xSkew</code> value of 1.5, the following parallelogram results:</p>
+<p><img src="skew-images/skeweffect.png" alt="The effect of the skew transform on a rectangle"></p>
+<p>The coordinates of the bottom edge have <code>y</code> values of 100, so it is shifted 150 pixels to the right.</p>
+<p>For non-zero values of <code>xSkew</code> or <code>ySkew</code>, only the point (0, 0) remains the same. That point can be considered the center of skewing. If you need the center of skewing to be something else (which is usually the case), there is no <code>Skew</code> method that provides that. You'll need to explicitly combine <code>Translate</code> calls with the <code>Skew</code> call. To center the skewing at <code>px</code> and <code>py</code>, make the following calls:</p>
+<pre><code class="lang-csharp">canvas.Translate(px, py);
+canvas.Skew(xSkew, ySkew);
+canvas.Translate(-px, -py);
+</code></pre>
+<p>The composite transform formulas are:</p>
+<p>x' = x + xSkew · (y – py)</p>
+<p>y' = ySkew · (x – px) + y</p>
+<p>If <code>ySkew</code> is zero, then the <code>px</code> value is not used. The value is irrelevant, and similarly for <code>ySkew</code> and <code>py</code>.</p>
+<p>You might feel more comfortable specifying skew as an angle of tilt, such as the angle α in this diagram:</p>
+<p><img src="skew-images/skewangleeffect.png" alt="The effect of the skew transform on a rectangle with a skewing angle indicated"></p>
+<p>The ratio of the 150-pixel shift to the 100-pixel vertical is the tangent of that angle, in this example 56.3 degrees.</p>
+<p>The XAML file of the <strong>Skew Angle Experiment</strong> page is similar to the <strong>Skew Angle</strong> page except that the <code>Slider</code> elements range from –90 degrees to 90 degrees. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewAngleExperimentPage.xaml.cs"><code>SkewAngleExperiment</code></a> code-behind file centers the text on the page and uses <code>Translate</code> to set a center of skewing to the center of the page. A short <code>SkewDegrees</code> method at the bottom of the code converts angles to skew values:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    using (SKPaint textPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Fill,
+        Color = SKColors.Blue,
+        TextSize = 200
+    })
+    {
+        float xCenter = info.Width / 2;
+        float yCenter = info.Height / 2;
+
+        string text = &quot;SKEW&quot;;
+        SKRect textBounds = new SKRect();
+        textPaint.MeasureText(text, ref textBounds);
+        float xText = xCenter - textBounds.MidX;
+        float yText = yCenter - textBounds.MidY;
+
+        canvas.Translate(xCenter, yCenter);
+        SkewDegrees(canvas, xSkewSlider.Value, ySkewSlider.Value);
+        canvas.Translate(-xCenter, -yCenter);
+        canvas.DrawText(text, xText, yText, textPaint);
+    }
+}
+
+void SkewDegrees(SKCanvas canvas, double xDegrees, double yDegrees)
+{
+    canvas.Skew((float)Math.Tan(Math.PI * xDegrees / 180),
+                (float)Math.Tan(Math.PI * yDegrees / 180));
+}
+</code></pre>
+<p>As an angle approaches positive or negative 90 degrees, the tangent approaches infinity, but angles up to about 80 degrees or so are usable:</p>
+<p><a href="skew-images/skewangleexperiment-large.png#lightbox" title="Triple screenshot of the Skew Angle Experiment page"><img src="skew-images/skewangleexperiment-small.png" alt="Triple screenshot of the Skew Angle Experiment page"></a></p>
+<p>A small negative horizontal skew can mimic oblique or italic text, as the <strong>Oblique Text</strong> page demonstrates. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/ObliqueTextPage.cs"><code>ObliqueTextPage</code></a> class shows how it's done:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    using (SKPaint textPaint = new SKPaint()
+    {
+        Style = SKPaintStyle.Fill,
+        Color = SKColors.Maroon,
+        TextAlign = SKTextAlign.Center,
+        TextSize = info.Width / 8       // empirically determined
+    })
+    {
+        canvas.Translate(info.Width / 2, info.Height / 2);
+        SkewDegrees(canvas, -20, 0);
+        canvas.DrawText(Title, 0, 0, textPaint);
+    }
+}
+
+void SkewDegrees(SKCanvas canvas, double xDegrees, double yDegrees)
+{
+    canvas.Skew((float)Math.Tan(Math.PI * xDegrees / 180),
+                (float)Math.Tan(Math.PI * yDegrees / 180));
+}
+</code></pre>
+<p>The <code>TextAlign</code> property of <code>SKPaint</code> is set to <code>Center</code>. Without any transforms, the <code>DrawText</code> call with coordinates of (0, 0) would position the text with the horizontal center of the baseline at the upper-left corner. The <code>SkewDegrees</code> skews the text horizontally 20 degrees relative to the baseline. The <code>Translate</code> call moves the horizontal center of the text's baseline to the center of the canvas:</p>
+<p><a href="skew-images/obliquetext-large.png#lightbox" title="Triple screenshot of the Oblique Text page"><img src="skew-images/obliquetext-small.png" alt="Triple screenshot of the Oblique Text page"></a></p>
+<p>The <strong>Skew Shadow Text</strong> page demonstrates how to use a combination of a 45-degree skew and vertical scale to make a text shadow that tilts away from the text. Here's the pertinent part of the <code>PaintSurface</code> handler:</p>
+<pre><code class="lang-csharp">using (SKPaint textPaint = new SKPaint())
+{
+    textPaint.Style = SKPaintStyle.Fill;
+    textPaint.TextSize = info.Width / 6;   // empirically determined
+
+    // Common to shadow and text
+    string text = &quot;Shadow&quot;;
+    float xText = 20;
+    float yText = info.Height / 2;
+
+    // Shadow
+    textPaint.Color = SKColors.LightGray;
+    canvas.Save();
+    canvas.Translate(xText, yText);
+    canvas.Skew((float)Math.Tan(-Math.PI / 4), 0);
+    canvas.Scale(1, 3);
+    canvas.Translate(-xText, -yText);
+    canvas.DrawText(text, xText, yText, textPaint);
+    canvas.Restore();
+
+    // Text
+    textPaint.Color = SKColors.Blue;
+    canvas.DrawText(text, xText, yText, textPaint);
+}
+</code></pre>
+<p>The shadow is displayed first and then the text:</p>
+<p><a href="skew-images/skewshadowtext1-large.png#lightbox" title="Triple screenshot of the Skew Shadow Text page"><img src="skew-images/skewshadowtext1-small.png" alt="Triple screenshot of the Skew Shadow Text page"></a></p>
+<p>The vertical coordinate passed to the <code>DrawText</code> method indicates the position of the text relative to the baseline. That is the same vertical coordinate used for the center of skewing. This technique will not work if the text string contains descenders. For example, substitute the word &quot;quirky&quot; for &quot;Shadow&quot; and here's the result:</p>
+<p><a href="skew-images/skewshadowtext2-large.png#lightbox" title="Triple screenshot of the Skew Shadow Text page with an alternative word with descenders"><img src="skew-images/skewshadowtext2-small.png" alt="Triple screenshot of the Skew Shadow Text page with an alternative word with descenders"></a></p>
+<p>The shadow and text are still aligned at the baseline, but the effect just looks wrong. To fix it, you need to obtain the text bounds:</p>
+<pre><code class="lang-csharp">SKRect textBounds = new SKRect();
+textPaint.MeasureText(text, ref textBounds);
+</code></pre>
+<p>The <code>Translate</code> calls need to be adjusted by the height of the descenders:</p>
+<pre><code class="lang-csharp">canvas.Translate(xText, yText + textBounds.Bottom);
+canvas.Skew((float)Math.Tan(-Math.PI / 4), 0);
+canvas.Scale(1, 3);
+canvas.Translate(-xText, -yText - textBounds.Bottom);
+</code></pre>
+<p>Now the shadow extends from the bottom of those descenders:</p>
+<p><a href="skew-images/skewshadowtext3-large.png#lightbox" title="Triple screenshot of the Skew Shadow Text page with adjustments for descenders"><img src="skew-images/skewshadowtext3-small.png" alt="Triple screenshot of the Skew Shadow Text page with adjustments for descenders"></a></p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

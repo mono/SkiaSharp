@@ -1,0 +1,225 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>SkiaSharp blend modes | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="SkiaSharp blend modes | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../../images/logo.ico">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../TOC.html">
+    <meta property="docfx:tocrel" content="../../TOC.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="skiasharp-blend-modes">SkiaSharp blend modes</h1>
+
+<p>These articles focus on the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.blendmode#skiasharp-skpaint-blendmode"><code>BlendMode</code></a> property of <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint"><code>SKPaint</code></a>. The <code>BlendMode</code> property is of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skblendmode"><code>SKBlendMode</code></a>, an enumeration with 29 members.</p>
+<p>The <code>BlendMode</code> property determines what happens when a graphical object (often called the <em>source</em>) is rendered on top of existing graphical objects (called the <em>destination</em>). Normally, we expect the new graphical object to obscure the objects underneath it. But that happens only because the default blend mode is <code>SKBlendMode.SrcOver</code>, which means that the source is drawn <em>over</em> the destination. The other 28 members of <code>SKBlendMode</code> cause other effects. In graphics programming, the technique of combining graphical objects in various ways is known as <em>compositing</em>.</p>
+<h2 id="the-skblendmodes-enumeration">The SKBlendModes enumeration</h2>
+<p>The SkiaSharp blend modes correspond closely to those described in the W3C <a href="https://www.w3.org/TR/compositing-1/"><strong>Compositing and Blending Level 1</strong></a> specification. The Skia <a href="https://skia.org/docs/user/api/skblendmode_overview/"><strong>SkBlendMode Overview</strong></a> also provides helpful background information. For a general introduction to blend modes, the <a href="https://en.wikipedia.org/wiki/Blend_modes"><strong>Blend modes</strong></a> article in Wikipedia is a good start. Blend modes are supported in Adobe Photoshop, so there is much additional online information about blend modes in that context.</p>
+<p>The 29 members of the <code>SKBlendMode</code> enumeration can be divided into three categories:</p>
+<table>
+<thead>
+<tr>
+<th>Porter-Duff</th>
+<th>Separable</th>
+<th>Non-Separable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Clear</code></td>
+<td><code>Modulate</code></td>
+<td><code>Hue</code></td>
+</tr>
+<tr>
+<td><code>Src</code></td>
+<td><code>Screen</code></td>
+<td><code>Saturation</code></td>
+</tr>
+<tr>
+<td><code>Dst</code></td>
+<td><code>Overlay</code></td>
+<td><code>Color</code></td>
+</tr>
+<tr>
+<td><code>SrcOver</code></td>
+<td><code>Darken</code></td>
+<td><code>Luminosity</code></td>
+</tr>
+<tr>
+<td><code>DstOver</code></td>
+<td><code>Lighten</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SrcIn</code></td>
+<td><code>ColorDodge</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>DstIn</code></td>
+<td><code>ColorBurn</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SrcOut</code></td>
+<td><code>HardLight</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>DstOut</code></td>
+<td><code>SoftLight</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SrcATop</code></td>
+<td><code>Difference</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>DstATop</code></td>
+<td><code>Exclusion</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Xor</code></td>
+<td><code>Multiply</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Plus</code></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The names of these three categories will take on more meaning in the discussions that follow. The order that the members are listed here is the same as in the definition of the <code>SKBlendMode</code> enumeration. The 13 enumeration members in the first column have the integer values 0 to 12. The second column are enumeration members that correspond to integers 13 to 24, and the members in the third column have values of 25 to 28.</p>
+<p>These blend modes are discussed in <em>approximately</em> the same order in the W3C <strong>Compositing and Blending Level 1</strong> document, but there are a few differences: The <code>Src</code> mode is called <em>Copy</em> in the W3C document, and <code>Plus</code> is called <em>Lighter</em>. The W3C document defines a <em>Normal</em> blend mode that isn't included in <code>SKBlendModes</code> because it would be the same as <code>SrcOver</code>. The <code>Modulate</code> blend mode (at the top of the second column) isn't included in the W3C document, and discussion of the <code>Multiply</code> mode precedes <code>Screen</code>.</p>
+<p>Because the <code>Modulate</code> blend mode is unique to Skia, it will be discussed as an additional Porter-Duff mode and as a separable mode.</p>
+<h2 id="the-importance-of-transparency">The importance of transparency</h2>
+<p>Historically, compositing was developed in conjunction with the concept of the <em>alpha channel</em>. In a display surface such as the <code>SKCanvas</code> object and a full-color bitmap, each pixel consists of 4 bytes: 1 byte each for the red, green, and blue components, and an additional byte for transparency. This alpha component is 0 for full transparency and 0xFF for full opacity, with different levels of transparency between those values.</p>
+<p>Many of the blend modes rely on transparency. Usually, when an <code>SKCanvas</code> is first obtained in a <code>PaintSurface</code> handler, or when an <code>SKCanvas</code> is created to draw on a bitmap, the first step is this call:</p>
+<pre><code class="lang-csharp">canvas.Clear();
+</code></pre>
+<p>This method replaces all the pixels of the canvas with transparent black pixels, equivalent to <code>new SKColor(0, 0, 0, 0)</code> or the integer 0x00000000. All the bytes of all the pixels are initialized to zero.</p>
+<p>The drawing surface of an <code>SKCanvas</code> that is obtained in a <code>PaintSurface</code> handler might appear to have a white background, but that's only because the <code>SKCanvasView</code> itself has a transparent background, and the page has a white background. You can demonstrate this fact to yourself by setting the Xamarin.Forms <code>BackgroundColor</code> property of <code>SKCanvasView</code> to a Xamarin.Forms color:</p>
+<pre><code class="lang-csharp">canvasView.BackgroundColor = Color.Red;
+</code></pre>
+<p>Or, in a class that derives from <code>ContentPage</code>, you can set the page background color:</p>
+<pre><code class="lang-csharp">BackgroundColor = Color.Red;
+</code></pre>
+<p>You'll see this red background behind your SkiaSharp graphics because the SkiaSharp canvas itself is transparent.</p>
+<p>The article <a href="../../basics/transparency.html"><strong>SkiaSharp Transparency</strong></a> showed some basic techniques in using transparency to arrange multiple graphics in a composite image. The blend modes go beyond that, but transparency remains crucial to the blend modes.</p>
+<h2 id="skiasharp-porter-duff-blend-modes"><a href="porter-duff.html">SkiaSharp Porter-Duff blend modes</a></h2>
+<p>Use the Porter-Duff blend modes to compose scenes based on source and destination images.</p>
+<h2 id="skiasharp-separable-blend-modes"><a href="separable.html">SkiaSharp separable blend modes</a></h2>
+<p>Use the separable blend modes to alter red, green, and blue colors.</p>
+<h2 id="skiasharp-non-separable-blend-modes"><a href="non-separable.html">SkiaSharp non-separable blend modes</a></h2>
+<p>Use the non-separable blend modes to alter hue, saturation, or luminosity.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

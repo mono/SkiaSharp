@@ -1,0 +1,358 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>The Translate Transform | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="The Translate Transform | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="the-translate-transform">The Translate Transform</h1>
+
+<p><em>Learn how to use the translate transform to shift SkiaSharp graphics</em></p>
+<p>The simplest type of transform in SkiaSharp is the <em>translate</em> or <em>translation</em> transform. This transform shifts graphical objects in the horizontal and vertical directions. In a sense, translation is the most unnecessary transform because you can usually accomplish the same effect by simply changing the coordinates that you're using in the drawing function. When rendering a path, however, all the coordinates are encapsulated in the path, so it's much easier applying a translate transform to shift the entire path.</p>
+<p>Translation is also useful for animation and for simple text effects:</p>
+<p><img src="translate-images/translateexample.png" alt="Text shadow, engraving, and embossing with translation"></p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.translate#skiasharp-skcanvas-translate(system-single-system-single)"><code>Translate</code></a> method in <code>SKCanvas</code> has two parameters that cause subsequently drawn graphics objects to be shifted horizontally and vertically:</p>
+<pre><code class="lang-csharp">public void Translate (Single dx, Single dy)
+</code></pre>
+<p>These arguments may be negative. A second <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.translate#skiasharp-skcanvas-translate(skiasharp-skpoint)"><code>Translate</code></a> method combines the two translation values in a single <code>SKPoint</code> value:</p>
+<pre><code class="lang-csharp">public void Translate (SKPoint point)
+</code></pre>
+<p>The <strong>Accumulated Translate</strong> page of the sample program demonstrates that multiple calls of the <code>Translate</code> method are cumulative. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/AccumulatedTranslatePage.cs"><code>AccumulatedTranslatePage</code></a> class displays 20 versions of the same rectangle, each one offset from the previous rectangle just enough so they stretch along the diagonal. Here's the <code>PaintSurface</code> event handler:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    using (SKPaint strokePaint = new SKPaint())
+    {
+        strokePaint.Color = SKColors.Black;
+        strokePaint.Style = SKPaintStyle.Stroke;
+        strokePaint.StrokeWidth = 3;
+
+        int rectangleCount = 20;
+        SKRect rect = new SKRect(0, 0, 250, 250);
+        float xTranslate = (info.Width - rect.Width) / (rectangleCount - 1);
+        float yTranslate = (info.Height - rect.Height) / (rectangleCount - 1);
+
+        for (int i = 0; i &lt; rectangleCount; i++)
+        {
+            canvas.DrawRect(rect, strokePaint);
+            canvas.Translate(xTranslate, yTranslate);
+        }
+    }
+}
+</code></pre>
+<p>The successive rectangles trickle down the page:</p>
+<p><a href="translate-images/accumulatedtranslate-large.png#lightbox" title="Triple screenshot of the Accumulated Translate page"><img src="translate-images/accumulatedtranslate-small.png" alt="Triple screenshot of the Accumulated Translate page"></a></p>
+<p>If the accumulated translation factors are <code>dx</code> and <code>dy</code>, and the point you specify in a drawing function is (<code>x</code>, <code>y</code>), then the graphical object is rendered at the point (<code>x'</code>, <code>y'</code>), where:</p>
+<p>x' = x + dx</p>
+<p>y' = y + dy</p>
+<p>These are known as the <em>transform formulas</em> for translation. The default values of <code>dx</code> and <code>dy</code> for a new <code>SKCanvas</code> are 0.</p>
+<p>It is common to use the translate transform for shadow effects and similar techniques, as the <strong>Translate Text Effects</strong> page demonstrates. Here's the relevant part of the <code>PaintSurface</code> handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/TranslateTextEffectsPage.cs"><code>TranslateTextEffectsPage</code></a> class:</p>
+<pre><code class="lang-csharp">float textSize = 150;
+
+using (SKPaint textPaint = new SKPaint())
+{
+    textPaint.Style = SKPaintStyle.Fill;
+    textPaint.TextSize = textSize;
+    textPaint.FakeBoldText = true;
+
+    float x = 10;
+    float y = textSize;
+
+    // Shadow
+    canvas.Translate(10, 10);
+    textPaint.Color = SKColors.Black;
+    canvas.DrawText(&quot;SHADOW&quot;, x, y, textPaint);
+    canvas.Translate(-10, -10);
+    textPaint.Color = SKColors.Pink;
+    canvas.DrawText(&quot;SHADOW&quot;, x, y, textPaint);
+
+    y += 2 * textSize;
+
+    // Engrave
+    canvas.Translate(-5, -5);
+    textPaint.Color = SKColors.Black;
+    canvas.DrawText(&quot;ENGRAVE&quot;, x, y, textPaint);
+    canvas.ResetMatrix();
+    textPaint.Color = SKColors.White;
+    canvas.DrawText(&quot;ENGRAVE&quot;, x, y, textPaint);
+
+    y += 2 * textSize;
+
+    // Emboss
+    canvas.Save();
+    canvas.Translate(5, 5);
+    textPaint.Color = SKColors.Black;
+    canvas.DrawText(&quot;EMBOSS&quot;, x, y, textPaint);
+    canvas.Restore();
+    textPaint.Color = SKColors.White;
+    canvas.DrawText(&quot;EMBOSS&quot;, x, y, textPaint);
+}
+</code></pre>
+<p>In each of the three examples, <code>Translate</code> is called for displaying the text to offset it from the location given by the <code>x</code> and <code>y</code> variables. Then the text is displayed again in another color with no translation effect:</p>
+<p><a href="translate-images/translatetexteffects-large.png#lightbox" title="Triple screenshot of the Translate Text Effects page"><img src="translate-images/translatetexteffects-small.png" alt="Triple screenshot of the Translate Text Effects page"></a></p>
+<p>Each of the three examples shows a different way of negating the <code>Translate</code> call:</p>
+<p>The first example simply calls <code>Translate</code> again but with negative values. Because the <code>Translate</code> calls are cumulative, this sequence of calls simply restores the total translation to the default values of zero.</p>
+<p>The second example calls <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.resetmatrix#skiasharp-skcanvas-resetmatrix"><code>ResetMatrix</code></a>. This causes all transforms to return to their default state.</p>
+<p>The third example saves the state of the <code>SKCanvas</code> object with a call to <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.save#skiasharp-skcanvas-save"><code>Save</code></a> and then restores the state with a call to <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.restore#skiasharp-skcanvas-restore"><code>Restore</code></a>. This is the most versatile way to manipulate transforms for a series of drawing operations. These <code>Save</code> and <code>Restore</code> calls function like a stack: You can call <code>Save</code> multiple times, and then call <code>Restore</code> in reverse sequence to return to previous states. The <code>Save</code> method returns an integer, and you can pass that integer to <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.restoretocount"><code>RestoreToCount</code></a> to effectively call <code>Restore</code> multiple times. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.savecount#skiasharp-skcanvas-savecount"><code>SaveCount</code></a> property returns the number of states currently saved on the stack.</p>
+<p>You can also use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skautocanvasrestore"><code>SKAutoCanvasRestore</code></a> class for restoring the canvas state. The constructor of this class is intended to be called in a <code>using</code> statement; the canvas state is automatically restored at the end of the <code>using</code> block.</p>
+<p>However, you don't have to worry about transforms carrying over from one call of the <code>PaintSurface</code> handler to the next. Each new call to <code>PaintSurface</code> delivers a fresh <code>SKCanvas</code> object with default transforms.</p>
+<p>Another common use of the <code>Translate</code> transform is for rendering a visual object that has been originally created using coordinates that are convenient for drawing. For example, you might want to specify coordinates for an analog clock with a center at the point (0, 0). You can then use transforms to display the clock where you want it. This technique is demonstrated in the [<strong>Hendecagram Array</strong>] page. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/HendecagramArrayPage.cs"><code>HendecagramArrayPage</code></a> class begins by creating an <code>SKPath</code> object for an 11-pointed star. The <code>HendecagramPath</code> object is defined as public, static, and read-only so that it can be accessed from other demonstration programs. It is created in a static constructor:</p>
+<pre><code class="lang-csharp">public class HendecagramArrayPage : ContentPage
+{
+    ...
+    public static readonly SKPath HendecagramPath;
+
+    static HendecagramArrayPage()
+    {
+        // Create 11-pointed star
+        HendecagramPath = new SKPath();
+        for (int i = 0; i &lt; 11; i++)
+        {
+            double angle = 5 * i * 2 * Math.PI / 11;
+            SKPoint pt = new SKPoint(100 * (float)Math.Sin(angle),
+                                    -100 * (float)Math.Cos(angle));
+            if (i == 0)
+            {
+                HendecagramPath.MoveTo(pt);
+            }
+            else
+            {
+                HendecagramPath.LineTo(pt);
+            }
+        }
+        HendecagramPath.Close();
+    }
+}
+</code></pre>
+<p>If the center of the star is the point (0, 0), all the points of the star are on a circle surrounding that point. Each point is a combination of sine and cosine values of an angle that increases by 5/11ths of 360 degrees. (It's also possible to create an 11-pointed star by increasing the angle by 2/11th, 3/11ths, or 4/11th of the circle.) The radius of that circle is set as 100.</p>
+<p>If this path is rendered without any transforms, the center will be positioned at the upper-left corner of the <code>SKCanvas</code>, and only a quarter of it will be visible. The <code>PaintSurface</code> handler of <code>HendecagramPage</code> instead uses <code>Translate</code> to tile the canvas with multiple copies of the star, each one randomly colored:</p>
+<pre><code class="lang-csharp">public class HendecagramArrayPage : ContentPage
+{
+    Random random = new Random();
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPaint paint = new SKPaint())
+        {
+            for (int x = 100; x &lt; info.Width + 100; x += 200)
+                for (int y = 100; y &lt; info.Height + 100; y += 200)
+                {
+                    // Set random color
+                    byte[] bytes = new byte[3];
+                    random.NextBytes(bytes);
+                    paint.Color = new SKColor(bytes[0], bytes[1], bytes[2]);
+
+                    // Display the hendecagram
+                    canvas.Save();
+                    canvas.Translate(x, y);
+                    canvas.DrawPath(HendecagramPath, paint);
+                    canvas.Restore();
+                }
+        }
+    }
+}
+
+</code></pre>
+<p>Here's the result:</p>
+<p><a href="translate-images/hendecagramarray-large.png#lightbox" title="Triple screenshot of the Hendecagram Array page"><img src="translate-images/hendecagramarray-small.png" alt="Triple screenshot of the Hendecagram Array page"></a></p>
+<p>Animations often involve transforms. The <strong>Hendecagram Animation</strong> page moves the 11-pointed star around in a circle. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/HendecagramAnimationPage.cs"><code>HendecagramAnimationPage</code></a> class begins with some fields and overrides of the <code>OnAppearing</code> and <code>OnDisappearing</code> methods to start and stop a Xamarin.Forms timer:</p>
+<pre><code class="lang-csharp">public class HendecagramAnimationPage : ContentPage
+{
+    const double cycleTime = 5000;      // in milliseconds
+
+    SKCanvasView canvasView;
+    Stopwatch stopwatch = new Stopwatch();
+    bool pageIsActive;
+    float angle;
+
+    public HendecagramAnimationPage()
+    {
+        Title = &quot;Hedecagram Animation&quot;;
+
+        canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        pageIsActive = true;
+        stopwatch.Start();
+
+        Device.StartTimer(TimeSpan.FromMilliseconds(33), () =&gt;
+        {
+            double t = stopwatch.Elapsed.TotalMilliseconds % cycleTime / cycleTime;
+            angle = (float)(360 * t);
+            canvasView.InvalidateSurface();
+
+            if (!pageIsActive)
+            {
+                stopwatch.Stop();
+            }
+
+            return pageIsActive;
+        });
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        pageIsActive = false;
+    }
+    ...
+}
+</code></pre>
+<p>The <code>angle</code> field is animated from 0 degrees to 360 degrees every 5 seconds. The <code>PaintSurface</code> handler uses the <code>angle</code> property in two ways: to specify the hue of the color in the <code>SKColor.FromHsl</code> method, and as an argument to the <code>Math.Sin</code> and <code>Math.Cos</code> methods to govern the location of the star:</p>
+<pre><code class="lang-csharp">public class HendecagramAnimationPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.Translate(info.Width / 2, info.Height / 2);
+        float radius = (float)Math.Min(info.Width, info.Height) / 2 - 100;
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Fill;
+            paint.Color = SKColor.FromHsl(angle, 100, 50);
+
+            float x = radius * (float)Math.Sin(Math.PI * angle / 180);
+            float y = -radius * (float)Math.Cos(Math.PI * angle / 180);
+            canvas.Translate(x, y);
+            canvas.DrawPath(HendecagramPage.HendecagramPath, paint);
+        }
+    }
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler calls the <code>Translate</code> method twice, first to translate to the center of the canvas, and then to translate to the circumference of a circle centered around (0, 0). The radius of the circle is set to be as large as possible while still keeping the star within the confines of the page:</p>
+<p><a href="translate-images/hendecagramanimation-large.png#lightbox" title="Triple screenshot of the Hendecagram Animation page"><img src="translate-images/hendecagramanimation-small.png" alt="Triple screenshot of the Hendecagram Animation page"></a></p>
+<p>Notice that the star maintains the same orientation as it revolves around the center of the page. It doesn't rotate at all. That's a job for a rotate transform.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

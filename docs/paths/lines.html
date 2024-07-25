@@ -1,0 +1,309 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Lines and Stroke Caps | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Lines and Stroke Caps | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="lines-and-stroke-caps">Lines and Stroke Caps</h1>
+
+<p><em>Learn how to use SkiaSharp to draw lines with different stroke caps</em></p>
+<p>In SkiaSharp, rendering a single line is very different from rendering a series of connected straight lines. Even when drawing single lines, however, it's often necessary to give the lines a particular stroke width. As these lines become wider, the appearance of the ends of the lines also becomes important. The appearance of the end of the line is called the <em>stroke cap</em>:</p>
+<p><img src="lines-images/strokecapsexample.png" alt="The three stroke caps options"></p>
+<p>For drawing single lines, <code>SKCanvas</code> defines a simple <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawline#skiasharp-skcanvas-drawline(system-single-system-single-system-single-system-single-skiasharp-skpaint)"><code>DrawLine</code></a> method whose arguments indicate the starting and ending coordinates of the line with an <code>SKPaint</code> object:</p>
+<pre><code class="lang-csharp">canvas.DrawLine (x0, y0, x1, y1, paint);
+</code></pre>
+<p>By default, the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.strokewidth#skiasharp-skpaint-strokewidth"><code>StrokeWidth</code></a> property of a newly instantiated <code>SKPaint</code> object is 0, which has the same effect as a value of 1 in rendering a line of one pixel in thickness. This appears very thin on high-resolution devices such as phones, so you'll probably want to set the <code>StrokeWidth</code> to a larger value. But once you start drawing lines of a sizable thickness, that raises another issue: How should the starts and ends of these thick lines be rendered?</p>
+<p>The appearance of the starts and ends of lines is called a <em>line cap</em> or, in Skia, a <em>stroke cap</em>. The word &quot;cap&quot; in this context refers to a kind of hat — something that sits on the end of the line. You set the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.strokecap#skiasharp-skpaint-strokecap"><code>StrokeCap</code></a> property of the <code>SKPaint</code> object to one of the following members of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skstrokecap"><code>SKStrokeCap</code></a> enumeration:</p>
+<ul>
+<li><code>Butt</code> (the default)</li>
+<li><code>Square</code></li>
+<li><code>Round</code></li>
+</ul>
+<p>These are best illustrated with a sample program. The <strong>SkiaSharp Lines and Paths</strong> section of the sample program begins with a page titled <strong>Stroke Caps</strong> based on the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/StrokeCapsPage.cs"><code>StrokeCapsPage</code></a> class. This page defines a <code>PaintSurface</code> event handler that loops through the three members of the <code>SKStrokeCap</code> enumeration, displaying both the name of the enumeration member and drawing a line using that stroke cap:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    SKPaint textPaint = new SKPaint
+    {
+        Color = SKColors.Black,
+        TextSize = 75,
+        TextAlign = SKTextAlign.Center
+    };
+
+    SKPaint thickLinePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Orange,
+        StrokeWidth = 50
+    };
+
+    SKPaint thinLinePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Black,
+        StrokeWidth = 2
+    };
+
+    float xText = info.Width / 2;
+    float xLine1 = 100;
+    float xLine2 = info.Width - xLine1;
+    float y = textPaint.FontSpacing;
+
+    foreach (SKStrokeCap strokeCap in Enum.GetValues(typeof(SKStrokeCap)))
+    {
+        // Display text
+        canvas.DrawText(strokeCap.ToString(), xText, y, textPaint);
+        y += textPaint.FontSpacing;
+
+        // Display thick line
+        thickLinePaint.StrokeCap = strokeCap;
+        canvas.DrawLine(xLine1, y, xLine2, y, thickLinePaint);
+
+        // Display thin line
+        canvas.DrawLine(xLine1, y, xLine2, y, thinLinePaint);
+        y += 2 * textPaint.FontSpacing;
+    }
+}
+</code></pre>
+<p>For each member of the <code>SKStrokeCap</code> enumeration, the handler draws two lines, one with a stroke thickness of 50 pixels and another line positioned on top with a stroke thickness of two pixels. This second line is intended to illustrate the geometric start and end of the line independent of the line thickness and a stroke cap:</p>
+<p><a href="lines-images/strokecaps-large.png#lightbox" title="Triple screenshot of the Stroke Caps page"><img src="lines-images/strokecaps-small.png" alt="Triple screenshot of the Stroke Caps page"></a></p>
+<p>As you can see, the <code>Square</code> and <code>Round</code> stroke caps effectively extend the length of the line by half the stroke width at the beginning of the line and again at the end. This extension becomes important when it's necessary to determine the dimensions of a rendered graphics object.</p>
+<p>The <code>SKCanvas</code> class also includes another method for drawing multiple lines that is somewhat peculiar:</p>
+<pre><code class="lang-csharp">DrawPoints (SKPointMode mode, points, paint)
+</code></pre>
+<p>The <code>points</code> parameter is an array of <code>SKPoint</code> values and <code>mode</code> is a member of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpointmode"><code>SKPointMode</code></a> enumeration, which has three members:</p>
+<ul>
+<li><code>Points</code> to render the individual points</li>
+<li><code>Lines</code> to connect each pair of points</li>
+<li><code>Polygon</code> to connect all consecutive points</li>
+</ul>
+<p>The <strong>Multiple Lines</strong> page demonstrates this method. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/MultipleLinesPage.xaml"><strong>MultipleLinesPage.xaml</strong></a> file instantiates two <code>Picker</code> views that let you select a member of the <code>SKPointMode</code> enumeration and a member of the <code>SKStrokeCap</code> enumeration:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Paths.MultipleLinesPage&quot;
+             Title=&quot;Multiple Lines&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.ColumnDefinitions&gt;
+            &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+            &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+        &lt;/Grid.ColumnDefinitions&gt;
+
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Picker x:Name=&quot;pointModePicker&quot;
+                Title=&quot;Point Mode&quot;
+                Grid.Row=&quot;0&quot;
+                Grid.Column=&quot;0&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKPointMode}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKPointMode.Points&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKPointMode.Lines&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKPointMode.Polygon&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;Picker x:Name=&quot;strokeCapPicker&quot;
+                Title=&quot;Stroke Cap&quot;
+                Grid.Row=&quot;0&quot;
+                Grid.Column=&quot;1&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKStrokeCap}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKStrokeCap.Butt&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKStrokeCap.Round&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKStrokeCap.Square&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;skiaforms:SKCanvasView x:Name=&quot;canvasView&quot;
+                                PaintSurface=&quot;OnCanvasViewPaintSurface&quot;
+                                Grid.Row=&quot;1&quot;
+                                Grid.Column=&quot;0&quot;
+                                Grid.ColumnSpan=&quot;2&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>Notice that the SkiaSharp namespace declarations are a little different because the <code>SkiaSharp</code> namespace is needed to reference the members of the <code>SKPointMode</code> and <code>SKStrokeCap</code> enumerations. The <code>SelectedIndexChanged</code> handler for both <code>Picker</code> views simply invalidates the <code>SKCanvasView</code> object:</p>
+<pre><code class="lang-csharp">void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+{
+    if (canvasView != null)
+    {
+        canvasView.InvalidateSurface();
+    }
+}
+</code></pre>
+<p>This handler needs to check for the existence of the <code>SKCanvasView</code> object because the event handler is first called when the <code>SelectedIndex</code> property of the <code>Picker</code> is set to 0 in the XAML file, and that occurs before the <code>SKCanvasView</code> has been instantiated.</p>
+<p>The <code>PaintSurface</code> handler obtains the two enumeration values from the <code>Picker</code> views:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    // Create an array of points scattered through the page
+    SKPoint[] points = new SKPoint[10];
+
+    for (int i = 0; i &lt; 2; i++)
+    {
+        float x = (0.1f + 0.8f * i) * info.Width;
+
+        for (int j = 0; j &lt; 5; j++)
+        {
+            float y = (0.1f + 0.2f * j) * info.Height;
+            points[2 * j + i] = new SKPoint(x, y);
+        }
+    }
+
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.DarkOrchid,
+        StrokeWidth = 50,
+        StrokeCap = (SKStrokeCap)strokeCapPicker.SelectedItem
+    };
+
+    // Render the points by calling DrawPoints
+    SKPointMode pointMode = (SKPointMode)pointModePicker.SelectedItem;
+    canvas.DrawPoints(pointMode, points, paint);
+}
+</code></pre>
+<p>The screenshots show a variety of <code>Picker</code> selections:</p>
+<p><a href="lines-images/multiplelines-large.png#lightbox" title="Triple screenshot of the Multiple Lines page"><img src="lines-images/multiplelines-small.png" alt="Triple screenshot of the Multiple Lines page"></a></p>
+<p>The iPhone at the left shows how the <code>SKPointMode.Points</code> enumeration member causes <code>DrawPoints</code> to render each of the points in the <code>SKPoint</code> array as a square if the line cap is <code>Butt</code> or <code>Square</code>. Circles are rendered if the line cap is <code>Round</code>.</p>
+<p>The Android screenshot shows the result of the <code>SKPointMode.Lines</code>. The <code>DrawPoints</code> method draws a line between each pair of <code>SKPoint</code> values, using the specified line cap, in this case <code>Round</code>.</p>
+<p>When you instead use <code>SKPointMode.Polygon</code>, a line is drawn between the successive points in the array, but if you look very closely, you'll see that these lines are not connected. Each of these separate lines starts and ends with the specified line cap. If you select the <code>Round</code> caps, the lines might appear to be connected, but they're really not connected.</p>
+<p>Whether lines are connected or not connected is a crucial aspect of working with graphics paths.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

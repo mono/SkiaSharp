@@ -1,0 +1,335 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>SkiaSharp mask filters | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="SkiaSharp mask filters | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="skiasharp-mask-filters">SkiaSharp mask filters</h1>
+
+<p>Mask filters are effects that manipulate the geometry and alpha channel of graphical objects. To use a mask filter, set the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.maskfilter#skiasharp-skpaint-maskfilter"><code>MaskFilter</code></a> property of <code>SKPaint</code> to an object of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmaskfilter"><code>SKMaskFilter</code></a> that you've created by calling one of the <code>SKMaskFilter</code> static methods.</p>
+<p>The best way to become familiar with mask filters is by experimenting with these static methods. The most useful mask filter creates a blur:</p>
+<p><img src="mask-filters-images/MaskFilterExample.png" alt="Blur Example" title="Blur Example"></p>
+<p>That's the only mask filter feature described in this article. The next article on <a href="image-filters.html"><strong>SkiaSharp image filters</strong></a> also describes a blur effect that you might prefer to this one.</p>
+<p>The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmaskfilter.createblur#skiasharp-skmaskfilter-createblur(skiasharp-skblurstyle-system-single)"><code>SKMaskFilter.CreateBlur</code></a> method has the following syntax:</p>
+<pre><code class="lang-csharp">public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma);
+</code></pre>
+<p>Overloads allow specifying flags for the algorithm used to create the blur, and a rectangle to avoid blurring in areas that will be covered with other graphical objects.</p>
+<p><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skblurstyle"><code>SKBlurStyle</code></a> is an enumeration with the following members:</p>
+<ul>
+<li><code>Normal</code></li>
+<li><code>Solid</code></li>
+<li><code>Outer</code></li>
+<li><code>Inner</code></li>
+</ul>
+<p>The effects of these styles are shown in the examples below. The <code>sigma</code> parameter specifies the extent of the blur. In older versions of Skia, the extent of the blur was indicated with a radius value. If a radius value is preferable for your application, there is a static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmaskfilter.convertradiustosigma"><code>SKMaskFilter.ConvertRadiusToSigma</code></a> method that can convert from one to the other. The method multiplies the radius by 0.57735 and adds 0.5.</p>
+<p>The <strong>Mask Blur Experiment</strong> page in the sample allows you to experiment with the blur styles and sigma values. The XAML file instantiates a <code>Picker</code> with the four <code>SKBlurStyle</code> enumeration members and a <code>Slider</code> for specifying the sigma value:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.MaskBlurExperimentPage&quot;
+             Title=&quot;Mask Blur Experiment&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;skiaforms:SKCanvasView x:Name=&quot;canvasView&quot;
+                                VerticalOptions=&quot;FillAndExpand&quot;
+                                PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Picker x:Name=&quot;blurStylePicker&quot;
+                Title=&quot;Filter Blur Style&quot;
+                Margin=&quot;10, 0&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKBlurStyle}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlurStyle.Normal&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlurStyle.Solid&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlurStyle.Outer&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlurStyle.Inner&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;Slider x:Name=&quot;sigmaSlider&quot;
+                Maximum=&quot;10&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference sigmaSlider},
+                              Path=Value,
+                              StringFormat='Sigma = {0:F1}'}&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file uses those values to create an <code>SKMaskFilter</code> object and set it to the <code>MaskFilter</code> property of an <code>SKPaint</code> object. This <code>SKPaint</code> object is used to draw both a text string and a bitmap:</p>
+<pre><code class="lang-csharp">public partial class MaskBlurExperimentPage : ContentPage
+{
+    const string TEXT = &quot;Blur My Text&quot;;
+
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+                            typeof(MaskBlurExperimentPage),
+                            &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+
+    public MaskBlurExperimentPage ()
+    {
+        InitializeComponent ();
+    }
+
+    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear(SKColors.Pink);
+
+        // Get values from XAML controls
+        SKBlurStyle blurStyle =
+            (SKBlurStyle)(blurStylePicker.SelectedIndex == -1 ?
+                                        0 : blurStylePicker.SelectedItem);
+
+        float sigma = (float)sigmaSlider.Value;
+
+        using (SKPaint paint = new SKPaint())
+        {
+            // Set SKPaint properties
+            paint.TextSize = (info.Width - 100) / (TEXT.Length / 2);
+            paint.MaskFilter = SKMaskFilter.CreateBlur(blurStyle, sigma);
+
+            // Get text bounds and calculate display rectangle
+            SKRect textBounds = new SKRect();
+            paint.MeasureText(TEXT, ref textBounds);
+            SKRect textRect = new SKRect(0, 0, info.Width, textBounds.Height + 50);
+
+            // Center the text in the display rectangle
+            float xText = textRect.Width / 2 - textBounds.MidX;
+            float yText = textRect.Height / 2 - textBounds.MidY;
+
+            canvas.DrawText(TEXT, xText, yText, paint);
+
+            // Calculate rectangle for bitmap
+            SKRect bitmapRect = new SKRect(0, textRect.Bottom, info.Width, info.Height);
+            bitmapRect.Inflate(-50, -50);
+
+            canvas.DrawBitmap(bitmap, bitmapRect, BitmapStretch.Uniform, paint: paint);
+        }
+    }
+}
+</code></pre>
+<p>Here's the program running on iOS, Android, and the Universal Windows Platform (UWP) with the <code>Normal</code> blur style and increasing <code>sigma</code> levels:</p>
+<p><a href="mask-filters-images/MaskBlurExperiment-Normal-Large.png#lightbox"><img src="mask-filters-images/MaskBlurExperiment-Normal.png" alt="Mask Blur Experiment - Normal" title="Mask Blur Experiment - Normal"></a></p>
+<p>You'll notice that only the edges of the bitmap are affected by the blur. The <code>SKMaskFilter</code> class is not the correct effect to use if you want to blur an entire bitmap image. For that you'll want to use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter"><code>SKImageFilter</code></a> class as described in the next article on <a href="image-filters.html"><strong>SkiaSharp image filters</strong></a>.</p>
+<p>The text is blurred more with increasing values of the <code>sigma</code> argument. In experimenting with this program, you'll notice that for a particular <code>sigma</code> value, the blur is more extreme on the Windows 10 desktop. This difference occurs because the pixel density is lower on a desktop monitor than on mobile devices, and hence the text height in pixels is lower. The <code>sigma</code> value is proportional to a blur extent in pixels, so for a given <code>sigma</code> value, the effect is more extreme on lower resolution displays. In a production application, you'll probably want to calculate a <code>sigma</code> value that is proportional to the size of the graphic.</p>
+<p>Try several values before settling on a blur level that looks the best for your application. For example, in the <strong>Mask Blur Experiment</strong> page, try setting <code>sigma</code> like this:</p>
+<pre><code class="lang-csharp">sigma = paint.TextSize / 18;
+paint.MaskFilter = SKMaskFilter.CreateBlur(blurStyle, sigma);
+</code></pre>
+<p>Now the <code>Slider</code> has no effect, but the degree of blur is consistent among the platforms:</p>
+<p><a href="mask-filters-images/MaskBlurExperiment-Consistent-Large.png#lightbox"><img src="mask-filters-images/MaskBlurExperiment-Consistent.png" alt="Mask Blur Experiment - Consistent" title="Mask Blur Experiment - Consistent"></a></p>
+<p>All the screenshots so far have shown blur created with the <code>SKBlurStyle.Normal</code> enumeration member. The following screenshots show the effects of the <code>Solid</code>, <code>Outer</code>, and <code>Inner</code> blur styles:</p>
+<p><a href="mask-filters-images/MaskBlurExperiment-Large.png#lightbox"><img src="mask-filters-images/MaskBlurExperiment.png" alt="Mask Blur Experiment" title="Mask Blur Experiment"></a></p>
+<p>The iOS screenshot shows the <code>Solid</code> style: The text characters are still present as solid black strokes, and the blur is added to the outside of these text characters.</p>
+<p>The Android screenshot in the middle shows the <code>Outer</code> style: The character strokes themselves are eliminated (as is the bitmap) and the blur surrounds the empty space where the text characters once appeared.</p>
+<p>The UWP screenshot on the right shows the <code>Inner</code> style. The blur is restricted to the area normally occupied by the text characters.</p>
+<p>The <a href="shaders/linear-gradient.html#transparency-and-gradients"><strong>SkiaSharp linear gradient</strong></a> article described a <strong>Reflection Gradient</strong> program that used a linear gradient and a transform to mimic a reflection of a text string:</p>
+<p><a href="shaders/linear-gradient-images/ReflectionGradient-Large.png#lightbox"><img src="shaders/linear-gradient-images/ReflectionGradient.png" alt="Reflection Gradient" title="Reflection Gradient"></a></p>
+<p>The <strong>Blurry Reflection</strong> page adds a single statement to that code:</p>
+<pre><code class="lang-csharp">public class BlurryReflectionPage : ContentPage
+{
+    const string TEXT = &quot;Reflection&quot;;
+
+    public BlurryReflectionPage()
+    {
+        Title = &quot;Blurry Reflection&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPaint paint = new SKPaint())
+        {
+            // Set text color to blue
+            paint.Color = SKColors.Blue;
+
+            // Set text size to fill 90% of width
+            paint.TextSize = 100;
+            float width = paint.MeasureText(TEXT);
+            float scale = 0.9f * info.Width / width;
+            paint.TextSize *= scale;
+
+            // Get text bounds
+            SKRect textBounds = new SKRect();
+            paint.MeasureText(TEXT, ref textBounds);
+
+            // Calculate offsets to position text above center
+            float xText = info.Width / 2 - textBounds.MidX;
+            float yText = info.Height / 2;
+
+            // Draw unreflected text
+            canvas.DrawText(TEXT, xText, yText, paint);
+
+            // Shift textBounds to match displayed text
+            textBounds.Offset(xText, yText);
+
+            // Use those offsets to create a gradient for the reflected text
+            paint.Shader = SKShader.CreateLinearGradient(
+                                new SKPoint(0, textBounds.Top),
+                                new SKPoint(0, textBounds.Bottom),
+                                new SKColor[] { paint.Color.WithAlpha(0),
+                                                paint.Color.WithAlpha(0x80) },
+                                null,
+                                SKShaderTileMode.Clamp);
+
+            // Create a blur mask filter
+            paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, paint.TextSize / 36);
+
+            // Scale the canvas to flip upside-down around the vertical center
+            canvas.Scale(1, -1, 0, yText);
+
+            // Draw reflected text
+            canvas.DrawText(TEXT, xText, yText, paint);
+        }
+    }
+}
+</code></pre>
+<p>The new statement adds a blur filter for the reflected text that is based on the text size:</p>
+<pre><code class="lang-csharp">paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, paint.TextSize / 36);
+</code></pre>
+<p>This blur filter causes the reflection to seem much more realistic:</p>
+<p><a href="mask-filters-images/BlurryReflection-Large.png#lightbox"><img src="mask-filters-images/BlurryReflection.png" alt="Blurry Reflection" title="Blurry Reflection"></a></p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

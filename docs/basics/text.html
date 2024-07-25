@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Integrating Text and Graphics | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Integrating Text and Graphics | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="integrating-text-and-graphics">Integrating Text and Graphics</h1>
+
+<p><em>See how to determine the size of rendered text string to integrate text with SkiaSharp graphics</em></p>
+<p>This article demonstrates how to measure text, scale the text to a particular size, and integrate text with other graphics:</p>
+<p><img src="text-images/textandgraphicsexample.png" alt="Text surrounded by rectangles"></p>
+<p>That image also includes a rounded rectangle. The SkiaSharp <code>Canvas</code> class includes <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawrect"><code>DrawRect</code></a> methods to draw a rectangle and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawroundrect"><code>DrawRoundRect</code></a> methods to draw a rectangle with rounded corners. These methods allow the rectangle to be defined as an <code>SKRect</code> value or in other ways.</p>
+<p>The <strong>Framed Text</strong> page centers a short text string on the page and surrounds it with a frame composed of a pair of rounded rectangles. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/FramedTextPage.cs"><code>FramedTextPage</code></a> class shows how it's done.</p>
+<p>In SkiaSharp, you use the <code>SKPaint</code> class to set text and font attributes, but you can also use it to obtain the rendered size of text. The beginning of the following <code>PaintSurface</code> event handler calls two different <code>MeasureText</code> methods. The first <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.measuretext#skiasharp-skpaint-measuretext(system-string)"><code>MeasureText</code></a> call has a simple <code>string</code> argument and returns the pixel width of the text based on the current font attributes. The program then calculates a new <code>TextSize</code> property of the <code>SKPaint</code> object based on that rendered width, the current <code>TextSize</code> property, and the width of the display area. This calculation is intended to set <code>TextSize</code> so that the text string to be rendered at 90% of the width of the screen:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    string str = &quot;Hello SkiaSharp!&quot;;
+
+    // Create an SKPaint object to display the text
+    SKPaint textPaint = new SKPaint
+    {
+        Color = SKColors.Chocolate
+    };
+
+    // Adjust TextSize property so text is 90% of screen width
+    float textWidth = textPaint.MeasureText(str);
+    textPaint.TextSize = 0.9f * info.Width * textPaint.TextSize / textWidth;
+
+    // Find the text bounds
+    SKRect textBounds = new SKRect();
+    textPaint.MeasureText(str, ref textBounds);
+    ...
+}
+</code></pre>
+<p>The second <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.measuretext#skiasharp-skpaint-measuretext(system-string-skiasharp-skrect@)"><code>MeasureText</code></a> call has an <code>SKRect</code> argument, so it obtains both a width and height of the rendered text. The <code>Height</code> property of this <code>SKRect</code> value depends on the presence of capital letters, ascenders, and descenders in the text string. Different <code>Height</code> values are reported for the text strings &quot;mom&quot;, &quot;cat&quot;, and &quot;dog&quot;, for example.</p>
+<p>The <code>Left</code> and <code>Top</code> properties of the <code>SKRect</code> structure indicate the coordinates of the upper-left corner of the rendered text if the text is displayed by a <code>DrawText</code> call with X and Y positions of 0. For example, when this program is running on an iPhone 7 simulator, <code>TextSize</code> is assigned the value 90.6254 as a result of the calculation following the first call to <code>MeasureText</code>. The <code>SKRect</code> value obtained from the second call to <code>MeasureText</code> has the following property values:</p>
+<ul>
+<li><code>Left</code> = 6</li>
+<li><code>Top</code> = –68</li>
+<li><code>Width</code> = 664.8214</li>
+<li><code>Height</code> = 88;</li>
+</ul>
+<p>Keep in mind that the X and Y coordinates you pass to the <code>DrawText</code> method specify the left side of the text at the baseline. The <code>Top</code> value indicates that the text extends 68 pixels above that baseline and (subtracting 68 it from 88) 20 pixels below the baseline. The <code>Left</code> value of 6 indicates that the text begins six pixels to the right of the X value in the <code>DrawText</code> call. This allows for normal inter-character spacing. If you want to display the text snugly in the upper-left corner of the display, pass the negatives of these <code>Left</code> and <code>Top</code> values as the X and Y coordinates of <code>DrawText</code>, in this example, –6 and 68.</p>
+<p>The <code>SKRect</code> structure defines several handy properties and methods, some of which are used in the remainder of the <code>PaintSurface</code> handler. The <code>MidX</code> and <code>MidY</code> values indicate the coordinates of the center of the rectangle. (In the iPhone 7 example, those values are 338.4107 and –24.) The following code uses these values for the easiest calculation of coordinates to center text on the display:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    ...
+    // Calculate offsets to center the text on the screen
+    float xText = info.Width / 2 - textBounds.MidX;
+    float yText = info.Height / 2 - textBounds.MidY;
+
+    // And draw the text
+    canvas.DrawText(str, xText, yText, textPaint);
+    ...
+}
+</code></pre>
+<p>The <code>SKImageInfo</code> info structure also defines a <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo.rect#skiasharp-skimageinfo-rect"><code>Rect</code></a> property of type <code>SKRect</code>, so you can also calculate <code>xText</code> and <code>yText</code> like this:</p>
+<pre><code class="lang-csharp">float xText = info.Rect.MidX - textBounds.MidX;
+float yText = info.Rect.MidY - textBounds.MidY;
+</code></pre>
+<p>The <code>PaintSurface</code> handler concludes with two calls to <code>DrawRoundRect</code>, both of which require arguments of <code>SKRect</code>. This <code>SKRect</code> value is based on the <code>SKRect</code> value obtained from the <code>MeasureText</code> method, but it can't be the same. First, it needs to be a little larger so that the rounded rectangle doesn't draw over edges of the text. Secondly, it needs to be shifted in space so that the <code>Left</code> and <code>Top</code> values correspond to the upper-left corner where the rectangle is to be positioned. These two jobs are accomplished by the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skrect.offset"><code>Offset</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skrect.inflate"><code>Inflate</code></a> methods defined by <code>SKRect</code>:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    ...
+    // Create a new SKRect object for the frame around the text
+    SKRect frameRect = textBounds;
+    frameRect.Offset(xText, yText);
+    frameRect.Inflate(10, 10);
+
+    // Create an SKPaint object to display the frame
+    SKPaint framePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        StrokeWidth = 5,
+        Color = SKColors.Blue
+    };
+
+    // Draw one frame
+    canvas.DrawRoundRect(frameRect, 20, 20, framePaint);
+
+    // Inflate the frameRect and draw another
+    frameRect.Inflate(10, 10);
+    framePaint.Color = SKColors.DarkBlue;
+    canvas.DrawRoundRect(frameRect, 30, 30, framePaint);
+}
+</code></pre>
+<p>Following that, the remainder of the method is straight-forward. It creates another <code>SKPaint</code> object for the borders and calls <code>DrawRoundRect</code> twice. The second call uses a rectangle inflated by another 10 pixels. The first call specifies a corner radius of 20 pixels. The second has a corner radius of 30 pixels, so they seem to be parallel:</p>
+<p><a href="text-images/framedtext-large.png#lightbox" title="Triple screenshot of the Framed Text page"><img src="text-images/framedtext-small.png" alt="Triple screenshot of the Framed Text page"></a></p>
+<p>You can turn your phone or simulator sideways to see the text and frame increase in size.</p>
+<p>If you only need to center some text on the screen, you can do it approximately without measuring the text. Instead, set the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.textalign#skiasharp-skpaint-textalign"><code>TextAlign</code></a> property of <code>SKPaint</code> to the enumeration member <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sktextalign"><code>SKTextAlign.Center</code></a>. The X coordinate you specify in the <code>DrawText</code> method then indicates where the horizontal center of the text is positioned. If you pass the midpoint of the screen to the <code>DrawText</code> method, the text will be horizontally centered and <em>nearly</em> vertically centered because the baseline will be vertically centered.</p>
+<p>Text can be treated much like any other graphical object. One simple option is to display the outline of the text characters:</p>
+<p><a href="text-images/outlinedtext-large.png#lightbox" title="Triple screenshot of the Outlined Text page"><img src="text-images/outlinedtext-small.png" alt="Triple screen shot of the Outlined Text page"></a></p>
+<p>This is accomplished simply by changing the normal <code>Style</code> property of the <code>SKPaint</code> object from its default setting of <code>SKPaintStyle.Fill</code> to <code>SKPaintStyle.Stroke</code>, and by specifying a stroke width. The <code>PaintSurface</code> handler of the <strong>Outlined Text</strong> page shows how it's done:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    string text = &quot;OUTLINE&quot;;
+
+    // Create an SKPaint object to display the text
+    SKPaint textPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        StrokeWidth = 1,
+        FakeBoldText = true,
+        Color = SKColors.Blue
+    };
+
+    // Adjust TextSize property so text is 95% of screen width
+    float textWidth = textPaint.MeasureText(text);
+    textPaint.TextSize = 0.95f * info.Width * textPaint.TextSize / textWidth;
+
+    // Find the text bounds
+    SKRect textBounds = new SKRect();
+    textPaint.MeasureText(text, ref textBounds);
+
+    // Calculate offsets to center the text on the screen
+    float xText = info.Width / 2 - textBounds.MidX;
+    float yText = info.Height / 2 - textBounds.MidY;
+
+    // And draw the text
+    canvas.DrawText(text, xText, yText, textPaint);
+}
+</code></pre>
+<p>Another common graphical object is the bitmap. That's a large topic covered in depth in the section <a href="../bitmaps/index.html"><strong>SkiaSharp Bitmaps</strong></a>, but the next article, <a href="bitmaps.html"><strong>Bitmap Basics in SkiaSharp</strong></a>, provides a briefer introduction.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1304 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Path Effects in SkiaSharp | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Path Effects in SkiaSharp | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="path-effects-in-skiasharp">Path Effects in SkiaSharp</h1>
+
+<p><em>Discover the various path effects that allow paths to be used for stroking and filling</em></p>
+<p>A <em>path effect</em> is an instance of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect"><code>SKPathEffect</code></a> class that is created with one of eight static creation methods defined by the class. The <code>SKPathEffect</code> object is then set to the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.patheffect#skiasharp-skpaint-patheffect"><code>PathEffect</code></a> property of an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint"><code>SKPaint</code></a> object for a variety of interesting effects, for example, stroking a line with a small replicated path:</p>
+<p><img src="effects-images/patheffectsample.png" alt="The Linked Chain sample"></p>
+<p>Path effects allow you to:</p>
+<ul>
+<li>Stroke a line with dots and dashes</li>
+<li>Stroke a line with any filled path</li>
+<li>Fill an area with hatch lines</li>
+<li>Fill an area with a tiled path</li>
+<li>Make sharp corners rounded</li>
+<li>Add random &quot;jitter&quot; to lines and curves</li>
+</ul>
+<p>In addition, you can combine two or more path effects.</p>
+<p>This article also demonstrates how to use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.getfillpath"><code>GetFillPath</code></a> method of <code>SKPaint</code> to convert one path into another path by applying properties of <code>SKPaint</code>, including <code>StrokeWidth</code> and <code>PathEffect</code>. This results in some interesting techniques, such as obtaining a path that is an outline of another path. <code>GetFillPath</code> is also helpful in connection with path effects.</p>
+<h2 id="dots-and-dashes">Dots and Dashes</h2>
+<p>The use of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.createdash#skiasharp-skpatheffect-createdash(system-single()-system-single)"><code>PathEffect.CreateDash</code></a> method was described in the article <a href="../../xamarin-forms/user-interface/graphics/skiasharp/paths/dots.md"><strong>Dots and Dashes</strong></a>. The first argument of the method is an array containing an even number of two or more values, alternating between lengths of dashes and lengths of gaps between the dashes:</p>
+<pre><code class="lang-csharp">public static SKPathEffect CreateDash (Single[] intervals, Single phase)
+</code></pre>
+<p>These values are <em>not</em> relative to the stroke width. For example, if the stroke width is 10, and you want a line composed of square dashes and square gaps, set the <code>intervals</code> array to { 10, 10 }. The <code>phase</code> argument indicates where within the dash pattern the line begins. In this example, if you want the line to begin with the square gap, set <code>phase</code> to 10.</p>
+<p>The ends of the dashes are affected by the <code>StrokeCap</code> property of <code>SKPaint</code>. For wide stroke widths, it is very common to set this property to <code>SKStrokeCap.Round</code> to round the ends of the dashes. In this case, the values in the <code>intervals</code> array do <em>not</em> include the extra length resulting from the rounding. This fact means that a circular dot requires specifying a width of zero. For a stroke width of 10, to create a line with circular dots and gaps between the dots of the same diameter, use an <code>intervals</code> array of { 0, 20 }.</p>
+<p>The <strong>Animated Dotted Text</strong> page is similar to the <strong>Outlined Text</strong> page described in the article <a href="../../xamarin-forms/user-interface/graphics/skiasharp/basics/text.md"><strong>Integrating Text and Graphics</strong></a> in that it displays outlined text characters by setting the <code>Style</code> property of the <code>SKPaint</code> object to <code>SKPaintStyle.Stroke</code>. In addition, <strong>Animated Dotted Text</strong> uses <code>SKPathEffect.CreateDash</code> to give this outline a dotted appearance, and the program also animates the <code>phase</code> argument of the <code>SKPathEffect.CreateDash</code> method to make the dots seem to travel around the text characters. Here's the page in landscape mode:</p>
+<p><a href="effects-images/animateddottedtext-large.png#lightbox"><img src="effects-images/animateddottedtext-small.png" alt="Triple screenshot of the Animated Dotted Text page"></a></p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/DotDashMorphPage.cs"><code>AnimatedDottedTextPage</code></a> class begins by defining some constants, and also overrides the <code>OnAppearing</code> and <code>OnDisappearing</code> methods for the animation:</p>
+<pre><code class="lang-csharp">public class AnimatedDottedTextPage : ContentPage
+{
+    const string text = &quot;DOTTED&quot;;
+    const float strokeWidth = 10;
+    static readonly float[] dashArray = { 0, 2 * strokeWidth };
+
+    SKCanvasView canvasView;
+    bool pageIsActive;
+
+    public AnimatedDottedTextPage()
+    {
+        Title = &quot;Animated Dotted Text&quot;;
+
+        canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        pageIsActive = true;
+
+        Device.StartTimer(TimeSpan.FromSeconds(1f / 60), () =&gt;
+        {
+            canvasView.InvalidateSurface();
+            return pageIsActive;
+        });
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        pageIsActive = false;
+    }
+    ...
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler begins by creating an <code>SKPaint</code> object to display the text. The  <code>TextSize</code> property is adjusted based on the width of the screen:</p>
+<pre><code class="lang-csharp">public class AnimatedDottedTextPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Create an SKPaint object to display the text
+        using (SKPaint textPaint = new SKPaint
+            {
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = strokeWidth,
+                StrokeCap = SKStrokeCap.Round,
+                Color = SKColors.Blue,
+            })
+        {
+            // Adjust TextSize property so text is 95% of screen width
+            float textWidth = textPaint.MeasureText(text);
+            textPaint.TextSize *= 0.95f * info.Width / textWidth;
+
+            // Find the text bounds
+            SKRect textBounds = new SKRect();
+            textPaint.MeasureText(text, ref textBounds);
+
+            // Calculate offsets to center the text on the screen
+            float xText = info.Width / 2 - textBounds.MidX;
+            float yText = info.Height / 2 - textBounds.MidY;
+
+            // Animate the phase; t is 0 to 1 every second
+            TimeSpan timeSpan = new TimeSpan(DateTime.Now.Ticks);
+            float t = (float)(timeSpan.TotalSeconds % 1 / 1);
+            float phase = -t * 2 * strokeWidth;
+
+            // Create dotted line effect based on dash array and phase
+            using (SKPathEffect dashEffect = SKPathEffect.CreateDash(dashArray, phase))
+            {
+                // Set it to the paint object
+                textPaint.PathEffect = dashEffect;
+
+                // And draw the text
+                canvas.DrawText(text, xText, yText, textPaint);
+            }
+        }
+    }
+}
+</code></pre>
+<p>Towards the end of the method, the <code>SKPathEffect.CreateDash</code> method is called using the <code>dashArray</code> that is defined as a field, and the animated <code>phase</code> value. The <code>SKPathEffect</code> instance is set to the <code>PathEffect</code> property of the <code>SKPaint</code> object to display the text.</p>
+<p>Alternatively, you can set the <code>SKPathEffect</code> object to the <code>SKPaint</code> object prior to measuring the text and centering it on the page. In that case, however, the animated dots and dashes cause some variation in the size of the rendered text, and the text tends to vibrate a little. (Try it!)</p>
+<p>You'll also notice that as the animated dots circle around the text characters, there is a certain point in each closed curve where the dots seem to pop in and out of existence. This is where the path that defines the character outline begins and ends. If the path length is not an integral multiple of the length of the dash pattern (in this case 20 pixels), then only part of that pattern can fit at the end of the path.</p>
+<p>It's possible to adjust the length of the dash pattern to fit the length of the path, but that requires determining the length of the path, a technique that is covered in the article <a href="information.html"><strong>Path Information and Enumeration</strong></a>.</p>
+<p>The <strong>Dot / Dash Morph</strong> program animates the dash pattern itself so that dashes seem to divide into dots, which combine to form dashes again:</p>
+<p><a href="effects-images/dotdashmorph-large.png#lightbox"><img src="effects-images/dotdashmorph-small.png" alt="Triple screenshot of the Dot Dash Morph page"></a></p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/DotDashMorphPage.cs"><code>DotDashMorphPage</code></a> class overrides the <code>OnAppearing</code> and <code>OnDisappearing</code> methods just as the previous program did, but the class defines the <code>SKPaint</code> object as a field:</p>
+<pre><code class="lang-csharp">public class DotDashMorphPage : ContentPage
+{
+    const float strokeWidth = 30;
+    static readonly float[] dashArray = new float[4];
+
+    SKCanvasView canvasView;
+    bool pageIsActive = false;
+
+    SKPaint ellipsePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        StrokeWidth = strokeWidth,
+        StrokeCap = SKStrokeCap.Round,
+        Color = SKColors.Blue
+    };
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Create elliptical path
+        using (SKPath ellipsePath = new SKPath())
+        {
+            ellipsePath.AddOval(new SKRect(50, 50, info.Width - 50, info.Height - 50));
+
+            // Create animated path effect
+            TimeSpan timeSpan = new TimeSpan(DateTime.Now.Ticks);
+            float t = (float)(timeSpan.TotalSeconds % 3 / 3);
+            float phase = 0;
+
+            if (t &lt; 0.25f)  // 1, 0, 1, 2 --&gt; 0, 2, 0, 2
+            {
+                float tsub = 4 * t;
+                dashArray[0] = strokeWidth * (1 - tsub);
+                dashArray[1] = strokeWidth * 2 * tsub;
+                dashArray[2] = strokeWidth * (1 - tsub);
+                dashArray[3] = strokeWidth * 2;
+            }
+            else if (t &lt; 0.5f)  // 0, 2, 0, 2 --&gt; 1, 2, 1, 0
+            {
+                float tsub = 4 * (t - 0.25f);
+                dashArray[0] = strokeWidth * tsub;
+                dashArray[1] = strokeWidth * 2;
+                dashArray[2] = strokeWidth * tsub;
+                dashArray[3] = strokeWidth * 2 * (1 - tsub);
+                phase = strokeWidth * tsub;
+            }
+            else if (t &lt; 0.75f) // 1, 2, 1, 0 --&gt; 0, 2, 0, 2
+            {
+                float tsub = 4 * (t - 0.5f);
+                dashArray[0] = strokeWidth * (1 - tsub);
+                dashArray[1] = strokeWidth * 2;
+                dashArray[2] = strokeWidth * (1 - tsub);
+                dashArray[3] = strokeWidth * 2 * tsub;
+                phase = strokeWidth * (1 - tsub);
+            }
+            else               // 0, 2, 0, 2 --&gt; 1, 0, 1, 2
+            {
+                float tsub = 4 * (t - 0.75f);
+                dashArray[0] = strokeWidth * tsub;
+                dashArray[1] = strokeWidth * 2 * (1 - tsub);
+                dashArray[2] = strokeWidth * tsub;
+                dashArray[3] = strokeWidth * 2;
+            }
+
+            using (SKPathEffect pathEffect = SKPathEffect.CreateDash(dashArray, phase))
+            {
+                ellipsePaint.PathEffect = pathEffect;
+                canvas.DrawPath(ellipsePath, ellipsePaint);
+            }
+        }
+    }
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler creates an elliptical path based on the size of the page, and executes a long section of code that sets the <code>dashArray</code> and <code>phase</code> variables. As the animated variable <code>t</code> ranges from 0 to 1, the <code>if</code> blocks break up that time into four quarters, and in each of those quarters, <code>tsub</code> also ranges from 0 to 1. At the very end, the program creates the <code>SKPathEffect</code> and sets it to the <code>SKPaint</code> object for drawing.</p>
+<h2 id="from-path-to-path">From Path to Path</h2>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.getfillpath#skiasharp-skpaint-getfillpath(skiasharp-skpath-skiasharp-skpath-system-single)"><code>GetFillPath</code></a> method of <code>SKPaint</code> turns one path into another based on settings in the <code>SKPaint</code> object. To see how this works, replace the <code>canvas.DrawPath</code> call in the previous program with the following code:</p>
+<pre><code class="lang-csharp">SKPath newPath = new SKPath();
+bool fill = ellipsePaint.GetFillPath(ellipsePath, newPath);
+SKPaint newPaint = new SKPaint
+{
+    Style = fill ? SKPaintStyle.Fill : SKPaintStyle.Stroke
+};
+canvas.DrawPath(newPath, newPaint);
+
+</code></pre>
+<p>In this new code, the <code>GetFillPath</code> call converts the <code>ellipsePath</code> (which is just an oval) into <code>newPath</code>, which is then displayed with <code>newPaint</code>. The <code>newPaint</code> object is created with all default property settings except that the <code>Style</code> property is set based on the Boolean return value from <code>GetFillPath</code>.</p>
+<p>The visuals are identical except for the color, which is set in <code>ellipsePaint</code> but not <code>newPaint</code>. Rather than the simple ellipse defined in <code>ellipsePath</code>, <code>newPath</code> contains numerous path contours that define the series of dots and dashes. This is the result of applying various properties of <code>ellipsePaint</code> (specifically, <code>StrokeWidth</code>, <code>StrokeCap</code>, and <code>PathEffect</code>) to <code>ellipsePath</code> and putting the resultant path in <code>newPath</code>. The <code>GetFillPath</code> method returns a Boolean value indicating whether or not the destination path is to be filled; in this example, the return value is <code>true</code> for filling the path.</p>
+<p>Try changing the <code>Style</code> setting in <code>newPaint</code> to <code>SKPaintStyle.Stroke</code> and you'll see the individual path contours outlined with a one-pixel-width line.</p>
+<h2 id="stroking-with-a-path">Stroking with a Path</h2>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.create1dpath#skiasharp-skpatheffect-create1dpath(skiasharp-skpath-system-single-system-single-skiasharp-skpath1dpatheffectstyle)"><code>SKPathEffect.Create1DPath</code></a> method is conceptually similar to <code>SKPathEffect.CreateDash</code> except that you specify a path rather than a pattern of dashes and gaps. This path is replicated multiple times to stroke the line or curve.</p>
+<p>The syntax is:</p>
+<pre><code class="lang-csharp">public static SKPathEffect Create1DPath (SKPath path, Single advance,
+                                         Single phase, SKPath1DPathEffectStyle style)
+</code></pre>
+<p>In general, the path that you pass to <code>Create1DPath</code> will be small and centered around the point (0, 0). The <code>advance</code> parameter indicates the distance between the centers of the path as the path is replicated on the line. You usually set this argument to the approximate width of the path. The <code>phase</code> argument plays the same role here as it does in the <code>CreateDash</code> method.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath1dpatheffectstyle"><code>SKPath1DPathEffectStyle</code></a> has three members:</p>
+<ul>
+<li><code>Translate</code></li>
+<li><code>Rotate</code></li>
+<li><code>Morph</code></li>
+</ul>
+<p>The <code>Translate</code> member causes the path to remain in the same orientation as it is replicated along a line or curve. For <code>Rotate</code>, the path is rotated based on a tangent to the curve. The path has its normal orientation for horizontal lines. <code>Morph</code> is similar to <code>Rotate</code> except that the path itself is also curved to match the curvature of the line being stroked.</p>
+<p>The <strong>1D Path Effect</strong> page demonstrates these three options. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/OneDimensionalPathEffectPage.xaml"><strong>OneDimensionalPathEffectPage.xaml</strong></a> file defines a picker containing three items corresponding to the three members of the enumeration:</p>
+<pre><code class="lang-xaml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Curves.OneDimensionalPathEffectPage&quot;
+             Title=&quot;1D Path Effect&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Picker x:Name=&quot;effectStylePicker&quot;
+                Title=&quot;Effect Style&quot;
+                Grid.Row=&quot;0&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type x:String}&quot;&gt;
+                    &lt;x:String&gt;Translate&lt;/x:String&gt;
+                    &lt;x:String&gt;Rotate&lt;/x:String&gt;
+                    &lt;x:String&gt;Morph&lt;/x:String&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot;
+                           Grid.Row=&quot;1&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/OneDimensionalPathEffectPage.xaml.cs"><strong>OneDimensionalPathEffectPage.xaml.cs</strong></a> code-behind file defines three <code>SKPathEffect</code> objects as fields. These are all created using <code>SKPathEffect.Create1DPath</code> with <code>SKPath</code> objects created using <code>SKPath.ParseSvgPathData</code>. The first is a simple box, the second is a diamond shape, and the third is a rectangle. These are used to demonstrate the three effect styles:</p>
+<pre><code class="lang-csharp">public partial class OneDimensionalPathEffectPage : ContentPage
+{
+    SKPathEffect translatePathEffect =
+        SKPathEffect.Create1DPath(SKPath.ParseSvgPathData(&quot;M -10 -10 L 10 -10, 10 10, -10 10 Z&quot;),
+                                  24, 0, SKPath1DPathEffectStyle.Translate);
+
+    SKPathEffect rotatePathEffect =
+        SKPathEffect.Create1DPath(SKPath.ParseSvgPathData(&quot;M -10 0 L 0 -10, 10 0, 0 10 Z&quot;),
+                                  20, 0, SKPath1DPathEffectStyle.Rotate);
+
+    SKPathEffect morphPathEffect =
+        SKPathEffect.Create1DPath(SKPath.ParseSvgPathData(&quot;M -25 -10 L 25 -10, 25 10, -25 10 Z&quot;),
+                                  55, 0, SKPath1DPathEffectStyle.Morph);
+
+    SKPaint pathPaint = new SKPaint
+    {
+        Color = SKColors.Blue
+    };
+
+    public OneDimensionalPathEffectPage()
+    {
+        InitializeComponent();
+    }
+
+    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    {
+        if (canvasView != null)
+        {
+            canvasView.InvalidateSurface();
+        }
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPath path = new SKPath())
+        {
+            path.MoveTo(new SKPoint(0, 0));
+            path.CubicTo(new SKPoint(2 * info.Width, info.Height),
+                         new SKPoint(-info.Width, info.Height),
+                         new SKPoint(info.Width, 0));
+
+            switch ((string)effectStylePicker.SelectedItem))
+            {
+                case &quot;Translate&quot;:
+                    pathPaint.PathEffect = translatePathEffect;
+                    break;
+
+                case &quot;Rotate&quot;:
+                    pathPaint.PathEffect = rotatePathEffect;
+                    break;
+
+                case &quot;Morph&quot;:
+                    pathPaint.PathEffect = morphPathEffect;
+                    break;
+            }
+
+            canvas.DrawPath(path, pathPaint);
+        }
+    }
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler creates a Bézier curve that loops around itself, and accesses the picker to determine which <code>PathEffect</code> should be used to stroke it. The three options — <code>Translate</code>, <code>Rotate</code>, and <code>Morph</code> — are shown from left to right:</p>
+<p><a href="effects-images/1dpatheffect-large.png#lightbox"><img src="effects-images/1dpatheffect-small.png" alt="Triple screenshot of the 1D Path Effect page"></a></p>
+<p>The path specified in the <code>SKPathEffect.Create1DPath</code> method is always filled. The path specified in the <code>DrawPath</code> method is always stroked if the <code>SKPaint</code> object has its <code>PathEffect</code> property set to a 1D path effect. Notice that the <code>pathPaint</code> object has no <code>Style</code> setting, which normally defaults to <code>Fill</code>, but the path is stroked regardless.</p>
+<p>The box used in the <code>Translate</code> example is 20 pixels square, and the <code>advance</code> argument is set to 24. This difference causes a gap between the boxes when the line is roughly horizontal or vertical, but the boxes overlap a little when the line is diagonal because the diagonal of the box is 28.3 pixels.</p>
+<p>The diamond shape in the <code>Rotate</code> example is also 20 pixels wide. The <code>advance</code> is set to 20 so that the points continue to touch as the diamond is rotated along with the curvature of the line.</p>
+<p>The rectangle shape in the <code>Morph</code> example is 50 pixels wide with an <code>advance</code> setting of 55 to make a small gap between the rectangles as they are bent around the Bézier curve.</p>
+<p>If the <code>advance</code> argument is less than the size of the path, then the replicated paths can overlap. This can result in some interesting effects. The <strong>Linked Chain</strong> page displays a series of overlapping circles that seem to resemble a linked chain, which hangs in the distinctive shape of a catenary:</p>
+<p><a href="effects-images/linkedchain-large.png#lightbox"><img src="effects-images/linkedchain-small.png" alt="Triple screenshot of the Linked Chain page"></a></p>
+<p>Look very close and you'll see that those aren't actually circles. Each link in the chain is two arcs, sized and positioned so they seem to connect with adjoining links.</p>
+<p>A chain or cable of uniform weight distribution hangs in the form of a catenary. An arch built in the form of an inverted catenary benefits from an equal distribution of pressure from the weight of an arch. The catenary has a seemingly simple mathematical description:</p>
+<p><code>y = a · cosh(x / a)</code></p>
+<p>The <em>cosh</em> is the hyperbolic cosine function. For <em>x</em> equal to 0, <em>cosh</em> is zero and <em>y</em> equals <em>a</em>. That's the center of the catenary. Like the <em>cosine</em> function, <em>cosh</em> is said to be <em>even</em>, which means that <em>cosh(–x)</em> equals <em>cosh(x)</em>, and values increase for increasing positive or negative arguments. These values describe the curves that form the sides of the catenary.</p>
+<p>Finding the proper value of <em>a</em> to fit the catenary to the dimensions of the phone's page is not a direct calculation. If <em>w</em> and <em>h</em> are the width and height of a rectangle, the optimum value of <em>a</em> satisfies the following equation:</p>
+<p><code>cosh(w / 2 / a) = 1 + h / a</code></p>
+<p>The following method in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/LinkedChainPage.cs"><code>LinkedChainPage</code></a> class incorporates that equality by referring to the two expressions on the left and right of the equal sign as <code>left</code> and <code>right</code>. For small values of <em>a</em>, <code>left</code> is greater than <code>right</code>; for large values of <em>a</em>, <code>left</code> is less than <code>right</code>. The <code>while</code> loop narrows in on an optimum value of <em>a</em>:</p>
+<pre><code class="lang-csharp">float FindOptimumA(float width, float height)
+{
+    Func&lt;float, float&gt; left = (float a) =&gt; (float)Math.Cosh(width / 2 / a);
+    Func&lt;float, float&gt; right = (float a) =&gt; 1 + height / a;
+
+    float gtA = 1;         // starting value for left &gt; right
+    float ltA = 10000;     // starting value for left &lt; right
+
+    while (Math.Abs(gtA - ltA) &gt; 0.1f)
+    {
+        float avgA = (gtA + ltA) / 2;
+
+        if (left(avgA) &lt; right(avgA))
+        {
+            ltA = avgA;
+        }
+        else
+        {
+            gtA = avgA;
+        }
+    }
+
+    return (gtA + ltA) / 2;
+}
+</code></pre>
+<p>The <code>SKPath</code> object for the links is created in the class's constructor, and the resultant <code>SKPathEffect</code> object is then set to the <code>PathEffect</code> property of the <code>SKPaint</code> object that is stored as a field:</p>
+<pre><code class="lang-csharp">public class LinkedChainPage : ContentPage
+{
+    const float linkRadius = 30;
+    const float linkThickness = 5;
+
+    Func&lt;float, float, float&gt; catenary = (float a, float x) =&gt; (float)(a * Math.Cosh(x / a));
+
+    SKPaint linksPaint = new SKPaint
+    {
+        Color = SKColors.Silver
+    };
+
+    public LinkedChainPage()
+    {
+        Title = &quot;Linked Chain&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+
+        // Create the path for the individual links
+        SKRect outer = new SKRect(-linkRadius, -linkRadius, linkRadius, linkRadius);
+        SKRect inner = outer;
+        inner.Inflate(-linkThickness, -linkThickness);
+
+        using (SKPath linkPath = new SKPath())
+        {
+            linkPath.AddArc(outer, 55, 160);
+            linkPath.ArcTo(inner, 215, -160, false);
+            linkPath.Close();
+
+            linkPath.AddArc(outer, 235, 160);
+            linkPath.ArcTo(inner, 395, -160, false);
+            linkPath.Close();
+
+            // Set that path as the 1D path effect for linksPaint
+            linksPaint.PathEffect =
+                SKPathEffect.Create1DPath(linkPath, 1.3f * linkRadius, 0,
+                                          SKPath1DPathEffectStyle.Rotate);
+        }
+    }
+    ...
+}
+</code></pre>
+<p>The main job  of the <code>PaintSurface</code> handler is to create a path for the catenary itself. After determining the optimum <em>a</em> and storing it in the <code>optA</code> variable, it also needs to calculate an offset from the top of the window. Then, it can accumulate a collection of <code>SKPoint</code> values for the catenary, turn that into a path, and draw the path with the previously created <code>SKPaint</code> object:</p>
+<pre><code class="lang-csharp">public class LinkedChainPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear(SKColors.Black);
+
+        // Width and height of catenary
+        int width = info.Width;
+        float height = info.Height - linkRadius;
+
+        // Find the optimum 'a' for this width and height
+        float optA = FindOptimumA(width, height);
+
+        // Calculate the vertical offset for that value of 'a'
+        float yOffset = catenary(optA, -width / 2);
+
+        // Create a path for the catenary
+        SKPoint[] points = new SKPoint[width];
+
+        for (int x = 0; x &lt; width; x++)
+        {
+            points[x] = new SKPoint(x, yOffset - catenary(optA, x - width / 2));
+        }
+
+        using (SKPath path = new SKPath())
+        {
+            path.AddPoly(points, false);
+
+            // And render that path with the linksPaint object
+            canvas.DrawPath(path, linksPaint);
+        }
+    }
+    ...
+}
+</code></pre>
+<p>This program defines the path used in <code>Create1DPath</code> to have its (0, 0) point in the center. This seems reasonable because the (0, 0) point of the path is aligned with the line or curve that it's adorning. However, you can use a non-centered (0, 0) point for some special effects.</p>
+<p>The <strong>Conveyor Belt</strong> page creates a path resembling an oblong conveyor belt with a curved top and bottom that is sized to the dimensions of the window. That path is stroked with a simple <code>SKPaint</code> object 20 pixels wide and colored gray, and then stroked again with another <code>SKPaint</code> object with an <code>SKPathEffect</code> object referencing a path resembling a little bucket:</p>
+<p><a href="effects-images/conveyorbelt-large.png#lightbox"><img src="effects-images/conveyorbelt-small.png" alt="Triple screenshot of the Conveyor Belt page"></a></p>
+<p>The (0, 0) point of the bucket path is the handle, so when the <code>phase</code> argument is animated, the buckets seem to revolve around the conveyor belt, perhaps scooping up water at the bottom and dumping it out at the top.</p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ConveyorBeltPage.cs"><code>ConveyorBeltPage</code></a> class implements animation with overrides of the <code>OnAppearing</code> and <code>OnDisappearing</code> methods. The path for the bucket is defined in the page's constructor:</p>
+<pre><code class="lang-csharp">public class ConveyorBeltPage : ContentPage
+{
+    SKCanvasView canvasView;
+    bool pageIsActive = false;
+
+    SKPaint conveyerPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        StrokeWidth = 20,
+        Color = SKColors.DarkGray
+    };
+
+    SKPath bucketPath = new SKPath();
+
+    SKPaint bucketsPaint = new SKPaint
+    {
+        Color = SKColors.BurlyWood,
+    };
+
+    public ConveyorBeltPage()
+    {
+        Title = &quot;Conveyor Belt&quot;;
+
+        canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+
+        // Create the path for the bucket starting with the handle
+        bucketPath.AddRect(new SKRect(-5, -3, 25, 3));
+
+        // Sides
+        bucketPath.AddRoundedRect(new SKRect(25, -19, 27, 18), 10, 10,
+                                  SKPathDirection.CounterClockwise);
+        bucketPath.AddRoundedRect(new SKRect(63, -19, 65, 18), 10, 10,
+                                  SKPathDirection.CounterClockwise);
+
+        // Five slats
+        for (int i = 0; i &lt; 5; i++)
+        {
+            bucketPath.MoveTo(25, -19 + 8 * i);
+            bucketPath.LineTo(25, -13 + 8 * i);
+            bucketPath.ArcTo(50, 50, 0, SKPathArcSize.Small,
+                             SKPathDirection.CounterClockwise, 65, -13 + 8 * i);
+            bucketPath.LineTo(65, -19 + 8 * i);
+            bucketPath.ArcTo(50, 50, 0, SKPathArcSize.Small,
+                             SKPathDirection.Clockwise, 25, -19 + 8 * i);
+            bucketPath.Close();
+        }
+
+        // Arc to suggest the hidden side
+        bucketPath.MoveTo(25, -17);
+        bucketPath.ArcTo(50, 50, 0, SKPathArcSize.Small,
+                         SKPathDirection.Clockwise, 65, -17);
+        bucketPath.LineTo(65, -19);
+        bucketPath.ArcTo(50, 50, 0, SKPathArcSize.Small,
+                         SKPathDirection.CounterClockwise, 25, -19);
+        bucketPath.Close();
+
+        // Make it a little bigger and correct the orientation
+        bucketPath.Transform(SKMatrix.MakeScale(-2, 2));
+        bucketPath.Transform(SKMatrix.MakeRotationDegrees(90));
+    }
+    ...
+</code></pre>
+<p>The bucket creation code completes with two transforms that make the bucket a little bigger and turn it sideways. Applying these transforms was easier than adjusting all the coordinates in the previous code.</p>
+<p>The <code>PaintSurface</code> handler begins by defining a path for the conveyor belt itself. This is simply a pair of lines and a pair of semi-circles that are drawn with a 20-pixel-wide dark-gray line:</p>
+<pre><code class="lang-csharp">public class ConveyorBeltPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        float width = info.Width / 3;
+        float verticalMargin = width / 2 + 150;
+
+        using (SKPath conveyerPath = new SKPath())
+        {
+            // Straight verticals capped by semicircles on top and bottom
+            conveyerPath.MoveTo(width, verticalMargin);
+            conveyerPath.ArcTo(width / 2, width / 2, 0, SKPathArcSize.Large,
+                               SKPathDirection.Clockwise, 2 * width, verticalMargin);
+            conveyerPath.LineTo(2 * width, info.Height - verticalMargin);
+            conveyerPath.ArcTo(width / 2, width / 2, 0, SKPathArcSize.Large,
+                               SKPathDirection.Clockwise, width, info.Height - verticalMargin);
+            conveyerPath.Close();
+
+            // Draw the conveyor belt itself
+            canvas.DrawPath(conveyerPath, conveyerPaint);
+
+            // Calculate spacing based on length of conveyer path
+            float length = 2 * (info.Height - 2 * verticalMargin) +
+                           2 * ((float)Math.PI * width / 2);
+
+            // Value will be somewhere around 200
+            float spacing = length / (float)Math.Round(length / 200);
+
+            // Now animate the phase; t is 0 to 1 every 2 seconds
+            TimeSpan timeSpan = new TimeSpan(DateTime.Now.Ticks);
+            float t = (float)(timeSpan.TotalSeconds % 2 / 2);
+            float phase = -t * spacing;
+
+            // Create the buckets PathEffect
+            using (SKPathEffect bucketsPathEffect =
+                        SKPathEffect.Create1DPath(bucketPath, spacing, phase,
+                                                  SKPath1DPathEffectStyle.Rotate))
+            {
+                // Set it to the Paint object and draw the path again
+                bucketsPaint.PathEffect = bucketsPathEffect;
+                canvas.DrawPath(conveyerPath, bucketsPaint);
+            }
+        }
+    }
+}
+</code></pre>
+<p>The logic for drawing the conveyor belt does not work in landscape mode.</p>
+<p>The buckets should be spaced about 200 pixels apart on the conveyor belt. However, the conveyor belt is probably not a multiple of 200 pixels long, which means that as the <code>phase</code> argument of <code>SKPathEffect.Create1DPath</code> is animated, buckets will pop into and out of existence.</p>
+<p>For this reason, the program first calculates a value named <code>length</code> that is the length of the conveyor belt. Because the conveyor belt consists of straight lines and semi-circles, this is a simple calculation. Next, the number of buckets is calculated by dividing <code>length</code> by 200. This is rounded to the nearest integer, and that number is then divided into <code>length</code>. The result is a spacing for an integral number of buckets. The <code>phase</code> argument is simply a fraction of that.</p>
+<h2 id="from-path-to-path-again">From Path to Path Again</h2>
+<p>At the bottom of the <code>DrawSurface</code> handler in <strong>Conveyor Belt</strong>, comment out the <code>canvas.DrawPath</code> call and replace it with the following code:</p>
+<pre><code class="lang-csharp">SKPath newPath = new SKPath();
+bool fill = bucketsPaint.GetFillPath(conveyerPath, newPath);
+SKPaint newPaint = new SKPaint
+{
+    Style = fill ? SKPaintStyle.Fill : SKPaintStyle.Stroke
+};
+canvas.DrawPath(newPath, newPaint);
+</code></pre>
+<p>As with the previous example of <code>GetFillPath</code>, you'll see that the results are the same except for the color. After executing <code>GetFillPath</code>, the <code>newPath</code> object contains multiple copies of the bucket path, each positioned in the same spot that the animation positioned them at the time of the call.</p>
+<h2 id="hatching-an-area">Hatching an Area</h2>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.create2dline#skiasharp-skpatheffect-create2dline(system-single-skiasharp-skmatrix)"><code>SKPathEffect.Create2DLines</code></a> method fills an area with parallel lines, often called <em>hatch lines</em>. The method has the following syntax:</p>
+<pre><code class="lang-csharp">public static SKPathEffect Create2DLine (Single width, SKMatrix matrix)
+</code></pre>
+<p>The <code>width</code> argument specifies the stroke width of the hatch lines. The <code>matrix</code> parameter is a combination of scaling and optional rotation. The scaling factor indicates the pixel increment that Skia uses to space the hatch lines. The separation between the lines is the scaling factor minus the <code>width</code> argument. If the scaling factor is less than or equal to the <code>width</code> value, there will be no space between the hatch lines, and the area will appear to be filled. Specify the same value for horizontal and vertical scaling.</p>
+<p>By default, hatch lines are horizontal. If the <code>matrix</code> parameter contains rotation, the hatch lines are rotated clockwise.</p>
+<p>The <strong>Hatch Fill</strong> page demonstrates this path effect. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/HatchFillPage.cs"><code>HatchFillPage</code></a> class defines three path effects as fields, the first for horizontal hatch lines with a width of 3 pixels with a scaling factor indicating that they are spaced 6 pixels apart. The separation between the lines is therefore three pixels. The second path effect is for vertical hatch lines with a width of six pixels spaced 24 pixels apart (so the separation is 18 pixels), and the third is for diagonal hatch lines 12 pixels wide spaced 36 pixels apart.</p>
+<pre><code class="lang-csharp">public class HatchFillPage : ContentPage
+{
+    SKPaint fillPaint = new SKPaint();
+
+    SKPathEffect horzLinesPath = SKPathEffect.Create2DLine(3, SKMatrix.MakeScale(6, 6));
+
+    SKPathEffect vertLinesPath = SKPathEffect.Create2DLine(6,
+        Multiply(SKMatrix.MakeRotationDegrees(90), SKMatrix.MakeScale(24, 24)));
+
+    SKPathEffect diagLinesPath = SKPathEffect.Create2DLine(12,
+        Multiply(SKMatrix.MakeScale(36, 36), SKMatrix.MakeRotationDegrees(45)));
+
+    SKPaint strokePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        StrokeWidth = 3,
+        Color = SKColors.Black
+    };
+    ...
+    static SKMatrix Multiply(SKMatrix first, SKMatrix second)
+    {
+        SKMatrix target = SKMatrix.MakeIdentity();
+        SKMatrix.Concat(ref target, first, second);
+        return target;
+    }
+}
+</code></pre>
+<p>Notice the matrix <code>Multiply</code> method. Because the horizontal and vertical scaling factors are the same, the order in which the scaling and rotation matrices are multiplied doesn't matter.</p>
+<p>The <code>PaintSurface</code> handler uses these three path effects with three different colors in combination with <code>fillPaint</code> to fill a rounded rectangle sized to fit the page. The <code>Style</code> property set on <code>fillPaint</code> is ignored; when the <code>SKPaint</code> object includes a path effect created from <code>SKPathEffect.Create2DLine</code>, the area is filled regardless:</p>
+<pre><code class="lang-csharp">public class HatchFillPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPath roundRectPath = new SKPath())
+        {
+            // Create a path
+            roundRectPath.AddRoundedRect(
+                new SKRect(50, 50, info.Width - 50, info.Height - 50), 100, 100);
+
+            // Horizontal hatch marks
+            fillPaint.PathEffect = horzLinesPath;
+            fillPaint.Color = SKColors.Red;
+            canvas.DrawPath(roundRectPath, fillPaint);
+
+            // Vertical hatch marks
+            fillPaint.PathEffect = vertLinesPath;
+            fillPaint.Color = SKColors.Blue;
+            canvas.DrawPath(roundRectPath, fillPaint);
+
+            // Diagonal hatch marks -- use clipping
+            fillPaint.PathEffect = diagLinesPath;
+            fillPaint.Color = SKColors.Green;
+
+            canvas.Save();
+            canvas.ClipPath(roundRectPath);
+            canvas.DrawRect(new SKRect(0, 0, info.Width, info.Height), fillPaint);
+            canvas.Restore();
+
+            // Outline the path
+            canvas.DrawPath(roundRectPath, strokePaint);
+        }
+    }
+    ...
+}
+</code></pre>
+<p>If you look carefully at the results, you'll see that the red and blue hatch lines aren't confined precisely to the rounded rectangle. (This is apparently a characteristic of the underlying Skia code.) If this is unsatisfactory, an alternative approach is shown for the diagonal hatch lines in green: The rounded rectangle is used as a clipping path and the hatch lines are drawn on the entire page.</p>
+<p>The <code>PaintSurface</code> handler concludes with a call to simply stroke the rounded rectangle, so you can see the discrepancy with the red and blue hatch lines:</p>
+<p><a href="effects-images/hatchfill-large.png#lightbox"><img src="effects-images/hatchfill-small.png" alt="Triple screenshot of the Hatch Fill page"></a></p>
+<p>The Android screen doesn't really look like that: The scaling of the screenshot has caused the thin red lines and thin spaces to consolidate into seemingly wider red lines and wider spaces.</p>
+<h2 id="filling-with-a-path">Filling with a Path</h2>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.create2dpath#skiasharp-skpatheffect-create2dpath(skiasharp-skmatrix-skiasharp-skpath)"><code>SKPathEffect.Create2DPath</code></a> allows you to fill an area with a path that is replicated horizontally and vertically, in effect tiling the area:</p>
+<pre><code class="lang-csharp">public static SKPathEffect Create2DPath (SKMatrix matrix, SKPath path)
+</code></pre>
+<p>The <code>SKMatrix</code> scaling factors indicate the horizontal and vertical spacing of the replicated path. But you can't rotate the path using this <code>matrix</code> argument; if you want the path rotated, rotate the path itself using the <code>Transform</code> method defined by <code>SKPath</code>.</p>
+<p>The replicated path is normally aligned with the left and top edges of the screen rather than the area being filled. You can override this behavior by providing translation factors between 0 and the scaling factors to specify horizontal and vertical offsets from the left and top sides.</p>
+<p>The <strong>Path Tile Fill</strong> page demonstrates this path effect. The path used for tiling the area is defined as a field in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PathTileFillPage.cs"><code>PathTileFillPage</code></a> class. The horizontal and vertical coordinates range from –40 to 40, which means that this path is 80 pixels square:</p>
+<pre><code class="lang-csharp">public class PathTileFillPage : ContentPage
+{
+    SKPath tilePath = SKPath.ParseSvgPathData(
+        &quot;M -20 -20 L 2 -20, 2 -40, 18 -40, 18 -20, 40 -20, &quot; +
+        &quot;40 -12, 20 -12, 20 12, 40 12, 40 40, 22 40, 22 20, &quot; +
+        &quot;-2 20, -2 40, -20 40, -20 8, -40 8, -40 -8, -20 -8 Z&quot;);
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Color = SKColors.Red;
+
+            using (SKPathEffect pathEffect =
+                   SKPathEffect.Create2DPath(SKMatrix.MakeScale(64, 64), tilePath))
+            {
+                paint.PathEffect = pathEffect;
+
+                canvas.DrawRoundRect(
+                    new SKRect(50, 50, info.Width - 50, info.Height - 50),
+                    100, 100, paint);
+            }
+        }
+    }
+}
+</code></pre>
+<p>In the <code>PaintSurface</code> handler, the <code>SKPathEffect.Create2DPath</code> calls sets the horizontal and vertical spacing to 64 to cause the 80-pixel square tiles to overlap. Fortunately, the path resembles a puzzle piece, meshing nicely with adjoining tiles:</p>
+<p><a href="effects-images/pathtilefill-large.png#lightbox"><img src="effects-images/pathtilefill-small.png" alt="Triple screenshot of the Path Tile Fill page"></a></p>
+<p>The scaling from the original screenshot causes some distortion, particularly on the Android screen.</p>
+<p>Notice that these tiles always appear whole and are never truncated. On the first two screenshots, it's not even evident that the area being filled is a rounded rectangle. If you want to truncate these tiles to a particular area, use a clipping path.</p>
+<p>Try setting the <code>Style</code> property of the <code>SKPaint</code> object to <code>Stroke</code>, and you'll see the individual tiles outlined rather than filled.</p>
+<p>It's also possible to fill an area with a tiled bitmap, as shown in the article <a href="../effects/shaders/bitmap-tiling.html"><strong>SkiaSharp bitmap tiling</strong></a>.</p>
+<h2 id="rounding-sharp-corners">Rounding Sharp Corners</h2>
+<p>The <strong>Rounded Heptagon</strong> program presented in the <a href="../../xamarin-forms/user-interface/graphics/skiasharp/curves/arcs.md"><strong>Three Ways to Draw an Arc</strong></a> article used a tangent arc to curve the points of a seven-sided figure. The <strong>Another Rounded Heptagon</strong> page shows a much easier approach that uses a path effect created from the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.createcorner#skiasharp-skpatheffect-createcorner(system-single)"><code>SKPathEffect.CreateCorner</code></a> method:</p>
+<pre><code class="lang-csharp">public static SKPathEffect CreateCorner (Single radius)
+</code></pre>
+<p>Although the single argument is named <code>radius</code>, you must set it to half the desired corner radius. (This is a characteristic of the underlying Skia code.)</p>
+<p>Here's the <code>PaintSurface</code> handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/AnotherRoundedHeptagonPage.cs"><code>AnotherRoundedHeptagonPage</code></a> class:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    int numVertices = 7;
+    float radius = 0.45f * Math.Min(info.Width, info.Height);
+    SKPoint[] vertices = new SKPoint[numVertices];
+    double vertexAngle = -0.5f * Math.PI;       // straight up
+
+    // Coordinates of the vertices of the polygon
+    for (int vertex = 0; vertex &lt; numVertices; vertex++)
+    {
+        vertices[vertex] = new SKPoint(radius * (float)Math.Cos(vertexAngle),
+                                       radius * (float)Math.Sin(vertexAngle));
+        vertexAngle += 2 * Math.PI / numVertices;
+    }
+
+    float cornerRadius = 100;
+
+    // Create the path
+    using (SKPath path = new SKPath())
+    {
+        path.AddPoly(vertices, true);
+
+        // Render the path in the center of the screen
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = SKColors.Blue;
+            paint.StrokeWidth = 10;
+
+            // Set argument to half the desired corner radius!
+            paint.PathEffect = SKPathEffect.CreateCorner(cornerRadius / 2);
+
+            canvas.Translate(info.Width / 2, info.Height / 2);
+            canvas.DrawPath(path, paint);
+
+            // Uncomment DrawCircle call to verify corner radius
+            float offset = cornerRadius / (float)Math.Sin(Math.PI * (numVertices - 2) / numVertices / 2);
+            paint.Color = SKColors.Green;
+            // canvas.DrawCircle(vertices[0].X, vertices[0].Y + offset, cornerRadius, paint);
+        }
+    }
+}
+</code></pre>
+<p>You can use this effect with either stroking or filling based on the <code>Style</code> property of the <code>SKPaint</code> object. Here it is running:</p>
+<p><a href="effects-images/anotherroundedheptagon-large.png#lightbox"><img src="effects-images/anotherroundedheptagon-small.png" alt="Triple screenshot of the Another Rounded Heptagon page"></a></p>
+<p>You'll see that this rounded heptagon is identical to the earlier program. If you need more convincing that the corner radius is truly 100 rather than the 50 specified in the <code>SKPathEffect.CreateCorner</code> call, you can uncomment the final statement in the program and see a 100-radius circle superimposed on the corner.</p>
+<h2 id="random-jitter">Random Jitter</h2>
+<p>Sometimes the flawless straight lines of computer graphics are not quite what you want, and a little randomness is desired. In that case, you'll want to try the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.creatediscrete#skiasharp-skpatheffect-creatediscrete(system-single-system-single-system-uint32)"><code>SKPathEffect.CreateDiscrete</code></a> method:</p>
+<pre><code class="lang-csharp">public static SKPathEffect CreateDiscrete (Single segLength, Single deviation, UInt32 seedAssist)
+</code></pre>
+<p>You can use this path effect for either stroking or filling. Lines are separated into connected segments — the approximate length of which is specified by <code>segLength</code> — and extend in different directions. The extent of the deviation from the original line is specified by <code>deviation</code>.</p>
+<p>The final argument is a seed used to generate the pseudo-random sequence used for the effect. The jitter effect will look a little different for different seeds. The argument has a default value of zero, which means that the effect is the same whenever you run the program. If you want different jitter whenever the screen is repainted, you can set the seed to the <code>Millisecond</code> property of a <code>DataTime.Now</code> value (for example).</p>
+<p>The <strong>Jitter Experiment</strong> page allows you to experiment with different values in stroking a rectangle:</p>
+<p><a href="effects-images/jitterexperiment-large.png#lightbox"><img src="effects-images/jitterexperiment-small.png" alt="Triple screenshot of the JitterExperiment page"></a></p>
+<p>The program is straightforward. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/JitterExperimentPage.xaml"><strong>JitterExperimentPage.xaml</strong></a> file instantiates two <code>Slider</code> elements and an <code>SKCanvasView</code>:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Curves.JitterExperimentPage&quot;
+             Title=&quot;Jitter Experiment&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Grid.Resources&gt;
+            &lt;ResourceDictionary&gt;
+                &lt;Style TargetType=&quot;Label&quot;&gt;
+                    &lt;Setter Property=&quot;HorizontalTextAlignment&quot; Value=&quot;Center&quot; /&gt;
+                &lt;/Style&gt;
+
+                &lt;Style TargetType=&quot;Slider&quot;&gt;
+                    &lt;Setter Property=&quot;Margin&quot; Value=&quot;20, 0&quot; /&gt;
+                    &lt;Setter Property=&quot;Minimum&quot; Value=&quot;0&quot; /&gt;
+                    &lt;Setter Property=&quot;Maximum&quot; Value=&quot;100&quot; /&gt;
+                &lt;/Style&gt;
+            &lt;/ResourceDictionary&gt;
+        &lt;/Grid.Resources&gt;
+
+        &lt;Slider x:Name=&quot;segLengthSlider&quot;
+                Grid.Row=&quot;0&quot;
+                ValueChanged=&quot;sliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference segLengthSlider},
+                              Path=Value,
+                              StringFormat='Segment Length = {0:F0}'}&quot;
+               Grid.Row=&quot;1&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;deviationSlider&quot;
+                Grid.Row=&quot;2&quot;
+                ValueChanged=&quot;sliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference deviationSlider},
+                              Path=Value,
+                              StringFormat='Deviation = {0:F0}'}&quot;
+               Grid.Row=&quot;3&quot; /&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           Grid.Row=&quot;4&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The <code>PaintSurface</code> handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/JitterExperimentPage.xaml.cs"><strong>JitterExperimentPage.xaml.cs</strong></a> code-behind file is called whenever a <code>Slider</code> value changes. It calls <code>SKPathEffect.CreateDiscrete</code> using the two <code>Slider</code> values and uses that to stroke a rectangle:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    float segLength = (float)segLengthSlider.Value;
+    float deviation = (float)deviationSlider.Value;
+
+    using (SKPaint paint = new SKPaint())
+    {
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = 5;
+        paint.Color = SKColors.Blue;
+
+        using (SKPathEffect pathEffect = SKPathEffect.CreateDiscrete(segLength, deviation))
+        {
+            paint.PathEffect = pathEffect;
+
+            SKRect rect = new SKRect(100, 100, info.Width - 100, info.Height - 100);
+            canvas.DrawRect(rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>You can use this effect for filling as well, in which case the outline of the filled area is subject to these random deviations. The <strong>Jitter Text</strong> page demonstrates using this path effect to display text. Most of the code in the <code>PaintSurface</code> handler of the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/JitterTextPage.cs"><code>JitterTextPage</code></a> class is devoted to sizing and centering the text:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    string text = &quot;FUZZY&quot;;
+
+    using (SKPaint textPaint = new SKPaint())
+    {
+        textPaint.Color = SKColors.Purple;
+        textPaint.PathEffect = SKPathEffect.CreateDiscrete(3f, 10f);
+
+        // Adjust TextSize property so text is 95% of screen width
+        float textWidth = textPaint.MeasureText(text);
+        textPaint.TextSize *= 0.95f * info.Width / textWidth;
+
+        // Find the text bounds
+        SKRect textBounds = new SKRect();
+        textPaint.MeasureText(text, ref textBounds);
+
+        // Calculate offsets to center the text on the screen
+        float xText = info.Width / 2 - textBounds.MidX;
+        float yText = info.Height / 2 - textBounds.MidY;
+
+        canvas.DrawText(text, xText, yText, textPaint);
+    }
+}
+</code></pre>
+<p>Here it is running in landscape mode:</p>
+<p><a href="effects-images/jittertext-large.png#lightbox"><img src="effects-images/jittertext-small.png" alt="Triple screenshot of the JitterText page"></a></p>
+<h2 id="path-outlining">Path Outlining</h2>
+<p>You've already seen two little examples of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.getfillpath"><code>GetFillPath</code></a> method of <code>SKPaint</code>, which exists two versions:</p>
+<pre><code class="lang-csharp">public Boolean GetFillPath (SKPath src, SKPath dst, Single resScale = 1)
+
+public Boolean GetFillPath (SKPath src, SKPath dst, SKRect cullRect, Single resScale = 1)
+</code></pre>
+<p>Only the first two arguments are required. The method accesses the path referenced by the <code>src</code> argument, modifies the path data based on the stroke properties in the <code>SKPaint</code> object (including the <code>PathEffect</code> property), and then writes the results into the <code>dst</code> path. The <code>resScale</code> parameter allows reducing the precision to create a smaller destination path, and the <code>cullRect</code> argument can eliminate contours outside a rectangle.</p>
+<p>One basic use of this method does not involve path effects at all: If the <code>SKPaint</code> object has its <code>Style</code> property set to <code>SKPaintStyle.Stroke</code>, and does <em>not</em> have its <code>PathEffect</code> set, then <code>GetFillPath</code> creates a path that represents an <em>outline</em> of the source path as if it had been stroked by the paint properties.</p>
+<p>For example, if the <code>src</code> path is a simple circle of radius 500, and the <code>SKPaint</code> object specifies a stroke width of 100, then the <code>dst</code> path becomes two concentric circles, one with a radius of 450 and the other with a radius of 550. The method is called <code>GetFillPath</code> because filling this <code>dst</code> path is the same as stroking the <code>src</code> path. But you can also stroke the <code>dst</code> path to see the path outlines.</p>
+<p>The <strong>Tap to Outline the Path</strong> demonstrates this. The <code>SKCanvasView</code> and <code>TapGestureRecognizer</code> are instantiated in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/TapToOutlineThePathPage.xaml"><strong>TapToOutlineThePathPage.xaml</strong></a> file. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/TapToOutlineThePathPage.xaml.cs"><strong>TapToOutlineThePathPage.xaml.cs</strong></a> code-behind file defines three <code>SKPaint</code> objects as fields, two for stroking with stroke widths of 100 and 20, and the third for filling:</p>
+<pre><code class="lang-csharp">public partial class TapToOutlineThePathPage : ContentPage
+{
+    bool outlineThePath = false;
+
+    SKPaint redThickStroke = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Red,
+        StrokeWidth = 100
+    };
+
+    SKPaint redThinStroke = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Red,
+        StrokeWidth = 20
+    };
+
+    SKPaint blueFill = new SKPaint
+    {
+        Style = SKPaintStyle.Fill,
+        Color = SKColors.Blue
+    };
+
+    public TapToOutlineThePathPage()
+    {
+        InitializeComponent();
+    }
+
+    void OnCanvasViewTapped(object sender, EventArgs args)
+    {
+        outlineThePath ^= true;
+        (sender as SKCanvasView).InvalidateSurface();
+    }
+    ...
+}
+</code></pre>
+<p>If the screen has not been tapped, the <code>PaintSurface</code> handler uses the <code>blueFill</code> and <code>redThickStroke</code> paint objects to render a circular path:</p>
+<pre><code class="lang-csharp">public partial class TapToOutlineThePathPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPath circlePath = new SKPath())
+        {
+            circlePath.AddCircle(info.Width / 2, info.Height / 2,
+                                 Math.Min(info.Width / 2, info.Height / 2) -
+                                 redThickStroke.StrokeWidth);
+
+            if (!outlineThePath)
+            {
+                canvas.DrawPath(circlePath, blueFill);
+                canvas.DrawPath(circlePath, redThickStroke);
+            }
+            else
+            {
+                using (SKPath outlinePath = new SKPath())
+                {
+                    redThickStroke.GetFillPath(circlePath, outlinePath);
+
+                    canvas.DrawPath(outlinePath, blueFill);
+                    canvas.DrawPath(outlinePath, redThinStroke);
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<p>The circle is filled and stroked as you'd expect:</p>
+<p><a href="effects-images/taptooutlinethepathnormal-large.png#lightbox"><img src="effects-images/taptooutlinethepathnormal-small.png" alt="Triple screenshot of the normal Tap To Outline The Path page"></a></p>
+<p>When you tap the screen, <code>outlineThePath</code> is set to <code>true</code>, and the <code>PaintSurface</code> handler creates a fresh <code>SKPath</code> object and uses that as the destination path in a call to <code>GetFillPath</code> on the <code>redThickStroke</code> paint object. That destination path is then filled and stroked with <code>redThinStroke</code>, resulting in the following:</p>
+<p><a href="effects-images/taptooutlinethepathoutlined-large.png#lightbox"><img src="effects-images/taptooutlinethepathoutlined-small.png" alt="Triple screenshot of the outlined Tap To Outline The Path page"></a></p>
+<p>The two red circles clearly indicate that the original circular path has been converted into two circular contours.</p>
+<p>This method can be very useful in developing paths to use for the <code>SKPathEffect.Create1DPath</code> method. The paths you specify in these methods are always filled when the paths are replicated. If you don't want the entire path to be filled, you must carefully define the outlines.</p>
+<p>For example, in the <strong>Linked Chain</strong> sample, the links were defined with a series of four arcs, each pair of which were based on two radii to outline the area of the path to be filled. It's possible to replace the code in the <code>LinkedChainPage</code> class to do it a little differently.</p>
+<p>First, you'll want to redefine the <code>linkRadius</code> constant:</p>
+<pre><code class="lang-csharp">const float linkRadius = 27.5f;
+const float linkThickness = 5;
+</code></pre>
+<p>The <code>linkPath</code> is now just two arcs based on that single radius, with the desired start angles and sweep angles:</p>
+<pre><code class="lang-csharp">using (SKPath linkPath = new SKPath())
+{
+    SKRect rect = new SKRect(-linkRadius, -linkRadius, linkRadius, linkRadius);
+    linkPath.AddArc(rect, 55, 160);
+    linkPath.AddArc(rect, 235, 160);
+
+    using (SKPaint strokePaint = new SKPaint())
+    {
+        strokePaint.Style = SKPaintStyle.Stroke;
+        strokePaint.StrokeWidth = linkThickness;
+
+        using (SKPath outlinePath = new SKPath())
+        {
+            strokePaint.GetFillPath(linkPath, outlinePath);
+
+            // Set that path as the 1D path effect for linksPaint
+            linksPaint.PathEffect =
+                SKPathEffect.Create1DPath(outlinePath, 1.3f * linkRadius, 0,
+                                          SKPath1DPathEffectStyle.Rotate);
+
+        }
+
+    }
+}
+</code></pre>
+<p>The <code>outlinePath</code> object is then the recipient of the outline of <code>linkPath</code> when it is stroked with the properties specified in <code>strokePaint</code>.</p>
+<p>Another example using this technique is coming up next for the path used in a  method.</p>
+<h2 id="combining-path-effects">Combining Path Effects</h2>
+<p>The two final static creation methods of <code>SKPathEffect</code> are <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.createsum#skiasharp-skpatheffect-createsum(skiasharp-skpatheffect-skiasharp-skpatheffect)"><code>SKPathEffect.CreateSum</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.createcompose#skiasharp-skpatheffect-createcompose(skiasharp-skpatheffect-skiasharp-skpatheffect)"><code>SKPathEffect.CreateCompose</code></a>:</p>
+<pre><code class="lang-csharp">public static SKPathEffect CreateSum (SKPathEffect first, SKPathEffect second)
+
+public static SKPathEffect CreateCompose (SKPathEffect outer, SKPathEffect inner)
+</code></pre>
+<p>Both these methods combine two path effects to create a composite path effect. The <code>CreateSum</code> method creates a path effect that is similar to the two path effects applied separately, while <code>CreateCompose</code> applies one path effect (the <code>inner</code>) and then applies the <code>outer</code> to that.</p>
+<p>You've already seen how the <code>GetFillPath</code> method of <code>SKPaint</code> can convert one path to another path based on <code>SKPaint</code> properties (including <code>PathEffect</code>) so it shouldn't be <em>too</em> mysterious how an <code>SKPaint</code> object can perform that operation twice with the two path effects specified in the <code>CreateSum</code> or <code>CreateCompose</code> methods.</p>
+<p>One obvious use of <code>CreateSum</code> is to define an <code>SKPaint</code> object that fills a path with one path effect, and strokes the path with another path effect. This is demonstrated in the <strong>Cats in Frame</strong> sample, which displays an array of cats within a frame with scalloped edges:</p>
+<p><a href="effects-images/catsinframe-large.png#lightbox"><img src="effects-images/catsinframe-small.png" alt="Triple screenshot of the Cats In Frame page"></a></p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/CatsInFramePage.cs"><code>CatsInFramePage</code></a> class begins by defining several fields. You might recognize the first field from the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataCatPage.cs"><code>PathDataCatPage</code></a> class from the <a href="../../xamarin-forms/user-interface/graphics/skiasharp/curves/path-data.md"><strong>SVG Path Data</strong></a> article. The second path is based on a line and arc for the scallop pattern of the frame:</p>
+<pre><code class="lang-csharp">public class CatsInFramePage : ContentPage
+{
+    // From PathDataCatPage.cs
+    SKPath catPath = SKPath.ParseSvgPathData(
+        &quot;M 160 140 L 150 50 220 103&quot; +              // Left ear
+        &quot;M 320 140 L 330 50 260 103&quot; +              // Right ear
+        &quot;M 215 230 L 40 200&quot; +                      // Left whiskers
+        &quot;M 215 240 L 40 240&quot; +
+        &quot;M 215 250 L 40 280&quot; +
+        &quot;M 265 230 L 440 200&quot; +                     // Right whiskers
+        &quot;M 265 240 L 440 240&quot; +
+        &quot;M 265 250 L 440 280&quot; +
+        &quot;M 240 100&quot; +                               // Head
+        &quot;A 100 100 0 0 1 240 300&quot; +
+        &quot;A 100 100 0 0 1 240 100 Z&quot; +
+        &quot;M 180 170&quot; +                               // Left eye
+        &quot;A 40 40 0 0 1 220 170&quot; +
+        &quot;A 40 40 0 0 1 180 170 Z&quot; +
+        &quot;M 300 170&quot; +                               // Right eye
+        &quot;A 40 40 0 0 1 260 170&quot; +
+        &quot;A 40 40 0 0 1 300 170 Z&quot;);
+
+    SKPaint catStroke = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        StrokeWidth = 5
+    };
+
+    SKPath scallopPath =
+        SKPath.ParseSvgPathData(&quot;M 0 0 L 50 0 A 60 60 0 0 1 -50 0 Z&quot;);
+
+    SKPaint framePaint = new SKPaint
+    {
+        Color = SKColors.Black
+    };
+    ...
+}
+</code></pre>
+<p>The <code>catPath</code> could be used in the <code>SKPathEffect.Create2DPath</code> method if the <code>SKPaint</code> object <code>Style</code> property is set to <code>Stroke</code>. However, if the <code>catPath</code> is used directly in this program, then the entire head of the cat will be filled, and the whiskers won't even be visible. (Try it!) It's necessary to obtain the outline of that path and use that outline in the <code>SKPathEffect.Create2DPath</code> method.</p>
+<p>The constructor does this job. It first applies two transforms to <code>catPath</code> to move the (0, 0) point to the center and scale it down in size. <code>GetFillPath</code> obtains all the outlines of the contours in <code>outlinedCatPath</code>, and that object is used in the <code>SKPathEffect.Create2DPath</code> call. The scaling factors in the <code>SKMatrix</code> value are slightly larger than the horizontal and vertical size of the cat to provide a little buffer between the tiles, while the translation factors were derived somewhat empirically so that a full cat is visible in the upper-left corner of the frame:</p>
+<pre><code class="lang-csharp">public class CatsInFramePage : ContentPage
+{
+    ...
+    public CatsInFramePage()
+    {
+        Title = &quot;Cats in Frame&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+
+        // Move (0, 0) point to center of cat path
+        catPath.Transform(SKMatrix.MakeTranslation(-240, -175));
+
+        // Now catPath is 400 by 250
+        // Scale it down to 160 by 100
+        catPath.Transform(SKMatrix.MakeScale(0.40f, 0.40f));
+
+        // Get the outlines of the contours of the cat path
+        SKPath outlinedCatPath = new SKPath();
+        catStroke.GetFillPath(catPath, outlinedCatPath);
+
+        // Create a 2D path effect from those outlines
+        SKPathEffect fillEffect = SKPathEffect.Create2DPath(
+            new SKMatrix { ScaleX = 170, ScaleY = 110,
+                           TransX = 75, TransY = 80,
+                           Persp2 = 1 },
+            outlinedCatPath);
+
+        // Create a 1D path effect from the scallop path
+        SKPathEffect strokeEffect =
+            SKPathEffect.Create1DPath(scallopPath, 75, 0, SKPath1DPathEffectStyle.Rotate);
+
+        // Set the sum the effects to frame paint
+        framePaint.PathEffect = SKPathEffect.CreateSum(fillEffect, strokeEffect);
+    }
+    ...
+}
+</code></pre>
+<p>The constructor then calls <code>SKPathEffect.Create1DPath</code> for the scalloped frame. Notice that the width of the path is 100 pixels, but the advance is 75 pixels so that the replicated path is overlapped around the frame. The final statement of the constructor calls <code>SKPathEffect.CreateSum</code> to combine the two path effects and set the result to the <code>SKPaint</code> object.</p>
+<p>All this work allows the <code>PaintSurface</code> handler to be quite simple. It only needs to define a rectangle and draw it using <code>framePaint</code>:</p>
+<pre><code class="lang-csharp">public class CatsInFramePage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        SKRect rect = new SKRect(50, 50, info.Width - 50, info.Height - 50);
+        canvas.ClipRect(rect);
+        canvas.DrawRect(rect, framePaint);
+    }
+}
+</code></pre>
+<p>The algorithms behind the path effects always cause the whole path used for stroking or filling to be displayed, which can cause some visuals to appear outside the rectangle. The <code>ClipRect</code> call prior to the <code>DrawRect</code> call allows the visuals to be considerably cleaner. (Try it without clipping!)</p>
+<p>It is common to use <code>SKPathEffect.CreateCompose</code> to add some jitter to another path effect. You can certainly experiment on your own, but here's a somewhat different example:</p>
+<p>The <strong>Dashed Hatch Lines</strong> fills an ellipse with hatch lines that are dashed. Most of the work in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/DashedHatchLinesPage.cs"><code>DashedHatchLinesPage</code></a> class is performed right in the field definitions. These fields define a dash effect and a hatch effect. They are defined as <code>static</code> because they are then referenced in an <code>SKPathEffect.CreateCompose</code> call in the <code>SKPaint</code> definition:</p>
+<pre><code class="lang-csharp">public class DashedHatchLinesPage : ContentPage
+{
+    static SKPathEffect dashEffect =
+        SKPathEffect.CreateDash(new float[] { 30, 30 }, 0);
+
+    static SKPathEffect hatchEffect = SKPathEffect.Create2DLine(20,
+        Multiply(SKMatrix.MakeScale(60, 60),
+                 SKMatrix.MakeRotationDegrees(45)));
+
+    SKPaint paint = new SKPaint()
+    {
+        PathEffect = SKPathEffect.CreateCompose(dashEffect, hatchEffect),
+        StrokeCap = SKStrokeCap.Round,
+        Color = SKColors.Blue
+    };
+    ...
+    static SKMatrix Multiply(SKMatrix first, SKMatrix second)
+    {
+        SKMatrix target = SKMatrix.MakeIdentity();
+        SKMatrix.Concat(ref target, first, second);
+        return target;
+    }
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler needs to contain only the standard overhead plus one call to <code>DrawOval</code>:</p>
+<pre><code class="lang-csharp">public class DashedHatchLinesPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        canvas.DrawOval(info.Width / 2, info.Height / 2,
+                        0.45f * info.Width, 0.45f * info.Height,
+                        paint);
+    }
+    ...
+}
+</code></pre>
+<p>As you've already discovered, the hatch lines aren't precisely restricted to the interior of the area, and in this example, they always begin at the left with a whole dash:</p>
+<p><a href="effects-images/dashedhatchlines-large.png#lightbox"><img src="effects-images/dashedhatchlines-small.png" alt="Triple screenshot of the Dashed Hatch Lines page"></a></p>
+<p>Now that you've seen path effects that range from simple dots and dashes to strange combinations, use your imagination and see what you can create.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

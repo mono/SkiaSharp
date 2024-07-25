@@ -1,0 +1,368 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>The non-separable blend modes | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="The non-separable blend modes | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../../images/logo.ico">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../TOC.html">
+    <meta property="docfx:tocrel" content="../../TOC.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="the-non-separable-blend-modes">The non-separable blend modes</h1>
+
+<p>As you saw in the article <a href="separable.html"><strong>SkiaSharp separable blend modes</strong></a>, the separable blend modes perform operations on the red, green, and blue channels separately. The non-separable blend modes do not. By operating upon the Hue, Saturation, and Luminosity levels of color, the non-separable blend modes can alter colors in interesting ways:</p>
+<p><img src="non-separable-images/NonSeparableSample.png" alt="Non-Separable Sample" title="Non-Separable Sample"></p>
+<h2 id="the-hue-saturation-luminosity-model">The Hue-Saturation-Luminosity model</h2>
+<p>To understand the non-separable blend modes, it is necessary to treat the destination and source pixels as colors in the Hue-Saturation-Luminosity model. (Luminosity is also referred to as Lightness.)</p>
+<p>The HSL color model was discussed in the article <a href="../../basics/integration.html"><strong>Integrating with Xamarin.Forms</strong></a> and a sample program in that article allows experimentation with HSL colors. You can create an <code>SKColor</code> value using Hue, Saturation, and Luminosity values with the static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.fromhsl"><code>SKColor.FromHsl</code></a> method.</p>
+<p>The Hue represents the dominant wavelength of the color. Hue values range from 0 to 360 and cycle through the additive and subtractive primaries: Red is the value 0, yellow is 60, green is 120, cyan is 180, blue is 240, magenta is 300, and the cycle goes back to red at 360.</p>
+<p>If there is no dominant color — for example, the color is white or black or a gray shade — then the Hue is undefined and usually set to 0.</p>
+<p>The Saturation values can range from 0 to 100 and indicate the purity of the color. A Saturation value of 100 is the purest color while values lower than 100 cause the color to become more grayish. A Saturation value of 0 results in a shade of gray.</p>
+<p>The Luminosity (or Lightness) value indicates how bright the color is. A Luminosity value of 0 is black regardless of the other settings. Similarly, a Luminosity value of 100 is white.</p>
+<p>The HSL value (0, 100, 50) is the RGB value (FF, 00, 00), which is pure red. The HSL value (180, 100, 50) is the RGB value (00, FF, FF), pure cyan. As the Saturation is decreased, the dominant color component is decreased and the other components are increased. At a Saturation level of 0, all the components are the same and the color is a gray shade. Decrease the Luminosity to go to black; increase the Luminosity to go to white.</p>
+<h2 id="the-blend-modes-in-detail">The blend modes in detail</h2>
+<p>Like the other blend modes, the four non-separable blend modes involve a destination (which is often a bitmap image) and a source, which is often a single color or a gradient. The blend modes combine Hue, Saturation, and Luminosity values from the destination and the source:</p>
+<table>
+<thead>
+<tr>
+<th>Blend Mode</th>
+<th>Components from source</th>
+<th>Components from destination</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Hue</code></td>
+<td>Hue</td>
+<td>Saturation and Luminosity</td>
+</tr>
+<tr>
+<td><code>Saturation</code></td>
+<td>Saturation</td>
+<td>Hue and Luminosity</td>
+</tr>
+<tr>
+<td><code>Color</code></td>
+<td>Hue and Saturation</td>
+<td>Luminosity</td>
+</tr>
+<tr>
+<td><code>Luminosity</code></td>
+<td>Luminosity</td>
+<td>Hue and Saturation</td>
+</tr>
+</tbody>
+</table>
+<p>See the W3C <a href="https://www.w3.org/TR/compositing-1/"><strong>Compositing and Blending Level 1</strong></a> specification for the algorithms.</p>
+<p>The <strong>Non-Separable Blend Modes</strong> page contains a <code>Picker</code> to select one of these blend modes and three <code>Slider</code> views to select an HSL color:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
+             xmlns:skiaviews=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.NonSeparableBlendModesPage&quot;
+             Title=&quot;Non-Separable Blend Modes&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;skiaviews:SKCanvasView x:Name=&quot;canvasView&quot;
+                                VerticalOptions=&quot;FillAndExpand&quot;
+                                PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Picker x:Name=&quot;blendModePicker&quot;
+                Title=&quot;Blend Mode&quot;
+                Margin=&quot;10, 0&quot;
+                SelectedIndexChanged=&quot;OnPickerSelectedIndexChanged&quot;&gt;
+            &lt;Picker.ItemsSource&gt;
+                &lt;x:Array Type=&quot;{x:Type skia:SKBlendMode}&quot;&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Hue&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Saturation&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Color&quot; /&gt;
+                    &lt;x:Static Member=&quot;skia:SKBlendMode.Luminosity&quot; /&gt;
+                &lt;/x:Array&gt;
+            &lt;/Picker.ItemsSource&gt;
+
+            &lt;Picker.SelectedIndex&gt;
+                0
+            &lt;/Picker.SelectedIndex&gt;
+        &lt;/Picker&gt;
+
+        &lt;Slider x:Name=&quot;hueSlider&quot;
+                Maximum=&quot;360&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;satSlider&quot;
+                Maximum=&quot;100&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;lumSlider&quot;
+                Maximum=&quot;100&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;StackLayout Orientation=&quot;Horizontal&quot;&gt;
+            &lt;Label x:Name=&quot;hslLabel&quot;
+                   HorizontalOptions=&quot;CenterAndExpand&quot; /&gt;
+
+            &lt;Label x:Name=&quot;rgbLabel&quot;
+                   HorizontalOptions=&quot;CenterAndExpand&quot; /&gt;
+
+        &lt;/StackLayout&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>To save space, the three <code>Slider</code> views are not identified in the user interface of the program. You'll need to remember that the order is Hue, Saturation, and Luminosity. Two <code>Label</code> views at the bottom of the page show the HSL and RGB color values.</p>
+<p>The code-behind file loads one of the bitmap resources, displays that as large as possible on the canvas, and then covers the canvas with a rectangle. The rectangle color is based on the three <code>Slider</code> views and the blend mode is the one selected in the <code>Picker</code>:</p>
+<pre><code class="lang-csharp">public partial class NonSeparableBlendModesPage : ContentPage
+{
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+                        typeof(NonSeparableBlendModesPage),
+                        &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+    SKColor color;
+
+    public NonSeparableBlendModesPage()
+    {
+        InitializeComponent();
+    }
+
+    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs e)
+    {
+        // Calculate new color based on sliders
+        color = SKColor.FromHsl((float)hueSlider.Value,
+                                (float)satSlider.Value,
+                                (float)lumSlider.Value);
+
+        // Use labels to display HSL and RGB color values
+        color.ToHsl(out float hue, out float sat, out float lum);
+
+        hslLabel.Text = String.Format(&quot;HSL = {0:F0} {1:F0} {2:F0}&quot;,
+                                      hue, sat, lum);
+
+        rgbLabel.Text = String.Format(&quot;RGB = {0:X2} {1:X2} {2:X2}&quot;,
+                                      color.Red, color.Green, color.Blue);
+
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
+
+        // Get blend mode from Picker
+        SKBlendMode blendMode =
+            (SKBlendMode)(blendModePicker.SelectedIndex == -1 ?
+                                        0 : blendModePicker.SelectedItem);
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Color = color;
+            paint.BlendMode = blendMode;
+            canvas.DrawRect(info.Rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>Notice that the program does not display the HSL color value as selected by the three sliders. Instead, it creates a color value from those sliders and then uses the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.tohsl"><code>ToHsl</code></a> method to obtain the Hue, Saturation, and Luminosity values. This is because the <code>FromHsl</code> method converts an HSL color to an RGB color, which is stored internally in the <code>SKColor</code> structure. The <code>ToHsl</code> method converts from RGB to HSL, but the result will not always be the original value.</p>
+<p>For example, <code>FromHsl</code> converts the HSL value (180, 50, 0) to the RGB color (0, 0, 0) because the <code>Luminosity</code> is zero. The <code>ToHsl</code> method converts the RGB color (0, 0, 0) to the HSL color (0, 0, 0) because the Hue and Saturation values are irrelevant. When using this program, it is better that you see the representation of the HSL color that the program is using rather than the one you specified with the sliders.</p>
+<p>The <code>SKBlendModes.Hue</code> blend mode uses the Hue level of the source while retaining the Saturation and Luminosity levels of the destination. When you test this blend mode, the saturation and luminosity sliders must be set to something other than 0 or 100 because in those cases, the Hue is not uniquely defined.</p>
+<p><a href="non-separable-images/NonSeparableBlendModes-Hue-Large.png#lightbox"><img src="non-separable-images/NonSeparableBlendModes-Hue.png" alt="Non-Separable Blend Modes - Hue" title="Non-Separable Blend Modes - Hue"></a></p>
+<p>When you use set the slider to 0 (as with the iOS screenshot at the left), everything turns reddish. But this does not mean that the image is entirely absent of green and blue. Obviously there are still gray shades present in the result. For example, the RGB color (40, 40, C0) is equivalent to the HSL color (240, 50, 50). The Hue is blue, but the saturation value of 50 indicates that there are red and green components as well. If the Hue is set to 0 with <code>SKBlendModes.Hue</code>, the HSL color is (0, 50, 50), which is the RGB color (C0, 40, 40). There are still blue and green components but now the dominant component is red.</p>
+<p>The <code>SKBlendModes.Saturation</code> blend mode combines the Saturation level of the source with the Hue and Luminosity of the destination. Like the Hue, the Saturation is not well defined if the Luminosity is 0 or 100. In theory, any Luminosity setting between those two extremes should work. However, the Luminosity setting seems to affect the result more than it should. Set the luminosity to 50, and you can see how you can set the Saturation level of the picture:</p>
+<p><a href="non-separable-images/NonSeparableBlendModes-Saturation-Large.png#lightbox"><img src="non-separable-images/NonSeparableBlendModes-Saturation.png" alt="Non-Separable Blend Modes - Saturation" title="Non-Separable Blend Modes - Saturation"></a></p>
+<p>You can use this blend mode to increase the color Saturation of a dull image, or you can decrease the Saturation down to zero (as in the iOS screenshot at the left) for a resultant image composed of only gray shades.</p>
+<p>The <code>SKBlendModes.Color</code> blend mode retains the Luminosity of the destination but uses the Hue and Saturation of the source. Again, that implies that any setting of the Luminosity slider somewhere between the extremes should work.</p>
+<p><a href="non-separable-images/NonSeparableBlendModes-Color-Large.png#lightbox"><img src="non-separable-images/NonSeparableBlendModes-Color.png" alt="Non-Separable Blend Modes - Color" title="Non-Separable Blend Modes - Color"></a></p>
+<p>You'll see an application of this blend mode shortly.</p>
+<p>Finally, the <code>SKBlendModes.Luminosity</code> blend mode is the opposite of <code>SKBlendModes.Color</code>. It retains the Hue and Saturation of the destination but uses the Luminosity of the source. The <code>Luminosity</code> blend mode is the most mysterious of the batch: The Hue and Saturation sliders affect the image, but even at medium Luminosity, the image is not distinct:</p>
+<p><a href="non-separable-images/NonSeparableBlendModes-Luminosity-Large.png#lightbox"><img src="non-separable-images/NonSeparableBlendModes-Luminosity.png" alt="Non-Separable Blend Modes - Luminosity" title="Non-Separable Blend Modes - Luminosity"></a></p>
+<p>In theory, increasing or decreasing the Luminosity of an image should make it lighter or darker. This <a href="https://jetbrains.github.io/skiko/skiko/org.jetbrains.skia/-blend-mode/-l-u-m-i-n-o-s-i-t-y/index.html">Luminosity property example</a> or this <a href="/dotnet/api/SkiaSharp.SKBlendMode?view=skiasharp-2.80.2&amp;preserve-view=true">SKBlendMode Enum define</a> may be of interest.</p>
+<p>It is generally not the case that you'll want to use one of the non-separable blend modes with a source that consists of a single color applied to the entire destination image. The effect is just too great. You'll want to restrict the effect to one part of the image. In that case, the source will probably incorporate transparancy, or perhaps the source will be limited to a smaller graphic.</p>
+<h2 id="a-matte-for-a-separable-mode">A matte for a separable mode</h2>
+<p>Here's one of the bitmaps included as a resource in the sample. The filename is <strong>Banana.jpg</strong>:</p>
+<p><img src="non-separable-images/Banana.jpg" alt="Banana Monkey" title="Banana Monkey"></p>
+<p>It's possible to create a matte that encompasses just the banana. This is also a resource in the sample. The filename is <strong>BananaMatte.png</strong>:</p>
+<p><img src="non-separable-images/BananaMatte.png" alt="Banana Matte" title="Banana Matte"></p>
+<p>Aside from the black banana shape, the rest of the bitmap is transparent.</p>
+<p>The <strong>Blue Banana</strong> page uses that matte to alter the Hue and Saturation of the banana that the monkey is holding, but to change nothing else in the image.</p>
+<p>In the following <code>BlueBananaPage</code> class, the <strong>Banana.jpg</strong> bitmap is loaded as a field. The constructor loads the <strong>BananaMatte.png</strong> bitmap as the <code>matteBitmap</code> object, but it does not retain that object beyond the constructor. Instead, a third bitmap named <code>blueBananaBitmap</code> is created. The <code>matteBitmap</code> is drawn on <code>blueBananaBitmap</code> followed by an <code>SKPaint</code> with its <code>Color</code> set to blue and its <code>BlendMode</code> set to <code>SKBlendMode.SrcIn</code>. The <code>blueBananaBitmap</code> remains mostly transparent but with a solid pure blue image of the banana:</p>
+<pre><code class="lang-csharp">public class BlueBananaPage : ContentPage
+{
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+        typeof(BlueBananaPage),
+        &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+
+    SKBitmap blueBananaBitmap;
+
+    public BlueBananaPage()
+    {
+        Title = &quot;Blue Banana&quot;;
+
+        // Load banana matte bitmap (black on transparent)
+        SKBitmap matteBitmap = BitmapExtensions.LoadBitmapResource(
+            typeof(BlueBananaPage),
+            &quot;SkiaSharpFormsDemos.Media.BananaMatte.png&quot;);
+
+        // Create a bitmap with a solid blue banana and transparent otherwise
+        blueBananaBitmap = new SKBitmap(matteBitmap.Width, matteBitmap.Height);
+
+        using (SKCanvas canvas = new SKCanvas(blueBananaBitmap))
+        {
+            canvas.Clear();
+            canvas.DrawBitmap(matteBitmap, new SKPoint(0, 0));
+
+            using (SKPaint paint = new SKPaint())
+            {
+                paint.Color = SKColors.Blue;
+                paint.BlendMode = SKBlendMode.SrcIn;
+                canvas.DrawPaint(paint);
+            }
+        }
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.BlendMode = SKBlendMode.Color;
+            canvas.DrawBitmap(blueBananaBitmap,
+                              info.Rect,
+                              BitmapStretch.Uniform,
+                              paint: paint);
+        }
+    }
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler draws the bitmap with the monkey holding the banana. This code is followed by the display of <code>blueBananaBitmap</code> with <code>SKBlendMode.Color</code>. Over the surface of the banana, each pixel's Hue and Saturation is replaced by the solid blue, which corresponds to a hue value of 240 and a saturation value of 100. The Luminosity, however, remains the same, which means the banana continues to have a realistic texture despite its new color:</p>
+<p><a href="non-separable-images/BlueBanana-Large.png#lightbox"><img src="non-separable-images/BlueBanana.png" alt="Blue Banana" title="Blue Banana"></a></p>
+<p>Try changing the blend mode to <code>SKBlendMode.Saturation</code>. The banana remains yellow but it's a more intense yellow. In a real-life application, this might be a more desirable effect than turning the banana blue.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

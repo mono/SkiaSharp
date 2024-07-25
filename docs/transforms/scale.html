@@ -1,0 +1,365 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>The Scale Transform | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="The Scale Transform | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="the-scale-transform">The Scale Transform</h1>
+
+<p><em>Discover the SkiaSharp scale transform for scaling objects to various sizes</em></p>
+<p>As you've seen in <a href="translate.html"><strong>The Translate Transform</strong></a> article, the translate transform can move a graphical object from one location to another. In contrast, the scale transform changes the size of the graphical object:</p>
+<p><img src="scale-images/scaleexample.png" alt="A tall word scaled in size"></p>
+<p>The scale transform also often causes graphics coordinates to move as they are made larger.</p>
+<p>Earlier you saw two transform formulas that describe the effects of translation factors of <code>dx</code> and <code>dy</code>:</p>
+<p>x' = x + dx</p>
+<p>y' = y + dy</p>
+<p>Scale factors of <code>sx</code> and <code>sy</code> are multiplicative rather than additive:</p>
+<p>x' = sx · x</p>
+<p>y' = sy · y</p>
+<p>The default values of the translate factors are 0; the default values of the scale factors are 1.</p>
+<p>The <code>SKCanvas</code> class defines four <code>Scale</code> methods. The first <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.scale#skiasharp-skcanvas-scale(system-single)"><code>Scale</code></a> method is for cases when you want the same horizontal and vertical scaling factor:</p>
+<pre><code class="lang-csharp">public void Scale (Single s)
+</code></pre>
+<p>This is known as <em>isotropic</em> scaling — scaling that is the same in both directions. Isotropic scaling preserves the object's aspect ratio.</p>
+<p>The second <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.scale#skiasharp-skcanvas-scale(system-single-system-single)"><code>Scale</code></a> method lets you specify different values for horizontal and vertical scaling:</p>
+<pre><code class="lang-csharp">public void Scale (Single sx, Single sy)
+</code></pre>
+<p>This results in <em>anisotropic</em> scaling.
+The third <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.scale#skiasharp-skcanvas-scale(skiasharp-skpoint)"><code>Scale</code></a> method combines the two scaling factors in a single <code>SKPoint</code> value:</p>
+<pre><code class="lang-csharp">public void Scale (SKPoint size)
+</code></pre>
+<p>The fourth <code>Scale</code> method will be described shortly.</p>
+<p>The <strong>Basic Scale</strong> page demonstrates the <code>Scale</code> method. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicScalePage.xaml"><strong>BasicScalePage.xaml</strong></a> file contains two <code>Slider</code> elements that let you select horizontal and vertical scaling factors between 0 and 10. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicScalePage.xaml.cs"><strong>BasicScalePage.xaml.cs</strong></a> code-behind file uses those values to call <code>Scale</code> before displaying a rounded rectangle stroked with a dashed line and sized to fit some text in the upper-left corner of the canvas:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.SkyBlue);
+
+    using (SKPaint strokePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Red,
+        StrokeWidth = 3,
+        PathEffect = SKPathEffect.CreateDash(new float[] {  7, 7 }, 0)
+    })
+    using (SKPaint textPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Fill,
+        Color = SKColors.Blue,
+        TextSize = 50
+    })
+    {
+        canvas.Scale((float)xScaleSlider.Value,
+                     (float)yScaleSlider.Value);
+
+        SKRect textBounds = new SKRect();
+        textPaint.MeasureText(Title, ref textBounds);
+
+        float margin = 10;
+        SKRect borderRect = SKRect.Create(new SKPoint(margin, margin), textBounds.Size);
+        canvas.DrawRoundRect(borderRect, 20, 20, strokePaint);
+        canvas.DrawText(Title, margin, -textBounds.Top + margin, textPaint);
+    }
+}
+</code></pre>
+<p>You might wonder: How do the scaling factors affect the value returned from the <code>MeasureText</code> method of <code>SKPaint</code>? The answer is: Not at all. <code>Scale</code> is a method of <code>SKCanvas</code>. It does not affect anything you do with an <code>SKPaint</code> object until you use that object to render something on the canvas.</p>
+<p>As you can see, everything drawn after the <code>Scale</code> call increases proportionally:</p>
+<p><a href="scale-images/basicscale-large.png#lightbox" title="Triple screenshot of the Basic Scale page"><img src="scale-images/basicscale-small.png" alt="Triple screenshot of the Basic Scale page"></a></p>
+<p>The text, the width of the dashed line, the length of the dashes in that line, the rounding of the corners, and the 10-pixel margin between the left and top edges of the canvas and the rounded rectangle are all subject to the same scaling factors.</p>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>The Universal Windows Platform does not properly render anisotropicly scaled text.</p>
+</div>
+<p>Anisotropic scaling causes the stroke width to become different for lines aligned with the horizontal and vertical axes. (This is also evident from the first image on this page.) If you don't want the stroke width to be affected by the scaling factors, set it to 0 and it will always be one pixel wide regardless of the <code>Scale</code> setting.</p>
+<p>Scaling is relative to the upper-left corner of the canvas. This might be exactly what you want, but it might not be. Suppose you want to position the text and rectangle somewhere else on the canvas and you want to scale it relative to its center. In that case you can use the fourth version of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.scale#skiasharp-skcanvas-scale(system-single-system-single-system-single-system-single)"><code>Scale</code></a> method, which includes two additional parameters to specify the center of scaling:</p>
+<pre><code class="lang-csharp">public void Scale (Single sx, Single sy, Single px, Single py)
+</code></pre>
+<p>The <code>px</code> and <code>py</code> parameters define a point that is sometimes called the <em>scaling center</em> but in the SkiaSharp documentation is referred to as a <em>pivot point</em>. This is a point relative to the upper-left corner of the canvas that is not affected by the scaling. All scaling occurs relative to that center.</p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/CenteredScalePage.xaml.cs"><strong>Centered Scale</strong></a> page shows how this works. The <code>PaintSurface</code> handler is similar to the <strong>Basic Scale</strong> program except that the <code>margin</code> value is calculated to center the text horizontally, which implies that the program works best in portrait mode:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.SkyBlue);
+
+    using (SKPaint strokePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Red,
+        StrokeWidth = 3,
+        PathEffect = SKPathEffect.CreateDash(new float[] { 7, 7 }, 0)
+    })
+    using (SKPaint textPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Fill,
+        Color = SKColors.Blue,
+        TextSize = 50
+    })
+    {
+        SKRect textBounds = new SKRect();
+        textPaint.MeasureText(Title, ref textBounds);
+        float margin = (info.Width - textBounds.Width) / 2;
+
+        float sx = (float)xScaleSlider.Value;
+        float sy = (float)yScaleSlider.Value;
+        float px = margin + textBounds.Width / 2;
+        float py = margin + textBounds.Height / 2;
+
+        canvas.Scale(sx, sy, px, py);
+
+        SKRect borderRect = SKRect.Create(new SKPoint(margin, margin), textBounds.Size);
+        canvas.DrawRoundRect(borderRect, 20, 20, strokePaint);
+        canvas.DrawText(Title, margin, -textBounds.Top + margin, textPaint);
+    }
+}
+</code></pre>
+<p>The upper-left corner of the rounded rectangle is positioned <code>margin</code> pixels from the left of the canvas and <code>margin</code> pixels from the top. The last two arguments to the <code>Scale</code> method are set to those values plus the width and height of the text, which is also the width and height of the rounded rectangle. This means that all scaling is relative to the center of that rectangle:</p>
+<p><a href="scale-images/centeredscale-large.png#lightbox" title="Triple screenshot of the Centered Scale page"><img src="scale-images/centeredscale-small.png" alt="Triple screenshot of the Centered Scale page"></a></p>
+<p>The <code>Slider</code> elements in this program have a range of –10 to 10. As you can see,
+negative values of vertical scaling (such as on the Android screen in the center) cause objects to flip around the horizontal axis that passes through the center of scaling. Negative values of horizontal scaling (such as in the UWP screen on the right) cause objects to flip around the vertical axis that passes through the center of scaling.</p>
+<p>The version of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.scale#skiasharp-skcanvas-scale(system-single-system-single-system-single-system-single)"><code>Scale</code></a> method with pivot points is a shortcut for a series of three <code>Translate</code> and <code>Scale</code> calls. You might want to see how this works by replacing the <code>Scale</code> method in the <strong>Centered Scale</strong> page with the following:</p>
+<pre><code class="lang-csharp">canvas.Translate(-px, -py);
+</code></pre>
+<p>These are the negatives of the pivot point coordinates.</p>
+<p>Now run the program again. You'll see that the rectangle and text are shifted so that the center is in the upper-left corner of the canvas. You can barely see it. The sliders don't work of course because now the program doesn't scale at all.</p>
+<p>Now add the basic <code>Scale</code> call (without a scaling center) <em>before</em> that <code>Translate</code> call:</p>
+<pre><code class="lang-csharp">canvas.Scale(sx, sy);
+canvas.Translate(–px, –py);
+</code></pre>
+<p>If you're familiar with this exercise in other graphics programming systems, you might think that's wrong, but it's not. Skia handles successive transform calls a little differently from what you might be familiar with.</p>
+<p>With the successive <code>Scale</code> and <code>Translate</code> calls, the center of the rounded rectangle is still in the upper-left corner, but you can now scale it relative to the upper-left corner of the canvas, which is also the center of the rounded rectangle.</p>
+<p>Now, before that <code>Scale</code> call, add another <code>Translate</code> call with the centering values:</p>
+<pre><code class="lang-csharp">canvas.Translate(px, py);
+canvas.Scale(sx, sy);
+canvas.Translate(–px, –py);
+</code></pre>
+<p>This moves the scaled result back to the original position. Those three calls are equivalent to:</p>
+<pre><code class="lang-csharp">canvas.Scale(sx, sy, px, py);
+</code></pre>
+<p>The individual transforms are compounded so that the total transform formula is:</p>
+<p>x' = sx · (x – px) + px</p>
+<p>y' = sy · (y – py) + py</p>
+<p>Keep in mind that the default values of <code>sx</code> and <code>sy</code> are 1. It's easy to convince yourself that the pivot point (px, py) is not transformed by these formulas. It remains in the same location relative to the canvas.</p>
+<p>When you combine <code>Translate</code> and <code>Scale</code> calls, the order matters. If the <code>Translate</code> comes after the <code>Scale</code>, the translation factors are effectively scaled by the scaling factors. If the <code>Translate</code> comes before the <code>Scale</code>, the translation factors are not scaled. This process becomes somewhat clearer (albeit more mathematical) when the subject of transform matrices is introduced.</p>
+<p>The <code>SKPath</code> class defines a read-only <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.bounds#skiasharp-skpath-bounds"><code>Bounds</code></a> property that returns an <code>SKRect</code> defining the extent of the coordinates in the path. For example, when the <code>Bounds</code> property is obtained from the hendecagram path created earlier, the <code>Left</code> and <code>Top</code> properties of the rectangle are approximately –100, the <code>Right</code> and <code>Bottom</code> properties are approximately 100, and the <code>Width</code> and <code>Height</code> properties are approximately 200. (Most of the actual values are a little less because the points of the stars are defined by a circle with a radius of 100 but only the top point is parallel with the horizontal or vertical axes.)</p>
+<p>The availability of this information implies that it should be possible to derive scale and translate factors suitable for scaling a path to the size of the canvas. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/AnisotropicScalingPage.cs"><strong>Anisotropic Scaling</strong></a> page demonstrates this with the 11-pointed star. An <em>anisotropic</em> scale means that it's unequal in the horizontal and vertical directions, which means that the star won't retain its original aspect ratio. Here's the relevant code in the <code>PaintSurface</code> handler:</p>
+<pre><code class="lang-csharp">SKPath path = HendecagramPage.HendecagramPath;
+SKRect pathBounds = path.Bounds;
+
+using (SKPaint fillPaint = new SKPaint
+{
+    Style = SKPaintStyle.Fill,
+    Color = SKColors.Pink
+})
+using (SKPaint strokePaint = new SKPaint
+{
+    Style = SKPaintStyle.Stroke,
+    Color = SKColors.Blue,
+    StrokeWidth = 3,
+    StrokeJoin = SKStrokeJoin.Round
+})
+{
+    canvas.Scale(info.Width / pathBounds.Width,
+                 info.Height / pathBounds.Height);
+    canvas.Translate(-pathBounds.Left, -pathBounds.Top);
+
+    canvas.DrawPath(path, fillPaint);
+    canvas.DrawPath(path, strokePaint);
+}
+</code></pre>
+<p>The <code>pathBounds</code> rectangle is obtained near the top of this code, and then used later with the width and height of the canvas in the <code>Scale</code> call. That call by itself will scale the coordinates of the path when it's rendered by the <code>DrawPath</code> call but the star will be centered in the upper-right corner of the canvas. It needs to be shifted down and to the left. This is the job of the <code>Translate</code> call. Those two properties of <code>pathBounds</code> are approximately –100, so the translation factors are about 100. Because the <code>Translate</code> call is after the <code>Scale</code> call, those values are effectively scaled by the scaling factors, so they move the center of the star to the center of the canvas:</p>
+<p><a href="scale-images/anisotropicscaling-large.png#lightbox" title="Triple screenshot of the Anisotropic Scaling page"><img src="scale-images/anisotropicscaling-small.png" alt="Triple screenshot of the Anisotropic Scaling page"></a></p>
+<p>Another way you can think about the <code>Scale</code> and <code>Translate</code> calls is to determine the effect in reverse sequence: The <code>Translate</code> call shifts the path so it becomes fully visible but oriented in the upper-left corner of the canvas. The <code>Scale</code> method then makes that star larger relative to the upper-left corner.</p>
+<p>Actually, it appears that the star is a little larger than the canvas. The problem is the stroke width. The <code>Bounds</code> property of <code>SKPath</code> indicates the dimensions of the coordinates encoded in the path, and that's what the program uses to scale it. When the path is rendered with a particular stroke width, the rendered path is larger than the canvas.</p>
+<p>To fix this problem you need to compensate for that. One easy approach in this program is to add the following statement right before the <code>Scale</code> call:</p>
+<pre><code class="lang-csharp">pathBounds.Inflate(strokePaint.StrokeWidth / 2,
+                   strokePaint.StrokeWidth / 2);
+</code></pre>
+<p>This increases the <code>pathBounds</code> rectangle by 1.5 units on all four sides. This is a reasonable solution only when the stroke join is rounded. A miter join can be longer and is difficult to calculate.</p>
+<p>You can also use a similar technique with text, as the <strong>Anisotropic Text</strong> page demonstrates. Here's the relevant part of the <code>PaintSurface</code> handler from the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/AnisotropicTextPage.cs"><code>AnisotropicTextPage</code></a> class:</p>
+<pre><code class="lang-csharp">using (SKPaint textPaint = new SKPaint
+{
+    Style = SKPaintStyle.Stroke,
+    Color = SKColors.Blue,
+    StrokeWidth = 0.1f,
+    StrokeJoin = SKStrokeJoin.Round
+})
+{
+    SKRect textBounds = new SKRect();
+    textPaint.MeasureText(&quot;HELLO&quot;, ref textBounds);
+
+    // Inflate bounds by the stroke width
+    textBounds.Inflate(textPaint.StrokeWidth / 2,
+                       textPaint.StrokeWidth / 2);
+
+    canvas.Scale(info.Width / textBounds.Width,
+                 info.Height / textBounds.Height);
+    canvas.Translate(-textBounds.Left, -textBounds.Top);
+
+    canvas.DrawText(&quot;HELLO&quot;, 0, 0, textPaint);
+}
+</code></pre>
+<p>It's similar logic, and the text expands to the size of the page based on the text bounds rectangle returned from <code>MeasureText</code> (which is a little larger than the actual text):</p>
+<p><a href="scale-images/anisotropictext-large.png#lightbox" title="Triple screenshot of the Anisotropic Test page"><img src="scale-images/anisotropictext-small.png" alt="Triple screenshot of the Anisotropic Test page"></a></p>
+<p>If you need to preserve the aspect ratio of the graphical objects, you'll want to use isotropic scaling. The <strong>Isotropic Scaling</strong> page demonstrates this for the 11-pointed star. Conceptually, the steps for displaying a graphical object in the center of the page with isotropic scaling are:</p>
+<ul>
+<li>Translate the center of the graphical object to the upper-left corner.</li>
+<li>Scale the object based on the minimum of the horizontal and vertical page dimensions divided by the graphical object dimensions.</li>
+<li>Translate the center of the scaled object to the center of the page.</li>
+</ul>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/IsotropicScalingPage.cs"><code>IsotropicScalingPage</code></a> performs these steps in reverse order before displaying the star:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    SKPath path = HendecagramArrayPage.HendecagramPath;
+    SKRect pathBounds = path.Bounds;
+
+    using (SKPaint fillPaint = new SKPaint())
+    {
+        fillPaint.Style = SKPaintStyle.Fill;
+
+        float scale = Math.Min(info.Width / pathBounds.Width,
+                               info.Height / pathBounds.Height);
+
+        for (int i = 0; i &lt;= 10; i++)
+        {
+            fillPaint.Color = new SKColor((byte)(255 * (10 - i) / 10),
+                                          0,
+                                          (byte)(255 * i / 10));
+            canvas.Save();
+            canvas.Translate(info.Width / 2, info.Height / 2);
+            canvas.Scale(scale);
+            canvas.Translate(-pathBounds.MidX, -pathBounds.MidY);
+            canvas.DrawPath(path, fillPaint);
+            canvas.Restore();
+
+            scale *= 0.9f;
+        }
+    }
+}
+</code></pre>
+<p>The code also displays the star 10 more times, each time decreasing the scaling factor by 10% and progressively changing the color from red to blue:</p>
+<p><a href="scale-images/isotropicscaling-large.png#lightbox" title="Triple screenshot of the Isotropic Scaling page"><img src="scale-images/isotropicscaling-small.png" alt="Triple screenshot of the Isotropic Scaling page"></a></p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

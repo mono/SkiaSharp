@@ -1,0 +1,220 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Drawing a Simple Circle in SkiaSharp | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Drawing a Simple Circle in SkiaSharp | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="drawing-a-simple-circle-in-skiasharp">Drawing a Simple Circle in SkiaSharp</h1>
+
+<p><em>Learn the basics of SkiaSharp drawing, including canvases and paint objects</em></p>
+<p>This article introduces the concepts of drawing graphics in Xamarin.Forms using SkiaSharp, including creating an <code>SKCanvasView</code> object to host the graphics, handling the <code>PaintSurface</code> event, and using a <code>SKPaint</code> object to specify color and other drawing attributes.</p>
+<p>The sample program contains all the sample code for this series of SkiaSharp articles. The first page is entitled <strong>Simple Circle</strong> and invokes the page class <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/SimpleCirclePage.cs"><code>SimpleCirclePage</code></a>. This code shows how to draw a circle in the center of the page with a radius of 100 pixels. The outline of the circle is red, and the interior of the circle is blue.</p>
+<p><img src="circle-images/circleexample.png" alt="A blue circle outlined in red"></p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/SimpleCirclePage.cs"><code>SimpleCircle</code></a> page class derives from <code>ContentPage</code> and contains two <code>using</code> directives for the SkiaSharp namespaces:</p>
+<pre><code class="lang-csharp">using SkiaSharp;
+using SkiaSharp.Views.Forms;
+</code></pre>
+<p>The following constructor of the class creates an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skcanvasview"><code>SKCanvasView</code></a> object, attaches a handler for the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skcanvasview.paintsurface#skiasharp-views-forms-skcanvasview-paintsurface"><code>PaintSurface</code></a> event, and sets the <code>SKCanvasView</code> object as the content of the page:</p>
+<pre><code class="lang-csharp">public SimpleCirclePage()
+{
+    Title = &quot;Simple Circle&quot;;
+
+    SKCanvasView canvasView = new SKCanvasView();
+    canvasView.PaintSurface += OnCanvasViewPaintSurface;
+    Content = canvasView;
+}
+</code></pre>
+<p>The <code>SKCanvasView</code> occupies the entire content area of the page. You can alternatively combine an <code>SKCanvasView</code> with other Xamarin.Forms <code>View</code> derivatives, as you'll see in other examples.</p>
+<p>The <code>PaintSurface</code> event handler is where you do all your drawing. This method can be called multiple times while your program is running, so it should maintain all the information necessary to recreate the graphics display:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    ...
+}
+
+</code></pre>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skpaintsurfaceeventargs"><code>SKPaintSurfaceEventArgs</code></a> object that accompanies the event has two properties:</p>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skpaintsurfaceeventargs.info#skiasharp-views-forms-skpaintsurfaceeventargs-info"><code>Info</code></a> of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo"><code>SKImageInfo</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skpaintsurfaceeventargs.surface#skiasharp-views-forms-skpaintsurfaceeventargs-surface"><code>Surface</code></a> of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sksurface"><code>SKSurface</code></a></li>
+</ul>
+<p>The <code>SKImageInfo</code> structure contains information about the drawing surface, most importantly, its width and height in pixels. The <code>SKSurface</code> object represents the drawing surface itself. In this program, the drawing surface is a video display, but in other programs an <code>SKSurface</code> object can also represent a bitmap that you use SkiaSharp to draw on.</p>
+<p>The most important property of <code>SKSurface</code> is <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sksurface.canvas#skiasharp-sksurface-canvas"><code>Canvas</code></a> of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas"><code>SKCanvas</code></a>. This class is a graphics drawing context that you use to perform the actual drawing. The <code>SKCanvas</code> object encapsulates a graphics state, which includes graphics transforms and clipping.</p>
+<p>Here's a typical start of a <code>PaintSurface</code> event handler:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+    ...
+}
+
+</code></pre>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.clear#skiasharp-skcanvas-clear"><code>Clear</code></a> method clears the canvas with a transparent color. An overload lets you specify a background color for the canvas.</p>
+<p>The goal here is to draw a red circle filled with blue. Because this particular graphic image contains two different colors, the job needs to be done in two steps. The first step is to draw the outline of the circle. To specify the color and other characteristic of the line, you create and initialize an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint"><code>SKPaint</code></a> object:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    ...
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = Colors.Red.ToSKColor(),
+        StrokeWidth = 25
+    };
+    ...
+}
+</code></pre>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.style#skiasharp-skpaint-style"><code>Style</code></a> property indicates that you want to <em>stroke</em> a line (in this case the outline of the circle) rather than <em>fill</em> the interior. The three members of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaintstyle"><code>SKPaintStyle</code></a> enumeration are as follows:</p>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaintstyle#skiasharp-skpaintstyle-fill"><code>Fill</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaintstyle#skiasharp-skpaintstyle-stroke"><code>Stroke</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaintstyle#skiasharp-skpaintstyle-strokeandfill"><code>StrokeAndFill</code></a></li>
+</ul>
+<p>The default is <code>Fill</code>. Use the third option to stroke the line and fill the interior with the same color.</p>
+<p>Set the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.color#skiasharp-skpaint-color"><code>Color</code></a> property to a value of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor"><code>SKColor</code></a>. One way to get an <code>SKColor</code> value is by converting a Xamarin.Forms <code>Color</code> value to an <code>SKColor</code> value using the extension method <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.extensions.toskcolor"><code>ToSKColor</code></a>. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.extensions"><code>Extensions</code></a> class in the <code>SkiaSharp.Views.Forms</code> namespace includes other methods that convert between Xamarin.Forms values and SkiaSharp values.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.strokewidth#skiasharp-skpaint-strokewidth"><code>StrokeWidth</code></a> property indicates the thickness of the line. Here it's set to 25 pixels.</p>
+<p>You use that <code>SKPaint</code> object to draw the circle:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    ...
+    canvas.DrawCircle(info.Width / 2, info.Height / 2, 100, paint);
+    ...
+}
+</code></pre>
+<p>Coordinates are specified relative to the upper-left corner of the display surface. X coordinates increase to the right and Y coordinates increase going down. In discussion about graphics, often the mathematical notation (x, y) is used to denote a point. The point (0, 0) is the upper-left corner of the display surface and is often called the <em>origin</em>.</p>
+<p>The first two arguments of <code>DrawCircle</code> indicate the X and Y coordinates of the center of the circle. These are assigned to half the width and height of the display surface to put the center of the circle in the center of the display surface. The third argument specifies the circle's radius, and the last argument is the <code>SKPaint</code> object.</p>
+<p>To fill the interior of the circle, you can alter two properties of the <code>SKPaint</code> object and call <code>DrawCircle</code> again. This code also shows an alternative way to get an <code>SKColor</code> value from one of the many fields of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolors"><code>SKColors</code></a> structure:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    ...
+    paint.Style = SKPaintStyle.Fill;
+    paint.Color = SKColors.Blue;
+    canvas.DrawCircle(args.Info.Width / 2, args.Info.Height / 2, 100, paint);
+}
+</code></pre>
+<p>This time, the <code>DrawCircle</code> call fills the circle using the new properties of the <code>SKPaint</code> object.</p>
+<p>Here's the program running on iOS and Android:</p>
+<p><a href="circle-images/simplecircle-large.png#lightbox" title="Triple screenshot of the Simple Circle page"><img src="circle-images/simplecircle-small.png" alt="Triple screenshot of the Simple Circle page"></a></p>
+<p>When running the program yourself, you can turn the phone or simulator sideways to see how the graphic is redrawn. Each time the graphic needs to be redrawn, the <code>PaintSurface</code> event handler is called again.</p>
+<p>It's also possible to color graphical objects with gradients or bitmap tiles. These options are discussed in the section on <a href="../effects/shaders/index.html"><strong>SkiaSharp shaders</strong></a>.</p>
+<p>An <code>SKPaint</code> object is little more than a collection of graphics drawing properties. These objects are lightweight. You can reuse <code>SKPaint</code> objects as this program does, or you can create multiple <code>SKPaint</code> objects for various combinations of drawing properties. You can create and initialize these objects outside of the <code>PaintSurface</code> event handler, and you can save them as fields in your page class.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>The <code>SKPaint</code> class defines an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.isantialias#skiasharp-skpaint-isantialias"><code>IsAntialias</code></a> to enable anti-aliasing in the rendering of your graphics. Anti-aliasing generally results in visually smoother edges, so you'll probably want to set this property to <code>true</code> in most of your <code>SKPaint</code> objects. For purposes of simplicity, this property is <em>not</em> set in most of the sample pages.</p>
+</div>
+<p>Although the width of the circle's outline is specified as 25 pixels — or one-quarter of the radius of the circle — it appears to be thinner, and there's a good reason for that: Half the width of the line is obscured by the blue circle. The arguments to the <code>DrawCircle</code> method define the abstract geometric coordinates of a circle. The blue interior is sized to that dimension to the nearest pixel, but the 25-pixel-wide outline straddles the geometric circle — half on the inside and half on the outside.</p>
+<p>The next sample in the <a href="../../xamarin-forms/user-interface/graphics/skiasharp/basics/integration.md">Integrating with Xamarin.Forms</a> article demonstrates this visually.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

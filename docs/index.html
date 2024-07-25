@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Overview | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Overview | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../images/logo.ico">
+    <link rel="stylesheet" href="../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../styles/docfx.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <meta property="docfx:navrel" content="../TOC.html">
+    <meta property="docfx:tocrel" content="TOC.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="skiasharp-graphics-in-xamarinforms">SkiaSharp Graphics in Xamarin.Forms</h1>
+
+<p><em>Use SkiaSharp for 2D graphics in your Xamarin.Forms applications</em></p>
+<p>SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products. You can use SkiaSharp in your Xamarin.Forms applications to draw 2D vector graphics, bitmaps, and text.</p>
+<p>This guide assumes that you are familiar with Xamarin.Forms programming.</p>
+<h2 id="skiasharp-preliminaries">SkiaSharp Preliminaries</h2>
+<p>SkiaSharp for Xamarin.Forms is packaged as a NuGet package. After you've created a Xamarin.Forms solution in Visual Studio or Visual Studio for Mac, you can use the NuGet package manager to search for the <strong>SkiaSharp.Views.Forms</strong> package and add it to your solution. If you check the <strong>References</strong> section of each project after adding SkiaSharp, you can see that various <strong>SkiaSharp</strong> libraries have been added to each of the projects in the solution.</p>
+<p>If your Xamarin.Forms application targets iOS, edit its <strong>Info.plist</strong> file to change the minimum deployment target to iOS 8.0.</p>
+<p>In any C# page that uses SkiaSharp you'll want to include a <code>using</code> directive for the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp"><code>SkiaSharp</code></a> namespace, which encompasses all the SkiaSharp classes, structures, and enumerations that you'll use in your graphics programming. You'll also want a <code>using</code> directive for the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms"><code>SkiaSharp.Views.Forms</code></a> namespace for the classes specific to Xamarin.Forms. This is a much smaller namespace, with the most important class being <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skcanvasview"><code>SKCanvasView</code></a>. This class derives from the Xamarin.Forms <code>View</code> class and hosts your SkiaSharp graphics output.</p>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>The <code>SkiaSharp.Views.Forms</code> namespace also contains an <code>SKGLView</code> class that derives from <code>View</code> but uses OpenGL for rendering graphics. For purposes of simplicity, this guide restricts itself to <code>SKCanvasView</code>, but using <code>SKGLView</code> instead is quite similar.</p>
+</div>
+<h2 id="skiasharp-drawing-basics"><a href="basics/index.html">SkiaSharp Drawing Basics</a></h2>
+<p>Some of the simplest graphics figures you can draw with SkiaSharp are circles, ovals, and rectangles. In displaying these figures, you will learn about SkiaSharp coordinates, sizes, and colors. The display of text and bitmaps is more complex, but these articles also introduce those techniques.</p>
+<h2 id="skiasharp-lines-and-paths"><a href="paths/index.html">SkiaSharp Lines and Paths</a></h2>
+<p>A graphics path is a series of connected straight lines and curves. Paths can be stroked, filled, or both. This article encompasses many aspects of line drawing, including stroke ends and joins, and dashed and dotted lines, but stops short of curve geometries.</p>
+<h2 id="skiasharp-transforms"><a href="transforms/index.html">SkiaSharp Transforms</a></h2>
+<p>Transforms allow graphics objects to be uniformly translated, scaled, rotated, or skewed. This article also shows how you can use a standard 3-by-3 transform matrix for creating non-affine transforms and applying transforms to paths.</p>
+<h2 id="skiasharp-curves-and-paths"><a href="curves/index.html">SkiaSharp Curves and Paths</a></h2>
+<p>The exploration of paths continues with adding curves to a path objects, and exploiting other powerful path features. You'll see how you can specify an entire path in a concise text string, how to use path effects, and how to dig into path internals.</p>
+<h2 id="skiasharp-bitmaps"><a href="bitmaps/index.html">SkiaSharp Bitmaps</a></h2>
+<p>Bitmaps are rectangular arrays of bits corresponding to the pixels of a display device. This series of articles shows how to load, save, display, create, draw on, animate, and access the bits of SkiaSharp bitmaps.</p>
+<h2 id="skiasharp-effects"><a href="effects/index.html">SkiaSharp Effects</a></h2>
+<p>Effects are properties that alter the normal display of graphics, including linear and circular gradients, bitmap tiling, blend modes, blur, and others.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  </body>
+</html>

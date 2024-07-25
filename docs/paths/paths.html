@@ -1,0 +1,277 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Path Basics in SkiaSharp | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Path Basics in SkiaSharp | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="path-basics-in-skiasharp">Path Basics in SkiaSharp</h1>
+
+<p><em>Explore the SkiaSharp SKPath object for combining connected lines and curves</em></p>
+<p>One of the most important features of the graphics path is the ability to define when multiple lines should be connected and when they should not be connected. The difference can be significant, as the tops of these two triangles demonstrate:</p>
+<p><img src="paths-images/connectedlinesexample.png" alt="Two triangles showing the difference between connected and disconnected lines"></p>
+<p>A graphics path is encapsulated by the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath"><code>SKPath</code></a> object. A path is a collection of one or more <em>contours</em>. Each contour is a collection of <em>connected</em> straight lines and curves. Contours are not connected to each other but they might visually overlap. Sometimes a single contour can overlap itself.</p>
+<p>A contour generally begins with a call to the following method of <code>SKPath</code>:</p>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.moveto"><code>MoveTo</code></a> to begin a new contour</li>
+</ul>
+<p>The argument to that method is a single point, which you can express either as an <code>SKPoint</code> value or as separate X and Y coordinates. The <code>MoveTo</code> call establishes a point at the beginning of the contour and an initial <em>current point</em>. You can call the following methods to continue the contour with a line or curve from the current point to a point specified in the method, which then becomes the new current point:</p>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.lineto"><code>LineTo</code></a> to add a straight line to the path</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.arcto"><code>ArcTo</code></a> to add an arc, which is a line on the circumference of a circle or ellipse</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.cubicto"><code>CubicTo</code></a> to add a cubic Bezier spline</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.quadto"><code>QuadTo</code></a> to add a quadratic Bezier spline</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.conicto"><code>ConicTo</code></a> to add a rational quadratic Bezier spline, which can accurately render conic sections (ellipses, parabolas, and hyperbolas)</li>
+</ul>
+<p>None of these five methods contain all the information necessary to describe the line or curve. Each of these five methods works in conjunction with the current point established by the method call immediately preceding it. For example, the <code>LineTo</code> method adds a straight line to the contour based on the current point, so the parameter to <code>LineTo</code> is only a single point.</p>
+<p>The <code>SKPath</code> class also defines methods that have the same names as these six methods but with an <code>R</code> at the beginning:</p>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.rmoveto"><code>RMoveTo</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.rlineto"><code>RLineTo</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.rarcto"><code>RArcTo</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.rcubicto"><code>RCubicTo</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.rquadto"><code>RQuadTo</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.rconicto"><code>RConicTo</code></a></li>
+</ul>
+<p>The <code>R</code> stands for <em>relative</em>. These methods have the same syntax as the corresponding methods without the <code>R</code> but are relative to the current point. These are handy for drawing similar parts of a path in a method that you call multiple times.</p>
+<p>A contour ends with another call to <code>MoveTo</code> or <code>RMoveTo</code>, which begins a new contour, or a call to <code>Close</code>, which closes the contour. The <code>Close</code> method automatically appends a straight line from the current point to the first point of the contour, and marks the path as closed, which means that it will be rendered without any stroke caps.</p>
+<p>The difference between open and closed contours is illustrated in the <strong>Two Triangle Contours</strong> page, which uses an <code>SKPath</code> object with two contours to render two triangles. The first contour is open and the second is closed. Here's the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/TwoTriangleContoursPage.cs"><code>TwoTriangleContoursPage</code></a> class:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    // Create the path
+    SKPath path = new SKPath();
+
+    // Define the first contour
+    path.MoveTo(0.5f * info.Width, 0.1f * info.Height);
+    path.LineTo(0.2f * info.Width, 0.4f * info.Height);
+    path.LineTo(0.8f * info.Width, 0.4f * info.Height);
+    path.LineTo(0.5f * info.Width, 0.1f * info.Height);
+
+    // Define the second contour
+    path.MoveTo(0.5f * info.Width, 0.6f * info.Height);
+    path.LineTo(0.2f * info.Width, 0.9f * info.Height);
+    path.LineTo(0.8f * info.Width, 0.9f * info.Height);
+    path.Close();
+
+    // Create two SKPaint objects
+    SKPaint strokePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Magenta,
+        StrokeWidth = 50
+    };
+
+    SKPaint fillPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Fill,
+        Color = SKColors.Cyan
+    };
+
+    // Fill and stroke the path
+    canvas.DrawPath(path, fillPaint);
+    canvas.DrawPath(path, strokePaint);
+}
+</code></pre>
+<p>The first contour consists of a call to <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.moveto#skiasharp-skpath-moveto(system-single-system-single)"><code>MoveTo</code></a> using X and Y coordinates rather than an <code>SKPoint</code> value, followed by three calls to <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.lineto#skiasharp-skpath-lineto(system-single-system-single)"><code>LineTo</code></a> to draw the three sides of the triangle. The second contour has only two calls to <code>LineTo</code> but it finishes the contour with a call to <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.close#skiasharp-skpath-close"><code>Close</code></a>, which closes the contour. The difference is significant:</p>
+<p><a href="paths-images/twotrianglecontours-large.png#lightbox" title="Triple screenshot of the Two Triangle Contours page"><img src="paths-images/twotrianglecontours-small.png" alt="Triple screenshot of the Two Triangle Contours page"></a></p>
+<p>As you can see, the first contour is obviously a series of three connected lines, but the end doesn't connect with the beginning. The two lines overlap at the top. The second contour is obviously closed, and was accomplished with one fewer <code>LineTo</code> calls because the <code>Close</code> method automatically adds a final line to close the contour.</p>
+<p><code>SKCanvas</code> defines only one <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawpath#skiasharp-skcanvas-drawpath(skiasharp-skpath-skiasharp-skpaint)"><code>DrawPath</code></a> method, which in this demonstration is called twice to fill and stroke the path. All contours are filled, even those that are not closed. For purposes of filling unclosed paths, a straight line is assumed to exist between the start and end points of the contours. If you remove the last <code>LineTo</code> from the first contour, or remove the <code>Close</code> call from the second contour, each contour will have only two sides but will be filled as if it were a triangle.</p>
+<p><code>SKPath</code> defines many other methods and properties. The following methods add entire contours to the path, which might be closed or not closed depending on the method:</p>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.addrect"><code>AddRect</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.addroundedrect#skiasharp-skpath-addroundedrect(skiasharp-skrect-system-single-system-single-skiasharp-skpathdirection)"><code>AddRoundedRect</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.addcircle#skiasharp-skpath-addcircle(system-single-system-single-system-single-skiasharp-skpathdirection)"><code>AddCircle</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.addoval#skiasharp-skpath-addoval(skiasharp-skrect-skiasharp-skpathdirection)"><code>AddOval</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.addarc#skiasharp-skpath-addarc(skiasharp-skrect-system-single-system-single)"><code>AddArc</code></a> to add a curve on the circumference of an ellipse</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.addpath"><code>AddPath</code></a> to add another path to the current path</li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.addpathreverse#skiasharp-skpath-addpathreverse(skiasharp-skpath)"><code>AddPathReverse</code></a> to add another path in reverse</li>
+</ul>
+<p>Keep in mind that an <code>SKPath</code> object defines only a geometry — a series of points and connections. Only when an <code>SKPath</code> is combined with an <code>SKPaint</code> object is the path rendered with a particular color, stroke width, and so forth. Also, keep in mind that the <code>SKPaint</code> object passed to the <code>DrawPath</code> method defines characteristics of the entire path. If you want to draw something requiring several colors, you must use a separate path for each color.</p>
+<p>Just as the appearance of the start and end of a line is defined by a stroke cap, the appearance of the connection between two lines is defined by a <em>stroke join</em>. You specify this by setting the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.strokejoin#skiasharp-skpaint-strokejoin"><code>StrokeJoin</code></a> property of <code>SKPaint</code> to a member of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skstrokejoin"><code>SKStrokeJoin</code></a> enumeration:</p>
+<ul>
+<li><code>Miter</code> for a pointy join</li>
+<li><code>Round</code> for a rounded join</li>
+<li><code>Bevel</code> for a chopped-off join</li>
+</ul>
+<p>The <strong>Stroke Joins</strong> page shows these three stroke joins with code similar to the <strong>Stroke Caps</strong> page. This is the <code>PaintSurface</code> event handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/StrokeJoinsPage.cs"><code>StrokeJoinsPage</code></a> class:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    SKPaint textPaint = new SKPaint
+    {
+        Color = SKColors.Black,
+        TextSize = 75,
+        TextAlign = SKTextAlign.Right
+    };
+
+    SKPaint thickLinePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Orange,
+        StrokeWidth = 50
+    };
+
+    SKPaint thinLinePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Black,
+        StrokeWidth = 2
+    };
+
+    float xText = info.Width - 100;
+    float xLine1 = 100;
+    float xLine2 = info.Width - xLine1;
+    float y = 2 * textPaint.FontSpacing;
+    string[] strStrokeJoins = { &quot;Miter&quot;, &quot;Round&quot;, &quot;Bevel&quot; };
+
+    foreach (string strStrokeJoin in strStrokeJoins)
+    {
+        // Display text
+        canvas.DrawText(strStrokeJoin, xText, y, textPaint);
+
+        // Get stroke-join value
+        SKStrokeJoin strokeJoin;
+        Enum.TryParse(strStrokeJoin, out strokeJoin);
+
+        // Create path
+        SKPath path = new SKPath();
+        path.MoveTo(xLine1, y - 80);
+        path.LineTo(xLine1, y + 80);
+        path.LineTo(xLine2, y + 80);
+
+        // Display thick line
+        thickLinePaint.StrokeJoin = strokeJoin;
+        canvas.DrawPath(path, thickLinePaint);
+
+        // Display thin line
+        canvas.DrawPath(path, thinLinePaint);
+        y += 3 * textPaint.FontSpacing;
+    }
+}
+</code></pre>
+<p>Here's the program running:</p>
+<p><a href="paths-images/strokejoins-large.png#lightbox" title="Triple screenshot of the Stroke Joins page"><img src="paths-images/strokejoins-small.png" alt="Triple screenshot of the Stroke Joins page"></a></p>
+<p>The miter join consists of a sharp point where the lines connect. When two lines join at a small angle, the miter join can become quite long. To prevent excessively long miter joins, the length of the miter join is limited by the value of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.strokemiter#skiasharp-skpaint-strokemiter"><code>StrokeMiter</code></a> property of <code>SKPaint</code>. A miter join that exceeds this length is chopped off to become a bevel join.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

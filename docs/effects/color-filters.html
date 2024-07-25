@@ -1,0 +1,334 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>SkiaSharp color filters | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="SkiaSharp color filters | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="skiasharp-color-filters">SkiaSharp color filters</h1>
+
+<p>Color filters can translate colors in a bitmap (or other image) to other colors for effects such as posterization:</p>
+<p><img src="color-filters-images/ColorFiltersExample.png" alt="Color Filters Example" title="Color Filters Example"></p>
+<p>To use a color filter, set the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.colorfilter#skiasharp-skpaint-colorfilter"><code>ColorFilter</code></a> property of <code>SKPaint</code> to an object of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolorfilter"><code>SKColorFilter</code></a> created by one of the static methods in that class. This article demonstrates:</p>
+<ul>
+<li>a color transform created with the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolorfilter.createcolormatrix"><code>CreateColorMatrix</code></a> method.</li>
+<li>a color table created with the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolorfilter.createtable"><code>CreateTable</code></a> method.</li>
+</ul>
+<h2 id="the-color-transform">The color transform</h2>
+<p>The color transform involves using a matrix to modify colors. Like most 2D graphics systems, SkiaSharp uses matrices mostly for transforming coordinate points as iscussed in the article <a href="../transforms/matrix.html"><strong>Matrix Transforms in SkiaSharp</strong></a>. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolorfilter"><code>SKColorFilter</code></a> also supports matrix transforms, but the matrix transforms RGB colors. Some familiarity with matrix concepts is necessary to understand these color transforms.</p>
+<p>The color-transform matrix has a dimension of four rows and five columns:</p>
+<pre>
+| M11 M12 M13 M14 M15 |
+| M21 M22 M23 M24 M25 |
+| M31 M32 M33 M34 M35 |
+| M41 M42 M43 M44 M45 |
+</pre>
+<p>It transforms a RGB source color (R, G, B, A) to the destination color (R', G', B', A').</p>
+<p>In preparation for the matrix multiplication, the source color is converted to a 5×1 matrix:</p>
+<pre>
+| R |
+| G |
+| B |
+| A |
+| 1 |
+</pre>
+<p>These R, G, B, and A values are the original bytes ranging from 0 to 255. They are <em>not</em> normalized to floating point values in the range 0 to 1.</p>
+<p>The extra cell is required for a translation factor. This is analogous to the use of a 3×3 matrix to transform two-dimensional coordinate points as described in the section <a href="../transforms/matrix.html#the-reason-for-the-3-by-3-matrix"><strong>The Reason for the 3-by-3 Matrix</strong></a> in the article on using matrices for transforming coordinate points.</p>
+<p>The 4×5 matrix is multiplied by the 5×1 matrix, and the product is a 4×1 matrix with the transformed color:</p>
+<pre>
+| M11 M12 M13 M14 M15 |    | R |   | R' |
+| M21 M22 M23 M24 M25 |    | G |   | G' |
+| M31 M32 M33 M34 M35 |  × | B | = | B' |
+| M41 M42 M43 M44 M45 |    | A |   | A' |
+                           | 1 |
+</pre>
+<p>Here are the separate formulas for R', G', B', and A':</p>
+<p><code>R' = M11·R + M12·G + M13·B + M14·A + M15</code></p>
+<p><code>G' = M21·R + M22·G + M23·B + M24·A + M25</code></p>
+<p><code>B' = M31·R + M32·G + M33·B + M34·A + M35</code></p>
+<p><code>A' = M41·R + M42·G + M43·B + M44·A + M45</code></p>
+<p>Most of the matrix consists of multiplicative factors that are generally in the range of 0 to 2. However, the last column (M15 through M45) contains values that are added in the formulas. These values generally range from 0 to 255. The results are clamped between the values of 0 and 255.</p>
+<p>The identity matrix is:</p>
+<pre>
+| 1 0 0 0 0 |
+| 0 1 0 0 0 |
+| 0 0 1 0 0 |
+| 0 0 0 1 0 |
+</pre>
+<p>This causes no change to the colors. The transform formulas are:</p>
+<p><code>R' = R</code></p>
+<p><code>G' = G</code></p>
+<p><code>B' = B</code></p>
+<p><code>A' = A</code></p>
+<p>The M44 cell is very important because it preserves opacity. It is generally the case that M41, M42, and M43 are all zero, because you probably don't want opacity to be based on the red, green, and blue values. But if M44 is zero, then A' will be zero, and nothing will be visible.</p>
+<p>One of the most common uses of the color matrix is to convert a color bitmap to a gray-scale bitmap. This involves a formula for a weighted average of the red, green, and blue values. For video displays using the sRGB (&quot;standard red green blue&quot;) color space, this formula is:</p>
+<p>gray-shade = 0.2126·R + 0.7152·G + 0.0722·B</p>
+<p>To convert a color bitmap to a gray-scale bitmap, the R', G', and B' results must all equal that same value. The matrix is:</p>
+<pre>
+| 0.21 0.72 0.07 0 0 |
+| 0.21 0.72 0.07 0 0 |
+| 0.21 0.72 0.07 0 0 |
+| 0    0    0    1 0 |
+</pre>
+<p>There is no SkiaSharp data type that corresponds to this matrix. Instead you must represent the matrix as an array of 20 <code>float</code> values in row order: first row, then second row, and so forth.</p>
+<p>The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolorfilter.createcolormatrix"><code>SKColorFilter.CreateColorMatrix</code></a> method has the following syntax:</p>
+<pre><code class="lang-csharp">public static SKColorFilter CreateColorMatrix (float[] matrix);
+</code></pre>
+<p>where <code>matrix</code> is an array of the 20 <code>float</code> values. When creating the array in C#, it is easy to format the numbers so they resemble the 4×5 matrix. This is demonstrated in the <strong>Gray-Scale Matrix</strong> page in the sample:</p>
+<pre><code class="lang-csharp">public class GrayScaleMatrixPage : ContentPage
+{
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+                        typeof(CenteredTilesPage),
+                        &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+
+    public GrayScaleMatrixPage()
+    {
+        Title = &quot;Gray-Scale Matrix&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.ColorFilter =
+                SKColorFilter.CreateColorMatrix(new float[]
+                {
+                    0.21f, 0.72f, 0.07f, 0, 0,
+                    0.21f, 0.72f, 0.07f, 0, 0,
+                    0.21f, 0.72f, 0.07f, 0, 0,
+                    0,     0,     0,     1, 0
+                });
+
+            canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform, paint: paint);
+        }
+    }
+}
+</code></pre>
+<p>The <code>DrawBitmap</code> method used in this code is from the <strong>BitmapExtension.cs</strong> file included with the sample.</p>
+<p>Here's the result running on iOS, Android, and Universal Windows Platform:</p>
+<p><a href="color-filters-images/GrayScaleMatrix-Large.png#lightbox"><img src="color-filters-images/GrayScaleMatrix.png" alt="Gray-Scale Matrix" title="Gray-Scale Matrix"></a></p>
+<p>Watch out for the value in the fourth row and fourth column. That's the crucial factor that is multiplied by the A value of the original color for the A' value of the transformed color. If that cell is zero, nothing will be displayed and the problem might be difficult to locate.</p>
+<p>When experimenting with color matrices, you can treat the transform either from the perspective of the source or the perspective of the destination. How should the red pixel of the source contribute to the red, green, and blue pixels of the destination? That's determined by the values in the first <em>column</em> of the matrix. Alternatively, how should the destination red pixel be affected by the red, green, and blue pixels of the source? That's determined by the first <em>row</em> of the matrix.</p>
+<p>For some ideas on how to use color transforms, see the <a href="/dotnet/framework/winforms/advanced/recoloring-images"><strong>Recoloring Images</strong></a> pages. The discussion concerns Windows Forms, and the matrix is a different format, but the concepts are the same.</p>
+<p>The <strong>Pastel Matrix</strong> calculates the destination red pixel by attenuating the source red pixel and slightly emphasizing the red and green pixels. This process occurs similarly for the green and blue pixels:</p>
+<pre><code class="lang-csharp">public class PastelMatrixPage : ContentPage
+{
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+                        typeof(PastelMatrixPage),
+                        &quot;SkiaSharpFormsDemos.Media.MountainClimbers.jpg&quot;);
+
+    public PastelMatrixPage()
+    {
+        Title = &quot;Pastel Matrix&quot;;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.ColorFilter =
+                SKColorFilter.CreateColorMatrix(new float[]
+                {
+                    0.75f, 0.25f, 0.25f, 0, 0,
+                    0.25f, 0.75f, 0.25f, 0, 0,
+                    0.25f, 0.25f, 0.75f, 0, 0,
+                    0, 0, 0, 1, 0
+                });
+
+            canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform, paint: paint);
+        }
+    }
+}
+</code></pre>
+<p>The result is to mute the intensity of the colors as you can see here:</p>
+<p><a href="color-filters-images/PastelMatrix-Large.png#lightbox"><img src="color-filters-images/PastelMatrix.png" alt="Pastel Matrix" title="Pastel Matrix"></a></p>
+<h2 id="color-tables">Color tables</h2>
+<p>The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolorfilter.createtable"><code>SKColorFilter.CreateTable</code></a> method comes in two versions:</p>
+<pre><code class="lang-csharp">public static SKColorFilter CreateTable (byte[] table);
+
+public static SKColorFilter CreateTable (byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB);
+</code></pre>
+<p>The arrays always contain 256 entries. In the <code>CreateTable</code> method with one table, the same table is used for the red, green, and blue components. It's a simple look-up table: If the source color is (R, G, B), and the destination color is (R', B', G'), then the destination components are obtained by indexing <code>table</code> with the source components:</p>
+<p><code>R' = table[R]</code></p>
+<p><code>G' = table[G]</code></p>
+<p><code>B' = table[B]</code></p>
+<p>In the second method, each of four color components can have a separate color table, or the same color tables might be shared among two or more components.</p>
+<p>If you want to set one of the arguments to the second <code>CreateTable</code> method to a color table that contains the values 0 through 255 in sequence, you can use <code>null</code> instead. Very often the <code>CreateTable</code> call has a <code>null</code> first argument for the alpha channel.</p>
+<p>In the section on <strong>Posterization</strong> in the article on <a href="../bitmaps/pixel-bits.html#posterization">Accessing SkiaSharp bitmap pixel bits</a>, you saw how to modify the individual pixel bits of a bitmap to reduce its color resolution. This is a technique called <em>posterization</em>.</p>
+<p>You can also posterize a bitmap with a color table. The constructor of the <strong>Posterize Table</strong> page creates a color table that maps its index to a byte with the bottom 6 bits set to zero:</p>
+<pre><code class="lang-csharp">public class PosterizeTablePage : ContentPage
+{
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+                        typeof(PosterizeTablePage),
+                        &quot;SkiaSharpFormsDemos.Media.MonkeyFace.png&quot;);
+
+    byte[] colorTable = new byte[256];
+
+    public PosterizeTablePage()
+    {
+        Title = &quot;Posterize Table&quot;;
+
+        // Create color table
+        for (int i = 0; i &lt; 256; i++)
+        {
+            colorTable[i] = (byte)(0xC0 &amp; i);
+        }
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.ColorFilter =
+                SKColorFilter.CreateTable(null, null, colorTable, colorTable);
+
+            canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform, paint: paint);
+        }
+    }
+}
+</code></pre>
+<p>The program chooses to use this color table only for the green and blue channels. The red channel continues to have full resolution:</p>
+<p><a href="color-filters-images/PosterizeTable-Large.png#lightbox"><img src="color-filters-images/PosterizeTable.png" alt="Posterize Table" title="Posterize Table"></a></p>
+<p>You can use various color tables for the different color channels for various effects.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

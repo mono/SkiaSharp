@@ -1,0 +1,592 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Creating and drawing on SkiaSharp bitmaps | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Creating and drawing on SkiaSharp bitmaps | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="creating-and-drawing-on-skiasharp-bitmaps">Creating and drawing on SkiaSharp bitmaps</h1>
+
+<p>You've seen how an application can load bitmaps from the Web, from application resources, and from the user's photo library. It's also possible to create new bitmaps within your application. The simplest approach involves one of the constructors of <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.-ctor#skiasharp-skbitmap-ctor(system-int32-system-int32-system-boolean)"><code>SKBitmap</code></a>:</p>
+<pre><code class="lang-csharp">SKBitmap bitmap = new SKBitmap(width, height);
+</code></pre>
+<p>The <code>width</code> and <code>height</code> parameters are integers and specify the pixel dimensions of the bitmap. This constructor creates a full-color bitmap with four bytes per pixel: one byte each for the red, green, blue, and alpha (opacity) components.</p>
+<p>After you've created a new bitmap, you need to get something on the surface of the bitmap. You generally do this in one of two ways:</p>
+<ul>
+<li>Draw on the bitmap using standard <code>Canvas</code> drawing methods.</li>
+<li>Access the pixel bits directly.</li>
+</ul>
+<p>This article demonstrates the first approach:</p>
+<p><img src="drawing-images/DrawingSample.png" alt="Drawing Sample" title="Drawing Sample"></p>
+<p>The second approach is discussed in the article <a href="pixel-bits.html"><strong>Accessing SkiaSharp Bitmap Pixels</strong></a>.</p>
+<h2 id="drawing-on-the-bitmap">Drawing on the bitmap</h2>
+<p>Drawing on the surface of a bitmap is the same as drawing on a video display. To draw on a video display, you obtain an <code>SKCanvas</code> object from the <code>PaintSurface</code> event arguments. To draw on a bitmap, you create an <code>SKCanvas</code> object using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.-ctor#skiasharp-skcanvas-ctor(skiasharp-skbitmap)"><code>SKCanvas</code></a> constructor:</p>
+<pre><code class="lang-csharp">SKCanvas canvas = new SKCanvas(bitmap);
+</code></pre>
+<p>When you're finished drawing on the bitmap, you can dispose of the <code>SKCanvas</code> object. For this reason, the <code>SKCanvas</code> constructor is generally called in a <code>using</code> statement:</p>
+<pre><code class="lang-csharp">using (SKCanvas canvas = new SKCanvas(bitmap))
+{
+    ··· // call drawing function
+}
+</code></pre>
+<p>The bitmap can then be displayed. At a later time, the program can create a new <code>SKCanvas</code> object based on that same bitmap, and draw on it some more.</p>
+<p>The <strong>Hello Bitmap</strong> page in the sample application writes the text &quot;Hello, Bitmap!&quot; on a bitmap and then displays that bitmap multiple times.</p>
+<p>The constructor of the <code>HelloBitmapPage</code> begins by creating an <code>SKPaint</code> object for displaying text. It determines the dimensions of a text string and creates a bitmap with those dimensions. It then creates an <code>SKCanvas</code> object based on that bitmap, calls <code>Clear</code>, and then calls <code>DrawText</code>. It's always a good idea to call <code>Clear</code> with a new bitmap because a newly created bitmap might contain random data.</p>
+<p>The constructor concludes by creating an <code>SKCanvasView</code> object to display the bitmap:</p>
+<pre><code class="lang-csharp">public partial class HelloBitmapPage : ContentPage
+{
+    const string TEXT = &quot;Hello, Bitmap!&quot;;
+    SKBitmap helloBitmap;
+
+    public HelloBitmapPage()
+    {
+        Title = TEXT;
+
+        // Create bitmap and draw on it
+        using (SKPaint textPaint = new SKPaint { TextSize = 48 })
+        {
+            SKRect bounds = new SKRect();
+            textPaint.MeasureText(TEXT, ref bounds);
+
+            helloBitmap = new SKBitmap((int)bounds.Right,
+                                       (int)bounds.Height);
+
+            using (SKCanvas bitmapCanvas = new SKCanvas(helloBitmap))
+            {
+                bitmapCanvas.Clear();
+                bitmapCanvas.DrawText(TEXT, 0, -bounds.Top, textPaint);
+            }
+        }
+
+        // Create SKCanvasView to view result
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear(SKColors.Aqua);
+
+        for (float y = 0; y &lt; info.Height; y += helloBitmap.Height)
+            for (float x = 0; x &lt; info.Width; x += helloBitmap.Width)
+            {
+                canvas.DrawBitmap(helloBitmap, x, y);
+            }
+    }
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler renders the bitmap multiple times in rows and columns of the display. Notice that the <code>Clear</code> method in the <code>PaintSurface</code> handler has an argument of <code>SKColors.Aqua</code>, which colors the background of the display surface:</p>
+<p><a href="drawing-images/HelloBitmap-Large.png#lightbox"><img src="drawing-images/HelloBitmap.png" alt="Hello, Bitmap!" title="Hello, Bitmap!"></a></p>
+<p>The appearance of the aqua background reveals that the bitmap is transparent except for the text.</p>
+<h2 id="clearing-and-transparency">Clearing and transparency</h2>
+<p>The display of the <strong>Hello Bitmap</strong> page demonstrates that the bitmap the program created is transparent except for the black text. That's why the aqua color of the display surface shows through.</p>
+<p>The documentation of the <code>Clear</code> methods of <code>SKCanvas</code> describes them with the statement: &quot;Replaces all the pixels in the canvas' current clip.&quot; The use of the word &quot;replaces&quot; reveals an important characteristic of these methods: All the drawing methods of <code>SKCanvas</code> add something to the existing display surface. The <code>Clear</code> methods <em>replace</em> what's already there.</p>
+<p><code>Clear</code> exists in two different versions:</p>
+<ul>
+<li><p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.clear#skiasharp-skcanvas-clear(skiasharp-skcolor)"><code>Clear</code></a> method with an <code>SKColor</code> parameter replaces the pixels of the display surface with pixels of that color.</p>
+</li>
+<li><p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.clear#skiasharp-skcanvas-clear"><code>Clear</code></a> method with no parameters replaces the pixels with the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolors.empty#skiasharp-skcolors-empty"><code>SKColors.Empty</code></a> color, which is a color in which all the components (red, green, blue, and alpha) are set to zero. This color is sometimes referred to as &quot;transparent black.&quot;</p>
+</li>
+</ul>
+<p>Calling <code>Clear</code> with no arguments on a new bitmap initializes the entire bitmap to be entirely transparent. Anything subsequently drawn on the bitmap will usually be opaque or partially opaque.</p>
+<p>Here's something to try: In the <strong>Hello Bitmap</strong> page, replace the <code>Clear</code> method applied to the <code>bitmapCanvas</code> with this one:</p>
+<pre><code class="lang-csharp">bitmapCanvas.Clear(new SKColor(255, 0, 0, 128));
+</code></pre>
+<p>The order of the <code>SKColor</code> constructor parameters is red, green, blue, and alpha, where each value can range from 0 to 255. Keep in mind that an alpha value of 0 is transparent, while an alpha value of 255 is opaque.</p>
+<p>The value (255, 0, 0, 128) clears the bitmap pixels to red pixels with a 50% opacity. This means that the bitmap background is semi-transparent. The semi-transparent red background of the bitmap combines with the aqua background of the display surface to create a gray background.</p>
+<p>Try setting the color of the text to transparent black by putting the following assignment in the <code>SKPaint</code> initializer:</p>
+<pre><code class="lang-csharp">Color = new SKColor(0, 0, 0, 0)
+</code></pre>
+<p>You might think that this transparent text would create fully transparent areas of the bitmap through which you'd see the aqua background of the display surface. But that is not so. The text is drawn on top of what's already on the bitmap. The transparent text will not be visible at all.</p>
+<p>No <code>Draw</code> method ever makes a bitmap more transparent. Only <code>Clear</code> can do that.</p>
+<h2 id="bitmap-color-types">Bitmap color types</h2>
+<p>The simplest <code>SKBitmap</code> constructor allows you to specify an integer pixel width and height for the bitmap. Other <code>SKBitmap</code> constructors are more complex. These constructors require arguments of two enumeration types: <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolortype"><code>SKColorType</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skalphatype"><code>SKAlphaType</code></a>. Other constructors use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo"><code>SKImageInfo</code></a> structure, which consolidates this information.</p>
+<p>The <code>SKColorType</code> enumeration has 9 members. Each of these members describes a particular way of storing the bitmap pixels:</p>
+<ul>
+<li><code>Unknown</code></li>
+<li><code>Alpha8</code> — each pixel is 8 bits, representing an alpha value from fully transparent to fully opaque</li>
+<li><code>Rgb565</code> — each pixel is 16 bits, 5 bits for red and blue, and 6 for green</li>
+<li><code>Argb4444</code> — each pixel is 16 bits, 4 each for alpha, red, green, and blue</li>
+<li><code>Rgba8888</code> — each pixel is 32 bits, 8 each for red, green, blue, and alpha</li>
+<li><code>Bgra8888</code> — each pixel is 32 bits, 8 each for blue, green, red, and alpha</li>
+<li><code>Index8</code> — each pixel is 8 bits and represents an index into an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolortable"><code>SKColorTable</code></a></li>
+<li><code>Gray8</code> — each pixel is 8 bits representing a gray shade from black to white</li>
+<li><code>RgbaF16</code> — each pixel is 64 bits, with red, green, blue, and alpha in a 16-bit floating-point format</li>
+</ul>
+<p>The two formats where each pixel is 32 pixels (4 bytes) are often called <em>full-color</em> formats. Many of the other formats date from a time when video displays themselves were not capable of full color. Bitmaps of limited color were adequate for these displays and allowed bitmaps to occupy less space in memory.</p>
+<p>These days, programmers almost always use full-color bitmaps and don't bother with other formats. The exception is the <code>RgbaF16</code> format, which allows greater color resolution than even the full-color formats. However, this format is used for specialized purposes, such as medical imaging, and doesn't make much sense when used with standard full-color displays.</p>
+<p>This series of articles will restrict itself to the <code>SKBitmap</code> color formats used by default when no <code>SKColorType</code> member is specified. This default format is based on the underlying platform. For the platforms supported by Xamarin.Forms, the default color type is:</p>
+<ul>
+<li><code>Rgba8888</code> for iOS and Android</li>
+<li><code>Bgra8888</code> for the UWP</li>
+</ul>
+<p>The only difference is the order of the 4 bytes in memory, and this only becomes an issue when you directly access the pixel bits. This won't become important until you get to the article <a href="pixel-bits.html"><strong>Accessing SkiaSharp Bitmap Pixels</strong></a>.</p>
+<p>The <code>SKAlphaType</code> enumeration has four members:</p>
+<ul>
+<li><code>Unknown</code></li>
+<li><code>Opaque</code> — the bitmap has no transparency</li>
+<li><code>Premul</code> — color components are pre-multiplied by the alpha component</li>
+<li><code>Unpremul</code> — color components are not pre-multiplied by the alpha component</li>
+</ul>
+<p>Here's a 4-byte red bitmap pixel with 50% transparency, with the bytes shown in the order red, green, blue, alpha:</p>
+<p>0xFF 0x00 0x00 0x80</p>
+<p>When a bitmap containing semi-transparent pixels is rendered on a display surface, the color components of each bitmap pixel must be multiplied by that pixel's alpha value, and the color components of the corresponding pixel of the display surface must be multiplied by 255 minus the alpha value. The two pixels can then be combined. The bitmap can be rendered faster if the color components in the bitmap pixels have already been pre-mulitplied by the alpha value. That same red pixel would be stored like this in a pre-multiplied format:</p>
+<p>0x80 0x00 0x00 0x80</p>
+<p>This performance improvement is why <code>SkiaSharp</code> bitmaps by default are created with a <code>Premul</code> format. But again, it becomes necessary to know this only when you access and manipulate pixel bits.</p>
+<h2 id="drawing-on-existing-bitmaps">Drawing on existing bitmaps</h2>
+<p>It is not necessary to create a new bitmap to draw on it. You can also draw on an existing bitmap.</p>
+<p>The <strong>Monkey Moustache</strong> page uses its constructor to load the <strong>MonkeyFace.png</strong> image. It then creates an <code>SKCanvas</code> object based on that bitmap, and uses <code>SKPaint</code> and <code>SKPath</code> objects to draw a moustache on it:</p>
+<pre><code class="lang-csharp">public partial class MonkeyMoustachePage : ContentPage
+{
+    SKBitmap monkeyBitmap;
+
+    public MonkeyMoustachePage()
+    {
+        Title = &quot;Monkey Moustache&quot;;
+
+        monkeyBitmap = BitmapExtensions.LoadBitmapResource(GetType(),
+            &quot;SkiaSharpFormsDemos.Media.MonkeyFace.png&quot;);
+
+        // Create canvas based on bitmap
+        using (SKCanvas canvas = new SKCanvas(monkeyBitmap))
+        {
+            using (SKPaint paint = new SKPaint())
+            {
+                paint.Style = SKPaintStyle.Stroke;
+                paint.Color = SKColors.Black;
+                paint.StrokeWidth = 24;
+                paint.StrokeCap = SKStrokeCap.Round;
+
+                using (SKPath path = new SKPath())
+                {
+                    path.MoveTo(380, 390);
+                    path.CubicTo(560, 390, 560, 280, 500, 280);
+
+                    path.MoveTo(320, 390);
+                    path.CubicTo(140, 390, 140, 280, 200, 280);
+
+                    canvas.DrawPath(path, paint);
+                }
+            }
+        }
+
+        // Create SKCanvasView to view result
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.DrawBitmap(monkeyBitmap, info.Rect, BitmapStretch.Uniform);
+    }
+}
+</code></pre>
+<p>The constructor concludes by creating an <code>SKCanvasView</code> whose <code>PaintSurface</code> handler simply displays the result:</p>
+<p><a href="drawing-images/MonkeyMoustache-Large.png#lightbox"><img src="drawing-images/MonkeyMoustache.png" alt="Monkey Moustache" title="Monkey Moustache"></a></p>
+<h2 id="copying-and-modifying-bitmaps">Copying and modifying bitmaps</h2>
+<p>The methods of <code>SKCanvas</code> that you can use to draw on a bitmap include <code>DrawBitmap</code>. This means that you can draw one bitmap on another, usually modifying it in some way.</p>
+<p>The most versatile way to modify a bitmap is through accessing the actual pixel bits, a subject covered in the article <strong><a href="pixel-bits.html">Accessing SkiaSharp bitmap pixels</a></strong>. But there are many other techniques to modify bitmaps that don't require accessing the pixel bits.</p>
+<p>The following bitmap included with the sample application is 360 pixels wide and 480 pixels in height:</p>
+<p><img src="drawing-images/MountainClimbers.jpg" alt="Mountain Climbers" title="Mountain Climbers"></p>
+<p>Suppose you haven't received permission from the monkey on the left to publish this photograph. One solution is to obscure the monkey's face using a technique called <em>pixelization</em>. The pixels of the face are replaced with blocks of color so you can't make out the features. The blocks of color are usually derived from the original image by averaging the colors of the pixels corresponding to these blocks. But you don't need to perform this averaging yourself. It happens automatically when you copy a bitmap into a smaller pixel dimension.</p>
+<p>The left monkey's face occupies approximately a 72-pixel square area with an upper-left corner at the point (112, 238). Let's replace that 72-pixel square area with a 9-by-9 array of colored blocks, each of which is 8-by-8 pixels square.</p>
+<p>The <strong>Pixelize Image</strong> page loads in that bitmap and first creates a tiny 9-pixel square bitmap called <code>faceBitmap</code>. This is a destination for copying just the monkey's face. The destination rectangle is just 9-pixels square but the source rectangle is 72-pixels square. Every 8-by-8 block of source pixels is consolidated down to just one pixel by averaging the colors.</p>
+<p>The next step is to copy the original bitmap into a new bitmap of the same size called <code>pixelizedBitmap</code>. The tiny <code>faceBitmap</code> is then copied on top of that with a 72-pixel square destination rectangle so that each pixel of <code>faceBitmap</code> is expanded to 8 times its size:</p>
+<pre><code class="lang-csharp">public class PixelizedImagePage : ContentPage
+{
+    SKBitmap pixelizedBitmap;
+
+    public PixelizedImagePage ()
+    {
+        Title = &quot;Pixelize Image&quot;;
+
+        SKBitmap originalBitmap = BitmapExtensions.LoadBitmapResource(GetType(),
+            &quot;SkiaSharpFormsDemos.Media.MountainClimbers.jpg&quot;);
+
+        // Create tiny bitmap for pixelized face
+        SKBitmap faceBitmap = new SKBitmap(9, 9);
+
+        // Copy subset of original bitmap to that
+        using (SKCanvas canvas = new SKCanvas(faceBitmap))
+        {
+            canvas.Clear();
+            canvas.DrawBitmap(originalBitmap,
+                              new SKRect(112, 238, 184, 310),   // source
+                              new SKRect(0, 0, 9, 9));          // destination
+
+        }
+
+        // Create full-sized bitmap for copy
+        pixelizedBitmap = new SKBitmap(originalBitmap.Width, originalBitmap.Height);
+
+        using (SKCanvas canvas = new SKCanvas(pixelizedBitmap))
+        {
+            canvas.Clear();
+
+            // Draw original in full size
+            canvas.DrawBitmap(originalBitmap, new SKPoint());
+
+            // Draw tiny bitmap to cover face
+            canvas.DrawBitmap(faceBitmap,
+                              new SKRect(112, 238, 184, 310));  // destination
+        }
+
+        // Create SKCanvasView to view result
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.DrawBitmap(pixelizedBitmap, info.Rect, BitmapStretch.Uniform);
+    }
+}
+</code></pre>
+<p>The constructor concludes by creating an <code>SKCanvasView</code> to display the result:</p>
+<p><a href="drawing-images/PixelizeImage-Large.png#lightbox"><img src="drawing-images/PixelizeImage.png" alt="Pixelize Image" title="Pixelize Image"></a></p>
+<h2 id="rotating-bitmaps">Rotating bitmaps</h2>
+<p>Another common task is rotating bitmaps. This is particularly useful when retrieving bitmaps from an iPhone or iPad photo library. Unless the device was held in a particular orientation when the photo was taken, the picture is likely to be upside-down or sideways.</p>
+<p>Turning a bitmap upside-down requires creating another bitmap the same size as the first, and then setting a transform to rotate by 180 degrees while copying the first to the second. In all of the examples in this section, <code>bitmap</code> is the <code>SKBitmap</code> object that you need to rotate:</p>
+<pre><code class="lang-csharp">SKBitmap rotatedBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
+
+using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
+{
+    canvas.Clear();
+    canvas.RotateDegrees(180, bitmap.Width / 2, bitmap.Height / 2);
+    canvas.DrawBitmap(bitmap, new SKPoint());
+}
+</code></pre>
+<p>When rotating by 90 degrees, you need to create a bitmap that is a different size than the original by swapping the height and width. For example, if the original bitmap is 1200 pixels wide and 800 pixels high, the rotated bitmap is 800 pixels wide and 1200 pixels wide. Set translation and rotation so that the bitmap is rotated around its upper-left corner and then shifted into view. (Keep in mind that the <code>Translate</code> and <code>RotateDegrees</code> methods are called in the opposite order of the way that they are applied.) Here's the code for rotating 90 degrees clockwise:</p>
+<pre><code class="lang-csharp">SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);
+
+using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
+{
+    canvas.Clear();
+    canvas.Translate(bitmap.Height, 0);
+    canvas.RotateDegrees(90);
+    canvas.DrawBitmap(bitmap, new SKPoint());
+}
+</code></pre>
+<p>And here's a similar function for rotating 90 degrees counter-clockwise:</p>
+<pre><code class="lang-csharp">SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);
+
+using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
+{
+    canvas.Clear();
+    canvas.Translate(0, bitmap.Width);
+    canvas.RotateDegrees(-90);
+    canvas.DrawBitmap(bitmap, new SKPoint());
+}
+</code></pre>
+<p>These two methods are used in the <strong>Photo Puzzle</strong> pages described in the article <a href="cropping.html#cropping-skiasharp-bitmaps"><strong>Cropping SkiaSharp Bitmaps</strong></a>.</p>
+<p>A program that allows the user to rotate a bitmap in 90-degree increments needs only implement one function for rotating by 90 degrees. The user can then rotate in any increment of 90 degrees by repeated execution of this one function.</p>
+<p>A program can also rotate a bitmap by any amount. One simple approach is to modify the function that rotates by 180 degrees by replacing 180 with a generalized <code>angle</code> variable:</p>
+<pre><code class="lang-csharp">SKBitmap rotatedBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
+
+using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
+{
+    canvas.Clear();
+    canvas.RotateDegrees(angle, bitmap.Width / 2, bitmap.Height / 2);
+    canvas.DrawBitmap(bitmap, new SKPoint());
+}
+</code></pre>
+<p>However, in the general case, this logic will crop off the corners of the rotated bitmap. A better approach is to calculate the size of the rotated bitmap using trigonometry to include those corners.</p>
+<p>This trigonometry is shown in the <strong>Bitmap Rotator</strong> page. The XAML file instantiates an <code>SKCanvasView</code> and a <code>Slider</code> that can range from 0 through 360 degrees with a <code>Label</code> showing the current value:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.BitmapRotatorPage&quot;
+             Title=&quot;Bitmap Rotator&quot;&gt;
+    &lt;StackLayout&gt;
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;slider&quot;
+                Maximum=&quot;360&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference slider},
+                              Path=Value,
+                              StringFormat='Rotate by {0:F0}&amp;#x00B0;'}&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file loads a bitmap resource and saves it as a static read-only field named <code>originalBitmap</code>. The bitmap displayed in the <code>PaintSurface</code> handler is <code>rotatedBitmap</code>, which is initially set to <code>originalBitmap</code>:</p>
+<pre><code class="lang-csharp">public partial class BitmapRotatorPage : ContentPage
+{
+    static readonly SKBitmap originalBitmap =
+        BitmapExtensions.LoadBitmapResource(typeof(BitmapRotatorPage),
+            &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+
+    SKBitmap rotatedBitmap = originalBitmap;
+
+    public BitmapRotatorPage ()
+    {
+        InitializeComponent ();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.DrawBitmap(rotatedBitmap, info.Rect, BitmapStretch.Uniform);
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        double angle = args.NewValue;
+        double radians = Math.PI * angle / 180;
+        float sine = (float)Math.Abs(Math.Sin(radians));
+        float cosine = (float)Math.Abs(Math.Cos(radians));
+        int originalWidth = originalBitmap.Width;
+        int originalHeight = originalBitmap.Height;
+        int rotatedWidth = (int)(cosine * originalWidth + sine * originalHeight);
+        int rotatedHeight = (int)(cosine * originalHeight + sine * originalWidth);
+
+        rotatedBitmap = new SKBitmap(rotatedWidth, rotatedHeight);
+
+        using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
+        {
+            canvas.Clear(SKColors.LightPink);
+            canvas.Translate(rotatedWidth / 2, rotatedHeight / 2);
+            canvas.RotateDegrees((float)angle);
+            canvas.Translate(-originalWidth / 2, -originalHeight / 2);
+            canvas.DrawBitmap(originalBitmap, new SKPoint());
+        }
+
+        canvasView.InvalidateSurface();
+    }
+}
+</code></pre>
+<p>The <code>ValueChanged</code> handler of the <code>Slider</code> performs the operations that create a new <code>rotatedBitmap</code> based on the rotation angle. The new width and height are based on absolute values of sines and cosines of the original widths and heights. The transforms used to draw the original bitmap on the rotated bitmap move the original bitmap center to the origin, then rotate it by the specified number of degrees, and then translate that center to the center of the rotated bitmap. (The <code>Translate</code> and <code>RotateDegrees</code> methods are called in the opposite order than how they are applied.)</p>
+<p>Notice the use of the <code>Clear</code> method to make the background of <code>rotatedBitmap</code> a light pink. This is solely to illustrate the size of <code>rotatedBitmap</code> on the display:</p>
+<p><a href="drawing-images/BitmapRotator-Large.png#lightbox"><img src="drawing-images/BitmapRotator.png" alt="Bitmap Rotator" title="Bitmap Rotator"></a></p>
+<p>The rotated bitmap is just large enough to include the entire original bitmap, but no larger.</p>
+<h2 id="flipping-bitmaps">Flipping bitmaps</h2>
+<p>Another operation commonly performed on bitmaps is called <em>flipping</em>. Conceptually, the bitmap is rotated in three dimensions around a vertical axis or horizontal axis through the center of the bitmap. Vertical flipping creates a mirror image.</p>
+<p>The <strong>Bitmap Flipper</strong> page in the sample application demonstrates these processes. The XAML file contains an <code>SKCanvasView</code> and two buttons for flipping vertically and horizontally:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.BitmapFlipperPage&quot;
+             Title=&quot;Bitmap Flipper&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Grid.ColumnDefinitions&gt;
+            &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+            &lt;ColumnDefinition Width=&quot;*&quot; /&gt;
+        &lt;/Grid.ColumnDefinitions&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           Grid.Row=&quot;0&quot; Grid.Column=&quot;0&quot; Grid.ColumnSpan=&quot;2&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Button Text=&quot;Flip Vertical&quot;
+                Grid.Row=&quot;1&quot; Grid.Column=&quot;0&quot;
+                Margin=&quot;0, 10&quot;
+                Clicked=&quot;OnFlipVerticalClicked&quot; /&gt;
+
+        &lt;Button Text=&quot;Flip Horizontal&quot;
+                Grid.Row=&quot;1&quot; Grid.Column=&quot;1&quot;
+                Margin=&quot;0, 10&quot;
+                Clicked=&quot;OnFlipHorizontalClicked&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file implements these two operations in the <code>Clicked</code> handlers for the buttons:</p>
+<pre><code class="lang-csharp">public partial class BitmapFlipperPage : ContentPage
+{
+    SKBitmap bitmap =
+        BitmapExtensions.LoadBitmapResource(typeof(BitmapRotatorPage),
+            &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+
+    public BitmapFlipperPage()
+    {
+        InitializeComponent();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
+    }
+
+    void OnFlipVerticalClicked(object sender, ValueChangedEventArgs args)
+    {
+        SKBitmap flippedBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
+
+        using (SKCanvas canvas = new SKCanvas(flippedBitmap))
+        {
+            canvas.Clear();
+            canvas.Scale(-1, 1, bitmap.Width / 2, 0);
+            canvas.DrawBitmap(bitmap, new SKPoint());
+        }
+
+        bitmap = flippedBitmap;
+        canvasView.InvalidateSurface();
+    }
+
+    void OnFlipHorizontalClicked(object sender, ValueChangedEventArgs args)
+    {
+        SKBitmap flippedBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
+
+        using (SKCanvas canvas = new SKCanvas(flippedBitmap))
+        {
+            canvas.Clear();
+            canvas.Scale(1, -1, 0, bitmap.Height / 2);
+            canvas.DrawBitmap(bitmap, new SKPoint());
+        }
+
+        bitmap = flippedBitmap;
+        canvasView.InvalidateSurface();
+    }
+}
+</code></pre>
+<p>The vertical flip is accomplished by a scaling transform with a horizontal scaling factor of –1. The scaling center is the vertical center of the bitmap. The horizontal flip is a scaling transform with a vertical scaling factor of –1.</p>
+<p>As you can see from the reversed lettering on the monkey's shirt, flipping is not the same as rotation. But as the UWP screenshot on the right demonstrates, flipping both horizontally and vertically is the same as rotating 180 degrees:</p>
+<p><a href="drawing-images/BitmapFlipper-Large.png#lightbox"><img src="drawing-images/BitmapFlipper.png" alt="Bitmap Flipper" title="Bitmap Flipper"></a></p>
+<p>Another common task that can be handled using similar techniques is cropping a bitmap to a rectangular subset. This is described in the next article <a href="cropping.html"><strong>Cropping SkiaSharp Bitmaps</strong></a>.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

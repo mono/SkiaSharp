@@ -1,0 +1,538 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>3D Rotations in SkiaSharp | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="3D Rotations in SkiaSharp | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="3d-rotations-in-skiasharp">3D Rotations in SkiaSharp</h1>
+
+<p><em>Use non-affine transforms to rotate 2D objects in 3D space.</em></p>
+<p>One common application of non-affine transforms is simulating the rotation of a 2D object in 3D space:</p>
+<p><img src="3d-rotation-images/3drotationsexample.png" alt="A text string rotated in 3D space"></p>
+<p>This job involves working with three-dimensional rotations, and then deriving a non-affine <code>SKMatrix</code> transform that performs these 3D rotations.</p>
+<p>It is hard to develop this <code>SKMatrix</code> transform working solely within two dimensions. The job becomes much easier when this 3-by-3 matrix is derived from a 4-by-4 matrix used in 3D graphics. SkiaSharp includes the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix44"><code>SKMatrix44</code></a> class for this purpose, but some background in 3D graphics is necessary for understanding 3D rotations and the 4-by-4 transform matrix.</p>
+<p>A three-dimensional coordinate system adds a third axis called Z. Conceptually, the Z axis is at right angles to the screen. Coordinate points in 3D space are indicated with three numbers: (x, y, z). In the 3D coordinate system used in this article, increasing values of X are to the right and increasing values of Y go down, just as in two dimensions. Increasing positive Z values come out of the screen. The origin is the upper-left corner, just as in 2D graphics. You can think of the screen as an XY plane with the Z axis at right angles to this plane.</p>
+<p>This is called a left-hand coordinate system. If you point the forefinger for your left hand in the direction of positive X coordinates (to the right), and your middle finger in the direction of increasing Y coordinates (down), then your thumb points in the direction of increasing Z coordinates — extending out from the screen.</p>
+<p>In 3D graphics, transforms are based on a 4-by-4 matrix. Here is the 4-by-4 identity matrix:</p>
+<pre>
+|  1  0  0  0  |
+|  0  1  0  0  |
+|  0  0  1  0  |
+|  0  0  0  1  |
+</pre>
+<p>In working with a 4-by-4 matrix, it is convenient to identify the cells with their row and column numbers:</p>
+<pre>
+|  M11  M12  M13  M14  |
+|  M21  M22  M23  M24  |
+|  M31  M32  M33  M34  |
+|  M41  M42  M43  M44  |
+</pre>
+<p>However, the SkiaSharp <code>Matrix44</code> class is a little different. The only way to set or get individual cell values in <code>SKMatrix44</code> is by using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix44.item#skiasharp-skmatrix44-item(system-int32-system-int32)"><code>Item</code></a> indexer. The row and column indices are zero-based rather than one-based, and the rows and columns are swapped. The cell M14 in the above diagram is accessed using the indexer <code>[3, 0]</code> in a <code>SKMatrix44</code> object.</p>
+<p>In a 3D graphics system, a 3D point (x, y, z) is converted to a 1-by-4 matrix for multiplying by the 4-by-4 transform matrix:</p>
+<pre>
+                 |  M11  M12  M13  M14  |
+| x  y  z  1 | × |  M21  M22  M23  M24  | = | x'  y'  z'  w' |
+                 |  M31  M32  M33  M34  |
+                 |  M41  M42  M43  M44  |
+</pre>
+<p>Analogous to 2D transforms that take place in three dimensions, 3D transforms are assumed to take place in four dimensions. The fourth dimension is referred to as W, and the 3D space is assumed to exist within the 4D space where W coordinates are equal to 1. The transform formulas are as follows:</p>
+<p><code>x' = M11·x + M21·y + M31·z + M41</code></p>
+<p><code>y' = M12·x + M22·y + M32·z + M42</code></p>
+<p><code>z' = M13·x + M23·y + M33·z + M43</code></p>
+<p><code>w' = M14·x + M24·y + M34·z + M44</code></p>
+<p>It's obvious from the transform formulas that the cells <code>M11</code>, <code>M22</code>, <code>M33</code> are scaling factors in the X, Y, and Z directions, and <code>M41</code>, <code>M42</code>, and <code>M43</code> are translation factors in the X, Y, and Z directions.</p>
+<p>To convert these coordinates back to the 3D space where W equals 1, the x', y', and z' coordinates are all divided by w':</p>
+<p><code>x&quot; = x' / w'</code></p>
+<p><code>y&quot; = y' / w'</code></p>
+<p><code>z&quot; = z' / w'</code></p>
+<p><code>w&quot; = w' / w' = 1</code></p>
+<p>That division by w' provides perspective in 3D space. If w' equals 1, then no perspective occurs.</p>
+<p>Rotations in 3D space can be quite complex, but the simplest rotations are those around the X, Y, and Z axes. A rotation of angle α around the X axis is this matrix:</p>
+<pre>
+|  1     0       0     0  |
+|  0   cos(α)  sin(α)  0  |
+|  0  –sin(α)  cos(α)  0  |
+|  0     0       0     1  |
+</pre>
+<p>Values of X remain the same when subjected to this transform. Rotation around the Y axis leaves values of Y unchanged:</p>
+<pre>
+|  cos(α)  0  –sin(α)  0  |
+|    0     1     0     0  |
+|  sin(α)  0   cos(α)  0  |
+|    0     0     0     1  |
+</pre>
+<p>Rotation around the Z axis is the same as in 2D graphics:</p>
+<pre>
+|  cos(α)  sin(α)  0  0  |
+| –sin(α)  cos(α)  0  0  |
+|    0       0     1  0  |
+|    0       0     0  1  |
+</pre>
+<p>The direction of rotation is implied by the handedness of the coordinate system. This is a left-handed system, so if you point the thumb of your left hand towards increasing values for a particular axis — to the right for rotation around the X axis, down for rotation around the Y axis, and towards you for rotation around the Z axis — then the curve of your other fingers indicates the direction of rotation for positive angles.</p>
+<p><code>SKMatrix44</code> has generalized static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix44.createrotation#skiasharp-skmatrix44-createrotation(system-single-system-single-system-single-system-single)"><code>CreateRotation</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix44.createrotationdegrees#skiasharp-skmatrix44-createrotationdegrees(system-single-system-single-system-single-system-single)"><code>CreateRotationDegrees</code></a> methods that allow you to specify the axis around which the rotation occurs:</p>
+<pre><code class="lang-csharp">public static SKMatrix44 CreateRotationDegrees (Single x, Single y, Single z, Single degrees)
+</code></pre>
+<p>For rotation around the X axis, set the first three arguments to 1, 0, 0. For rotation around the Y axis, set them to 0, 1, 0, and for rotation around the Z axis, set them to 0, 0, 1.</p>
+<p>The fourth column of the 4-by-4 is for perspective. The <code>SKMatrix44</code> has no methods for creating perspective transforms, but you can create one yourself using the following code:</p>
+<pre><code class="lang-csharp">SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
+perspectiveMatrix[3, 2] = -1 / depth;
+</code></pre>
+<p>The reason for the argument name <code>depth</code> will be evident shortly. That code creates the matrix:</p>
+<pre>
+|  1  0  0      0     |
+|  0  1  0      0     |
+|  0  0  1  -1/depth  |
+|  0  0  0      1     |
+</pre>
+<p>The transform formulas result in the following calculation of w':</p>
+<p><code>w' = –z / depth + 1</code></p>
+<p>This serves to reduce X and Y coordinates when values of Z are less than zero (conceptually behind the XY plane) and to increase X and Y coordinates for positive values of Z. When the Z coordinate equals <code>depth</code>, then w' is zero, and coordinates become infinite. Three-dimensional graphics systems are built around a camera metaphor, and the <code>depth</code> value here represents the distance of the camera from the origin of the coordinate system. If a graphical object has a Z coordinate that is <code>depth</code> units from the origin, it is conceptually touching the lens of the camera and becomes infinitely large.</p>
+<p>Keep in mind that you'll probably be using this <code>perspectiveMatrix</code> value in combination with rotation matrices. If a graphics object being rotated has X or Y coordinates greater than <code>depth</code>, then the rotation of this object in 3D space is likely to involve Z coordinates greater than <code>depth</code>. This must be avoided! When creating <code>perspectiveMatrix</code> you want to set <code>depth</code> to a value sufficiently large for all coordinates in the graphics object no matter how it is rotated. This ensures that there is never any division by zero.</p>
+<p>Combining 3D rotations and perspective requires multiplying 4-by-4 matrices together. For this purpose, <code>SKMatrix44</code> defines concatenation methods. If <code>A</code> and <code>B</code> are <code>SKMatrix44</code> objects, then the following code sets A equal to A × B:</p>
+<pre><code class="lang-csharp">A.PostConcat(B);
+</code></pre>
+<p>When a 4-by-4 transform matrix is used in a 2D graphics system, it is applied to 2D objects. These objects are flat and are assumed to have Z coordinates of zero. The transform multiplication is a little simpler than the transform shown earlier:</p>
+<pre>
+                 |  M11  M12  M13  M14  |
+| x  y  0  1 | × |  M21  M22  M23  M24  | = | x'  y'  z'  w' |
+                 |  M31  M32  M33  M34  |
+                 |  M41  M42  M43  M44  |
+</pre>
+<p>That 0 value for z results in transform formulas that do not involve any cells in the third row of the matrix:</p>
+<p>x' = M11·x + M21·y + M41</p>
+<p>y' = M12·x + M22·y + M42</p>
+<p>z' = M13·x + M23·y + M43</p>
+<p>w' = M14·x + M24·y + M44</p>
+<p>Moreover, the z' coordinate is irrelevant here as well. When a 3D object is displayed in a 2D graphics system, it is collapsed to a two-dimensional object by ignoring the Z coordinate values. The transform formulas are really just these two:</p>
+<p><code>x&quot; = x' / w'</code></p>
+<p><code>y&quot; = y' / w'</code></p>
+<p>This means that the third row <em>and</em> third column of the 4-by-4 matrix can be ignored.</p>
+<p>But if that is so, why is the 4-by-4 matrix even necessary in the first place?</p>
+<p>Although the third row and third column of the 4-by-4 are irrelevant for two-dimensional transforms, the third row and column <em>do</em> play a role prior to that when various <code>SKMatrix44</code> values are multiplied together. For example, suppose that you multiply rotation around the Y axis with the perspective transform:</p>
+<pre>
+|  cos(α)  0  –sin(α)  0  |   |  1  0  0      0     |   |  cos(α)  0  –sin(α)   sin(α)/depth  |
+|    0     1     0     0  | × |  0  1  0      0     | = |    0     1     0           0        |
+|  sin(α)  0   cos(α)  0  |   |  0  0  1  -1/depth  |   |  sin(α)  0   cos(α)  -cos(α)/depth  |  
+|    0     0     0     1  |   |  0  0  0      1     |   |    0     0     0           1        |
+</pre>
+<p>In the product, the cell <code>M14</code> now contains a perspective value. If you want to apply that matrix to 2D objects, the third row and column are eliminated to convert it into a 3-by-3 matrix:</p>
+<pre>
+|  cos(α)  0  sin(α)/depth  |
+|    0     1       0        |
+|    0     0       1        |
+</pre>
+<p>Now it can be used to transform a 2D point:</p>
+<pre>
+                |  cos(α)  0  sin(α)/depth  |
+|  x  y  1  | × |    0     1       0        | = |  x'  y'  z'  |
+                |    0     0       1        |
+</pre>
+<p>The transform formulas are:</p>
+<p><code>x' = cos(α)·x</code></p>
+<p><code>y' = y</code></p>
+<p><code>z' = (sin(α)/depth)·x + 1</code></p>
+<p>Now divide everything by z':</p>
+<p><code>x&quot; = cos(α)·x / ((sin(α)/depth)·x + 1)</code></p>
+<p><code>y&quot; = y / ((sin(α)/depth)·x + 1)</code></p>
+<p>When 2D objects are rotated with a positive angle around the Y axis, then positive X values recede to the background while negative X values come to the foreground. The X values seem to move closer to the Y axis (which is governed by the cosine value) as coordinates furthest from the Y axis becomes smaller or larger as they move further from the viewer or closer to the viewer.</p>
+<p>When using <code>SKMatrix44</code>, perform all the 3D rotation and perspective operations by multiplying various <code>SKMatrix44</code> values. Then you can extract a two-dimensional 3-by-3 matrix from the 4-by-4 matrix using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix44.matrix#skiasharp-skmatrix44-matrix"><code>Matrix</code></a> property of the <code>SKMatrix44</code> class. This property returns a familiar <code>SKMatrix</code> value.</p>
+<p>The <strong>Rotation 3D</strong> page lets you experiment with 3D rotation. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml"><strong>Rotation3DPage.xaml</strong></a> file instantiates four sliders to set rotation around the X, Y, and Z axes, and to set a depth value:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Transforms.Rotation3DPage&quot;
+             Title=&quot;Rotation 3D&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Grid.Resources&gt;
+            &lt;ResourceDictionary&gt;
+                &lt;Style TargetType=&quot;Label&quot;&gt;
+                    &lt;Setter Property=&quot;HorizontalTextAlignment&quot; Value=&quot;Center&quot; /&gt;
+                &lt;/Style&gt;
+
+                &lt;Style TargetType=&quot;Slider&quot;&gt;
+                    &lt;Setter Property=&quot;Margin&quot; Value=&quot;20, 0&quot; /&gt;
+                    &lt;Setter Property=&quot;Maximum&quot; Value=&quot;360&quot; /&gt;
+                &lt;/Style&gt;
+            &lt;/ResourceDictionary&gt;
+        &lt;/Grid.Resources&gt;
+
+        &lt;Slider x:Name=&quot;xRotateSlider&quot;
+                Grid.Row=&quot;0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference xRotateSlider},
+                              Path=Value,
+                              StringFormat='X-Axis Rotation = {0:F0}'}&quot;
+               Grid.Row=&quot;1&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;yRotateSlider&quot;
+                Grid.Row=&quot;2&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference yRotateSlider},
+                              Path=Value,
+                              StringFormat='Y-Axis Rotation = {0:F0}'}&quot;
+               Grid.Row=&quot;3&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;zRotateSlider&quot;
+                Grid.Row=&quot;4&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference zRotateSlider},
+                              Path=Value,
+                              StringFormat='Z-Axis Rotation = {0:F0}'}&quot;
+               Grid.Row=&quot;5&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;depthSlider&quot;
+                Grid.Row=&quot;6&quot;
+                Maximum=&quot;2500&quot;
+                Minimum=&quot;250&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Grid.Row=&quot;7&quot;
+               Text=&quot;{Binding Source={x:Reference depthSlider},
+                              Path=Value,
+                              StringFormat='Depth = {0:F0}'}&quot; /&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           Grid.Row=&quot;8&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>Notice that the <code>depthSlider</code> is initialized with a <code>Minimum</code> value of 250. This implies that the 2D object being rotated here has X and Y coordinates restricted to a circle defined by a 250-pixel radius around the origin. Any rotation of this object in 3D space will always result in coordinate values less than 250.</p>
+<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml.cs"><strong>Rotation3DPage.cs</strong></a> code-behind file loads in a bitmap that is 300 pixels square:</p>
+<pre><code class="lang-csharp">public partial class Rotation3DPage : ContentPage
+{
+    SKBitmap bitmap;
+
+    public Rotation3DPage()
+    {
+        InitializeComponent();
+
+        string resourceID = &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;;
+        Assembly assembly = GetType().GetTypeInfo().Assembly;
+
+        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+        {
+            bitmap = SKBitmap.Decode(stream);
+        }
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        if (canvasView != null)
+        {
+            canvasView.InvalidateSurface();
+        }
+    }
+    ...
+}
+</code></pre>
+<p>If the 3D transform is centered on this bitmap, then X and Y coordinates range between –150 and 150, while the corners are 212 pixels from the center, so everything is within the 250-pixel radius.</p>
+<p>The <code>PaintSurface</code> handler creates <code>SKMatrix44</code> objects based on the sliders and multiplies them together using <code>PostConcat</code>. The <code>SKMatrix</code> value extracted from the final <code>SKMatrix44</code> object is surrounded by translate transforms to center the rotation in the center of the screen:</p>
+<pre><code class="lang-csharp">public partial class Rotation3DPage : ContentPage
+{
+    SKBitmap bitmap;
+
+    public Rotation3DPage()
+    {
+        InitializeComponent();
+
+        string resourceID = &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;;
+        Assembly assembly = GetType().GetTypeInfo().Assembly;
+
+        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+        {
+            bitmap = SKBitmap.Decode(stream);
+        }
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        if (canvasView != null)
+        {
+            canvasView.InvalidateSurface();
+        }
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Find center of canvas
+        float xCenter = info.Width / 2;
+        float yCenter = info.Height / 2;
+
+        // Translate center to origin
+        SKMatrix matrix = SKMatrix.MakeTranslation(-xCenter, -yCenter);
+
+        // Use 3D matrix for 3D rotations and perspective
+        SKMatrix44 matrix44 = SKMatrix44.CreateIdentity();
+        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(1, 0, 0, (float)xRotateSlider.Value));
+        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(0, 1, 0, (float)yRotateSlider.Value));
+        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(0, 0, 1, (float)zRotateSlider.Value));
+
+        SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
+        perspectiveMatrix[3, 2] = -1 / (float)depthSlider.Value;
+        matrix44.PostConcat(perspectiveMatrix);
+
+        // Concatenate with 2D matrix
+        SKMatrix.PostConcat(ref matrix, matrix44.Matrix);
+
+        // Translate back to center
+        SKMatrix.PostConcat(ref matrix,
+            SKMatrix.MakeTranslation(xCenter, yCenter));
+
+        // Set the matrix and display the bitmap
+        canvas.SetMatrix(matrix);
+        float xBitmap = xCenter - bitmap.Width / 2;
+        float yBitmap = yCenter - bitmap.Height / 2;
+        canvas.DrawBitmap(bitmap, xBitmap, yBitmap);
+    }
+}
+</code></pre>
+<p>When you experiment with the fourth slider, you'll notice that the different depth settings don't move the object further away from the viewer, but instead alter the extent of the perspective effect:</p>
+<p><a href="3d-rotation-images/rotation3d-large.png#lightbox" title="Triple screenshot of the Rotation 3D page"><img src="3d-rotation-images/rotation3d-small.png" alt="Triple screenshot of the Rotation 3D page"></a></p>
+<p>The <strong>Animated Rotation 3D</strong> also uses <code>SKMatrix44</code> to animate a text string in 3D space. The <code>textPaint</code> object set as a field is used in the constructor to determine the bounds of the text:</p>
+<pre><code class="lang-csharp">public class AnimatedRotation3DPage : ContentPage
+{
+    SKCanvasView canvasView;
+    float xRotationDegrees, yRotationDegrees, zRotationDegrees;
+    string text = &quot;SkiaSharp&quot;;
+    SKPaint textPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Black,
+        TextSize = 100,
+        StrokeWidth = 3,
+    };
+    SKRect textBounds;
+
+    public AnimatedRotation3DPage()
+    {
+        Title = &quot;Animated Rotation 3D&quot;;
+
+        canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+
+        // Measure the text
+        textPaint.MeasureText(text, ref textBounds);
+    }
+    ...
+}
+</code></pre>
+<p>The <code>OnAppearing</code> override defines three Xamarin.Forms <code>Animation</code> objects to animate the <code>xRotationDegrees</code>, <code>yRotationDegrees</code>, and <code>zRotationDegrees</code> fields at different rates. Notice that the periods of these animations are set to prime numbers (5 seconds, 7 seconds, and 11 seconds) so the overall combination only repeats every 385 seconds, or more than 10 minutes:</p>
+<pre><code class="lang-csharp">public class AnimatedRotation3DPage : ContentPage
+{
+    ...
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        new Animation((value) =&gt; xRotationDegrees = 360 * (float)value).
+            Commit(this, &quot;xRotationAnimation&quot;, length: 5000, repeat: () =&gt; true);
+
+        new Animation((value) =&gt; yRotationDegrees = 360 * (float)value).
+            Commit(this, &quot;yRotationAnimation&quot;, length: 7000, repeat: () =&gt; true);
+
+        new Animation((value) =&gt;
+        {
+            zRotationDegrees = 360 * (float)value;
+            canvasView.InvalidateSurface();
+        }).Commit(this, &quot;zRotationAnimation&quot;, length: 11000, repeat: () =&gt; true);
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        this.AbortAnimation(&quot;xRotationAnimation&quot;);
+        this.AbortAnimation(&quot;yRotationAnimation&quot;);
+        this.AbortAnimation(&quot;zRotationAnimation&quot;);
+    }
+    ...
+}
+</code></pre>
+<p>As in the previous program, the <code>PaintCanvas</code> handler creates <code>SKMatrix44</code> values for rotation and perspective, and multiplies them together:</p>
+<pre><code class="lang-csharp">public class AnimatedRotation3DPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Find center of canvas
+        float xCenter = info.Width / 2;
+        float yCenter = info.Height / 2;
+
+        // Translate center to origin
+        SKMatrix matrix = SKMatrix.MakeTranslation(-xCenter, -yCenter);
+
+        // Scale so text fits
+        float scale = Math.Min(info.Width / textBounds.Width,
+                               info.Height / textBounds.Height);
+        SKMatrix.PostConcat(ref matrix, SKMatrix.MakeScale(scale, scale));
+
+        // Calculate composite 3D transforms
+        float depth = 0.75f * scale * textBounds.Width;
+
+        SKMatrix44 matrix44 = SKMatrix44.CreateIdentity();
+        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(1, 0, 0, xRotationDegrees));
+        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(0, 1, 0, yRotationDegrees));
+        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(0, 0, 1, zRotationDegrees));
+
+        SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
+        perspectiveMatrix[3, 2] = -1 / depth;
+        matrix44.PostConcat(perspectiveMatrix);
+
+        // Concatenate with 2D matrix
+        SKMatrix.PostConcat(ref matrix, matrix44.Matrix);
+
+        // Translate back to center
+        SKMatrix.PostConcat(ref matrix,
+            SKMatrix.MakeTranslation(xCenter, yCenter));
+
+        // Set the matrix and display the text
+        canvas.SetMatrix(matrix);
+        float xText = xCenter - textBounds.MidX;
+        float yText = yCenter - textBounds.MidY;
+        canvas.DrawText(text, xText, yText, textPaint);
+    }
+}
+</code></pre>
+<p>This 3D rotation is surrounded with several 2D transforms to move the center of rotation to the center of the screen, and to scale the size of the text string so that it is the same width as the screen:</p>
+<p><a href="3d-rotation-images/animatedrotation3d-large.png#lightbox" title="Triple screenshot of the Animated Rotation 3D page"><img src="3d-rotation-images/animatedrotation3d-small.png" alt="Triple screenshot of the Animated Rotation 3D page"></a></p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

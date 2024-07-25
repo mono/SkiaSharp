@@ -1,0 +1,427 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>SVG Path Data in SkiaSharp | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="SVG Path Data in SkiaSharp | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="svg-path-data-in-skiasharp">SVG Path Data in SkiaSharp</h1>
+
+<p><em>Define paths using text strings in the Scalable Vector Graphics format</em></p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath"><code>SKPath</code></a> class supports the definition of entire path objects from text strings in a format established by the Scalable Vector Graphics (SVG) specification. You'll see later in this article how you can represent an entire path such as this one in a text string:</p>
+<p><img src="path-data-images/pathdatasample.png" alt="A sample path defined with SVG path data"></p>
+<p>SVG is an XML-based graphics programming language for web pages. Because SVG must allow paths to be defined in markup rather than a series of function calls, the SVG standard includes an extremely concise way of specifying an entire graphics path as a text string.</p>
+<p>Within SkiaSharp, this format is referred to as &quot;SVG path-data.&quot; The format is also supported in Windows XAML-based programming environments, including the Windows Presentation Foundation and the Universal Windows Platform, where it is known as the <a href="/dotnet/framework/wpf/graphics-multimedia/path-markup-syntax">Path Markup Syntax</a> or the <a href="/windows/uwp/xaml-platform/move-draw-commands-syntax/">Move and draw commands syntax</a>. It can also serve as an exchange format for vector graphics images, particularly in text-based files such as XML.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath"><code>SKPath</code></a> class defines two methods with the words <code>SvgPathData</code> in their names:</p>
+<pre><code class="lang-csharp">public static SKPath ParseSvgPathData(string svgPath)
+
+public string ToSvgPathData()
+</code></pre>
+<p>The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.parsesvgpathdata#skiasharp-skpath-parsesvgpathdata(system-string)"><code>ParseSvgPathData</code></a> method converts a string to an <code>SKPath</code> object, while <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.tosvgpathdata#skiasharp-skpath-tosvgpathdata"><code>ToSvgPathData</code></a> converts an <code>SKPath</code> object to a string.</p>
+<p>Here's an SVG string for a five-pointed star centered on the point (0, 0) with a radius of 100:</p>
+<pre><code>&quot;M 0 -100 L 58.8 90.9, -95.1 -30.9, 95.1 -30.9, -58.8 80.9 Z&quot;
+</code></pre>
+<p>The letters are commands that build an <code>SKPath</code> object: <code>M</code> indicates a <code>MoveTo</code> call, <code>L</code> is <code>LineTo</code>, and <code>Z</code> is <code>Close</code> to close a contour. Each number pair provides an X and Y coordinate of a point. Notice that the <code>L</code> command is followed by multiple points separated by commas. In a series of coordinates and points, commas and whitespace are treated identically. Some programmers prefer to put commas between the X and Y coordinates rather than between the points, but commas or spaces are only required to avoid ambiguity. This is perfectly legal:</p>
+<pre><code>&quot;M0-100L58.8 90.9-95.1-30.9 95.1-30.9-58.8 80.9Z&quot;
+</code></pre>
+<p>The syntax of SVG path data is formally documented in <a href="https://www.w3.org/TR/SVG11/paths.html#PathData">Section 8.3 of the SVG specification</a>. Here is a summary:</p>
+<h2 id="moveto"><strong>MoveTo</strong></h2>
+<pre><code>M x y
+</code></pre>
+<p>This begins a new contour in the path by setting the current position. Path data should always begin with an <code>M</code> command.</p>
+<h2 id="lineto"><strong>LineTo</strong></h2>
+<pre><code>L x y ...
+</code></pre>
+<p>This command adds a straight line (or lines) to the path and sets the new current position to the end of the last line. You can follow the <code>L</code> command with multiple pairs of <em>x</em> and <em>y</em> coordinates.</p>
+<h2 id="horizontal-lineto"><strong>Horizontal LineTo</strong></h2>
+<pre><code>H x ...
+</code></pre>
+<p>This command adds a horizontal line to the path and sets the new current position to the end of the line. You can follow the <code>H</code> command with multiple <em>x</em> coordinates, but it doesn't make much sense.</p>
+<h2 id="vertical-line"><strong>Vertical Line</strong></h2>
+<pre><code>V y ...
+</code></pre>
+<p>This command adds a vertical line to the path and sets the new current position to the end of the line.</p>
+<h2 id="close"><strong>Close</strong></h2>
+<pre><code>Z
+</code></pre>
+<p>The <code>C</code> command closes the contour by adding a straight line from the current position to the beginning of the contour.</p>
+<h2 id="arcto"><strong>ArcTo</strong></h2>
+<p>The command to add an elliptical arc to the contour is by far the most complex command in the entire SVG path-data specification. It is the only command in which numbers can represent something other than coordinate values:</p>
+<pre><code>A rx ry rotation-angle large-arc-flag sweep-flag x y ...
+</code></pre>
+<p>The <em>rx</em> and <em>ry</em> parameters are the horizontal and vertical radii of the ellipse. The <em>rotation-angle</em> is clockwise in degrees.</p>
+<p>Set the <em>large-arc-flag</em> to 1 for the large arc or to 0 for the small arc.</p>
+<p>Set the <em>sweep-flag</em> to 1 for clockwise and to 0 for counter-clockwise.</p>
+<p>The arc is drawn to the point (<em>x</em>, <em>y</em>), which becomes the new current position.</p>
+<h2 id="cubicto"><strong>CubicTo</strong></h2>
+<pre><code>C x1 y1 x2 y2 x3 y3 ...
+</code></pre>
+<p>This command adds a cubic Bézier curve from the current position to (<em>x3</em>, <em>y3</em>), which becomes the new current position. The points (<em>x1</em>, <em>y1</em>) and (<em>x2</em>, <em>y2</em>) are control points.</p>
+<p>Multiple Bézier curves can be specified by a single <code>C</code> command. The number of points must be a multiple of 3.</p>
+<p>There is also a &quot;smooth&quot; Bézier curve command:</p>
+<pre><code>S x2 y2 x3 y3 ...
+</code></pre>
+<p>This command should follow a regular Bézier command (although that's not strictly required). The smooth Bézier command calculates the first control point so that it is a reflection of the second control point of the previous Bézier around their mutual point. These three points are therefore colinear, and the connection between the two Bézier curves is smooth.</p>
+<h2 id="quadto"><strong>QuadTo</strong></h2>
+<pre><code>Q x1 y1 x2 y2 ...
+</code></pre>
+<p>For quadratic Bézier curves, the number of points must be a multiple of 2. The control point is (<em>x1</em>, <em>y1</em>) and the end point (and new current position) is (<em>x2</em>, <em>y2</em>)</p>
+<p>There is also a smooth quadratic curve command:</p>
+<pre><code>T x2 y2 ...
+</code></pre>
+<p>The control point is calculated based on the control point of the previous quadratic curve.</p>
+<p>All these commands are also available in &quot;relative&quot; versions, where the coordinate points are relative to the current position. These relative commands begin with lower-case letters, for example <code>c</code> rather than <code>C</code> for the relative version of the cubic Bézier command.</p>
+<p>This is the extent of the SVG path-data definition. There is no facility for repeating groups of commands or for performing any type of calculation. Commands for <code>ConicTo</code> or the other types of arc specifications are not available.</p>
+<p>The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.parsesvgpathdata#skiasharp-skpath-parsesvgpathdata(system-string)"><code>SKPath.ParseSvgPathData</code></a> method expects a valid string of SVG commands. If any syntax error is detected, the method returns <code>null</code>. That is the only error indication.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.tosvgpathdata#skiasharp-skpath-tosvgpathdata"><code>ToSvgPathData</code></a> method is handy for obtaining SVG path data from an existing <code>SKPath</code> object to transfer  to another program, or to store in a text-based file format such as XML. (The <code>ToSvgPathData</code> method is not demonstrated in sample code in this article.) Do <em>not</em> expect <code>ToSvgPathData</code> to return a string corresponding exactly to the method calls that created the path. In particular, you'll discover that arcs are converted to multiple <code>QuadTo</code> commands, and that's how they appear in the path data returned from <code>ToSvgPathData</code>.</p>
+<p>The <strong>Path Data Hello</strong> page spells out the word &quot;HELLO&quot; using SVG path data. Both the <code>SKPath</code> and <code>SKPaint</code> objects are defined as fields in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataHelloPage.cs"><code>PathDataHelloPage</code></a> class:</p>
+<pre><code class="lang-csharp">public class PathDataHelloPage : ContentPage
+{
+    SKPath helloPath = SKPath.ParseSvgPathData(
+        &quot;M 0 0 L 0 100 M 0 50 L 50 50 M 50 0 L 50 100&quot; +                // H
+        &quot;M 125 0 C 60 -10, 60 60, 125 50, 60 40, 60 110, 125 100&quot; +     // E
+        &quot;M 150 0 L 150 100, 200 100&quot; +                                  // L
+        &quot;M 225 0 L 225 100, 275 100&quot; +                                  // L
+        &quot;M 300 50 A 25 50 0 1 0 300 49.9 Z&quot;);                           // O
+
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Blue,
+        StrokeWidth = 10,
+        StrokeCap = SKStrokeCap.Round,
+        StrokeJoin = SKStrokeJoin.Round
+    };
+    ...
+}
+</code></pre>
+<p>The path defining the text string begins at the upper-left corner at the point(0, 0). Each letter is 50 units wide and 100 units tall, and letters are separated by another 25 units, which means that the entire path is 350 units wide.</p>
+<p>The 'H' of &quot;Hello&quot; is composed of three one-line contours, while the 'E' is two connected cubic Bézier curves. Notice that the <code>C</code> command is followed by six points, and two of the control points have Y coordinates of –10 and 110, which puts them outside the range of the Y coordinates of the other letters. The 'L' is two connected lines, while the 'O' is an ellipse that is rendered with an <code>A</code> command.</p>
+<p>Notice that the <code>M</code> command that begins the last contour sets the position to the point (350, 50), which is the vertical center of the left side of the 'O'. As indicated by the first numbers following the <code>A</code> command, the ellipse has a horizontal radius of 25 and a vertical radius of 50. The end point is indicated by the last pair of numbers in the <code>A</code> command, which represents the point (300, 49.9). That's deliberately just slightly different from the start point. If the endpoint is set equal to the start point, the arc will not be rendered. To draw a complete ellipse, you must set the endpoint close to (but not equal to) the start point, or you must use two or more <code>A</code> commands, each for part of the complete ellipse.</p>
+<p>You might want to add the following statement to the page's constructor, and then set a breakpoint to examine the resultant string:</p>
+<pre><code class="lang-csharp">string str = helloPath.ToSvgPathData();
+</code></pre>
+<p>You'll discover that the arc has been replaced with a long series of <code>Q</code> commands for a piecemeal approximation of the arc using quadratic Bézier curves.</p>
+<p>The <code>PaintSurface</code> handler obtains the tight bounds of the path, which does not include the control points for the 'E' and 'O' curves. The three transforms move the center of the path to the point (0, 0), scale the path to the size of the canvas (but also taking the stroke width into account), and then move the center of the path to the center of the canvas:</p>
+<pre><code class="lang-csharp">public class PathDataHelloPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        SKRect bounds;
+        helloPath.GetTightBounds(out bounds);
+
+        canvas.Translate(info.Width / 2, info.Height / 2);
+
+        canvas.Scale(info.Width / (bounds.Width + paint.StrokeWidth),
+                     info.Height / (bounds.Height + paint.StrokeWidth));
+
+        canvas.Translate(-bounds.MidX, -bounds.MidY);
+
+        canvas.DrawPath(helloPath, paint);
+    }
+}
+</code></pre>
+<p>The path fills the canvas, which looks more reasonable when viewed in landscape mode:</p>
+<p><a href="path-data-images/pathdatahello-large.png#lightbox" title="Triple screenshot of the Path Data Hello page"><img src="path-data-images/pathdatahello-small.png" alt="Triple screenshot of the Path Data Hello page"></a></p>
+<p>The <strong>Path Data Cat</strong> page is similar. The path and paint objects are both defined as fields in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataCatPage.cs"><code>PathDataCatPage</code></a> class:</p>
+<pre><code class="lang-csharp">public class PathDataCatPage : ContentPage
+{
+    SKPath catPath = SKPath.ParseSvgPathData(
+        &quot;M 160 140 L 150 50 220 103&quot; +              // Left ear
+        &quot;M 320 140 L 330 50 260 103&quot; +              // Right ear
+        &quot;M 215 230 L 40 200&quot; +                      // Left whiskers
+        &quot;M 215 240 L 40 240&quot; +
+        &quot;M 215 250 L 40 280&quot; +
+        &quot;M 265 230 L 440 200&quot; +                     // Right whiskers
+        &quot;M 265 240 L 440 240&quot; +
+        &quot;M 265 250 L 440 280&quot; +
+        &quot;M 240 100&quot; +                               // Head
+        &quot;A 100 100 0 0 1 240 300&quot; +
+        &quot;A 100 100 0 0 1 240 100 Z&quot; +
+        &quot;M 180 170&quot; +                               // Left eye
+        &quot;A 40 40 0 0 1 220 170&quot; +
+        &quot;A 40 40 0 0 1 180 170 Z&quot; +
+        &quot;M 300 170&quot; +                               // Right eye
+        &quot;A 40 40 0 0 1 260 170&quot; +
+        &quot;A 40 40 0 0 1 300 170 Z&quot;);
+
+    SKPaint paint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Orange,
+        StrokeWidth = 5
+    };
+    ...
+}
+</code></pre>
+<p>The head of a cat is a circle, and here it is rendered with two <code>A</code> commands, each of which draws a semicircle. Both <code>A</code> commands for the head define horizontal and vertical radii of 100. The first arc begins at (240, 100) and ends at (240, 300), which becomes the start point for the second arc that ends back at (240, 100).</p>
+<p>The two eyes are also rendered with two <code>A</code> commands, and as with the cat's head, the second <code>A</code> command ends at the same point as the start of the first <code>A</code> command. However, these pairs of <code>A</code> commands do not define an ellipse. The with of each arc is 40 units and the radius is also 40 units, which means that these arcs are not full semicircles.</p>
+<p>The <code>PaintSurface</code> handler performs similar transforms as the previous sample, but sets a single <code>Scale</code> factor to maintain the aspect ratio and provide a little margin so the cat's whiskers don't touch the sides of the screen:</p>
+<pre><code class="lang-csharp">public class PathDataCatPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear(SKColors.Black);
+
+        SKRect bounds;
+        catPath.GetBounds(out bounds);
+
+        canvas.Translate(info.Width / 2, info.Height / 2);
+
+        canvas.Scale(0.9f * Math.Min(info.Width / bounds.Width,
+                                     info.Height / bounds.Height));
+
+        canvas.Translate(-bounds.MidX, -bounds.MidY);
+
+        canvas.DrawPath(catPath, paint);
+    }
+}
+</code></pre>
+<p>Here's the program running:</p>
+<p><a href="path-data-images/pathdatacat-large.png#lightbox" title="Triple screenshot of the Path Data Cat page"><img src="path-data-images/pathdatacat-small.png" alt="Triple screenshot of the Path Data Cat page"></a></p>
+<p>Normally, when an <code>SKPath</code> object is defined as a field, the contours of the path must be defined in the constructor or another method. When using SVG path data, however, you've seen that the path can be specified entirely in the field definition.</p>
+<p>The earlier <strong>Ugly Analog Clock</strong> sample in the <a href="../../xamarin-forms/user-interface/graphics/skiasharp/transforms/rotate.md"><strong>The Rotate Transform</strong></a> article displayed the hands of the clock as simple lines. The <strong>Pretty Analog Clock</strong> program below replaces those lines with <code>SKPath</code> objects defined as fields in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PrettyAnalogClockPage.cs"><code>PrettyAnalogClockPage</code></a> class along with <code>SKPaint</code> objects:</p>
+<pre><code class="lang-csharp">public class PrettyAnalogClockPage : ContentPage
+{
+    ...
+    // Clock hands pointing straight up
+    SKPath hourHandPath = SKPath.ParseSvgPathData(
+        &quot;M 0 -60 C   0 -30 20 -30  5 -20 L  5   0&quot; +
+                &quot;C   5 7.5 -5 7.5 -5   0 L -5 -20&quot; +
+                &quot;C -20 -30  0 -30  0 -60 Z&quot;);
+
+    SKPath minuteHandPath = SKPath.ParseSvgPathData(
+        &quot;M 0 -80 C   0 -75  0 -70  2.5 -60 L  2.5   0&quot; +
+                &quot;C   2.5 5 -2.5 5 -2.5   0 L -2.5 -60&quot; +
+                &quot;C 0 -70  0 -75  0 -80 Z&quot;);
+
+    SKPath secondHandPath = SKPath.ParseSvgPathData(
+        &quot;M 0 10 L 0 -80&quot;);
+
+    // SKPaint objects
+    SKPaint handStrokePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Black,
+        StrokeWidth = 2,
+        StrokeCap = SKStrokeCap.Round
+    };
+
+    SKPaint handFillPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Fill,
+        Color = SKColors.Gray
+    };
+    ...
+}
+</code></pre>
+<p>The hour and minute hands now have enclosed areas. To make those hands distinct from each other, they are drawn with both a black outline and gray fill using the <code>handStrokePaint</code> and <code>handFillPaint</code> objects.</p>
+<p>In the earlier <strong>Ugly Analog Clock</strong> sample, the little circles that marked the hours and minutes were drawn in a loop. In this <strong>Pretty Analog Clock</strong> sample, an entirely different approach is used: the hour and minute marks are dotted lines drawn with the <code>minuteMarkPaint</code> and <code>hourMarkPaint</code> objects:</p>
+<pre><code class="lang-csharp">public class PrettyAnalogClockPage : ContentPage
+{
+    ...
+    SKPaint minuteMarkPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Black,
+        StrokeWidth = 3,
+        StrokeCap = SKStrokeCap.Round,
+        PathEffect = SKPathEffect.CreateDash(new float[] { 0, 3 * 3.14159f }, 0)
+    };
+
+    SKPaint hourMarkPaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Black,
+        StrokeWidth = 6,
+        StrokeCap = SKStrokeCap.Round,
+        PathEffect = SKPathEffect.CreateDash(new float[] { 0, 15 * 3.14159f }, 0)
+    };
+    ...
+}
+</code></pre>
+<p>The <a href="../../xamarin-forms/user-interface/graphics/skiasharp/paths/dots.md"><strong>Dots and Dashes</strong></a> article discussed how you can use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.createdash"><code>SKPathEffect.CreateDash</code></a> method to create a dashed line. The first argument is a <code>float</code> array that generally has two elements: The first element is the length of the dashes, and the second element is the gap between the dashes. When the <code>StrokeCap</code> property is set to <code>SKStrokeCap.Round</code>, then the rounded ends of the dash effectively lengthen the dash length by the stroke width on both sides of the dash. Thus, setting the first array element to 0 creates a dotted line.</p>
+<p>The distance between these dots is governed by the second array element. As you'll see shortly, these two <code>SKPaint</code> objects are used to draw circles with a radius of 90 units. The circumference of this circle is therefore 180π, which means that the 60 minute marks must appear every 3π units, which is the second value in the <code>float</code> array in <code>minuteMarkPaint</code>. The 12 hour marks must appear every 15π units, which is the value in the second <code>float</code> array.</p>
+<p>The <code>PrettyAnalogClockPage</code> class sets a timer to invalidate the surface every 16 milliseconds, and the <code>PaintSurface</code> handler is called at that rate. The earlier definitions of the <code>SKPath</code> and <code>SKPaint</code> objects allow for very clean drawing code:</p>
+<pre><code class="lang-csharp">public class PrettyAnalogClockPage : ContentPage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Transform for 100-radius circle in center
+        canvas.Translate(info.Width / 2, info.Height / 2);
+        canvas.Scale(Math.Min(info.Width / 200, info.Height / 200));
+
+        // Draw circles for hour and minute marks
+        SKRect rect = new SKRect(-90, -90, 90, 90);
+        canvas.DrawOval(rect, minuteMarkPaint);
+        canvas.DrawOval(rect, hourMarkPaint);
+
+        // Get time
+        DateTime dateTime = DateTime.Now;
+
+        // Draw hour hand
+        canvas.Save();
+        canvas.RotateDegrees(30 * dateTime.Hour + dateTime.Minute / 2f);
+        canvas.DrawPath(hourHandPath, handStrokePaint);
+        canvas.DrawPath(hourHandPath, handFillPaint);
+        canvas.Restore();
+
+        // Draw minute hand
+        canvas.Save();
+        canvas.RotateDegrees(6 * dateTime.Minute + dateTime.Second / 10f);
+        canvas.DrawPath(minuteHandPath, handStrokePaint);
+        canvas.DrawPath(minuteHandPath, handFillPaint);
+        canvas.Restore();
+
+        // Draw second hand
+        double t = dateTime.Millisecond / 1000.0;
+
+        if (t &lt; 0.5)
+        {
+            t = 0.5 * Easing.SpringIn.Ease(t / 0.5);
+        }
+        else
+        {
+            t = 0.5 * (1 + Easing.SpringOut.Ease((t - 0.5) / 0.5));
+        }
+
+        canvas.Save();
+        canvas.RotateDegrees(6 * (dateTime.Second + (float)t));
+        canvas.DrawPath(secondHandPath, handStrokePaint);
+        canvas.Restore();
+    }
+}
+</code></pre>
+<p>Something special is done with the second hand, however. Because the clock is updated every 16 milliseconds, the <code>Millisecond</code> property of the <code>DateTime</code> value can potentially be used to animate a sweep second hand instead of one that moves in discrete jumps from second to second. But this code does not allow the movement to be smooth. Instead, it uses the Xamarin.Forms <a href="xref:Xamarin.Forms.Easing.SpringIn"><code>SpringIn</code></a> and <a href="xref:Xamarin.Forms.Easing.SpringOut"><code>SpringOut</code></a> animation easing functions for a different kind of movement. These easing functions cause the second hand to move in a jerkier manner — pulling back a little before it moves, and then slightly over-shooting its destination, an effect that unfortunately can't be reproduced in these static screenshots:</p>
+<p><a href="path-data-images/prettyanalogclock-large.png#lightbox" title="Triple screenshot of the Pretty Analog Clock page"><img src="path-data-images/prettyanalogclock-small.png" alt="Triple screenshot of the Pretty Analog Clock page"></a></p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

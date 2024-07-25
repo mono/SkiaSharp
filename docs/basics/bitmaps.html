@@ -1,0 +1,296 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Bitmap Basics in SkiaSharp | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Bitmap Basics in SkiaSharp | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="bitmap-basics-in-skiasharp">Bitmap Basics in SkiaSharp</h1>
+
+<p><em>Load bitmaps from various sources and display them.</em></p>
+<p>The support of bitmaps in SkiaSharp is quite extensive. This article covers only the basics — how to load bitmaps and how to display them:</p>
+<p><img src="bitmaps-images/basicbitmaps-small.png" alt="The display of two bitmaps"></p>
+<p>A much deeper exploration of bitmaps can be found in the section <a href="../bitmaps/index.html">SkiaSharp Bitmaps</a>.</p>
+<p>A SkiaSharp bitmap is an object of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap"><code>SKBitmap</code></a>. There are many ways to create a bitmap but this article restricts itself to the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.decode#skiasharp-skbitmap-decode(system-io-stream)"><code>SKBitmap.Decode</code></a> method, which loads the bitmap from a .NET <code>Stream</code> object.</p>
+<p>The <strong>Basic Bitmaps</strong> page in the <strong>SkiaSharpFormsDemos</strong> program demonstrates how to load bitmaps from three different sources:</p>
+<ul>
+<li>From over the Internet</li>
+<li>From a resource embedded in the executable</li>
+<li>From the user's photo library</li>
+</ul>
+<p>Three <code>SKBitmap</code> objects for these three sources are defined as fields in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/BasicBitmapsPage.cs"><code>BasicBitmapsPage</code></a> class:</p>
+<pre><code class="lang-csharp">public class BasicBitmapsPage : ContentPage
+{
+    SKCanvasView canvasView;
+    SKBitmap webBitmap;
+    SKBitmap resourceBitmap;
+    SKBitmap libraryBitmap;
+
+    public BasicBitmapsPage()
+    {
+        Title = &quot;Basic Bitmaps&quot;;
+
+        canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+        ...
+    }
+    ...
+}
+</code></pre>
+<h2 id="loading-a-bitmap-from-the-web">Loading a Bitmap from the Web</h2>
+<p>To load a bitmap based on a URL, you can use the <a href="/dotnet/api/system.net.http.httpclient?view=netstandard-2.0&amp;preserve-view=true"><code>HttpClient</code></a> class. You should instantiate only one instance of <code>HttpClient</code> and reuse it, so store it as a field:</p>
+<pre><code class="lang-csharp">HttpClient httpClient = new HttpClient();
+</code></pre>
+<p>When using <code>HttpClient</code> with iOS and Android applications, you'll want to set project properties as described in the documents on <strong><a href="../../cross-platform/app-fundamentals/transport-layer-security.md">Transport Layer Security (TLS) 1.2</a></strong>.</p>
+<p>Because it's most convenient to use the <code>await</code> operator with <code>HttpClient</code>, the code can't be executed in the <code>BasicBitmapsPage</code> constructor. Instead, it's part of the <code>OnAppearing</code> override. The URL here points to an area on the Xamarin web site with some sample bitmaps. A package on the web site allows appending a specification for resizing the bitmap to a particular width:</p>
+<pre><code class="lang-csharp">protected override async void OnAppearing()
+{
+    base.OnAppearing();
+
+    // Load web bitmap.
+    string url = &quot;https://developer.xamarin.com/demo/IMG_3256.JPG?width=480&quot;;
+
+    try
+    {
+        using (Stream stream = await httpClient.GetStreamAsync(url))
+        using (MemoryStream memStream = new MemoryStream())
+        {
+            await stream.CopyToAsync(memStream);
+            memStream.Seek(0, SeekOrigin.Begin);
+
+            webBitmap = SKBitmap.Decode(memStream);
+            canvasView.InvalidateSurface();
+        };
+    }
+    catch
+    {
+    }
+}
+</code></pre>
+<p>The Android operating system raises an exception when using the <code>Stream</code> returned from <code>GetStreamAsync</code> in the <code>SKBitmap.Decode</code> method because it's performing a lengthy operation on a main thread. For this reason, the contents of the bitmap file are copied to a <code>MemoryStream</code> object using <code>CopyToAsync</code>.</p>
+<p>The static <code>SKBitmap.Decode</code> method is responsible for decoding bitmap files. It works with JPEG, PNG, and GIF bitmap formats, and stores the results in an internal SkiaSharp format. At this point, the <code>SKCanvasView</code> needs to be invalidated to allow the <code>PaintSurface</code> handler to update the display.</p>
+<h2 id="loading-a-bitmap-resource">Loading a Bitmap Resource</h2>
+<p>In terms of code, the easiest approach to loading bitmaps is including a bitmap resource directly in your application. The <strong>SkiaSharpFormsDemos</strong> program includes a folder named <strong>Media</strong> containing several bitmap files, including one named <strong>monkey.png</strong>. For bitmaps stored as program resources, you must use the <strong>Properties</strong> dialog to give the file a <strong>Build Action</strong> of <strong>Embedded Resource</strong>!</p>
+<p>Each embedded resource has a <em>resource ID</em> that consists of the project name, the folder, and the filename, all connected by periods: <strong>SkiaSharpFormsDemos.Media.monkey.png</strong>. You can get access to this resource by specifying that resource ID as an argument to the <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.assembly.getmanifestresourcestream#system-reflection-assembly-getmanifestresourcestream(system-string)"><code>GetManifestResourceStream</code></a> method of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.assembly"><code>Assembly</code></a> class:</p>
+<pre><code class="lang-csharp">string resourceID = &quot;SkiaSharpFormsDemos.Media.monkey.png&quot;;
+Assembly assembly = GetType().GetTypeInfo().Assembly;
+
+using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+{
+    resourceBitmap = SKBitmap.Decode(stream);
+}
+</code></pre>
+<p>This <code>Stream</code> object can be passed directly to the <code>SKBitmap.Decode</code> method.</p>
+<h2 id="loading-a-bitmap-from-the-photo-library">Loading a Bitmap from the Photo Library</h2>
+<p>It's also possible for the user to load a photo from the device's picture library. This facility is not provided by Xamarin.Forms itself. The job requires a dependency service, such as the one described in the article <a href="../../xamarin-forms/app-fundamentals/dependency-service/photo-picker.md">Picking a Photo from the Picture Library</a>.</p>
+<p>The <strong>IPhotoLibrary.cs</strong> file in the <strong>SkiaSharpFormsDemos</strong> project and the three <strong>PhotoLibrary.cs</strong> files in the platform projects have been adapted from that article. In addition, the Android <strong>MainActivity.cs</strong> file has been modified as described in the article, and the iOS project has been given permission to access the photo library with two lines towards the bottom of the <strong>info.plist</strong> file.</p>
+<p>The <code>BasicBitmapsPage</code> constructor adds a <code>TapGestureRecognizer</code> to the <code>SKCanvasView</code> to be notified of taps. On receipt of a tap, the <code>Tapped</code> handler gets access to the picture-picker dependency service and calls <code>PickPhotoAsync</code>. If a <code>Stream</code> object is returned, then it is passed to the <code>SKBitmap.Decode</code> method:</p>
+<pre><code class="lang-csharp">// Add tap gesture recognizer
+TapGestureRecognizer tapRecognizer = new TapGestureRecognizer();
+tapRecognizer.Tapped += async (sender, args) =&gt;
+{
+    // Load bitmap from photo library
+    IPhotoLibrary photoLibrary = DependencyService.Get&lt;IPhotoLibrary&gt;();
+
+    using (Stream stream = await photoLibrary.PickPhotoAsync())
+    {
+        if (stream != null)
+        {
+            libraryBitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
+        }
+    }
+};
+canvasView.GestureRecognizers.Add(tapRecognizer);
+</code></pre>
+<p>Notice that the <code>Tapped</code> handler also calls the <code>InvalidateSurface</code> method of the <code>SKCanvasView</code> object. This generates a new call to the <code>PaintSurface</code> handler.</p>
+<h2 id="displaying-the-bitmaps">Displaying the Bitmaps</h2>
+<p>The <code>PaintSurface</code> handler needs to display three bitmaps. The handler assumes that the phone is in portrait mode and divides the canvas vertically into three equal parts.</p>
+<p>The first bitmap is displayed with the simplest <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmap#skiasharp-skcanvas-drawbitmap(skiasharp-skbitmap-system-single-system-single-skiasharp-skpaint)"><code>DrawBitmap</code></a> method. All you need to specify are the X and Y coordinates where the upper-left corner of the bitmap is to be positioned:</p>
+<pre><code class="lang-csharp">public void DrawBitmap (SKBitmap bitmap, Single x, Single y, SKPaint paint = null)
+</code></pre>
+<p>Although an <code>SKPaint</code> parameter is defined, it has a default value of <code>null</code> and you can ignore it. The pixels of the bitmap are simply transferred to the pixels of the display surface with a one-to-one mapping. You'll see an application for this <code>SKPaint</code> argument in the next section on <a href="transparency.html"><strong>SkiaSharp Transparency</strong></a>.</p>
+<p>A program can obtain the pixel dimensions of a bitmap with the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.width#skiasharp-skbitmap-width"><code>Width</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap.height#skiasharp-skbitmap-height"><code>Height</code></a> properties. These properties allow the program to calculate coordinates to position the bitmap in the center of the upper-third of the canvas:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    if (webBitmap != null)
+    {
+        float x = (info.Width - webBitmap.Width) / 2;
+        float y = (info.Height / 3 - webBitmap.Height) / 2;
+        canvas.DrawBitmap(webBitmap, x, y);
+    }
+    ...
+}
+</code></pre>
+<p>The other two bitmaps are displayed with a version of <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmap#skiasharp-skcanvas-drawbitmap(skiasharp-skbitmap-skiasharp-skrect-skiasharp-skpaint)"><code>DrawBitmap</code></a> with an <code>SKRect</code> parameter:</p>
+<pre><code class="lang-csharp">public void DrawBitmap (SKBitmap bitmap, SKRect dest, SKPaint paint = null)
+</code></pre>
+<p>A third version of <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmap#skiasharp-skcanvas-drawbitmap(skiasharp-skbitmap-skiasharp-skrect-skiasharp-skrect-skiasharp-skpaint)"><code>DrawBitmap</code></a> has two <code>SKRect</code> arguments for specifying a rectangular subset of the bitmap to display, but that version isn't used in this article.</p>
+<p>Here's the code to display the bitmap loaded from an embedded resource bitmap:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    ...
+    if (resourceBitmap != null)
+    {
+        canvas.DrawBitmap(resourceBitmap,
+            new SKRect(0, info.Height / 3, info.Width, 2 * info.Height / 3));
+    }
+    ...
+}
+</code></pre>
+<p>The bitmap is stretched to the dimensions of the rectangle, which is why the monkey is horizontally stretched in these screenshots:</p>
+<p><a href="bitmaps-images/basicbitmaps-large.png#lightbox" title="A triple screenshot of the Basic Bitmaps page"><img src="bitmaps-images/basicbitmaps-small.png" alt="A triple screenshot of the Basic Bitmaps page"></a></p>
+<p>The third image — which you can only see if you run the program and load a photo from your own picture library — is also displayed within a rectangle, but the rectangle's position and size are adjusted to maintain the bitmap's aspect ratio. This calculation is a little more involved because it requires calculating a scaling factor based on the size of the bitmap and the destination rectangle, and centering the rectangle in that area:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    ...
+    if (libraryBitmap != null)
+    {
+        float scale = Math.Min((float)info.Width / libraryBitmap.Width,
+                               info.Height / 3f / libraryBitmap.Height);
+
+        float left = (info.Width - scale * libraryBitmap.Width) / 2;
+        float top = (info.Height / 3 - scale * libraryBitmap.Height) / 2;
+        float right = left + scale * libraryBitmap.Width;
+        float bottom = top + scale * libraryBitmap.Height;
+        SKRect rect = new SKRect(left, top, right, bottom);
+        rect.Offset(0, 2 * info.Height / 3);
+
+        canvas.DrawBitmap(libraryBitmap, rect);
+    }
+    else
+    {
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Color = SKColors.Blue;
+            paint.TextAlign = SKTextAlign.Center;
+            paint.TextSize = 48;
+
+            canvas.DrawText(&quot;Tap to load bitmap&quot;,
+                info.Width / 2, 5 * info.Height / 6, paint);
+        }
+    }
+}
+</code></pre>
+<p>If no bitmap has yet been loaded from the picture library, then the <code>else</code> block displays some text to prompt the user to tap the screen.</p>
+<p>You can display bitmaps with various degrees of transparency, and the next article on <a href="transparency.html"><strong>SkiaSharp Transparency</strong></a> describes how.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+<li><a href="../../xamarin-forms/app-fundamentals/dependency-service/photo-picker.md">Picking a Photo from the Picture Library</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

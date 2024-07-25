@@ -1,0 +1,636 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Three Ways to Draw an Arc | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Three Ways to Draw an Arc | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="three-ways-to-draw-an-arc">Three Ways to Draw an Arc</h1>
+
+<p><em>Learn how to use SkiaSharp to define arcs in three different ways</em></p>
+<p>An arc is a curve on the circumference of an ellipse, such as the rounded parts of this infinity sign:</p>
+<p><img src="arcs-images/arcsample.png" alt="Infinity sign"></p>
+<p>Despite the simplicity of that definition, there is no way to define an arc-drawing function that satisfies every need, and hence, no consensus among graphics systems of the best way to draw an arc. For this reason, the <code>SKPath</code> class does not restrict itself to just one approach.</p>
+<p><code>SKPath</code> defines an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.addarc"><code>AddArc</code></a> method, five different <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.arcto"><code>ArcTo</code></a> methods, and two relative <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.rarcto"><code>RArcTo</code></a> methods. These methods fall into three categories, representing three very different approaches to specifying an arc. Which one you use depends on the information available to define the arc, and how this arc fits in with the other graphics that you're drawing.</p>
+<h2 id="the-angle-arc">The Angle Arc</h2>
+<p>The angle arc approach to drawing arcs requires that you specify a rectangle that bounds an ellipse. The arc on the circumference of this ellipse is indicated by angles from the center of the ellipse that indicate the beginning of the arc and its length. Two different methods draw angle arcs. These are the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.addarc#skiasharp-skpath-addarc(skiasharp-skrect-system-single-system-single)"><code>AddArc</code></a> method and the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.arcto#skiasharp-skpath-arcto(skiasharp-skrect-system-single-system-single-system-boolean)"><code>ArcTo</code></a> method:</p>
+<pre><code class="lang-csharp">public void AddArc (SKRect oval, Single startAngle, Single sweepAngle)
+
+public void ArcTo (SKRect oval, Single startAngle, Single sweepAngle, Boolean forceMoveTo)
+</code></pre>
+<p>These methods are identical to the Android <a href="xref:Android.Graphics.Path.AddArc*"><code>AddArc</code></a> and [<code>ArcTo</code>]xref:Android.Graphics.Path.ArcTo*) methods. The iOS <a href="xref:CoreGraphics.CGPath.AddArc(System.nfloat,System.nfloat,System.nfloat,System.nfloat,System.nfloat,System.Boolean)"><code>AddArc</code></a> method is similar but is restricted to arcs on the circumference of a circle rather than generalized to an ellipse.</p>
+<p>Both methods begin with an <code>SKRect</code> value that defines both the location and size of an ellipse:</p>
+<p><img src="arcs-images/anglearcoval.png" alt="The oval that begins an angle arc"></p>
+<p>The arc is a part of the circumference of this ellipse.</p>
+<p>The <code>startAngle</code> argument is a clockwise angle in degrees relative to a horizontal line drawn from the center of the ellipse to the right. The <code>sweepAngle</code> argument is relative to the <code>startAngle</code>. Here are <code>startAngle</code> and <code>sweepAngle</code> values of 60 degrees and 100 degrees, respectively:</p>
+<p><img src="arcs-images/anglearcangles.png" alt="The angles that define an angle arc"></p>
+<p>The arc begins at the start angle. Its length is governed by the sweep angle. The arc is shown here in red:</p>
+<p><img src="arcs-images/anglearchighlight.png" alt="The highlighted angle arc"></p>
+<p>The curve added to the path with the <code>AddArc</code> or <code>ArcTo</code> method is simply that part of the ellipse's circumference:</p>
+<p><img src="arcs-images/anglearc.png" alt="The angle arc by itself"></p>
+<p>The <code>startAngle</code> or <code>sweepAngle</code> arguments can be negative: The arc is clockwise for positive values of <code>sweepAngle</code> and counter-clockwise for negative values.</p>
+<p>However, <code>AddArc</code> does <em>not</em> define a closed contour. If you call <code>LineTo</code> after <code>AddArc</code>, a line is drawn from the end of the arc to the point in the <code>LineTo</code> method, and the same is true of <code>ArcTo</code>.</p>
+<p><code>AddArc</code> automatically starts a new contour and is functionally equivalent to a call to <code>ArcTo</code> with a final argument of <code>true</code>:</p>
+<pre><code class="lang-csharp">path.ArcTo (oval, startAngle, sweepAngle, true);
+</code></pre>
+<p>That last argument is called <code>forceMoveTo</code>, and it effectively causes a <code>MoveTo</code> call at the beginning of the arc. That begins a new contour. That is not the case with a last argument of <code>false</code>:</p>
+<pre><code class="lang-csharp">path.ArcTo (oval, startAngle, sweepAngle, false);
+</code></pre>
+<p>This version of <code>ArcTo</code> draws a line from the current position to the beginning of the arc. This means that the arc can be somewhere in the middle of a larger contour.</p>
+<p>The <strong>Angle Arc</strong> page lets you use two sliders to specify the start and sweep angles. The XAML file instantiates two <code>Slider</code> elements and an <code>SKCanvasView</code>. The <code>PaintCanvas</code> handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/AngleArcPage.xaml.cs"><strong>AngleArcPage.xaml.cs</strong></a> file draws both the oval and the arc using two <code>SKPaint</code> objects defined as fields:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    SKRect rect = new SKRect(100, 100, info.Width - 100, info.Height - 100);
+    float startAngle = (float)startAngleSlider.Value;
+    float sweepAngle = (float)sweepAngleSlider.Value;
+
+    canvas.DrawOval(rect, outlinePaint);
+
+    using (SKPath path = new SKPath())
+    {
+        path.AddArc(rect, startAngle, sweepAngle);
+        canvas.DrawPath(path, arcPaint);
+    }
+}
+</code></pre>
+<p>As you can see, both the start angle and the sweep angle can take on negative values:</p>
+<p><a href="arcs-images/anglearc-large.png#lightbox"><img src="arcs-images/anglearc-small.png" alt="Triple screenshot of the Angle Arc page"></a></p>
+<p>This approach to generating an arc is algorithmically the simplest, and it's easy to derive the parametric equations that describe the arc. Knowing the size and location of the ellipse, and the start and sweep angles, the start and end points of the arc can be calculated using simple trigonometry:</p>
+<p><code>x = oval.MidX + (oval.Width / 2) * cos(angle)</code></p>
+<p><code>y = oval.MidY + (oval.Height / 2) * sin(angle)</code></p>
+<p>The <code>angle</code> value is either <code>startAngle</code> or <code>startAngle + sweepAngle</code>.</p>
+<p>The use of two angles to define an arc is best for cases where you know the angular length of the arc that you want to draw, for example, to make a pie chart. The <strong>Exploded Pie Chart</strong> page demonstrates this. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ExplodedPieChartPage.cs"><code>ExplodedPieChartPage</code></a> class uses an internal class to define some fabricated data and colors:</p>
+<pre><code class="lang-csharp">class ChartData
+{
+    public ChartData(int value, SKColor color)
+    {
+        Value = value;
+        Color = color;
+    }
+
+    public int Value { private set; get; }
+
+    public SKColor Color { private set; get; }
+}
+
+ChartData[] chartData =
+{
+    new ChartData(45, SKColors.Red),
+    new ChartData(13, SKColors.Green),
+    new ChartData(27, SKColors.Blue),
+    new ChartData(19, SKColors.Magenta),
+    new ChartData(40, SKColors.Cyan),
+    new ChartData(22, SKColors.Brown),
+    new ChartData(29, SKColors.Gray)
+};
+
+</code></pre>
+<p>The <code>PaintSurface</code> handler first loops through the items to calculate a <code>totalValues</code> number. From that, it can determine each item's size as the fraction of the total, and convert that to an angle:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    int totalValues = 0;
+
+    foreach (ChartData item in chartData)
+    {
+        totalValues += item.Value;
+    }
+
+    SKPoint center = new SKPoint(info.Width / 2, info.Height / 2);
+    float explodeOffset = 50;
+    float radius = Math.Min(info.Width / 2, info.Height / 2) - 2 * explodeOffset;
+    SKRect rect = new SKRect(center.X - radius, center.Y - radius,
+                             center.X + radius, center.Y + radius);
+
+    float startAngle = 0;
+
+    foreach (ChartData item in chartData)
+    {
+        float sweepAngle = 360f * item.Value / totalValues;
+
+        using (SKPath path = new SKPath())
+        using (SKPaint fillPaint = new SKPaint())
+        using (SKPaint outlinePaint = new SKPaint())
+        {
+            path.MoveTo(center);
+            path.ArcTo(rect, startAngle, sweepAngle, false);
+            path.Close();
+
+            fillPaint.Style = SKPaintStyle.Fill;
+            fillPaint.Color = item.Color;
+
+            outlinePaint.Style = SKPaintStyle.Stroke;
+            outlinePaint.StrokeWidth = 5;
+            outlinePaint.Color = SKColors.Black;
+
+            // Calculate &quot;explode&quot; transform
+            float angle = startAngle + 0.5f * sweepAngle;
+            float x = explodeOffset * (float)Math.Cos(Math.PI * angle / 180);
+            float y = explodeOffset * (float)Math.Sin(Math.PI * angle / 180);
+
+            canvas.Save();
+            canvas.Translate(x, y);
+
+            // Fill and stroke the path
+            canvas.DrawPath(path, fillPaint);
+            canvas.DrawPath(path, outlinePaint);
+            canvas.Restore();
+        }
+
+        startAngle += sweepAngle;
+    }
+}
+</code></pre>
+<p>A new <code>SKPath</code> object is created for each pie slice. The path consists of a line from the center, then an <code>ArcTo</code> to draw the arc, and another line back to the center results from the <code>Close</code> call. This program displays &quot;exploded&quot; pie slices by moving them all out from the center by 50 pixels. That task requires a vector in the direction of the midpoint of the sweep angle for each slice:</p>
+<p><a href="arcs-images/explodedpiechart-large.png#lightbox"><img src="arcs-images/explodedpiechart-small.png" alt="Triple screenshot of the Exploded Pie Chart page"></a></p>
+<p>To see what it looks like without the &quot;explosion,&quot; simply comment out the <code>Translate</code> call:</p>
+<p><a href="arcs-images/explodedpiechartunexploded-large.png#lightbox"><img src="arcs-images/explodedpiechartunexploded-small.png" alt="Triple screenshot of the Exploded Pie Chart page without the explosion"></a></p>
+<h2 id="the-tangent-arc">The Tangent Arc</h2>
+<p>The second type of arc supported by <code>SKPath</code> is the <em>tangent arc</em>, so called because the arc is the circumference of a circle that is tangent to two connected lines.</p>
+<p>A tangent arc is added to a path with a call to the  <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.arcto#skiasharp-skpath-arcto(skiasharp-skpoint-skiasharp-skpoint-system-single)"><code>ArcTo</code></a> method with two <code>SKPoint</code> parameters, or the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.arcto#skiasharp-skpath-arcto(system-single-system-single-system-single-system-single-system-single)"><code>ArcTo</code></a> overload with separate <code>Single</code> parameters for the points:</p>
+<pre><code class="lang-csharp">public void ArcTo (SKPoint point1, SKPoint point2, Single radius)
+
+public void ArcTo (Single x1, Single y1, Single x2, Single y2, Single radius)
+</code></pre>
+<p>This <code>ArcTo</code> method is similar to the PostScript <a href="https://www.adobe.com/products/postscript/pdfs/PLRM.pdf"><code>arct</code></a> (page 532) function and the iOS <a href="xref:CoreGraphics.CGPath.AddArcToPoint(System.nfloat,System.nfloat,System.nfloat,System.nfloat,System.nfloat)"><code>AddArcToPoint</code></a> method.</p>
+<p>The <code>ArcTo</code> method involves three points:</p>
+<ul>
+<li>The current point of the contour, or the point (0, 0) if <code>MoveTo</code> has not been called</li>
+<li>The first point argument to the <code>ArcTo</code> method, called the <em>corner point</em></li>
+<li>The second point argument to <code>ArcTo</code>, called the <em>destination point</em>:</li>
+</ul>
+<p><img src="arcs-images/tangentarcthreepoints.png" alt="Three points that begin a tangent arc"></p>
+<p>These three points define two connected lines:</p>
+<p><img src="arcs-images/tangentarcconnectinglines.png" alt="Lines connecting the three points of a tangent arc"></p>
+<p>If the three points are colinear — that is, if they lie on the same straight line — no arc will be drawn.</p>
+<p>The <code>ArcTo</code> method also includes a <code>radius</code> parameter. This defines the radius of a circle:</p>
+<p><img src="arcs-images/tangentarccircle.png" alt="The circle of a tangent arc"></p>
+<p>The tangent arc is not generalized for an ellipse.</p>
+<p>If the two lines meet at any angle, that circle can be inserted between those lines so that it is tangent to both lines:</p>
+<p><img src="arcs-images/tangentarctangentcircle.png" alt="The tangent arc circle between the two lines"></p>
+<p>The curve that is added to the contour does not touch either of the points specified in the <code>ArcTo</code> method. It consists of a straight line from the current point to the first tangent point, and an arc that ends at the second tangent point, shown here in red:</p>
+<p><img src="arcs-images/tangentarchighlight.png" alt="Diagram shows the previous diagram annotated with a red line that shows the highlighted tangent arc between the two lines."></p>
+<p>Here's the final straight line and arc that is added to the contour:</p>
+<p><img src="arcs-images/tangentarc.png" alt="The highlighted tangent arc between the two lines"></p>
+<p>The contour can be continued from the second tangent point.</p>
+<p>The <strong>Tangent Arc</strong> page allows you to experiment with the tangent arc. This is the first of several pages that derive from <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/InteractivePage.cs"><code>InteractivePage</code></a>, which defines a few handy <code>SKPaint</code> objects and performs <code>TouchPoint</code> processing:</p>
+<pre><code class="lang-csharp">public class InteractivePage : ContentPage
+{
+    protected SKCanvasView baseCanvasView;
+    protected TouchPoint[] touchPoints;
+
+    protected SKPaint strokePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Black,
+        StrokeWidth = 3
+    };
+
+    protected SKPaint redStrokePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Red,
+        StrokeWidth = 15
+    };
+
+    protected SKPaint dottedStrokePaint = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.Black,
+        StrokeWidth = 3,
+        PathEffect = SKPathEffect.CreateDash(new float[] { 7, 7 }, 0)
+    };
+
+    protected void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    {
+        bool touchPointMoved = false;
+
+        foreach (TouchPoint touchPoint in touchPoints)
+        {
+            float scale = baseCanvasView.CanvasSize.Width / (float)baseCanvasView.Width;
+            SKPoint point = new SKPoint(scale * (float)args.Location.X,
+                                        scale * (float)args.Location.Y);
+            touchPointMoved |= touchPoint.ProcessTouchEvent(args.Id, args.Type, point);
+        }
+
+        if (touchPointMoved)
+        {
+            baseCanvasView.InvalidateSurface();
+        }
+    }
+}
+</code></pre>
+<p>The <code>TangentArcPage</code> class derives from <code>InteractivePage</code>. The constructor in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/TangentArcPage.xaml.cs"><strong>TangentArcPage.xaml.cs</strong></a> file is responsible for instantiating and initializing the <code>touchPoints</code> array, and setting <code>baseCanvasView</code> (in <code>InteractivePage</code>) to the <code>SKCanvasView</code> object instantiated in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/TangentArcPage.xaml"><strong>TangentArcPage.xaml</strong></a> file:</p>
+<pre><code class="lang-csharp">public partial class TangentArcPage : InteractivePage
+{
+    public TangentArcPage()
+    {
+        touchPoints = new TouchPoint[3];
+
+        for (int i = 0; i &lt; 3; i++)
+        {
+            TouchPoint touchPoint = new TouchPoint
+            {
+                Center = new SKPoint(i == 0 ? 100 : 500,
+                                     i != 2 ? 100 : 500)
+            };
+            touchPoints[i] = touchPoint;
+        }
+
+        InitializeComponent();
+
+        baseCanvasView = canvasView;
+        radiusSlider.Value = 100;
+    }
+
+    void sliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        if (canvasView != null)
+        {
+            canvasView.InvalidateSurface();
+        }
+    }
+    ...
+}
+</code></pre>
+<p>The <code>PaintSurface</code> handler uses the <code>ArcTo</code> method to draw the arc based on the touch points and a <code>Slider</code>, but also algorithmically calculates the circle that the angle is based on:</p>
+<pre><code class="lang-csharp">public partial class TangentArcPage : InteractivePage
+{
+    ...
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Draw the two lines that meet at an angle
+        using (SKPath path = new SKPath())
+        {
+            path.MoveTo(touchPoints[0].Center);
+            path.LineTo(touchPoints[1].Center);
+            path.LineTo(touchPoints[2].Center);
+            canvas.DrawPath(path, dottedStrokePaint);
+        }
+
+        // Draw the circle that the arc wraps around
+        float radius = (float)radiusSlider.Value;
+
+        SKPoint v1 = Normalize(touchPoints[0].Center - touchPoints[1].Center);
+        SKPoint v2 = Normalize(touchPoints[2].Center - touchPoints[1].Center);
+
+        double dotProduct = v1.X * v2.X + v1.Y * v2.Y;
+        double angleBetween = Math.Acos(dotProduct);
+        float hypotenuse = radius / (float)Math.Sin(angleBetween / 2);
+        SKPoint vMid = Normalize(new SKPoint((v1.X + v2.X) / 2, (v1.Y + v2.Y) / 2));
+        SKPoint center = new SKPoint(touchPoints[1].Center.X + vMid.X * hypotenuse,
+                                     touchPoints[1].Center.Y + vMid.Y * hypotenuse);
+
+        canvas.DrawCircle(center.X, center.Y, radius, this.strokePaint);
+
+        // Draw the tangent arc
+        using (SKPath path = new SKPath())
+        {
+            path.MoveTo(touchPoints[0].Center);
+            path.ArcTo(touchPoints[1].Center, touchPoints[2].Center, radius);
+            canvas.DrawPath(path, redStrokePaint);
+        }
+
+        foreach (TouchPoint touchPoint in touchPoints)
+        {
+            touchPoint.Paint(canvas);
+        }
+    }
+
+    // Vector methods
+    SKPoint Normalize(SKPoint v)
+    {
+        float magnitude = Magnitude(v);
+        return new SKPoint(v.X / magnitude, v.Y / magnitude);
+    }
+
+    float Magnitude(SKPoint v)
+    {
+        return (float)Math.Sqrt(v.X * v.X + v.Y * v.Y);
+    }
+}
+</code></pre>
+<p>Here's the <strong>Tangent Arc</strong> page running:</p>
+<p><a href="arcs-images/tangentarc-large.png#lightbox"><img src="arcs-images/tangentarc-small.png" alt="Triple screenshot of the Tangent Arc page"></a></p>
+<p>The tangent arc is ideal for creating rounded corners, such as a rounded rectangle. Because <code>SKPath</code> already includes an <code>AddRoundedRect</code> method, the <strong>Rounded Heptagon</strong> page demonstrates how to use <code>ArcTo</code> for rounding the corners of a seven-sided polygon. (The code is generalized for any regular polygon.)</p>
+<p>The <code>PaintSurface</code> handler of the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/RoundedHeptagonPage.cs"><code>RoundedHeptagonPage</code></a> class contains one <code>for</code> loop to calculate the coordinates of the seven vertices of the heptagon, and a second to calculate the midpoints of the seven sides from these vertices. These midpoints are then used to construct the path:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    float cornerRadius = 100;
+    int numVertices = 7;
+    float radius = 0.45f * Math.Min(info.Width, info.Height);
+
+    SKPoint[] vertices = new SKPoint[numVertices];
+    SKPoint[] midPoints = new SKPoint[numVertices];
+
+    double vertexAngle = -0.5f * Math.PI;       // straight up
+
+    // Coordinates of the vertices of the polygon
+    for (int vertex = 0; vertex &lt; numVertices; vertex++)
+    {
+        vertices[vertex] = new SKPoint(radius * (float)Math.Cos(vertexAngle),
+                                       radius * (float)Math.Sin(vertexAngle));
+        vertexAngle += 2 * Math.PI / numVertices;
+    }
+
+    // Coordinates of the midpoints of the sides connecting the vertices
+    for (int vertex = 0; vertex &lt; numVertices; vertex++)
+    {
+        int prevVertex = (vertex + numVertices - 1) % numVertices;
+        midPoints[vertex] = new SKPoint((vertices[prevVertex].X + vertices[vertex].X) / 2,
+                                        (vertices[prevVertex].Y + vertices[vertex].Y) / 2);
+    }
+
+    // Create the path
+    using (SKPath path = new SKPath())
+    {
+        // Begin at the first midpoint
+        path.MoveTo(midPoints[0]);
+
+        for (int vertex = 0; vertex &lt; numVertices; vertex++)
+        {
+            SKPoint nextMidPoint = midPoints[(vertex + 1) % numVertices];
+
+            // Draws a line from the current point, and then the arc
+            path.ArcTo(vertices[vertex], nextMidPoint, cornerRadius);
+
+            // Connect the arc with the next midpoint
+            path.LineTo(nextMidPoint);
+        }
+        path.Close();
+
+        // Render the path in the center of the screen
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = SKColors.Blue;
+            paint.StrokeWidth = 10;
+
+            canvas.Translate(info.Width / 2, info.Height / 2);
+            canvas.DrawPath(path, paint);
+        }
+    }
+}
+
+</code></pre>
+<p>Here's the program running:</p>
+<p><a href="arcs-images/roundedheptagon-large.png#lightbox"><img src="arcs-images/roundedheptagon-small.png" alt="Triple screenshot of the Rounded Heptagon page"></a></p>
+<h2 id="the-elliptical-arc">The Elliptical Arc</h2>
+<p>The elliptical arc is added to a path with a call to the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.arcto#skiasharp-skpath-arcto(skiasharp-skpoint-system-single-skiasharp-skpatharcsize-skiasharp-skpathdirection-skiasharp-skpoint)"><code>ArcTo</code></a> method that has two <code>SKPoint</code> parameters, or the  <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.arcto#skiasharp-skpath-arcto(system-single-system-single-system-single-skiasharp-skpatharcsize-skiasharp-skpathdirection-system-single-system-single)"><code>ArcTo</code></a> overload with separate X and Y coordinates:</p>
+<pre><code class="lang-csharp">public void ArcTo (SKPoint r, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, SKPoint xy)
+
+public void ArcTo (Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y)
+</code></pre>
+<p>The elliptical arc is consistent with the <a href="https://www.w3.org/TR/SVG11/paths.html#PathDataEllipticalArcCommands">elliptical arc</a> included in Scalable Vector Graphics (SVG) and the Universal Windows Platform <a href="/uwp/api/Windows.UI.Xaml.Media.ArcSegment/"><code>ArcSegment</code></a> class.</p>
+<p>These <code>ArcTo</code> methods draw an arc between two points, which are the current point of the contour, and the last parameter to the <code>ArcTo</code> method (the <code>xy</code> parameter or the separate <code>x</code> and <code>y</code> parameters):</p>
+<p><img src="arcs-images/ellipticalarcpoints.png" alt="The two points that defined an elliptical arc"></p>
+<p>The first point parameter to the <code>ArcTo</code> method (<code>r</code>, or <code>rx</code> and <code>ry</code>) is not a point at all but instead specifies the horizontal and vertical radii of an ellipse;</p>
+<p><img src="arcs-images/ellipticalarcellipse.png" alt="The ellipse that defined an elliptical arc"></p>
+<p>The <code>xAxisRotate</code> parameter is the number of clockwise degrees to rotate this ellipse:</p>
+<p><img src="arcs-images/ellipticalarctiltedellipse.png" alt="The tilted ellipse that defined an elliptical arc"></p>
+<p>If this tilted ellipse is then positioned so that it touches the two points, the points are connected by two different arcs:</p>
+<p><img src="arcs-images/ellipticalarcellipse1.png" alt="The first set of elliptical arcs"></p>
+<p>These two arcs can be distinguished in two ways: The top arc is larger than the bottom arc, and as the arc is drawn from left to right, the top arc is drawn in a clockwise direction while the bottom arc is drawn in a counter-clockwise direction.</p>
+<p>It is also possible to fit the ellipse between the two points in another way:</p>
+<p><img src="arcs-images/ellipticalarcellipse2.png" alt="The second set of elliptical arcs"></p>
+<p>Now there's a smaller arc on top that's drawn clockwise, and a larger arc on the bottom that's drawn counter-clockwise.</p>
+<p>These two points can therefore be connected by an arc defined by the tilted ellipse in a total of four ways:</p>
+<p><img src="arcs-images/ellipticalarccolors.png" alt="All four elliptical arcs"></p>
+<p>These four arcs are distinguished by the four combinations of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatharcsize"><code>SKPathArcSize</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpathdirection"><code>SKPathDirection</code></a> enumeration type arguments to the <code>ArcTo</code> method:</p>
+<ul>
+<li>red: SKPathArcSize.Large and SKPathDirection.Clockwise</li>
+<li>green: SKPathArcSize.Small and SKPathDirection.Clockwise</li>
+<li>blue: SKPathArcSize.Small and SKPathDirection.CounterClockwise</li>
+<li>magenta: SKPathArcSize.Large and SKPathDirection.CounterClockwise</li>
+</ul>
+<p>If the tilted ellipse is not large enough to fit between the two points, then it is uniformly scaled until it is large enough. Only two unique arcs connect the two points in that case. These can be distinguished with the <code>SKPathDirection</code> parameter.</p>
+<p>Although this approach to defining an arc sounds complex on first encounter, it is the only approach that allows defining an arc with a rotated ellipse, and it is often the easiest approach when you need to integrate arcs with other parts of the contour.</p>
+<p>The <strong>Elliptical Arc</strong> page allows you to interactively set the two points, and the size and rotation of the ellipse. The <code>EllipticalArcPage</code> class derives from <code>InteractivePage</code>, and the <code>PaintSurface</code> handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/EllipticalArcPage.xaml.cs"><strong>EllipticalArcPage.xaml.cs</strong></a> code-behind file draws the four arcs:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    using (SKPath path = new SKPath())
+    {
+        int colorIndex = 0;
+        SKPoint ellipseSize = new SKPoint((float)xRadiusSlider.Value,
+                                          (float)yRadiusSlider.Value);
+        float rotation = (float)rotationSlider.Value;
+
+        foreach (SKPathArcSize arcSize in Enum.GetValues(typeof(SKPathArcSize)))
+            foreach (SKPathDirection direction in Enum.GetValues(typeof(SKPathDirection)))
+            {
+                path.MoveTo(touchPoints[0].Center);
+                path.ArcTo(ellipseSize, rotation,
+                           arcSize, direction,
+                           touchPoints[1].Center);
+
+                strokePaint.Color = colors[colorIndex++];
+                canvas.DrawPath(path, strokePaint);
+                path.Reset();
+            }
+    }
+
+    foreach (TouchPoint touchPoint in touchPoints)
+    {
+        touchPoint.Paint(canvas);
+    }
+}
+
+</code></pre>
+<p>Here it is running:</p>
+<p><a href="arcs-images/ellipticalarc-large.png#lightbox"><img src="arcs-images/ellipticalarc-small.png" alt="Triple screenshot of the Elliptical Arc page"></a></p>
+<p>The <strong>Arc Infinity</strong> page uses the elliptical arc to draw an infinity sign. The infinity sign is based on two circles with radii of 100 units separated by 100 units:</p>
+<p><img src="arcs-images/infinitycircles.png" alt="Two circles"></p>
+<p>Two lines crossing each other are tangent to both circles:</p>
+<p><img src="arcs-images/infinitycircleslines.png" alt="Two circles with tangent lines"></p>
+<p>The infinity sign is a combination of parts of these circles and the two lines. To use the elliptical arc to draw the infinity sign, the coordinates where the two lines are tangent to the circles must be determined.</p>
+<p>Construct a right rectangle in one of the circles:</p>
+<p><img src="arcs-images/infinitytriangle.png" alt="Two circles with tangent lines and embedded circle"></p>
+<p>The radius of the circle is 100 units, and the hypotenuse of the triangle is 150 units, so the angle α is the arcsine (inverse sine) of 100 divided by 150, or 41.8 degrees. The length of the other side of the triangle is 150 times the cosine of 41.8 degrees, or 112, which can also be calculated by the Pythagorean theorem.</p>
+<p>The coordinates of the tangent point can then be calculated using this information:</p>
+<p><code>x = 112·cos(41.8) = 83</code></p>
+<p><code>y = 112·sin(41.8) = 75</code></p>
+<p>The four tangent points are all that's necessary to draw an infinity sign centered on the point (0, 0) with circle radii of 100:</p>
+<p><img src="arcs-images/infinitycoordinates.png" alt="Two circles with tangent lines and coordinates"></p>
+<p>The <code>PaintSurface</code> handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ArcInfinityPage.cs"><code>ArcInfinityPage</code></a> class positions the infinity sign so that the (0, 0) point is positioned in the center of the page, and scales the path to the screen size:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+{
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+
+    using (SKPath path = new SKPath())
+    {
+        path.LineTo(83, 75);
+        path.ArcTo(100, 100, 0, SKPathArcSize.Large, SKPathDirection.CounterClockwise, 83, -75);
+        path.LineTo(-83, 75);
+        path.ArcTo(100, 100, 0, SKPathArcSize.Large, SKPathDirection.Clockwise, -83, -75);
+        path.Close();
+
+        // Use path.TightBounds for coordinates without control points
+        SKRect pathBounds = path.Bounds;
+
+        canvas.Translate(info.Width / 2, info.Height / 2);
+        canvas.Scale(Math.Min(info.Width / pathBounds.Width,
+                              info.Height / pathBounds.Height));
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = SKColors.Blue;
+            paint.StrokeWidth = 5;
+
+            canvas.DrawPath(path, paint);
+        }
+    }
+}
+</code></pre>
+<p>The code uses the <code>Bounds</code> property of <code>SKPath</code> to determine the dimensions of the infinity sine to scale it to the size of the canvas:</p>
+<p><a href="arcs-images/arcinfinity-large.png#lightbox"><img src="arcs-images/arcinfinity-small.png" alt="Triple screenshot of the Arc Infinity page"></a></p>
+<p>The result seems a little small, which suggests that the <code>Bounds</code> property of <code>SKPath</code> is reporting a size larger than the path.</p>
+<p>Internally, Skia approximates the arc using multiple quadratic Bézier curves. These curves (as you'll see in the next section) contain control points that govern how the curve is drawn but are not part of the rendered curve. The <code>Bounds</code> property includes those control points.</p>
+<p>To get a tighter fit, use the <code>TightBounds</code> property, which excludes the control points. Here's the program running in landscape mode, and using the <code>TightBounds</code> property to obtain the path bounds:</p>
+<p><a href="arcs-images/arcinfinitytightbounds-large.png#lightbox"><img src="arcs-images/arcinfinitytightbounds-small.png" alt="Triple screenshot of the Arc Infinity page with tight bounds"></a></p>
+<p>Although the connections between the arcs and straight lines are mathematically smooth, the change from arc to straight line might seem a little abrupt. A better infinity sign is presented in the next article on <a href="beziers.html"><strong>Three Types of Bézier Curves</strong></a>.</p>
+<h2 id="related-links">Related Links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

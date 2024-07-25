@@ -1,0 +1,437 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>SkiaSharp noise and composing | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="SkiaSharp noise and composing | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../../images/logo.ico">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../../TOC.html">
+    <meta property="docfx:tocrel" content="../../TOC.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="skiasharp-noise-and-composing">SkiaSharp noise and composing</h1>
+
+<p>Simple vector graphics tend to look unnatural. The straight lines, smooth curves, and solid colors don't resemble the imperfections of real-world objects. While working on the computer-generated graphics for the 1982 movie <em>Tron</em>, computer scientist Ken Perlin began developing algorithms that used random processes to give these images more realistic textures. In 1997, Ken Perlin won an Academy Award for Technical Achievement. His work has come to be known as Perlin noise, and it is supported in SkiaSharp. Here's an example:</p>
+<p><img src="noise-images/NoiseSample.png" alt="Perlin Noise sample" title="Perlin Noise Sample"></p>
+<p>As you can see, each pixel is not a random color value. The continuity from pixel to pixel results in random shapes.</p>
+<p>The support of Perlin noise in Skia is based on a W3C specification for CSS and SVG. Section 8.20 of <a href="https://www.w3.org/TR/filter-effects-1/#feTurbulenceElement"><strong>Filter Effects Module Level 1</strong></a> includes the underlying Perlin noise algorithms in C code.</p>
+<h2 id="exploring-perlin-noise">Exploring Perlin noise</h2>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader"><code>SKShader</code></a> class defines two different static methods for generating Perlin noise:  <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createperlinnoisefractalnoise"><code>CreatePerlinNoiseFractalNoise</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createperlinnoiseturbulence"><code>CreatePerlinNoiseTurbulence</code></a>. The parameters are identical:</p>
+<pre><code class="lang-csharp">public static SkiaSharp CreatePerlinNoiseFractalNoise (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed);
+
+public static SkiaSharp.SKShader CreatePerlinNoiseTurbulence (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed);
+</code></pre>
+<p>Both methods also exist in overloaded versions with an additional <code>SKPointI</code> parameter. The section <a href="#tiling-perlin-noise"><strong>Tiling Perlin noise</strong></a> discusses these overloads.</p>
+<p>The two <code>baseFrequency</code> arguments are positive values defined in the SkiaSharp documentation as ranging from 0 to 1, but they can be set to higher values as well. The higher the value, the greater the change in the random image in the horizontal and vertical directions.</p>
+<p>The <code>numOctaves</code> value is an integer of 1 or higher. It relates to an iteration factor in the algorithms. Each additional octave contributes an effect that is half of the previous octave, so the effect decreases with higher octave values.</p>
+<p>The <code>seed</code> parameter is the starting point for the random-number generator. Although specified as a floating-point value, the fraction is truncated before it's used, and 0 is the same as 1.</p>
+<p>The <strong>Perlin Noise</strong> page in the sample allows you experiment with various values of the <code>baseFrequency</code> and <code>numOctaves</code> arguments. Here's the XAML file:</p>
+<pre><code class="lang-xaml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.PerlinNoisePage&quot;
+             Title=&quot;Perlin Noise&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;baseFrequencyXSlider&quot;
+                Maximum=&quot;4&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label x:Name=&quot;baseFrequencyXText&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;baseFrequencyYSlider&quot;
+                Maximum=&quot;4&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label x:Name=&quot;baseFrequencyYText&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+
+        &lt;StackLayout Orientation=&quot;Horizontal&quot;
+                     HorizontalOptions=&quot;Center&quot;
+                     Margin=&quot;10&quot;&gt;
+
+            &lt;Label Text=&quot;{Binding Source={x:Reference octavesStepper},
+                                  Path=Value,
+                                  StringFormat='Number of Octaves: {0:F0}'}&quot;
+                   VerticalOptions=&quot;Center&quot; /&gt;
+
+            &lt;Stepper x:Name=&quot;octavesStepper&quot;
+                     Minimum=&quot;1&quot;
+                     ValueChanged=&quot;OnStepperValueChanged&quot; /&gt;
+        &lt;/StackLayout&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>It uses two <code>Slider</code> views for the two <code>baseFrequency</code> arguments. To expand the range of the lower values, the sliders are logarithmic. The code-behind file calculates the arguments to the <code>SKShader</code>methods from powers of the <code>Slider</code> values. The <code>Label</code> views display the calculated values:</p>
+<pre><code class="lang-csharp">float baseFreqX = (float)Math.Pow(10, baseFrequencyXSlider.Value - 4);
+baseFrequencyXText.Text = String.Format(&quot;Base Frequency X = {0:F4}&quot;, baseFreqX);
+
+float baseFreqY = (float)Math.Pow(10, baseFrequencyYSlider.Value - 4);
+baseFrequencyYText.Text = String.Format(&quot;Base Frequency Y = {0:F4}&quot;, baseFreqY);
+</code></pre>
+<p>A <code>Slider</code> value of 1 corresponds to 0.001, a <code>Slider</code> value os 2 corresponds to 0.01, a <code>Slider</code> values of 3 corresponds to 0.1, and a <code>Slider</code> value of 4 corresponds to 1.</p>
+<p>Here's the code-behind file that includes that code:</p>
+<pre><code class="lang-csharp">public partial class PerlinNoisePage : ContentPage
+{
+    public PerlinNoisePage()
+    {
+        InitializeComponent();
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnStepperValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Get values from sliders and stepper
+        float baseFreqX = (float)Math.Pow(10, baseFrequencyXSlider.Value - 4);
+        baseFrequencyXText.Text = String.Format(&quot;Base Frequency X = {0:F4}&quot;, baseFreqX);
+
+        float baseFreqY = (float)Math.Pow(10, baseFrequencyYSlider.Value - 4);
+        baseFrequencyYText.Text = String.Format(&quot;Base Frequency Y = {0:F4}&quot;, baseFreqY);
+
+        int numOctaves = (int)octavesStepper.Value;
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Shader =
+                SKShader.CreatePerlinNoiseFractalNoise(baseFreqX,
+                                                       baseFreqY,
+                                                       numOctaves,
+                                                       0);
+
+            SKRect rect = new SKRect(0, 0, info.Width, info.Height / 2);
+            canvas.DrawRect(rect, paint);
+
+            paint.Shader =
+                SKShader.CreatePerlinNoiseTurbulence(baseFreqX,
+                                                     baseFreqY,
+                                                     numOctaves,
+                                                     0);
+
+            rect = new SKRect(0, info.Height / 2, info.Width, info.Height);
+            canvas.DrawRect(rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>Here's the program running on iOS, Android, and Universal Windows Platform (UWP) devices. The fractal noise is shown in the upper half of the canvas. The turbulence noise is in the bottom half:</p>
+<p><a href="noise-images/PerlinNoise-Large.png#lightbox"><img src="noise-images/PerlinNoise.png" alt="Perlin Noise" title="Perlin Noise"></a></p>
+<p>The same arguments always produce the same pattern that begins at the upper-left corner. This consistency is obvious when you adjust the width and height of the UWP window. As Windows 10 redraws the screen, the pattern in the upper half of the canvas remains the same.</p>
+<p>The noise pattern incorporates various degrees of transparency. The transparency becomes obvious if you set a color in the <code>canvas.Clear()</code> call. That color becomes prominent in the pattern. You'll also see this effect in the section <a href="#combining-multiple-shaders"><strong>Combining multiple shaders</strong></a>.</p>
+<p>These Perlin noise patterns are rarely used by themselves. Often they are subjected to blend modes and color filters discussed in later articles.</p>
+<h2 id="tiling-perlin-noise">Tiling Perlin noise</h2>
+<p>The two static <code>SKShader</code> methods for creating Perlin noise also exist in overload versions. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createperlinnoisefractalnoise#skiasharp-skshader-createperlinnoisefractalnoise(system-single-system-single-system-int32-system-single-skiasharp-skpointi)"><code>CreatePerlinNoiseFractalNoise</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createperlinnoisefractalnoise#skiasharp-skshader-createperlinnoisefractalnoise(system-single-system-single-system-int32-system-single-skiasharp-skpointi)"><code>CreatePerlinNoiseTurbulence</code></a> overloads have an additional <code>SKPointI</code> parameter:</p>
+<pre><code class="lang-csharp">public static SKShader CreatePerlinNoiseFractalNoise (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKPointI tileSize);
+
+public static SKShader CreatePerlinNoiseTurbulence (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKPointI tileSize);
+</code></pre>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpointi"><code>SKPointI</code></a> structure is the integer version of the familiar <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpoint"><code>SKPoint</code></a> structure. <code>SKPointI</code> defines <code>X</code> and <code>Y</code> properties of type <code>int</code> rather than <code>float</code>.</p>
+<p>These methods create a repeating pattern of the specified size. In each tile, the right edge is the same as the left edge, and the top edge is the same as the bottom edge. This characteristic is demonstrated in the <strong>Tiled Perlin Noise</strong> page. The XAML file is similar to the previous sample, but it only has a <code>Stepper</code> view for changing the <code>seed</code> argument:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.TiledPerlinNoisePage&quot;
+             Title=&quot;Tiled Perlin Noise&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;StackLayout Orientation=&quot;Horizontal&quot;
+                     HorizontalOptions=&quot;Center&quot;
+                     Margin=&quot;10&quot;&gt;
+
+            &lt;Label Text=&quot;{Binding Source={x:Reference seedStepper},
+                                  Path=Value,
+                                  StringFormat='Seed: {0:F0}'}&quot;
+                   VerticalOptions=&quot;Center&quot; /&gt;
+
+            &lt;Stepper x:Name=&quot;seedStepper&quot;
+                     Minimum=&quot;1&quot;
+                     ValueChanged=&quot;OnStepperValueChanged&quot; /&gt;
+
+        &lt;/StackLayout&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file defines a constant for the tile size. The <code>PaintSurface</code> handler creates a bitmap of that size and an <code>SKCanvas</code> for drawing into that bitmap. The <code>SKShader.CreatePerlinNoiseTurbulence</code> method creates a shader with that tile size. This shader is drawn on the bitmap:</p>
+<pre><code class="lang-csharp">public partial class TiledPerlinNoisePage : ContentPage
+{
+    const int TILE_SIZE = 200;
+
+    public TiledPerlinNoisePage()
+    {
+        InitializeComponent();
+    }
+
+    void OnStepperValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Get seed value from stepper
+        float seed = (float)seedStepper.Value;
+
+        SKRect tileRect = new SKRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+        using (SKBitmap bitmap = new SKBitmap(TILE_SIZE, TILE_SIZE))
+        {
+            using (SKCanvas bitmapCanvas = new SKCanvas(bitmap))
+            {
+                bitmapCanvas.Clear();
+
+                // Draw tiled turbulence noise on bitmap
+                using (SKPaint paint = new SKPaint())
+                {
+                    paint.Shader = SKShader.CreatePerlinNoiseTurbulence(
+                                        0.02f, 0.02f, 1, seed,
+                                        new SKPointI(TILE_SIZE, TILE_SIZE));
+
+                    bitmapCanvas.DrawRect(tileRect, paint);
+                }
+            }
+
+            // Draw tiled bitmap shader on canvas
+            using (SKPaint paint = new SKPaint())
+            {
+                paint.Shader = SKShader.CreateBitmap(bitmap,
+                                                     SKShaderTileMode.Repeat,
+                                                     SKShaderTileMode.Repeat);
+                canvas.DrawRect(info.Rect, paint);
+            }
+
+            // Draw rectangle showing tile
+            using (SKPaint paint = new SKPaint())
+            {
+                paint.Style = SKPaintStyle.Stroke;
+                paint.Color = SKColors.Black;
+                paint.StrokeWidth = 2;
+
+                canvas.DrawRect(tileRect, paint);
+            }
+        }
+    }
+}
+</code></pre>
+<p>After the bitmap has been created, another <code>SKPaint</code> object is used to create a tiled bitmap pattern by calling <code>SKShader.CreateBitmap</code>. Notice the two arguments of <code>SKShaderTileMode.Repeat</code>:</p>
+<pre><code class="lang-csharp">paint.Shader = SKShader.CreateBitmap(bitmap,
+                                     SKShaderTileMode.Repeat,
+                                     SKShaderTileMode.Repeat);
+</code></pre>
+<p>This shader is used to cover the canvas. Finally, another <code>SKPaint</code> object is used to stroke a rectangle showing the size of the original bitmap.</p>
+<p>Only the <code>seed</code> parameter is selectable from the user interface. If the same <code>seed</code> pattern is used on each platform, they would show the same pattern. Different <code>seed</code> values result in different patterns:</p>
+<p><a href="noise-images/TiledPerlinNoise-Large.png#lightbox"><img src="noise-images/TiledPerlinNoise.png" alt="Tiled Perlin Noise" title="Tiled Perlin Noise"></a></p>
+<p>The 200-pixel square pattern in the upper-left corner flows seamlessly into the other tiles.</p>
+<h2 id="combining-multiple-shaders">Combining multiple shaders</h2>
+<p>The <code>SKShader</code> class includes a <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createcolor"><code>CreateColor</code></a> method that creates a shader with a specified solid color. This shader is not very useful by itself because you can simply set that color to the <code>Color</code> property of the <code>SKPaint</code> object and set the <code>Shader</code> property to null.</p>
+<p>This <code>CreateColor</code> method becomes useful in another method that <code>SKShader</code> defines. This method is <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createcompose#skiasharp-skshader-createcompose(skiasharp-skshader-skiasharp-skshader)"><code>CreateCompose</code></a>, which combines two shaders. Here's the syntax:</p>
+<pre><code class="lang-csharp">public static SKShader CreateCompose (SKShader dstShader, SKShader srcShader);
+</code></pre>
+<p>The <code>srcShader</code> (source shader) is effectively drawn on top of the <code>dstShader</code> (destination shader). If the source shader is a solid color or a gradient without transparency, the destination shader will be completely obscured.</p>
+<p>A Perlin noise shader contains transparency. If that shader is the source, the destination shader will show through the transparent areas.</p>
+<p>The <strong>Composed Perlin Noise</strong> page has a XAML file that is virtually identical to the first <strong>Perlin Noise</strong> page. The code-behind file is also similar. But the original <strong>Perlin Noise</strong> page sets the <code>Shader</code> property of <code>SKPaint</code> to the shader returned from the static <code>CreatePerlinNoiseFractalNoise</code> and <code>CreatePerlinNoiseTurbulence</code> methods. This <strong>Composed Perlin Noise</strong> page calls <code>CreateCompose</code> for a combination shader. The destination is a solid blue shader created using <code>CreateColor</code>. The source is a Perlin noise shader:</p>
+<pre><code class="lang-csharp">public partial class ComposedPerlinNoisePage : ContentPage
+{
+    public ComposedPerlinNoisePage()
+    {
+        InitializeComponent();
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnStepperValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Get values from sliders and stepper
+        float baseFreqX = (float)Math.Pow(10, baseFrequencyXSlider.Value - 4);
+        baseFrequencyXText.Text = String.Format(&quot;Base Frequency X = {0:F4}&quot;, baseFreqX);
+
+        float baseFreqY = (float)Math.Pow(10, baseFrequencyYSlider.Value - 4);
+        baseFrequencyYText.Text = String.Format(&quot;Base Frequency Y = {0:F4}&quot;, baseFreqY);
+
+        int numOctaves = (int)octavesStepper.Value;
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.Shader = SKShader.CreateCompose(
+                SKShader.CreateColor(SKColors.Blue),
+                SKShader.CreatePerlinNoiseFractalNoise(baseFreqX,
+                                                       baseFreqY,
+                                                       numOctaves,
+                                                       0));
+
+            SKRect rect = new SKRect(0, 0, info.Width, info.Height / 2);
+            canvas.DrawRect(rect, paint);
+
+            paint.Shader = SKShader.CreateCompose(
+                SKShader.CreateColor(SKColors.Blue),
+                SKShader.CreatePerlinNoiseTurbulence(baseFreqX,
+                                                     baseFreqY,
+                                                     numOctaves,
+                                                     0));
+
+            rect = new SKRect(0, info.Height / 2, info.Width, info.Height);
+            canvas.DrawRect(rect, paint);
+        }
+    }
+}
+</code></pre>
+<p>The fractal noise shader is on the top; the turbulence shader is on the bottom:</p>
+<p><a href="noise-images/ComposedPerlinNoise-Large.png#lightbox"><img src="noise-images/ComposedPerlinNoise.png" alt="Composed Perlin Noise" title="Composed Perlin Noise"></a></p>
+<p>Notice how much bluer these shaders are than the ones displayed by the <strong>Perlin Noise</strong> page. The difference illustrates the amount of transparency in the noise shaders.</p>
+<p>There's also an overload of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createcompose#skiasharp-skshader-createcompose(skiasharp-skshader-skiasharp-skshader-skiasharp-skblendmode)"><code>CreateCompose</code></a> method:</p>
+<pre><code class="lang-csharp">public static SKShader CreateCompose (SKShader dstShader, SKShader srcShader, SKBlendMode blendMode);
+</code></pre>
+<p>The final parameter is a member of the <code>SKBlendMode</code> enumeration, an enumeration with 29 members that is discussed in the next series of articles on <a href="../blend-modes/index.html"><strong>SkiaSharp compositing and blend modes</strong></a>.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

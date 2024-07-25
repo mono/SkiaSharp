@@ -1,0 +1,486 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>SkiaSharp image filters | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="SkiaSharp image filters | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="skiasharp-image-filters">SkiaSharp image filters</h1>
+
+<p>Image filters are effects that operate on all the color bits of pixels that make up an image. They are more versatile than mask filters, which only operate on the alpha channel as described in the article <a href="mask-filters.html"><strong>SkiaSharp mask filters</strong></a>. To use an image filter, set the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.imagefilter#skiasharp-skpaint-imagefilter"><code>ImageFilter</code></a> property of <code>SKPaint</code> to an object of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter"><code>SKImageFilter</code></a> that you've created by calling one of the class's static methods.</p>
+<p>The best way to become familiar with mask filters is by experimenting with these static methods. You can use a mask filter to blur an entire bitmap:</p>
+<p><img src="image-filters-images/ImageFilterExample.png" alt="Blur Example" title="Blur Example"></p>
+<p>This article also demonstrates using an image filter to create a drop shadow, and for embossing and engraving effects.</p>
+<h2 id="blurring-vector-graphics-and-bitmaps">Blurring vector graphics and bitmaps</h2>
+<p>The blur effect created by the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter.createblur"><code>SKImageFilter.CreateBlur</code></a> static method has a significant advantage over the blur methods in the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmaskfilter"><code>SKMaskFilter</code></a> class: The image filter can blur an entire bitmap. The method has the following syntax:</p>
+<pre><code class="lang-csharp">public static SkiaSharp.SKImageFilter CreateBlur (float sigmaX, float sigmaY,
+                                                  SKImageFilter input = null,
+                                                  SKImageFilter.CropRect cropRect = null);
+</code></pre>
+<p>The method has two sigma values — the first for the blur extent in the horizontal direction and the second for the vertical direction. You can cascade image filters by specifying another image filter as the optional third argument. A cropping rectangle can also be specified.</p>
+<p>The <strong>Image Blur Experiment</strong> page in the sample includes two <code>Slider</code> views that let you experiment with setting various levels of blur:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.ImageBlurExperimentPage&quot;
+             Title=&quot;Image Blur Experiment&quot;&gt;
+
+    &lt;StackLayout&gt;
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;sigmaXSlider&quot;
+                Maximum=&quot;10&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference sigmaXSlider},
+                              Path=Value,
+                              StringFormat='Sigma X = {0:F1}'}&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;sigmaYSlider&quot;
+                Maximum=&quot;10&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference sigmaYSlider},
+                              Path=Value,
+                              StringFormat='Sigma Y = {0:F1}'}&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file uses the two <code>Slider</code> values to call <code>SKImageFilter.CreateBlur</code> for the <code>SKPaint</code> object used to display both text and a bitmap:</p>
+<pre><code class="lang-csharp">public partial class ImageBlurExperimentPage : ContentPage
+{
+    const string TEXT = &quot;Blur My Text&quot;;
+
+    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
+                            typeof(MaskBlurExperimentPage),
+                            &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+
+    public ImageBlurExperimentPage ()
+    {
+        InitializeComponent ();
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear(SKColors.Pink);
+
+        // Get values from sliders
+        float sigmaX = (float)sigmaXSlider.Value;
+        float sigmaY = (float)sigmaYSlider.Value;
+
+        using (SKPaint paint = new SKPaint())
+        {
+            // Set SKPaint properties
+            paint.TextSize = (info.Width - 100) / (TEXT.Length / 2);
+            paint.ImageFilter = SKImageFilter.CreateBlur(sigmaX, sigmaY);
+
+            // Get text bounds and calculate display rectangle
+            SKRect textBounds = new SKRect();
+            paint.MeasureText(TEXT, ref textBounds);
+            SKRect textRect = new SKRect(0, 0, info.Width, textBounds.Height + 50);
+
+            // Center the text in the display rectangle
+            float xText = textRect.Width / 2 - textBounds.MidX;
+            float yText = textRect.Height / 2 - textBounds.MidY;
+
+            canvas.DrawText(TEXT, xText, yText, paint);
+
+            // Calculate rectangle for bitmap
+            SKRect bitmapRect = new SKRect(0, textRect.Bottom, info.Width, info.Height);
+            bitmapRect.Inflate(-50, -50);
+
+            canvas.DrawBitmap(bitmap, bitmapRect, BitmapStretch.Uniform, paint: paint);
+        }
+    }
+}
+</code></pre>
+<p>The three screenshots show various settings for the <code>sigmaX</code> and <code>sigmaY</code> settings:</p>
+<p><a href="image-filters-images/ImageBlurExperiment-Large.png#lightbox"><img src="image-filters-images/ImageBlurExperiment.png" alt="Image Blur Experiment" title="Image Blur Experiment"></a></p>
+<p>To keep the blur consistent among different display sizes and resolutions, set <code>sigmaX</code> and <code>sigmaY</code> to values that are proportional to the rendered pixel size of the image that the blur is applied to.</p>
+<h2 id="drop-shadow">Drop shadow</h2>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter.createdropshadow"><code>SKImageFilter.CreateDropShadow</code></a> static method creates an <code>SKImageFilter</code> object for a drop shadow:</p>
+<pre><code class="lang-csharp">public static SKImageFilter CreateDropShadow (float dx, float dy,
+                                              float sigmaX, float sigmaY,
+                                              SKColor color,
+                                              SKDropShadowImageFilterShadowMode shadowMode,
+                                              SKImageFilter input = null,
+                                              SKImageFilter.CropRect cropRect = null);
+</code></pre>
+<p>Set this object to the <code>ImageFilter</code> property of an <code>SKPaint</code> object, and anything you draw with that object will have a drop shadow behind it.</p>
+<p>The <code>dx</code> and <code>dy</code> parameters indicate the horizontal and vertical offsets of the shadow in pixels from the graphical object. The convention in 2D graphics is to assume a light source coming from the upper left, which implies that both these arguments should be positive to position the shadow below and to the right of the graphical object.</p>
+<p>The <code>sigmaX</code> and <code>sigmaY</code> parameters are blurring factors for the drop shadow.</p>
+<p>The <code>color</code> parameter is the color of the drop shadow. This <code>SKColor</code> value can include transparency. One possibility is the color value <code>SKColors.Black.WithAlpha(0x80)</code> to darken any color background.</p>
+<p>The final two parameters are optional.</p>
+<p>The <strong>Drop Shadow Experiment</strong> program lets you experiment with values of <code>dx</code>, <code>dy</code>, <code>sigmaX</code>, and <code>sigmaY</code> to display a text string with a drop shadow. The XAML file instantiates four <code>Slider</code> views to set these values:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Effects.DropShadowExperimentPage&quot;
+             Title=&quot;Drop Shadow Experiment&quot;&gt;
+    &lt;ContentPage.Resources&gt;
+        &lt;Style TargetType=&quot;Slider&quot;&gt;
+            &lt;Setter Property=&quot;Margin&quot; Value=&quot;10, 0&quot; /&gt;
+        &lt;/Style&gt;
+
+        &lt;Style TargetType=&quot;Label&quot;&gt;
+            &lt;Setter Property=&quot;HorizontalTextAlignment&quot; Value=&quot;Center&quot; /&gt;
+        &lt;/Style&gt;
+    &lt;/ContentPage.Resources&gt;
+
+    &lt;StackLayout&gt;
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;dxSlider&quot;
+                Minimum=&quot;-20&quot;
+                Maximum=&quot;20&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference dxSlider},
+                              Path=Value,
+                              StringFormat='Horizontal offset = {0:F1}'}&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;dySlider&quot;
+                Minimum=&quot;-20&quot;
+                Maximum=&quot;20&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference dySlider},
+                              Path=Value,
+                              StringFormat='Vertical offset = {0:F1}'}&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;sigmaXSlider&quot;
+                Maximum=&quot;10&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference sigmaXSlider},
+                              Path=Value,
+                              StringFormat='Sigma X = {0:F1}'}&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;sigmaYSlider&quot;
+                Maximum=&quot;10&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference sigmaYSlider},
+                              Path=Value,
+                              StringFormat='Sigma Y = {0:F1}'}&quot; /&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file uses those values to create a red drop shadow on a blue text string:</p>
+<pre><code class="lang-csharp">public partial class DropShadowExperimentPage : ContentPage
+{
+    const string TEXT = &quot;Drop Shadow&quot;;
+
+    public DropShadowExperimentPage ()
+    {
+        InitializeComponent ();
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        // Get values from sliders
+        float dx = (float)dxSlider.Value;
+        float dy = (float)dySlider.Value;
+        float sigmaX = (float)sigmaXSlider.Value;
+        float sigmaY = (float)sigmaYSlider.Value;
+
+        using (SKPaint paint = new SKPaint())
+        {
+            // Set SKPaint properties
+            paint.TextSize = info.Width / 7;
+            paint.Color = SKColors.Blue;
+            paint.ImageFilter = SKImageFilter.CreateDropShadow(
+                                    dx,
+                                    dy,
+                                    sigmaX,
+                                    sigmaY,
+                                    SKColors.Red,
+                                    SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
+
+            SKRect textBounds = new SKRect();
+            paint.MeasureText(TEXT, ref textBounds);
+
+            // Center the text in the display rectangle
+            float xText = info.Width / 2 - textBounds.MidX;
+            float yText = info.Height / 2 - textBounds.MidY;
+
+            canvas.DrawText(TEXT, xText, yText, paint);
+        }
+    }
+}
+</code></pre>
+<p>Here's the program running:</p>
+<p><a href="image-filters-images/DropShadowExperiment-Large.png#lightbox"><img src="image-filters-images/DropShadowExperiment.png" alt="Drop Shadow Experiment" title="Drop Shadow Experiment"></a></p>
+<p>The negative offset values in the Universal Windows Platform screenshot at the far right cause the shadow to appear above and to the left of the text. This suggests a light source in the lower right, which is not the convention for computer graphics. But it doesn't seem wrong in any way, perhaps because the shadow is also made very blurry and seems more ornamental than most drop shadows.</p>
+<h2 id="lighting-effects">Lighting Effects</h2>
+<p>The <code>SKImageFilter</code> class defines six methods that have similar names and parameters, listed here in order of increasing complexity:</p>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter.createdistantlitdiffuse"><code>CreateDistantLitDiffuse</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter.createdistantlitspecular"><code>CreateDistantLitSpecular</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter.createpointlitdiffuse"><code>CreatePointLitDiffuse</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter.createpointlitspecular"><code>CreatePointLitSpecular</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter.createspotlitdiffuse"><code>CreateSpotLitDiffuse</code></a></li>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter.createspotlitspecular"><code>CreateSpotLitSpecular</code></a></li>
+</ul>
+<p>These methods create image filters that mimic the effect of different kinds of light on three-dimensional surfaces. The resultant image filter illuminates two-dimensional objects as if they existed in 3D space, which can cause these objects to appear elevated or recessed, or with specular highlighting.</p>
+<p>The <code>Distant</code> light methods assume that the light comes from a far distance. For the purpose of illuminating objects, the light is assumed to point in one consistent direction in 3D space, much like the Sun on a small area of the Earth. The <code>Point</code> light methods mimic a light bulb positioned in 3D space that emits light in all directions. The <code>Spot</code> light has both a position and a direction, much like a flashlight.</p>
+<p>Locations and directions in 3D space are both specified with values of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpoint3"><code>SKPoint3</code></a> structure, which is similar to <code>SKPoint</code> but with three properties named <code>X</code>, <code>Y</code>, and <code>Z</code>.</p>
+<p>The number and complexity of the parameters to these methods make experimentation with them difficult. To get you started, the <strong>Distant Light Experiment</strong> page lets you experiment with parameters to the <code>CreateDistantLightDiffuse</code> method:</p>
+<pre><code class="lang-csharp">public static SKImageFilter CreateDistantLitDiffuse (SKPoint3 direction,
+                                                     SKColor lightColor,
+                                                     float surfaceScale,
+                                                     float kd,
+                                                     SKImageFilter input = null,
+                                                     SKImageFilter.CropRect cropRect = null);
+</code></pre>
+<p>The page doesn't use the last two optional parameters.</p>
+<p>Three <code>Slider</code> views in the XAML file let you select the <code>Z</code> coordinate of the <code>SKPoint3</code> value, the <code>surfaceScale</code> parameter, and the <code>kd</code> parameter, which is defined in the API documentation as the &quot;diffuse lighting constant&quot;:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             x:Class=&quot;SkiaLightExperiment.MainPage&quot;
+             Title=&quot;Distant Light Experiment&quot;&gt;
+
+    &lt;StackLayout&gt;
+
+        &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot;
+                           VerticalOptions=&quot;FillAndExpand&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;zSlider&quot;
+                Minimum=&quot;-10&quot;
+                Maximum=&quot;10&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference zSlider},
+                              Path=Value,
+                              StringFormat='Z = {0:F0}'}&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;surfaceScaleSlider&quot;
+                Minimum=&quot;-1&quot;
+                Maximum=&quot;1&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference surfaceScaleSlider},
+                              Path=Value,
+                              StringFormat='Surface Scale = {0:F1}'}&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+
+        &lt;Slider x:Name=&quot;lightConstantSlider&quot;
+                Minimum=&quot;-1&quot;
+                Maximum=&quot;1&quot;
+                Margin=&quot;10, 0&quot;
+                ValueChanged=&quot;OnSliderValueChanged&quot; /&gt;
+
+        &lt;Label Text=&quot;{Binding Source={x:Reference lightConstantSlider},
+                              Path=Value,
+                              StringFormat='Light Constant = {0:F1}'}&quot;
+               HorizontalTextAlignment=&quot;Center&quot; /&gt;
+    &lt;/StackLayout&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file obtains those three values and uses them to create an image filter to display a text string:</p>
+<pre><code class="lang-csharp">public partial class DistantLightExperimentPage : ContentPage
+{
+    const string TEXT = &quot;Lighting&quot;;
+
+    public DistantLightExperimentPage()
+    {
+        InitializeComponent();
+    }
+
+    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    {
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+
+        float z = (float)zSlider.Value;
+        float surfaceScale = (float)surfaceScaleSlider.Value;
+        float lightConstant = (float)lightConstantSlider.Value;
+
+        using (SKPaint paint = new SKPaint())
+        {
+            paint.IsAntialias = true;
+
+            // Size text to 90% of canvas width
+            paint.TextSize = 100;
+            float textWidth = paint.MeasureText(TEXT);
+            paint.TextSize *= 0.9f * info.Width / textWidth;
+
+            // Find coordinates to center text
+            SKRect textBounds = new SKRect();
+            paint.MeasureText(TEXT, ref textBounds);
+
+            float xText = info.Rect.MidX - textBounds.MidX;
+            float yText = info.Rect.MidY - textBounds.MidY;
+
+            // Create distant light image filter
+            paint.ImageFilter = SKImageFilter.CreateDistantLitDiffuse(
+                                    new SKPoint3(2, 3, z),
+                                    SKColors.White,
+                                    surfaceScale,
+                                    lightConstant);
+
+            canvas.DrawText(TEXT, xText, yText, paint);
+        }
+    }
+}
+</code></pre>
+<p>The first argument of <code>SKImageFilter.CreateDistantLitDiffuse</code> is the direction of the light. The positive X and Y coordinates indicate that the light is pointed to the right and down. Positive Z coordinates point into the screen. The XAML file allows you to select negative Z values, but that's only so you can see what happens: Conceptually, negative Z coordinates cause the light to point out of the screen. For anything other then small negative values, the lighting effect stops working.</p>
+<p>The <code>surfaceScale</code> argument can range from –1 to 1. (Higher or lower values have no further effect.) These are relative values in the Z axis that indicate the displacement of the graphical object (in this case, the text string) from the canvas surface. Use negative values to raise the text string above the surface of the canvas, and positive values to depress it into the canvas.</p>
+<p>The <code>lightConstant</code> value should be positive. (The program allows negative values so you can see that they cause the effect to stop working.) Higher values cause more intense light.</p>
+<p>These factors can be balanced to obtain an embossed effect when <code>surfaceScale</code> is negative (as with the iOS and Android screenshots) and an engraved effect when <code>surfaceScale</code> is positive, as with the UWP screenshot at the right:</p>
+<p><a href="image-filters-images/DistantLightExperiment-Large.png#lightbox"><img src="image-filters-images/DistantLightExperiment.png" alt="Distant Light Experiment" title="Distant Light Experiment"></a></p>
+<p>The Android screenshot has a Z value of 0, which means that the light is only pointing down and to the right. The background isn't illuminated and the surface of the text string isn't illuminated either. The light only effects the edge of the text for a very subtle effect.</p>
+<p>An alternative approach to embossed and engraved text was demonstrated in the article <a href="../transforms/translate.html">The Translate Transform</a>: The text string is displayed twice with different colors that are offset slightly from each other.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

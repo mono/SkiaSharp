@@ -1,0 +1,770 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Cropping SkiaSharp bitmaps | SkiaSharp </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Cropping SkiaSharp bitmaps | SkiaSharp ">
+    <meta name="generator" content="docfx 2.45.1.0">
+    
+    <link rel="shortcut icon" href="../../images/logo.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../../TOC.html">
+    <meta property="docfx:tocrel" content="../TOC.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="cropping-skiasharp-bitmaps">Cropping SkiaSharp bitmaps</h1>
+
+<p>The <a href="drawing.html"><strong>Creating and Drawing SkiaSharp Bitmaps</strong></a> article described how an <code>SKBitmap</code> object can be passed to an <code>SKCanvas</code> constructor. Any drawing method called on that canvas causes graphics to be rendered on the bitmap. These drawing methods include <code>DrawBitmap</code>, which means that this technique allows transferring part or all of one bitmap to another bitmap, perhaps with transforms applied.</p>
+<p>You can use that technique for cropping a bitmap by calling the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmap#skiasharp-skcanvas-drawbitmap(skiasharp-skbitmap-skiasharp-skrect-skiasharp-skrect-skiasharp-skpaint)"><code>DrawBitmap</code></a> method with source and destination rectangles:</p>
+<pre><code class="lang-csharp">canvas.DrawBitmap(bitmap, sourceRect, destRect);
+</code></pre>
+<p>However, applications that implement cropping often provide an interface for the user to interactively select the cropping rectangle:</p>
+<p><img src="cropping-images/CroppingSample.png" alt="Cropping Sample" title="Cropping Sample"></p>
+<p>This article focuses on that interface.</p>
+<h2 id="encapsulating-the-cropping-rectangle">Encapsulating the cropping rectangle</h2>
+<p>It's helpful to isolate some of the cropping logic in a class named <code>CroppingRectangle</code>. The constructor parameters include a maximum rectangle, which is generally the size of the bitmap being cropped, and an optional aspect ratio. The constructor first defines an initial cropping rectangle, which it makes public in the <code>Rect</code> property of type <code>SKRect</code>. This initial cropping rectangle is 80% of the width and height of the bitmap rectangle, but it is then adjusted if an aspect ratio is specified:</p>
+<pre><code class="lang-csharp">class CroppingRectangle
+{
+    ···
+    SKRect maxRect;             // generally the size of the bitmap
+    float? aspectRatio;
+
+    public CroppingRectangle(SKRect maxRect, float? aspectRatio = null)
+    {
+        this.maxRect = maxRect;
+        this.aspectRatio = aspectRatio;
+
+        // Set initial cropping rectangle
+        Rect = new SKRect(0.9f * maxRect.Left + 0.1f * maxRect.Right,
+                          0.9f * maxRect.Top + 0.1f * maxRect.Bottom,
+                          0.1f * maxRect.Left + 0.9f * maxRect.Right,
+                          0.1f * maxRect.Top + 0.9f * maxRect.Bottom);
+
+        // Adjust for aspect ratio
+        if (aspectRatio.HasValue)
+        {
+            SKRect rect = Rect;
+            float aspect = aspectRatio.Value;
+
+            if (rect.Width &gt; aspect * rect.Height)
+            {
+                float width = aspect * rect.Height;
+                rect.Left = (maxRect.Width - width) / 2;
+                rect.Right = rect.Left + width;
+            }
+            else
+            {
+                float height = rect.Width / aspect;
+                rect.Top = (maxRect.Height - height) / 2;
+                rect.Bottom = rect.Top + height;
+            }
+
+            Rect = rect;
+        }
+    }
+
+    public SKRect Rect { set; get; }
+    ···
+}
+</code></pre>
+<p>One useful piece of information that <code>CroppingRectangle</code> also makes available is an array of <code>SKPoint</code> values corresponding to the four corners of the cropping rectangle in the order upper-left, upper-right, lower-right, and lower-left:</p>
+<pre><code class="lang-csharp">class CroppingRectangle
+{
+    ···
+    public SKPoint[] Corners
+    {
+        get
+        {
+            return new SKPoint[]
+            {
+                new SKPoint(Rect.Left, Rect.Top),
+                new SKPoint(Rect.Right, Rect.Top),
+                new SKPoint(Rect.Right, Rect.Bottom),
+                new SKPoint(Rect.Left, Rect.Bottom)
+            };
+        }
+    }
+    ···
+}
+</code></pre>
+<p>This array is used in the following method, which is called <code>HitTest</code>. The <code>SKPoint</code> parameter is a point corresponding to a finger touch or a mouse click. The method returns an index (0, 1, 2, or 3) corresponding to the corner that the finger or mouse pointer touched, within a distance given by the <code>radius</code> parameter:</p>
+<pre><code class="lang-csharp">class CroppingRectangle
+{
+    ···
+    public int HitTest(SKPoint point, float radius)
+    {
+        SKPoint[] corners = Corners;
+
+        for (int index = 0; index &lt; corners.Length; index++)
+        {
+            SKPoint diff = point - corners[index];
+
+            if ((float)Math.Sqrt(diff.X * diff.X + diff.Y * diff.Y) &lt; radius)
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+    ···
+}
+</code></pre>
+<p>If the touch or mouse point was not within <code>radius</code> units of any corner, the method returns –1.</p>
+<p>The final method in <code>CroppingRectangle</code> is called <code>MoveCorner</code>, which is called in response to touch or mouse movement. The two parameters indicate the index of the corner being moved, and the new location of that corner. The first half of the method adjusts the cropping rectangle based on the new location of the corner, but always within the bounds of <code>maxRect</code>, which is the size of the bitmap. This logic also takes account of the <code>MINIMUM</code> field to avoid collapsing the cropping rectangle into nothing:</p>
+<pre><code class="lang-csharp">class CroppingRectangle
+{
+    const float MINIMUM = 10;   // pixels width or height
+    ···
+    public void MoveCorner(int index, SKPoint point)
+    {
+        SKRect rect = Rect;
+
+        switch (index)
+        {
+            case 0: // upper-left
+                rect.Left = Math.Min(Math.Max(point.X, maxRect.Left), rect.Right - MINIMUM);
+                rect.Top = Math.Min(Math.Max(point.Y, maxRect.Top), rect.Bottom - MINIMUM);
+                break;
+
+            case 1: // upper-right
+                rect.Right = Math.Max(Math.Min(point.X, maxRect.Right), rect.Left + MINIMUM);
+                rect.Top = Math.Min(Math.Max(point.Y, maxRect.Top), rect.Bottom - MINIMUM);
+                break;
+
+            case 2: // lower-right
+                rect.Right = Math.Max(Math.Min(point.X, maxRect.Right), rect.Left + MINIMUM);
+                rect.Bottom = Math.Max(Math.Min(point.Y, maxRect.Bottom), rect.Top + MINIMUM);
+                break;
+
+            case 3: // lower-left
+                rect.Left = Math.Min(Math.Max(point.X, maxRect.Left), rect.Right - MINIMUM);
+                rect.Bottom = Math.Max(Math.Min(point.Y, maxRect.Bottom), rect.Top + MINIMUM);
+                break;
+        }
+
+        // Adjust for aspect ratio
+        if (aspectRatio.HasValue)
+        {
+            float aspect = aspectRatio.Value;
+
+            if (rect.Width &gt; aspect * rect.Height)
+            {
+                float width = aspect * rect.Height;
+
+                switch (index)
+                {
+                    case 0:
+                    case 3: rect.Left = rect.Right - width; break;
+                    case 1:
+                    case 2: rect.Right = rect.Left + width; break;
+                }
+            }
+            else
+            {
+                float height = rect.Width / aspect;
+
+                switch (index)
+                {
+                    case 0:
+                    case 1: rect.Top = rect.Bottom - height; break;
+                    case 2:
+                    case 3: rect.Bottom = rect.Top + height; break;
+                }
+            }
+        }
+
+        Rect = rect;
+    }
+}
+</code></pre>
+<p>The second half of the method adjusts for the optional aspect ratio.</p>
+<p>Keep in mind that everything in this class is in units of pixels.</p>
+<h2 id="a-canvas-view-just-for-cropping">A canvas view just for cropping</h2>
+<p>The <code>CroppingRectangle</code> class you've just seen is used by the <code>PhotoCropperCanvasView</code> class, which derives from <code>SKCanvasView</code>. This class is responsible for displaying the bitmap and the cropping rectangle, as well as handling touch or mouse events for changing the cropping rectangle.</p>
+<p>The <code>PhotoCropperCanvasView</code> constructor requires a bitmap. An aspect ratio is optional. The constructor instantiates an object of type <code>CroppingRectangle</code> based on this bitmap and aspect ratio and saves it as a field:</p>
+<pre><code class="lang-csharp">class PhotoCropperCanvasView : SKCanvasView
+{
+    ···
+    SKBitmap bitmap;
+    CroppingRectangle croppingRect;
+    ···
+    public PhotoCropperCanvasView(SKBitmap bitmap, float? aspectRatio = null)
+    {
+        this.bitmap = bitmap;
+
+        SKRect bitmapRect = new SKRect(0, 0, bitmap.Width, bitmap.Height);
+        croppingRect = new CroppingRectangle(bitmapRect, aspectRatio);
+        ···
+    }
+    ···
+}
+</code></pre>
+<p>Because this class derives from <code>SKCanvasView</code>, it doesn't need to install a handler for the <code>PaintSurface</code> event. It can instead override its <code>OnPaintSurface</code> method. The method displays the bitmap and uses a couple of <code>SKPaint</code> objects saved as fields to draw the current cropping rectangle:</p>
+<pre><code class="lang-csharp">class PhotoCropperCanvasView : SKCanvasView
+{
+    const int CORNER = 50;      // pixel length of cropper corner
+    ···
+    SKBitmap bitmap;
+    CroppingRectangle croppingRect;
+    SKMatrix inverseBitmapMatrix;
+    ···
+    // Drawing objects
+    SKPaint cornerStroke = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.White,
+        StrokeWidth = 10
+    };
+
+    SKPaint edgeStroke = new SKPaint
+    {
+        Style = SKPaintStyle.Stroke,
+        Color = SKColors.White,
+        StrokeWidth = 2
+    };
+    ···
+    protected override void OnPaintSurface(SKPaintSurfaceEventArgs args)
+    {
+        base.OnPaintSurface(args);
+
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear(SKColors.Gray);
+
+        // Calculate rectangle for displaying bitmap
+        float scale = Math.Min((float)info.Width / bitmap.Width, (float)info.Height / bitmap.Height);
+        float x = (info.Width - scale * bitmap.Width) / 2;
+        float y = (info.Height - scale * bitmap.Height) / 2;
+        SKRect bitmapRect = new SKRect(x, y, x + scale * bitmap.Width, y + scale * bitmap.Height);
+        canvas.DrawBitmap(bitmap, bitmapRect);
+
+        // Calculate a matrix transform for displaying the cropping rectangle
+        SKMatrix bitmapScaleMatrix = SKMatrix.MakeIdentity();
+        bitmapScaleMatrix.SetScaleTranslate(scale, scale, x, y);
+
+        // Display rectangle
+        SKRect scaledCropRect = bitmapScaleMatrix.MapRect(croppingRect.Rect);
+        canvas.DrawRect(scaledCropRect, edgeStroke);
+
+        // Display heavier corners
+        using (SKPath path = new SKPath())
+        {
+            path.MoveTo(scaledCropRect.Left, scaledCropRect.Top + CORNER);
+            path.LineTo(scaledCropRect.Left, scaledCropRect.Top);
+            path.LineTo(scaledCropRect.Left + CORNER, scaledCropRect.Top);
+
+            path.MoveTo(scaledCropRect.Right - CORNER, scaledCropRect.Top);
+            path.LineTo(scaledCropRect.Right, scaledCropRect.Top);
+            path.LineTo(scaledCropRect.Right, scaledCropRect.Top + CORNER);
+
+            path.MoveTo(scaledCropRect.Right, scaledCropRect.Bottom - CORNER);
+            path.LineTo(scaledCropRect.Right, scaledCropRect.Bottom);
+            path.LineTo(scaledCropRect.Right - CORNER, scaledCropRect.Bottom);
+
+            path.MoveTo(scaledCropRect.Left + CORNER, scaledCropRect.Bottom);
+            path.LineTo(scaledCropRect.Left, scaledCropRect.Bottom);
+            path.LineTo(scaledCropRect.Left, scaledCropRect.Bottom - CORNER);
+
+            canvas.DrawPath(path, cornerStroke);
+        }
+
+        // Invert the transform for touch tracking
+        bitmapScaleMatrix.TryInvert(out inverseBitmapMatrix);
+    }
+    ···
+}
+</code></pre>
+<p>The code in the <code>CroppingRectangle</code> class bases the cropping rectangle on the pixel size of the bitmap. However, the display of the bitmap by the <code>PhotoCropperCanvasView</code> class is scaled based on the size of the display area. The <code>bitmapScaleMatrix</code> calculated in the <code>OnPaintSurface</code> override maps from the bitmap pixels to the size and position of the bitmap as it is displayed. This matrix is then used to transform the cropping rectangle so that it can be displayed relative to the bitmap.</p>
+<p>The last line of the <code>OnPaintSurface</code> override takes the inverse of the <code>bitmapScaleMatrix</code> and saves it as the <code>inverseBitmapMatrix</code> field. This is used for touch processing.</p>
+<p>A <code>TouchEffect</code> object is instantiated as a field, and the constructor attaches a handler to the <code>TouchAction</code> event, but the <code>TouchEffect</code> needs to be added to the <code>Effects</code> collection of the <em>parent</em> of the <code>SKCanvasView</code> derivative, so that's done in the <code>OnParentSet</code> override:</p>
+<pre><code class="lang-csharp">class PhotoCropperCanvasView : SKCanvasView
+{
+    ···
+    const int RADIUS = 100;     // pixel radius of touch hit-test
+    ···
+    CroppingRectangle croppingRect;
+    SKMatrix inverseBitmapMatrix;
+
+    // Touch tracking
+    TouchEffect touchEffect = new TouchEffect();
+    struct TouchPoint
+    {
+        public int CornerIndex { set; get; }
+        public SKPoint Offset { set; get; }
+    }
+
+    Dictionary&lt;long, TouchPoint&gt; touchPoints = new Dictionary&lt;long, TouchPoint&gt;();
+    ···
+    public PhotoCropperCanvasView(SKBitmap bitmap, float? aspectRatio = null)
+    {
+        ···
+        touchEffect.TouchAction += OnTouchEffectTouchAction;
+    }
+    ···
+    protected override void OnParentSet()
+    {
+        base.OnParentSet();
+
+        // Attach TouchEffect to parent view
+        Parent.Effects.Add(touchEffect);
+    }
+    ···
+    void OnTouchEffectTouchAction(object sender, TouchActionEventArgs args)
+    {
+        SKPoint pixelLocation = ConvertToPixel(args.Location);
+        SKPoint bitmapLocation = inverseBitmapMatrix.MapPoint(pixelLocation);
+
+        switch (args.Type)
+        {
+            case TouchActionType.Pressed:
+                // Convert radius to bitmap/cropping scale
+                float radius = inverseBitmapMatrix.ScaleX * RADIUS;
+
+                // Find corner that the finger is touching
+                int cornerIndex = croppingRect.HitTest(bitmapLocation, radius);
+
+                if (cornerIndex != -1 &amp;&amp; !touchPoints.ContainsKey(args.Id))
+                {
+                    TouchPoint touchPoint = new TouchPoint
+                    {
+                        CornerIndex = cornerIndex,
+                        Offset = bitmapLocation - croppingRect.Corners[cornerIndex]
+                    };
+
+                    touchPoints.Add(args.Id, touchPoint);
+                }
+                break;
+
+            case TouchActionType.Moved:
+                if (touchPoints.ContainsKey(args.Id))
+                {
+                    TouchPoint touchPoint = touchPoints[args.Id];
+                    croppingRect.MoveCorner(touchPoint.CornerIndex,
+                                            bitmapLocation - touchPoint.Offset);
+                    InvalidateSurface();
+                }
+                break;
+
+            case TouchActionType.Released:
+            case TouchActionType.Cancelled:
+                if (touchPoints.ContainsKey(args.Id))
+                {
+                    touchPoints.Remove(args.Id);
+                }
+                break;
+        }
+    }
+
+    SKPoint ConvertToPixel(Xamarin.Forms.Point pt)
+    {
+        return new SKPoint((float)(CanvasSize.Width * pt.X / Width),
+                           (float)(CanvasSize.Height * pt.Y / Height));
+    }
+}
+</code></pre>
+<p>The touch events processed by the <code>TouchAction</code> handler are in device-independent units. These first need to be converted to pixels using the <code>ConvertToPixel</code> method at the bottom of the class, and then converted to <code>CroppingRectangle</code> units using <code>inverseBitmapMatrix</code>.</p>
+<p>For <code>Pressed</code> events, the <code>TouchAction</code> handler calls the <code>HitTest</code> method of <code>CroppingRectangle</code>. If this returns an index other than –1, then one of the corners of the cropping rectangle is being manipulated. That index and an offset of the actual touch point from the corner is stored in a <code>TouchPoint</code> object and added to the <code>touchPoints</code> dictionary.</p>
+<p>For the <code>Moved</code> event, the <code>MoveCorner</code> method of <code>CroppingRectangle</code> is called to move the corner, with possible adjustments for the aspect ratio.</p>
+<p>At any time, a program using <code>PhotoCropperCanvasView</code> can access the <code>CroppedBitmap</code> property. This property uses the <code>Rect</code> property of the <code>CroppingRectangle</code> to create a new bitmap of the cropped size. The version of <code>DrawBitmap</code> with destination and source rectangles then extracts a subset of the original bitmap:</p>
+<pre><code class="lang-csharp">class PhotoCropperCanvasView : SKCanvasView
+{
+    ···
+    SKBitmap bitmap;
+    CroppingRectangle croppingRect;
+    ···
+    public SKBitmap CroppedBitmap
+    {
+        get
+        {
+            SKRect cropRect = croppingRect.Rect;
+            SKBitmap croppedBitmap = new SKBitmap((int)cropRect.Width,
+                                                  (int)cropRect.Height);
+            SKRect dest = new SKRect(0, 0, cropRect.Width, cropRect.Height);
+            SKRect source = new SKRect(cropRect.Left, cropRect.Top,
+                                       cropRect.Right, cropRect.Bottom);
+
+            using (SKCanvas canvas = new SKCanvas(croppedBitmap))
+            {
+                canvas.DrawBitmap(bitmap, source, dest);
+            }
+
+            return croppedBitmap;
+        }
+    }
+    ···
+}
+</code></pre>
+<h2 id="hosting-the-photo-cropper-canvas-view">Hosting the photo cropper canvas view</h2>
+<p>With those two classes handling the cropping logic, the <strong>Photo Cropping</strong> page in the sample application has very little work to do. The XAML file instantiates a <code>Grid</code> to host the <code>PhotoCropperCanvasView</code> and a <strong>Done</strong> button:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.PhotoCroppingPage&quot;
+             Title=&quot;Photo Cropping&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Grid x:Name=&quot;canvasViewHost&quot;
+              Grid.Row=&quot;0&quot;
+              BackgroundColor=&quot;Gray&quot;
+              Padding=&quot;5&quot; /&gt;
+
+        &lt;Button Text=&quot;Done&quot;
+                Grid.Row=&quot;1&quot;
+                HorizontalOptions=&quot;Center&quot;
+                Margin=&quot;5&quot;
+                Clicked=&quot;OnDoneButtonClicked&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The <code>PhotoCropperCanvasView</code> cannot be instantiated in the XAML file because it requires a parameter of type <code>SKBitmap</code>.</p>
+<p>Instead, the <code>PhotoCropperCanvasView</code> is instantiated in the constructor of the code-behind file using one of the resource bitmaps:</p>
+<pre><code class="lang-csharp">public partial class PhotoCroppingPage : ContentPage
+{
+    PhotoCropperCanvasView photoCropper;
+    SKBitmap croppedBitmap;
+
+    public PhotoCroppingPage ()
+    {
+        InitializeComponent ();
+
+        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(GetType(),
+            &quot;SkiaSharpFormsDemos.Media.MountainClimbers.jpg&quot;);
+
+        photoCropper = new PhotoCropperCanvasView(bitmap);
+        canvasViewHost.Children.Add(photoCropper);
+    }
+
+    void OnDoneButtonClicked(object sender, EventArgs args)
+    {
+        croppedBitmap = photoCropper.CroppedBitmap;
+
+        SKCanvasView canvasView = new SKCanvasView();
+        canvasView.PaintSurface += OnCanvasViewPaintSurface;
+        Content = canvasView;
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.DrawBitmap(croppedBitmap, info.Rect, BitmapStretch.Uniform);
+    }
+}
+</code></pre>
+<p>The user can then manipulate the cropping rectangle:</p>
+<p><a href="cropping-images/PhotoCropping1-Large.png#lightbox"><img src="cropping-images/PhotoCropping1.png" alt="Photo Cropper 1" title="Photo Cropper 1"></a></p>
+<p>When a good cropping rectangle has been defined, click the <strong>Done</strong> button. The <code>Clicked</code> handler obtains the cropped bitmap from the <code>CroppedBitmap</code> property of <code>PhotoCropperCanvasView</code>, and replaces all the content of the page with a new <code>SKCanvasView</code> object that displays this cropped bitmap:</p>
+<p><a href="cropping-images/PhotoCropping2-Large.png#lightbox"><img src="cropping-images/PhotoCropping2.png" alt="Photo Cropper 2" title="Photo Cropper 2"></a></p>
+<p>Try setting the second argument of <code>PhotoCropperCanvasView</code> to 1.78f (for example):</p>
+<pre><code class="lang-csharp">photoCropper = new PhotoCropperCanvasView(bitmap, 1.78f);
+</code></pre>
+<p>You'll see the cropping rectangle restricted to a 16-to-9 aspect ratio characteristic of high-definition television.</p>
+<h2 id="dividing-a-bitmap-into-tiles">Dividing a bitmap into tiles</h2>
+<p>A Xamarin.Forms version of the famous 14-15 puzzle appeared in Chapter 22 of the book <a href="../../xamarin-forms/creating-mobile-apps-xamarin-forms/index.md"><em>Creating Mobile Apps with Xamarin.Forms</em></a> and can be downloaded as <a href="https://github.com/xamarin/xamarin-forms-book-samples/tree/master/Chapter22/XamagonXuzzle"><strong>XamagonXuzzle</strong></a>. However, the puzzle becomes more fun (and often more challenging) when it is based on an image from your own photo library.</p>
+<p>This version of the 14-15 puzzle is part of the sample application, and consists of a series of pages titled <strong>Photo Puzzle</strong>.</p>
+<p>The <strong>PhotoPuzzlePage1.xaml</strong> file consists of a <code>Button</code>:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.PhotoPuzzlePage1&quot;
+             Title=&quot;Photo Puzzle&quot;&gt;
+
+    &lt;Button Text=&quot;Pick a photo from your library&quot;
+            VerticalOptions=&quot;CenterAndExpand&quot;
+            HorizontalOptions=&quot;CenterAndExpand&quot;
+            Clicked=&quot;OnPickButtonClicked&quot;/&gt;
+
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file implements a <code>Clicked</code> handler that uses the <code>IPhotoLibrary</code> dependency service to let the user pick a photo from the photo library:</p>
+<pre><code class="lang-csharp">public partial class PhotoPuzzlePage1 : ContentPage
+{
+    public PhotoPuzzlePage1 ()
+    {
+        InitializeComponent ();
+    }
+
+    async void OnPickButtonClicked(object sender, EventArgs args)
+    {
+        IPhotoLibrary photoLibrary = DependencyService.Get&lt;IPhotoLibrary&gt;();
+        using (Stream stream = await photoLibrary.PickPhotoAsync())
+        {
+            if (stream != null)
+            {
+                SKBitmap bitmap = SKBitmap.Decode(stream);
+
+                await Navigation.PushAsync(new PhotoPuzzlePage2(bitmap));
+            }
+        }
+    }
+}
+</code></pre>
+<p>The method then navigates to <code>PhotoPuzzlePage2</code>, passing to the constuctor the selected bitmap.</p>
+<p>It's possible that the photo selected from the library is not oriented as it appeared in the photo library, but is rotated or upside-down. (This is particularly a problem with iOS devices.) For that reason, <code>PhotoPuzzlePage2</code> allows you to rotate the image to a desired orientation. The XAML file contains three buttons labeled <strong>90° Right</strong> (meaning clockwise), <strong>90° Left</strong> (counterclockwise), and <strong>Done</strong>.</p>
+<p>The code-behind file implements the bitmap-rotation logic shown in the article <strong><a href="drawing.html#rotating-bitmaps">Creating and Drawing on SkiaSharp Bitmaps</a></strong>. The user can rotate the image 90 degrees clockwise or counter-clockwise any number of times:</p>
+<pre><code class="lang-csharp">public partial class PhotoPuzzlePage2 : ContentPage
+{
+    SKBitmap bitmap;
+
+    public PhotoPuzzlePage2 (SKBitmap bitmap)
+    {
+        this.bitmap = bitmap;
+
+        InitializeComponent ();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKImageInfo info = args.Info;
+        SKSurface surface = args.Surface;
+        SKCanvas canvas = surface.Canvas;
+
+        canvas.Clear();
+        canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
+    }
+
+    void OnRotateRightButtonClicked(object sender, EventArgs args)
+    {
+        SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);
+
+        using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
+        {
+            canvas.Clear();
+            canvas.Translate(bitmap.Height, 0);
+            canvas.RotateDegrees(90);
+            canvas.DrawBitmap(bitmap, new SKPoint());
+        }
+
+        bitmap = rotatedBitmap;
+        canvasView.InvalidateSurface();
+    }
+
+    void OnRotateLeftButtonClicked(object sender, EventArgs args)
+    {
+        SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);
+
+        using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
+        {
+            canvas.Clear();
+            canvas.Translate(0, bitmap.Width);
+            canvas.RotateDegrees(-90);
+            canvas.DrawBitmap(bitmap, new SKPoint());
+        }
+
+        bitmap = rotatedBitmap;
+        canvasView.InvalidateSurface();
+    }
+
+    async void OnDoneButtonClicked(object sender, EventArgs args)
+    {
+        await Navigation.PushAsync(new PhotoPuzzlePage3(bitmap));
+    }
+}
+</code></pre>
+<p>When the user clicks the <strong>Done</strong> button, the <code>Clicked</code> handler navigates to <code>PhotoPuzzlePage3</code>, passing the final rotated bitmap in the page's constructor.</p>
+<p><code>PhotoPuzzlePage3</code> allows the photo to be cropped. The program requires a square bitmap to divide into a 4-by-4 grid of tiles.</p>
+<p>The <strong>PhotoPuzzlePage3.xaml</strong> file contains a <code>Label</code>, a <code>Grid</code> to host the <code>PhotoCropperCanvasView</code>, and another <strong>Done</strong> button:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+             xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+             x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.PhotoPuzzlePage3&quot;
+             Title=&quot;Photo Puzzle&quot;&gt;
+    &lt;Grid&gt;
+        &lt;Grid.RowDefinitions&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+            &lt;RowDefinition Height=&quot;*&quot; /&gt;
+            &lt;RowDefinition Height=&quot;Auto&quot; /&gt;
+        &lt;/Grid.RowDefinitions&gt;
+
+        &lt;Label Text=&quot;Crop the photo to a square&quot;
+               Grid.Row=&quot;0&quot;
+               FontSize=&quot;Large&quot;
+               HorizontalTextAlignment=&quot;Center&quot;
+               Margin=&quot;5&quot; /&gt;
+
+        &lt;Grid x:Name=&quot;canvasViewHost&quot;
+              Grid.Row=&quot;1&quot;
+              BackgroundColor=&quot;Gray&quot;
+              Padding=&quot;5&quot; /&gt;
+
+        &lt;Button Text=&quot;Done&quot;
+                Grid.Row=&quot;2&quot;
+                HorizontalOptions=&quot;Center&quot;
+                Margin=&quot;5&quot;
+                Clicked=&quot;OnDoneButtonClicked&quot; /&gt;
+    &lt;/Grid&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The code-behind file instantiates the <code>PhotoCropperCanvasView</code> with the bitmap passed to its constructor. Notice that a 1 is passed as the second argument to <code>PhotoCropperCanvasView</code>. This aspect ratio of 1 forces the cropping rectangle to be a square:</p>
+<pre><code class="lang-csharp">public partial class PhotoPuzzlePage3 : ContentPage
+{
+    PhotoCropperCanvasView photoCropper;
+
+    public PhotoPuzzlePage3(SKBitmap bitmap)
+    {
+        InitializeComponent ();
+
+        photoCropper = new PhotoCropperCanvasView(bitmap, 1f);
+        canvasViewHost.Children.Add(photoCropper);
+    }
+
+    async void OnDoneButtonClicked(object sender, EventArgs args)
+    {
+        SKBitmap croppedBitmap = photoCropper.CroppedBitmap;
+        int width = croppedBitmap.Width / 4;
+        int height = croppedBitmap.Height / 4;
+
+        ImageSource[] imgSources = new ImageSource[15];
+
+        for (int row = 0; row &lt; 4; row++)
+        {
+            for (int col = 0; col &lt; 4; col++)
+            {
+                // Skip the last one!
+                if (row == 3 &amp;&amp; col == 3)
+                    break;
+
+                // Create a bitmap 1/4 the width and height of the original
+                SKBitmap bitmap = new SKBitmap(width, height);
+                SKRect dest = new SKRect(0, 0, width, height);
+                SKRect source = new SKRect(col * width, row * height, (col + 1) * width, (row + 1) * height);
+
+                // Copy 1/16 of the original into that bitmap
+                using (SKCanvas canvas = new SKCanvas(bitmap))
+                {
+                    canvas.DrawBitmap(croppedBitmap, source, dest);
+                }
+
+                imgSources[4 * row + col] = (SKBitmapImageSource)bitmap;
+            }
+        }
+
+        await Navigation.PushAsync(new PhotoPuzzlePage4(imgSources));
+    }
+}
+</code></pre>
+<p>The <strong>Done</strong> button handler obtains the width and height of the cropped bitmap (these two values should be the same) and then divides it into 15 separate bitmaps, each of which is 1/4 the width and height of the original. (The last of the possible 16 bitmaps is not created.) The <code>DrawBitmap</code> method with source and destination rectangle allows a bitmap to be created based on subset of a larger bitmap.</p>
+<h2 id="converting-to-xamarinforms-bitmaps">Converting to Xamarin.Forms bitmaps</h2>
+<p>In the <code>OnDoneButtonClicked</code> method, the array created for the 15 bitmaps is of type <a href="xref:Xamarin.Forms.ImageSource"><code>ImageSource</code></a>:</p>
+<pre><code class="lang-csharp">ImageSource[] imgSources = new ImageSource[15];
+</code></pre>
+<p><code>ImageSource</code> is the Xamarin.Forms base type that encapsulates a bitmap. Fortunately, SkiaSharp allows converting from SkiaSharp bitmaps to Xamarin.Forms bitmaps. The <strong>SkiaSharp.Views.Forms</strong> assembly defines an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skbitmapimagesource"><code>SKBitmapImageSource</code></a> class that derives from <code>ImageSource</code> but can be created based on a SkiaSharp <code>SKBitmap</code> object. <code>SKBitmapImageSource</code> even defines conversions between <code>SKBitmapImageSource</code> and <code>SKBitmap</code>, and that's how <code>SKBitmap</code> objects are stored in an array as Xamarin.Forms bitmaps:</p>
+<pre><code class="lang-csharp">imgSources[4 * row + col] = (SKBitmapImageSource)bitmap;
+</code></pre>
+<p>This array of bitmaps is passed as a constructor to <code>PhotoPuzzlePage4</code>. That page is entirely Xamarin.Forms and doesn't use any SkiaSharp. It is very similar to <a href="https://github.com/xamarin/xamarin-forms-book-samples/tree/master/Chapter22/XamagonXuzzle"><strong>XamagonXuzzle</strong></a>, so it won't be described here, but it displays your selected photo divided into 15 square tiles:</p>
+<p><a href="cropping-images/PhotoPuzzle1-Large.png#lightbox"><img src="cropping-images/PhotoPuzzle1.png" alt="Photo Puzzle 1" title="Photo Puzzle 1"></a></p>
+<p>Pressing the <strong>Randomize</strong> button mixes up all the tiles:</p>
+<p><a href="cropping-images/PhotoPuzzle2-Large.png#lightbox"><img src="cropping-images/PhotoPuzzle2.png" alt="Photo Puzzle 2" title="Photo Puzzle 2"></a></p>
+<p>Now you can put them back in the correct order. Any tiles in the same row or column as the blank square can be tapped to move them into the blank square.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
