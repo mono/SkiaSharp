@@ -1,0 +1,28 @@
+name: Publish Docs
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: DocFX
+        uses: nikeee/docfx-action@v0.1.0
+        with:
+          args: docs/docfx.json
+
+      - name: Deploy Live
+        if: github.ref == 'refs/heads/docs'
+        uses: peaceiris/actions-gh-pages@v3.6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site/
+          publish_branch: docs-live

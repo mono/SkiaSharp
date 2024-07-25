@@ -1,72 +1,43 @@
-# SkiaSharp
+# Xamarin Documentation
 
-[![SkiaSharp](https://img.shields.io/nuget/vpre/SkiaSharp.svg?cacheSeconds=3600&label=SkiaSharp%20nuget)](https://www.nuget.org/packages/SkiaSharp)
-[![HarfBuzzSharp](https://img.shields.io/nuget/vpre/HarfBuzzSharp.svg?cacheSeconds=3600&label=HarfBuzzSharp%20nuget)](https://www.nuget.org/packages/HarfBuzzSharp)
+The documentation in this repo is hosted at [Xamarin documentation](https://learn.microsoft.com/previous-versions/xamarin). Support for Xamarin ended on the 1st May 2024 and so this documentation won't be updated. For more information, see [Xamarin Support Policy](https://dotnet.microsoft.com/platform/support/policy/xamarin).
 
-[![SkiaSharp.Views](https://img.shields.io/nuget/vpre/SkiaSharp.Views.svg?cacheSeconds=3600&label=SkiaSharp.Views%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views)
-[![SkiaSharp.Views.Maui.Controls](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Maui.Controls.svg?cacheSeconds=3600&label=SkiaSharp.Views.Maui.Controls%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls)
-[![SkiaSharp.Views.Uno](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Uno.svg?cacheSeconds=3600&label=SkiaSharp.Views.Uno%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Uno) 
+## Microsoft Open Source Code of Conduct
 
-[![discord](https://img.shields.io/badge/chat-.NET%20Discord-E60256.svg)](https://aka.ms/dotnet-discord)
-[![SkiaSharp API Docs](https://img.shields.io/badge/docs-skiasharp-1faece.svg)](https://docs.microsoft.com/dotnet/api/SkiaSharp)
-[![HarfBuzzSharp API Docs](https://img.shields.io/badge/docs-harfbuzzsharp-1faece.svg)](https://docs.microsoft.com/dotnet/api/SkiaSharp)
-[![SkiaSharp Guides](https://img.shields.io/badge/docs-guides-1faece.svg)](https://docs.microsoft.com/xamarin/graphics-games/skiasharp/)
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-[![Build Status](https://dev.azure.com/devdiv/DevDiv/_apis/build/status/Xamarin/Components/SkiaSharp?branchName=main)](https://dev.azure.com/devdiv/DevDiv/_build/latest?definitionId=10789&branchName=main)
-[![Build Status](https://dev.azure.com/xamarin/public/_apis/build/status/mono/SkiaSharp/SkiaSharp%20(Public)?branchName=main)](https://dev.azure.com/xamarin/public/_build/latest?definitionId=4&branchName=main)
+## Contribute to Xamarin documentation
 
-SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's
-Skia Graphics Library ([skia.org](https://skia.org/)). It provides a comprehensive 2D API that can
-be used across mobile, server and desktop models to render images.
+This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit https://cla.microsoft.com.
 
-SkiaSharp provides cross-platform bindings for:
+When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.
 
- - .NET Standard 1.3
- - .NET Core
- - .NET 6
- - Tizen
- - Android
- - iOS
- - tvOS
- - macOS
- - Mac Catalyst
- - WinUI 3 (Windows App SDK / Uno Platform)
- - Windows Classic Desktop (Windows.Forms / WPF)
- - Web Assembly (WASM)
- - Uno Platform (iOS / macOS / Android / WebAssembly)
+Read about the [**contribution process**](CONTRIBUTING.md), and identify which of these best fits your situation:
 
-The [API Documentation](https://docs.microsoft.com/en-us/dotnet/api/SkiaSharp/) is
-available on the web to browse.
+* **Community - minor updates**: If you are contributing minor updates out of the goodness of your heart, you can find the article in this repository, or visit the article in [Xamarin documentation](https://learn.microsoft.com/xamarin) and click the **Edit** link in the article that goes to the GitHub source. Then, just use the GitHub website to make your updates. Or, you are welcome to [fork the repository](CONTRIBUTING.md) and submit updates from your fork.
 
-## Using SkiaSharp
+* **Community - new articles**: If you're part of the Xamarin community and you want to create a new article, you need to work with an employee to help bring that new content in through a combination of work in the public and private repository. Start by raising a [GitHub issue](https://github.com/MicrosoftDocs/xamarin-docs/issues) in this repository that outlines your proposed content.
 
-SkiaSharp is available as a convenient NuGet package, to use install the package like this:
+* **Employees**: If you are a technical writer, program manager or developer from the product team for a Xamarin product and it's your job to contribute to or author technical articles, you should use the private repository (https://github.com/MicrosoftDocs/xamarin-docs-pr). If you are making substantial changes to an existing article, adding or changing images, or contributing a new article, you need to fork this repository, install Git, a markdown editor, and learn some git commands. See the [internal Docs contributor guide](https://review.learn.microsoft.com/help/contribute/?branch=main) for more information.
 
-```
-nuget install SkiaSharp
-```
+## Legal Notices
 
-_Because there are multiple distros of Linux, and we cannot possibly support them all, we have a separate NuGet package that will contain the supported binaries for a few distros: [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux). ([distros](https://github.com/mono/SkiaSharp/issues/453)) ([more info](https://github.com/mono/SkiaSharp/issues/312))_
+Microsoft and any contributors grant you a license to the Microsoft documentation and other content
+in this repository under the [Creative Commons Attribution 4.0 International Public License](https://creativecommons.org/licenses/by/4.0/legalcode),
+see the [LICENSE](LICENSE) file, and grant you a license to any code in the repository under the [MIT License](https://opensource.org/licenses/MIT), see the
+[LICENSE-CODE](LICENSE-CODE) file.
 
-There is also a early access feed that you can use to get the latest and greatest, before it goes out to the public:
+Microsoft, Windows, Microsoft Azure and/or other Microsoft products and services referenced in the documentation
+may be either trademarks or registered trademarks of Microsoft in the United States and/or other countries.
+The licenses for this project do not grant you rights to use any Microsoft names, logos, or trademarks.
+Microsoft's general trademark guidelines can be found at http://go.microsoft.com/fwlink/?LinkID=254653.
 
-```
-https://aka.ms/skiasharp-eap/index.json
-```
+Privacy information can be found at https://privacy.microsoft.com/en-us/
 
-## Building SkiaSharp
-
-Building SkiaSharp is mostly straight forward. The main issue is the multiple dependencies for each platform.
-
-However, these are easy to install as they are found on the various websites. If you are just working on managed code, it is even easier as there mays to skip all the native builds.
-
- - To get started building, [go here](https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp).
- - If you are just wanting a custom Linux build, [go here](https://github.com/mono/SkiaSharp/wiki/Building-on-Linux)
-
-## Compare Code
-
-Here are some links to show the differences in our code as compared to Google's code.
-
-What version are we on? [**m116**](https://github.com/google/skia/tree/chrome/m116)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m116)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m116...mono:skiasharp)  
+Microsoft and any contributors reserve all others rights, whether under their respective copyrights, patents,
+or trademarks, whether by implication, estoppel or otherwise.
