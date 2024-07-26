@@ -7,6 +7,8 @@
   <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
     <!-- Include the GL symbol when running under net7 (https://github.com/dotnet/runtime/issues/76077) -->
     <WasmShellEmccExportedRuntimeMethod Include="GL" />
+    <!-- Include the emscripten_gl* symbols in net8 -->
+    <WasmShellExtraEmccFlags Include="-s USE_WEBGL2=1"/>
     <!-- Enable GLCtx when threading is available -->
     <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
   </ItemGroup>
@@ -20,6 +22,7 @@
     <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
     <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
     <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\st\*.a" Condition="$([MSBuild]::VersionGreaterThan($(TargetFrameworkVersion), '8.0'))" />
   </ItemGroup>
 
 </Project>

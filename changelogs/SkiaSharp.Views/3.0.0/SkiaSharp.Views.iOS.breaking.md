@@ -27,4 +27,5 @@ public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.SKImag
 
 
 #### Removed Type SkiaSharp.Views.iOS.Extensions
+#### Removed Type SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs
 

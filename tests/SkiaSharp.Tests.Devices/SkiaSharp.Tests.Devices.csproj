@@ -39,8 +39,10 @@
     <PackageReference Include="DeviceRunners.XHarness.Xunit" Version="0.1.0-preview.1" />
     <PackageReference Include="DeviceRunners.UITesting.Maui" Version="0.1.0-preview.1" />
     <PackageReference Include="DeviceRunners.UITesting.Xunit" Version="0.1.0-preview.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -66,13 +68,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Tests\**" />
-    <None Include="Tests\**" />
-    <Compile Include="Tests\Apple\**\*.cs;Tests\iOS\**\*.cs" Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-tvos'))" />
-    <Compile Include="Tests\Apple\**\*.cs;Tests\macOS\**\*.cs" Condition="$(TargetFramework.Contains('-macos'))" />
-    <Compile Include="Tests\Android\**\*.cs" Condition="$(TargetFramework.Contains('-android'))" />
-    <Compile Include="Tests\Tizen\**\*.cs" Condition="$(TargetFramework.Contains('-tizen'))" />
-    <Compile Include="Tests\Windows\**\*.cs" Condition="$(TargetFramework.Contains('-windows'))" />
+    <_PlatformCompile Include="Tests\Apple\**\*.cs;Tests\iOS\**\*.cs" Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-tvos'))" />
+    <_PlatformCompile Include="Tests\Apple\**\*.cs;Tests\macOS\**\*.cs" Condition="$(TargetFramework.Contains('-macos'))" />
+    <_PlatformCompile Include="Tests\Android\**\*.cs" Condition="$(TargetFramework.Contains('-android'))" />
+    <_PlatformCompile Include="Tests\Tizen\**\*.cs" Condition="$(TargetFramework.Contains('-tizen'))" />
+    <_PlatformCompile Include="Tests\Windows\**\*.cs" Condition="$(TargetFramework.Contains('-windows'))" />
+    <_OtherCompile Include="Tests\Apple\**;Tests\iOS\**;Tests\macOS\**;Tests\Android\**;Tests\Tizen\**;Tests\Windows\**" Exclude="@(_PlatformCompile)" />
+    <Compile Remove="@(_OtherCompile)" />
+    <None Include="@(_OtherCompile)" />
   </ItemGroup>
 
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />

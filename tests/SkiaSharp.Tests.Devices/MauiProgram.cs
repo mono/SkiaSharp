@@ -3,6 +3,7 @@ using DeviceRunners.VisualRunners;
 using DeviceRunners.XHarness;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Hosting;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace SkiaSharp.Tests
 {
@@ -23,6 +24,7 @@ namespace SkiaSharp.Tests
 			};
 
 			builder
+				.UseSkiaSharp()
 				.ConfigureUITesting()
 				.UseXHarnessTestRunner(conf => conf
 					.AddTestAssemblies(testAssemblies)

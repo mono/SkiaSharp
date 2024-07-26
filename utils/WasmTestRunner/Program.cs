@@ -7,6 +7,8 @@ using System.Xml.Linq;
 using Mono.Options;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Chromium;
+using OpenQA.Selenium.Edge;
 
 namespace WasmTestRunner
 {
@@ -15,13 +17,27 @@ namespace WasmTestRunner
 		private const string DefaultUrl = "http://localhost:5000/";
 		private const string ResultsFileName = "TestResults.xml";
 
-		public static string ChromeDriverPath { get; set; }
+		private static string chromeDriverPath;
+
+		public static string ChromeDriverPath
+		{
+			get => chromeDriverPath;
+			set
+			{
+				chromeDriverPath = value;
+				var fname = Path.GetFileNameWithoutExtension(chromeDriverPath);
+				if (fname.Equals("msedgedriver", StringComparison.OrdinalIgnoreCase))
+					UseEdge = true;
+			}
+		}
 
 		public static string OutputPath { get; set; } = Directory.GetCurrentDirectory();
 
 		public static int Timeout { get; set; } = 30;
 
 		public static bool UseHeadless { get; set; } = true;
+
+		public static bool UseEdge { get; set; }
 
 		public static bool ShowHelp { get; set; }
 
@@ -71,7 +87,7 @@ namespace WasmTestRunner
 			if (ShowHelp)
 			{
 				Console.WriteLine("Usage: wasm-test [OPTIONS]+ URL");
-				Console.WriteLine("Run WASM tests in Chrome.");
+				Console.WriteLine("Run WASM tests in the browser.");
 				Console.WriteLine();
 				Console.WriteLine("Options:");
 				p.WriteOptionDescriptions(Console.Out);
@@ -100,9 +116,41 @@ namespace WasmTestRunner
 			return 0;
 		}
 
+		private static ChromiumOptions CreateOptions()
+		{
+			if (UseEdge)
+			{
+				return new EdgeOptions();
+			}
+			else
+			{
+				return new ChromeOptions();
+			}
+		}	
+
+		private static (ChromiumDriverService Service, ChromiumDriver Driver) CreateDriver(ChromiumOptions options)
+		{
+			if (UseEdge)
+			{
+				var service = string.IsNullOrEmpty(ChromeDriverPath)
+					? EdgeDriverService.CreateDefaultService()
+					: EdgeDriverService.CreateDefaultService(ChromeDriverPath);
+				var driver = new EdgeDriver(service, (EdgeOptions)options);
+				return (service, driver);
+			}
+			else
+			{
+				var service = string.IsNullOrEmpty(ChromeDriverPath)
+					? ChromeDriverService.CreateDefaultService()
+					: ChromeDriverService.CreateDefaultService(ChromeDriverPath);
+				var driver = new ChromeDriver(service, (ChromeOptions)options);
+				return (service, driver);
+			}
+		}	
+
 		private static void RunTests()
 		{
-			var options = new ChromeOptions();
+			var options = CreateOptions();
 			if (UseHeadless)
 			{
 				options.AddArgument("no-sandbox");
@@ -111,10 +159,9 @@ namespace WasmTestRunner
 
 			options.AddArgument("window-size=1024x768");
 
-			using var service = string.IsNullOrEmpty(ChromeDriverPath)
-				? ChromeDriverService.CreateDefaultService()
-				: ChromeDriverService.CreateDefaultService(ChromeDriverPath);
-			using var driver = new ChromeDriver(service, options);
+			var (service, driver) = CreateDriver(options);
+			using var _ = service;
+			using var __ = driver;
 
 			driver.Url = Url;
 

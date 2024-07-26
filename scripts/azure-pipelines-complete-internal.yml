@@ -39,6 +39,19 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-20.04
         os: linux
+  - name: buildAgentAndroidTests
+    displayName: 'The build agent configuration for building the Android tests:'
+    type: object
+    default:
+      pool:
+        name: VSEng-VSMac-Xamarin-Shared
+        vmImage: VSEng-VSMac-Xamarin-Shared
+        os: macos
+        demands:
+          - macOS.Name -equals Ventura
+          - macOS.Architecture -equals x64
+      parameters:
+        installXcode: false
   - name: enableSigning
     displayName: 'Enable package signing (Test signing)'
     type: boolean
@@ -110,3 +123,4 @@ extends:
           buildAgentMacNative: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinux }}
+          buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}

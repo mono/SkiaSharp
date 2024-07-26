@@ -80,5 +80,22 @@ public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 ```
 
 
+#### Type Changed: SkiaSharp.Views.Mac.SKPaintMetalSurfaceEventArgs
+
+Added constructors:
+
+```csharp
+public SKPaintMetalSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info);
+public SKPaintMetalSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
+```
+
+Added properties:
+
+```csharp
+public SkiaSharp.SKImageInfo Info { get; }
+public SkiaSharp.SKImageInfo RawInfo { get; }
+```
+
+
 #### Removed Type SkiaSharp.Views.Mac.Extensions
 
