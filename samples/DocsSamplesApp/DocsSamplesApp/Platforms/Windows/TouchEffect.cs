@@ -3,9 +3,9 @@ using System.Linq;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
-using Xamarin.Forms.Platform.UWP;
 
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Platform;
 using Microsoft.Maui;
 using Microsoft.Maui.ApplicationModel;
 

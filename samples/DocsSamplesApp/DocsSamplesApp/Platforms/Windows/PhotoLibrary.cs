@@ -7,28 +7,24 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 
-using DocsSamplesApp.UWP;
+using DocsSamplesApp.WinUI;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
 
 [assembly: Dependency(typeof(PhotoLibrary))]
-namespace DocsSamplesApp.UWP
+namespace DocsSamplesApp.WinUI
 {
     public class PhotoLibrary : IPhotoLibrary
     {
         public async Task<Stream> PickPhotoAsync()
         {
-/*
-    TODO You should replace 'App.WindowHandle' with the your window's handle (HWND) 
-    Read more on retrieving window handle here: https://docs.microsoft.com/en-us/windows/apps/develop/ui-input/retrieve-hwnd
-*/
             // Create and initialize the FileOpenPicker
             FileOpenPicker openPicker = InitializeWithWindow(new FileOpenPicker
             {
                 ViewMode = PickerViewMode.Thumbnail,
                 SuggestedStartLocation = PickerLocationId.PicturesLibrary,
-            },App.WindowHandle);
+            }, WinRT.Interop.WindowNative.GetWindowHandle(Application.Current.Windows[0]));
 
             openPicker.FileTypeFilter.Add(".jpg");
             openPicker.FileTypeFilter.Add(".jpeg");
