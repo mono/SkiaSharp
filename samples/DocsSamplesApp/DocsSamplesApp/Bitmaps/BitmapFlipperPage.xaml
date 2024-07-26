@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="DocsSamplesApp.Bitmaps.BitmapFlipperPage"
+             Title="Bitmap Flipper">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        
+        <skia:SKCanvasView x:Name="canvasView"
+                           Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Button Text="Flip Vertical"
+                Grid.Row="1" Grid.Column="0"
+                Margin="0, 10"
+                Clicked="OnFlipVerticalClicked" />
+
+        <Button Text="Flip Horizontal"
+                Grid.Row="1" Grid.Column="1"
+                Margin="0, 10"
+                Clicked="OnFlipHorizontalClicked" />
+    </Grid>
+</ContentPage>
