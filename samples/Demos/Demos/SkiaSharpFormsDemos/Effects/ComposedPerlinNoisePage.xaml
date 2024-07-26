@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Effects.ComposedPerlinNoisePage"
+             Title="Composed Perlin Noise">
+
+    <StackLayout>
+        <skia:SKCanvasView x:Name="canvasView"
+                           VerticalOptions="FillAndExpand"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Slider x:Name="baseFrequencyXSlider"
+                Maximum="4"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label x:Name="baseFrequencyXText"
+               HorizontalTextAlignment="Center" />
+
+        <Slider x:Name="baseFrequencyYSlider"
+                Maximum="4"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label x:Name="baseFrequencyYText"
+               HorizontalTextAlignment="Center" />
+
+        <StackLayout Orientation="Horizontal"
+                     HorizontalOptions="Center"
+                     Margin="10">
+
+            <Label Text="{Binding Source={x:Reference octavesStepper},
+                                  Path=Value,
+                                  StringFormat='Number of Octaves: {0:F0}'}"
+                   VerticalOptions="Center" />
+
+            <Stepper x:Name="octavesStepper"
+                     Minimum="1"
+                     ValueChanged="OnStepperValueChanged" />
+        </StackLayout>
+    </StackLayout>
+</ContentPage>

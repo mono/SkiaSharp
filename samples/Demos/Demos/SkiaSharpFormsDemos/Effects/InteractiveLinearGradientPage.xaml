@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<local:InteractivePage xmlns="http://xamarin.com/schemas/2014/forms"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                       xmlns:local="clr-namespace:SkiaSharpFormsDemos"
+                       xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
+                       xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+                       xmlns:tt="clr-namespace:TouchTracking"
+                       x:Class="SkiaSharpFormsDemos.Effects.InteractiveLinearGradientPage"
+                       Title="Interactive Linear Gradient">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid BackgroundColor="White"
+              Grid.Row="0">
+            <skiaforms:SKCanvasView x:Name="canvasView"
+                                    PaintSurface="OnCanvasViewPaintSurface" />
+            <Grid.Effects>
+                <tt:TouchEffect Capture="True"
+                                TouchAction="OnTouchEffectAction" />
+            </Grid.Effects>
+        </Grid>
+
+        <Picker x:Name="tileModePicker" 
+                Grid.Row="1"
+                Title="Shader Tile Mode" 
+                Margin="10"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type skia:SKShaderTileMode}">
+                    <x:Static Member="skia:SKShaderTileMode.Clamp" />
+                    <x:Static Member="skia:SKShaderTileMode.Repeat" />
+                    <x:Static Member="skia:SKShaderTileMode.Mirror" />
+                </x:Array>
+            </Picker.ItemsSource>
+
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+    </Grid>
+</local:InteractivePage>

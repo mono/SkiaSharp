@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:local="clr-namespace:SkiaSharpFormsDemos.Transforms"
+             x:Class="SkiaSharpFormsDemos.Transforms.TaperTransformPage"
+             Title="Taper Transform">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Picker x:Name="taperSidePicker"
+                    Title="Taper Side"
+                    Grid.Column="0"
+                    SelectedIndexChanged="OnPickerSelectedIndexChanged">
+                <Picker.ItemsSource>
+                    <x:Array Type="{x:Type local:TaperSide}">
+                        <x:Static Member="local:TaperSide.Left" />
+                        <x:Static Member="local:TaperSide.Top" />
+                        <x:Static Member="local:TaperSide.Right" />
+                        <x:Static Member="local:TaperSide.Bottom" />
+                    </x:Array>
+                </Picker.ItemsSource>
+                <Picker.SelectedIndex>
+                    0
+                </Picker.SelectedIndex>
+            </Picker>
+
+            <Picker x:Name="taperCornerPicker"
+                    Title="Taper Corner"
+                    Grid.Column="1"
+                    SelectedIndexChanged="OnPickerSelectedIndexChanged">
+                <Picker.ItemsSource>
+                    <x:Array Type="{x:Type local:TaperCorner}">
+                        <x:Static Member="local:TaperCorner.LeftOrTop" />
+                        <x:Static Member="local:TaperCorner.RightOrBottom" />
+                        <x:Static Member="local:TaperCorner.Both" />
+                    </x:Array>
+                </Picker.ItemsSource>
+                <Picker.SelectedIndex>
+                    0
+                </Picker.SelectedIndex>
+            </Picker>
+        </Grid>
+
+        <Slider x:Name="taperFractionSlider"
+                Grid.Row="1"
+                Minimum="0.1"
+                Maximum="2"
+                Value="1"
+                Margin="20, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label Grid.Row="2"
+               Text="{Binding Source={x:Reference taperFractionSlider},
+                              Path=Value,
+                              StringFormat='Taper Fraction = {0:F1}'}"
+               HorizontalTextAlignment="Center" />
+
+        <skia:SKCanvasView x:Name="canvasView"
+                           PaintSurface="OnCanvasViewPaintSurface"
+                           Grid.Row="3" />
+    </Grid>
+</ContentPage>

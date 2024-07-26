@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
+             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Paths.MultipleLinesPage"
+             Title="Multiple Lines">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Picker x:Name="pointModePicker"
+                Title="Point Mode"
+                Grid.Row="0"
+                Grid.Column="0"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type skia:SKPointMode}">
+                    <x:Static Member="skia:SKPointMode.Points" />
+                    <x:Static Member="skia:SKPointMode.Lines" />
+                    <x:Static Member="skia:SKPointMode.Polygon" />
+                </x:Array>
+            </Picker.ItemsSource>
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+
+        <Picker x:Name="strokeCapPicker"
+                Title="Stroke Cap"
+                Grid.Row="0"
+                Grid.Column="1"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type skia:SKStrokeCap}">
+                    <x:Static Member="skia:SKStrokeCap.Butt" />
+                    <x:Static Member="skia:SKStrokeCap.Round" />
+                    <x:Static Member="skia:SKStrokeCap.Square" />
+                </x:Array>
+            </Picker.ItemsSource>
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+
+        <skiaforms:SKCanvasView x:Name="canvasView"
+                                PaintSurface="OnCanvasViewPaintSurface"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2" />
+    </Grid>
+</ContentPage>

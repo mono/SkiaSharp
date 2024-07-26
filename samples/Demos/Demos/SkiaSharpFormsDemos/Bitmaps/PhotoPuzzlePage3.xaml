@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SkiaSharpFormsDemos.Bitmaps.PhotoPuzzlePage3"
+             Title="Photo Puzzle">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Label Text="Crop the photo to a square"
+               Grid.Row="0"
+               FontSize="Large"
+               HorizontalTextAlignment="Center"
+               Margin="5" />
+
+        <Grid x:Name="canvasViewHost"
+              Grid.Row="1"
+              BackgroundColor="Gray"
+              Padding="5" />
+
+        <Button Text="Done"
+                Grid.Row="2"
+                HorizontalOptions="Center"
+                Margin="5"
+                Clicked="OnDoneButtonClicked" />
+    </Grid>
+</ContentPage>

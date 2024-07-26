@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
+             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Effects.RadialGradientPage"
+             Title="Radial Gradient">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <skiaforms:SKCanvasView x:Name="canvasView"
+                                Grid.Row="0"
+                                PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Picker x:Name="tileModePicker" 
+                Grid.Row="1"
+                Title="Shader Tile Mode" 
+                Margin="10"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type skia:SKShaderTileMode}">
+                    <x:Static Member="skia:SKShaderTileMode.Clamp" />
+                    <x:Static Member="skia:SKShaderTileMode.Repeat" />
+                    <x:Static Member="skia:SKShaderTileMode.Mirror" />
+                </x:Array>
+            </Picker.ItemsSource>
+
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+    </Grid>
+</ContentPage>

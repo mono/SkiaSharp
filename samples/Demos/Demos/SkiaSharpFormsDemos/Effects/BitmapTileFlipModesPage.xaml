@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
+             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Effects.BitmapTileFlipModesPage"
+             Title="Bitmap Tile Flip Modes">
+
+    <ContentPage.Resources>
+        <x:Array x:Key="tileModes"
+                 Type="{x:Type skia:SKShaderTileMode}">
+            <x:Static Member="skia:SKShaderTileMode.Clamp" />
+            <x:Static Member="skia:SKShaderTileMode.Repeat" />
+            <x:Static Member="skia:SKShaderTileMode.Mirror" />
+        </x:Array>
+    </ContentPage.Resources>
+
+    <StackLayout>
+        <skiaforms:SKCanvasView x:Name="canvasView"
+                                VerticalOptions="FillAndExpand"
+                                PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Picker x:Name="xModePicker"
+                Title="Tile X Mode"
+                Margin="10, 0"
+                ItemsSource="{StaticResource tileModes}"
+                SelectedIndex="0"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged" />
+
+        <Picker x:Name="yModePicker"
+                Title="Tile Y Mode"
+                Margin="10, 10"
+                ItemsSource="{StaticResource tileModes}"
+                SelectedIndex="0"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged" />
+
+    </StackLayout>
+</ContentPage>

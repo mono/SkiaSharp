@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:tt="clr-namespace:TouchTracking"
+             x:Class="SkiaSharpFormsDemos.Curves.ConicCircularArcPage"
+             Title="Conic Circular Arc">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Slider x:Name="angleSlider" 
+                Grid.Row="0"
+                Margin="20, 0"
+                Maximum="180"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference angleSlider},
+                              Path=Value,
+                              StringFormat='Angle = {0:F1}'}"
+               HorizontalTextAlignment="Center"
+               Grid.Row="1" />
+
+        <skia:SKCanvasView x:Name="canvasView"
+                           Grid.Row="2"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+    </Grid>
+</ContentPage>

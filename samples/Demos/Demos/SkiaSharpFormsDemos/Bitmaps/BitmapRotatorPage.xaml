@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Bitmaps.BitmapRotatorPage"
+             Title="Bitmap Rotator">
+    <StackLayout>
+        <skia:SKCanvasView x:Name="canvasView"
+                           VerticalOptions="FillAndExpand"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Slider x:Name="slider"
+                Maximum="360"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference slider},
+                              Path=Value,
+                              StringFormat='Rotate by {0:F0}&#x00B0;'}"
+               HorizontalTextAlignment="Center" />
+
+    </StackLayout>
+</ContentPage>

@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
+             xmlns:skiaviews="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Effects.SeparableBlendModesPage"
+             Title="Separable Blend Modes">
+
+    <StackLayout>
+        <skiaviews:SKCanvasView x:Name="canvasView"
+                                VerticalOptions="FillAndExpand"
+                                PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Picker x:Name="blendModePicker"
+                Title="Blend Mode"
+                Margin="10, 0"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type skia:SKBlendMode}">
+                    <x:Static Member="skia:SKBlendMode.Plus" />
+                    <x:Static Member="skia:SKBlendMode.Modulate" />
+                    <x:Static Member="skia:SKBlendMode.Screen" />
+                    <x:Static Member="skia:SKBlendMode.Overlay" />
+                    <x:Static Member="skia:SKBlendMode.Darken" />
+                    <x:Static Member="skia:SKBlendMode.Lighten" />
+                    <x:Static Member="skia:SKBlendMode.ColorDodge" />
+                    <x:Static Member="skia:SKBlendMode.ColorBurn" />
+                    <x:Static Member="skia:SKBlendMode.HardLight" />
+                    <x:Static Member="skia:SKBlendMode.SoftLight" />
+                    <x:Static Member="skia:SKBlendMode.Difference" />
+                    <x:Static Member="skia:SKBlendMode.Exclusion" />
+                    <x:Static Member="skia:SKBlendMode.Multiply" />
+                </x:Array>
+            </Picker.ItemsSource>
+
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+
+        <Slider x:Name="redSlider"
+                MinimumTrackColor="Red"
+                MaximumTrackColor="Red"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Slider x:Name="greenSlider"
+                MinimumTrackColor="Green"
+                MaximumTrackColor="Green"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Slider x:Name="blueSlider"
+                MinimumTrackColor="Blue"
+                MaximumTrackColor="Blue"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Slider x:Name="graySlider"
+                MinimumTrackColor="Gray"
+                MaximumTrackColor="Gray"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label x:Name="colorLabel"
+               HorizontalTextAlignment="Center" />
+
+    </StackLayout>
+</ContentPage>

@@ -1,0 +1,309 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Media\BananaMatte.png" />
+    <None Remove="Media\BrickWallTile.jpg" />
+    <None Remove="Media\MonkeyFace.png" />
+    <None Remove="Media\Newtons_cradle_animation_book_2.gif" />
+    <None Remove="Media\SeatedMonkeyMatte.png" />
+    <None Remove="Media\StoneWallTile.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="1.60.0" />
+    <PackageReference Include="SkiaSharp.Views.Forms" Version="1.60.0" />
+    <PackageReference Include="Xamarin.Forms" Version="5.0.0.1874" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Bitmaps\BitmapFlipperPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\BitmapRotatorPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\ColorAdjustmentPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\MandelbrotAnimationPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\SaveFileFormatsPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\SpinPaintPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Basics\BitmapDissolvePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\BitmapTileFlipModesPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\ComposedPerlinNoisePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\DistanceLightExperimentPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\DodgeAndBurnPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\GradientTransitionsPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\BrickWallCompositingPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\DropShadowExperimentPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\LightenAndDarkenPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\MaskBlurExperimentPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\ConicalGradientPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\EffectsHomePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\ImageBlurExperimentPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\InteractiveLinearGradientPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\NonSeparableBlendModesPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\PerlinNoisePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\RadialGradientPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\SeparableBlendModesPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\TiledPerlinNoisePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\PhotoCroppingPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\PhotoPuzzlePage1.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\PhotoPuzzlePage3.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\PhotoPuzzlePage2.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\PhotoPuzzlePage4.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\RectangleSubsetPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="HomePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Basics\TapToggleFillPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Basics\EllipseFillPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Basics\PulsatingEllipsePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\AnimatedGifPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\FingerPaintSavePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\BitmapsHomePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Bitmaps\ScalingModesPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Paths\MultipleLinesPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Paths\FivePointedStarPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Paths\DotsAndDashesPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\BasicScalePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\CenteredScalePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\BasicRotatePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\CenteredRotatePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\SkewExperimentPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\SkewAngleExperimentPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Basics\ColorExplorePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\ShowAffineMatrixPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\ShowNonAffineMatrixPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\TaperTransformPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\TouchManipulationPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Paths\FingerPaintPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\BitmapScatterViewPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\TestPerspectivePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\Rotation3DPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\AngleArcPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\TangentArcPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\EllipticalArcPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\BezierCurvePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\QuadraticCurvePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\ConicCurvePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\ConicCircularArcPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\BezierCircularArcPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Basics\BasicsHomePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Paths\PathsHomePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\TransformsHomePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\CurvesHomePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\OneDimensionalPathEffectPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\JitterExperimentPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\TapToOutlineThePathPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Curves\PathLengthPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Transforms\SingleFingerCornerScalePage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Effects\PorterDuffTransparencyPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Media\BananaMatte.png" />
+    <EmbeddedResource Include="Media\BrickWallTile.jpg" />
+    <EmbeddedResource Include="Media\monkey.png" />
+    <EmbeddedResource Include="Media\Banana.jpg" />
+    <EmbeddedResource Include="Media\FacePalm.jpg" />
+    <EmbeddedResource Include="Media\MonkeyFace.png" />
+    <EmbeddedResource Include="Media\MountainClimbers.jpg" />
+    <EmbeddedResource Include="Media\Newtons_cradle_animation_book_2.gif" />
+    <EmbeddedResource Include="Media\SeatedMonkey.jpg" />
+    <EmbeddedResource Include="Media\PageOfCode.png" />
+    <EmbeddedResource Include="Media\SeatedMonkeyMatte.png" />
+    <EmbeddedResource Include="Media\StoneWallTile.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Bitmaps\BitmapsHomePage.xaml.cs">
+      <DependentUpon>BitmapsHomePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Bitmaps\ColorAdjustmentPage.xaml.cs">
+      <DependentUpon>ColorAdjustmentPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Bitmaps\PhotoPuzzlePage1.xaml.cs">
+      <DependentUpon>PhotoPuzzlePage1.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Bitmaps\PhotoPuzzlePage3.xaml.cs">
+      <DependentUpon>PhotoPuzzlePage3.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Bitmaps\PhotoPuzzlePage2.xaml.cs">
+      <DependentUpon>PhotoPuzzlePage2.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Bitmaps\PhotoPuzzlePage4.xaml.cs">
+      <DependentUpon>PhotoPuzzlePage4.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Bitmaps\SaveFileFormatsPage.xaml.cs">
+      <DependentUpon>SaveFileFormatsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Effects\GradientTransitionsPage.xaml.cs">
+      <DependentUpon>GradientTransitionsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Effects\MaskBlurExperimentPage.xaml.cs">
+      <DependentUpon>MaskBlurExperimentPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Effects\EffectsHomePage.xaml.cs">
+      <DependentUpon>EffectsHomePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Effects\PorterDuffTransparencyPage.xaml.cs">
+      <DependentUpon>PorterDuffTransparencyPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Effects\SeparableBlendModesPage.xaml.cs">
+      <DependentUpon>SeparableBlendModesPage.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+</Project>

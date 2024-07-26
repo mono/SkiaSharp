@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Transforms.BasicRotatePage"
+             Title="Basic Rotate">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Slider x:Name="rotateSlider"
+                Grid.Row="0"
+                Margin="20, 0"
+                Minimum="-360"
+                Maximum="360"
+                ValueChanged="sliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference rotateSlider},
+                              Path=Value,
+                              StringFormat='Rotation = {0:F0}'}"
+               Grid.Row="1"
+               HorizontalTextAlignment="Center" />
+        
+        <skia:SKCanvasView x:Name="canvasView"
+                           Grid.Row="2"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+    </Grid>
+</ContentPage>

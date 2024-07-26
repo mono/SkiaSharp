@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<local:InteractivePage xmlns="http://xamarin.com/schemas/2014/forms"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                       xmlns:local="clr-namespace:SkiaSharpFormsDemos"
+                       xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+                       xmlns:tt="clr-namespace:TouchTracking"
+                       x:Class="SkiaSharpFormsDemos.Curves.TangentArcPage"
+                       Title="Tangent Arc">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Slider x:Name="radiusSlider"
+                Grid.Row="0"
+                Margin="20, 0"
+                Maximum="500"
+                Value="100"                
+                ValueChanged="sliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference radiusSlider},
+                              Path=Value,
+                              StringFormat='Arc Radius = {0:F0}'}"
+               Grid.Row="1"
+               HorizontalTextAlignment="Center" />
+        
+        <Grid BackgroundColor="White"
+              Grid.Row="2">
+
+            <skia:SKCanvasView x:Name="canvasView"
+                               PaintSurface="OnCanvasViewPaintSurface" />
+            <Grid.Effects>
+                <tt:TouchEffect Capture="True"
+                                TouchAction="OnTouchEffectAction" />
+            </Grid.Effects>
+        </Grid>
+    </Grid>
+</local:InteractivePage>

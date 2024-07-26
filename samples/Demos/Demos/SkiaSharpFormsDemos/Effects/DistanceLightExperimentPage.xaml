@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Effects.DistantLightExperimentPage"
+             Title="Distant Light Experiment">
+
+    <StackLayout>
+
+        <skia:SKCanvasView x:Name="canvasView"
+                           PaintSurface="OnCanvasViewPaintSurface"
+                           VerticalOptions="FillAndExpand" />
+
+        <Slider x:Name="zSlider" 
+                Minimum="-10"
+                Maximum="10"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference zSlider},
+                              Path=Value,
+                              StringFormat='Z = {0:F0}'}"
+               HorizontalTextAlignment="Center" />
+
+        <Slider x:Name="surfaceScaleSlider" 
+                Minimum="-1"
+                Maximum="1"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference surfaceScaleSlider},
+                              Path=Value,
+                              StringFormat='Surface Scale = {0:F1}'}"
+               HorizontalTextAlignment="Center" />
+
+        <Slider x:Name="lightConstantSlider" 
+                Minimum="-1"
+                Maximum="1"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference lightConstantSlider},
+                              Path=Value,
+                              StringFormat='Light Constant = {0:F1}'}"
+               HorizontalTextAlignment="Center" />
+    </StackLayout>
+</ContentPage>

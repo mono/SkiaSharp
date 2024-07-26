@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Bitmaps.PhotoPuzzlePage2"
+             Title="Photo Puzzle">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid.Resources>
+            <Style TargetType="Button">
+                <Setter Property="HorizontalOptions" Value="Center" />
+                <Setter Property="Margin" Value="0, 5" />
+            </Style>
+        </Grid.Resources>
+
+        <Label Text="If necessary, rotate the image"
+               Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+               FontSize="Large"
+               HorizontalTextAlignment="Center"
+               Margin="5" />
+
+        <skia:SKCanvasView x:Name="canvasView"
+                           Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+        
+        <Button Text="90&#x00B0; Right"
+                Grid.Row="2" Grid.Column="0" 
+                Clicked="OnRotateRightButtonClicked" />
+
+        <Button Text="90&#x00B0; Left"
+                Grid.Row="2" Grid.Column="1" 
+                Clicked="OnRotateLeftButtonClicked" />
+
+        <Button Text="Done"
+                Grid.Row="2" Grid.Column="2" 
+                Clicked="OnDoneButtonClicked" />
+    </Grid>
+</ContentPage>

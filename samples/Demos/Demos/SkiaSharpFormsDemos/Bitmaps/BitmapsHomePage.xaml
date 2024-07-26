@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<local:HomeBasePage xmlns="http://xamarin.com/schemas/2014/forms"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:local="clr-namespace:SkiaSharpFormsDemos"
+                    x:Class="SkiaSharpFormsDemos.Bitmaps.BitmapsHomePage"
+                    Title="SkiaSharp Bitmaps"
+                    Padding="10">
+    <TableView Intent="Menu">
+        <TableRoot>
+            <TableSection Title="Displaying Bitmaps">
+                
+                <TextCell Text="Pixel Dimensions"
+                          Detail="Display a bitmap in its pixel dimensions"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.PixelDimensionsPage}" />
+
+                <TextCell Text="Fill Rectangle"
+                          Detail="Display a bitmap stretched to a rectangle"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.FillRectanglePage}" />
+
+                <TextCell Text="Uniform Scaling"
+                          Detail="Stretch a bitmap without losing the aspect ratio"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.UniformScalingPage}" />
+
+                <TextCell Text="Scaling Modes"
+                          Detail="Select how a bitmap is scaled and aligned"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.ScalingModesPage}" />
+
+                <TextCell Text="Rectangle Subset"
+                          Detail="Display a rectangular subset of a bitmap"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.RectangleSubsetPage}" />
+            </TableSection>
+            
+            <TableSection Title="Bitmap Creation and Drawing">
+
+                <TextCell Text="Hello, Bitmap!"
+                          Detail="Create a bitmap, draw on it, and render it"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.HelloBitmapPage}" />
+
+                <TextCell Text="Monkey Moustache"
+                          Detail="Draw a moustache on a monkey"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.MonkeyMoustachePage}" />
+
+                <TextCell Text="Pixelized Image"
+                          Detail="Pixelize part of a bitmap"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.PixelizedImagePage}" />
+
+                <TextCell Text="Bitmap Rotator"
+                          Detail="Rotate a bitmap by any angle"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.BitmapRotatorPage}" />
+
+                <TextCell Text="Bitmap Flipper"
+                          Detail="Flip a bitmap horizontally or vertically"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.BitmapFlipperPage}" />
+            </TableSection>
+
+            <TableSection Title="Bitmap Cropping">
+
+                <TextCell Text="Photo Cropping"
+                          Detail="Interactively define a bitmap cropping rectangle"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.PhotoCroppingPage}" />
+
+                <TextCell Text="Photo Puzzle"
+                          Detail="Play the classic 14-15 game with a photo of your choice"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.PhotoPuzzlePage1}" />
+            </TableSection>
+
+            <TableSection Title="Segmented Bitmap Rendering">
+
+                <TextCell Text="Nine Patch Display"
+                          Detail="Scale a bitmap interior without scaling the edges"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.NinePatchDisplayPage}" />
+
+                <TextCell Text="Lattice Nine-Patch"
+                          Detail="Use the bitmap lattice feature to emulate nine-patch"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.LatticeNinePatchPage}" />
+
+                <TextCell Text="Lattice Display"
+                          Detail="Experiment with the bitmap lattice display"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.LatticeDisplayPage}" />
+            </TableSection>
+
+            <TableSection Title="Saving Bitmap Files">
+                
+                <TextCell Text="Save File Formats"
+                          Detail="Save a bitmap in various file formats"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.SaveFileFormatsPage}" />
+
+                <TextCell Text="Finger Paint with Save"
+                          Detail="Save your finger-painting artworks"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.FingerPaintSavePage}" />
+
+                <TextCell Text="SpinPaint"
+                          Detail="Create designs and save them"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.SpinPaintPage}" />
+            </TableSection>
+
+            <TableSection Title="Accessing Pixel Bits">
+
+                <TextCell Text="Gradient Bitmap"
+                          Detail="Render a gradient by accessing the pixel bits"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.GradientBitmapPage}" />
+
+                <TextCell Text="Rainbow Sine"
+                          Detail="Render a rainbow in the form of a sine curve"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.RainbowSinePage}" />
+
+                <TextCell Text="Color Adjustment"
+                          Detail="Interactively adjust hue, saturation, and luminosity"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.ColorAdjustmentPage}" />
+
+                <TextCell Text="Posterize"
+                          Detail="Reduce the color depths of an image"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.PosterizePage}" />
+            </TableSection>
+            
+            <TableSection Title="Animating Bitmaps">
+
+                <TextCell Text="Mandelbrot Animation"
+                          Detail="Watch an animated series of bitmaps show the Mandelbrot Set"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.MandelbrotAnimationPage}" />
+
+                <TextCell Text="Animated GIF"
+                          Detail="Show the animated Newton's Cradle"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Bitmaps.AnimatedGifPage}" />
+            </TableSection>
+        </TableRoot>
+    </TableView>
+</local:HomeBasePage>

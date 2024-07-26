@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Transforms.TestPerspectivePage"
+             Title="Test Perpsective">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <ResourceDictionary>
+                <Style TargetType="Label">
+                    <Setter Property="HorizontalTextAlignment" Value="Center" />
+                </Style>
+
+                <Style TargetType="Slider">
+                    <Setter Property="Minimum" Value="-1" />
+                    <Setter Property="Maximum" Value="1" />
+                    <Setter Property="Margin" Value="20, 0" />
+                </Style>
+            </ResourceDictionary>
+        </Grid.Resources>
+
+        <Slider x:Name="persp0Slider"
+                Grid.Row="0"
+                ValueChanged="OnPersp0SliderValueChanged" />
+
+        <Label x:Name="persp0Label"
+               Text="Persp0 = 0.0000"
+               Grid.Row="1" />
+
+        <Slider x:Name="persp1Slider"
+                Grid.Row="2"
+                ValueChanged="OnPersp1SliderValueChanged" />
+
+        <Label x:Name="persp1Label"
+               Text="Persp1 = 0.0000"
+               Grid.Row="3" />
+
+        <skia:SKCanvasView x:Name="canvasView"
+                           Grid.Row="4"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+    </Grid>
+</ContentPage>

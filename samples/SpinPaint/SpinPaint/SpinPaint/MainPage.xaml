@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:tt="clr-namespace:TouchTracking"
+             xmlns:local="clr-namespace:SpinPaint"
+             x:Class="SpinPaint.MainPage">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        
+     
+        <Label x:Name="titleLabel"
+               Text="SpinPaint"
+               Grid.Row="0"
+               Margin="0, 20"
+               FontSize="48"
+               FontAttributes="Italic"
+               VerticalOptions="Center"
+               HorizontalOptions="Center" />
+
+        <local:AspectRatioLayout x:Name="canvasViewLayout"
+                                 Grid.Row="1"                       
+                                 BackgroundColor="White"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center">
+            
+            <!-- SKCanvasView or SKGLView created in code-behind file -->
+
+            <local:AspectRatioLayout.Effects>
+                <tt:TouchEffect Capture="True"
+                                TouchAction="OnTouchEffectAction" />
+            </local:AspectRatioLayout.Effects>
+        </local:AspectRatioLayout>
+
+        <StackLayout Grid.Row="2"
+                     Orientation="Horizontal"
+                     Margin="0, 20">
+            <StackLayout.Resources>
+                <ResourceDictionary>
+                    <Style TargetType="Button">
+                        <Setter Property="HorizontalOptions" Value="CenterAndExpand" />
+                        <Setter Property="VerticalOptions" Value="Center" />
+                    </Style>
+                </ResourceDictionary>
+            </StackLayout.Resources>
+            
+            <Button Text="Clear"
+                    Clicked="OnClearButtonClicked" />
+
+            <Button Text="Save"
+                    Clicked="OnSaveButtonClicked" />
+        </StackLayout>
+    </Grid>
+</ContentPage>    

@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:SkiaSharpFormsDemos"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Bitmaps.ScalingModesPage"
+             Title="Scaling Modes">
+    
+    <Grid Padding="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <skia:SKCanvasView x:Name="canvasView" 
+                           Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Label Text="Stretch:"
+               Grid.Row="1" Grid.Column="0"
+               VerticalOptions="Center" />
+
+        <Picker x:Name="stretchPicker"
+                Grid.Row="1" Grid.Column="1"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type local:BitmapStretch}">
+                    <x:Static Member="local:BitmapStretch.None" />
+                    <x:Static Member="local:BitmapStretch.Fill" />
+                    <x:Static Member="local:BitmapStretch.Uniform" />
+                    <x:Static Member="local:BitmapStretch.UniformToFill" />
+                </x:Array>
+            </Picker.ItemsSource>
+
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+
+        <Label Text="Horizontal Alignment:"
+               Grid.Row="2" Grid.Column="0"
+               VerticalOptions="Center" />
+
+        <Picker x:Name="horizontalPicker" 
+                Grid.Row="2" Grid.Column="1"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type local:BitmapAlignment}">
+                    <x:Static Member="local:BitmapAlignment.Start" />
+                    <x:Static Member="local:BitmapAlignment.Center" />
+                    <x:Static Member="local:BitmapAlignment.End" />
+                </x:Array>
+            </Picker.ItemsSource>
+
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+
+        <Label Text="Vertical Alignment:"
+               Grid.Row="3" Grid.Column="0"
+               VerticalOptions="Center" />
+
+        <Picker x:Name="verticalPicker" 
+                Grid.Row="3" Grid.Column="1"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type local:BitmapAlignment}">
+                    <x:Static Member="local:BitmapAlignment.Start" />
+                    <x:Static Member="local:BitmapAlignment.Center" />
+                    <x:Static Member="local:BitmapAlignment.End" />
+                </x:Array>
+            </Picker.ItemsSource>
+
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+    </Grid>
+</ContentPage>

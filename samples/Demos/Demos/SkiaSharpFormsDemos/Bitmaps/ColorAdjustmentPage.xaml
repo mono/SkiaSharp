@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Bitmaps.ColorAdjustmentPage"
+             Title="Color Adjustment">
+    <StackLayout Padding="10">
+
+        <skia:SKCanvasView x:Name="canvasView"
+                           VerticalOptions="FillAndExpand"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Slider x:Name="hueSlider"
+                Maximum="360"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label x:Name="hueLabel"
+               HorizontalTextAlignment="Center" />
+
+        <Slider x:Name="saturationSlider"
+                Minimum="-1"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label x:Name="saturationLabel"
+               HorizontalTextAlignment="Center" />
+
+        <Slider x:Name="luminositySlider"
+                Minimum="-1"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label x:Name="luminosityLabel"
+               HorizontalTextAlignment="Center" />
+
+    </StackLayout>
+</ContentPage>

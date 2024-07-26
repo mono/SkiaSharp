@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Curves.JitterExperimentPage"
+             Title="Jitter Experiment">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <ResourceDictionary>
+                <Style TargetType="Label">
+                    <Setter Property="HorizontalTextAlignment" Value="Center" />
+                </Style>
+
+                <Style TargetType="Slider">
+                    <Setter Property="Margin" Value="20, 0" />
+                    <Setter Property="Minimum" Value="0" />
+                    <Setter Property="Maximum" Value="100" />
+                </Style>
+            </ResourceDictionary>
+        </Grid.Resources>
+
+        <Slider x:Name="segLengthSlider"
+                Grid.Row="0"
+                ValueChanged="sliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference segLengthSlider},
+                              Path=Value,
+                              StringFormat='Segment Length = {0:F0}'}"
+               Grid.Row="1" />
+
+        <Slider x:Name="deviationSlider"
+                Grid.Row="2"
+                ValueChanged="sliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference deviationSlider},
+                              Path=Value,
+                              StringFormat='Deviation = {0:F0}'}"
+               Grid.Row="3" />
+
+        <skia:SKCanvasView x:Name="canvasView"
+                           Grid.Row="4"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+    </Grid>
+</ContentPage>

@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
+             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Bitmaps.SaveFileFormatsPage"
+             Title="Save File Formats">
+
+    <StackLayout Margin="10">
+        <skiaforms:SKCanvasView PaintSurface="OnCanvasViewPaintSurface"
+                                VerticalOptions="FillAndExpand" />
+
+        <Picker x:Name="formatPicker"
+                Title="image format"
+                SelectedIndexChanged="OnFormatPickerChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type skia:SKEncodedImageFormat}">
+                    <x:Static Member="skia:SKEncodedImageFormat.Astc" />
+                    <x:Static Member="skia:SKEncodedImageFormat.Bmp" />
+                    <x:Static Member="skia:SKEncodedImageFormat.Dng" />
+                    <x:Static Member="skia:SKEncodedImageFormat.Gif" />
+                    <x:Static Member="skia:SKEncodedImageFormat.Ico" />
+                    <x:Static Member="skia:SKEncodedImageFormat.Jpeg" />
+                    <x:Static Member="skia:SKEncodedImageFormat.Ktx" />
+                    <x:Static Member="skia:SKEncodedImageFormat.Pkm" />
+                    <x:Static Member="skia:SKEncodedImageFormat.Png" />
+                    <x:Static Member="skia:SKEncodedImageFormat.Wbmp" />
+                    <x:Static Member="skia:SKEncodedImageFormat.Webp" />
+                </x:Array>
+            </Picker.ItemsSource>
+        </Picker>
+
+        <Slider x:Name="qualitySlider"
+                Maximum="100"
+                Value="50" />
+
+        <Label Text="{Binding Source={x:Reference qualitySlider},
+                              Path=Value,
+                              StringFormat='Quality = {0:F0}'}"
+               HorizontalTextAlignment="Center" />
+
+        <StackLayout Orientation="Horizontal">
+            <Label Text="Folder Name: "
+                   VerticalOptions="Center" />
+
+            <Entry x:Name="folderNameEntry"
+                   Text="SaveFileFormats"
+                   HorizontalOptions="FillAndExpand" />
+        </StackLayout>
+
+        <StackLayout Orientation="Horizontal">
+            <Label Text="File Name: "
+                   VerticalOptions="Center" />
+
+            <Entry x:Name="fileNameEntry"
+                   Text="Sample.xxx"
+                   HorizontalOptions="FillAndExpand" />
+        </StackLayout>
+
+        <Button Text="Save" 
+                Clicked="OnButtonClicked">
+            <Button.Triggers>
+                <DataTrigger TargetType="Button"
+                             Binding="{Binding Source={x:Reference formatPicker},
+                                               Path=SelectedIndex}"
+                             Value="-1">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+
+                <DataTrigger TargetType="Button"
+                             Binding="{Binding Source={x:Reference fileNameEntry},
+                                               Path=Text.Length}"
+                             Value="0">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Button.Triggers>
+        </Button>
+
+        <Label x:Name="statusLabel"
+               Text="OK"
+               Margin="10, 0" />
+    </StackLayout>
+</ContentPage>

@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
+             xmlns:skiaviews="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Effects.NonSeparableBlendModesPage"
+             Title="Non-Separable Blend Modes">
+
+    <StackLayout>
+        <skiaviews:SKCanvasView x:Name="canvasView"
+                                VerticalOptions="FillAndExpand"
+                                PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Picker x:Name="blendModePicker"
+                Title="Blend Mode"
+                Margin="10, 0"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type skia:SKBlendMode}">
+                    <x:Static Member="skia:SKBlendMode.Hue" />
+                    <x:Static Member="skia:SKBlendMode.Saturation" />
+                    <x:Static Member="skia:SKBlendMode.Color" />
+                    <x:Static Member="skia:SKBlendMode.Luminosity" />
+                </x:Array>
+            </Picker.ItemsSource>
+
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+
+        <Slider x:Name="hueSlider"
+                Maximum="360"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Slider x:Name="satSlider"
+                Maximum="100"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Slider x:Name="lumSlider"
+                Maximum="100"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <StackLayout Orientation="Horizontal">
+            <Label x:Name="hslLabel"
+                   HorizontalOptions="CenterAndExpand" />
+
+            <Label x:Name="rgbLabel"
+                   HorizontalOptions="CenterAndExpand" />
+
+        </StackLayout>
+    </StackLayout>
+</ContentPage>

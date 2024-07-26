@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
+             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Effects.MaskBlurExperimentPage"
+             Title="Mask Blur Experiment">
+    
+    <StackLayout>
+        <skiaforms:SKCanvasView x:Name="canvasView"
+                                VerticalOptions="FillAndExpand"
+                                PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Picker x:Name="blurStylePicker" 
+                Title="Filter Blur Style" 
+                Margin="10, 0"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type skia:SKBlurStyle}">
+                    <x:Static Member="skia:SKBlurStyle.Normal" />
+                    <x:Static Member="skia:SKBlurStyle.Solid" />
+                    <x:Static Member="skia:SKBlurStyle.Outer" />
+                    <x:Static Member="skia:SKBlurStyle.Inner" />
+                </x:Array>
+            </Picker.ItemsSource>
+
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+
+        <Slider x:Name="sigmaSlider"
+                Maximum="10"
+                Margin="10, 0"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference sigmaSlider},
+                              Path=Value,
+                              StringFormat='Sigma = {0:F1}'}"
+               HorizontalTextAlignment="Center" />
+    </StackLayout>
+</ContentPage>

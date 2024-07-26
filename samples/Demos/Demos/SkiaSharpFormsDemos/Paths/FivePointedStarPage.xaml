@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
+             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Paths.FivePointedStarPage"
+             Title="Five-Pointed Star">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Picker x:Name="fillTypePicker"
+                Title="Path Fill Type"
+                Grid.Row="0"
+                Grid.Column="0"
+                Margin="10"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type skia:SKPathFillType}">
+                    <x:Static Member="skia:SKPathFillType.Winding" />
+                    <x:Static Member="skia:SKPathFillType.EvenOdd" />
+                    <x:Static Member="skia:SKPathFillType.InverseWinding" />
+                    <x:Static Member="skia:SKPathFillType.InverseEvenOdd" />
+                </x:Array>
+            </Picker.ItemsSource>
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+
+        <Picker x:Name="drawingModePicker"
+                Title="Drawing Mode"
+                Grid.Row="0"
+                Grid.Column="1"
+                Margin="10"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type x:String}">
+                    <x:String>Fill only</x:String>
+                    <x:String>Stroke only</x:String>
+                    <x:String>Stroke then Fill</x:String>
+                    <x:String>Fill then Stroke</x:String>
+                </x:Array>
+            </Picker.ItemsSource>
+            <Picker.SelectedIndex>
+                0
+            </Picker.SelectedIndex>
+        </Picker>
+
+        <skiaforms:SKCanvasView x:Name="canvasView"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                PaintSurface="OnCanvasViewPaintSurface" />
+    </Grid>
+</ContentPage>

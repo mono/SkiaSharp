@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<local:HomeBasePage xmlns="http://xamarin.com/schemas/2014/forms"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:local="clr-namespace:SkiaSharpFormsDemos"
+                    x:Class="SkiaSharpFormsDemos.Basics.BasicsHomePage"
+                    Title="SkiaSharp Drawing Basics"
+                    Padding="10">
+    <TableView Intent="Menu">
+        <TableRoot>
+            <TableSection Title="Drawing a Simple Circle">
+                <TextCell Text="Simple Circle"
+                          Detail="Outline and fill a circle with SkiaSharp"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.SimpleCirclePage}" />
+            </TableSection>
+            
+            <TableSection Title="Integrating with Xamarin.Forms">
+                <TextCell Text="Tap Toggle Fill"
+                          Detail="Tap the screen to toggle the circle fill"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.TapToggleFillPage}" />
+
+                <TextCell Text="Color Explore"
+                          Detail="Use sliders to select color"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.ColorExplorePage}" />
+            </TableSection>
+
+            <TableSection Title="Pixels and Device-Independent Units">
+                <TextCell Text="Surface Size"
+                          Detail="Display the surface size three different ways"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.SurfaceSizePage}" />
+
+                <TextCell Text="Ellipse Fill"
+                          Detail="Fill the surface with an ellipse"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.EllipseFillPage}" />
+            </TableSection>
+
+            <TableSection Title="Basic Animation">
+                <TextCell Text="Pulsating Ellipse"
+                          Detail="Animate the axes of an ellipse"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.PulsatingEllipsePage}" />
+
+                <TextCell Text="Expanding Circles"
+                          Detail="Animate circles to expand forever"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.ExpandingCirclesPage}" />
+            </TableSection>
+
+            <TableSection Title="Integrating Text and Graphics">
+                <TextCell Text="Framed Text"
+                          Detail="Draw a rounded rectangle around a text string"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.FramedTextPage}" />
+
+                <TextCell Text="Outlined Text"
+                          Detail="Outline text characters"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.OutlinedTextPage}" />
+            </TableSection>
+
+            <TableSection Title="Bitmap Basics">
+                <TextCell Text="Basic Bitmaps"
+                          Detail="Load and display bitmaps"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.BasicBitmapsPage}" />
+            </TableSection>
+
+            <TableSection Title="Transparency">
+                <TextCell Text="Code More Code"
+                          Detail="Animate the alpha channel to fade between text strings"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.CodeMoreCodePage}" />
+
+                <TextCell Text="Bitmap Dissolve"
+                          Detail="Use a transparency to dissolve between one bitmap and another"
+                          Command="{Binding NavigateCommand}"
+                          CommandParameter="{x:Type local:Basics.BitmapDissolvePage}" />
+            </TableSection>
+        </TableRoot>
+    </TableView>
+</local:HomeBasePage>

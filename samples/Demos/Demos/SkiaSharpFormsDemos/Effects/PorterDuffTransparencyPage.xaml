@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
+             xmlns:skiaviews="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SkiaSharpFormsDemos.Effects.PorterDuffTransparencyPage"
+             Title="Porter-Duff Transparency">
+
+    <StackLayout>
+        <skiaviews:SKCanvasView x:Name="canvasView"
+                                VerticalOptions="FillAndExpand"
+                                PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Picker x:Name="blendModePicker"
+                Title="Blend Mode"
+                Margin="10"
+                SelectedIndexChanged="OnPickerSelectedIndexChanged">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type skia:SKBlendMode}">
+                    <x:Static Member="skia:SKBlendMode.Clear" />
+                    <x:Static Member="skia:SKBlendMode.Src" />
+                    <x:Static Member="skia:SKBlendMode.Dst" />
+                    <x:Static Member="skia:SKBlendMode.SrcOver" />
+                    <x:Static Member="skia:SKBlendMode.DstOver" />
+                    <x:Static Member="skia:SKBlendMode.SrcIn" />
+                    <x:Static Member="skia:SKBlendMode.DstIn" />
+                    <x:Static Member="skia:SKBlendMode.SrcOut" />
+                    <x:Static Member="skia:SKBlendMode.DstOut" />
+                    <x:Static Member="skia:SKBlendMode.SrcATop" />
+                    <x:Static Member="skia:SKBlendMode.DstATop" />
+                    <x:Static Member="skia:SKBlendMode.Xor" />
+                    <x:Static Member="skia:SKBlendMode.Plus" />
+                    <x:Static Member="skia:SKBlendMode.Modulate" />
+                </x:Array>
+            </Picker.ItemsSource>
+
+            <Picker.SelectedIndex>
+                3
+            </Picker.SelectedIndex>
+        </Picker>
+    </StackLayout>
+</ContentPage>

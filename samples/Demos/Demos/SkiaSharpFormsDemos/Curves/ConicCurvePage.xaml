@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<local:InteractivePage xmlns="http://xamarin.com/schemas/2014/forms"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                       xmlns:local="clr-namespace:SkiaSharpFormsDemos"
+                       xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+                       xmlns:tt="clr-namespace:TouchTracking"
+                       x:Class="SkiaSharpFormsDemos.Curves.ConicCurvePage"
+                       Title="Conic Curve">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Slider x:Name="weightSlider" 
+                Grid.Row="0"
+                Margin="20, 0"
+                Minimum="-2"
+                Maximum="2"
+                ValueChanged="OnSliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference weightSlider},
+                              Path=Value,
+                              StringFormat='Weight = {0:F1}'}"
+               HorizontalTextAlignment="Center"
+               Grid.Row="1" />
+
+        <Grid Grid.Row="2"
+              BackgroundColor="White">
+
+                <skia:SKCanvasView x:Name="canvasView"
+                                   PaintSurface="OnCanvasViewPaintSurface" />
+            <Grid.Effects>
+                <tt:TouchEffect Capture="True"
+                                TouchAction="OnTouchEffectAction" />
+            </Grid.Effects>
+        </Grid>
+    </Grid>
+</local:InteractivePage>

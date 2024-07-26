@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<local:InteractivePage xmlns="http://xamarin.com/schemas/2014/forms"
+                       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                       xmlns:local="clr-namespace:SkiaSharpFormsDemos"
+                       xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+                       xmlns:tt="clr-namespace:TouchTracking"
+                       x:Class="SkiaSharpFormsDemos.Curves.EllipticalArcPage"
+                       Title="Elliptical Arc">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <ResourceDictionary>
+                <Style TargetType="Label">
+                    <Setter Property="HorizontalTextAlignment" Value="Center" />
+                </Style>
+
+                <Style TargetType="Slider">
+                    <Setter Property="Margin" Value="20, 0" />
+                    <Setter Property="Maximum" Value="500" />
+                    <Setter Property="Minimum" Value="100" />
+                </Style>
+            </ResourceDictionary>
+        </Grid.Resources>
+
+        <Slider x:Name="xRadiusSlider"
+                Grid.Row="0"
+                ValueChanged="sliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference xRadiusSlider},
+                              Path=Value,
+                              StringFormat='Ellipse X-Radius = {0:F0}'}"
+               Grid.Row="1" />
+
+        <Slider x:Name="yRadiusSlider"
+                Grid.Row="2"
+                ValueChanged="sliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference yRadiusSlider},
+                              Path=Value,
+                              StringFormat='Ellipse Y-Radius = {0:F0}'}"
+               Grid.Row="3" />
+
+        <Slider x:Name="rotationSlider"
+                Grid.Row="4"
+                Minimum="0"
+                Maximum="360"
+                ValueChanged="sliderValueChanged" />
+
+        <Label Text="{Binding Source={x:Reference rotationSlider},
+                              Path=Value,
+                              StringFormat='Ellipse Rotation = {0:F0} degrees'}"
+               Grid.Row="5" />
+
+        <Grid BackgroundColor="White"
+              Grid.Row="6">
+
+            <skia:SKCanvasView x:Name="canvasView"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+            <Grid.Effects>
+                <tt:TouchEffect Capture="True"
+                            TouchAction="OnTouchEffectAction" />
+            </Grid.Effects>
+        </Grid>
+    </Grid>
+</local:InteractivePage>
