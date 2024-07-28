@@ -1,38 +1,45 @@
 Param(
-    [string] $API
+    [Parameter(Mandatory)] [string[]] $API
 )
 
 $ErrorActionPreference = 'Stop'
 
 .\scripts\install-android-sdk.ps1
+
 $sdk = "$env:ANDROID_SDK_ROOT"
+$sdkmanager = "$env:ANDROID_SDK_MANAGER_PATH"
 
-$apiPath = Join-Path "$sdk" "platforms" "android-$API" "android.jar"
-if (Test-Path $apiPath) {
-    Write-Host "Android API level $API was already installed."
-    exit 0
-}
+$apis = $API -split ','
+Write-Host "Installing $($apis.Count) Android API levels $API..."
 
-$latest = Join-Path "$sdk" "cmdline-tools" "latest"
-if (-not (Test-Path $latest)) {
-    $versions = Get-ChildItem (Join-Path "$sdk" "cmdline-tools")
-    $latest = ($versions | Select-Object -Last 1)[0]
-}
+# install each of the APIs
+foreach ($API in $apis) {
+    Write-Host "Installing Android API level $API..."
 
-if (-not $IsMacOS -and -not $IsLinux) {
-    $ext = ".bat"
-}
-$sdkmanager = Join-Path "$latest" "bin" "sdkmanager$ext"
-
-Set-Content -Value "y" -Path "yes.txt"
-try {
-    if ($IsMacOS -or $IsLinux) {
-        sh -c "'$sdkmanager' 'platforms;android-$API' < yes.txt"
-    } else {
-        cmd /c "`"$sdkmanager`" `"platforms;android-$API`" < yes.txt"
+    # check if already installed
+    $apiPath = Join-Path "$sdk" "platforms" "android-$API" "android.jar"
+    if (Test-Path $apiPath) {
+        Write-Host "Android API level $API was already installed."
+        # continue
     }
-} finally {
-    Remove-Item "yes.txt"
+
+    # install
+    Set-Content -Value "y" -Path "yes.txt"
+    try {
+        Write-Host "Installing Android API level $API..."
+        if ($IsMacOS -or $IsLinux) {
+            sh -c "'$sdkmanager' 'platforms;android-$API' < yes.txt"
+        } else {
+            cmd /c "`"$sdkmanager`" `"platforms;android-$API`" < yes.txt"
+        }
+        if (!$?) {
+            Write-Host "Failed to install Android API level $API."
+            exit 1
+        }
+        Write-Host "Installation of Android API level $API complete."
+    } finally {
+        Remove-Item "yes.txt"
+    }
 }
 
 exit $LASTEXITCODE

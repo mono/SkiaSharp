@@ -174,11 +174,10 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # install the required version of the Android Platforms
-          - ${{ each apiVersion in split(variables.ANDROID_PLATFORM_VERSIONS, ',')}}:
-            - pwsh: .\scripts\install-android-platform.ps1 -API ${{ apiVersion }}
-              displayName: Install Android API ${{ apiVersion }}
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - pwsh: .\scripts\install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
+            displayName: Install Android APIs
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
           - ${{ if eq(parameters.buildAgent.pool.os, 'macos') }}:
