@@ -95,12 +95,17 @@ if (-not $sdk) {
     }
 }
 
-# make sure that the SDK is in ANDROID_HOME and ANDROID_SDK_ROOT
+# make sure that the SDK is in:
+# - ANDROID_HOME and ANDROID_SDK_ROOT for native things
+# - AndroidSdkDirectory for .NET for Android
 Write-Host "Setting environment variable ANDROID_HOME=$sdk"
 Write-Host "Setting environment variable ANDROID_SDK_ROOT=$sdk"
+Write-Host "Setting environment variable AndroidSdkDirectory=$sdk"
 Write-Host "##vso[task.setvariable variable=ANDROID_SDK_ROOT;]$sdk";
 Write-Host "##vso[task.setvariable variable=ANDROID_HOME;]$sdk";
+Write-Host "##vso[task.setvariable variable=AndroidSdkDirectory;]$sdk";
 $env:ANDROID_SDK_ROOT = $sdk
 $env:ANDROID_HOME = $sdk
+$env:AndroidSdkDirectory = $sdk
 
 exit $LASTEXITCODE
