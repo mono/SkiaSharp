@@ -722,6 +722,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netfx
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_win32_x86_windows
@@ -747,6 +748,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_win32_x86_windows
@@ -774,6 +776,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_macos_macos
@@ -800,6 +803,7 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES)
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_linux_x64_linux
@@ -818,62 +822,65 @@ stages:
                 path: 'output/logs/testlogs'
               - name: coverage_netcore_linux
                 path: 'output/coverage'
-        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|android (macOS)
-          parameters:
-            name: tests_android_macos
-            displayName: Android (macOS)
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentAndroidTests }}
-            target: tests-android
-            additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
-            shouldPublish: false
-            requiredArtifacts:
-              - name: native_android_x86_macos
-              - name: native_android_x64_macos
-              - name: native_android_arm_macos
-              - name: native_android_arm64_macos
-            preBuildSteps:
-              - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
-                displayName: Install the Android emulator
-              - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
-                displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
-            postBuildSteps:
-              - task: PublishTestResults@2
-                displayName: Publish the Android test results
-                condition: always()
-                inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
-                  testRunTitle: 'Android Tests (API $(ANDROID_TEST_DEVICE_VERSION))'
-            publishArtifacts:
-              - name: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
-                always: true
-                path: 'output/logs/testlogs'
-        - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|ios (macOS)
-          parameters:
-            name: tests_ios_macos
-            displayName: iOS (macOS)
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentMac }}
-            target: tests-ios
-            additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
-            shouldPublish: false
-            requiredArtifacts:
-              - name: native_ios_macos
-            preBuildSteps:
-              - template: /scripts/azure-templates-provisioning-profiles.yml@self
-            postBuildSteps:
-              - task: PublishTestResults@2
-                displayName: Publish the iOS test results
-                condition: always()
-                inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
-                  testRunTitle: 'iOS Tests (v$(IOS_TEST_DEVICE_VERSION))'
-            publishArtifacts:
-              - name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
-                always: true
-                path: 'output/logs/testlogs'
+        - ${{ each apiVersion in split(variables.ANDROID_TEST_DEVICE_VERSIONS, ',')}}:
+          - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|android (macOS)
+            parameters:
+              name: tests_android_${{ apiVersion }}_macos
+              displayName: Android ${{ apiVersion }} (macOS)
+              buildPipelineType: ${{ parameters.buildPipelineType }}
+              buildAgent: ${{ parameters.buildAgentAndroidTests }}
+              target: tests-android
+              additionalArgs: --device=android-emulator-64 --deviceVersion=${{ apiVersion }} --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+              shouldPublish: false
+              requiredArtifacts:
+                - name: native_android_x86_macos
+                - name: native_android_x64_macos
+                - name: native_android_arm_macos
+                - name: native_android_arm64_macos
+              preBuildSteps:
+                - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
+                  displayName: Install the Android emulator
+                - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-${{ apiVersion }};google_apis;x86_64"
+                  displayName: Install the Android API ${{ apiVersion }} emulator image
+              postBuildSteps:
+                - task: PublishTestResults@2
+                  displayName: Publish the Android test results
+                  condition: always()
+                  inputs:
+                    testResultsFormat: xUnit
+                    testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                    testRunTitle: 'Android Tests (API ${{ apiVersion }})'
+              publishArtifacts:
+                - name: testlogs_android_${{ apiVersion }}
+                  always: true
+                  path: 'output/logs/testlogs'
+        - ${{ each iosVersion in split(variables.IOS_TEST_DEVICE_VERSIONS, ',')}}:
+          - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|ios (macOS)
+            parameters:
+              name: tests_ios_${{ iosVersion }}_macos
+              displayName: iOS ${{ iosVersion }} (macOS)
+              buildPipelineType: ${{ parameters.buildPipelineType }}
+              buildAgent: ${{ parameters.buildAgentMac }}
+              target: tests-ios
+              additionalArgs: --device=ios-simulator-64 --deviceVersion=${{ iosVersion }} --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+              installAndroidSdk: false
+              shouldPublish: false
+              requiredArtifacts:
+                - name: native_ios_macos
+              preBuildSteps:
+                - template: /scripts/azure-templates-provisioning-profiles.yml@self
+              postBuildSteps:
+                - task: PublishTestResults@2
+                  displayName: Publish the iOS test results
+                  condition: always()
+                  inputs:
+                    testResultsFormat: xUnit
+                    testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                    testRunTitle: 'iOS Tests (v${{ iosVersion }})'
+              publishArtifacts:
+                - name: testlogs_ios_${{ iosVersion }}
+                  always: true
+                  path: 'output/logs/testlogs'
         - template: /scripts/azure-templates-bootstrapper.yml@self # Tests|maccatalyst (macOS)
           parameters:
             name: tests_maccatalyst_macos
@@ -882,6 +889,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-maccatalyst
             additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_maccatalyst_macos
@@ -908,6 +916,7 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
             additionalArgs: --skipExternals="all" --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_wasm
