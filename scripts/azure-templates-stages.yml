@@ -722,6 +722,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netfx
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_win32_x86_windows
@@ -747,6 +748,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_win32_x86_windows
@@ -774,6 +776,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_macos_macos
@@ -800,6 +803,7 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES)
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_linux_x64_linux
@@ -882,6 +886,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-maccatalyst
             additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_maccatalyst_macos
@@ -908,6 +913,7 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
             additionalArgs: --skipExternals="all" --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_wasm

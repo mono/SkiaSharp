@@ -62,11 +62,11 @@ jobs:
             displayName: 'Publish the ${{ parameters.name }} artifacts'
             artifactName: ${{ parameters.name }}
             targetPath: 'output'
-          - output: pipelineArtifact
-            displayName: 'Publish the failed ${{ parameters.name }} artifacts'
-            condition: failed()
-            artifactName: ${{ parameters.name }}_failed_$(System.JobAttempt)
-            targetPath: 'output'
+        - output: pipelineArtifact
+          displayName: 'Publish the failed ${{ parameters.name }} artifacts'
+          condition: failed()
+          artifactName: ${{ parameters.name }}_failed_$(System.JobAttempt)
+          targetPath: 'output'
         - ${{ each additionalArtifact in parameters.publishArtifacts }}:
           - output: pipelineArtifact
             displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
@@ -174,16 +174,8 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # install the required version of the Android Platforms
-          - pwsh: .\scripts\install-android-platform.ps1 -API 29
-            displayName: Install Android API 29 (v10)
-            retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - pwsh: .\scripts\install-android-platform.ps1 -API 30
-            displayName: Install Android API 30 (v11)
-            retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - pwsh: .\scripts\install-android-platform.ps1 -API 31
-            displayName: Install Android API 31 (v12)
+          - pwsh: .\scripts\install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
+            displayName: Install Android APIs
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         # install the bits needed for .NET
