@@ -8,6 +8,11 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $HOME_DIR = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
 
+$manualLocation = "$HOME_DIR/android-sdk"
+if ($InstallDestination) {
+    $manualLocation = $InstallDestination
+}
+
 function Get-SdkManager {
     param (
         [string] $SdkPath,
@@ -84,15 +89,16 @@ if (-not $sdk -and -not $IsMacOS -and -not $IsLinux) {
     $pfsdk = Join-Path "${env:ProgramFiles(x86)}" "Android" "android-sdk"
     $sdk = Get-AndroidSdk -SdkPath "$pfsdk" -PathType "Program Files"
 }
+# look in the previous location
+if (-not $sdk) {
+    $sdk = Get-AndroidSdk -SdkPath "$manualLocation" -PathType "Previous install location"
+}
 
 # Nothing was found, so we need to install the SDK
 if (-not $sdk) {
     Write-Host "No Android SDK found, will download and install the latest..."
 
-    $sdk = "$HOME_DIR/android-sdk"
-    if ($InstallDestination) {
-        $sdk = $InstallDestination
-    }
+    $sdk = $manualLocation
     Write-Host "  Install destination is $sdk."
 
     # detect
