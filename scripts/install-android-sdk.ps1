@@ -10,11 +10,16 @@ $HOME_DIR = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
 
 function Get-SdkManager {
     param (
-        [Parameter(Mandatory)] [string] $SdkPath,
+        [string] $SdkPath,
         [string] $Indent = "    "
     )
 
     Write-Host "${Indent}Looking for the SDK Manager in $SdkPath..."
+
+    if (-not $SdkPath -or -not (Test-Path $SdkPath)) {
+        Write-Host "${Indent}No SDK Manager found."
+        return ""
+    }
 
     $cmdline = Join-Path "$SdkPath" "cmdline-tools"
     if (Test-Path $cmdline) {
@@ -44,8 +49,8 @@ function Get-SdkManager {
 
 function Get-AndroidSdk {
     param (
-        [Parameter(Mandatory)] [string] $SdkPath,
-        [Parameter(Mandatory)] [string] $PathType,
+        [string] $SdkPath,
+        [string] $PathType,
         [string] $Indent = "  "
     )
 
