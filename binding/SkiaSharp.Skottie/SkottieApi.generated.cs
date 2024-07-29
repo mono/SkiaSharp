@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 #region Namespaces
 
@@ -17,6 +18,7 @@ using gr_recording_context_t = System.IntPtr;
 using gr_vk_extensions_t = System.IntPtr;
 using gr_vk_memory_allocator_t = System.IntPtr;
 using gr_vkinterface_t = System.IntPtr;
+using sk_bbh_factory_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
 using sk_blender_t = System.IntPtr;
 using sk_canvas_t = System.IntPtr;
@@ -59,6 +61,7 @@ using sk_region_iterator_t = System.IntPtr;
 using sk_region_spanerator_t = System.IntPtr;
 using sk_region_t = System.IntPtr;
 using sk_rrect_t = System.IntPtr;
+using sk_rtree_factory_t = System.IntPtr;
 using sk_runtimeeffect_t = System.IntPtr;
 using sk_shader_t = System.IntPtr;
 using sk_stream_asset_t = System.IntPtr;
@@ -110,8 +113,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_builder_delete(skottie_animation_builder_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_builder_delete (skottie_animation_builder_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_builder_delete (skottie_animation_builder_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -124,8 +132,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_builder_get_stats(skottie_animation_builder_t* instance, skottie_animation_builder_stats_t* stats)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_builder_get_stats (skottie_animation_builder_t instance, AnimationBuilderStats* stats);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_builder_get_stats (skottie_animation_builder_t instance, AnimationBuilderStats* stats);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -138,8 +151,13 @@ namespace SkiaSharp
 
 		// skottie_animation_t* skottie_animation_builder_make_from_data(skottie_animation_builder_t* instance, const char* data, size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skottie_animation_t skottie_animation_builder_make_from_data (skottie_animation_builder_t instance, /* char */ void* data, /* size_t */ IntPtr length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern skottie_animation_t skottie_animation_builder_make_from_data (skottie_animation_builder_t instance, /* char */ void* data, /* size_t */ IntPtr length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -152,8 +170,13 @@ namespace SkiaSharp
 
 		// skottie_animation_t* skottie_animation_builder_make_from_file(skottie_animation_builder_t* instance, const char* path)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skottie_animation_t skottie_animation_builder_make_from_file (skottie_animation_builder_t instance, /* char */ void* path);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern skottie_animation_t skottie_animation_builder_make_from_file (skottie_animation_builder_t instance, /* char */ void* path);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -166,8 +189,13 @@ namespace SkiaSharp
 
 		// skottie_animation_t* skottie_animation_builder_make_from_stream(skottie_animation_builder_t* instance, sk_stream_t* stream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skottie_animation_t skottie_animation_builder_make_from_stream (skottie_animation_builder_t instance, sk_stream_t stream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern skottie_animation_t skottie_animation_builder_make_from_stream (skottie_animation_builder_t instance, sk_stream_t stream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -180,8 +208,13 @@ namespace SkiaSharp
 
 		// skottie_animation_t* skottie_animation_builder_make_from_string(skottie_animation_builder_t* instance, const char* data, size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skottie_animation_t skottie_animation_builder_make_from_string (skottie_animation_builder_t instance, /* char */ void* data, /* size_t */ IntPtr length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern skottie_animation_t skottie_animation_builder_make_from_string (skottie_animation_builder_t instance, /* char */ void* data, /* size_t */ IntPtr length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -194,8 +227,13 @@ namespace SkiaSharp
 
 		// skottie_animation_builder_t* skottie_animation_builder_new(skottie_animation_builder_flags_t flags)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skottie_animation_builder_t skottie_animation_builder_new (AnimationBuilderFlags flags);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern skottie_animation_builder_t skottie_animation_builder_new (AnimationBuilderFlags flags);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -208,8 +246,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_builder_set_font_manager(skottie_animation_builder_t* instance, sk_fontmgr_t* fontManager)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_builder_set_font_manager (skottie_animation_builder_t instance, sk_fontmgr_t fontManager);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_builder_set_font_manager (skottie_animation_builder_t instance, sk_fontmgr_t fontManager);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -222,8 +265,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_builder_set_resource_provider(skottie_animation_builder_t* instance, skottie_resource_provider_t* resourceProvider)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_builder_set_resource_provider (skottie_animation_builder_t instance, skottie_resource_provider_t resourceProvider);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_builder_set_resource_provider (skottie_animation_builder_t instance, skottie_resource_provider_t resourceProvider);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -236,8 +284,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_delete(skottie_animation_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_delete (skottie_animation_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_delete (skottie_animation_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -250,8 +303,13 @@ namespace SkiaSharp
 
 		// double skottie_animation_get_duration(skottie_animation_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Double skottie_animation_get_duration (skottie_animation_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Double skottie_animation_get_duration (skottie_animation_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -264,8 +322,13 @@ namespace SkiaSharp
 
 		// double skottie_animation_get_fps(skottie_animation_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Double skottie_animation_get_fps (skottie_animation_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Double skottie_animation_get_fps (skottie_animation_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -278,8 +341,13 @@ namespace SkiaSharp
 
 		// double skottie_animation_get_in_point(skottie_animation_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Double skottie_animation_get_in_point (skottie_animation_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Double skottie_animation_get_in_point (skottie_animation_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -292,8 +360,13 @@ namespace SkiaSharp
 
 		// double skottie_animation_get_out_point(skottie_animation_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Double skottie_animation_get_out_point (skottie_animation_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Double skottie_animation_get_out_point (skottie_animation_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -306,8 +379,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_get_size(skottie_animation_t* instance, sk_size_t* size)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_get_size (skottie_animation_t instance, SKSize* size);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_get_size (skottie_animation_t instance, SKSize* size);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -320,8 +398,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_get_version(skottie_animation_t* instance, sk_string_t* version)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_get_version (skottie_animation_t instance, sk_string_t version);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_get_version (skottie_animation_t instance, sk_string_t version);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -334,8 +417,13 @@ namespace SkiaSharp
 
 		// skottie_animation_t* skottie_animation_make_from_data(const char* data, size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skottie_animation_t skottie_animation_make_from_data (/* char */ void* data, /* size_t */ IntPtr length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern skottie_animation_t skottie_animation_make_from_data (/* char */ void* data, /* size_t */ IntPtr length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -348,8 +436,13 @@ namespace SkiaSharp
 
 		// skottie_animation_t* skottie_animation_make_from_file(const char* path)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skottie_animation_t skottie_animation_make_from_file ([MarshalAs (UnmanagedType.LPStr)] String path);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern skottie_animation_t skottie_animation_make_from_file ([MarshalAs (UnmanagedType.LPStr)] String path);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -362,8 +455,13 @@ namespace SkiaSharp
 
 		// skottie_animation_t* skottie_animation_make_from_stream(sk_stream_t* stream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skottie_animation_t skottie_animation_make_from_stream (sk_stream_t stream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern skottie_animation_t skottie_animation_make_from_stream (sk_stream_t stream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -376,8 +474,13 @@ namespace SkiaSharp
 
 		// skottie_animation_t* skottie_animation_make_from_string(const char* data, size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skottie_animation_t skottie_animation_make_from_string ([MarshalAs (UnmanagedType.LPStr)] String data, int length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern skottie_animation_t skottie_animation_make_from_string ([MarshalAs (UnmanagedType.LPStr)] String data, int length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -390,8 +493,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_ref(skottie_animation_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_ref (skottie_animation_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_ref (skottie_animation_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -404,8 +512,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_render(skottie_animation_t* instance, sk_canvas_t* canvas, sk_rect_t* dst)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_render (skottie_animation_t instance, sk_canvas_t canvas, SKRect* dst);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_render (skottie_animation_t instance, sk_canvas_t canvas, SKRect* dst);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -418,8 +531,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_render_with_flags(skottie_animation_t* instance, sk_canvas_t* canvas, sk_rect_t* dst, skottie_animation_renderflags_t flags)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_render_with_flags (skottie_animation_t instance, sk_canvas_t canvas, SKRect* dst, AnimationRenderFlags flags);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_render_with_flags (skottie_animation_t instance, sk_canvas_t canvas, SKRect* dst, AnimationRenderFlags flags);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -432,8 +550,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_seek(skottie_animation_t* instance, float t, sksg_invalidation_controller_t* ic)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_seek (skottie_animation_t instance, Single t, sksg_invalidation_controller_t ic);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_seek (skottie_animation_t instance, Single t, sksg_invalidation_controller_t ic);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -446,8 +569,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_seek_frame(skottie_animation_t* instance, float t, sksg_invalidation_controller_t* ic)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_seek_frame (skottie_animation_t instance, Single t, sksg_invalidation_controller_t ic);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_seek_frame (skottie_animation_t instance, Single t, sksg_invalidation_controller_t ic);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -460,8 +588,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_seek_frame_time(skottie_animation_t* instance, float t, sksg_invalidation_controller_t* ic)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_seek_frame_time (skottie_animation_t instance, Single t, sksg_invalidation_controller_t ic);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_seek_frame_time (skottie_animation_t instance, Single t, sksg_invalidation_controller_t ic);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -474,8 +607,13 @@ namespace SkiaSharp
 
 		// void skottie_animation_unref(skottie_animation_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void skottie_animation_unref (skottie_animation_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void skottie_animation_unref (skottie_animation_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -494,7 +632,9 @@ namespace SkiaSharp
 #endregion Functions
 
 #region Delegates
+#if !USE_LIBRARY_IMPORT
 
+#endif // !USE_LIBRARY_IMPORT
 #endregion
 
 #region Structs
@@ -520,7 +660,9 @@ namespace SkiaSharp.Skottie {
 		private readonly /* size_t */ IntPtr fAnimatorCount;
 
 		public readonly bool Equals (AnimationBuilderStats obj) =>
+#pragma warning disable CS8909
 			fTotalLoadTimeMS == obj.fTotalLoadTimeMS && fJsonParseTimeMS == obj.fJsonParseTimeMS && fSceneParseTimeMS == obj.fSceneParseTimeMS && fJsonSize == obj.fJsonSize && fAnimatorCount == obj.fAnimatorCount;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is AnimationBuilderStats f && Equals (f);
@@ -570,5 +712,9 @@ namespace SkiaSharp.Skottie {
 		DisableTopLevelClipping = 2,
 	}
 }
+
+#endregion
+
+#region DelegateProxies
 
 #endregion

@@ -405,6 +405,9 @@
     },
     "functions": {
       // delegates
+      "gr_gl_func_ptr": {
+        "generateProxy": false
+      },
       "gr_gl_get_proc": {
         "cs": "GRGlGetProcProxyDelegate",
         "parameters": {
@@ -412,7 +415,8 @@
         }
       },
       "gr_vk_func_ptr": {
-        "convention": "stdcall"
+        "convention": "stdcall",
+        "generateProxy": false
       },
       "gr_vk_get_proc": {
         "cs": "GRVkGetProcProxyDelegate",
@@ -479,6 +483,11 @@
         "parameters": {
           "1": "[MarshalAs (UnmanagedType.LPStr)] String"
         }
+      },
+      "sk_image_raster_release_proc": {
+        "proxySuffixes": [
+          "", "ForCoTaskMem"
+        ]
       }
     }
   }

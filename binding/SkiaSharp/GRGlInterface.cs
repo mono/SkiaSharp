@@ -7,11 +7,12 @@ using SkiaSharp.Internals;
 
 #if __TIZEN__
 using System.Reflection;
+using System.Runtime.CompilerServices;
 #endif
 
 namespace SkiaSharp
 {
-	public unsafe class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
+	public unsafe partial class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal GRGlInterface (IntPtr h, bool owns)
 			: base (h, owns)
@@ -46,7 +47,8 @@ namespace SkiaSharp
 
 		public static GRGlInterface Create (GRGlGetProcedureAddressDelegate get)
 		{
-			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			DelegateProxies.Create (get, out var gch, out var ctx);
+			var proxy = get != null ? DelegateProxies.GRGlGetProcProxy : null;
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_interface ((void*)ctx, proxy));
 			} finally {
@@ -59,7 +61,8 @@ namespace SkiaSharp
 
 		public static GRGlInterface CreateOpenGl (GRGlGetProcedureAddressDelegate get)
 		{
-			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			DelegateProxies.Create (get, out var gch, out var ctx);
+			var proxy = get != null ? DelegateProxies.GRGlGetProcProxy : null;
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_gl_interface ((void*)ctx, proxy));
 			} finally {
@@ -69,7 +72,8 @@ namespace SkiaSharp
 
 		public static GRGlInterface CreateGles (GRGlGetProcedureAddressDelegate get)
 		{
-			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			DelegateProxies.Create (get, out var gch, out var ctx);
+			var proxy = get != null ? DelegateProxies.GRGlGetProcProxy : null;
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_gles_interface ((void*)ctx, proxy));
 			} finally {
@@ -79,7 +83,8 @@ namespace SkiaSharp
 
 		public static GRGlInterface CreateWebGl (GRGlGetProcedureAddressDelegate get)
 		{
-			var proxy = DelegateProxies.Create (get, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			DelegateProxies.Create (get, out var gch, out var ctx);
+			var proxy = get != null ? DelegateProxies.GRGlGetProcProxy : null;
 			try {
 				return GetObject (SkiaApi.gr_glinterface_assemble_webgl_interface ((void*)ctx, proxy));
 			} finally {
@@ -112,7 +117,7 @@ namespace SkiaSharp
 
 		//
 
-		private static class AngleLoader
+		private static partial class AngleLoader
 		{
 			private static readonly IntPtr libEGL;
 			private static readonly IntPtr libGLESv2;
@@ -127,6 +132,12 @@ namespace SkiaSharp
 			private static extern IntPtr GetProcAddress (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
 
 			private static IntPtr LoadLibrary (string lpFileName) => LoadPackagedLibrary(lpFileName, 0);
+#elif USE_LIBRARY_IMPORT
+			[LibraryImport ("Kernel32.dll", SetLastError = true)]
+			private static partial IntPtr LoadLibrary ([MarshalAs (UnmanagedType.LPStr)] string lpFileName);
+
+			[LibraryImport ("Kernel32.dll", SetLastError = true)]
+			private static partial IntPtr GetProcAddress (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
 #else
 			[DllImport ("Kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
 			private static extern IntPtr LoadLibrary ([MarshalAs (UnmanagedType.LPStr)] string lpFileName);
@@ -135,8 +146,13 @@ namespace SkiaSharp
 			private static extern IntPtr GetProcAddress (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
 #endif
 
+#if USE_LIBRARY_IMPORT
+			[LibraryImport ("libEGL.dll")]
+			private static partial IntPtr eglGetProcAddress ([MarshalAs (UnmanagedType.LPStr)] string procname);
+#else
 			[DllImport ("libEGL.dll")]
 			private static extern IntPtr eglGetProcAddress ([MarshalAs (UnmanagedType.LPStr)] string procname);
+#endif
 
 			static AngleLoader()
 			{
@@ -177,7 +193,7 @@ namespace SkiaSharp
 		}
 
 #if __TIZEN__
-		private class EvasGlLoader
+		private partial class EvasGlLoader
 		{
 			private const string libevas = "libevas.so.1";
 
@@ -188,17 +204,17 @@ namespace SkiaSharp
 			private readonly IntPtr glEvas;
 			private readonly EvasGlApi api;
 
-			[DllImport (libevas)]
-			internal static extern IntPtr evas_gl_api_get (IntPtr evas_gl);
+			[LibraryImport (libevas)]
+			internal static partial IntPtr evas_gl_api_get (IntPtr evas_gl);
 
-			[DllImport (libevas)]
-			internal static extern IntPtr evas_gl_context_api_get (IntPtr evas_gl, IntPtr ctx);
+			[LibraryImport (libevas)]
+			internal static partial IntPtr evas_gl_context_api_get (IntPtr evas_gl, IntPtr ctx);
 
-			[DllImport (libevas)]
-			internal static extern IntPtr evas_gl_current_context_get (IntPtr evas_gl);
+			[LibraryImport (libevas)]
+			internal static partial IntPtr evas_gl_current_context_get (IntPtr evas_gl);
 
-			[DllImport (libevas)]
-			internal static extern IntPtr evas_gl_proc_address_get (IntPtr evas_gl, string name);
+			[LibraryImport(libevas)]
+			internal static partial IntPtr evas_gl_proc_address_get (IntPtr evas_gl, [MarshalAs (UnmanagedType.LPStr)] string name);
 
 			static EvasGlLoader ()
 			{
@@ -207,7 +223,7 @@ namespace SkiaSharp
 				apiFields = EvasGlApiType.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 			}
 
-			public EvasGlLoader (IntPtr evas)
+			public unsafe EvasGlLoader (IntPtr evas)
 			{
 				glEvas = evas;
 				var glContext = evas_gl_current_context_get (glEvas);
@@ -216,7 +232,7 @@ namespace SkiaSharp
 					? evas_gl_context_api_get (glEvas, glContext)
 					: evas_gl_api_get (glEvas);
 
-				api = Marshal.PtrToStructure<EvasGlApi> (apiPtr);
+				api = *(EvasGlApi*)apiPtr;
 			}
 
 			public IntPtr GetFunctionPointer (string name)

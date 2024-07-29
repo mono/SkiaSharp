@@ -54,7 +54,7 @@ namespace HarfBuzzSharp
 
 			var container = new FontUserData (this, fontData);
 			var ctx = DelegateProxies.CreateMultiUserData (destroy, container);
-			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, (void*)ctx, DelegateProxies.ReleaseDelegateProxyForMulti);
+			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
 		}
 
 		public void GetScale (out int xScale, out int yScale)

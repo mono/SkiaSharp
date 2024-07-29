@@ -6,7 +6,7 @@ using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {
-	public class SKAutoCoInitialize : IDisposable
+	public partial class SKAutoCoInitialize : IDisposable
 	{
 		private long hResult;
 
@@ -41,10 +41,16 @@ namespace SkiaSharp
 		private const uint COINIT_DISABLE_OLE1DDE = 0x4;
 		private const uint COINIT_SPEED_OVER_MEMORY = 0x8;
 
+#if USE_LIBRARY_IMPORT
+		[LibraryImport("ole32.dll", SetLastError = true)]
+		private static partial long CoInitializeEx(IntPtr pvReserved, uint dwCoInit);
+		[LibraryImport("ole32.dll", SetLastError = true)]
+		private static partial void CoUninitialize();
+#else
 		[DllImport("ole32.dll", CharSet = CharSet.Ansi, SetLastError = true, CallingConvention = CallingConvention.StdCall)]
 		private static extern long CoInitializeEx([In, Optional] IntPtr pvReserved, [In] uint dwCoInit);
-
 		[DllImport("ole32.dll", CharSet = CharSet.Ansi, SetLastError = true, CallingConvention = CallingConvention.StdCall)]
 		private static extern void CoUninitialize();
+#endif
 	}
 }
