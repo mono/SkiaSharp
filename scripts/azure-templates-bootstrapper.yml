@@ -62,11 +62,11 @@ jobs:
             displayName: 'Publish the ${{ parameters.name }} artifacts'
             artifactName: ${{ parameters.name }}
             targetPath: 'output'
-          - output: pipelineArtifact
-            displayName: 'Publish the failed ${{ parameters.name }} artifacts'
-            condition: failed()
-            artifactName: ${{ parameters.name }}_failed_$(System.JobAttempt)
-            targetPath: 'output'
+        - output: pipelineArtifact
+          displayName: 'Publish the failed ${{ parameters.name }} artifacts'
+          condition: failed()
+          artifactName: ${{ parameters.name }}_failed_$(System.JobAttempt)
+          targetPath: 'output'
         - ${{ each additionalArtifact in parameters.publishArtifacts }}:
           - output: pipelineArtifact
             displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
