@@ -118,7 +118,7 @@ namespace SkiaSharp
 			SkiaApi.sk_rrect_set_nine_patch (Handle, &rect, leftRadius, topRadius, rightRadius, bottomRadius);
 		}
 
-		public void SetRectRadii (SKRect rect, SKPoint[] radii)
+		public void SetRectRadii (SKRect rect, ReadOnlySpan<SKPoint> radii)
 		{
 			if (radii == null)
 				throw new ArgumentNullException (nameof (radii));
