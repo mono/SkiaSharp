@@ -20,7 +20,7 @@ foreach ($API in $apis) {
     $apiPath = Join-Path "$sdk" "platforms" "android-$API" "android.jar"
     if (Test-Path $apiPath) {
         Write-Host "Android API level $API was already installed."
-        # continue
+        continue
     }
 
     # install
