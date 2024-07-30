@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 #region Namespaces
@@ -2299,6 +2299,20 @@ namespace SkiaSharp
 		private static Delegates.sk_canvas_save_layer sk_canvas_save_layer_delegate;
 		internal static Int32 sk_canvas_save_layer (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint) =>
 			(sk_canvas_save_layer_delegate ??= GetSymbol<Delegates.sk_canvas_save_layer> ("sk_canvas_save_layer")).Invoke (ccanvas, crect, cpaint);
+		#endif
+
+		// int sk_canvas_save_layer_rec(sk_canvas_t* ccanvas, const sk_rect_t* cbounds, const sk_paint_t* cpaint, const sk_imagefilter_t* cfilter, uint32_t flags)
+		#if !USE_DELEGATES
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKRect* cbounds, sk_paint_t cpaint, sk_imagefilter_t cfilter, uint flags);
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKRect* cbounds, sk_paint_t cpaint, sk_imagefilter_t cfilter, uint flags);
+		}
+		private static Delegates.sk_canvas_save_layer_rec sk_canvas_save_layer_rec_delegate;
+		internal static Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKRect* cbounds, sk_paint_t cpaint, sk_imagefilter_t cfilter, uint flags) =>
+			(sk_canvas_save_layer_rec_delegate ??= GetSymbol<Delegates.sk_canvas_save_layer_rec> ("sk_canvas_save_layer_rec")).Invoke (ccanvas, cbounds, cpaint, cfilter, flags);
 		#endif
 
 		// void sk_canvas_scale(sk_canvas_t* ccanvas, float sx, float sy)
