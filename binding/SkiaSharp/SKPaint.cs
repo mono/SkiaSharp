@@ -211,7 +211,9 @@ namespace SkiaSharp
 		[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.")]
 		public SKFilterQuality FilterQuality {
 			get => (SKFilterQuality)SkiaApi.sk_compatpaint_get_filter_quality (Handle);
-			set => SkiaApi.sk_compatpaint_set_filter_quality (Handle, (int)value);
+			set {
+				SkiaApi.sk_compatpaint_set_filter_quality (Handle, (int)value);
+			}
 		}
 
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Typeface)} instead.")]
