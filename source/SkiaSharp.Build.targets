@@ -43,10 +43,6 @@
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB9004</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <PackagingPlatform Condition=" '$(PackagingPlatform)' == '' ">$(TargetFramework)</PackagingPlatform>
-  </PropertyGroup>
-
   <ItemGroup Condition=" $(IsWindows) and '$(Configuration)' == 'Release' ">
     <PackageReference Include="mdoc" Version="5.8.9" PrivateAssets="All" GeneratePathProperty="true" />
   </ItemGroup>
