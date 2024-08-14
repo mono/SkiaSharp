@@ -34,12 +34,16 @@ namespace SkiaSharp
 
 		public static GRGlInterface CreateAngle ()
 		{
+#if (NETSTANDARD || NET6_0_OR_GREATER || NET40_OR_GREATER) && (!NETPLATFORM || WINDOWS) // a cross-platform TFM or windows-only
 			if (PlatformConfiguration.IsWindows) {
 				return CreateAngle (AngleLoader.GetProc);
 			} else {
 				// return null on non-DirectX platforms: everything except Windows
 				return null;
 			}
+#else
+			return null;
+#endif
 		}
 
 		// Create* (assemble)
@@ -112,6 +116,7 @@ namespace SkiaSharp
 
 		//
 
+#if (NETSTANDARD || NET6_0_OR_GREATER || NET40_OR_GREATER) && (!NETPLATFORM || WINDOWS)
 		private static class AngleLoader
 		{
 			private static readonly IntPtr libEGL;
@@ -175,6 +180,7 @@ namespace SkiaSharp
 				return proc;
 			}
 		}
+#endif
 
 #if __TIZEN__
 		private class EvasGlLoader
