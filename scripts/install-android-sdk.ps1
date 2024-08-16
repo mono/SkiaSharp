@@ -52,6 +52,32 @@ function Get-SdkManager {
     return $sdkmanager
 }
 
+function Get-Adb {
+    param (
+        [string] $SdkPath,
+        [string] $Indent = "    "
+    )
+
+    Write-Host "${Indent}Looking for ADB in $SdkPath..."
+
+    $platformtools = Join-Path "$SdkPath" "platform-tools"
+    if (Test-Path $platformtools) {
+        Write-Host "${Indent}  Found platform tools: $platformtools"
+    }
+
+    $adbExt = if (-not $IsMacOS -and -not $IsLinux) { ".exe" } else { "" }
+    $adb = Get-ChildItem $platformtools | Where-Object { $_.Name -eq "adb$adbExt" }
+
+    if (-not $adb) {
+        Write-Host "${Indent}No ADB found."
+        return ""
+    }
+
+    Write-Host "${Indent}Found ADB at $adb."
+
+    return $adb
+}
+
 function Get-AndroidSdk {
     param (
         [string] $SdkPath,
@@ -69,6 +95,12 @@ function Get-AndroidSdk {
     $sdkmanager = Get-SdkManager -SdkPath "$SdkPath"
     if (-not (Test-Path $sdkmanager)) {
         Write-Host "${Indent}No SDK Manager found, not going to use this one."
+        return ""
+    }
+
+    $adb = Adb -SdkPath "$SdkPath"
+    if (-not (Test-Path $adb)) {
+        Write-Host "${Indent}No ADB found, not going to use this one."
         return ""
     }
 
@@ -154,6 +186,7 @@ if (-not $sdk) {
 }
 
 $sdkmanager = Get-SdkManager -SdkPath "$sdk" -Indent ""
+$adb = Get-Adb -SdkPath "$sdk" -Indent ""
 
 Write-Host "Using Android SDK at $sdk."
 
@@ -167,13 +200,16 @@ Write-Host "Setting environment variable ANDROID_HOME=$sdk"
 Write-Host "Setting environment variable ANDROID_SDK_ROOT=$sdk"
 Write-Host "Setting environment variable AndroidSdkDirectory=$sdk"
 Write-Host "Setting environment variable ANDROID_SDK_MANAGER_PATH=$sdkmanager"
+Write-Host "Setting environment variable ANDROID_ADB_PATH=$adb"
 Write-Host "##vso[task.setvariable variable=ANDROID_SDK_ROOT;]$sdk";
 Write-Host "##vso[task.setvariable variable=ANDROID_HOME;]$sdk";
 Write-Host "##vso[task.setvariable variable=AndroidSdkDirectory;]$sdk";
 Write-Host "##vso[task.setvariable variable=ANDROID_SDK_MANAGER_PATH;]$sdkmanager";
+Write-Host "##vso[task.setvariable variable=ANDROID_ADB_PATH;]$adb";
 $env:ANDROID_SDK_ROOT = $sdk
 $env:ANDROID_HOME = $sdk
 $env:AndroidSdkDirectory = $sdk
 $env:ANDROID_SDK_MANAGER_PATH = $sdkmanager
+$env:ANDROID_ADB_PATH = $adb
 
 exit $LASTEXITCODE
