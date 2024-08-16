@@ -184,6 +184,10 @@
     <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(TargetFramework.Contains('-'))">
+    <DefineConstants>$(DefineConstants);NETPLATFORM</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DependsOnNETStandard>true</DependsOnNETStandard>
   </PropertyGroup>
