@@ -98,7 +98,7 @@ function Get-AndroidSdk {
         return ""
     }
 
-    $adb = Adb -SdkPath "$SdkPath"
+    $adb = Get-Adb -SdkPath "$SdkPath"
     if (-not (Test-Path $adb)) {
         Write-Host "${Indent}No ADB found, not going to use this one."
         return ""
