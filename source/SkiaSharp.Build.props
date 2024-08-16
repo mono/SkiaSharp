@@ -47,8 +47,28 @@
     <TFMCurrent>net8.0</TFMCurrent>
     <!-- The next version (typically a preview) that we are building for (all the TFMs) -->
     <TFMNext></TFMNext>
-    <!-- The Windows OS version we are building against -->
-    <TFMWindowsVersion>10.0.19041.0</TFMWindowsVersion>
+  </PropertyGroup>
+
+  <!-- Target Platform Versions -->
+  <PropertyGroup>
+    <!-- Previous -->
+    <TPVWindowsPrevious>10.0.19041.0</TPVWindowsPrevious>
+    <!-- Current -->
+    <TPVAndroidCurrent>34.0</TPVAndroidCurrent>
+    <TPViOSCurrent>17.0</TPViOSCurrent>
+    <TPVMacCatalystCurrent>17.0</TPVMacCatalystCurrent>
+    <TPVtvOSCurrent>17.0</TPVtvOSCurrent>
+    <TPVmacOSCurrent>14.0</TPVmacOSCurrent>
+    <TPVTizenCurrent>7.0</TPVTizenCurrent>
+    <TPVWindowsCurrent>10.0.19041.0</TPVWindowsCurrent>
+    <!-- Next -->
+    <TPVAndroidNext>35.0</TPVAndroidNext>
+    <TPViOSNext>17.5</TPViOSNext>
+    <TPVMacCatalystNext>17.5</TPVMacCatalystNext>
+    <TPVtvOSNext>17.5</TPVtvOSNext>
+    <TPVmacOSNext>14.5</TPVmacOSNext>
+    <TPVTizenNext>7.0</TPVTizenNext>
+    <TPVWindowsNext>10.0.19041.0</TPVWindowsNext>
   </PropertyGroup>
 
   <!-- Try determine which .NET workloads are installed for LOCAL builds -->
@@ -98,22 +118,22 @@
   <!-- .NET Standard, .NET Framework and .NET -->
   <PropertyGroup>
     <BasicTargetFrameworksCurrent>netstandard2.0;netstandard2.1;net462;$(TFMCurrent)</BasicTargetFrameworksCurrent>
-    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</PlatformTargetFrameworksCurrent>
-    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tizen</PlatformTargetFrameworksCurrent>
-    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tvos</PlatformTargetFrameworksCurrent>
-    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-macos</PlatformTargetFrameworksCurrent>
-    <PlatformTargetFrameworksCurrent Condition="$(IsWindows)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-windows$(TFMWindowsVersion)</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tizen$(TPVTizenCurrent)</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tvos$(TPVtvOSCurrent)</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-macos$(TPVmacOSCurrent)</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="$(IsWindows)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-windows$(TPVWindowsCurrent)</PlatformTargetFrameworksCurrent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMPrevious)' != ''">
     <BasicTargetFrameworksPrevious>$(TFMPrevious)</BasicTargetFrameworksPrevious>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMNext)' != ''">
     <BasicTargetFrameworksNext>$(TFMNext)</BasicTargetFrameworksNext>
-    <PlatformTargetFrameworksNext Condition="!$(IsLinux)">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</PlatformTargetFrameworksNext>
-    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tizen</PlatformTargetFrameworksNext>
-    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tvos</PlatformTargetFrameworksNext>
-    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-macos</PlatformTargetFrameworksNext>
-    <PlatformTargetFrameworksNext Condition="$(IsWindows)">$(PlatformTargetFrameworksNext);$(TFMNext)-windows$(TFMWindowsVersion)</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux)">$(TFMNext)-ios$(TPViOSNext);$(TFMNext)-maccatalyst$(TPVMacCatalystNext);$(TFMNext)-android$(TPVAndroidNext)</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tizen$(TPVTizenNext)</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-tvos$(TPVtvOSNext)</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksNext);$(TFMNext)-macos$(TPVmacOSNext)</PlatformTargetFrameworksNext>
+    <PlatformTargetFrameworksNext Condition="$(IsWindows)">$(PlatformTargetFrameworksNext);$(TFMNext)-windows$(TPVWindowsNext)</PlatformTargetFrameworksNext>
   </PropertyGroup>
   <PropertyGroup>
     <BasicTargetFrameworks>$(BasicTargetFrameworksCurrent);$(BasicTargetFrameworksPrevious);$(BasicTargetFrameworksNext)</BasicTargetFrameworks>
@@ -123,9 +143,9 @@
 
   <!-- Windows TFMs -->
   <PropertyGroup>
-    <WindowsTargetFrameworksCurrent Condition="$(IsWindows)">$(TFMCurrent)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksCurrent>
-    <WindowsTargetFrameworksPrevious Condition="$(IsWindows) and '$(TFMPrevious)' != ''">$(TFMPrevious)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksPrevious>
-    <WindowsTargetFrameworksNext Condition="$(IsWindows) and '$(TFMNext)' != ''">$(TFMNext)-windows$(TFMWindowsVersion)</WindowsTargetFrameworksNext>
+    <WindowsTargetFrameworksCurrent Condition="$(IsWindows)">$(TFMCurrent)-windows$(TPVWindowsCurrent)</WindowsTargetFrameworksCurrent>
+    <WindowsTargetFrameworksPrevious Condition="$(IsWindows) and '$(TFMPrevious)' != ''">$(TFMPrevious)-windows$(TPVWindowsPrevious)</WindowsTargetFrameworksPrevious>
+    <WindowsTargetFrameworksNext Condition="$(IsWindows) and '$(TFMNext)' != ''">$(TFMNext)-windows$(TPVWindowsNext)</WindowsTargetFrameworksNext>
     <WindowsTargetFrameworks Condition="$(IsWindows)">$(WindowsTargetFrameworksCurrent);$(WindowsTargetFrameworksPrevious);$(WindowsTargetFrameworksNext)</WindowsTargetFrameworks>
   </PropertyGroup>
 
@@ -135,30 +155,60 @@
     <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">$(WindowsDesktopTargetFrameworks);$(WindowsTargetFrameworks)</WindowsDesktopTargetFrameworks>
   </PropertyGroup>
 
+  <!-- Workaround for MAUI https://github.com/dotnet/maui/pull/24263 -->
+  <PropertyGroup>
+    <TPViOSCurrent></TPViOSCurrent>
+    <TPVMacCatalystCurrent></TPVMacCatalystCurrent>
+    <TPVtvOSCurrent></TPVtvOSCurrent>
+    <TPVmacOSCurrent></TPVmacOSCurrent>
+    <TPVTizenCurrent></TPVTizenCurrent>
+  </PropertyGroup>
+
   <!-- .NET MAUI -->
   <PropertyGroup>
-    <MauiTargetFrameworksPlatformCurrent>$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</MauiTargetFrameworksPlatformCurrent>
-    <MauiTargetFrameworksPlatformCurrent Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-tizen</MauiTargetFrameworksPlatformCurrent>
-    <MauiTargetFrameworksPlatformCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-windows$(TFMWindowsVersion)</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksPlatformCurrent>$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksPlatformCurrent Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-tizen$(TPVTizenCurrent)</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksPlatformCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-windows$(TPVWindowsCurrent)</MauiTargetFrameworksPlatformCurrent>
     <MauiTargetFrameworksCurrent>$(TFMCurrent);$(MauiTargetFrameworksPlatformCurrent)</MauiTargetFrameworksCurrent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMNext)' != ''">
     <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
-    <MauiTargetFrameworksPlatformNext>$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</MauiTargetFrameworksPlatformNext>
-    <MauiTargetFrameworksPlatformNext Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksPlatformNext);$(TFMNext)-tizen</MauiTargetFrameworksPlatformNext>
-    <MauiTargetFrameworksPlatformNext Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformNext);$(TFMNext)-windows$(TFMWindowsVersion)</MauiTargetFrameworksPlatformNext>
+    <MauiTargetFrameworksPlatformNext>$(TFMNext)-ios$(TPViOSNext);$(TFMNext)-maccatalyst$(TPVMacCatalystNext);$(TFMNext)-android$(TPVAndroidNext)</MauiTargetFrameworksPlatformNext>
+    <MauiTargetFrameworksPlatformNext Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksPlatformNext);$(TFMNext)-tizen$(TPVTizenNext)</MauiTargetFrameworksPlatformNext>
+    <MauiTargetFrameworksPlatformNext Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformNext);$(TFMNext)-windows$(TPVWindowsNext)</MauiTargetFrameworksPlatformNext>
     <MauiTargetFrameworksNext>$(TFMNext);$(MauiTargetFrameworksPlatformNext)</MauiTargetFrameworksNext>
   </PropertyGroup>
   <PropertyGroup>
     <MauiTargetFrameworks>$(MauiTargetFrameworksCurrent);$(MauiTargetFrameworksNext)</MauiTargetFrameworks>
   </PropertyGroup>
 
+  <!-- Undo MAUI workaround https://github.com/dotnet/maui/pull/24263 -->
+  <PropertyGroup>
+    <TPViOSCurrent>17.0</TPViOSCurrent>
+    <TPVMacCatalystCurrent>17.0</TPVMacCatalystCurrent>
+    <TPVtvOSCurrent>17.0</TPVtvOSCurrent>
+    <TPVmacOSCurrent>14.0</TPVmacOSCurrent>
+    <TPVTizenCurrent>7.0</TPVTizenCurrent>
+  </PropertyGroup>
+
+  <!-- .NET MAUI Apps (no TPV) -->
+  <PropertyGroup>
+    <MauiTargetFrameworksAppCurrent>$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android</MauiTargetFrameworksAppCurrent>
+    <MauiTargetFrameworksAppCurrent Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksAppCurrent);$(TFMCurrent)-tizen</MauiTargetFrameworksAppCurrent>
+    <MauiTargetFrameworksAppCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksAppCurrent);$(TFMCurrent)-windows$(TPVWindowsCurrent)</MauiTargetFrameworksAppCurrent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TFMNext)' != ''">
+    <MauiTargetFrameworksAppNext>$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android</MauiTargetFrameworksAppNext>
+    <MauiTargetFrameworksAppNext Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksAppNext);$(TFMNext)-tizen</MauiTargetFrameworksAppNext>
+    <MauiTargetFrameworksAppNext Condition="$(IsWindows)">$(MauiTargetFrameworksAppNext);$(TFMNext)-windows$(TPVWindowsNext)</MauiTargetFrameworksAppNext>
+  </PropertyGroup>
+
   <!-- Uno Platform -->
   <PropertyGroup>
     <UnoTargetFrameworksReference>$(TFMCurrent)</UnoTargetFrameworksReference>
     <UnoTargetFrameworksReference Condition="'$(TFMNext)' != ''">$(UnoTargetFrameworksReference);$(TFMNext)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios;$(TFMCurrent)-maccatalyst;$(TFMCurrent)-android;$(TFMCurrent)-macos</UnoTargetFrameworksCurrent>
-    <UnoTargetFrameworksNext Condition="!$(IsLinux) and '$(TFMNext)' != ''">$(TFMNext)-ios;$(TFMNext)-maccatalyst;$(TFMNext)-android;$(TFMNext)-macos</UnoTargetFrameworksNext>
+    <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent);$(TFMCurrent)-macos$(TPVmacOSCurrent)</UnoTargetFrameworksCurrent>
+    <UnoTargetFrameworksNext Condition="!$(IsLinux) and '$(TFMNext)' != ''">$(TFMNext)-ios$(TPViOSNext);$(TFMNext)-maccatalyst$(TPVMacCatalystNext);$(TFMNext)-android$(TPVAndroidNext);$(TFMNext)-macos$(TPVmacOSNext)</UnoTargetFrameworksNext>
     <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksCurrent);$(UnoTargetFrameworksNext);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
   </PropertyGroup>
 
