@@ -32,6 +32,9 @@ function Get-SdkManager {
         $cmdline | Get-ChildItem | ForEach-Object {
             Write-Host "${Indent}    $_"
         }
+    } else {
+        Write-Host "${Indent}  No command line tools found."
+        return ""
     }
 
     Write-Host "${Indent}  Selecting the latest command line tools..."
@@ -63,6 +66,9 @@ function Get-Adb {
     $platformtools = Join-Path "$SdkPath" "platform-tools"
     if (Test-Path $platformtools) {
         Write-Host "${Indent}  Found platform tools: $platformtools"
+    } else {
+        Write-Host "${Indent}  No platform tools found."
+        return ""
     }
 
     $adbExt = if (-not $IsMacOS -and -not $IsLinux) { ".exe" } else { "" }
