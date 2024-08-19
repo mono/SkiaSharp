@@ -37,6 +37,7 @@ parameters:
   skipSteps: false                              # whether or not to run any steps
   use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
   sdl: []                                       # the SDL properties to use for this job
+  continueOnError: false                        # whether or not to continue on error
 
 jobs:
   - job: ${{ parameters.name }}
@@ -45,6 +46,7 @@ jobs:
     pool: ${{ parameters.buildAgent.pool }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
+    continueOnError: ${{ parameters.continueOnError }}
     variables:
       ${{ if ne(parameters.buildAgent.variables, '') }}:
         ${{ parameters.buildAgent.variables }}
