@@ -56,16 +56,20 @@ namespace SkiaSharp.Tests
 		public static IEnumerable<object[]> InteropDelegatesData =>
 			InteropDelegates.Select(m => new object[] { m });
 
-		// Targets using USE_LIBRARY_IMPORT don't have delegates generated as they are not used.
-#if !USE_LIBRARY_IMPORT
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableFact]
 		public void DelegateTypesAreValid()
 		{
 			var del = InteropDelegatesData;
+#if USE_LIBRARY_IMPORT
+			// Targets using USE_LIBRARY_IMPORT don't have delegates generated as they are not used.
+			Assert.Empty(del);
+#else
 			Assert.NotEmpty(del);
+#endif
 		}
 
+#if !USE_LIBRARY_IMPORT
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableTheory]
 		[MemberData(nameof(InteropDelegatesData))]
