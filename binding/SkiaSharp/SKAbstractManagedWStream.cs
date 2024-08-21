@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -10,15 +11,15 @@ namespace SkiaSharp
 	{
 		private static readonly SKManagedWStreamDelegates delegates;
 
-		private int fromNative;
+		internal int fromNative;
 
 		static SKAbstractManagedWStream ()
 		{
 			delegates = new SKManagedWStreamDelegates {
-				fWrite = WriteInternal,
-				fFlush = FlushInternal,
-				fBytesWritten = BytesWrittenInternal,
-				fDestroy = DestroyInternal,
+				fWrite = DelegateProxies.SKManagedWStreamWriteProxy,
+				fFlush = DelegateProxies.SKManagedWStreamFlushProxy,
+				fBytesWritten = DelegateProxies.SKManagedWStreamBytesWrittenProxy,
+				fDestroy = DelegateProxies.SKManagedWStreamDestroyProxy
 			};
 
 			SkiaApi.sk_managedwstream_set_procs (delegates);
@@ -45,42 +46,10 @@ namespace SkiaSharp
 				SkiaApi.sk_managedwstream_destroy (Handle);
 		}
 
-		protected abstract bool OnWrite (IntPtr buffer, IntPtr size);
+		protected internal abstract bool OnWrite (IntPtr buffer, IntPtr size);
 
-		protected abstract void OnFlush ();
+		protected internal abstract void OnFlush ();
 
-		protected abstract IntPtr OnBytesWritten ();
-
-		[MonoPInvokeCallback (typeof (SKManagedWStreamWriteProxyDelegate))]
-		private static bool WriteInternal (IntPtr s, void* context, void* buffer, IntPtr size)
-		{
-			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
-			return stream.OnWrite ((IntPtr)buffer, size);
-		}
-
-		[MonoPInvokeCallback (typeof (SKManagedWStreamFlushProxyDelegate))]
-		private static void FlushInternal (IntPtr s, void* context)
-		{
-			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
-			stream.OnFlush ();
-		}
-
-		[MonoPInvokeCallback (typeof (SKManagedWStreamBytesWrittenProxyDelegate))]
-		private static IntPtr BytesWrittenInternal (IntPtr s, void* context)
-		{
-			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
-			return stream.OnBytesWritten ();
-		}
-
-		[MonoPInvokeCallback (typeof (SKManagedWStreamDestroyProxyDelegate))]
-		private static void DestroyInternal (IntPtr s, void* context)
-		{
-			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out var gch);
-			if (stream != null) {
-				Interlocked.Exchange (ref stream.fromNative, 1);
-				stream.Dispose ();
-			}
-			gch.Free ();
-		}
+		protected internal abstract IntPtr OnBytesWritten ();
 	}
 }

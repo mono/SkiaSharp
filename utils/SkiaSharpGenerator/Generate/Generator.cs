@@ -40,6 +40,7 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine("using System;");
 			writer.WriteLine("using System.Runtime.InteropServices;");
+			writer.WriteLine("using System.Runtime.CompilerServices;");
 			writer.WriteLine();
 			WriteNamespaces(writer);
 			writer.WriteLine();
@@ -62,6 +63,8 @@ namespace SkiaSharpGenerator
 			WriteStructs(writer);
 			writer.WriteLine();
 			WriteEnums(writer);
+			writer.WriteLine();
+			WriteDelegateProxies(writer);
 		}
 
 		private void WriteDelegates(TextWriter writer)
@@ -69,6 +72,7 @@ namespace SkiaSharpGenerator
 			Log?.LogVerbose("  Writing delegates...");
 
 			writer.WriteLine($"#region Delegates");
+			writer.WriteLine($"#if !USE_LIBRARY_IMPORT");
 
 			var delegates = compilation.Typedefs
 				.Where(t => t.ElementType.TypeKind == CppTypeKind.Pointer)
@@ -90,6 +94,7 @@ namespace SkiaSharpGenerator
 			}
 
 			writer.WriteLine();
+			writer.WriteLine($"#endif // !USE_LIBRARY_IMPORT");
 			writer.WriteLine($"#endregion");
 		}
 
@@ -113,28 +118,9 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"\t// {del}");
 			writer.WriteLine($"\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
 
-			var paramsList = new List<string>();
-			for (var i = 0; i < function.Parameters.Count; i++)
+			var (paramsList, returnType) = GetManagedFunctionArguments(function, map);
+			if (returnType == "bool")
 			{
-				var p = function.Parameters[i];
-				var n = string.IsNullOrEmpty(p.Name) ? $"param{i}" : p.Name;
-				var t = GetType(p.Type);
-				var cppT = GetCppType(p.Type);
-				if (t == "Boolean" || cppT == "bool")
-					t = $"[MarshalAs (UnmanagedType.I1)] bool";
-				if (map != null && map.Parameters.TryGetValue(i.ToString(), out var newT))
-					t = newT;
-				paramsList.Add($"{t} {n}");
-			}
-
-			var returnType = GetType(function.ReturnType);
-			if (map != null && map.Parameters.TryGetValue("-1", out var newR))
-			{
-				returnType = newR;
-			}
-			else if (returnType == "Boolean" || GetCppType(function.ReturnType) == "bool")
-			{
-				returnType = "bool";
 				writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
 			}
 
@@ -198,6 +184,7 @@ namespace SkiaSharpGenerator
 			foreach (var field in klass.Fields)
 			{
 				var type = GetType(field.Type);
+				var funcPointerType = GetFunctionPointerType(field.Type);
 				var cppT = GetCppType(field.Type);
 
 				writer.WriteLine($"\t\t// {field}");
@@ -212,7 +199,18 @@ namespace SkiaSharpGenerator
 
 				var vis = map?.IsInternal == true ? "public" : "private";
 				var ro = map?.IsReadOnly == true ? " readonly" : "";
-				writer.WriteLine($"\t\t{vis}{ro} {type} {fieldName};");
+				if (funcPointerType is null)
+				{
+					writer.WriteLine($"\t\t{vis}{ro} {type} {fieldName};");
+				}
+				else
+				{
+					writer.WriteLine($"#if USE_LIBRARY_IMPORT");
+					writer.WriteLine($"\t\t{vis}{ro} {funcPointerType} {fieldName};");
+					writer.WriteLine($"#else");
+					writer.WriteLine($"\t\t{vis}{ro} {type} {fieldName};");
+					writer.WriteLine($"#endif");
+				}
 
 				if (!isPrivate && (map == null || (map.GenerateProperties && !map.IsInternal)))
 				{
@@ -251,7 +249,18 @@ namespace SkiaSharpGenerator
 						{
 							if (map?.IsReadOnly == true)
 							{
-								writer.WriteLine($"\t\tpublic readonly {type} {propertyName} => {fieldName};");
+								if (funcPointerType is null)
+								{
+									writer.WriteLine($"\t\tpublic readonly {type} {propertyName} => {fieldName};");
+								}
+								else
+								{
+									writer.WriteLine($"#if USE_LIBRARY_IMPORT");
+									writer.WriteLine($"\t\tpublic readonly {funcPointerType} {propertyName} => {fieldName};");
+									writer.WriteLine($"#else");
+									writer.WriteLine($"\t\tpublic readonly {type} {propertyName} => {fieldName};");
+									writer.WriteLine($"#endif");
+								}
 							}
 							else
 							{
@@ -276,7 +285,9 @@ namespace SkiaSharpGenerator
 					equalityFields.Add($"{f} == obj.{f}");
 				}
 				writer.WriteLine($"\t\tpublic readonly bool Equals ({name} obj) =>");
+				writer.WriteLine($"#pragma warning disable CS8909");
 				writer.WriteLine($"\t\t\t{string.Join(" && ", equalityFields)};");
+				writer.WriteLine($"#pragma warning restore CS8909");
 				writer.WriteLine();
 
 				// Equals
@@ -464,13 +475,22 @@ namespace SkiaSharpGenerator
 					var skipFunction = false;
 
 					var paramsList = new List<string>();
+					var paramsListWithFuncPointers = new List<string>();
 					var paramNamesList = new List<string>();
 					for (var i = 0; i < function.Parameters.Count; i++)
 					{
 						var p = function.Parameters[i];
 						var n = string.IsNullOrEmpty(p.Name) ? $"param{i}" : p.Name;
 						n = SafeName(n);
-						var t = GetType(p.Type);
+						var t1 = GetType(p.Type);
+						var t2 = GetFunctionPointerType(p.Type);
+
+						// Mono WASM didn't support function pointers in DllImport definitions until .NET 8.
+						// While it should, it still didn't work for me even on .NET 9 previews, so keeping `void*` instead of function pointers.
+						// It makes higher chance of accident mistakes, but old managed delegates build should catch the errors compile time too.
+						if (t2 is not null) t2 = "void*";
+						t2 ??= t1;
+
 						var cppT = GetCppType(p.Type);
 						if (excludedTypes.Contains(cppT) == true)
 						{
@@ -478,11 +498,12 @@ namespace SkiaSharpGenerator
 							skipFunction = true;
 							break;
 						}
-						if (t == "Boolean" || cppT == "bool")
-							t = $"[MarshalAs (UnmanagedType.I1)] bool";
+						if (t1 == "Boolean" || cppT == "bool")
+							t1 = t2 = "[MarshalAs (UnmanagedType.I1)] bool";
 						if (funcMap != null && funcMap.Parameters.TryGetValue(i.ToString(), out var newT))
-							t = newT;
-						paramsList.Add($"{t} {n}");
+							t1 = t2 = newT;
+						paramsList.Add($"{t1} {n}");
+						paramsListWithFuncPointers.Add($"{t2} {n}");
 						paramNamesList.Add(n);
 					}
 
@@ -504,10 +525,19 @@ namespace SkiaSharpGenerator
 					writer.WriteLine();
 					writer.WriteLine($"\t\t// {function}");
 					writer.WriteLine($"\t\t#if !USE_DELEGATES");
+					writer.WriteLine($"\t\t#if USE_LIBRARY_IMPORT");
+					writer.WriteLine($"\t\t[LibraryImport ({config.DllName})]");
+					if (!string.IsNullOrEmpty(retAttr))
+						writer.WriteLine($"\t\t{retAttr}");
+					writer.WriteLine($"\t\tinternal static partial {returnType} {name} ({string.Join(", ", paramsListWithFuncPointers)});");
+
+					writer.WriteLine($"\t\t#else // !USE_LIBRARY_IMPORT");
 					writer.WriteLine($"\t\t[DllImport ({config.DllName}, CallingConvention = CallingConvention.Cdecl)]");
 					if (!string.IsNullOrEmpty(retAttr))
 						writer.WriteLine($"\t\t{retAttr}");
 					writer.WriteLine($"\t\tinternal static extern {returnType} {name} ({string.Join(", ", paramsList)});");
+					writer.WriteLine($"\t\t#endif");
+
 					writer.WriteLine($"\t\t#else");
 					writer.WriteLine($"\t\tprivate partial class Delegates {{");
 					writer.WriteLine($"\t\t\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
@@ -522,6 +552,87 @@ namespace SkiaSharpGenerator
 				}
 				writer.WriteLine();
 				writer.WriteLine($"\t\t#endregion");
+				writer.WriteLine();
+			}
+		}
+
+		public void WriteDelegateProxies(TextWriter writer)
+		{
+			Log?.LogVerbose("  Writing delegate proxies...");
+
+			writer.WriteLine($"#region DelegateProxies");
+
+			var delegates = compilation.Typedefs
+				.Where(t => t.ElementType.TypeKind == CppTypeKind.Pointer)
+				.Where(t => IncludeNamespace(t.GetDisplayName()))
+				.OrderBy(t => t.GetDisplayName())
+				.GroupBy(t => GetNamespace(t.GetDisplayName()));
+
+			foreach (var group in delegates)
+			{
+				writer.WriteLine();
+				writer.WriteLine($"namespace {group.Key} {{");
+				writer.WriteLine($"internal static unsafe partial class DelegateProxies {{ ");
+
+				foreach (var del in group)
+				{
+					WriteDelegateProxy(writer, del);
+				}
+
+				writer.WriteLine($"}}");
+				writer.WriteLine($"}}");
+			}
+
+			writer.WriteLine();
+			writer.WriteLine($"#endregion");
+		}
+
+		private void WriteDelegateProxy(TextWriter writer, CppTypedef del)
+		{
+			if (!(((CppPointerType)del.ElementType).ElementType is CppFunctionType function))
+			{
+				Log?.LogWarning($"Unknown delegate type {del}");
+
+				writer.WriteLine($"// TODO: {del}");
+				return;
+			}
+
+			var nativeName = del.GetDisplayName();
+
+			Log?.LogVerbose($"    {nativeName}");
+
+			functionMappings.TryGetValue(nativeName, out var map);
+			var name = map?.CsType ?? CleanName(nativeName);
+
+			if (map?.GenerateProxy == false)
+			{
+				return;
+			}
+
+			var functionPointerType = GetFunctionPointerType(del, map);
+
+			var (paramsList, returnType) = GetManagedFunctionArguments(function, map);
+
+			var proxies = map?.ProxySuffixes ?? new List<string> { "" };
+
+			foreach (var proxyPrefix in proxies)
+			{
+				var proxyName = name.EndsWith("ProxyDelegate") ? name.Replace("ProxyDelegate", "Proxy") : name;
+				var implName = name.EndsWith("ProxyDelegate") ? name.Replace("ProxyDelegate", "ProxyImplementation") : name + "Implementation";
+
+				proxyName += proxyPrefix;
+				implName += proxyPrefix;
+
+				writer.WriteLine($"\t/// Proxy for {nativeName} native function.");
+				writer.WriteLine($"#if USE_LIBRARY_IMPORT");
+				writer.WriteLine($"\tpublic static readonly {functionPointerType} {proxyName} = &{implName};");
+				writer.WriteLine($"\t[UnmanagedCallersOnly(CallConvs = new [] {{typeof(CallConvCdecl)}})]");
+				writer.WriteLine($"#else");
+				writer.WriteLine($"\tpublic static readonly {name} {proxyName} = {implName};");
+				writer.WriteLine($"\t[MonoPInvokeCallback (typeof ({name}))]");
+				writer.WriteLine($"#endif");
+				if (returnType == "bool") writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
+				writer.WriteLine($"\tprivate static partial {returnType} {implName}({string.Join(",", paramsList)});");
 				writer.WriteLine();
 			}
 		}
