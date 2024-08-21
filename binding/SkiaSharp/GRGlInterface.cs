@@ -138,7 +138,7 @@ namespace SkiaSharp
 
 			private static IntPtr LoadLibrary (string lpFileName) => LoadPackagedLibrary(lpFileName, 0);
 #elif USE_LIBRARY_IMPORT
-			[LibraryImport ("Kernel32.dll", SetLastError = true, Entrypoint = "LoadLibraryW", StringMarshalling = StringMarshalling.Utf16)]
+			[LibraryImport ("Kernel32.dll", SetLastError = true, EntryPoint = "LoadLibraryW", StringMarshalling = StringMarshalling.Utf16)]
 			private static partial IntPtr LoadLibrary (string lpFileName);
 
 			[LibraryImport ("Kernel32.dll", SetLastError = true)]
