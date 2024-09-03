@@ -420,6 +420,17 @@ namespace SkiaSharp
 			}
 		}
 
+		public void DrawPoints (SKPointMode mode, SKPoint[] points, int count, SKPaint paint)
+		{
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			if (points == null)
+				throw new ArgumentNullException (nameof (points));
+			fixed (SKPoint* p = points) {
+				SkiaApi.sk_canvas_draw_points (Handle, mode, (IntPtr)count, p, paint.Handle);
+			}
+		}
+
 		// DrawPoint
 
 		public void DrawPoint (SKPoint p, SKPaint paint)
