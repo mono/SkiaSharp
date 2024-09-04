@@ -9,9 +9,13 @@
     <Title>SkiaSharp Views &amp; Layers for Windows.Forms</Title>
     <PackageTags>windows.forms;winforms</PackageTags>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <PackageReference Include="OpenTK" Version="3.1.0" NoWarn="NU1701" />
     <PackageReference Include="OpenTK.GLControl" Version="3.1.0" NoWarn="NU1701" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.StartsWith('net4'))">
+    <PackageReference Include="OpenTK" Version="4.8.2" />
+    <PackageReference Include="OpenTK.GLControl" Version="4.0.1" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <Reference Include="System.Windows.Forms" />
