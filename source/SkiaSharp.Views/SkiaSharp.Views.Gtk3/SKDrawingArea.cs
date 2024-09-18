@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using Cairo;
+using Gtk;
 using SkiaSharp.Views.Desktop;
 
 namespace SkiaSharp.Views.Gtk
@@ -10,6 +11,7 @@ namespace SkiaSharp.Views.Gtk
 	{
 		private ImageSurface pix;
 		private SKSurface surface;
+		private bool ignorePixelScaling = true; // Enable by default to keep previous behavior
 
 		public SKDrawingArea()
 		{
@@ -19,6 +21,16 @@ namespace SkiaSharp.Views.Gtk
 
 		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
+
+		public bool IgnorePixelScaling
+		{
+			get => ignorePixelScaling;
+			set
+			{
+				ignorePixelScaling = value;
+				QueueDraw();
+			}
+		}
 
 		protected override bool OnDrawn(Context cr)
 		{
@@ -48,6 +60,10 @@ namespace SkiaSharp.Views.Gtk
 			}
 
 			// write the pixbuf to the graphics
+			if (!IgnorePixelScaling)
+			{
+				cr.Scale(1.0f / ScaleFactor, 1.0f / ScaleFactor);
+			}
 			cr.SetSourceSurface(pix, 0, 0);
 			cr.Paint();
 
@@ -73,6 +89,13 @@ namespace SkiaSharp.Views.Gtk
 			var alloc = Allocation;
 			var w = alloc.Width;
 			var h = alloc.Height;
+
+			if (!IgnorePixelScaling)
+			{
+				w *= ScaleFactor;
+				h *= ScaleFactor;
+			}
+
 			var imgInfo = new SKImageInfo(w, h, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
 			if (pix == null || pix.Width != imgInfo.Width || pix.Height != imgInfo.Height)
