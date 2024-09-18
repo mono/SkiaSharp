@@ -1,7 +1,6 @@
 ﻿#nullable disable
 
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SkiaSharp
@@ -10,16 +9,16 @@ namespace SkiaSharp
 	{
 		private static readonly SKManagedDrawableDelegates delegates;
 
-		private int fromNative;
+		internal int fromNative;
 
 		static SKDrawable ()
 		{
 			delegates = new SKManagedDrawableDelegates {
-				fDraw = DrawInternal,
-				fGetBounds = GetBoundsInternal,
-				fApproximateBytesUsed = ApproximateBytesUsedInternal,
-				fMakePictureSnapshot = MakePictureSnapshotInternal,
-				fDestroy = DestroyInternal,
+				fDraw = DelegateProxies.SKManagedDrawableDrawProxy,
+				fGetBounds = DelegateProxies.SKManagedDrawableGetBoundsProxy,
+				fApproximateBytesUsed = DelegateProxies.SKManagedDrawableApproximateBytesUsedProxy,
+				fMakePictureSnapshot = DelegateProxies.SKManagedDrawableMakePictureSnapshotProxy,
+				fDestroy = DelegateProxies.SKManagedDrawableDestroyProxy
 			};
 
 			SkiaApi.sk_manageddrawable_set_procs (delegates);
@@ -65,6 +64,9 @@ namespace SkiaSharp
 			}
 		}
 
+		public int ApproximateBytesUsed =>
+			(int)SkiaApi.sk_drawable_approximate_bytes_used (Handle);
+
 		public void Draw (SKCanvas canvas, in SKMatrix matrix)
 		{
 			fixed (SKMatrix* m = &matrix)
@@ -84,60 +86,20 @@ namespace SkiaSharp
 		public void NotifyDrawingChanged () =>
 			SkiaApi.sk_drawable_notify_drawing_changed (Handle);
 
-		protected virtual void OnDraw (SKCanvas canvas)
+		protected internal virtual void OnDraw (SKCanvas canvas)
 		{
 		}
 
-		protected virtual int OnGetApproximateBytesUsed () => 0;
+		protected internal virtual int OnGetApproximateBytesUsed () => 0;
 
-		protected virtual SKRect OnGetBounds () => SKRect.Empty;
+		protected internal virtual SKRect OnGetBounds () => SKRect.Empty;
 
-		protected virtual SKPicture OnSnapshot ()
+		protected internal virtual SKPicture OnSnapshot ()
 		{
 			using var recorder = new SKPictureRecorder ();
 			var canvas = recorder.BeginRecording (Bounds);
 			Draw (canvas, 0, 0);
 			return recorder.EndRecording ();
-		}
-
-		[MonoPInvokeCallback (typeof (SKManagedDrawableDrawProxyDelegate))]
-		private static void DrawInternal (IntPtr d, void* context, IntPtr canvas)
-		{
-			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
-			drawable.OnDraw (SKCanvas.GetObject (canvas, false));
-		}
-
-		[MonoPInvokeCallback (typeof (SKManagedDrawableGetBoundsProxyDelegate))]
-		private static void GetBoundsInternal (IntPtr d, void* context, SKRect* rect)
-		{
-			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
-			var bounds = drawable.OnGetBounds ();
-			*rect = bounds;
-		}
-
-		[MonoPInvokeCallback (typeof (SKManagedDrawableApproximateBytesUsedProxyDelegate))]
-		private static IntPtr ApproximateBytesUsedInternal (IntPtr d, void* context)
-		{
-			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
-			return (IntPtr)drawable.OnGetApproximateBytesUsed ();
-		}
-
-		[MonoPInvokeCallback (typeof (SKManagedDrawableMakePictureSnapshotProxyDelegate))]
-		private static IntPtr MakePictureSnapshotInternal (IntPtr d, void* context)
-		{
-			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out _);
-			return drawable.OnSnapshot ()?.Handle ?? IntPtr.Zero;
-		}
-
-		[MonoPInvokeCallback (typeof (SKManagedDrawableDestroyProxyDelegate))]
-		private static void DestroyInternal (IntPtr d, void* context)
-		{
-			var drawable = DelegateProxies.GetUserData<SKDrawable> ((IntPtr)context, out var gch);
-			if (drawable != null) {
-				Interlocked.Exchange (ref drawable.fromNative, 1);
-				drawable.Dispose ();
-			}
-			gch.Free ();
 		}
 
 		internal static SKDrawable GetObject (IntPtr handle) =>

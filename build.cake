@@ -2,11 +2,13 @@
 #addin nuget:?package=Cake.XCode&version=5.0.0
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 #addin nuget:?package=Cake.Json&version=6.0.1
-#addin nuget:?package=NuGet.Packaging.Core&version=5.11.0
+#addin nuget:?package=NuGet.Packaging&version=6.9.1
 #addin nuget:?package=SharpCompress&version=0.32.2
-#addin nuget:?package=Mono.Cecil&version=0.10.0
-#addin nuget:?package=Mono.ApiTools&version=5.14.0.2
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.5
+#addin nuget:?package=Mono.Cecil&version=0.11.5
+#addin nuget:?package=Mono.ApiTools.ApiInfo&version=1.4.1
+#addin nuget:?package=Mono.ApiTools.ApiDiff&version=1.4.1
+#addin nuget:?package=Mono.ApiTools.ApiDiffFormatted&version=1.4.1
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.4.1
 
 #tool nuget:?package=mdoc&version=5.8.9
 #tool nuget:?package=xunit.runner.console&version=2.4.2
@@ -251,7 +253,7 @@ Task ("tests-netcore")
 
     var failedTests = 0;
 
-    var tfm = "net7.0";
+    var tfm = "net8.0";
     var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
     if (SUPPORT_VULKAN)
         testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
@@ -297,7 +299,7 @@ Task ("tests-android")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Release";
-    var tfm = "net7.0-android";
+    var tfm = "net8.0-android";
     var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
 
@@ -329,7 +331,7 @@ Task ("tests-ios")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net7.0-ios";
+    var tfm = "net8.0-ios";
     var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 
@@ -361,7 +363,7 @@ Task ("tests-maccatalyst")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net7.0-maccatalyst";
+    var tfm = "net8.0-maccatalyst";
     var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 
@@ -395,10 +397,8 @@ Task ("tests-wasm")
 
     IProcess serverProc = null;
     try {
-        serverProc = RunAndReturnProcess (PYTHON_EXE, new ProcessSettings {
-            Arguments = MakeAbsolute (File ("./tests/SkiaSharp.Tests.Wasm/server.py")).FullPath,
-            WorkingDirectory = "./tests/SkiaSharp.Tests.Wasm/bin/Release/net7.0/dist",
-        });
+        var wasmProj = MakeAbsolute (File ("./tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj")).FullPath;
+        serverProc = RunAndReturnProcess ("dotnet", $"run --project {wasmProj} --no-build -c {CONFIGURATION}");
         DotNetRun ("./utils/WasmTestRunner/WasmTestRunner.csproj",
             $"--output=\"./output/logs/testlogs/SkiaSharp.Tests.Wasm/{DATE_TIME_STR}/\" " +
             (string.IsNullOrEmpty (CHROMEWEBDRIVER) ? "" : $"--driver=\"{CHROMEWEBDRIVER}\" ") +

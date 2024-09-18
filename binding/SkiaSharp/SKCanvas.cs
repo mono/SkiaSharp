@@ -450,7 +450,9 @@ namespace SkiaSharp
 
 		public void DrawImage (SKImage image, SKPoint p, SKPaint paint = null)
 		{
-			DrawImage (image, p.X, p.Y, SKSamplingOptions.Default, paint);
+#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawImage (image, p.X, p.Y, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
+#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 		}
 
 		public void DrawImage (SKImage image, SKPoint p, SKSamplingOptions sampling, SKPaint paint = null)
@@ -460,7 +462,9 @@ namespace SkiaSharp
 
 		public void DrawImage (SKImage image, float x, float y, SKPaint paint = null)
 		{
-			DrawImage (image, x, y, SKSamplingOptions.Default, paint);
+#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawImage (image, x, y, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
+#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 		}
 
 		public void DrawImage (SKImage image, float x, float y, SKSamplingOptions sampling, SKPaint paint = null)
@@ -472,7 +476,9 @@ namespace SkiaSharp
 
 		public void DrawImage (SKImage image, SKRect dest, SKPaint paint = null)
 		{
-			DrawImage (image, null, &dest, SKSamplingOptions.Default, paint);
+#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawImage (image, null, &dest, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
+#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 		}
 
 		public void DrawImage (SKImage image, SKRect dest, SKSamplingOptions sampling, SKPaint paint = null)
@@ -482,7 +488,9 @@ namespace SkiaSharp
 
 		public void DrawImage (SKImage image, SKRect source, SKRect dest, SKPaint paint = null)
 		{
-			DrawImage (image, &source, &dest, SKSamplingOptions.Default, paint);
+#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawImage (image, &source, &dest, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
+#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 		}
 
 		public void DrawImage (SKImage image, SKRect source, SKRect dest, SKSamplingOptions sampling, SKPaint paint = null)
@@ -856,6 +864,10 @@ namespace SkiaSharp
 		public void SetMatrix (in SKMatrix matrix) =>
 			SetMatrix ((SKMatrix44)matrix);
 
+		[Obsolete("Use SetMatrix(in SKMatrix) instead.", true)]
+		public void SetMatrix (SKMatrix matrix) =>
+			SetMatrix (in matrix);
+
 		public void SetMatrix (in SKMatrix44 matrix)
 		{
 			fixed (SKMatrix44* ptr = &matrix) {
@@ -937,25 +949,31 @@ namespace SkiaSharp
 
 		// DrawAtlas
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint) =>
-			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, SKSamplingOptions.Default, null, paint);
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint = null) =>
+#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, null, paint);
+#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKSamplingOptions sampling, SKPaint paint) =>
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, sampling, null, paint);
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint) =>
-			DrawAtlas (atlas, sprites, transforms, colors, mode, SKSamplingOptions.Default, null, paint);
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint = null) =>
+#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, null, paint);
+#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKPaint paint) =>
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, sampling, null, paint);
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint) =>
-			DrawAtlas (atlas, sprites, transforms, colors, mode, SKSamplingOptions.Default, &cullRect, paint);
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint = null) =>
+#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, &cullRect, paint);
+#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
-		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect cullRect, SKPaint paint) =>
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect cullRect, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, sampling, &cullRect, paint);
 
-		private void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect* cullRect, SKPaint paint)
+		private void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect* cullRect, SKPaint paint = null)
 		{
 			if (atlas == null)
 				throw new ArgumentNullException (nameof (atlas));
@@ -972,7 +990,7 @@ namespace SkiaSharp
 			fixed (SKRect* s = sprites)
 			fixed (SKRotationScaleMatrix* t = transforms)
 			fixed (SKColor* c = colors) {
-				SkiaApi.sk_canvas_draw_atlas (Handle, atlas.Handle, t, s, (uint*)c, transforms.Length, mode, &sampling, cullRect, paint.Handle);
+				SkiaApi.sk_canvas_draw_atlas (Handle, atlas.Handle, t, s, (uint*)c, transforms.Length, mode, &sampling, cullRect, paint?.Handle ?? IntPtr.Zero);
 			}
 		}
 

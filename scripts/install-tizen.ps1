@@ -3,7 +3,7 @@
 #  - https://developercommunity.visualstudio.com/content/problem/661596/the-updated-path-doesnt-kick-in.html
 
 Param(
-    [string] $Version = "5.1",
+    [string] $Version = "5.6",
     [string] $InstallDestination = $null,
     [boolean] $UpgradeLLVM = $true
 )

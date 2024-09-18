@@ -33,25 +33,23 @@ public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.SKImag
 ```
 
 
-#### Type Changed: SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs
+#### Type Changed: SkiaSharp.Views.iOS.SKPaintMetalSurfaceEventArgs
 
-Removed constructors:
+Added constructors:
 
 ```csharp
-[Obsolete]
-public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
-
-[Obsolete]
-public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
+public SKPaintMetalSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info);
+public SKPaintMetalSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
 ```
 
-Removed property:
+Added properties:
 
 ```csharp
-[Obsolete]
-public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
+public SkiaSharp.SKImageInfo Info { get; }
+public SkiaSharp.SKImageInfo RawInfo { get; }
 ```
 
 
 #### Removed Type SkiaSharp.Views.iOS.Extensions
+#### Removed Type SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs
 

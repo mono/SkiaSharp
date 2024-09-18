@@ -1,30 +1,4 @@
 export class SKHtmlCanvas {
-    constructor(useGL, element, callback) {
-        this.renderLoopEnabled = false;
-        this.renderLoopRequest = 0;
-        this.htmlCanvas = element;
-        this.renderFrameCallback = callback;
-        if (useGL) {
-            const ctx = SKHtmlCanvas.createWebGLContext(this.htmlCanvas);
-            if (!ctx) {
-                console.error(`Failed to create WebGL context: err ${ctx}`);
-                return null;
-            }
-            // make current
-            const GL = SKHtmlCanvas.getGL();
-            GL.makeContextCurrent(ctx);
-            // read values
-            const GLctx = SKHtmlCanvas.getGLctx();
-            const fbo = GLctx.getParameter(GLctx.FRAMEBUFFER_BINDING);
-            this.glInfo = {
-                context: ctx,
-                fboId: fbo ? fbo.id : 0,
-                stencil: GLctx.getParameter(GLctx.STENCIL_BITS),
-                sample: 0,
-                depth: GLctx.getParameter(GLctx.DEPTH_BITS),
-            };
-        }
-    }
     static initGL(element, elementId, callback) {
         var view = SKHtmlCanvas.init(true, element, elementId, callback);
         if (!view || !view.glInfo)
@@ -78,6 +52,32 @@ export class SKHtmlCanvas {
         if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
             return;
         htmlCanvas.SKHtmlCanvas.putImageData(pData, width, height);
+    }
+    constructor(useGL, element, callback) {
+        this.renderLoopEnabled = false;
+        this.renderLoopRequest = 0;
+        this.htmlCanvas = element;
+        this.renderFrameCallback = callback;
+        if (useGL) {
+            const ctx = SKHtmlCanvas.createWebGLContext(this.htmlCanvas);
+            if (!ctx) {
+                console.error(`Failed to create WebGL context: err ${ctx}`);
+                return null;
+            }
+            // make current
+            const GL = SKHtmlCanvas.getGL();
+            GL.makeContextCurrent(ctx);
+            // read values
+            const GLctx = SKHtmlCanvas.getGLctx();
+            const fbo = GLctx.getParameter(GLctx.FRAMEBUFFER_BINDING);
+            this.glInfo = {
+                context: ctx,
+                fboId: fbo ? fbo.id : 0,
+                stencil: GLctx.getParameter(GLctx.STENCIL_BITS),
+                sample: 0, // TODO: GLctx.getParameter(GLctx.SAMPLES)
+                depth: GLctx.getParameter(GLctx.DEPTH_BITS),
+            };
+        }
     }
     deinit() {
         this.setEnableRenderLoop(false);

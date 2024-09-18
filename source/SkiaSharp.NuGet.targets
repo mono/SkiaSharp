@@ -23,8 +23,14 @@ $(PackageNotes)</PackageDescription>
     <None Include="@(PackageFile)" Link="%(PackagePath)" Pack="True" />
   </ItemGroup>
 
-  <!-- Generate the README -->
-  <Target Name="_IncludeAdditionalPackageFiles"
+  <!--
+    ===================================================================================================================
+    _GeneratePackageReadmeFile
+
+    Generate the package README file.
+    ===================================================================================================================
+  -->
+  <Target Name="_GeneratePackageReadmeFile"
           BeforeTargets="_GetPackageFiles"
           Condition="'$(PackageDescription)' != ''">
     <WriteLinesToFile File="$(IntermediateOutputPath)$(PackageReadmeFile)" Lines="$(PackageDescription)" Overwrite="True" />
@@ -34,23 +40,74 @@ $(PackageNotes)</PackageDescription>
     </ItemGroup>
   </Target>
 
-  <!-- Add the xml docs -->
+  <!--
+    ===================================================================================================================
+    _IncludeAdditionalTfmSpecificPackageFilesPrepare
+
+    Create all the properties needed to add additional files.
+    ===================================================================================================================
+  -->
   <Target Name="_IncludeAdditionalTfmSpecificPackageFilesPrepare">
     <GetNuGetShortFolderName
       TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
       TargetPlatformMoniker="$(TargetPlatformMoniker)">
       <Output TaskParameter="NuGetShortFolderName" PropertyName="NuGetShortFolderName" />
     </GetNuGetShortFolderName>
+  </Target>
+
+  <!--
+    ===================================================================================================================
+    IncludeMDocTfmSpecificPackageFiles
+
+    Include the XML docs in the package.
+    ===================================================================================================================
+  -->
+  <Target Name="IncludeMDocTfmSpecificPackageFiles">
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(MDocOutputPath)" PackagePath="lib\$(NuGetShortFolderName)\$(MDocOutputName)"
                               Exclude="@(DocumentationProjectOutputGroupOutput)" Condition="Exists('$(MDocOutputPath)')" />
     </ItemGroup>
   </Target>
 
-  <Target Name="_IncludeAdditionalTfmSpecificPackageFiles"
-          DependsOnTargets="_IncludeAdditionalTfmSpecificPackageFilesPrepare;IncludeAdditionalTfmSpecificPackageFiles" />
+  <!--
+    ===================================================================================================================
+    IncludeReferenceAssemblyTfmSpecificPackageFiles
 
-  <!-- Set the package version properties -->
+    Include the reference assembly in the package.
+    ===================================================================================================================
+  -->
+	<Target Name="IncludeReferenceAssemblyTfmSpecificPackageFiles">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(TargetRefPath)" PackagePath="ref\$(NuGetShortFolderName)\$(TargetFileName)"
+                              Condition="Exists('$(TargetRefPath)')" />
+		</ItemGroup>
+	</Target>
+  
+  <!--
+    ===================================================================================================================
+    _IncludeAdditionalTfmSpecificPackageFiles
+
+    Include all the additional files in the package.
+    ===================================================================================================================
+  -->
+  <PropertyGroup>
+    <_IncludeAdditionalTfmSpecificPackageFilesDependsOn>
+      _IncludeAdditionalTfmSpecificPackageFilesPrepare;
+      IncludeMDocTfmSpecificPackageFiles;
+      IncludeReferenceAssemblyTfmSpecificPackageFiles;
+      IncludeAdditionalTfmSpecificPackageFiles;
+    </_IncludeAdditionalTfmSpecificPackageFilesDependsOn>
+  </PropertyGroup>
+  <Target Name="_IncludeAdditionalTfmSpecificPackageFiles"
+          DependsOnTargets="$(_IncludeAdditionalTfmSpecificPackageFilesDependsOn)" />
+
+  <!--
+    ===================================================================================================================
+    _IncludeAdditionalVersionInfo
+
+    Set the package version properties.
+    ===================================================================================================================
+  -->
   <Target Name="_IncludeAdditionalVersionInfo">
     <PropertyGroup>
       <PackageVersion>$(Version)</PackageVersion>
