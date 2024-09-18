@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(WindowsDesktopTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(FullFrameworkTargetFrameworks);$(WindowsDesktopTargetFrameworks)</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>SkiaSharp.Views.Desktop</RootNamespace>
     <AssemblyName>SkiaSharp.Views.WindowsForms</AssemblyName>
@@ -8,6 +8,7 @@
     <DefineConstants>$(DefineConstants);__DESKTOP__;__WINFORMS__</DefineConstants>
     <Title>SkiaSharp Views &amp; Layers for Windows.Forms</Title>
     <PackageTags>windows.forms;winforms</PackageTags>
+    <SignAssembly Condition="!$(TargetFramework.StartsWith('net4'))">false</SignAssembly>
   </PropertyGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <PackageReference Include="OpenTK" Version="3.1.0" NoWarn="NU1701" />

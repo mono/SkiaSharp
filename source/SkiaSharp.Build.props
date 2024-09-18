@@ -117,7 +117,8 @@
 
   <!-- .NET Standard, .NET Framework and .NET -->
   <PropertyGroup>
-    <BasicTargetFrameworksCurrent>netstandard2.0;netstandard2.1;net462;$(TFMCurrent)</BasicTargetFrameworksCurrent>
+    <FullFrameworkTargetFrameworks>net462</FullFrameworkTargetFrameworks>
+    <BasicTargetFrameworksCurrent>netstandard2.0;netstandard2.1;$(FullFrameworkTargetFrameworks);$(TFMCurrent)</BasicTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tizen$(TPVTizenCurrent)</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tvos$(TPVtvOSCurrent)</PlatformTargetFrameworksCurrent>
@@ -151,7 +152,7 @@
 
   <!-- Windows Desktop TFMs -->
   <PropertyGroup>
-    <WindowsDesktopTargetFrameworks>net462</WindowsDesktopTargetFrameworks>
+    <WindowsDesktopTargetFrameworks></WindowsDesktopTargetFrameworks>
     <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">$(WindowsDesktopTargetFrameworks);$(WindowsTargetFrameworks)</WindowsDesktopTargetFrameworks>
   </PropertyGroup>
 
