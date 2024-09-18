@@ -50,9 +50,9 @@ namespace SkiaSharp.Tests
 			var second = SKColorFilter.CreateBlendMode(SKColors.Blue, SKBlendMode.SrcOver);
 			var filters = new[] { first, second };
 
-			var lerp = SKColorFilter.Lerp(weight, first, second);
+			var lerp = SKColorFilter.CreateLerp(weight, first, second);
 
-			Assert.Equal(returned, filters.IndexOf(lerp));
+			Assert.Equal(returned, Array.IndexOf(filters, lerp));
 		}
 	}
 }
