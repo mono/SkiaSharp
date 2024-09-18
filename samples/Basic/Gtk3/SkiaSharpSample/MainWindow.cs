@@ -22,7 +22,7 @@ namespace SkiaSharpSample
 			DeleteEvent += OnWindowDeleteEvent;
 
 			skiaView = new SKDrawingArea();
-			skiaView.IgnorePixelScaling = false;
+			skiaView.IgnorePixelScaling = true;
 			skiaView.PaintSurface += OnPaintSurface;
 			skiaView.Show();
 			Child = skiaView;

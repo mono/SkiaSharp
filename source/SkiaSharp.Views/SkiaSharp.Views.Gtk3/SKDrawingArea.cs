@@ -11,13 +11,13 @@ namespace SkiaSharp.Views.Gtk
 	{
 		private ImageSurface pix;
 		private SKSurface surface;
-		private bool ignorePixelScaling = true; // Enable by default to keep previous behavior
+		private bool ignorePixelScaling = false;
 
 		public SKDrawingArea()
 		{
 		}
 
-		public SKSize CanvasSize => pix == null ? SKSize.Empty : new SKSize(pix.Width, pix.Height);
+		public SKSize CanvasSize { get; private set; } = SKSize.Empty;
 
 		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
@@ -60,7 +60,7 @@ namespace SkiaSharp.Views.Gtk
 			}
 
 			// write the pixbuf to the graphics
-			if (!IgnorePixelScaling)
+			if (IgnorePixelScaling)
 			{
 				cr.Scale(1.0f / ScaleFactor, 1.0f / ScaleFactor);
 			}
@@ -90,7 +90,9 @@ namespace SkiaSharp.Views.Gtk
 			var w = alloc.Width;
 			var h = alloc.Height;
 
-			if (!IgnorePixelScaling)
+			CanvasSize = new SKSize(w, h);
+
+			if (IgnorePixelScaling)
 			{
 				w *= ScaleFactor;
 				h *= ScaleFactor;
