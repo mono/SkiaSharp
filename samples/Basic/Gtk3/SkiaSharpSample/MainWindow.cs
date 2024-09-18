@@ -22,6 +22,7 @@ namespace SkiaSharpSample
 			DeleteEvent += OnWindowDeleteEvent;
 
 			skiaView = new SKDrawingArea();
+			skiaView.IgnorePixelScaling = false;
 			skiaView.PaintSurface += OnPaintSurface;
 			skiaView.Show();
 			Child = skiaView;
@@ -49,7 +50,7 @@ namespace SkiaSharpSample
 			};
 			using var font = new SKFont
 			{
-				Size = 24
+				Size = 24 * ScaleFactor
 			};
 			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
 			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
