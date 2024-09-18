@@ -107,28 +107,28 @@ namespace SkiaSharp.Tests
 		public int SnapshotFireCount;
 		public int ApproxBytesCount;
 
-		protected override void OnDraw(SKCanvas canvas)
+		protected internal override void OnDraw(SKCanvas canvas)
 		{
 			DrawFireCount++;
 
 			canvas.DrawColor(SKColors.Blue);
 		}
 
-		protected override SKRect OnGetBounds()
+		protected internal override SKRect OnGetBounds()
 		{
 			BoundsFireCount++;
 
 			return SKRect.Create(100, 100);
 		}
 
-		protected override SKPicture OnSnapshot()
+		protected internal override SKPicture OnSnapshot()
 		{
 			SnapshotFireCount++;
 
 			return base.OnSnapshot();
 		}
 
-		protected override int OnGetApproximateBytesUsed ()
+		protected internal override int OnGetApproximateBytesUsed ()
 		{
 			ApproxBytesCount++;
 

@@ -299,14 +299,65 @@ namespace SkiaSharp
 
 		// GetKerningPairAdjustments
 
+		/// <summary>
+		/// If false, then <see cref="GetKerningPairAdjustments"/> will never return nonzero
+		/// adjustments for any possible pair of glyphs.
+		/// </summary>
+		public bool HasGetKerningPairAdjustments =>
+			SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, null, 0, null);
+
+		/// <summary>
+		/// Gets a kerning adjustment for each sequential pair of glyph indices in <paramref name="glyphs"/>.
+		/// </summary>
+		/// <param name="glyphs">The sequence of glyph indices to get kerning adjustments for.</param>
+		/// <returns>
+		/// Adjustments are returned in design units, relative to <see cref="UnitsPerEm"/>.
+		/// </returns>
+		/// <remarks>
+		/// For backwards-compatibility reasons, an additional zero entry is present at the end of the array.
+		/// </remarks>
 		public int[] GetKerningPairAdjustments (ReadOnlySpan<ushort> glyphs)
 		{
 			var adjustments = new int[glyphs.Length];
+			GetKerningPairAdjustments (glyphs, adjustments);
+			return adjustments;
+		}
+
+		/// <summary>
+		/// Gets a kerning adjustment for each sequential pair of glyph indices in <paramref name="glyphs"/>.
+		/// </summary>
+		/// <param name="glyphs">The sequence of glyph indices to get kerning adjustments for.</param>
+		/// <param name="adjustments">
+		/// The span that will hold the output adjustments, one per adjacent pari of <paramref name="glyphs"/>.
+		/// Adjustments are returned in design units, relative to <see cref="UnitsPerEm"/>.
+		/// This must contain a minimum of glyphs.Length - 1 elements.
+		/// </param>
+		/// <returns>
+		/// True if any kerning pair adjustments were written to <paramref name="adjustments"/>.
+		/// False if the typeface does not contain adjustments for any of the given pairs of glyphs.
+		/// </returns>
+		/// <remarks>
+		/// If this function returns false, then the first <paramref name="glyphs"/>.Length - 1 elements of <paramref name="adjustments"/> will be zero.
+		/// Elements of <paramref name="adjustments"/> beyond <paramref name="glyphs"/>.Length - 1 will not be modified.
+		/// </remarks>
+		public bool GetKerningPairAdjustments (ReadOnlySpan<ushort> glyphs, Span<int> adjustments)
+		{
+			if (adjustments.Length < glyphs.Length - 1)
+				throw new ArgumentException ("Length of adjustments must be large enough to hold one adjustment per pair of glyphs (or, glyphs.Length - 1).");
+
+			bool res;
 			fixed (ushort* gp = glyphs)
 			fixed (int* ap = adjustments) {
-				SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, gp, glyphs.Length, ap);
+				res = SkiaApi.sk_typeface_get_kerning_pair_adjustments (Handle, gp, glyphs.Length, ap);
 			}
-			return adjustments;
+
+			if (!res && glyphs.Length > 1)
+				//Per SkTypeface::GetKerningPairAdjustments documentation, the method may have written
+				//nonsense into the array before bailing. Don't return it to the caller, the doc says
+				//such values must be ignored.
+				adjustments.Slice(0, glyphs.Length - 1).Clear ();
+
+			return res;
 		}
 
 		//

@@ -2,6 +2,9 @@
 using System.ComponentModel;
 using System.Windows.Forms;
 using OpenTK;
+#if WINDOWS
+using OpenTK.GLControl;
+#endif
 using OpenTK.Graphics;
 using OpenTK.Graphics.ES20;
 
@@ -24,6 +27,19 @@ namespace SkiaSharp.Views.Desktop
 
 		private SKSizeI lastSize;
 
+#if WINDOWS
+		public SKGLControl()
+			: base(new GLControlSettings { AlphaBits = 8, RedBits = 8, GreenBits = 8, BlueBits = 8, DepthBits = 24, StencilBits = 8 })
+		{
+			Initialize();
+		}
+
+		public SKGLControl(GLControlSettings settings)
+			: base(settings)
+		{
+			Initialize();
+		}
+#else
 		public SKGLControl()
 			: base(new GraphicsMode(new ColorFormat(8, 8, 8, 8), 24, 8))
 		{
@@ -41,6 +57,7 @@ namespace SkiaSharp.Views.Desktop
 		{
 			Initialize();
 		}
+#endif
 
 		private void Initialize()
 		{

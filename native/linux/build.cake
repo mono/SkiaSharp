@@ -60,6 +60,14 @@ Task("libSkiaSharp")
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
 
+        // This is terrible! But, Alpine (musl) does not define this
+        // so we are forced to for dng_sdk. If this ever becomes a problem
+        // for other libraries, we will need to find a better solution.
+        var wordSize = ReduceArch(arch).EndsWith("64") ? "64" : "32";
+        var wordSizeDefine = VARIANT.ToLower().StartsWith("alpine")
+            ? $", '-D__WORDSIZE={wordSize}'"
+            : $"";
+
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
             $"target_cpu='{arch}' " +
@@ -77,7 +85,7 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' {wordSizeDefine} ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
