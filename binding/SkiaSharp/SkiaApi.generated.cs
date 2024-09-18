@@ -3846,23 +3846,23 @@ namespace SkiaSharp
 			(sk_colorfilter_new_hsla_matrix_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_hsla_matrix> ("sk_colorfilter_new_hsla_matrix")).Invoke (array);
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_lerp(float t, sk_colorfilter_t* dst, sk_colorfilter_t* src)
+		// sk_colorfilter_t* sk_colorfilter_new_lerp(float weight, sk_colorfilter_t* filter0, sk_colorfilter_t* filter1)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_colorfilter_t sk_colorfilter_new_lerp (Single t, sk_colorfilter_t dst, sk_colorfilter_t src);
+		internal static partial sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_colorfilter_t sk_colorfilter_new_lerp (Single t, sk_colorfilter_t dst, sk_colorfilter_t src);
+		internal static extern sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_colorfilter_t sk_colorfilter_new_lerp (Single t, sk_colorfilter_t dst, sk_colorfilter_t src);
+			internal delegate sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1);
 		}
 		private static Delegates.sk_colorfilter_new_lerp sk_colorfilter_new_lerp_delegate;
-		internal static sk_colorfilter_t sk_colorfilter_new_lerp (Single t, sk_colorfilter_t dst, sk_colorfilter_t src) =>
-			(sk_colorfilter_new_lerp_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_lerp> ("sk_colorfilter_new_lerp")).Invoke (t, dst, src);
+		internal static sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1) =>
+			(sk_colorfilter_new_lerp_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_lerp> ("sk_colorfilter_new_lerp")).Invoke (weight, filter0, filter1);
 		#endif
 
 		// sk_colorfilter_t* sk_colorfilter_new_lighting(sk_color_t mul, sk_color_t add)
