@@ -237,7 +237,7 @@ namespace SkiaSharp
 				SKEncodedImageFormat.Jpeg =>
 					Encode (dst, new SKJpegEncoderOptions (quality)),
 				SKEncodedImageFormat.Png =>
-					Encode (dst, new SKPngEncoderOptions ()),
+					Encode (dst, new SKPngEncoderOptions(default, SKPngEncoderOptions.Default.ZLibLevel)),
 				SKEncodedImageFormat.Webp when quality == 100 =>
 					Encode (dst, new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossless, 75)),
 				SKEncodedImageFormat.Webp =>
