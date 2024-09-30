@@ -60,18 +60,6 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels) =>
-			FromPixelCopy (info, pixels, info.RowBytes);
-
-		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels, int rowBytes)
-		{
-			if (pixels == null)
-				throw new ArgumentNullException (nameof (pixels));
-			using (var data = SKData.CreateCopy (pixels)) {
-				return FromPixels (info, data, rowBytes);
-			}
-		}
-
 		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels) =>
 			FromPixelCopy (info, pixels, info.RowBytes);
 
@@ -173,18 +161,6 @@ namespace SkiaSharp
 		}
 
 		public static SKImage FromEncodedData (ReadOnlySpan<byte> data)
-		{
-			if (data == null)
-				throw new ArgumentNullException (nameof (data));
-			if (data.Length == 0)
-				throw new ArgumentException ("The data buffer was empty.");
-
-			using (var skdata = SKData.CreateCopy (data)) {
-				return FromEncodedData (skdata);
-			}
-		}
-
-		public static SKImage FromEncodedData (byte[] data)
 		{
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
