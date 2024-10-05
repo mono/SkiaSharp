@@ -319,6 +319,18 @@ namespace SkiaSharp
 			return result;
 		}
 
+		public readonly void MapPoints (Span<SKPoint> result, ReadOnlySpan<SKPoint> points)
+		{
+			if (result.Length != points.Length)
+				throw new ArgumentException ("Buffers must be the same size.");
+
+			fixed (SKMatrix* t = &this)
+			fixed (SKPoint* rp = result)
+			fixed (SKPoint* pp = points) {
+				SkiaApi.sk_matrix_map_points (t, rp, pp, result.Length);
+			}
+		}
+
 		public readonly void MapPoints (SKPoint[] result, SKPoint[] points)
 		{
 			if (result == null)
@@ -357,6 +369,18 @@ namespace SkiaSharp
 				SkiaApi.sk_matrix_map_vector (t, x, y, &result);
 			}
 			return result;
+		}
+
+		public readonly void MapVectors (Span<SKPoint> result, ReadOnlySpan<SKPoint> vectors)
+		{
+			if (result.Length != vectors.Length)
+				throw new ArgumentException ("Buffers must be the same size.");
+
+			fixed (SKMatrix* t = &this)
+			fixed (SKPoint* rp = result)
+			fixed (SKPoint* pp = vectors) {
+				SkiaApi.sk_matrix_map_vectors (t, rp, pp, result.Length);
+			}
 		}
 
 		public readonly void MapVectors (SKPoint[] result, SKPoint[] vectors)
