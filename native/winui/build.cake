@@ -1,8 +1,8 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/msbuild.cake"
+#load "../../cake/native-shared.cake"
+#load "../../cake/msbuild.cake"
 
 Task("SkiaSharp.Views.WinUI.Native")
     .WithCriteria(IsRunningOnWindows())
