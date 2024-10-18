@@ -153,6 +153,9 @@ internal partial class VersionConstants {
     <_SignAssemblyVerifyAfterTargets>
       Build
     </_SignAssemblyVerifyAfterTargets>
+    <_SignAssemblyAfterTargets Condition="'$(CsWinRTIncludes)' != ''">
+      CsWinRTReplaceForPatchedRuntime
+    </_SignAssemblyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssemblyVerify"
           AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
