@@ -135,6 +135,9 @@ internal partial class VersionConstants {
     <_SignAssemblyAfterTargets>
       CoreCompile
     </_SignAssemblyAfterTargets>
+    <_SignAssemblyAfterTargets Condition="'$(CsWinRTIncludes)' != ''">
+      CsWinRTReplaceForPatchedRuntime
+    </_SignAssemblyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssembly"
           AfterTargets="$(_SignAssemblyAfterTargets)"
@@ -153,9 +156,6 @@ internal partial class VersionConstants {
     <_SignAssemblyVerifyAfterTargets>
       Build
     </_SignAssemblyVerifyAfterTargets>
-    <_SignAssemblyAfterTargets Condition="'$(CsWinRTIncludes)' != ''">
-      CsWinRTReplaceForPatchedRuntime
-    </_SignAssemblyAfterTargets>
   </PropertyGroup>
   <Target Name="_SignAssemblyVerify"
           AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
