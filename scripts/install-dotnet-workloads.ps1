@@ -24,6 +24,7 @@ Write-Host "Installing .NET workloads..."
   --source $feed1 `
   --source $feed2 `
   --source $feed3 `
+  --verbosity diagnostic `
   --skip-sign-check
 
 Write-Host "Installing Tizen workloads..."
