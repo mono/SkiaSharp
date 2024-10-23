@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\winui\any\*.dll" Visible="False" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\winui\$(Platform)\*" Visible="False" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and ('$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU')">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\winui\x64\*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\winui\x86\*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\winui\arm64\*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\winui\x64\*" Condition="'$(RuntimeIdentifier)' == ''" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

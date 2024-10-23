@@ -237,6 +237,36 @@ stages:
             vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
             target: externals-nanoserver
             additionalArgs: --buildarch=x64
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native WinUI|x86 (Win)
+          parameters:
+            name: native_winui_x86_windows
+            displayName: WinUI x86
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-winui
+            additionalArgs: --buildarch=x86
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native WinUI|x64 (Win)
+          parameters:
+            name: native_winui_x64_windows
+            displayName: WinUI x64
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-winui
+            additionalArgs: --buildarch=x64
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native WinUI|arm64 (Win)
+          parameters:
+            name: native_winui_arm64_windows
+            displayName: WinUI arm64
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS_NATIVE }}
+            target: externals-winui
+            additionalArgs: --buildarch=arm64
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_macos
@@ -501,6 +531,10 @@ stages:
               - name: native_win32_x86_windows
               - name: native_win32_x64_windows
               - name: native_win32_arm64_windows
+              # WinUI
+              - name: native_winui_x86_windows
+              - name: native_winui_x64_windows
+              - name: native_winui_arm64_windows
               # Nano Server
               - name: native_win32_x64_nanoserver_windows
               # iOS
@@ -649,15 +683,6 @@ stages:
                   Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
                 displayName: Prepare the nugets-symbols artifact for publishing
               - pwsh: |
-                  $nupkgs = (Get-ChildItem ".\output\nugets*\*.*nupkg")
-                  foreach ($nupkg in $nupkgs) {
-                    $filename = $nupkg.Name.TrimEnd('.nupkg')
-                    $dest = ".\output\extracted_nugets\$filename"
-                    Write-Host "Extracting '$nupkg' to '$dest'..."
-                    Expand-Archive $nupkg $dest
-                  }
-                displayName: Extract all the .nupkg files for scanning
-              - pwsh: |
                   Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
                 displayName: Prepare the nugets-special artifact for publishing
               - pwsh: |
@@ -672,6 +697,35 @@ stages:
                 path: '.\output\nugets-special'
               - name: nuget_symbols
                 path: '.\output\nugets-symbols'
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Scan NuGets
+          parameters:
+            name: scanning_windows
+            displayName: Scan NuGets
+            sdl: ${{ parameters.sdl }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            vmImage: ${{ parameters.VM_IMAGE_WINDOWS}}
+            dependsOn: package_windows
+            skipInstall: true
+            skipSteps: true
+            shouldPublish: false
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
+              - name: nuget_special
+                dir: nugets-special
+              - name: nuget_symbols
+                dir: nugets-symbols
+            preBuildSteps:
+              - pwsh: |
+                  $nupkgs = (Get-ChildItem ".\output\nugets*\*.*nupkg")
+                  foreach ($nupkg in $nupkgs) {
+                    $filename = $nupkg.Name.TrimEnd('.nupkg')
+                    $dest = ".\output\extracted_nugets\$filename"
+                    Write-Host "Extracting '$nupkg' to '$dest'..."
+                    Expand-Archive $nupkg $dest
+                    Remove-Item $nupkg -Force -ErrorAction Continue
+                  }
+                displayName: Extract all the .nupkg files for scanning
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: api_diff
