@@ -7,7 +7,7 @@
 #   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.13.1-2 | * ]
 
 ARG IMAGE_ARCH=amd64
-FROM ${IMAGE_ARCH}/debian:10
+FROM ${IMAGE_ARCH}/debian:11
 
 # Install the required packages
 RUN apt-get update \
@@ -16,7 +16,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the cross-compilation GCC toolchain
-ARG TOOLCHAIN_VERSION=8
+ARG TOOLCHAIN_VERSION=9
 ARG TOOLCHAIN_ARCH=arm-linux-gnueabihf
 ARG TOOLCHAIN_ARCH_SHORT=armhf
 RUN apt-get update \
@@ -32,7 +32,7 @@ RUN ln -s /usr/${TOOLCHAIN_ARCH}/include/c++/${TOOLCHAIN_VERSION} /usr/${TOOLCHA
     && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libc.so
 
 # Install the cross-compilation skia build dependencies (fontconfig)
-ARG FONTCONFIG_VERSION=2.13.1-2
+ARG FONTCONFIG_VERSION=2.13.1-4.2
 RUN (mkdir -p /skia-utils/libfontconfig1-dev \
     && cd /skia-utils/libfontconfig1-dev \
     && curl http://deb.debian.org/debian/pool/main/f/fontconfig/libfontconfig1-dev_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig1-dev.deb \
