@@ -32,7 +32,7 @@ RUN ln -s /usr/${TOOLCHAIN_ARCH}/include/c++/${TOOLCHAIN_VERSION} /usr/${TOOLCHA
     && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libc.so
 
 # Install the cross-compilation skia build dependencies (fontconfig)
-ARG FONTCONFIG_VERSION=2.13.1-4.2
+ARG FONTCONFIG_VERSION=2.13.1-2
 RUN (mkdir -p /skia-utils/libfontconfig1-dev \
     && cd /skia-utils/libfontconfig1-dev \
     && curl http://deb.debian.org/debian/pool/main/f/fontconfig/libfontconfig1-dev_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig1-dev.deb \
