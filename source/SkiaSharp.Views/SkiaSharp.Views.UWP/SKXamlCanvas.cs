@@ -1,6 +1,5 @@
 ﻿using System;
 using Windows.ApplicationModel;
-using Windows.Graphics.Display;
 
 #if WINDOWS
 using Microsoft.UI.Dispatching;
@@ -39,6 +38,7 @@ namespace SkiaSharp.Views.UWP
 
 		private IntPtr pixels;
 		private WriteableBitmap bitmap;
+		private ImageBrush brush;
 		private bool ignorePixelScaling;
 		private bool isVisible = true;
 
@@ -101,8 +101,13 @@ namespace SkiaSharp.Views.UWP
 		private void OnXamlRootChanged(XamlRoot xamlRoot = null, XamlRootChangedEventArgs e = null)
 		{
 			var root = xamlRoot ?? XamlRoot;
-			Dpi = root?.RasterizationScale ?? 1.0;
-			Invalidate();
+			var newDpi = root?.RasterizationScale ?? 1.0;
+			if (newDpi != Dpi)
+			{
+				Dpi = newDpi;
+				UpdateBrushScale();
+				Invalidate();
+			}
 		}
 #else
 		private void OnDpiChanged(DisplayInformation sender, object args = null)
@@ -141,7 +146,7 @@ namespace SkiaSharp.Views.UWP
 				return;
 
 #if WINDOWS
-			if(XamlRoot != null)
+			if (XamlRoot != null)
 			{
 				XamlRoot.Changed -= OnXamlRootChanged;
 			}
@@ -170,7 +175,7 @@ namespace SkiaSharp.Views.UWP
 			if (!isVisible)
 				return;
 
-			var info = CreateBitmap(out var unscaledSize, out var dpi);
+			var (info, viewSize, dpi) = CreateBitmap();
 
 			if (info.Width <= 0 || info.Height <= 0)
 			{
@@ -178,12 +183,18 @@ namespace SkiaSharp.Views.UWP
 				return;
 			}
 
-			var userVisibleSize = IgnorePixelScaling ? unscaledSize : info.Size;
+			// This is here because the property name is confusing and backwards.
+			// True actually means to ignore the pixel scaling of the raw pixel
+			// size and instead use the view size such that sizes match the XAML
+			// elements.
+			var matchUI = IgnorePixelScaling;
+
+			var userVisibleSize = matchUI ? viewSize : info.Size;
 			CanvasSize = userVisibleSize;
 
 			using (var surface = SKSurface.Create(info, pixels, info.RowBytes))
 			{
-				if (IgnorePixelScaling)
+				if (matchUI)
 				{
 					var canvas = surface.Canvas;
 					canvas.Scale(dpi);
@@ -195,19 +206,19 @@ namespace SkiaSharp.Views.UWP
 			bitmap.Invalidate();
 		}
 
-		private SKSizeI CreateSize(out SKSizeI unscaledSize, out float dpi)
+		private (SKSizeI ViewSize, SKSizeI PixelSize, float Dpi) CreateSize()
 		{
-			unscaledSize = SKSizeI.Empty;
-			dpi = (float)Dpi;
-
 			var w = ActualWidth;
 			var h = ActualHeight;
 
 			if (!IsPositive(w) || !IsPositive(h))
-				return SKSizeI.Empty;
+				return (SKSizeI.Empty, SKSizeI.Empty, 1);
 
-			unscaledSize = new SKSizeI((int)w, (int)h);
-			return new SKSizeI((int)(w * dpi), (int)(h * dpi));
+			var dpi = (float)Dpi;
+			var viewSize = new SKSizeI((int)w, (int)h);
+			var pixelSize = new SKSizeI((int)(w * dpi), (int)(h * dpi));
+
+			return (viewSize, pixelSize, dpi);
 
 			static bool IsPositive(double value)
 			{
@@ -215,10 +226,10 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)
+		private (SKImageInfo Info, SKSizeI PixelSize, float Dpi) CreateBitmap()
 		{
-			var size = CreateSize(out unscaledSize, out dpi);
-			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+			var (viewSize, pixelSize, dpi) = CreateSize();
+			var info = new SKImageInfo(pixelSize.Width, pixelSize.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
 			if (bitmap?.PixelWidth != info.Width || bitmap?.PixelHeight != info.Height)
 				FreeBitmap();
@@ -228,22 +239,39 @@ namespace SkiaSharp.Views.UWP
 				bitmap = new WriteableBitmap(info.Width, info.Height);
 				pixels = bitmap.GetPixels();
 
-				var brush = new ImageBrush
+				brush = new ImageBrush
 				{
 					ImageSource = bitmap,
 					AlignmentX = AlignmentX.Left,
 					AlignmentY = AlignmentY.Top,
-					Stretch = Stretch.Fill
+					Stretch = Stretch.None
 				};
+				UpdateBrushScale();
+
 				Background = brush;
 			}
 
-			return info;
+			return (info, viewSize, dpi);
+		}
+
+		private void UpdateBrushScale()
+		{
+			if (brush == null)
+				return;
+
+			var scale = 1.0 / Dpi;
+
+			brush.Transform = new ScaleTransform
+			{
+				ScaleX = scale,
+				ScaleY = scale
+			};
 		}
 
 		private void FreeBitmap()
 		{
 			Background = null;
+			brush = null;
 			bitmap = null;
 			pixels = IntPtr.Zero;
 		}
