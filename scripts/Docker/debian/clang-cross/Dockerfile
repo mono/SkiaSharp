@@ -7,16 +7,16 @@
 #   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.13.1-2 | * ]
 
 ARG IMAGE_ARCH=amd64
-FROM ${IMAGE_ARCH}/debian:10
+FROM ${IMAGE_ARCH}/debian:11
 
 # Install the required packages
 RUN apt-get update \
     && apt-get install -y \
-        curl python3 git clang-13 ninja-build \
+        curl python3 git clang-13 ninja-build xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the cross-compilation GCC toolchain
-ARG TOOLCHAIN_VERSION=8
+ARG TOOLCHAIN_VERSION=9
 ARG TOOLCHAIN_ARCH=arm-linux-gnueabihf
 ARG TOOLCHAIN_ARCH_SHORT=armhf
 RUN apt-get update \

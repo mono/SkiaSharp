@@ -1,7 +1,7 @@
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
 
-FROM arm64v8/debian:10
+FROM arm64v8/debian:11
 
 # Install the required packages
 RUN apt-get update \
