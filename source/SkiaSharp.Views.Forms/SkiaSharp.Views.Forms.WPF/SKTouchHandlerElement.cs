@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
@@ -18,8 +17,6 @@ namespace SkiaSharp.Views.Forms
 
 		public void SetEnabled(FrameworkElement view, bool enableTouchEvents)
 		{
-			// TODO: touch and stylus
-
 			if (view != null)
 			{
 				// mouse
@@ -30,6 +27,23 @@ namespace SkiaSharp.Views.Forms
 				view.MouseUp -= OnMouseReleased;
 				view.MouseWheel -= OnMouseWheel;
 
+				// touch
+				view.TouchEnter -= OnTouchEntered;
+				view.TouchLeave -= OnTouchExited;
+				view.TouchDown -= OnTouchPressed;
+				view.TouchMove -= OnTouchMoved;
+				view.TouchUp -= OnTouchReleased;
+
+				// stylus
+				view.StylusEnter -= OnStylusEntered;
+				view.StylusLeave -= OnStylusExited;
+				view.StylusDown -= OnStylusPressed;
+				view.StylusMove -= OnStylusMoved;
+				view.StylusInAirMove -= OnStylusInAirMoved;
+				view.StylusUp -= OnStylusReleased;
+				view.StylusButtonDown -= OnStylusButtonPressed;
+				view.StylusButtonUp -= OnStylusButtonReleased;
+
 				if (enableTouchEvents)
 				{
 					// mouse
@@ -39,6 +53,23 @@ namespace SkiaSharp.Views.Forms
 					view.MouseMove += OnMouseMoved;
 					view.MouseUp += OnMouseReleased;
 					view.MouseWheel += OnMouseWheel;
+
+					// touch
+					view.TouchEnter += OnTouchEntered;
+					view.TouchLeave += OnTouchExited;
+					view.TouchDown += OnTouchPressed;
+					view.TouchMove += OnTouchMoved;
+					view.TouchUp += OnTouchReleased;
+
+					// stylus
+					view.StylusEnter += OnStylusEntered;
+					view.StylusLeave += OnStylusExited;
+					view.StylusDown += OnStylusPressed;
+					view.StylusMove += OnStylusMoved;
+					view.StylusInAirMove += OnStylusInAirMoved;
+					view.StylusUp += OnStylusReleased;
+					view.StylusButtonDown += OnStylusButtonPressed;
+					view.StylusButtonUp += OnStylusButtonReleased;
 				}
 			}
 		}
@@ -53,14 +84,32 @@ namespace SkiaSharp.Views.Forms
 			scalePixels = null;
 		}
 
-		// mouse events
-
 		private void OnMouseEntered(object sender, MouseEventArgs e)
 		{
 			e.Handled = CommonHandler(sender, SKTouchAction.Entered, e);
 		}
 
+		private void OnTouchEntered(object sender, TouchEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Entered, e);
+		}
+
+		private void OnStylusEntered(object sender, StylusEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Entered, e);
+		}
+
 		private void OnMouseExited(object sender, MouseEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Exited, e);
+		}
+
+		private void OnTouchExited(object sender, TouchEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Exited, e);
+		}
+
+		private void OnStylusExited(object sender, StylusEventArgs e)
 		{
 			e.Handled = CommonHandler(sender, SKTouchAction.Exited, e);
 		}
@@ -76,7 +125,37 @@ namespace SkiaSharp.Views.Forms
 			}
 		}
 
+		private void OnTouchPressed(object sender, TouchEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Pressed, e);
+		}
+
+		private void OnStylusPressed(object sender, StylusDownEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Pressed, e);
+		}
+
+		private void OnStylusButtonPressed(object sender, StylusButtonEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Pressed, e);
+		}
+
 		private void OnMouseMoved(object sender, MouseEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Moved, e);
+		}
+
+		private void OnTouchMoved(object sender, TouchEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Moved, e);
+		}
+
+		private void OnStylusMoved(object sender, StylusEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Moved, e);
+		}
+
+		private void OnStylusInAirMoved(object sender, StylusEventArgs e)
 		{
 			e.Handled = CommonHandler(sender, SKTouchAction.Moved, e);
 		}
@@ -87,6 +166,21 @@ namespace SkiaSharp.Views.Forms
 
 			var view = sender as FrameworkElement;
 			view.ReleaseMouseCapture();
+		}
+
+		private void OnTouchReleased(object sender, TouchEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Released, e);
+		}
+
+		private void OnStylusReleased(object sender, StylusEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Released, e);
+		}
+
+		private void OnStylusButtonReleased(object sender, StylusButtonEventArgs e)
+		{
+			e.Handled = CommonHandler(sender, SKTouchAction.Released, e);
 		}
 
 		private void OnMouseWheel(object sender, MouseWheelEventArgs e)
@@ -108,7 +202,7 @@ namespace SkiaSharp.Views.Forms
 				return false;
 
 			var id = GetId(evt);
-			var action = GetTouchAction(touchActionType, view, evt);
+			var action = touchActionType;
 			var mouse = GetMouseButton(evt);
 			var device = GetTouchDevice(evt);
 			var windowsPoint = GetPosition(evt, view);
@@ -142,28 +236,6 @@ namespace SkiaSharp.Views.Forms
 			}
 
 			return inContact;
-		}
-
-		private SKTouchAction GetTouchAction(SKTouchAction touchActionType, FrameworkElement view, InputEventArgs evt)
-		{
-			if (evt is TouchEventArgs touchEvent)
-			{
-				var action = touchEvent.GetTouchPoint(view).Action;
-				switch (action)
-				{
-					case TouchAction.Down:
-						touchActionType = SKTouchAction.Pressed;
-						break;
-					case TouchAction.Move:
-						touchActionType = SKTouchAction.Moved;
-						break;
-					case TouchAction.Up:
-						touchActionType = SKTouchAction.Released;
-						break;
-				}
-			}
-
-			return touchActionType;
 		}
 
 		private Point GetPosition(InputEventArgs evt, FrameworkElement view)
@@ -211,14 +283,14 @@ namespace SkiaSharp.Views.Forms
 			var device = SKTouchDeviceType.Mouse;
 			switch (evt)
 			{
-				case MouseEventArgs mouse:
+				case MouseEventArgs _:
 					device = SKTouchDeviceType.Mouse;
 					break;
 				case TouchEventArgs touch:
 					device = SKTouchDeviceType.Touch;
 					break;
 				case StylusEventArgs stylus:
-					device = SKTouchDeviceType.Pen;
+					device = stylus.Inverted ? SKTouchDeviceType.Eraser : SKTouchDeviceType.Pen;
 					break;
 			}
 			return device;
@@ -265,8 +337,23 @@ namespace SkiaSharp.Views.Forms
 
 				case StylusEventArgs stylus:
 					{
-						System.Diagnostics.Debug.WriteLine(string.Join(", ", stylus.StylusDevice.StylusButtons.Select(b => b.Name)));
-						mouse = stylus.InAir ? SKMouseButton.Unknown : SKMouseButton.Left;
+						var buttonsCount = stylus.StylusDevice.StylusButtons.Count;
+						var isPrimaryPressed = false;
+						var isSecondaryPressed = false;
+						var isTertiaryPressed = false;
+						if (buttonsCount > 0)
+							isPrimaryPressed = stylus.StylusDevice.StylusButtons[0].StylusButtonState == StylusButtonState.Down;
+						if (buttonsCount > 1)
+							isSecondaryPressed = stylus.StylusDevice.StylusButtons[1].StylusButtonState == StylusButtonState.Down;
+						if (buttonsCount > 2)
+							isTertiaryPressed = stylus.StylusDevice.StylusButtons[2].StylusButtonState == StylusButtonState.Down;
+
+						if (isPrimaryPressed)
+							mouse = SKMouseButton.Left;
+						else if (isSecondaryPressed)
+							mouse = SKMouseButton.Right;
+						else if (isTertiaryPressed)
+							mouse = SKMouseButton.Middle;
 					}
 					break;
 			}
