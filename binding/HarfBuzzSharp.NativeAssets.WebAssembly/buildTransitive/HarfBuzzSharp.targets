@@ -10,8 +10,8 @@
     <Content Include="@(HarfBuzzSharpStaticLibrary)" Visible="false" />
   </ItemGroup>
 
-  <!-- If this is a ASP.NET Blazor web assembly app -->
-  <PropertyGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True'">
+  <!-- If this is a .NET web assembly app -->
+  <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True'">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
     <!-- Pick the threading type: 'mt' for multi-threading or 'st' for single-threading -->
     <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_HarfBuzzSharpNativeBinaryType>
@@ -20,7 +20,7 @@
     <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_HarfBuzzSharpNativeBinaryType),simd</_HarfBuzzSharpNativeBinaryType>
     <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' != 'True'">$(_HarfBuzzSharpNativeBinaryType)</_HarfBuzzSharpNativeBinaryType>
   </PropertyGroup>
-  <ItemGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True'">
+  <ItemGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True'">
     <!-- net6.0 (only has st and non-simd) -->
     <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
     <!-- net7.0 -->
