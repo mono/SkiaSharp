@@ -320,10 +320,13 @@ namespace SkiaSharp
 
 		public void Flush (bool submit, bool synchronous = false)
 		{
+			if (Context is not GRContext grContext)
+				return;
+
 			if (submit)
-				SkiaApi.sk_surface_flush_and_submit (Handle, synchronous);
+				grContext.Flush (submit, synchronous);
 			else
-				SkiaApi.sk_surface_flush (Handle);
+				grContext.Flush ();
 		}
 
 		internal static SKSurface GetObject (IntPtr handle) =>
