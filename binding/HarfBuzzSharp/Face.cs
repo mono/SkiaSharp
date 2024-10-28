@@ -41,9 +41,9 @@ namespace HarfBuzzSharp
 				throw new ArgumentNullException (nameof (getTable));
 
 			Handle = HarfBuzzApi.hb_face_create_for_tables (
-				DelegateProxies.GetTableDelegateProxy,
+				DelegateProxies.ReferenceTableProxy,
 				(void*)DelegateProxies.CreateMultiUserData (getTable, destroy, this),
-				DelegateProxies.ReleaseDelegateProxyForMulti);
+				DelegateProxies.DestroyProxyForMulti);
 		}
 
 		internal Face (IntPtr handle)

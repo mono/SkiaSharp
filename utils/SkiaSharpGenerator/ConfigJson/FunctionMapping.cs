@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace SkiaSharpGenerator
@@ -10,5 +11,11 @@ namespace SkiaSharpGenerator
 
 		[JsonPropertyName("parameters")]
 		public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
+
+		[JsonPropertyName("generateProxy")]
+		public bool? GenerateProxy { get; set; }
+
+		[JsonPropertyName("proxySuffixes")]
+		public List<string>? ProxySuffixes { get; set; }
 	}
 }

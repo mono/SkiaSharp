@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks Condition="'$(TFMNext)' == ''">$(MauiTargetFrameworksPlatformCurrent)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(MauiTargetFrameworksPlatformNext)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TFMNext)' == ''">$(MauiTargetFrameworksAppCurrent)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(MauiTargetFrameworksAppNext)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
@@ -12,6 +12,7 @@
     <SignAssembly>false</SignAssembly>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>

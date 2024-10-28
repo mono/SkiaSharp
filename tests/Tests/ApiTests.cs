@@ -61,9 +61,15 @@ namespace SkiaSharp.Tests
 		public void DelegateTypesAreValid()
 		{
 			var del = InteropDelegatesData;
+#if USE_LIBRARY_IMPORT
+			// Targets using USE_LIBRARY_IMPORT don't have delegates generated as they are not used.
+			Assert.Empty(del);
+#else
 			Assert.NotEmpty(del);
+#endif
 		}
 
+#if !USE_LIBRARY_IMPORT
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableTheory]
 		[MemberData(nameof(InteropDelegatesData))]
@@ -71,6 +77,7 @@ namespace SkiaSharp.Tests
 		{
 			Assert.NotNull(delegateType.GetCustomAttribute<UnmanagedFunctionPointerAttribute>());
 		}
+#endif
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[SkippableTheory]

@@ -1,4 +1,5 @@
 ﻿#nullable disable
+// ReSharper disable PartialMethodParameterNameMismatch
 
 using System;
 
@@ -30,24 +31,9 @@ namespace HarfBuzzSharp
 
 	internal static unsafe partial class DelegateProxies
 	{
-		// references to the proxy implementations
-		public static readonly FontGetFontExtentsProxyDelegate FontExtentsProxy = FontExtentsProxyImplementation;
-		public static readonly FontGetNominalGlyphProxyDelegate NominalGlyphProxy = NominalGlyphProxyImplementation;
-		public static readonly FontGetVariationGlyphProxyDelegate VariationGlyphProxy = VariationGlyphProxyImplementation;
-		public static readonly FontGetNominalGlyphsProxyDelegate NominalGlyphsProxy = NominalGlyphsProxyImplementation;
-		public static readonly FontGetGlyphAdvanceProxyDelegate GlyphAdvanceProxy = GlyphAdvanceProxyImplementation;
-		public static readonly FontGetGlyphAdvancesProxyDelegate GlyphAdvancesProxy = GlyphAdvancesProxyImplementation;
-		public static readonly FontGetGlyphOriginProxyDelegate GlyphOriginProxy = GlyphOriginProxyImplementation;
-		public static readonly FontGetGlyphKerningProxyDelegate GlyphKerningProxy = GlyphKerningProxyImplementation;
-		public static readonly FontGetGlyphExtentsProxyDelegate GlyphExtentsProxy = GlyphExtentsProxyImplementation;
-		public static readonly FontGetGlyphContourPointProxyDelegate GlyphContourPointProxy = GlyphContourPointProxyImplementation;
-		public static readonly FontGetGlyphNameProxyDelegate GlyphNameProxy = GlyphNameProxyImplementation;
-		public static readonly FontGetGlyphFromNameProxyDelegate GlyphFromNameProxy = GlyphFromNameProxyImplementation;
-
 		// internal proxy implementations
 
-		[MonoPInvokeCallback (typeof (FontGetFontExtentsProxyDelegate))]
-		private static bool FontExtentsProxyImplementation (IntPtr font, void* fontData, FontExtents* extents, void* context)
+		private static partial bool FontGetFontExtentsProxyImplementation (IntPtr font, void* fontData, FontExtents* extents, void* context)
 		{
 			var del = GetMulti<FontExtentsDelegate> ((IntPtr)context, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
@@ -57,8 +43,7 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetNominalGlyphProxyDelegate))]
-		private static bool NominalGlyphProxyImplementation (IntPtr font, void* fontData, uint unicode, uint* glyph, void* context)
+		private static partial bool FontGetNominalGlyphProxyImplementation (IntPtr font, void* fontData, uint unicode, uint* glyph, void* context)
 		{
 			var del = GetMulti<NominalGlyphDelegate> ((IntPtr)context, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
@@ -68,8 +53,7 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetNominalGlyphsProxyDelegate))]
-		private static uint NominalGlyphsProxyImplementation (IntPtr font, void* fontData, uint count, uint* firstUnicode, uint unicodeStride, uint* firstGlyph, uint glyphStride, void* context)
+		private static partial uint FontGetNominalGlyphsProxyImplementation (IntPtr font, void* fontData, uint count, uint* firstUnicode, uint unicodeStride, uint* firstGlyph, uint glyphStride, void* context)
 		{
 			var del = GetMulti<NominalGlyphsDelegate> ((IntPtr)context, out _);
 			var unicodes = new ReadOnlySpan<uint> (firstUnicode, (int)count);
@@ -78,8 +62,7 @@ namespace HarfBuzzSharp
 			return del.Invoke (userData.Font, userData.FontData, count, unicodes, glyphs);
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetVariationGlyphProxyDelegate))]
-		private static bool VariationGlyphProxyImplementation (IntPtr font, void* fontData, uint unicode, uint variationSelector, uint* glyph, void* context)
+		private static partial bool FontGetVariationGlyphProxyImplementation (IntPtr font, void* fontData, uint unicode, uint variationSelector, uint* glyph, void* context)
 		{
 			var del = GetMulti<VariationGlyphDelegate> ((IntPtr)context, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
@@ -89,16 +72,14 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetGlyphAdvanceProxyDelegate))]
-		private static int GlyphAdvanceProxyImplementation (IntPtr font, void* fontData, uint glyph, void* context)
+		private static partial int FontGetGlyphAdvanceProxyImplementation (IntPtr font, void* fontData, uint glyph, void* context)
 		{
 			var del = GetMulti<GlyphAdvanceDelegate> ((IntPtr)context, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, glyph);
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetGlyphAdvancesProxyDelegate))]
-		private static void GlyphAdvancesProxyImplementation (IntPtr font, void* fontData, uint count, uint* firstGlyph, uint glyphStride, int* firstAdvance, uint advanceStride, void* context)
+		private static partial void FontGetGlyphAdvancesProxyImplementation (IntPtr font, void* fontData, uint count, uint* firstGlyph, uint glyphStride, int* firstAdvance, uint advanceStride, void* context)
 		{
 			var del = GetMulti<GlyphAdvancesDelegate> ((IntPtr)context, out _);
 			var glyphs = new ReadOnlySpan<uint> (firstGlyph, (int)count);
@@ -107,8 +88,7 @@ namespace HarfBuzzSharp
 			del.Invoke (userData.Font, userData.FontData, count, glyphs, advances);
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetGlyphOriginProxyDelegate))]
-		private static bool GlyphOriginProxyImplementation (IntPtr font, void* fontData, uint glyph, int* x, int* y, void* context)
+		private static partial bool FontGetGlyphOriginProxyImplementation (IntPtr font, void* fontData, uint glyph, int* x, int* y, void* context)
 		{
 			var del = GetMulti<GlyphOriginDelegate> ((IntPtr)context, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
@@ -120,16 +100,14 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetGlyphKerningProxyDelegate))]
-		private static int GlyphKerningProxyImplementation (IntPtr font, void* fontData, uint firstGlyph, uint secondGlyph, void* context)
+		private static partial int FontGetGlyphKerningProxyImplementation (IntPtr font, void* fontData, uint firstGlyph, uint secondGlyph, void* context)
 		{
 			var del = GetMulti<GlyphKerningDelegate> ((IntPtr)context, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, firstGlyph, secondGlyph);
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetGlyphExtentsProxyDelegate))]
-		private static bool GlyphExtentsProxyImplementation (IntPtr font, void* fontData, uint glyph, GlyphExtents* extents, void* context)
+		private static partial bool FontGetGlyphExtentsProxyImplementation (IntPtr font, void* fontData, uint glyph, GlyphExtents* extents, void* context)
 		{
 			var del = GetMulti<GlyphExtentsDelegate> ((IntPtr)context, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
@@ -139,8 +117,7 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetGlyphContourPointProxyDelegate))]
-		private static bool GlyphContourPointProxyImplementation (IntPtr font, void* fontData, uint glyph, uint pointIndex, int* x, int* y, void* context)
+		private static partial bool FontGetGlyphContourPointProxyImplementation (IntPtr font, void* fontData, uint glyph, uint pointIndex, int* x, int* y, void* context)
 		{
 			var del = GetMulti<GlyphContourPointDelegate> ((IntPtr)context, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
@@ -152,8 +129,7 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetGlyphNameProxyDelegate))]
-		private static bool GlyphNameProxyImplementation (IntPtr font, void* fontData, uint glyph, void* nameBuffer, uint size, void* context)
+		private static partial bool FontGetGlyphNameProxyImplementation (IntPtr font, void* fontData, uint glyph, void* nameBuffer, uint size, void* context)
 		{
 			var del = GetMulti<GlyphNameDelegate> ((IntPtr)context, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
@@ -166,8 +142,7 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		[MonoPInvokeCallback (typeof (FontGetGlyphFromNameProxyDelegate))]
-		private static bool GlyphFromNameProxyImplementation (IntPtr font, void* fontData, void* name, int len, uint* glyph, void* context)
+		private static partial bool FontGetGlyphFromNameProxyImplementation (IntPtr font, void* fontData, void* name, int len, uint* glyph, void* context)
 		{
 			var del = GetMulti<GlyphFromNameDelegate> ((IntPtr)context, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
