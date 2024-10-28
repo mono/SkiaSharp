@@ -140,10 +140,10 @@ namespace SkiaSharp.Tests
 
 			public List<string> Lines { get; } = new List<string>();
 
-			protected override void OnDumpNumericValue(string dumpName, string valueName, string units, ulong value) =>
+			protected internal override void OnDumpNumericValue(string dumpName, string valueName, string units, ulong value) =>
 				Lines.Add($"{dumpName}.{valueName} = {value} {units}");
 
-			protected override void OnDumpStringValue(string dumpName, string valueName, string value) =>
+			protected internal override void OnDumpStringValue(string dumpName, string valueName, string value) =>
 				Lines.Add($"{dumpName}.{valueName} = '{value}'");
 		}
 	}

@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 var TARGET = Argument("t", Argument("target", "Default"));
-var VERBOSITY = Argument("v", Argument("verbosity", Verbosity.Normal));
+var VERBOSITY = Context.Log.Verbosity;
 var CONFIGURATION = Argument("c", Argument("configuration", "Release"));
 
 var VS_INSTALL = Argument("vsinstall", EnvironmentVariable("VS_INSTALL"));
@@ -28,6 +28,7 @@ void RunCake(FilePath cake, string target = null, Dictionary<string, string> arg
     var args = Arguments().ToDictionary(a => a.Key, a => a.Value.LastOrDefault());
 
     args["target"] = target;
+    args["verbosity"] = VERBOSITY.ToString();
 
     if (arguments != null) {
         foreach (var arg in arguments) {
@@ -80,6 +81,14 @@ IProcess RunAndReturnProcess(FilePath process, ProcessSettings settings)
     return proc;
 }
 
+IProcess RunAndReturnProcess(FilePath process, string arguments)
+{
+    var proc = RunAndReturnProcess(process, new ProcessSettings {
+        Arguments = arguments,
+    });
+    return proc;
+}
+
 string GetVersion(string lib, string type = "nuget")
 {
     return GetRegexValue($@"^{lib}\s*{type}\s*(.*)$", ROOT_PATH.CombineWithFilePath("scripts/VERSIONS.txt"));
@@ -112,4 +121,15 @@ void CleanDir(DirectoryPath dir)
     }
 
     EnsureDirectoryExists(dir);
+}
+
+void TakeSnapshot(DirectoryPath output, string name)
+{
+    if (IsRunningOnWindows())
+        return;
+
+    var fname = $"screenshot-{DateTime.Now:yyyyMMdd_hhmmss}-{name}.jpg";
+    var dest = output.CombineWithFilePath(fname);
+
+    RunProcess("screencapture", dest.FullPath);
 }

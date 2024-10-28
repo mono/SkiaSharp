@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
 using System;
-
+using System.ComponentModel;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
@@ -10,6 +10,9 @@ namespace SkiaSharp.Views.Maui.Controls
 {
 	public partial class SKGLView : View, ISKGLView
 	{
+		private static readonly BindableProperty ProxyWindowProperty =
+			BindableProperty.Create("ProxyWindow", typeof(Window), typeof(SKGLView), propertyChanged: OnWindowChanged);
+
 		public static readonly BindableProperty IgnorePixelScalingProperty =
 			BindableProperty.Create(nameof(IgnorePixelScaling), typeof(bool), typeof(SKGLView), false);
 
@@ -21,6 +24,12 @@ namespace SkiaSharp.Views.Maui.Controls
 
 		private SKSizeI lastCanvasSize;
 		private GRContext? lastGRContext;
+
+		public SKGLView()
+		{
+			var binding = new Binding(nameof(Window), source: this);
+			SetBinding(ProxyWindowProperty, binding);
+		}
 
 		public bool IgnorePixelScaling
 		{
@@ -62,6 +71,17 @@ namespace SkiaSharp.Views.Maui.Controls
 		{
 			Touch?.Invoke(this, e);
 		}
+
+		private static void OnWindowChanged(BindableObject bindable, object oldValue, object newValue)
+		{
+			if (bindable is not SKGLView view)
+				return;
+
+			view.Handler?.UpdateValue(nameof(HasRenderLoop));
+		}
+
+		bool ISKGLView.HasRenderLoop =>
+			HasRenderLoop && Window is not null;
 
 		void ISKGLView.OnCanvasSizeChanged(SKSizeI size) =>
 			lastCanvasSize = size;

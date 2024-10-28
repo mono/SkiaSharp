@@ -1,0 +1,84 @@
+﻿@page "/raster"
+
+<h1>Raster (Bitmap) Canvas</h1>
+
+<p>The canvas below is using pixels in memory. Click and drag to draw a line.</p>
+
+<div class="container">
+    <div class="row">
+        <div class="col border rounded p-2 canvas-container">
+
+            <SKCanvasView @ref="skiaView"
+                          OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true"
+                          @onpointerdown="OnPointerDown" @onpointermove="OnPointerMove" @onpointerup="OnPointerUp" />
+
+        </div>
+    </div>
+</div>
+
+@code {
+    SKCanvasView skiaView = null!;
+    SKPath? drawing;
+
+    void OnPaintSurface(SKPaintSurfaceEventArgs e)
+    {
+        // the the canvas and properties
+        var canvas = e.Surface.Canvas;
+
+        // make sure the canvas is blank
+        canvas.Clear(SKColors.White);
+
+        // decide what the text looks like
+        using var paint = new SKPaint
+            {
+                Color = SKColors.Black,
+                IsAntialias = true,
+                Style = SKPaintStyle.Fill
+            };
+        using var font = new SKFont
+            {
+                Size = 24
+            };
+
+        // draw some text
+        var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
+        canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
+
+        // draw the path
+        if (drawing != null)
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = 5;
+
+            canvas.DrawPath(drawing, paint);
+        }
+    }
+
+    void OnPointerDown(PointerEventArgs e)
+    {
+        var touchLocation = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+
+        drawing = new SKPath();
+        drawing.MoveTo(touchLocation);
+
+        skiaView.Invalidate();
+    }
+
+    void OnPointerMove(PointerEventArgs e)
+    {
+        if (drawing is null)
+            return;
+
+        var touchLocation = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+        drawing.LineTo(touchLocation);
+
+        skiaView.Invalidate();
+    }
+
+    void OnPointerUp(PointerEventArgs e)
+    {
+        drawing = null;
+
+        skiaView.Invalidate();
+    }
+}

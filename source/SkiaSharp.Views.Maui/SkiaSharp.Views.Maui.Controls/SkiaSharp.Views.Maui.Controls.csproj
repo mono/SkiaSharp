@@ -7,13 +7,16 @@
     <AssemblyName>SkiaSharp.Views.Maui.Controls</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <DefineConstants>$(DefineConstants);__MAUI__</DefineConstants>
-    <PackagingPlatform Condition="$(TargetFramework.Contains('-windows'))">net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))-windows</PackagingPlatform>
     <UseMaui>true</UseMaui>
     <AndroidGenerateResourceDesigner>false</AndroidGenerateResourceDesigner>
     <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\SkiaSharp.Views.Maui.Core\SkiaSharp.Views.Maui.Core.csproj" />

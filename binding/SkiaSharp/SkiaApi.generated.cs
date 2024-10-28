@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 #region Namespaces
 
@@ -22,6 +23,7 @@ using gr_recording_context_t = System.IntPtr;
 using gr_vk_extensions_t = System.IntPtr;
 using gr_vk_memory_allocator_t = System.IntPtr;
 using gr_vkinterface_t = System.IntPtr;
+using sk_bbh_factory_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
 using sk_blender_t = System.IntPtr;
 using sk_canvas_t = System.IntPtr;
@@ -64,6 +66,7 @@ using sk_region_iterator_t = System.IntPtr;
 using sk_region_spanerator_t = System.IntPtr;
 using sk_region_t = System.IntPtr;
 using sk_rrect_t = System.IntPtr;
+using sk_rtree_factory_t = System.IntPtr;
 using sk_runtimeeffect_t = System.IntPtr;
 using sk_shader_t = System.IntPtr;
 using sk_stream_asset_t = System.IntPtr;
@@ -115,8 +118,13 @@ namespace SkiaSharp
 
 		// void gr_backendrendertarget_delete(gr_backendrendertarget_t* rendertarget)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_backendrendertarget_delete (gr_backendrendertarget_t rendertarget);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_backendrendertarget_delete (gr_backendrendertarget_t rendertarget);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -129,8 +137,13 @@ namespace SkiaSharp
 
 		// gr_backend_t gr_backendrendertarget_get_backend(const gr_backendrendertarget_t* rendertarget)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial GRBackendNative gr_backendrendertarget_get_backend (gr_backendrendertarget_t rendertarget);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern GRBackendNative gr_backendrendertarget_get_backend (gr_backendrendertarget_t rendertarget);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -143,9 +156,15 @@ namespace SkiaSharp
 
 		// bool gr_backendrendertarget_get_gl_framebufferinfo(const gr_backendrendertarget_t* rendertarget, gr_gl_framebufferinfo_t* glInfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_backendrendertarget_get_gl_framebufferinfo (gr_backendrendertarget_t rendertarget, GRGlFramebufferInfo* glInfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_backendrendertarget_get_gl_framebufferinfo (gr_backendrendertarget_t rendertarget, GRGlFramebufferInfo* glInfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -159,8 +178,13 @@ namespace SkiaSharp
 
 		// int gr_backendrendertarget_get_height(const gr_backendrendertarget_t* rendertarget)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 gr_backendrendertarget_get_height (gr_backendrendertarget_t rendertarget);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 gr_backendrendertarget_get_height (gr_backendrendertarget_t rendertarget);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -173,8 +197,13 @@ namespace SkiaSharp
 
 		// int gr_backendrendertarget_get_samples(const gr_backendrendertarget_t* rendertarget)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 gr_backendrendertarget_get_samples (gr_backendrendertarget_t rendertarget);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 gr_backendrendertarget_get_samples (gr_backendrendertarget_t rendertarget);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -187,8 +216,13 @@ namespace SkiaSharp
 
 		// int gr_backendrendertarget_get_stencils(const gr_backendrendertarget_t* rendertarget)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 gr_backendrendertarget_get_stencils (gr_backendrendertarget_t rendertarget);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 gr_backendrendertarget_get_stencils (gr_backendrendertarget_t rendertarget);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -201,8 +235,13 @@ namespace SkiaSharp
 
 		// int gr_backendrendertarget_get_width(const gr_backendrendertarget_t* rendertarget)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 gr_backendrendertarget_get_width (gr_backendrendertarget_t rendertarget);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 gr_backendrendertarget_get_width (gr_backendrendertarget_t rendertarget);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -215,9 +254,15 @@ namespace SkiaSharp
 
 		// bool gr_backendrendertarget_is_valid(const gr_backendrendertarget_t* rendertarget)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_backendrendertarget_is_valid (gr_backendrendertarget_t rendertarget);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_backendrendertarget_is_valid (gr_backendrendertarget_t rendertarget);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -245,8 +290,13 @@ namespace SkiaSharp
 
 		// gr_backendrendertarget_t* gr_backendrendertarget_new_gl(int width, int height, int samples, int stencils, const gr_gl_framebufferinfo_t* glInfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -259,8 +309,13 @@ namespace SkiaSharp
 
 		// gr_backendrendertarget_t* gr_backendrendertarget_new_metal(int width, int height, int samples, const gr_mtl_textureinfo_t* mtlInfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -273,8 +328,13 @@ namespace SkiaSharp
 
 		// gr_backendrendertarget_t* gr_backendrendertarget_new_vulkan(int width, int height, int samples, const gr_vk_imageinfo_t* vkImageInfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -287,8 +347,13 @@ namespace SkiaSharp
 
 		// void gr_backendtexture_delete(gr_backendtexture_t* texture)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_backendtexture_delete (gr_backendtexture_t texture);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_backendtexture_delete (gr_backendtexture_t texture);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -301,8 +366,13 @@ namespace SkiaSharp
 
 		// gr_backend_t gr_backendtexture_get_backend(const gr_backendtexture_t* texture)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial GRBackendNative gr_backendtexture_get_backend (gr_backendtexture_t texture);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern GRBackendNative gr_backendtexture_get_backend (gr_backendtexture_t texture);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -315,9 +385,15 @@ namespace SkiaSharp
 
 		// bool gr_backendtexture_get_gl_textureinfo(const gr_backendtexture_t* texture, gr_gl_textureinfo_t* glInfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_backendtexture_get_gl_textureinfo (gr_backendtexture_t texture, GRGlTextureInfo* glInfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_backendtexture_get_gl_textureinfo (gr_backendtexture_t texture, GRGlTextureInfo* glInfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -331,8 +407,13 @@ namespace SkiaSharp
 
 		// int gr_backendtexture_get_height(const gr_backendtexture_t* texture)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 gr_backendtexture_get_height (gr_backendtexture_t texture);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 gr_backendtexture_get_height (gr_backendtexture_t texture);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -345,8 +426,13 @@ namespace SkiaSharp
 
 		// int gr_backendtexture_get_width(const gr_backendtexture_t* texture)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 gr_backendtexture_get_width (gr_backendtexture_t texture);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 gr_backendtexture_get_width (gr_backendtexture_t texture);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -359,9 +445,15 @@ namespace SkiaSharp
 
 		// bool gr_backendtexture_has_mipmaps(const gr_backendtexture_t* texture)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_backendtexture_has_mipmaps (gr_backendtexture_t texture);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_backendtexture_has_mipmaps (gr_backendtexture_t texture);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -375,9 +467,15 @@ namespace SkiaSharp
 
 		// bool gr_backendtexture_is_valid(const gr_backendtexture_t* texture)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_backendtexture_is_valid (gr_backendtexture_t texture);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_backendtexture_is_valid (gr_backendtexture_t texture);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -405,8 +503,13 @@ namespace SkiaSharp
 
 		// gr_backendtexture_t* gr_backendtexture_new_gl(int width, int height, bool mipmapped, const gr_gl_textureinfo_t* glInfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_backendtexture_t gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_backendtexture_t gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -419,8 +522,13 @@ namespace SkiaSharp
 
 		// gr_backendtexture_t* gr_backendtexture_new_metal(int width, int height, bool mipmapped, const gr_mtl_textureinfo_t* mtlInfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_backendtexture_t gr_backendtexture_new_metal (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRMtlTextureInfoNative* mtlInfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -433,8 +541,13 @@ namespace SkiaSharp
 
 		// gr_backendtexture_t* gr_backendtexture_new_vulkan(int width, int height, const gr_vk_imageinfo_t* vkInfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_backendtexture_t gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_backendtexture_t gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -447,8 +560,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_abandon_context(gr_direct_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_abandon_context (gr_direct_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_abandon_context (gr_direct_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -461,8 +579,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_dump_memory_statistics(const gr_direct_context_t* context, sk_tracememorydump_t* dump)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_dump_memory_statistics (gr_direct_context_t context, sk_tracememorydump_t dump);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_dump_memory_statistics (gr_direct_context_t context, sk_tracememorydump_t dump);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -475,8 +598,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_flush(gr_direct_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_flush (gr_direct_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_flush (gr_direct_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -489,8 +617,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_flush_and_submit(gr_direct_context_t* context, bool syncCpu)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_flush_and_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_flush_and_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -501,10 +634,53 @@ namespace SkiaSharp
 			(gr_direct_context_flush_and_submit_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_and_submit> ("gr_direct_context_flush_and_submit")).Invoke (context, syncCpu);
 		#endif
 
+		// void gr_direct_context_flush_image(gr_direct_context_t* context, const sk_image_t* image)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image);
+		}
+		private static Delegates.gr_direct_context_flush_image gr_direct_context_flush_image_delegate;
+		internal static void gr_direct_context_flush_image (gr_direct_context_t context, sk_image_t image) =>
+			(gr_direct_context_flush_image_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_image> ("gr_direct_context_flush_image")).Invoke (context, image);
+		#endif
+
+		// void gr_direct_context_flush_surface(gr_direct_context_t* context, sk_surface_t* surface)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface);
+		}
+		private static Delegates.gr_direct_context_flush_surface gr_direct_context_flush_surface_delegate;
+		internal static void gr_direct_context_flush_surface (gr_direct_context_t context, sk_surface_t surface) =>
+			(gr_direct_context_flush_surface_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_surface> ("gr_direct_context_flush_surface")).Invoke (context, surface);
+		#endif
+
 		// void gr_direct_context_free_gpu_resources(gr_direct_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_free_gpu_resources (gr_direct_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_free_gpu_resources (gr_direct_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -517,8 +693,13 @@ namespace SkiaSharp
 
 		// size_t gr_direct_context_get_resource_cache_limit(gr_direct_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr gr_direct_context_get_resource_cache_limit (gr_direct_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr gr_direct_context_get_resource_cache_limit (gr_direct_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -531,8 +712,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_get_resource_cache_usage(gr_direct_context_t* context, int* maxResources, size_t* maxResourceBytes)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_get_resource_cache_usage (gr_direct_context_t context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_get_resource_cache_usage (gr_direct_context_t context, Int32* maxResources, /* size_t */ IntPtr* maxResourceBytes);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -545,9 +731,15 @@ namespace SkiaSharp
 
 		// bool gr_direct_context_is_abandoned(gr_direct_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_direct_context_is_abandoned (gr_direct_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_direct_context_is_abandoned (gr_direct_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -589,8 +781,13 @@ namespace SkiaSharp
 
 		// gr_direct_context_t* gr_direct_context_make_gl(const gr_glinterface_t* glInterface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_direct_context_make_gl (gr_glinterface_t glInterface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_direct_context_t gr_direct_context_make_gl (gr_glinterface_t glInterface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -603,8 +800,13 @@ namespace SkiaSharp
 
 		// gr_direct_context_t* gr_direct_context_make_gl_with_options(const gr_glinterface_t* glInterface, const gr_context_options_t* options)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_direct_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_direct_context_t gr_direct_context_make_gl_with_options (gr_glinterface_t glInterface, GRContextOptionsNative* options);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -617,8 +819,13 @@ namespace SkiaSharp
 
 		// gr_direct_context_t* gr_direct_context_make_metal(void* device, void* queue)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_direct_context_make_metal (void* device, void* queue);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_direct_context_t gr_direct_context_make_metal (void* device, void* queue);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -631,8 +838,13 @@ namespace SkiaSharp
 
 		// gr_direct_context_t* gr_direct_context_make_metal_with_options(void* device, void* queue, const gr_context_options_t* options)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_direct_context_t gr_direct_context_make_metal_with_options (void* device, void* queue, GRContextOptionsNative* options);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -645,8 +857,13 @@ namespace SkiaSharp
 
 		// gr_direct_context_t* gr_direct_context_make_vulkan(const gr_vk_backendcontext_t vkBackendContext)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_direct_context_t gr_direct_context_make_vulkan (GRVkBackendContextNative vkBackendContext);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -659,8 +876,13 @@ namespace SkiaSharp
 
 		// gr_direct_context_t* gr_direct_context_make_vulkan_with_options(const gr_vk_backendcontext_t vkBackendContext, const gr_context_options_t* options)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_direct_context_t gr_direct_context_make_vulkan_with_options (GRVkBackendContextNative vkBackendContext, GRContextOptionsNative* options);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -673,8 +895,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_perform_deferred_cleanup(gr_direct_context_t* context, long long ms)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_perform_deferred_cleanup (gr_direct_context_t context, Int64 ms);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_perform_deferred_cleanup (gr_direct_context_t context, Int64 ms);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -687,8 +914,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_purge_unlocked_resources(gr_direct_context_t* context, bool scratchResourcesOnly)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_purge_unlocked_resources (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_purge_unlocked_resources (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool scratchResourcesOnly);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -701,8 +933,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_purge_unlocked_resources_bytes(gr_direct_context_t* context, size_t bytesToPurge, bool preferScratchResources)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_purge_unlocked_resources_bytes (gr_direct_context_t context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_purge_unlocked_resources_bytes (gr_direct_context_t context, /* size_t */ IntPtr bytesToPurge, [MarshalAs (UnmanagedType.I1)] bool preferScratchResources);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -715,8 +952,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_release_resources_and_abandon_context(gr_direct_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_release_resources_and_abandon_context (gr_direct_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_release_resources_and_abandon_context (gr_direct_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -729,8 +971,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_reset_context(gr_direct_context_t* context, uint32_t state)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_reset_context (gr_direct_context_t context, UInt32 state);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_reset_context (gr_direct_context_t context, UInt32 state);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -743,8 +990,13 @@ namespace SkiaSharp
 
 		// void gr_direct_context_set_resource_cache_limit(gr_direct_context_t* context, size_t maxResourceBytes)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_set_resource_cache_limit (gr_direct_context_t context, /* size_t */ IntPtr maxResourceBytes);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_direct_context_set_resource_cache_limit (gr_direct_context_t context, /* size_t */ IntPtr maxResourceBytes);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -757,9 +1009,15 @@ namespace SkiaSharp
 
 		// bool gr_direct_context_submit(gr_direct_context_t* context, bool syncCpu)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_direct_context_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_direct_context_submit (gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -773,8 +1031,13 @@ namespace SkiaSharp
 
 		// const gr_glinterface_t* gr_glinterface_assemble_gl_interface(void* ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_glinterface_t gr_glinterface_assemble_gl_interface (void* ctx, void* get);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_glinterface_t gr_glinterface_assemble_gl_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -787,8 +1050,13 @@ namespace SkiaSharp
 
 		// const gr_glinterface_t* gr_glinterface_assemble_gles_interface(void* ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_glinterface_t gr_glinterface_assemble_gles_interface (void* ctx, void* get);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_glinterface_t gr_glinterface_assemble_gles_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -801,8 +1069,13 @@ namespace SkiaSharp
 
 		// const gr_glinterface_t* gr_glinterface_assemble_interface(void* ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_glinterface_t gr_glinterface_assemble_interface (void* ctx, void* get);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_glinterface_t gr_glinterface_assemble_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -815,8 +1088,13 @@ namespace SkiaSharp
 
 		// const gr_glinterface_t* gr_glinterface_assemble_webgl_interface(void* ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_glinterface_t gr_glinterface_assemble_webgl_interface (void* ctx, void* get);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_glinterface_t gr_glinterface_assemble_webgl_interface (void* ctx, GRGlGetProcProxyDelegate get);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -829,8 +1107,13 @@ namespace SkiaSharp
 
 		// const gr_glinterface_t* gr_glinterface_create_native_interface()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_glinterface_t gr_glinterface_create_native_interface ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_glinterface_t gr_glinterface_create_native_interface ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -843,9 +1126,15 @@ namespace SkiaSharp
 
 		// bool gr_glinterface_has_extension(const gr_glinterface_t* glInterface, const char* extension)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs (UnmanagedType.LPStr)] String extension);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs (UnmanagedType.LPStr)] String extension);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -859,8 +1148,13 @@ namespace SkiaSharp
 
 		// void gr_glinterface_unref(const gr_glinterface_t* glInterface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_glinterface_unref (gr_glinterface_t glInterface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_glinterface_unref (gr_glinterface_t glInterface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -873,9 +1167,15 @@ namespace SkiaSharp
 
 		// bool gr_glinterface_validate(const gr_glinterface_t* glInterface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_glinterface_validate (gr_glinterface_t glInterface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_glinterface_validate (gr_glinterface_t glInterface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -889,8 +1189,13 @@ namespace SkiaSharp
 
 		// gr_backend_t gr_recording_context_get_backend(gr_recording_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial GRBackendNative gr_recording_context_get_backend (gr_recording_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern GRBackendNative gr_recording_context_get_backend (gr_recording_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -903,8 +1208,13 @@ namespace SkiaSharp
 
 		// int gr_recording_context_get_max_surface_sample_count_for_color_type(gr_recording_context_t* context, sk_colortype_t colorType)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (gr_recording_context_t context, SKColorTypeNative colorType);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 gr_recording_context_get_max_surface_sample_count_for_color_type (gr_recording_context_t context, SKColorTypeNative colorType);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -917,9 +1227,15 @@ namespace SkiaSharp
 
 		// bool gr_recording_context_is_abandoned(gr_recording_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_recording_context_is_abandoned (gr_recording_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_recording_context_is_abandoned (gr_recording_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -933,8 +1249,13 @@ namespace SkiaSharp
 
 		// int gr_recording_context_max_render_target_size(gr_recording_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 gr_recording_context_max_render_target_size (gr_recording_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 gr_recording_context_max_render_target_size (gr_recording_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -947,8 +1268,13 @@ namespace SkiaSharp
 
 		// int gr_recording_context_max_texture_size(gr_recording_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 gr_recording_context_max_texture_size (gr_recording_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 gr_recording_context_max_texture_size (gr_recording_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -961,8 +1287,13 @@ namespace SkiaSharp
 
 		// void gr_recording_context_unref(gr_recording_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_recording_context_unref (gr_recording_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_recording_context_unref (gr_recording_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -975,8 +1306,13 @@ namespace SkiaSharp
 
 		// void gr_vk_extensions_delete(gr_vk_extensions_t* extensions)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_vk_extensions_delete (gr_vk_extensions_t extensions);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_vk_extensions_delete (gr_vk_extensions_t extensions);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -989,9 +1325,15 @@ namespace SkiaSharp
 
 		// bool gr_vk_extensions_has_extension(gr_vk_extensions_t* extensions, const char* ext, uint32_t minVersion)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool gr_vk_extensions_has_extension (gr_vk_extensions_t extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_vk_extensions_has_extension (gr_vk_extensions_t extensions, [MarshalAs (UnmanagedType.LPStr)] String ext, UInt32 minVersion);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1005,8 +1347,13 @@ namespace SkiaSharp
 
 		// void gr_vk_extensions_init(gr_vk_extensions_t* extensions, gr_vk_get_proc getProc, void* userData, vk_instance_t* instance, vk_physical_device_t* physDev, uint32_t instanceExtensionCount, const char** instanceExtensions, uint32_t deviceExtensionCount, const char** deviceExtensions)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_vk_extensions_init (gr_vk_extensions_t extensions, void* getProc, void* userData, vk_instance_t instance, vk_physical_device_t physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_vk_extensions_init (gr_vk_extensions_t extensions, GRVkGetProcProxyDelegate getProc, void* userData, vk_instance_t instance, vk_physical_device_t physDev, UInt32 instanceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] instanceExtensions, UInt32 deviceExtensionCount, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] deviceExtensions);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1019,8 +1366,13 @@ namespace SkiaSharp
 
 		// gr_vk_extensions_t* gr_vk_extensions_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_vk_extensions_t gr_vk_extensions_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_vk_extensions_t gr_vk_extensions_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1037,8 +1389,13 @@ namespace SkiaSharp
 
 		// void sk_bitmap_destructor(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_bitmap_destructor (sk_bitmap_t cbitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_destructor (sk_bitmap_t cbitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1051,8 +1408,13 @@ namespace SkiaSharp
 
 		// void sk_bitmap_erase(sk_bitmap_t* cbitmap, sk_color_t color)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_bitmap_erase (sk_bitmap_t cbitmap, UInt32 color);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_erase (sk_bitmap_t cbitmap, UInt32 color);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1065,8 +1427,13 @@ namespace SkiaSharp
 
 		// void sk_bitmap_erase_rect(sk_bitmap_t* cbitmap, sk_color_t color, sk_irect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_bitmap_erase_rect (sk_bitmap_t cbitmap, UInt32 color, SKRectI* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_erase_rect (sk_bitmap_t cbitmap, UInt32 color, SKRectI* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1079,9 +1446,15 @@ namespace SkiaSharp
 
 		// bool sk_bitmap_extract_alpha(sk_bitmap_t* cbitmap, sk_bitmap_t* dst, const sk_paint_t* paint, sk_ipoint_t* offset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_bitmap_extract_alpha (sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, SKPointI* offset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_extract_alpha (sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, SKPointI* offset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1095,9 +1468,15 @@ namespace SkiaSharp
 
 		// bool sk_bitmap_extract_subset(sk_bitmap_t* cbitmap, sk_bitmap_t* dst, sk_irect_t* subset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_bitmap_extract_subset (sk_bitmap_t cbitmap, sk_bitmap_t dst, SKRectI* subset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_extract_subset (sk_bitmap_t cbitmap, sk_bitmap_t dst, SKRectI* subset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1111,8 +1490,13 @@ namespace SkiaSharp
 
 		// void* sk_bitmap_get_addr(sk_bitmap_t* cbitmap, int x, int y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void* sk_bitmap_get_addr (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* sk_bitmap_get_addr (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1125,8 +1509,13 @@ namespace SkiaSharp
 
 		// uint16_t* sk_bitmap_get_addr_16(sk_bitmap_t* cbitmap, int x, int y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt16* sk_bitmap_get_addr_16 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt16* sk_bitmap_get_addr_16 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1139,8 +1528,13 @@ namespace SkiaSharp
 
 		// uint32_t* sk_bitmap_get_addr_32(sk_bitmap_t* cbitmap, int x, int y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32* sk_bitmap_get_addr_32 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32* sk_bitmap_get_addr_32 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1153,8 +1547,13 @@ namespace SkiaSharp
 
 		// uint8_t* sk_bitmap_get_addr_8(sk_bitmap_t* cbitmap, int x, int y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Byte* sk_bitmap_get_addr_8 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Byte* sk_bitmap_get_addr_8 (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1167,8 +1566,13 @@ namespace SkiaSharp
 
 		// size_t sk_bitmap_get_byte_count(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_bitmap_get_byte_count (sk_bitmap_t cbitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_bitmap_get_byte_count (sk_bitmap_t cbitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1181,8 +1585,13 @@ namespace SkiaSharp
 
 		// void sk_bitmap_get_info(sk_bitmap_t* cbitmap, sk_imageinfo_t* info)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_bitmap_get_info (sk_bitmap_t cbitmap, SKImageInfoNative* info);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_get_info (sk_bitmap_t cbitmap, SKImageInfoNative* info);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1195,8 +1604,13 @@ namespace SkiaSharp
 
 		// sk_color_t sk_bitmap_get_pixel_color(sk_bitmap_t* cbitmap, int x, int y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_bitmap_get_pixel_color (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_bitmap_get_pixel_color (sk_bitmap_t cbitmap, Int32 x, Int32 y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1209,8 +1623,13 @@ namespace SkiaSharp
 
 		// void sk_bitmap_get_pixel_colors(sk_bitmap_t* cbitmap, sk_color_t* colors)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_bitmap_get_pixel_colors (sk_bitmap_t cbitmap, UInt32* colors);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_get_pixel_colors (sk_bitmap_t cbitmap, UInt32* colors);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1223,8 +1642,13 @@ namespace SkiaSharp
 
 		// void* sk_bitmap_get_pixels(sk_bitmap_t* cbitmap, size_t* length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void* sk_bitmap_get_pixels (sk_bitmap_t cbitmap, /* size_t */ IntPtr* length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* sk_bitmap_get_pixels (sk_bitmap_t cbitmap, /* size_t */ IntPtr* length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1237,8 +1661,13 @@ namespace SkiaSharp
 
 		// size_t sk_bitmap_get_row_bytes(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_bitmap_get_row_bytes (sk_bitmap_t cbitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_bitmap_get_row_bytes (sk_bitmap_t cbitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1251,9 +1680,15 @@ namespace SkiaSharp
 
 		// bool sk_bitmap_install_pixels(sk_bitmap_t* cbitmap, const sk_imageinfo_t* cinfo, void* pixels, size_t rowBytes, const sk_bitmap_release_proc releaseProc, void* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, void* releaseProc, void* context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, SKBitmapReleaseProxyDelegate releaseProc, void* context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1267,9 +1702,15 @@ namespace SkiaSharp
 
 		// bool sk_bitmap_install_pixels_with_pixmap(sk_bitmap_t* cbitmap, const sk_pixmap_t* cpixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_bitmap_install_pixels_with_pixmap (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_install_pixels_with_pixmap (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1283,9 +1724,15 @@ namespace SkiaSharp
 
 		// bool sk_bitmap_is_immutable(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_bitmap_is_immutable (sk_bitmap_t cbitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_is_immutable (sk_bitmap_t cbitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1299,9 +1746,15 @@ namespace SkiaSharp
 
 		// bool sk_bitmap_is_null(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_bitmap_is_null (sk_bitmap_t cbitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_is_null (sk_bitmap_t cbitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1315,8 +1768,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_bitmap_make_shader(sk_bitmap_t* cbitmap, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_bitmap_make_shader (sk_bitmap_t cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_bitmap_make_shader (sk_bitmap_t cbitmap, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1329,8 +1787,13 @@ namespace SkiaSharp
 
 		// sk_bitmap_t* sk_bitmap_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_bitmap_t sk_bitmap_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_bitmap_t sk_bitmap_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1343,8 +1806,13 @@ namespace SkiaSharp
 
 		// void sk_bitmap_notify_pixels_changed(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_bitmap_notify_pixels_changed (sk_bitmap_t cbitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_notify_pixels_changed (sk_bitmap_t cbitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1357,9 +1825,15 @@ namespace SkiaSharp
 
 		// bool sk_bitmap_peek_pixels(sk_bitmap_t* cbitmap, sk_pixmap_t* cpixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_bitmap_peek_pixels (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_peek_pixels (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1373,9 +1847,15 @@ namespace SkiaSharp
 
 		// bool sk_bitmap_ready_to_draw(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_bitmap_ready_to_draw (sk_bitmap_t cbitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_ready_to_draw (sk_bitmap_t cbitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1389,8 +1869,13 @@ namespace SkiaSharp
 
 		// void sk_bitmap_reset(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_bitmap_reset (sk_bitmap_t cbitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_reset (sk_bitmap_t cbitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1403,8 +1888,13 @@ namespace SkiaSharp
 
 		// void sk_bitmap_set_immutable(sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_bitmap_set_immutable (sk_bitmap_t cbitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_set_immutable (sk_bitmap_t cbitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1417,8 +1907,13 @@ namespace SkiaSharp
 
 		// void sk_bitmap_set_pixels(sk_bitmap_t* cbitmap, void* pixels)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_bitmap_set_pixels (sk_bitmap_t cbitmap, void* pixels);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_set_pixels (sk_bitmap_t cbitmap, void* pixels);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1431,8 +1926,13 @@ namespace SkiaSharp
 
 		// void sk_bitmap_swap(sk_bitmap_t* cbitmap, sk_bitmap_t* cother)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_bitmap_swap (sk_bitmap_t cbitmap, sk_bitmap_t cother);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_bitmap_swap (sk_bitmap_t cbitmap, sk_bitmap_t cother);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1445,9 +1945,15 @@ namespace SkiaSharp
 
 		// bool sk_bitmap_try_alloc_pixels(sk_bitmap_t* cbitmap, const sk_imageinfo_t* requestedInfo, size_t rowBytes)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_bitmap_try_alloc_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_try_alloc_pixels (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, /* size_t */ IntPtr rowBytes);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1461,9 +1967,15 @@ namespace SkiaSharp
 
 		// bool sk_bitmap_try_alloc_pixels_with_flags(sk_bitmap_t* cbitmap, const sk_imageinfo_t* requestedInfo, uint32_t flags)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_bitmap_try_alloc_pixels_with_flags (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_bitmap_try_alloc_pixels_with_flags (sk_bitmap_t cbitmap, SKImageInfoNative* requestedInfo, UInt32 flags);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1481,8 +1993,13 @@ namespace SkiaSharp
 
 		// sk_blender_t* sk_blender_new_arithmetic(float k1, float k2, float k3, float k4, bool enforcePremul)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_blender_t sk_blender_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePremul);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_blender_t sk_blender_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePremul);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1495,8 +2012,13 @@ namespace SkiaSharp
 
 		// sk_blender_t* sk_blender_new_mode(sk_blendmode_t mode)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_blender_t sk_blender_new_mode (SKBlendMode mode);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_blender_t sk_blender_new_mode (SKBlendMode mode);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1509,8 +2031,13 @@ namespace SkiaSharp
 
 		// void sk_blender_ref(sk_blender_t* blender)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_blender_ref (sk_blender_t blender);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_blender_ref (sk_blender_t blender);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1523,8 +2050,13 @@ namespace SkiaSharp
 
 		// void sk_blender_unref(sk_blender_t* blender)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_blender_unref (sk_blender_t blender);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_blender_unref (sk_blender_t blender);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1541,8 +2073,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_clear(sk_canvas_t* ccanvas, sk_color_t color)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_clear (sk_canvas_t ccanvas, UInt32 color);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_clear (sk_canvas_t ccanvas, UInt32 color);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1555,8 +2092,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_clear_color4f(sk_canvas_t* ccanvas, sk_color4f_t color)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_clear_color4f (sk_canvas_t ccanvas, SKColorF color);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_clear_color4f (sk_canvas_t ccanvas, SKColorF color);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1569,8 +2111,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_clip_path_with_operation(sk_canvas_t* ccanvas, const sk_path_t* cpath, sk_clipop_t op, bool doAA)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_clip_path_with_operation (sk_canvas_t ccanvas, sk_path_t cpath, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_clip_path_with_operation (sk_canvas_t ccanvas, sk_path_t cpath, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1583,8 +2130,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_clip_rect_with_operation(sk_canvas_t* ccanvas, const sk_rect_t* crect, sk_clipop_t op, bool doAA)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_clip_rect_with_operation (sk_canvas_t ccanvas, SKRect* crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_clip_rect_with_operation (sk_canvas_t ccanvas, SKRect* crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1597,8 +2149,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_clip_region(sk_canvas_t* ccanvas, const sk_region_t* region, sk_clipop_t op)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_clip_region (sk_canvas_t ccanvas, sk_region_t region, SKClipOperation op);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_clip_region (sk_canvas_t ccanvas, sk_region_t region, SKClipOperation op);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1611,8 +2168,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_clip_rrect_with_operation(sk_canvas_t* ccanvas, const sk_rrect_t* crect, sk_clipop_t op, bool doAA)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_clip_rrect_with_operation (sk_canvas_t ccanvas, sk_rrect_t crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_clip_rrect_with_operation (sk_canvas_t ccanvas, sk_rrect_t crect, SKClipOperation op, [MarshalAs (UnmanagedType.I1)] bool doAA);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1625,8 +2187,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_concat(sk_canvas_t* ccanvas, const sk_matrix44_t* cmatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_concat (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_concat (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1639,8 +2206,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_destroy(sk_canvas_t* ccanvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_destroy (sk_canvas_t ccanvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_destroy (sk_canvas_t ccanvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1653,8 +2225,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_discard(sk_canvas_t* ccanvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_discard (sk_canvas_t ccanvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_discard (sk_canvas_t ccanvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1667,8 +2244,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_annotation(sk_canvas_t* t, const sk_rect_t* rect, const char* key, sk_data_t* value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_annotation (sk_canvas_t t, SKRect* rect, /* char */ void* key, sk_data_t value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_annotation (sk_canvas_t t, SKRect* rect, /* char */ void* key, sk_data_t value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1681,8 +2263,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_arc(sk_canvas_t* ccanvas, const sk_rect_t* oval, float startAngle, float sweepAngle, bool useCenter, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_arc (sk_canvas_t ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_arc (sk_canvas_t ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1695,8 +2282,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_atlas(sk_canvas_t* ccanvas, const sk_image_t* atlas, const sk_rsxform_t* xform, const sk_rect_t* tex, const sk_color_t* colors, int count, sk_blendmode_t mode, const sk_sampling_options_t* sampling, const sk_rect_t* cullRect, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_atlas (sk_canvas_t ccanvas, sk_image_t atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKSamplingOptions* sampling, SKRect* cullRect, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_atlas (sk_canvas_t ccanvas, sk_image_t atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKSamplingOptions* sampling, SKRect* cullRect, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1709,8 +2301,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_circle(sk_canvas_t* ccanvas, float cx, float cy, float rad, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_circle (sk_canvas_t ccanvas, Single cx, Single cy, Single rad, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_circle (sk_canvas_t ccanvas, Single cx, Single cy, Single rad, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1723,8 +2320,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_color(sk_canvas_t* ccanvas, sk_color_t color, sk_blendmode_t cmode)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_color (sk_canvas_t ccanvas, UInt32 color, SKBlendMode cmode);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_color (sk_canvas_t ccanvas, UInt32 color, SKBlendMode cmode);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1737,8 +2339,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_color4f(sk_canvas_t* ccanvas, sk_color4f_t color, sk_blendmode_t cmode)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_color4f (sk_canvas_t ccanvas, SKColorF color, SKBlendMode cmode);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_color4f (sk_canvas_t ccanvas, SKColorF color, SKBlendMode cmode);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1751,8 +2358,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_drawable(sk_canvas_t* ccanvas, sk_drawable_t* cdrawable, const sk_matrix_t* cmatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_drawable (sk_canvas_t ccanvas, sk_drawable_t cdrawable, SKMatrix* cmatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_drawable (sk_canvas_t ccanvas, sk_drawable_t cdrawable, SKMatrix* cmatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1765,8 +2377,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_drrect(sk_canvas_t* ccanvas, const sk_rrect_t* outer, const sk_rrect_t* inner, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_drrect (sk_canvas_t ccanvas, sk_rrect_t outer, sk_rrect_t inner, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_drrect (sk_canvas_t ccanvas, sk_rrect_t outer, sk_rrect_t inner, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1779,8 +2396,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_image(sk_canvas_t* ccanvas, const sk_image_t* cimage, float x, float y, const sk_sampling_options_t* sampling, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_image (sk_canvas_t ccanvas, sk_image_t cimage, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_image (sk_canvas_t ccanvas, sk_image_t cimage, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1793,8 +2415,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_image_lattice(sk_canvas_t* ccanvas, const sk_image_t* image, const sk_lattice_t* lattice, const sk_rect_t* dst, sk_filter_mode_t mode, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_image_lattice (sk_canvas_t ccanvas, sk_image_t image, SKLatticeInternal* lattice, SKRect* dst, SKFilterMode mode, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_image_lattice (sk_canvas_t ccanvas, sk_image_t image, SKLatticeInternal* lattice, SKRect* dst, SKFilterMode mode, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1807,8 +2434,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_image_nine(sk_canvas_t* ccanvas, const sk_image_t* image, const sk_irect_t* center, const sk_rect_t* dst, sk_filter_mode_t mode, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_image_nine (sk_canvas_t ccanvas, sk_image_t image, SKRectI* center, SKRect* dst, SKFilterMode mode, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_image_nine (sk_canvas_t ccanvas, sk_image_t image, SKRectI* center, SKRect* dst, SKFilterMode mode, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1821,8 +2453,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_image_rect(sk_canvas_t* ccanvas, const sk_image_t* cimage, const sk_rect_t* csrcR, const sk_rect_t* cdstR, const sk_sampling_options_t* sampling, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_image_rect (sk_canvas_t ccanvas, sk_image_t cimage, SKRect* csrcR, SKRect* cdstR, SKSamplingOptions* sampling, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_image_rect (sk_canvas_t ccanvas, sk_image_t cimage, SKRect* csrcR, SKRect* cdstR, SKSamplingOptions* sampling, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1835,8 +2472,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_line(sk_canvas_t* ccanvas, float x0, float y0, float x1, float y1, sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_line (sk_canvas_t ccanvas, Single x0, Single y0, Single x1, Single y1, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_line (sk_canvas_t ccanvas, Single x0, Single y0, Single x1, Single y1, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1849,8 +2491,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_link_destination_annotation(sk_canvas_t* t, const sk_rect_t* rect, sk_data_t* value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_link_destination_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_link_destination_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1863,8 +2510,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_named_destination_annotation(sk_canvas_t* t, const sk_point_t* point, sk_data_t* value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_named_destination_annotation (sk_canvas_t t, SKPoint* point, sk_data_t value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_named_destination_annotation (sk_canvas_t t, SKPoint* point, sk_data_t value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1877,8 +2529,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_oval(sk_canvas_t* ccanvas, const sk_rect_t* crect, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_oval (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_oval (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1891,8 +2548,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_paint(sk_canvas_t* ccanvas, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_paint (sk_canvas_t ccanvas, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_paint (sk_canvas_t ccanvas, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1905,8 +2567,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_patch(sk_canvas_t* ccanvas, const sk_point_t* cubics, const sk_color_t* colors, const sk_point_t* texCoords, sk_blendmode_t mode, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_patch (sk_canvas_t ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_patch (sk_canvas_t ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1919,8 +2586,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_path(sk_canvas_t* ccanvas, const sk_path_t* cpath, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_path (sk_canvas_t ccanvas, sk_path_t cpath, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_path (sk_canvas_t ccanvas, sk_path_t cpath, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1933,8 +2605,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_picture(sk_canvas_t* ccanvas, const sk_picture_t* cpicture, const sk_matrix_t* cmatrix, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_picture (sk_canvas_t ccanvas, sk_picture_t cpicture, SKMatrix* cmatrix, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_picture (sk_canvas_t ccanvas, sk_picture_t cpicture, SKMatrix* cmatrix, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1947,8 +2624,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_point(sk_canvas_t* ccanvas, float x, float y, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_point (sk_canvas_t ccanvas, Single x, Single y, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_point (sk_canvas_t ccanvas, Single x, Single y, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1961,8 +2643,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_points(sk_canvas_t* ccanvas, sk_point_mode_t pointMode, size_t count, const sk_point_t[-1] points, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_points (sk_canvas_t ccanvas, SKPointMode pointMode, /* size_t */ IntPtr count, SKPoint* points, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_points (sk_canvas_t ccanvas, SKPointMode pointMode, /* size_t */ IntPtr count, SKPoint* points, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1975,8 +2662,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_rect(sk_canvas_t* ccanvas, const sk_rect_t* crect, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_rect (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_rect (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -1989,8 +2681,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_region(sk_canvas_t* ccanvas, const sk_region_t* cregion, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_region (sk_canvas_t ccanvas, sk_region_t cregion, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_region (sk_canvas_t ccanvas, sk_region_t cregion, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2003,8 +2700,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_round_rect(sk_canvas_t* ccanvas, const sk_rect_t* crect, float rx, float ry, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_round_rect (sk_canvas_t ccanvas, SKRect* crect, Single rx, Single ry, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_round_rect (sk_canvas_t ccanvas, SKRect* crect, Single rx, Single ry, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2017,8 +2719,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_rrect(sk_canvas_t* ccanvas, const sk_rrect_t* crect, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_rrect (sk_canvas_t ccanvas, sk_rrect_t crect, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_rrect (sk_canvas_t ccanvas, sk_rrect_t crect, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2031,8 +2738,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_simple_text(sk_canvas_t* ccanvas, const void* text, size_t byte_length, sk_text_encoding_t encoding, float x, float y, const sk_font_t* cfont, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_simple_text (sk_canvas_t ccanvas, void* text, /* size_t */ IntPtr byte_length, SKTextEncoding encoding, Single x, Single y, sk_font_t cfont, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2045,8 +2757,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_text_blob(sk_canvas_t* ccanvas, sk_textblob_t* text, float x, float y, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_text_blob (sk_canvas_t ccanvas, sk_textblob_t text, Single x, Single y, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_text_blob (sk_canvas_t ccanvas, sk_textblob_t text, Single x, Single y, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2059,8 +2776,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_url_annotation(sk_canvas_t* t, const sk_rect_t* rect, sk_data_t* value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_url_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_url_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2073,8 +2795,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_draw_vertices(sk_canvas_t* ccanvas, const sk_vertices_t* vertices, sk_blendmode_t mode, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_vertices (sk_canvas_t ccanvas, sk_vertices_t vertices, SKBlendMode mode, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_vertices (sk_canvas_t ccanvas, sk_vertices_t vertices, SKBlendMode mode, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2087,8 +2814,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_flush(sk_canvas_t* ccanvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_flush (sk_canvas_t ccanvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_flush (sk_canvas_t ccanvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2101,9 +2833,15 @@ namespace SkiaSharp
 
 		// bool sk_canvas_get_device_clip_bounds(sk_canvas_t* ccanvas, sk_irect_t* cbounds)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_canvas_get_device_clip_bounds (sk_canvas_t ccanvas, SKRectI* cbounds);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_canvas_get_device_clip_bounds (sk_canvas_t ccanvas, SKRectI* cbounds);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2117,9 +2855,15 @@ namespace SkiaSharp
 
 		// bool sk_canvas_get_local_clip_bounds(sk_canvas_t* ccanvas, sk_rect_t* cbounds)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_canvas_get_local_clip_bounds (sk_canvas_t ccanvas, SKRect* cbounds);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_canvas_get_local_clip_bounds (sk_canvas_t ccanvas, SKRect* cbounds);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2133,8 +2877,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_get_matrix(sk_canvas_t* ccanvas, sk_matrix44_t* cmatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_get_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_get_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2147,8 +2896,13 @@ namespace SkiaSharp
 
 		// int sk_canvas_get_save_count(sk_canvas_t* ccanvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_canvas_get_save_count (sk_canvas_t ccanvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_canvas_get_save_count (sk_canvas_t ccanvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2161,9 +2915,15 @@ namespace SkiaSharp
 
 		// bool sk_canvas_is_clip_empty(sk_canvas_t* ccanvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_canvas_is_clip_empty (sk_canvas_t ccanvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_canvas_is_clip_empty (sk_canvas_t ccanvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2177,9 +2937,15 @@ namespace SkiaSharp
 
 		// bool sk_canvas_is_clip_rect(sk_canvas_t* ccanvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_canvas_is_clip_rect (sk_canvas_t ccanvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_canvas_is_clip_rect (sk_canvas_t ccanvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2193,8 +2959,13 @@ namespace SkiaSharp
 
 		// sk_canvas_t* sk_canvas_new_from_bitmap(const sk_bitmap_t* bitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_canvas_t sk_canvas_new_from_bitmap (sk_bitmap_t bitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_canvas_t sk_canvas_new_from_bitmap (sk_bitmap_t bitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2207,8 +2978,13 @@ namespace SkiaSharp
 
 		// sk_canvas_t* sk_canvas_new_from_raster(const sk_imageinfo_t* cinfo, void* pixels, size_t rowBytes, const sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_canvas_t sk_canvas_new_from_raster (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, sk_surfaceprops_t props);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_canvas_t sk_canvas_new_from_raster (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes, sk_surfaceprops_t props);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2221,9 +2997,15 @@ namespace SkiaSharp
 
 		// bool sk_canvas_quick_reject(sk_canvas_t* ccanvas, const sk_rect_t* crect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_canvas_quick_reject (sk_canvas_t ccanvas, SKRect* crect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_canvas_quick_reject (sk_canvas_t ccanvas, SKRect* crect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2237,8 +3019,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_reset_matrix(sk_canvas_t* ccanvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_reset_matrix (sk_canvas_t ccanvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_reset_matrix (sk_canvas_t ccanvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2251,8 +3038,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_restore(sk_canvas_t* ccanvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_restore (sk_canvas_t ccanvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_restore (sk_canvas_t ccanvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2265,8 +3057,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_restore_to_count(sk_canvas_t* ccanvas, int saveCount)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_restore_to_count (sk_canvas_t ccanvas, Int32 saveCount);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_restore_to_count (sk_canvas_t ccanvas, Int32 saveCount);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2279,8 +3076,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_rotate_degrees(sk_canvas_t* ccanvas, float degrees)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_rotate_degrees (sk_canvas_t ccanvas, Single degrees);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_rotate_degrees (sk_canvas_t ccanvas, Single degrees);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2293,8 +3095,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_rotate_radians(sk_canvas_t* ccanvas, float radians)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_rotate_radians (sk_canvas_t ccanvas, Single radians);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_rotate_radians (sk_canvas_t ccanvas, Single radians);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2307,8 +3114,13 @@ namespace SkiaSharp
 
 		// int sk_canvas_save(sk_canvas_t* ccanvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_canvas_save (sk_canvas_t ccanvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_canvas_save (sk_canvas_t ccanvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2321,8 +3133,13 @@ namespace SkiaSharp
 
 		// int sk_canvas_save_layer(sk_canvas_t* ccanvas, const sk_rect_t* crect, const sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_canvas_save_layer (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_canvas_save_layer (sk_canvas_t ccanvas, SKRect* crect, sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2335,8 +3152,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_scale(sk_canvas_t* ccanvas, float sx, float sy)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_scale (sk_canvas_t ccanvas, Single sx, Single sy);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_scale (sk_canvas_t ccanvas, Single sx, Single sy);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2349,8 +3171,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_set_matrix(sk_canvas_t* ccanvas, const sk_matrix44_t* cmatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_set_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_set_matrix (sk_canvas_t ccanvas, SKMatrix44* cmatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2363,8 +3190,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_skew(sk_canvas_t* ccanvas, float sx, float sy)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_skew (sk_canvas_t ccanvas, Single sx, Single sy);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_skew (sk_canvas_t ccanvas, Single sx, Single sy);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2377,8 +3209,13 @@ namespace SkiaSharp
 
 		// void sk_canvas_translate(sk_canvas_t* ccanvas, float dx, float dy)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_translate (sk_canvas_t ccanvas, Single dx, Single dy);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_translate (sk_canvas_t ccanvas, Single dx, Single dy);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2391,8 +3228,13 @@ namespace SkiaSharp
 
 		// void sk_nodraw_canvas_destroy(sk_nodraw_canvas_t* t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_nodraw_canvas_destroy (sk_nodraw_canvas_t t);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_nodraw_canvas_destroy (sk_nodraw_canvas_t t);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2405,8 +3247,13 @@ namespace SkiaSharp
 
 		// sk_nodraw_canvas_t* sk_nodraw_canvas_new(int width, int height)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_nodraw_canvas_t sk_nodraw_canvas_new (Int32 width, Int32 height);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_nodraw_canvas_t sk_nodraw_canvas_new (Int32 width, Int32 height);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2419,8 +3266,13 @@ namespace SkiaSharp
 
 		// void sk_nway_canvas_add_canvas(sk_nway_canvas_t* t, sk_canvas_t* canvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_nway_canvas_add_canvas (sk_nway_canvas_t t, sk_canvas_t canvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_nway_canvas_add_canvas (sk_nway_canvas_t t, sk_canvas_t canvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2433,8 +3285,13 @@ namespace SkiaSharp
 
 		// void sk_nway_canvas_destroy(sk_nway_canvas_t* t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_nway_canvas_destroy (sk_nway_canvas_t t);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_nway_canvas_destroy (sk_nway_canvas_t t);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2447,8 +3304,13 @@ namespace SkiaSharp
 
 		// sk_nway_canvas_t* sk_nway_canvas_new(int width, int height)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_nway_canvas_t sk_nway_canvas_new (Int32 width, Int32 height);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_nway_canvas_t sk_nway_canvas_new (Int32 width, Int32 height);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2461,8 +3323,13 @@ namespace SkiaSharp
 
 		// void sk_nway_canvas_remove_all(sk_nway_canvas_t* t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_nway_canvas_remove_all (sk_nway_canvas_t t);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_nway_canvas_remove_all (sk_nway_canvas_t t);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2475,8 +3342,13 @@ namespace SkiaSharp
 
 		// void sk_nway_canvas_remove_canvas(sk_nway_canvas_t* t, sk_canvas_t* canvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_nway_canvas_remove_canvas (sk_nway_canvas_t t, sk_canvas_t canvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_nway_canvas_remove_canvas (sk_nway_canvas_t t, sk_canvas_t canvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2489,8 +3361,13 @@ namespace SkiaSharp
 
 		// void sk_overdraw_canvas_destroy(sk_overdraw_canvas_t* canvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_overdraw_canvas_destroy (sk_overdraw_canvas_t canvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_overdraw_canvas_destroy (sk_overdraw_canvas_t canvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2503,8 +3380,13 @@ namespace SkiaSharp
 
 		// sk_overdraw_canvas_t* sk_overdraw_canvas_new(sk_canvas_t* canvas)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_overdraw_canvas_t sk_overdraw_canvas_new (sk_canvas_t canvas);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_overdraw_canvas_t sk_overdraw_canvas_new (sk_canvas_t canvas);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2521,8 +3403,13 @@ namespace SkiaSharp
 
 		// void sk_codec_destroy(sk_codec_t* codec)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_codec_destroy (sk_codec_t codec);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_codec_destroy (sk_codec_t codec);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2535,8 +3422,13 @@ namespace SkiaSharp
 
 		// sk_encoded_image_format_t sk_codec_get_encoded_format(sk_codec_t* codec)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKEncodedImageFormat sk_codec_get_encoded_format (sk_codec_t codec);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKEncodedImageFormat sk_codec_get_encoded_format (sk_codec_t codec);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2549,8 +3441,13 @@ namespace SkiaSharp
 
 		// int sk_codec_get_frame_count(sk_codec_t* codec)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_codec_get_frame_count (sk_codec_t codec);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_codec_get_frame_count (sk_codec_t codec);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2563,8 +3460,13 @@ namespace SkiaSharp
 
 		// void sk_codec_get_frame_info(sk_codec_t* codec, sk_codec_frameinfo_t* frameInfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_codec_get_frame_info (sk_codec_t codec, SKCodecFrameInfo* frameInfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_codec_get_frame_info (sk_codec_t codec, SKCodecFrameInfo* frameInfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2577,9 +3479,15 @@ namespace SkiaSharp
 
 		// bool sk_codec_get_frame_info_for_index(sk_codec_t* codec, int index, sk_codec_frameinfo_t* frameInfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_codec_get_frame_info_for_index (sk_codec_t codec, Int32 index, SKCodecFrameInfo* frameInfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_codec_get_frame_info_for_index (sk_codec_t codec, Int32 index, SKCodecFrameInfo* frameInfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2593,8 +3501,13 @@ namespace SkiaSharp
 
 		// void sk_codec_get_info(sk_codec_t* codec, sk_imageinfo_t* info)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_codec_get_info (sk_codec_t codec, SKImageInfoNative* info);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_codec_get_info (sk_codec_t codec, SKImageInfoNative* info);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2607,8 +3520,13 @@ namespace SkiaSharp
 
 		// sk_encodedorigin_t sk_codec_get_origin(sk_codec_t* codec)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKEncodedOrigin sk_codec_get_origin (sk_codec_t codec);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKEncodedOrigin sk_codec_get_origin (sk_codec_t codec);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2621,8 +3539,13 @@ namespace SkiaSharp
 
 		// sk_codec_result_t sk_codec_get_pixels(sk_codec_t* codec, const sk_imageinfo_t* info, void* pixels, size_t rowBytes, const sk_codec_options_t* options)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKCodecResult sk_codec_get_pixels (sk_codec_t codec, SKImageInfoNative* info, void* pixels, /* size_t */ IntPtr rowBytes, SKCodecOptionsInternal* options);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKCodecResult sk_codec_get_pixels (sk_codec_t codec, SKImageInfoNative* info, void* pixels, /* size_t */ IntPtr rowBytes, SKCodecOptionsInternal* options);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2635,8 +3558,13 @@ namespace SkiaSharp
 
 		// int sk_codec_get_repetition_count(sk_codec_t* codec)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_codec_get_repetition_count (sk_codec_t codec);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_codec_get_repetition_count (sk_codec_t codec);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2649,8 +3577,13 @@ namespace SkiaSharp
 
 		// void sk_codec_get_scaled_dimensions(sk_codec_t* codec, float desiredScale, sk_isize_t* dimensions)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_codec_get_scaled_dimensions (sk_codec_t codec, Single desiredScale, SKSizeI* dimensions);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_codec_get_scaled_dimensions (sk_codec_t codec, Single desiredScale, SKSizeI* dimensions);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2663,8 +3596,13 @@ namespace SkiaSharp
 
 		// sk_codec_scanline_order_t sk_codec_get_scanline_order(sk_codec_t* codec)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKCodecScanlineOrder sk_codec_get_scanline_order (sk_codec_t codec);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKCodecScanlineOrder sk_codec_get_scanline_order (sk_codec_t codec);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2677,8 +3615,13 @@ namespace SkiaSharp
 
 		// int sk_codec_get_scanlines(sk_codec_t* codec, void* dst, int countLines, size_t rowBytes)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_codec_get_scanlines (sk_codec_t codec, void* dst, Int32 countLines, /* size_t */ IntPtr rowBytes);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_codec_get_scanlines (sk_codec_t codec, void* dst, Int32 countLines, /* size_t */ IntPtr rowBytes);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2691,9 +3634,15 @@ namespace SkiaSharp
 
 		// bool sk_codec_get_valid_subset(sk_codec_t* codec, sk_irect_t* desiredSubset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_codec_get_valid_subset (sk_codec_t codec, SKRectI* desiredSubset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_codec_get_valid_subset (sk_codec_t codec, SKRectI* desiredSubset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2707,8 +3656,13 @@ namespace SkiaSharp
 
 		// sk_codec_result_t sk_codec_incremental_decode(sk_codec_t* codec, int* rowsDecoded)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKCodecResult sk_codec_incremental_decode (sk_codec_t codec, Int32* rowsDecoded);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKCodecResult sk_codec_incremental_decode (sk_codec_t codec, Int32* rowsDecoded);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2721,8 +3675,13 @@ namespace SkiaSharp
 
 		// size_t sk_codec_min_buffered_bytes_needed()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_codec_min_buffered_bytes_needed ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_codec_min_buffered_bytes_needed ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2735,8 +3694,13 @@ namespace SkiaSharp
 
 		// sk_codec_t* sk_codec_new_from_data(sk_data_t* data)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_codec_t sk_codec_new_from_data (sk_data_t data);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_codec_t sk_codec_new_from_data (sk_data_t data);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2749,8 +3713,13 @@ namespace SkiaSharp
 
 		// sk_codec_t* sk_codec_new_from_stream(sk_stream_t* stream, sk_codec_result_t* result)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_codec_t sk_codec_new_from_stream (sk_stream_t stream, SKCodecResult* result);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_codec_t sk_codec_new_from_stream (sk_stream_t stream, SKCodecResult* result);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2763,8 +3732,13 @@ namespace SkiaSharp
 
 		// int sk_codec_next_scanline(sk_codec_t* codec)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_codec_next_scanline (sk_codec_t codec);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_codec_next_scanline (sk_codec_t codec);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2777,8 +3751,13 @@ namespace SkiaSharp
 
 		// int sk_codec_output_scanline(sk_codec_t* codec, int inputScanline)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_codec_output_scanline (sk_codec_t codec, Int32 inputScanline);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_codec_output_scanline (sk_codec_t codec, Int32 inputScanline);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2791,9 +3770,15 @@ namespace SkiaSharp
 
 		// bool sk_codec_skip_scanlines(sk_codec_t* codec, int countLines)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_codec_skip_scanlines (sk_codec_t codec, Int32 countLines);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_codec_skip_scanlines (sk_codec_t codec, Int32 countLines);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2807,8 +3792,13 @@ namespace SkiaSharp
 
 		// sk_codec_result_t sk_codec_start_incremental_decode(sk_codec_t* codec, const sk_imageinfo_t* info, void* pixels, size_t rowBytes, const sk_codec_options_t* options)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKCodecResult sk_codec_start_incremental_decode (sk_codec_t codec, SKImageInfoNative* info, void* pixels, /* size_t */ IntPtr rowBytes, SKCodecOptionsInternal* options);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKCodecResult sk_codec_start_incremental_decode (sk_codec_t codec, SKImageInfoNative* info, void* pixels, /* size_t */ IntPtr rowBytes, SKCodecOptionsInternal* options);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2821,8 +3811,13 @@ namespace SkiaSharp
 
 		// sk_codec_result_t sk_codec_start_scanline_decode(sk_codec_t* codec, const sk_imageinfo_t* info, const sk_codec_options_t* options)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKCodecResult sk_codec_start_scanline_decode (sk_codec_t codec, SKImageInfoNative* info, SKCodecOptionsInternal* options);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKCodecResult sk_codec_start_scanline_decode (sk_codec_t codec, SKImageInfoNative* info, SKCodecOptionsInternal* options);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2839,8 +3834,13 @@ namespace SkiaSharp
 
 		// sk_colorfilter_t* sk_colorfilter_new_color_matrix(const float[20] array = 20)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_color_matrix (Single* array);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_colorfilter_new_color_matrix (Single* array);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2853,8 +3853,13 @@ namespace SkiaSharp
 
 		// sk_colorfilter_t* sk_colorfilter_new_compose(sk_colorfilter_t* outer, sk_colorfilter_t* inner)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_compose (sk_colorfilter_t outer, sk_colorfilter_t inner);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_colorfilter_new_compose (sk_colorfilter_t outer, sk_colorfilter_t inner);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2867,8 +3872,13 @@ namespace SkiaSharp
 
 		// sk_colorfilter_t* sk_colorfilter_new_high_contrast(const sk_highcontrastconfig_t* config)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_high_contrast (SKHighContrastConfig* config);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_colorfilter_new_high_contrast (SKHighContrastConfig* config);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2881,8 +3891,13 @@ namespace SkiaSharp
 
 		// sk_colorfilter_t* sk_colorfilter_new_lighting(sk_color_t mul, sk_color_t add)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_lighting (UInt32 mul, UInt32 add);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_colorfilter_new_lighting (UInt32 mul, UInt32 add);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2895,8 +3910,13 @@ namespace SkiaSharp
 
 		// sk_colorfilter_t* sk_colorfilter_new_luma_color()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_luma_color ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_colorfilter_new_luma_color ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2909,8 +3929,13 @@ namespace SkiaSharp
 
 		// sk_colorfilter_t* sk_colorfilter_new_mode(sk_color_t c, sk_blendmode_t mode)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_mode (UInt32 c, SKBlendMode mode);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_colorfilter_new_mode (UInt32 c, SKBlendMode mode);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2923,8 +3948,13 @@ namespace SkiaSharp
 
 		// sk_colorfilter_t* sk_colorfilter_new_table(const uint8_t[256] table = 256)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_table (Byte* table);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_colorfilter_new_table (Byte* table);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2937,8 +3967,13 @@ namespace SkiaSharp
 
 		// sk_colorfilter_t* sk_colorfilter_new_table_argb(const uint8_t[256] tableA = 256, const uint8_t[256] tableR = 256, const uint8_t[256] tableG = 256, const uint8_t[256] tableB = 256)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_table_argb (Byte* tableA, Byte* tableR, Byte* tableG, Byte* tableB);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_colorfilter_new_table_argb (Byte* tableA, Byte* tableR, Byte* tableG, Byte* tableB);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2951,8 +3986,13 @@ namespace SkiaSharp
 
 		// void sk_colorfilter_unref(sk_colorfilter_t* filter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorfilter_unref (sk_colorfilter_t filter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorfilter_unref (sk_colorfilter_t filter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2969,8 +4009,13 @@ namespace SkiaSharp
 
 		// void sk_color4f_from_color(sk_color_t color, sk_color4f_t* color4f)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_color4f_from_color (UInt32 color, SKColorF* color4f);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_color4f_from_color (UInt32 color, SKColorF* color4f);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2983,8 +4028,13 @@ namespace SkiaSharp
 
 		// sk_color_t sk_color4f_to_color(const sk_color4f_t* color4f)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_color4f_to_color (SKColorF* color4f);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_color4f_to_color (SKColorF* color4f);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -2997,9 +4047,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_equals(const sk_colorspace_t* src, const sk_colorspace_t* dst)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_equals (sk_colorspace_t src, sk_colorspace_t dst);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_equals (sk_colorspace_t src, sk_colorspace_t dst);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3013,9 +4069,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_gamma_close_to_srgb(const sk_colorspace_t* colorspace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_gamma_close_to_srgb (sk_colorspace_t colorspace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_gamma_close_to_srgb (sk_colorspace_t colorspace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3029,9 +4091,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_gamma_is_linear(const sk_colorspace_t* colorspace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_gamma_is_linear (sk_colorspace_t colorspace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_gamma_is_linear (sk_colorspace_t colorspace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3045,8 +4113,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_icc_profile_delete(sk_colorspace_icc_profile_t* profile)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_icc_profile_delete (sk_colorspace_icc_profile_t profile);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_icc_profile_delete (sk_colorspace_icc_profile_t profile);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3059,8 +4132,13 @@ namespace SkiaSharp
 
 		// const uint8_t* sk_colorspace_icc_profile_get_buffer(const sk_colorspace_icc_profile_t* profile, uint32_t* size)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Byte* sk_colorspace_icc_profile_get_buffer (sk_colorspace_icc_profile_t profile, UInt32* size);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Byte* sk_colorspace_icc_profile_get_buffer (sk_colorspace_icc_profile_t profile, UInt32* size);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3073,9 +4151,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_icc_profile_get_to_xyzd50(const sk_colorspace_icc_profile_t* profile, sk_colorspace_xyz_t* toXYZD50)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_icc_profile_get_to_xyzd50 (sk_colorspace_icc_profile_t profile, SKColorSpaceXyz* toXYZD50);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_icc_profile_get_to_xyzd50 (sk_colorspace_icc_profile_t profile, SKColorSpaceXyz* toXYZD50);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3089,8 +4173,13 @@ namespace SkiaSharp
 
 		// sk_colorspace_icc_profile_t* sk_colorspace_icc_profile_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_icc_profile_t sk_colorspace_icc_profile_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_icc_profile_t sk_colorspace_icc_profile_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3103,9 +4192,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_icc_profile_parse(const void* buffer, size_t length, sk_colorspace_icc_profile_t* profile)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, sk_colorspace_icc_profile_t profile);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_icc_profile_parse (void* buffer, /* size_t */ IntPtr length, sk_colorspace_icc_profile_t profile);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3119,9 +4214,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_is_numerical_transfer_fn(const sk_colorspace_t* colorspace, sk_colorspace_transfer_fn_t* transferFn)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_is_numerical_transfer_fn (sk_colorspace_t colorspace, SKColorSpaceTransferFn* transferFn);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_is_numerical_transfer_fn (sk_colorspace_t colorspace, SKColorSpaceTransferFn* transferFn);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3135,9 +4236,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_is_srgb(const sk_colorspace_t* colorspace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_is_srgb (sk_colorspace_t colorspace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_is_srgb (sk_colorspace_t colorspace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3151,8 +4258,13 @@ namespace SkiaSharp
 
 		// sk_colorspace_t* sk_colorspace_make_linear_gamma(const sk_colorspace_t* colorspace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_t sk_colorspace_make_linear_gamma (sk_colorspace_t colorspace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_colorspace_make_linear_gamma (sk_colorspace_t colorspace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3165,8 +4277,13 @@ namespace SkiaSharp
 
 		// sk_colorspace_t* sk_colorspace_make_srgb_gamma(const sk_colorspace_t* colorspace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_t sk_colorspace_make_srgb_gamma (sk_colorspace_t colorspace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_colorspace_make_srgb_gamma (sk_colorspace_t colorspace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3179,8 +4296,13 @@ namespace SkiaSharp
 
 		// sk_colorspace_t* sk_colorspace_new_icc(const sk_colorspace_icc_profile_t* profile)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_t sk_colorspace_new_icc (sk_colorspace_icc_profile_t profile);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_colorspace_new_icc (sk_colorspace_icc_profile_t profile);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3193,8 +4315,13 @@ namespace SkiaSharp
 
 		// sk_colorspace_t* sk_colorspace_new_rgb(const sk_colorspace_transfer_fn_t* transferFn, const sk_colorspace_xyz_t* toXYZD50)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_t sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_colorspace_new_rgb (SKColorSpaceTransferFn* transferFn, SKColorSpaceXyz* toXYZD50);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3207,8 +4334,13 @@ namespace SkiaSharp
 
 		// sk_colorspace_t* sk_colorspace_new_srgb()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_t sk_colorspace_new_srgb ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_colorspace_new_srgb ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3221,8 +4353,13 @@ namespace SkiaSharp
 
 		// sk_colorspace_t* sk_colorspace_new_srgb_linear()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_t sk_colorspace_new_srgb_linear ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_colorspace_new_srgb_linear ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3235,9 +4372,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_primaries_to_xyzd50(const sk_colorspace_primaries_t* primaries, sk_colorspace_xyz_t* toXYZD50)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_primaries_to_xyzd50 (SKColorSpacePrimaries* primaries, SKColorSpaceXyz* toXYZD50);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_primaries_to_xyzd50 (SKColorSpacePrimaries* primaries, SKColorSpaceXyz* toXYZD50);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3251,8 +4394,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_ref(sk_colorspace_t* colorspace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_ref (sk_colorspace_t colorspace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_ref (sk_colorspace_t colorspace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3265,8 +4413,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_to_profile(const sk_colorspace_t* colorspace, sk_colorspace_icc_profile_t* profile)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_to_profile (sk_colorspace_t colorspace, sk_colorspace_icc_profile_t profile);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_to_profile (sk_colorspace_t colorspace, sk_colorspace_icc_profile_t profile);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3279,9 +4432,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_to_xyzd50(const sk_colorspace_t* colorspace, sk_colorspace_xyz_t* toXYZD50)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, SKColorSpaceXyz* toXYZD50);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, SKColorSpaceXyz* toXYZD50);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3295,8 +4454,13 @@ namespace SkiaSharp
 
 		// float sk_colorspace_transfer_fn_eval(const sk_colorspace_transfer_fn_t* transferFn, float x)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_colorspace_transfer_fn_eval (SKColorSpaceTransferFn* transferFn, Single x);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_colorspace_transfer_fn_eval (SKColorSpaceTransferFn* transferFn, Single x);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3309,9 +4473,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_transfer_fn_invert(const sk_colorspace_transfer_fn_t* src, sk_colorspace_transfer_fn_t* dst)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_transfer_fn_invert (SKColorSpaceTransferFn* src, SKColorSpaceTransferFn* dst);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_transfer_fn_invert (SKColorSpaceTransferFn* src, SKColorSpaceTransferFn* dst);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3325,8 +4495,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_transfer_fn_named_2dot2(sk_colorspace_transfer_fn_t* transferFn)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_transfer_fn_named_2dot2 (SKColorSpaceTransferFn* transferFn);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_transfer_fn_named_2dot2 (SKColorSpaceTransferFn* transferFn);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3339,8 +4514,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_transfer_fn_named_hlg(sk_colorspace_transfer_fn_t* transferFn)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_transfer_fn_named_hlg (SKColorSpaceTransferFn* transferFn);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_transfer_fn_named_hlg (SKColorSpaceTransferFn* transferFn);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3353,8 +4533,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_transfer_fn_named_linear(sk_colorspace_transfer_fn_t* transferFn)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_transfer_fn_named_linear (SKColorSpaceTransferFn* transferFn);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_transfer_fn_named_linear (SKColorSpaceTransferFn* transferFn);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3367,8 +4552,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_transfer_fn_named_pq(sk_colorspace_transfer_fn_t* transferFn)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_transfer_fn_named_pq (SKColorSpaceTransferFn* transferFn);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_transfer_fn_named_pq (SKColorSpaceTransferFn* transferFn);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3381,8 +4571,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_transfer_fn_named_rec2020(sk_colorspace_transfer_fn_t* transferFn)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_transfer_fn_named_rec2020 (SKColorSpaceTransferFn* transferFn);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_transfer_fn_named_rec2020 (SKColorSpaceTransferFn* transferFn);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3395,8 +4590,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_transfer_fn_named_srgb(sk_colorspace_transfer_fn_t* transferFn)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_transfer_fn_named_srgb (SKColorSpaceTransferFn* transferFn);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_transfer_fn_named_srgb (SKColorSpaceTransferFn* transferFn);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3409,8 +4609,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_unref(sk_colorspace_t* colorspace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_unref (sk_colorspace_t colorspace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_unref (sk_colorspace_t colorspace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3423,8 +4628,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_xyz_concat(const sk_colorspace_xyz_t* a, const sk_colorspace_xyz_t* b, sk_colorspace_xyz_t* result)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_xyz_concat (SKColorSpaceXyz* a, SKColorSpaceXyz* b, SKColorSpaceXyz* result);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_xyz_concat (SKColorSpaceXyz* a, SKColorSpaceXyz* b, SKColorSpaceXyz* result);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3437,9 +4647,15 @@ namespace SkiaSharp
 
 		// bool sk_colorspace_xyz_invert(const sk_colorspace_xyz_t* src, sk_colorspace_xyz_t* dst)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_colorspace_xyz_invert (SKColorSpaceXyz* src, SKColorSpaceXyz* dst);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_xyz_invert (SKColorSpaceXyz* src, SKColorSpaceXyz* dst);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3453,8 +4669,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_xyz_named_adobe_rgb(sk_colorspace_xyz_t* xyz)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_xyz_named_adobe_rgb (SKColorSpaceXyz* xyz);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_xyz_named_adobe_rgb (SKColorSpaceXyz* xyz);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3467,8 +4688,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_xyz_named_display_p3(sk_colorspace_xyz_t* xyz)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_xyz_named_display_p3 (SKColorSpaceXyz* xyz);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_xyz_named_display_p3 (SKColorSpaceXyz* xyz);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3481,8 +4707,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_xyz_named_rec2020(sk_colorspace_xyz_t* xyz)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_xyz_named_rec2020 (SKColorSpaceXyz* xyz);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_xyz_named_rec2020 (SKColorSpaceXyz* xyz);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3495,8 +4726,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_xyz_named_srgb(sk_colorspace_xyz_t* xyz)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_xyz_named_srgb (SKColorSpaceXyz* xyz);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_xyz_named_srgb (SKColorSpaceXyz* xyz);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3509,8 +4745,13 @@ namespace SkiaSharp
 
 		// void sk_colorspace_xyz_named_xyz(sk_colorspace_xyz_t* xyz)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_colorspace_xyz_named_xyz (SKColorSpaceXyz* xyz);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colorspace_xyz_named_xyz (SKColorSpaceXyz* xyz);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3527,8 +4768,13 @@ namespace SkiaSharp
 
 		// const uint8_t* sk_data_get_bytes(const sk_data_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Byte* sk_data_get_bytes (sk_data_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Byte* sk_data_get_bytes (sk_data_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3541,8 +4787,13 @@ namespace SkiaSharp
 
 		// const void* sk_data_get_data(const sk_data_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void* sk_data_get_data (sk_data_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* sk_data_get_data (sk_data_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3555,8 +4806,13 @@ namespace SkiaSharp
 
 		// size_t sk_data_get_size(const sk_data_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_data_get_size (sk_data_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_data_get_size (sk_data_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3569,8 +4825,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_data_new_empty()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_data_new_empty ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_data_new_empty ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3583,8 +4844,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_data_new_from_file(const char* path)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_data_new_from_file (/* char */ void* path);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_data_new_from_file (/* char */ void* path);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3597,8 +4863,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_data_new_from_stream(sk_stream_t* stream, size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_data_new_from_stream (sk_stream_t stream, /* size_t */ IntPtr length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_data_new_from_stream (sk_stream_t stream, /* size_t */ IntPtr length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3611,8 +4882,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_data_new_subset(const sk_data_t* src, size_t offset, size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_data_new_subset (sk_data_t src, /* size_t */ IntPtr offset, /* size_t */ IntPtr length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_data_new_subset (sk_data_t src, /* size_t */ IntPtr offset, /* size_t */ IntPtr length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3625,8 +4901,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_data_new_uninitialized(size_t size)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_data_new_uninitialized (/* size_t */ IntPtr size);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_data_new_uninitialized (/* size_t */ IntPtr size);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3639,8 +4920,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_data_new_with_copy(const void* src, size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_data_new_with_copy (void* src, /* size_t */ IntPtr length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_data_new_with_copy (void* src, /* size_t */ IntPtr length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3653,8 +4939,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_data_new_with_proc(const void* ptr, size_t length, sk_data_release_proc proc, void* ctx)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_data_new_with_proc (void* ptr, /* size_t */ IntPtr length, void* proc, void* ctx);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_data_new_with_proc (void* ptr, /* size_t */ IntPtr length, SKDataReleaseProxyDelegate proc, void* ctx);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3667,8 +4958,13 @@ namespace SkiaSharp
 
 		// void sk_data_ref(const sk_data_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_data_ref (sk_data_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_data_ref (sk_data_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3681,8 +4977,13 @@ namespace SkiaSharp
 
 		// void sk_data_unref(const sk_data_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_data_unref (sk_data_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_data_unref (sk_data_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3699,8 +5000,13 @@ namespace SkiaSharp
 
 		// void sk_document_abort(sk_document_t* document)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_document_abort (sk_document_t document);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_document_abort (sk_document_t document);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3713,8 +5019,13 @@ namespace SkiaSharp
 
 		// sk_canvas_t* sk_document_begin_page(sk_document_t* document, float width, float height, const sk_rect_t* content)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_canvas_t sk_document_begin_page (sk_document_t document, Single width, Single height, SKRect* content);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_canvas_t sk_document_begin_page (sk_document_t document, Single width, Single height, SKRect* content);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3727,8 +5038,13 @@ namespace SkiaSharp
 
 		// void sk_document_close(sk_document_t* document)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_document_close (sk_document_t document);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_document_close (sk_document_t document);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3741,8 +5057,13 @@ namespace SkiaSharp
 
 		// sk_document_t* sk_document_create_pdf_from_stream(sk_wstream_t* stream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_document_t sk_document_create_pdf_from_stream (sk_wstream_t stream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_document_t sk_document_create_pdf_from_stream (sk_wstream_t stream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3755,8 +5076,13 @@ namespace SkiaSharp
 
 		// sk_document_t* sk_document_create_pdf_from_stream_with_metadata(sk_wstream_t* stream, const sk_document_pdf_metadata_t* metadata)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKDocumentPdfMetadataInternal* metadata);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKDocumentPdfMetadataInternal* metadata);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3769,8 +5095,13 @@ namespace SkiaSharp
 
 		// sk_document_t* sk_document_create_xps_from_stream(sk_wstream_t* stream, float dpi)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_document_t sk_document_create_xps_from_stream (sk_wstream_t stream, Single dpi);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_document_t sk_document_create_xps_from_stream (sk_wstream_t stream, Single dpi);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3783,8 +5114,13 @@ namespace SkiaSharp
 
 		// void sk_document_end_page(sk_document_t* document)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_document_end_page (sk_document_t document);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_document_end_page (sk_document_t document);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3797,8 +5133,13 @@ namespace SkiaSharp
 
 		// void sk_document_unref(sk_document_t* document)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_document_unref (sk_document_t document);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_document_unref (sk_document_t document);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3813,10 +5154,34 @@ namespace SkiaSharp
 
 		#region sk_drawable.h
 
+		// size_t sk_drawable_approximate_bytes_used(sk_drawable_t*)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_drawable_approximate_bytes_used (sk_drawable_t param0);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_drawable_approximate_bytes_used (sk_drawable_t param0);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_drawable_approximate_bytes_used (sk_drawable_t param0);
+		}
+		private static Delegates.sk_drawable_approximate_bytes_used sk_drawable_approximate_bytes_used_delegate;
+		internal static /* size_t */ IntPtr sk_drawable_approximate_bytes_used (sk_drawable_t param0) =>
+			(sk_drawable_approximate_bytes_used_delegate ??= GetSymbol<Delegates.sk_drawable_approximate_bytes_used> ("sk_drawable_approximate_bytes_used")).Invoke (param0);
+		#endif
+
 		// void sk_drawable_draw(sk_drawable_t*, sk_canvas_t*, const sk_matrix_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_drawable_draw (sk_drawable_t param0, sk_canvas_t param1, SKMatrix* param2);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_drawable_draw (sk_drawable_t param0, sk_canvas_t param1, SKMatrix* param2);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3829,8 +5194,13 @@ namespace SkiaSharp
 
 		// void sk_drawable_get_bounds(sk_drawable_t*, sk_rect_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_drawable_get_bounds (sk_drawable_t param0, SKRect* param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_drawable_get_bounds (sk_drawable_t param0, SKRect* param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3843,8 +5213,13 @@ namespace SkiaSharp
 
 		// uint32_t sk_drawable_get_generation_id(sk_drawable_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_drawable_get_generation_id (sk_drawable_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_drawable_get_generation_id (sk_drawable_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3857,8 +5232,13 @@ namespace SkiaSharp
 
 		// sk_picture_t* sk_drawable_new_picture_snapshot(sk_drawable_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_picture_t sk_drawable_new_picture_snapshot (sk_drawable_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_picture_t sk_drawable_new_picture_snapshot (sk_drawable_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3871,8 +5251,13 @@ namespace SkiaSharp
 
 		// void sk_drawable_notify_drawing_changed(sk_drawable_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_drawable_notify_drawing_changed (sk_drawable_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_drawable_notify_drawing_changed (sk_drawable_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3885,8 +5270,13 @@ namespace SkiaSharp
 
 		// void sk_drawable_unref(sk_drawable_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_drawable_unref (sk_drawable_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_drawable_unref (sk_drawable_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3903,8 +5293,13 @@ namespace SkiaSharp
 
 		// size_t sk_font_break_text(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, float maxWidth, float* measuredWidth, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_font_break_text (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, Single maxWidth, Single* measuredWidth, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_font_break_text (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, Single maxWidth, Single* measuredWidth, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3917,8 +5312,13 @@ namespace SkiaSharp
 
 		// void sk_font_delete(sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_delete (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_delete (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3931,8 +5331,13 @@ namespace SkiaSharp
 
 		// sk_font_edging_t sk_font_get_edging(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKFontEdging sk_font_get_edging (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKFontEdging sk_font_get_edging (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3945,8 +5350,13 @@ namespace SkiaSharp
 
 		// sk_font_hinting_t sk_font_get_hinting(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKFontHinting sk_font_get_hinting (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKFontHinting sk_font_get_hinting (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3959,8 +5369,13 @@ namespace SkiaSharp
 
 		// float sk_font_get_metrics(const sk_font_t* font, sk_fontmetrics_t* metrics)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_font_get_metrics (sk_font_t font, SKFontMetrics* metrics);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_font_get_metrics (sk_font_t font, SKFontMetrics* metrics);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3973,9 +5388,15 @@ namespace SkiaSharp
 
 		// bool sk_font_get_path(const sk_font_t* font, uint16_t glyph, sk_path_t* path)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_font_get_path (sk_font_t font, UInt16 glyph, sk_path_t path);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_font_get_path (sk_font_t font, UInt16 glyph, sk_path_t path);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -3989,8 +5410,13 @@ namespace SkiaSharp
 
 		// void sk_font_get_paths(const sk_font_t* font, uint16_t[-1] glyphs, int count, const sk_glyph_path_proc glyphPathProc, void* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_get_paths (sk_font_t font, UInt16* glyphs, Int32 count, void* glyphPathProc, void* context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_get_paths (sk_font_t font, UInt16* glyphs, Int32 count, SKGlyphPathProxyDelegate glyphPathProc, void* context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4003,8 +5429,13 @@ namespace SkiaSharp
 
 		// void sk_font_get_pos(const sk_font_t* font, const uint16_t[-1] glyphs, int count, sk_point_t[-1] pos, sk_point_t* origin)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_get_pos (sk_font_t font, UInt16* glyphs, Int32 count, SKPoint* pos, SKPoint* origin);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_get_pos (sk_font_t font, UInt16* glyphs, Int32 count, SKPoint* pos, SKPoint* origin);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4017,8 +5448,13 @@ namespace SkiaSharp
 
 		// float sk_font_get_scale_x(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_font_get_scale_x (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_font_get_scale_x (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4031,8 +5467,13 @@ namespace SkiaSharp
 
 		// float sk_font_get_size(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_font_get_size (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_font_get_size (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4045,8 +5486,13 @@ namespace SkiaSharp
 
 		// float sk_font_get_skew_x(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_font_get_skew_x (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_font_get_skew_x (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4059,8 +5505,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_font_get_typeface(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_font_get_typeface (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_font_get_typeface (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4073,8 +5524,13 @@ namespace SkiaSharp
 
 		// void sk_font_get_widths_bounds(const sk_font_t* font, const uint16_t[-1] glyphs, int count, float[-1] widths, sk_rect_t[-1] bounds, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_get_widths_bounds (sk_font_t font, UInt16* glyphs, Int32 count, Single* widths, SKRect* bounds, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_get_widths_bounds (sk_font_t font, UInt16* glyphs, Int32 count, Single* widths, SKRect* bounds, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4087,8 +5543,13 @@ namespace SkiaSharp
 
 		// void sk_font_get_xpos(const sk_font_t* font, const uint16_t[-1] glyphs, int count, float[-1] xpos, float origin)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_get_xpos (sk_font_t font, UInt16* glyphs, Int32 count, Single* xpos, Single origin);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_get_xpos (sk_font_t font, UInt16* glyphs, Int32 count, Single* xpos, Single origin);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4101,9 +5562,15 @@ namespace SkiaSharp
 
 		// bool sk_font_is_baseline_snap(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_font_is_baseline_snap (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_font_is_baseline_snap (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4117,9 +5584,15 @@ namespace SkiaSharp
 
 		// bool sk_font_is_embedded_bitmaps(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_font_is_embedded_bitmaps (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_font_is_embedded_bitmaps (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4133,9 +5606,15 @@ namespace SkiaSharp
 
 		// bool sk_font_is_embolden(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_font_is_embolden (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_font_is_embolden (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4149,9 +5628,15 @@ namespace SkiaSharp
 
 		// bool sk_font_is_force_auto_hinting(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_font_is_force_auto_hinting (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_font_is_force_auto_hinting (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4165,9 +5650,15 @@ namespace SkiaSharp
 
 		// bool sk_font_is_linear_metrics(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_font_is_linear_metrics (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_font_is_linear_metrics (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4181,9 +5672,15 @@ namespace SkiaSharp
 
 		// bool sk_font_is_subpixel(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_font_is_subpixel (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_font_is_subpixel (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4197,8 +5694,13 @@ namespace SkiaSharp
 
 		// float sk_font_measure_text(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, sk_rect_t* bounds, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_font_measure_text (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_font_measure_text (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4211,8 +5713,13 @@ namespace SkiaSharp
 
 		// void sk_font_measure_text_no_return(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, sk_rect_t* bounds, const sk_paint_t* paint, float* measuredWidth)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_measure_text_no_return (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, sk_paint_t paint, Single* measuredWidth);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_measure_text_no_return (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, sk_paint_t paint, Single* measuredWidth);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4225,8 +5732,13 @@ namespace SkiaSharp
 
 		// sk_font_t* sk_font_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_font_t sk_font_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_font_t sk_font_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4239,8 +5751,13 @@ namespace SkiaSharp
 
 		// sk_font_t* sk_font_new_with_values(sk_typeface_t* typeface, float size, float scaleX, float skewX)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_font_t sk_font_new_with_values (sk_typeface_t typeface, Single size, Single scaleX, Single skewX);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_font_t sk_font_new_with_values (sk_typeface_t typeface, Single size, Single scaleX, Single skewX);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4253,8 +5770,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_baseline_snap(sk_font_t* font, bool value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_baseline_snap (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_baseline_snap (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4267,8 +5789,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_edging(sk_font_t* font, sk_font_edging_t value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_edging (sk_font_t font, SKFontEdging value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_edging (sk_font_t font, SKFontEdging value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4281,8 +5808,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_embedded_bitmaps(sk_font_t* font, bool value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_embedded_bitmaps (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_embedded_bitmaps (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4295,8 +5827,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_embolden(sk_font_t* font, bool value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_embolden (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_embolden (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4309,8 +5846,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_force_auto_hinting(sk_font_t* font, bool value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_force_auto_hinting (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_force_auto_hinting (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4323,8 +5865,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_hinting(sk_font_t* font, sk_font_hinting_t value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_hinting (sk_font_t font, SKFontHinting value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_hinting (sk_font_t font, SKFontHinting value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4337,8 +5884,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_linear_metrics(sk_font_t* font, bool value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_linear_metrics (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_linear_metrics (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4351,8 +5903,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_scale_x(sk_font_t* font, float value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_scale_x (sk_font_t font, Single value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_scale_x (sk_font_t font, Single value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4365,8 +5922,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_size(sk_font_t* font, float value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_size (sk_font_t font, Single value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_size (sk_font_t font, Single value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4379,8 +5941,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_skew_x(sk_font_t* font, float value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_skew_x (sk_font_t font, Single value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_skew_x (sk_font_t font, Single value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4393,8 +5960,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_subpixel(sk_font_t* font, bool value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_subpixel (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_subpixel (sk_font_t font, [MarshalAs (UnmanagedType.I1)] bool value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4407,8 +5979,13 @@ namespace SkiaSharp
 
 		// void sk_font_set_typeface(sk_font_t* font, sk_typeface_t* value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_set_typeface (sk_font_t font, sk_typeface_t value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_typeface (sk_font_t font, sk_typeface_t value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4421,8 +5998,13 @@ namespace SkiaSharp
 
 		// int sk_font_text_to_glyphs(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, uint16_t[-1] glyphs, int maxGlyphCount)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_font_text_to_glyphs (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, UInt16* glyphs, Int32 maxGlyphCount);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_font_text_to_glyphs (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, UInt16* glyphs, Int32 maxGlyphCount);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4435,8 +6017,13 @@ namespace SkiaSharp
 
 		// uint16_t sk_font_unichar_to_glyph(const sk_font_t* font, int32_t uni)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt16 sk_font_unichar_to_glyph (sk_font_t font, Int32 uni);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt16 sk_font_unichar_to_glyph (sk_font_t font, Int32 uni);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4449,8 +6036,13 @@ namespace SkiaSharp
 
 		// void sk_font_unichars_to_glyphs(const sk_font_t* font, const int32_t[-1] uni, int count, uint16_t[-1] glyphs)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_font_unichars_to_glyphs (sk_font_t font, Int32* uni, Int32 count, UInt16* glyphs);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_unichars_to_glyphs (sk_font_t font, Int32* uni, Int32 count, UInt16* glyphs);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4463,8 +6055,13 @@ namespace SkiaSharp
 
 		// void sk_text_utils_get_path(const void* text, size_t length, sk_text_encoding_t encoding, float x, float y, const sk_font_t* font, sk_path_t* path)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_text_utils_get_path (void* text, /* size_t */ IntPtr length, SKTextEncoding encoding, Single x, Single y, sk_font_t font, sk_path_t path);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_text_utils_get_path (void* text, /* size_t */ IntPtr length, SKTextEncoding encoding, Single x, Single y, sk_font_t font, sk_path_t path);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4477,8 +6074,13 @@ namespace SkiaSharp
 
 		// void sk_text_utils_get_pos_path(const void* text, size_t length, sk_text_encoding_t encoding, const sk_point_t[-1] pos, const sk_font_t* font, sk_path_t* path)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_text_utils_get_pos_path (void* text, /* size_t */ IntPtr length, SKTextEncoding encoding, SKPoint* pos, sk_font_t font, sk_path_t path);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_text_utils_get_pos_path (void* text, /* size_t */ IntPtr length, SKTextEncoding encoding, SKPoint* pos, sk_font_t font, sk_path_t path);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4495,8 +6097,13 @@ namespace SkiaSharp
 
 		// sk_colortype_t sk_colortype_get_default_8888()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKColorTypeNative sk_colortype_get_default_8888 ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKColorTypeNative sk_colortype_get_default_8888 ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4509,8 +6116,13 @@ namespace SkiaSharp
 
 		// int sk_nvrefcnt_get_ref_count(const sk_nvrefcnt_t* refcnt)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_nvrefcnt_get_ref_count (sk_nvrefcnt_t refcnt);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_nvrefcnt_get_ref_count (sk_nvrefcnt_t refcnt);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4523,8 +6135,13 @@ namespace SkiaSharp
 
 		// void sk_nvrefcnt_safe_ref(sk_nvrefcnt_t* refcnt)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_nvrefcnt_safe_ref (sk_nvrefcnt_t refcnt);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_nvrefcnt_safe_ref (sk_nvrefcnt_t refcnt);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4537,8 +6154,13 @@ namespace SkiaSharp
 
 		// void sk_nvrefcnt_safe_unref(sk_nvrefcnt_t* refcnt)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_nvrefcnt_safe_unref (sk_nvrefcnt_t refcnt);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_nvrefcnt_safe_unref (sk_nvrefcnt_t refcnt);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4551,9 +6173,15 @@ namespace SkiaSharp
 
 		// bool sk_nvrefcnt_unique(const sk_nvrefcnt_t* refcnt)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_nvrefcnt_unique (sk_nvrefcnt_t refcnt);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_nvrefcnt_unique (sk_nvrefcnt_t refcnt);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4567,8 +6195,13 @@ namespace SkiaSharp
 
 		// int sk_refcnt_get_ref_count(const sk_refcnt_t* refcnt)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_refcnt_get_ref_count (sk_refcnt_t refcnt);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_refcnt_get_ref_count (sk_refcnt_t refcnt);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4581,8 +6214,13 @@ namespace SkiaSharp
 
 		// void sk_refcnt_safe_ref(sk_refcnt_t* refcnt)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_refcnt_safe_ref (sk_refcnt_t refcnt);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_refcnt_safe_ref (sk_refcnt_t refcnt);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4595,8 +6233,13 @@ namespace SkiaSharp
 
 		// void sk_refcnt_safe_unref(sk_refcnt_t* refcnt)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_refcnt_safe_unref (sk_refcnt_t refcnt);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_refcnt_safe_unref (sk_refcnt_t refcnt);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4609,9 +6252,15 @@ namespace SkiaSharp
 
 		// bool sk_refcnt_unique(const sk_refcnt_t* refcnt)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_refcnt_unique (sk_refcnt_t refcnt);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_refcnt_unique (sk_refcnt_t refcnt);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4625,8 +6274,13 @@ namespace SkiaSharp
 
 		// int sk_version_get_increment()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_version_get_increment ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_version_get_increment ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4639,8 +6293,13 @@ namespace SkiaSharp
 
 		// int sk_version_get_milestone()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_version_get_milestone ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_version_get_milestone ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4653,8 +6312,13 @@ namespace SkiaSharp
 
 		// const char* sk_version_get_string()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* char */ void* sk_version_get_string ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* char */ void* sk_version_get_string ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4671,8 +6335,13 @@ namespace SkiaSharp
 
 		// void sk_graphics_dump_memory_statistics(sk_tracememorydump_t* dump)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_graphics_dump_memory_statistics (sk_tracememorydump_t dump);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_graphics_dump_memory_statistics (sk_tracememorydump_t dump);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4685,8 +6354,13 @@ namespace SkiaSharp
 
 		// int sk_graphics_get_font_cache_count_limit()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_graphics_get_font_cache_count_limit ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_graphics_get_font_cache_count_limit ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4699,8 +6373,13 @@ namespace SkiaSharp
 
 		// int sk_graphics_get_font_cache_count_used()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_graphics_get_font_cache_count_used ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_graphics_get_font_cache_count_used ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4713,8 +6392,13 @@ namespace SkiaSharp
 
 		// size_t sk_graphics_get_font_cache_limit()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_graphics_get_font_cache_limit ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_graphics_get_font_cache_limit ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4727,8 +6411,13 @@ namespace SkiaSharp
 
 		// size_t sk_graphics_get_font_cache_used()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_graphics_get_font_cache_used ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_graphics_get_font_cache_used ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4741,8 +6430,13 @@ namespace SkiaSharp
 
 		// size_t sk_graphics_get_resource_cache_single_allocation_byte_limit()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_graphics_get_resource_cache_single_allocation_byte_limit ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_graphics_get_resource_cache_single_allocation_byte_limit ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4755,8 +6449,13 @@ namespace SkiaSharp
 
 		// size_t sk_graphics_get_resource_cache_total_byte_limit()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_graphics_get_resource_cache_total_byte_limit ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_graphics_get_resource_cache_total_byte_limit ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4769,8 +6468,13 @@ namespace SkiaSharp
 
 		// size_t sk_graphics_get_resource_cache_total_bytes_used()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_graphics_get_resource_cache_total_bytes_used ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_graphics_get_resource_cache_total_bytes_used ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4783,8 +6487,13 @@ namespace SkiaSharp
 
 		// void sk_graphics_init()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_graphics_init ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_graphics_init ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4797,8 +6506,13 @@ namespace SkiaSharp
 
 		// void sk_graphics_purge_all_caches()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_graphics_purge_all_caches ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_graphics_purge_all_caches ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4811,8 +6525,13 @@ namespace SkiaSharp
 
 		// void sk_graphics_purge_font_cache()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_graphics_purge_font_cache ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_graphics_purge_font_cache ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4825,8 +6544,13 @@ namespace SkiaSharp
 
 		// void sk_graphics_purge_resource_cache()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_graphics_purge_resource_cache ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_graphics_purge_resource_cache ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4839,8 +6563,13 @@ namespace SkiaSharp
 
 		// int sk_graphics_set_font_cache_count_limit(int count)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_graphics_set_font_cache_count_limit (Int32 count);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_graphics_set_font_cache_count_limit (Int32 count);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4853,8 +6582,13 @@ namespace SkiaSharp
 
 		// size_t sk_graphics_set_font_cache_limit(size_t bytes)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_graphics_set_font_cache_limit (/* size_t */ IntPtr bytes);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_graphics_set_font_cache_limit (/* size_t */ IntPtr bytes);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4867,8 +6601,13 @@ namespace SkiaSharp
 
 		// size_t sk_graphics_set_resource_cache_single_allocation_byte_limit(size_t newLimit)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_graphics_set_resource_cache_single_allocation_byte_limit (/* size_t */ IntPtr newLimit);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_graphics_set_resource_cache_single_allocation_byte_limit (/* size_t */ IntPtr newLimit);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4881,8 +6620,13 @@ namespace SkiaSharp
 
 		// size_t sk_graphics_set_resource_cache_total_byte_limit(size_t newLimit)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_graphics_set_resource_cache_total_byte_limit (/* size_t */ IntPtr newLimit);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_graphics_set_resource_cache_total_byte_limit (/* size_t */ IntPtr newLimit);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4899,8 +6643,13 @@ namespace SkiaSharp
 
 		// sk_alphatype_t sk_image_get_alpha_type(const sk_image_t* image)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKAlphaType sk_image_get_alpha_type (sk_image_t image);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKAlphaType sk_image_get_alpha_type (sk_image_t image);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4913,8 +6662,13 @@ namespace SkiaSharp
 
 		// sk_colortype_t sk_image_get_color_type(const sk_image_t* image)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKColorTypeNative sk_image_get_color_type (sk_image_t image);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKColorTypeNative sk_image_get_color_type (sk_image_t image);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4927,8 +6681,13 @@ namespace SkiaSharp
 
 		// sk_colorspace_t* sk_image_get_colorspace(const sk_image_t* image)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_t sk_image_get_colorspace (sk_image_t image);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_image_get_colorspace (sk_image_t image);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4941,8 +6700,13 @@ namespace SkiaSharp
 
 		// int sk_image_get_height(const sk_image_t* cimage)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_image_get_height (sk_image_t cimage);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_image_get_height (sk_image_t cimage);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4955,8 +6719,13 @@ namespace SkiaSharp
 
 		// uint32_t sk_image_get_unique_id(const sk_image_t* cimage)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_image_get_unique_id (sk_image_t cimage);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_image_get_unique_id (sk_image_t cimage);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4969,8 +6738,13 @@ namespace SkiaSharp
 
 		// int sk_image_get_width(const sk_image_t* cimage)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_image_get_width (sk_image_t cimage);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_image_get_width (sk_image_t cimage);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4983,9 +6757,15 @@ namespace SkiaSharp
 
 		// bool sk_image_is_alpha_only(const sk_image_t* image)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_image_is_alpha_only (sk_image_t image);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_image_is_alpha_only (sk_image_t image);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -4999,9 +6779,15 @@ namespace SkiaSharp
 
 		// bool sk_image_is_lazy_generated(const sk_image_t* image)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_image_is_lazy_generated (sk_image_t image);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_image_is_lazy_generated (sk_image_t image);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5015,9 +6801,15 @@ namespace SkiaSharp
 
 		// bool sk_image_is_texture_backed(const sk_image_t* image)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_image_is_texture_backed (sk_image_t image);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_image_is_texture_backed (sk_image_t image);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5031,9 +6823,15 @@ namespace SkiaSharp
 
 		// bool sk_image_is_valid(const sk_image_t* image, gr_recording_context_t* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_image_is_valid (sk_image_t image, gr_recording_context_t context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_image_is_valid (sk_image_t image, gr_recording_context_t context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5047,8 +6845,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_make_non_texture_image(const sk_image_t* cimage)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_make_non_texture_image (sk_image_t cimage);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_make_non_texture_image (sk_image_t cimage);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5061,8 +6864,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_make_raster_image(const sk_image_t* cimage)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_make_raster_image (sk_image_t cimage);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_make_raster_image (sk_image_t cimage);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5073,24 +6881,15 @@ namespace SkiaSharp
 			(sk_image_make_raster_image_delegate ??= GetSymbol<Delegates.sk_image_make_raster_image> ("sk_image_make_raster_image")).Invoke (cimage);
 		#endif
 
-		// sk_shader_t* sk_image_make_shader(const sk_image_t* image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, const sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
-		}
-		private static Delegates.sk_image_make_shader sk_image_make_shader_delegate;
-		internal static sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix) =>
-			(sk_image_make_shader_delegate ??= GetSymbol<Delegates.sk_image_make_shader> ("sk_image_make_shader")).Invoke (image, tileX, tileY, sampling, cmatrix);
-		#endif
-
 		// sk_shader_t* sk_image_make_raw_shader(const sk_image_t* image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, const sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_image_make_raw_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_image_make_raw_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5101,10 +6900,34 @@ namespace SkiaSharp
 			(sk_image_make_raw_shader_delegate ??= GetSymbol<Delegates.sk_image_make_raw_shader> ("sk_image_make_raw_shader")).Invoke (image, tileX, tileY, sampling, cmatrix);
 		#endif
 
+		// sk_shader_t* sk_image_make_shader(const sk_image_t* image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, const sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix);
+		}
+		private static Delegates.sk_image_make_shader sk_image_make_shader_delegate;
+		internal static sk_shader_t sk_image_make_shader (sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions* sampling, SKMatrix* cmatrix) =>
+			(sk_image_make_shader_delegate ??= GetSymbol<Delegates.sk_image_make_shader> ("sk_image_make_shader")).Invoke (image, tileX, tileY, sampling, cmatrix);
+		#endif
+
 		// sk_image_t* sk_image_make_subset(const sk_image_t* cimage, gr_direct_context_t* context, const sk_irect_t* subset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_make_subset (sk_image_t cimage, gr_direct_context_t context, SKRectI* subset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_make_subset (sk_image_t cimage, gr_direct_context_t context, SKRectI* subset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5117,8 +6940,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_make_subset_raster(const sk_image_t* cimage, const sk_irect_t* subset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_make_subset_raster (sk_image_t cimage, SKRectI* subset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_make_subset_raster (sk_image_t cimage, SKRectI* subset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5131,8 +6959,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_make_texture_image(const sk_image_t* cimage, gr_direct_context_t* context, bool mipmapped, bool budgeted)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_make_texture_image (sk_image_t cimage, gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool mipmapped, [MarshalAs (UnmanagedType.I1)] bool budgeted);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_make_texture_image (sk_image_t cimage, gr_direct_context_t context, [MarshalAs (UnmanagedType.I1)] bool mipmapped, [MarshalAs (UnmanagedType.I1)] bool budgeted);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5145,8 +6978,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_make_with_filter(const sk_image_t* cimage, gr_recording_context_t* context, const sk_imagefilter_t* filter, const sk_irect_t* subset, const sk_irect_t* clipBounds, sk_irect_t* outSubset, sk_ipoint_t* outOffset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_make_with_filter (sk_image_t cimage, gr_recording_context_t context, sk_imagefilter_t filter, SKRectI* subset, SKRectI* clipBounds, SKRectI* outSubset, SKPointI* outOffset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_make_with_filter (sk_image_t cimage, gr_recording_context_t context, sk_imagefilter_t filter, SKRectI* subset, SKRectI* clipBounds, SKRectI* outSubset, SKPointI* outOffset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5159,8 +6997,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_make_with_filter_raster(const sk_image_t* cimage, const sk_imagefilter_t* filter, const sk_irect_t* subset, const sk_irect_t* clipBounds, sk_irect_t* outSubset, sk_ipoint_t* outOffset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_make_with_filter_raster (sk_image_t cimage, sk_imagefilter_t filter, SKRectI* subset, SKRectI* clipBounds, SKRectI* outSubset, SKPointI* outOffset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_make_with_filter_raster (sk_image_t cimage, sk_imagefilter_t filter, SKRectI* subset, SKRectI* clipBounds, SKRectI* outSubset, SKPointI* outOffset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5173,8 +7016,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_from_adopted_texture(gr_recording_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, const sk_colorspace_t* colorSpace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_new_from_adopted_texture (gr_recording_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorTypeNative colorType, SKAlphaType alpha, sk_colorspace_t colorSpace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_new_from_adopted_texture (gr_recording_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorTypeNative colorType, SKAlphaType alpha, sk_colorspace_t colorSpace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5187,8 +7035,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_from_bitmap(const sk_bitmap_t* cbitmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_new_from_bitmap (sk_bitmap_t cbitmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_new_from_bitmap (sk_bitmap_t cbitmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5201,8 +7054,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_from_encoded(const sk_data_t* cdata)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_new_from_encoded (sk_data_t cdata);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_new_from_encoded (sk_data_t cdata);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5215,8 +7073,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_from_picture(sk_picture_t* picture, const sk_isize_t* dimensions, const sk_matrix_t* cmatrix, const sk_paint_t* paint, bool useFloatingPointBitDepth, const sk_colorspace_t* colorSpace, const sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_new_from_picture (sk_picture_t picture, SKSizeI* dimensions, SKMatrix* cmatrix, sk_paint_t paint, [MarshalAs (UnmanagedType.I1)] bool useFloatingPointBitDepth, sk_colorspace_t colorSpace, sk_surfaceprops_t props);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_new_from_picture (sk_picture_t picture, SKSizeI* dimensions, SKMatrix* cmatrix, sk_paint_t paint, [MarshalAs (UnmanagedType.I1)] bool useFloatingPointBitDepth, sk_colorspace_t colorSpace, sk_surfaceprops_t props);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5229,8 +7092,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_from_texture(gr_recording_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, const sk_colorspace_t* colorSpace, const sk_image_texture_release_proc releaseProc, void* releaseContext)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_new_from_texture (gr_recording_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorTypeNative colorType, SKAlphaType alpha, sk_colorspace_t colorSpace, void* releaseProc, void* releaseContext);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_new_from_texture (gr_recording_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorTypeNative colorType, SKAlphaType alpha, sk_colorspace_t colorSpace, SKImageTextureReleaseProxyDelegate releaseProc, void* releaseContext);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5243,8 +7111,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_raster(const sk_pixmap_t* pixmap, sk_image_raster_release_proc releaseProc, void* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_new_raster (sk_pixmap_t pixmap, void* releaseProc, void* context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_new_raster (sk_pixmap_t pixmap, SKImageRasterReleaseProxyDelegate releaseProc, void* context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5257,8 +7130,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_raster_copy(const sk_imageinfo_t* cinfo, const void* pixels, size_t rowBytes)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_new_raster_copy (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_new_raster_copy (SKImageInfoNative* cinfo, void* pixels, /* size_t */ IntPtr rowBytes);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5271,8 +7149,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_raster_copy_with_pixmap(const sk_pixmap_t* pixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_new_raster_copy_with_pixmap (sk_pixmap_t pixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_new_raster_copy_with_pixmap (sk_pixmap_t pixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5285,8 +7168,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_image_new_raster_data(const sk_imageinfo_t* cinfo, sk_data_t* pixels, size_t rowBytes)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_image_new_raster_data (SKImageInfoNative* cinfo, sk_data_t pixels, /* size_t */ IntPtr rowBytes);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_image_new_raster_data (SKImageInfoNative* cinfo, sk_data_t pixels, /* size_t */ IntPtr rowBytes);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5299,9 +7187,15 @@ namespace SkiaSharp
 
 		// bool sk_image_peek_pixels(const sk_image_t* image, sk_pixmap_t* pixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_image_peek_pixels (sk_image_t image, sk_pixmap_t pixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_image_peek_pixels (sk_image_t image, sk_pixmap_t pixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5315,9 +7209,15 @@ namespace SkiaSharp
 
 		// bool sk_image_read_pixels(const sk_image_t* image, const sk_imageinfo_t* dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY, sk_image_caching_hint_t cachingHint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_image_read_pixels (sk_image_t image, SKImageInfoNative* dstInfo, void* dstPixels, /* size_t */ IntPtr dstRowBytes, Int32 srcX, Int32 srcY, SKImageCachingHint cachingHint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_image_read_pixels (sk_image_t image, SKImageInfoNative* dstInfo, void* dstPixels, /* size_t */ IntPtr dstRowBytes, Int32 srcX, Int32 srcY, SKImageCachingHint cachingHint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5331,9 +7231,15 @@ namespace SkiaSharp
 
 		// bool sk_image_read_pixels_into_pixmap(const sk_image_t* image, const sk_pixmap_t* dst, int srcX, int srcY, sk_image_caching_hint_t cachingHint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_image_read_pixels_into_pixmap (sk_image_t image, sk_pixmap_t dst, Int32 srcX, Int32 srcY, SKImageCachingHint cachingHint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_image_read_pixels_into_pixmap (sk_image_t image, sk_pixmap_t dst, Int32 srcX, Int32 srcY, SKImageCachingHint cachingHint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5347,8 +7253,13 @@ namespace SkiaSharp
 
 		// void sk_image_ref(const sk_image_t* cimage)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_image_ref (sk_image_t cimage);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_image_ref (sk_image_t cimage);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5361,8 +7272,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_image_ref_encoded(const sk_image_t* cimage)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_image_ref_encoded (sk_image_t cimage);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_image_ref_encoded (sk_image_t cimage);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5375,9 +7291,15 @@ namespace SkiaSharp
 
 		// bool sk_image_scale_pixels(const sk_image_t* image, const sk_pixmap_t* dst, const sk_sampling_options_t* sampling, sk_image_caching_hint_t cachingHint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_image_scale_pixels (sk_image_t image, sk_pixmap_t dst, SKSamplingOptions* sampling, SKImageCachingHint cachingHint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_image_scale_pixels (sk_image_t image, sk_pixmap_t dst, SKSamplingOptions* sampling, SKImageCachingHint cachingHint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5391,8 +7313,13 @@ namespace SkiaSharp
 
 		// void sk_image_unref(const sk_image_t* cimage)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_image_unref (sk_image_t cimage);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_image_unref (sk_image_t cimage);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5407,24 +7334,15 @@ namespace SkiaSharp
 
 		#region sk_imagefilter.h
 
-		// sk_imagefilter_t* sk_imagefilter_new_alpha_threshold(const sk_region_t* region, float innerThreshold, float outerThreshold, const sk_imagefilter_t* input)
-		#if !USE_DELEGATES
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_imagefilter_t sk_imagefilter_new_alpha_threshold (sk_region_t region, Single innerThreshold, Single outerThreshold, sk_imagefilter_t input);
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_imagefilter_t sk_imagefilter_new_alpha_threshold (sk_region_t region, Single innerThreshold, Single outerThreshold, sk_imagefilter_t input);
-		}
-		private static Delegates.sk_imagefilter_new_alpha_threshold sk_imagefilter_new_alpha_threshold_delegate;
-		internal static sk_imagefilter_t sk_imagefilter_new_alpha_threshold (sk_region_t region, Single innerThreshold, Single outerThreshold, sk_imagefilter_t input) =>
-			(sk_imagefilter_new_alpha_threshold_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_alpha_threshold> ("sk_imagefilter_new_alpha_threshold")).Invoke (region, innerThreshold, outerThreshold, input);
-		#endif
-
 		// sk_imagefilter_t* sk_imagefilter_new_arithmetic(float k1, float k2, float k3, float k4, bool enforcePMColor, const sk_imagefilter_t* background, const sk_imagefilter_t* foreground, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePMColor, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_arithmetic (Single k1, Single k2, Single k3, Single k4, [MarshalAs (UnmanagedType.I1)] bool enforcePMColor, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5437,8 +7355,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_blend(sk_blendmode_t mode, const sk_imagefilter_t* background, const sk_imagefilter_t* foreground, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_blend (SKBlendMode mode, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_blend (SKBlendMode mode, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5451,8 +7374,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_blender(sk_blender_t* blender, const sk_imagefilter_t* background, const sk_imagefilter_t* foreground, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_blender (sk_blender_t blender, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_blender (sk_blender_t blender, sk_imagefilter_t background, sk_imagefilter_t foreground, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5465,8 +7393,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_blur(float sigmaX, float sigmaY, sk_shader_tilemode_t tileMode, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_blur (Single sigmaX, Single sigmaY, SKShaderTileMode tileMode, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5479,8 +7412,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_color_filter(sk_colorfilter_t* cf, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_color_filter (sk_colorfilter_t cf, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_color_filter (sk_colorfilter_t cf, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5493,8 +7431,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_compose(const sk_imagefilter_t* outer, const sk_imagefilter_t* inner)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_compose (sk_imagefilter_t outer, sk_imagefilter_t inner);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_compose (sk_imagefilter_t outer, sk_imagefilter_t inner);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5507,8 +7450,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_dilate(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_dilate (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_dilate (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5521,8 +7469,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_displacement_map_effect(sk_color_channel_t xChannelSelector, sk_color_channel_t yChannelSelector, float scale, const sk_imagefilter_t* displacement, const sk_imagefilter_t* color, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_displacement_map_effect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, Single scale, sk_imagefilter_t displacement, sk_imagefilter_t color, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5535,8 +7488,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_distant_lit_diffuse(const sk_point3_t* direction, sk_color_t lightColor, float surfaceScale, float kd, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_distant_lit_diffuse (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_distant_lit_diffuse (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5549,8 +7507,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_distant_lit_specular(const sk_point3_t* direction, sk_color_t lightColor, float surfaceScale, float ks, float shininess, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_distant_lit_specular (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_distant_lit_specular (SKPoint3* direction, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5563,8 +7526,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_drop_shadow(float dx, float dy, float sigmaX, float sigmaY, sk_color_t color, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_drop_shadow (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5577,8 +7545,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_drop_shadow_only(float dx, float dy, float sigmaX, float sigmaY, sk_color_t color, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5591,8 +7564,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_erode(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_erode (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_erode (Single radiusX, Single radiusY, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5605,8 +7583,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_image(sk_image_t* image, const sk_rect_t* srcRect, const sk_rect_t* dstRect, const sk_sampling_options_t* sampling)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_image (sk_image_t image, SKRect* srcRect, SKRect* dstRect, SKSamplingOptions* sampling);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_image (sk_image_t image, SKRect* srcRect, SKRect* dstRect, SKSamplingOptions* sampling);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5619,8 +7602,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_image_simple(sk_image_t* image, const sk_sampling_options_t* sampling)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_image_simple (sk_image_t image, SKSamplingOptions* sampling);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_image_simple (sk_image_t image, SKSamplingOptions* sampling);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5633,8 +7621,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_magnifier(const sk_rect_t* lensBounds, float zoomAmount, float inset, const sk_sampling_options_t* sampling, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_magnifier (SKRect* lensBounds, Single zoomAmount, Single inset, SKSamplingOptions* sampling, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_magnifier (SKRect* lensBounds, Single zoomAmount, Single inset, SKSamplingOptions* sampling, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5647,8 +7640,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_matrix_convolution(const sk_isize_t* kernelSize, const float[-1] kernel, float gain, float bias, const sk_ipoint_t* kernelOffset, sk_shader_tilemode_t ctileMode, bool convolveAlpha, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode ctileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_matrix_convolution (SKSizeI* kernelSize, Single* kernel, Single gain, Single bias, SKPointI* kernelOffset, SKShaderTileMode ctileMode, [MarshalAs (UnmanagedType.I1)] bool convolveAlpha, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5661,8 +7659,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_matrix_transform(const sk_matrix_t* cmatrix, const sk_sampling_options_t* sampling, const sk_imagefilter_t* input)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_matrix_transform (SKMatrix* cmatrix, SKSamplingOptions* sampling, sk_imagefilter_t input);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_matrix_transform (SKMatrix* cmatrix, SKSamplingOptions* sampling, sk_imagefilter_t input);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5675,8 +7678,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_merge(const sk_imagefilter_t*[-1] cfilters, int count, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_merge (sk_imagefilter_t* cfilters, Int32 count, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_merge (sk_imagefilter_t* cfilters, Int32 count, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5689,8 +7697,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_merge_simple(const sk_imagefilter_t* first, const sk_imagefilter_t* second, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_merge_simple (sk_imagefilter_t first, sk_imagefilter_t second, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_merge_simple (sk_imagefilter_t first, sk_imagefilter_t second, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5703,8 +7716,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_offset(float dx, float dy, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_offset (Single dx, Single dy, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_offset (Single dx, Single dy, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5717,8 +7735,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_picture(const sk_picture_t* picture)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_picture (sk_picture_t picture);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_picture (sk_picture_t picture);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5731,8 +7754,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_picture_with_rect(const sk_picture_t* picture, const sk_rect_t* targetRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_picture_with_rect (sk_picture_t picture, SKRect* targetRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_picture_with_rect (sk_picture_t picture, SKRect* targetRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5745,8 +7773,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_point_lit_diffuse(const sk_point3_t* location, sk_color_t lightColor, float surfaceScale, float kd, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_point_lit_diffuse (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_point_lit_diffuse (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5759,8 +7792,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_point_lit_specular(const sk_point3_t* location, sk_color_t lightColor, float surfaceScale, float ks, float shininess, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_point_lit_specular (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_point_lit_specular (SKPoint3* location, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5773,8 +7811,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_shader(const sk_shader_t* shader, bool dither, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_shader (sk_shader_t shader, [MarshalAs (UnmanagedType.I1)] bool dither, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_shader (sk_shader_t shader, [MarshalAs (UnmanagedType.I1)] bool dither, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5787,8 +7830,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_spot_lit_diffuse(const sk_point3_t* location, const sk_point3_t* target, float specularExponent, float cutoffAngle, sk_color_t lightColor, float surfaceScale, float kd, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_spot_lit_diffuse (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_spot_lit_diffuse (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single kd, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5801,8 +7849,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_spot_lit_specular(const sk_point3_t* location, const sk_point3_t* target, float specularExponent, float cutoffAngle, sk_color_t lightColor, float surfaceScale, float ks, float shininess, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_spot_lit_specular (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_spot_lit_specular (SKPoint3* location, SKPoint3* target, Single specularExponent, Single cutoffAngle, UInt32 lightColor, Single surfaceScale, Single ks, Single shininess, sk_imagefilter_t input, SKRect* cropRect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5815,8 +7868,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_imagefilter_new_tile(const sk_rect_t* src, const sk_rect_t* dst, const sk_imagefilter_t* input)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_tile (SKRect* src, SKRect* dst, sk_imagefilter_t input);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_imagefilter_new_tile (SKRect* src, SKRect* dst, sk_imagefilter_t input);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5829,8 +7887,13 @@ namespace SkiaSharp
 
 		// void sk_imagefilter_unref(sk_imagefilter_t* cfilter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_imagefilter_unref (sk_imagefilter_t cfilter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_imagefilter_unref (sk_imagefilter_t cfilter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5847,8 +7910,13 @@ namespace SkiaSharp
 
 		// void sk_linker_keep_alive()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_linker_keep_alive ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_linker_keep_alive ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5865,8 +7933,13 @@ namespace SkiaSharp
 
 		// sk_maskfilter_t* sk_maskfilter_new_blur(sk_blurstyle_t, float sigma)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_maskfilter_t sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_maskfilter_t sk_maskfilter_new_blur (SKBlurStyle param0, Single sigma);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5879,8 +7952,13 @@ namespace SkiaSharp
 
 		// sk_maskfilter_t* sk_maskfilter_new_blur_with_flags(sk_blurstyle_t, float sigma, bool respectCTM)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_maskfilter_t sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_maskfilter_t sk_maskfilter_new_blur_with_flags (SKBlurStyle param0, Single sigma, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5893,8 +7971,13 @@ namespace SkiaSharp
 
 		// sk_maskfilter_t* sk_maskfilter_new_clip(uint8_t min, uint8_t max)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_maskfilter_t sk_maskfilter_new_clip (Byte min, Byte max);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_maskfilter_t sk_maskfilter_new_clip (Byte min, Byte max);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5907,8 +7990,13 @@ namespace SkiaSharp
 
 		// sk_maskfilter_t* sk_maskfilter_new_gamma(float gamma)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_maskfilter_t sk_maskfilter_new_gamma (Single gamma);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_maskfilter_t sk_maskfilter_new_gamma (Single gamma);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5921,8 +8009,13 @@ namespace SkiaSharp
 
 		// sk_maskfilter_t* sk_maskfilter_new_shader(sk_shader_t* cshader)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_maskfilter_t sk_maskfilter_new_shader (sk_shader_t cshader);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_maskfilter_t sk_maskfilter_new_shader (sk_shader_t cshader);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5935,8 +8028,13 @@ namespace SkiaSharp
 
 		// sk_maskfilter_t* sk_maskfilter_new_table(const uint8_t[256] table = 256)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_maskfilter_t sk_maskfilter_new_table (Byte* table);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_maskfilter_t sk_maskfilter_new_table (Byte* table);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5949,8 +8047,13 @@ namespace SkiaSharp
 
 		// void sk_maskfilter_ref(sk_maskfilter_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_maskfilter_ref (sk_maskfilter_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_maskfilter_ref (sk_maskfilter_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5963,8 +8066,13 @@ namespace SkiaSharp
 
 		// void sk_maskfilter_unref(sk_maskfilter_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_maskfilter_unref (sk_maskfilter_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_maskfilter_unref (sk_maskfilter_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5981,8 +8089,13 @@ namespace SkiaSharp
 
 		// void sk_matrix_concat(sk_matrix_t* result, sk_matrix_t* first, sk_matrix_t* second)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_matrix_concat (SKMatrix* result, SKMatrix* first, SKMatrix* second);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_matrix_concat (SKMatrix* result, SKMatrix* first, SKMatrix* second);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -5995,8 +8108,13 @@ namespace SkiaSharp
 
 		// void sk_matrix_map_points(sk_matrix_t* matrix, sk_point_t* dst, sk_point_t* src, int count)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_matrix_map_points (SKMatrix* matrix, SKPoint* dst, SKPoint* src, Int32 count);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_matrix_map_points (SKMatrix* matrix, SKPoint* dst, SKPoint* src, Int32 count);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6009,8 +8127,13 @@ namespace SkiaSharp
 
 		// float sk_matrix_map_radius(sk_matrix_t* matrix, float radius)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_matrix_map_radius (SKMatrix* matrix, Single radius);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_matrix_map_radius (SKMatrix* matrix, Single radius);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6023,8 +8146,13 @@ namespace SkiaSharp
 
 		// void sk_matrix_map_rect(sk_matrix_t* matrix, sk_rect_t* dest, sk_rect_t* source)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_matrix_map_rect (SKMatrix* matrix, SKRect* dest, SKRect* source);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_matrix_map_rect (SKMatrix* matrix, SKRect* dest, SKRect* source);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6037,8 +8165,13 @@ namespace SkiaSharp
 
 		// void sk_matrix_map_vector(sk_matrix_t* matrix, float x, float y, sk_point_t* result)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_matrix_map_vector (SKMatrix* matrix, Single x, Single y, SKPoint* result);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_matrix_map_vector (SKMatrix* matrix, Single x, Single y, SKPoint* result);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6051,8 +8184,13 @@ namespace SkiaSharp
 
 		// void sk_matrix_map_vectors(sk_matrix_t* matrix, sk_point_t* dst, sk_point_t* src, int count)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_matrix_map_vectors (SKMatrix* matrix, SKPoint* dst, SKPoint* src, Int32 count);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_matrix_map_vectors (SKMatrix* matrix, SKPoint* dst, SKPoint* src, Int32 count);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6065,8 +8203,13 @@ namespace SkiaSharp
 
 		// void sk_matrix_map_xy(sk_matrix_t* matrix, float x, float y, sk_point_t* result)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_matrix_map_xy (SKMatrix* matrix, Single x, Single y, SKPoint* result);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_matrix_map_xy (SKMatrix* matrix, Single x, Single y, SKPoint* result);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6079,8 +8222,13 @@ namespace SkiaSharp
 
 		// void sk_matrix_post_concat(sk_matrix_t* result, sk_matrix_t* matrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_matrix_post_concat (SKMatrix* result, SKMatrix* matrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_matrix_post_concat (SKMatrix* result, SKMatrix* matrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6093,8 +8241,13 @@ namespace SkiaSharp
 
 		// void sk_matrix_pre_concat(sk_matrix_t* result, sk_matrix_t* matrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_matrix_pre_concat (SKMatrix* result, SKMatrix* matrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_matrix_pre_concat (SKMatrix* result, SKMatrix* matrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6107,9 +8260,15 @@ namespace SkiaSharp
 
 		// bool sk_matrix_try_invert(sk_matrix_t* matrix, sk_matrix_t* result)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_matrix_try_invert (SKMatrix* matrix, SKMatrix* result);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_matrix_try_invert (SKMatrix* matrix, SKMatrix* result);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6127,8 +8286,13 @@ namespace SkiaSharp
 
 		// sk_paint_t* sk_paint_clone(sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_paint_t sk_paint_clone (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_paint_t sk_paint_clone (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6141,8 +8305,13 @@ namespace SkiaSharp
 
 		// void sk_paint_delete(sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_delete (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_delete (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6155,8 +8324,13 @@ namespace SkiaSharp
 
 		// sk_blender_t* sk_paint_get_blender(sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_blender_t sk_paint_get_blender (sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_blender_t sk_paint_get_blender (sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6169,8 +8343,13 @@ namespace SkiaSharp
 
 		// sk_blendmode_t sk_paint_get_blendmode(sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKBlendMode sk_paint_get_blendmode (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKBlendMode sk_paint_get_blendmode (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6183,8 +8362,13 @@ namespace SkiaSharp
 
 		// sk_color_t sk_paint_get_color(const sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_paint_get_color (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_paint_get_color (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6197,8 +8381,13 @@ namespace SkiaSharp
 
 		// void sk_paint_get_color4f(const sk_paint_t* paint, sk_color4f_t* color)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_get_color4f (sk_paint_t paint, SKColorF* color);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_get_color4f (sk_paint_t paint, SKColorF* color);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6211,8 +8400,13 @@ namespace SkiaSharp
 
 		// sk_colorfilter_t* sk_paint_get_colorfilter(sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_paint_get_colorfilter (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_paint_get_colorfilter (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6225,9 +8419,15 @@ namespace SkiaSharp
 
 		// bool sk_paint_get_fill_path(const sk_paint_t* cpaint, const sk_path_t* src, sk_path_t* dst, const sk_rect_t* cullRect, const sk_matrix_t* cmatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_paint_get_fill_path (sk_paint_t cpaint, sk_path_t src, sk_path_t dst, SKRect* cullRect, SKMatrix* cmatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_paint_get_fill_path (sk_paint_t cpaint, sk_path_t src, sk_path_t dst, SKRect* cullRect, SKMatrix* cmatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6241,8 +8441,13 @@ namespace SkiaSharp
 
 		// sk_imagefilter_t* sk_paint_get_imagefilter(sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_paint_get_imagefilter (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_imagefilter_t sk_paint_get_imagefilter (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6255,8 +8460,13 @@ namespace SkiaSharp
 
 		// sk_maskfilter_t* sk_paint_get_maskfilter(sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_maskfilter_t sk_paint_get_maskfilter (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_maskfilter_t sk_paint_get_maskfilter (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6269,8 +8479,13 @@ namespace SkiaSharp
 
 		// sk_path_effect_t* sk_paint_get_path_effect(sk_paint_t* cpaint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_effect_t sk_paint_get_path_effect (sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_paint_get_path_effect (sk_paint_t cpaint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6283,8 +8498,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_paint_get_shader(sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_paint_get_shader (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_paint_get_shader (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6297,8 +8517,13 @@ namespace SkiaSharp
 
 		// sk_stroke_cap_t sk_paint_get_stroke_cap(const sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKStrokeCap sk_paint_get_stroke_cap (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKStrokeCap sk_paint_get_stroke_cap (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6311,8 +8536,13 @@ namespace SkiaSharp
 
 		// sk_stroke_join_t sk_paint_get_stroke_join(const sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKStrokeJoin sk_paint_get_stroke_join (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKStrokeJoin sk_paint_get_stroke_join (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6325,8 +8555,13 @@ namespace SkiaSharp
 
 		// float sk_paint_get_stroke_miter(const sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_paint_get_stroke_miter (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_paint_get_stroke_miter (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6339,8 +8574,13 @@ namespace SkiaSharp
 
 		// float sk_paint_get_stroke_width(const sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_paint_get_stroke_width (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_paint_get_stroke_width (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6353,8 +8593,13 @@ namespace SkiaSharp
 
 		// sk_paint_style_t sk_paint_get_style(const sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKPaintStyle sk_paint_get_style (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKPaintStyle sk_paint_get_style (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6367,9 +8612,15 @@ namespace SkiaSharp
 
 		// bool sk_paint_is_antialias(const sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_paint_is_antialias (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_paint_is_antialias (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6383,9 +8634,15 @@ namespace SkiaSharp
 
 		// bool sk_paint_is_dither(const sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_paint_is_dither (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_paint_is_dither (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6399,8 +8656,13 @@ namespace SkiaSharp
 
 		// sk_paint_t* sk_paint_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_paint_t sk_paint_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_paint_t sk_paint_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6413,8 +8675,13 @@ namespace SkiaSharp
 
 		// void sk_paint_reset(sk_paint_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_reset (sk_paint_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_reset (sk_paint_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6427,8 +8694,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_antialias(sk_paint_t*, bool)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_antialias (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_antialias (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6441,8 +8713,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_blender(sk_paint_t* paint, sk_blender_t* blender)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_blender (sk_paint_t paint, sk_blender_t blender);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_blender (sk_paint_t paint, sk_blender_t blender);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6455,8 +8732,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_blendmode(sk_paint_t*, sk_blendmode_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_blendmode (sk_paint_t param0, SKBlendMode param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_blendmode (sk_paint_t param0, SKBlendMode param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6469,8 +8751,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_color(sk_paint_t*, sk_color_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_color (sk_paint_t param0, UInt32 param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_color (sk_paint_t param0, UInt32 param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6483,8 +8770,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_color4f(sk_paint_t* paint, sk_color4f_t* color, sk_colorspace_t* colorspace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_color4f (sk_paint_t paint, SKColorF* color, sk_colorspace_t colorspace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_color4f (sk_paint_t paint, SKColorF* color, sk_colorspace_t colorspace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6497,8 +8789,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_colorfilter(sk_paint_t*, sk_colorfilter_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_colorfilter (sk_paint_t param0, sk_colorfilter_t param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_colorfilter (sk_paint_t param0, sk_colorfilter_t param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6511,8 +8808,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_dither(sk_paint_t*, bool)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_dither (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_dither (sk_paint_t param0, [MarshalAs (UnmanagedType.I1)] bool param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6525,8 +8827,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_imagefilter(sk_paint_t*, sk_imagefilter_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_imagefilter (sk_paint_t param0, sk_imagefilter_t param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_imagefilter (sk_paint_t param0, sk_imagefilter_t param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6539,8 +8846,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_maskfilter(sk_paint_t*, sk_maskfilter_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_maskfilter (sk_paint_t param0, sk_maskfilter_t param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_maskfilter (sk_paint_t param0, sk_maskfilter_t param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6553,8 +8865,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_path_effect(sk_paint_t* cpaint, sk_path_effect_t* effect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_path_effect (sk_paint_t cpaint, sk_path_effect_t effect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_path_effect (sk_paint_t cpaint, sk_path_effect_t effect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6567,8 +8884,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_shader(sk_paint_t*, sk_shader_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_shader (sk_paint_t param0, sk_shader_t param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_shader (sk_paint_t param0, sk_shader_t param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6581,8 +8903,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_stroke_cap(sk_paint_t*, sk_stroke_cap_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_stroke_cap (sk_paint_t param0, SKStrokeCap param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_stroke_cap (sk_paint_t param0, SKStrokeCap param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6595,8 +8922,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_stroke_join(sk_paint_t*, sk_stroke_join_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_stroke_join (sk_paint_t param0, SKStrokeJoin param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_stroke_join (sk_paint_t param0, SKStrokeJoin param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6609,8 +8941,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_stroke_miter(sk_paint_t*, float miter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_stroke_miter (sk_paint_t param0, Single miter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_stroke_miter (sk_paint_t param0, Single miter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6623,8 +8960,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_stroke_width(sk_paint_t*, float width)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_stroke_width (sk_paint_t param0, Single width);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_stroke_width (sk_paint_t param0, Single width);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6637,8 +8979,13 @@ namespace SkiaSharp
 
 		// void sk_paint_set_style(sk_paint_t*, sk_paint_style_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_set_style (sk_paint_t param0, SKPaintStyle param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_paint_set_style (sk_paint_t param0, SKPaintStyle param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6655,8 +9002,13 @@ namespace SkiaSharp
 
 		// void sk_opbuilder_add(sk_opbuilder_t* builder, const sk_path_t* path, sk_pathop_t op)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_opbuilder_add (sk_opbuilder_t builder, sk_path_t path, SKPathOp op);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_opbuilder_add (sk_opbuilder_t builder, sk_path_t path, SKPathOp op);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6669,8 +9021,13 @@ namespace SkiaSharp
 
 		// void sk_opbuilder_destroy(sk_opbuilder_t* builder)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_opbuilder_destroy (sk_opbuilder_t builder);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_opbuilder_destroy (sk_opbuilder_t builder);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6683,8 +9040,13 @@ namespace SkiaSharp
 
 		// sk_opbuilder_t* sk_opbuilder_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_opbuilder_t sk_opbuilder_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_opbuilder_t sk_opbuilder_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6697,9 +9059,15 @@ namespace SkiaSharp
 
 		// bool sk_opbuilder_resolve(sk_opbuilder_t* builder, sk_path_t* result)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_opbuilder_resolve (sk_opbuilder_t builder, sk_path_t result);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_opbuilder_resolve (sk_opbuilder_t builder, sk_path_t result);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6713,8 +9081,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_arc(sk_path_t* cpath, const sk_rect_t* crect, float startAngle, float sweepAngle)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_arc (sk_path_t cpath, SKRect* crect, Single startAngle, Single sweepAngle);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_arc (sk_path_t cpath, SKRect* crect, Single startAngle, Single sweepAngle);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6727,8 +9100,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_circle(sk_path_t*, float x, float y, float radius, sk_path_direction_t dir)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_circle (sk_path_t param0, Single x, Single y, Single radius, SKPathDirection dir);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_circle (sk_path_t param0, Single x, Single y, Single radius, SKPathDirection dir);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6741,8 +9119,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_oval(sk_path_t*, const sk_rect_t*, sk_path_direction_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_oval (sk_path_t param0, SKRect* param1, SKPathDirection param2);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_oval (sk_path_t param0, SKRect* param1, SKPathDirection param2);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6755,8 +9138,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_path(sk_path_t* cpath, sk_path_t* other, sk_path_add_mode_t add_mode)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_path (sk_path_t cpath, sk_path_t other, SKPathAddMode add_mode);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_path (sk_path_t cpath, sk_path_t other, SKPathAddMode add_mode);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6769,8 +9157,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_path_matrix(sk_path_t* cpath, sk_path_t* other, sk_matrix_t* matrix, sk_path_add_mode_t add_mode)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_path_matrix (sk_path_t cpath, sk_path_t other, SKMatrix* matrix, SKPathAddMode add_mode);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_path_matrix (sk_path_t cpath, sk_path_t other, SKMatrix* matrix, SKPathAddMode add_mode);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6783,8 +9176,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_path_offset(sk_path_t* cpath, sk_path_t* other, float dx, float dy, sk_path_add_mode_t add_mode)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_path_offset (sk_path_t cpath, sk_path_t other, Single dx, Single dy, SKPathAddMode add_mode);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_path_offset (sk_path_t cpath, sk_path_t other, Single dx, Single dy, SKPathAddMode add_mode);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6797,8 +9195,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_path_reverse(sk_path_t* cpath, sk_path_t* other)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_path_reverse (sk_path_t cpath, sk_path_t other);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_path_reverse (sk_path_t cpath, sk_path_t other);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6811,8 +9214,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_poly(sk_path_t* cpath, const sk_point_t* points, int count, bool close)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_poly (sk_path_t cpath, SKPoint* points, Int32 count, [MarshalAs (UnmanagedType.I1)] bool close);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_poly (sk_path_t cpath, SKPoint* points, Int32 count, [MarshalAs (UnmanagedType.I1)] bool close);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6825,8 +9233,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_rect(sk_path_t*, const sk_rect_t*, sk_path_direction_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_rect (sk_path_t param0, SKRect* param1, SKPathDirection param2);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_rect (sk_path_t param0, SKRect* param1, SKPathDirection param2);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6839,8 +9252,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_rect_start(sk_path_t* cpath, const sk_rect_t* crect, sk_path_direction_t cdir, uint32_t startIndex)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_rect_start (sk_path_t cpath, SKRect* crect, SKPathDirection cdir, UInt32 startIndex);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_rect_start (sk_path_t cpath, SKRect* crect, SKPathDirection cdir, UInt32 startIndex);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6853,8 +9271,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_rounded_rect(sk_path_t*, const sk_rect_t*, float, float, sk_path_direction_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_rounded_rect (sk_path_t param0, SKRect* param1, Single param2, Single param3, SKPathDirection param4);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_rounded_rect (sk_path_t param0, SKRect* param1, Single param2, Single param3, SKPathDirection param4);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6867,8 +9290,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_rrect(sk_path_t*, const sk_rrect_t*, sk_path_direction_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_rrect (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_rrect (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6881,8 +9309,13 @@ namespace SkiaSharp
 
 		// void sk_path_add_rrect_start(sk_path_t*, const sk_rrect_t*, sk_path_direction_t, uint32_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_add_rrect_start (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2, UInt32 param3);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_add_rrect_start (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2, UInt32 param3);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6895,8 +9328,13 @@ namespace SkiaSharp
 
 		// void sk_path_arc_to(sk_path_t*, float rx, float ry, float xAxisRotate, sk_path_arc_size_t largeArc, sk_path_direction_t sweep, float x, float y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_arc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_arc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6909,8 +9347,13 @@ namespace SkiaSharp
 
 		// void sk_path_arc_to_with_oval(sk_path_t*, const sk_rect_t* oval, float startAngle, float sweepAngle, bool forceMoveTo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_arc_to_with_oval (sk_path_t param0, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_arc_to_with_oval (sk_path_t param0, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6923,8 +9366,13 @@ namespace SkiaSharp
 
 		// void sk_path_arc_to_with_points(sk_path_t*, float x1, float y1, float x2, float y2, float radius)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_arc_to_with_points (sk_path_t param0, Single x1, Single y1, Single x2, Single y2, Single radius);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_arc_to_with_points (sk_path_t param0, Single x1, Single y1, Single x2, Single y2, Single radius);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6937,8 +9385,13 @@ namespace SkiaSharp
 
 		// sk_path_t* sk_path_clone(const sk_path_t* cpath)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_t sk_path_clone (sk_path_t cpath);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_t sk_path_clone (sk_path_t cpath);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6951,8 +9404,13 @@ namespace SkiaSharp
 
 		// void sk_path_close(sk_path_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_close (sk_path_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_close (sk_path_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6965,8 +9423,13 @@ namespace SkiaSharp
 
 		// void sk_path_compute_tight_bounds(const sk_path_t*, sk_rect_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_compute_tight_bounds (sk_path_t param0, SKRect* param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_compute_tight_bounds (sk_path_t param0, SKRect* param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6979,8 +9442,13 @@ namespace SkiaSharp
 
 		// void sk_path_conic_to(sk_path_t*, float x0, float y0, float x1, float y1, float w)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_conic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single w);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_conic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single w);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -6993,9 +9461,15 @@ namespace SkiaSharp
 
 		// bool sk_path_contains(const sk_path_t* cpath, float x, float y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_path_contains (sk_path_t cpath, Single x, Single y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_path_contains (sk_path_t cpath, Single x, Single y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7009,8 +9483,13 @@ namespace SkiaSharp
 
 		// int sk_path_convert_conic_to_quads(const sk_point_t* p0, const sk_point_t* p1, const sk_point_t* p2, float w, sk_point_t* pts, int pow2)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_path_convert_conic_to_quads (SKPoint* p0, SKPoint* p1, SKPoint* p2, Single w, SKPoint* pts, Int32 pow2);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_path_convert_conic_to_quads (SKPoint* p0, SKPoint* p1, SKPoint* p2, Single w, SKPoint* pts, Int32 pow2);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7023,8 +9502,13 @@ namespace SkiaSharp
 
 		// int sk_path_count_points(const sk_path_t* cpath)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_path_count_points (sk_path_t cpath);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_path_count_points (sk_path_t cpath);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7037,8 +9521,13 @@ namespace SkiaSharp
 
 		// int sk_path_count_verbs(const sk_path_t* cpath)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_path_count_verbs (sk_path_t cpath);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_path_count_verbs (sk_path_t cpath);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7051,8 +9540,13 @@ namespace SkiaSharp
 
 		// sk_path_iterator_t* sk_path_create_iter(sk_path_t* cpath, int forceClose)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_iterator_t sk_path_create_iter (sk_path_t cpath, Int32 forceClose);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_iterator_t sk_path_create_iter (sk_path_t cpath, Int32 forceClose);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7065,8 +9559,13 @@ namespace SkiaSharp
 
 		// sk_path_rawiterator_t* sk_path_create_rawiter(sk_path_t* cpath)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_rawiterator_t sk_path_create_rawiter (sk_path_t cpath);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_rawiterator_t sk_path_create_rawiter (sk_path_t cpath);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7079,8 +9578,13 @@ namespace SkiaSharp
 
 		// void sk_path_cubic_to(sk_path_t*, float x0, float y0, float x1, float y1, float x2, float y2)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_cubic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single x2, Single y2);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_cubic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single x2, Single y2);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7093,8 +9597,13 @@ namespace SkiaSharp
 
 		// void sk_path_delete(sk_path_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_delete (sk_path_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_delete (sk_path_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7107,8 +9616,13 @@ namespace SkiaSharp
 
 		// void sk_path_get_bounds(const sk_path_t*, sk_rect_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_get_bounds (sk_path_t param0, SKRect* param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_get_bounds (sk_path_t param0, SKRect* param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7121,8 +9635,13 @@ namespace SkiaSharp
 
 		// sk_path_filltype_t sk_path_get_filltype(sk_path_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKPathFillType sk_path_get_filltype (sk_path_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKPathFillType sk_path_get_filltype (sk_path_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7135,9 +9654,15 @@ namespace SkiaSharp
 
 		// bool sk_path_get_last_point(const sk_path_t* cpath, sk_point_t* point)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_path_get_last_point (sk_path_t cpath, SKPoint* point);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_path_get_last_point (sk_path_t cpath, SKPoint* point);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7151,8 +9676,13 @@ namespace SkiaSharp
 
 		// void sk_path_get_point(const sk_path_t* cpath, int index, sk_point_t* point)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_get_point (sk_path_t cpath, Int32 index, SKPoint* point);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_get_point (sk_path_t cpath, Int32 index, SKPoint* point);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7165,8 +9695,13 @@ namespace SkiaSharp
 
 		// int sk_path_get_points(const sk_path_t* cpath, sk_point_t* points, int max)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_path_get_points (sk_path_t cpath, SKPoint* points, Int32 max);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_path_get_points (sk_path_t cpath, SKPoint* points, Int32 max);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7179,8 +9714,13 @@ namespace SkiaSharp
 
 		// uint32_t sk_path_get_segment_masks(sk_path_t* cpath)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_path_get_segment_masks (sk_path_t cpath);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_path_get_segment_masks (sk_path_t cpath);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7193,9 +9733,15 @@ namespace SkiaSharp
 
 		// bool sk_path_is_convex(const sk_path_t* cpath)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_path_is_convex (sk_path_t cpath);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_path_is_convex (sk_path_t cpath);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7209,9 +9755,15 @@ namespace SkiaSharp
 
 		// bool sk_path_is_line(sk_path_t* cpath, sk_point_t[2] line = 2)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_path_is_line (sk_path_t cpath, SKPoint* line);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_path_is_line (sk_path_t cpath, SKPoint* line);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7225,9 +9777,15 @@ namespace SkiaSharp
 
 		// bool sk_path_is_oval(sk_path_t* cpath, sk_rect_t* bounds)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_path_is_oval (sk_path_t cpath, SKRect* bounds);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_path_is_oval (sk_path_t cpath, SKRect* bounds);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7241,9 +9799,15 @@ namespace SkiaSharp
 
 		// bool sk_path_is_rect(sk_path_t* cpath, sk_rect_t* rect, bool* isClosed, sk_path_direction_t* direction)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_path_is_rect (sk_path_t cpath, SKRect* rect, Byte* isClosed, SKPathDirection* direction);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_path_is_rect (sk_path_t cpath, SKRect* rect, Byte* isClosed, SKPathDirection* direction);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7257,9 +9821,15 @@ namespace SkiaSharp
 
 		// bool sk_path_is_rrect(sk_path_t* cpath, sk_rrect_t* bounds)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_path_is_rrect (sk_path_t cpath, sk_rrect_t bounds);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_path_is_rrect (sk_path_t cpath, sk_rrect_t bounds);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7273,8 +9843,13 @@ namespace SkiaSharp
 
 		// float sk_path_iter_conic_weight(sk_path_iterator_t* iterator)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_path_iter_conic_weight (sk_path_iterator_t iterator);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_path_iter_conic_weight (sk_path_iterator_t iterator);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7287,8 +9862,13 @@ namespace SkiaSharp
 
 		// void sk_path_iter_destroy(sk_path_iterator_t* iterator)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_iter_destroy (sk_path_iterator_t iterator);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_iter_destroy (sk_path_iterator_t iterator);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7301,8 +9881,13 @@ namespace SkiaSharp
 
 		// int sk_path_iter_is_close_line(sk_path_iterator_t* iterator)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_path_iter_is_close_line (sk_path_iterator_t iterator);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_path_iter_is_close_line (sk_path_iterator_t iterator);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7315,8 +9900,13 @@ namespace SkiaSharp
 
 		// int sk_path_iter_is_closed_contour(sk_path_iterator_t* iterator)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_path_iter_is_closed_contour (sk_path_iterator_t iterator);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_path_iter_is_closed_contour (sk_path_iterator_t iterator);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7329,8 +9919,13 @@ namespace SkiaSharp
 
 		// sk_path_verb_t sk_path_iter_next(sk_path_iterator_t* iterator, sk_point_t[4] points = 4)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKPathVerb sk_path_iter_next (sk_path_iterator_t iterator, SKPoint* points);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKPathVerb sk_path_iter_next (sk_path_iterator_t iterator, SKPoint* points);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7343,8 +9938,13 @@ namespace SkiaSharp
 
 		// void sk_path_line_to(sk_path_t*, float x, float y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_line_to (sk_path_t param0, Single x, Single y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_line_to (sk_path_t param0, Single x, Single y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7357,8 +9957,13 @@ namespace SkiaSharp
 
 		// void sk_path_move_to(sk_path_t*, float x, float y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_move_to (sk_path_t param0, Single x, Single y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_move_to (sk_path_t param0, Single x, Single y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7371,8 +9976,13 @@ namespace SkiaSharp
 
 		// sk_path_t* sk_path_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_t sk_path_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_t sk_path_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7385,9 +9995,15 @@ namespace SkiaSharp
 
 		// bool sk_path_parse_svg_string(sk_path_t* cpath, const char* str)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_path_parse_svg_string (sk_path_t cpath, [MarshalAs (UnmanagedType.LPStr)] String str);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_path_parse_svg_string (sk_path_t cpath, [MarshalAs (UnmanagedType.LPStr)] String str);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7401,8 +10017,13 @@ namespace SkiaSharp
 
 		// void sk_path_quad_to(sk_path_t*, float x0, float y0, float x1, float y1)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_quad_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_quad_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7415,8 +10036,13 @@ namespace SkiaSharp
 
 		// void sk_path_rarc_to(sk_path_t*, float rx, float ry, float xAxisRotate, sk_path_arc_size_t largeArc, sk_path_direction_t sweep, float x, float y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_rarc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_rarc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7429,8 +10055,13 @@ namespace SkiaSharp
 
 		// float sk_path_rawiter_conic_weight(sk_path_rawiterator_t* iterator)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_path_rawiter_conic_weight (sk_path_rawiterator_t iterator);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_path_rawiter_conic_weight (sk_path_rawiterator_t iterator);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7443,8 +10074,13 @@ namespace SkiaSharp
 
 		// void sk_path_rawiter_destroy(sk_path_rawiterator_t* iterator)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_rawiter_destroy (sk_path_rawiterator_t iterator);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_rawiter_destroy (sk_path_rawiterator_t iterator);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7457,8 +10093,13 @@ namespace SkiaSharp
 
 		// sk_path_verb_t sk_path_rawiter_next(sk_path_rawiterator_t* iterator, sk_point_t[4] points = 4)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKPathVerb sk_path_rawiter_next (sk_path_rawiterator_t iterator, SKPoint* points);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKPathVerb sk_path_rawiter_next (sk_path_rawiterator_t iterator, SKPoint* points);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7471,8 +10112,13 @@ namespace SkiaSharp
 
 		// sk_path_verb_t sk_path_rawiter_peek(sk_path_rawiterator_t* iterator)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKPathVerb sk_path_rawiter_peek (sk_path_rawiterator_t iterator);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKPathVerb sk_path_rawiter_peek (sk_path_rawiterator_t iterator);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7485,8 +10131,13 @@ namespace SkiaSharp
 
 		// void sk_path_rconic_to(sk_path_t*, float dx0, float dy0, float dx1, float dy1, float w)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_rconic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single w);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_rconic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single w);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7499,8 +10150,13 @@ namespace SkiaSharp
 
 		// void sk_path_rcubic_to(sk_path_t*, float dx0, float dy0, float dx1, float dy1, float dx2, float dy2)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_rcubic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single dx2, Single dy2);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_rcubic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single dx2, Single dy2);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7513,8 +10169,13 @@ namespace SkiaSharp
 
 		// void sk_path_reset(sk_path_t* cpath)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_reset (sk_path_t cpath);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_reset (sk_path_t cpath);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7527,8 +10188,13 @@ namespace SkiaSharp
 
 		// void sk_path_rewind(sk_path_t* cpath)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_rewind (sk_path_t cpath);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_rewind (sk_path_t cpath);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7541,8 +10207,13 @@ namespace SkiaSharp
 
 		// void sk_path_rline_to(sk_path_t*, float dx, float yd)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_rline_to (sk_path_t param0, Single dx, Single yd);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_rline_to (sk_path_t param0, Single dx, Single yd);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7555,8 +10226,13 @@ namespace SkiaSharp
 
 		// void sk_path_rmove_to(sk_path_t*, float dx, float dy)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_rmove_to (sk_path_t param0, Single dx, Single dy);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_rmove_to (sk_path_t param0, Single dx, Single dy);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7569,8 +10245,13 @@ namespace SkiaSharp
 
 		// void sk_path_rquad_to(sk_path_t*, float dx0, float dy0, float dx1, float dy1)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_rquad_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_rquad_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7583,8 +10264,13 @@ namespace SkiaSharp
 
 		// void sk_path_set_filltype(sk_path_t*, sk_path_filltype_t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_set_filltype (sk_path_t param0, SKPathFillType param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_set_filltype (sk_path_t param0, SKPathFillType param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7597,8 +10283,13 @@ namespace SkiaSharp
 
 		// void sk_path_to_svg_string(const sk_path_t* cpath, sk_string_t* str)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_to_svg_string (sk_path_t cpath, sk_string_t str);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_to_svg_string (sk_path_t cpath, sk_string_t str);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7611,8 +10302,13 @@ namespace SkiaSharp
 
 		// void sk_path_transform(sk_path_t* cpath, const sk_matrix_t* cmatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_transform (sk_path_t cpath, SKMatrix* cmatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_transform (sk_path_t cpath, SKMatrix* cmatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7625,8 +10321,13 @@ namespace SkiaSharp
 
 		// void sk_path_transform_to_dest(const sk_path_t* cpath, const sk_matrix_t* cmatrix, sk_path_t* destination)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_transform_to_dest (sk_path_t cpath, SKMatrix* cmatrix, sk_path_t destination);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_transform_to_dest (sk_path_t cpath, SKMatrix* cmatrix, sk_path_t destination);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7639,8 +10340,13 @@ namespace SkiaSharp
 
 		// void sk_pathmeasure_destroy(sk_pathmeasure_t* pathMeasure)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathmeasure_destroy (sk_pathmeasure_t pathMeasure);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_pathmeasure_destroy (sk_pathmeasure_t pathMeasure);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7653,8 +10359,13 @@ namespace SkiaSharp
 
 		// float sk_pathmeasure_get_length(sk_pathmeasure_t* pathMeasure)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_pathmeasure_get_length (sk_pathmeasure_t pathMeasure);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_pathmeasure_get_length (sk_pathmeasure_t pathMeasure);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7667,9 +10378,15 @@ namespace SkiaSharp
 
 		// bool sk_pathmeasure_get_matrix(sk_pathmeasure_t* pathMeasure, float distance, sk_matrix_t* matrix, sk_pathmeasure_matrixflags_t flags)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pathmeasure_get_matrix (sk_pathmeasure_t pathMeasure, Single distance, SKMatrix* matrix, SKPathMeasureMatrixFlags flags);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pathmeasure_get_matrix (sk_pathmeasure_t pathMeasure, Single distance, SKMatrix* matrix, SKPathMeasureMatrixFlags flags);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7683,9 +10400,15 @@ namespace SkiaSharp
 
 		// bool sk_pathmeasure_get_pos_tan(sk_pathmeasure_t* pathMeasure, float distance, sk_point_t* position, sk_vector_t* tangent)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pathmeasure_get_pos_tan (sk_pathmeasure_t pathMeasure, Single distance, SKPoint* position, SKPoint* tangent);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pathmeasure_get_pos_tan (sk_pathmeasure_t pathMeasure, Single distance, SKPoint* position, SKPoint* tangent);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7699,9 +10422,15 @@ namespace SkiaSharp
 
 		// bool sk_pathmeasure_get_segment(sk_pathmeasure_t* pathMeasure, float start, float stop, sk_path_t* dst, bool startWithMoveTo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pathmeasure_get_segment (sk_pathmeasure_t pathMeasure, Single start, Single stop, sk_path_t dst, [MarshalAs (UnmanagedType.I1)] bool startWithMoveTo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pathmeasure_get_segment (sk_pathmeasure_t pathMeasure, Single start, Single stop, sk_path_t dst, [MarshalAs (UnmanagedType.I1)] bool startWithMoveTo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7715,9 +10444,15 @@ namespace SkiaSharp
 
 		// bool sk_pathmeasure_is_closed(sk_pathmeasure_t* pathMeasure)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pathmeasure_is_closed (sk_pathmeasure_t pathMeasure);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pathmeasure_is_closed (sk_pathmeasure_t pathMeasure);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7731,8 +10466,13 @@ namespace SkiaSharp
 
 		// sk_pathmeasure_t* sk_pathmeasure_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_pathmeasure_t sk_pathmeasure_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_pathmeasure_t sk_pathmeasure_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7745,8 +10485,13 @@ namespace SkiaSharp
 
 		// sk_pathmeasure_t* sk_pathmeasure_new_with_path(const sk_path_t* path, bool forceClosed, float resScale)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_pathmeasure_t sk_pathmeasure_new_with_path (sk_path_t path, [MarshalAs (UnmanagedType.I1)] bool forceClosed, Single resScale);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_pathmeasure_t sk_pathmeasure_new_with_path (sk_path_t path, [MarshalAs (UnmanagedType.I1)] bool forceClosed, Single resScale);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7759,9 +10504,15 @@ namespace SkiaSharp
 
 		// bool sk_pathmeasure_next_contour(sk_pathmeasure_t* pathMeasure)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pathmeasure_next_contour (sk_pathmeasure_t pathMeasure);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pathmeasure_next_contour (sk_pathmeasure_t pathMeasure);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7775,8 +10526,13 @@ namespace SkiaSharp
 
 		// void sk_pathmeasure_set_path(sk_pathmeasure_t* pathMeasure, const sk_path_t* path, bool forceClosed)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathmeasure_set_path (sk_pathmeasure_t pathMeasure, sk_path_t path, [MarshalAs (UnmanagedType.I1)] bool forceClosed);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_pathmeasure_set_path (sk_pathmeasure_t pathMeasure, sk_path_t path, [MarshalAs (UnmanagedType.I1)] bool forceClosed);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7789,9 +10545,15 @@ namespace SkiaSharp
 
 		// bool sk_pathop_as_winding(const sk_path_t* path, sk_path_t* result)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pathop_as_winding (sk_path_t path, sk_path_t result);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pathop_as_winding (sk_path_t path, sk_path_t result);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7805,9 +10567,15 @@ namespace SkiaSharp
 
 		// bool sk_pathop_op(const sk_path_t* one, const sk_path_t* two, sk_pathop_t op, sk_path_t* result)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pathop_op (sk_path_t one, sk_path_t two, SKPathOp op, sk_path_t result);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pathop_op (sk_path_t one, sk_path_t two, SKPathOp op, sk_path_t result);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7821,9 +10589,15 @@ namespace SkiaSharp
 
 		// bool sk_pathop_simplify(const sk_path_t* path, sk_path_t* result)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pathop_simplify (sk_path_t path, sk_path_t result);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pathop_simplify (sk_path_t path, sk_path_t result);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7837,9 +10611,15 @@ namespace SkiaSharp
 
 		// bool sk_pathop_tight_bounds(const sk_path_t* path, sk_rect_t* result)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pathop_tight_bounds (sk_path_t path, SKRect* result);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pathop_tight_bounds (sk_path_t path, SKRect* result);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7857,8 +10637,13 @@ namespace SkiaSharp
 
 		// sk_path_effect_t* sk_path_effect_create_1d_path(const sk_path_t* path, float advance, float phase, sk_path_effect_1d_style_t style)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_effect_t sk_path_effect_create_1d_path (sk_path_t path, Single advance, Single phase, SKPath1DPathEffectStyle style);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_path_effect_create_1d_path (sk_path_t path, Single advance, Single phase, SKPath1DPathEffectStyle style);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7871,8 +10656,13 @@ namespace SkiaSharp
 
 		// sk_path_effect_t* sk_path_effect_create_2d_line(float width, const sk_matrix_t* matrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_effect_t sk_path_effect_create_2d_line (Single width, SKMatrix* matrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_path_effect_create_2d_line (Single width, SKMatrix* matrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7885,8 +10675,13 @@ namespace SkiaSharp
 
 		// sk_path_effect_t* sk_path_effect_create_2d_path(const sk_matrix_t* matrix, const sk_path_t* path)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_effect_t sk_path_effect_create_2d_path (SKMatrix* matrix, sk_path_t path);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_path_effect_create_2d_path (SKMatrix* matrix, sk_path_t path);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7899,8 +10694,13 @@ namespace SkiaSharp
 
 		// sk_path_effect_t* sk_path_effect_create_compose(sk_path_effect_t* outer, sk_path_effect_t* inner)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_effect_t sk_path_effect_create_compose (sk_path_effect_t outer, sk_path_effect_t inner);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_path_effect_create_compose (sk_path_effect_t outer, sk_path_effect_t inner);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7913,8 +10713,13 @@ namespace SkiaSharp
 
 		// sk_path_effect_t* sk_path_effect_create_corner(float radius)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_effect_t sk_path_effect_create_corner (Single radius);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_path_effect_create_corner (Single radius);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7927,8 +10732,13 @@ namespace SkiaSharp
 
 		// sk_path_effect_t* sk_path_effect_create_dash(const float[-1] intervals, int count, float phase)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_effect_t sk_path_effect_create_dash (Single* intervals, Int32 count, Single phase);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_path_effect_create_dash (Single* intervals, Int32 count, Single phase);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7941,8 +10751,13 @@ namespace SkiaSharp
 
 		// sk_path_effect_t* sk_path_effect_create_discrete(float segLength, float deviation, uint32_t seedAssist)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_effect_t sk_path_effect_create_discrete (Single segLength, Single deviation, UInt32 seedAssist);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_path_effect_create_discrete (Single segLength, Single deviation, UInt32 seedAssist);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7955,8 +10770,13 @@ namespace SkiaSharp
 
 		// sk_path_effect_t* sk_path_effect_create_sum(sk_path_effect_t* first, sk_path_effect_t* second)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_effect_t sk_path_effect_create_sum (sk_path_effect_t first, sk_path_effect_t second);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_path_effect_create_sum (sk_path_effect_t first, sk_path_effect_t second);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7969,8 +10789,13 @@ namespace SkiaSharp
 
 		// sk_path_effect_t* sk_path_effect_create_trim(float start, float stop, sk_path_effect_trim_mode_t mode)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_effect_t sk_path_effect_create_trim (Single start, Single stop, SKTrimPathEffectMode mode);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_path_effect_t sk_path_effect_create_trim (Single start, Single stop, SKTrimPathEffectMode mode);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7983,8 +10808,13 @@ namespace SkiaSharp
 
 		// void sk_path_effect_unref(sk_path_effect_t* t)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_path_effect_unref (sk_path_effect_t t);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_effect_unref (sk_path_effect_t t);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -7999,10 +10829,53 @@ namespace SkiaSharp
 
 		#region sk_picture.h
 
+		// size_t sk_picture_approximate_bytes_used(const sk_picture_t* picture)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_picture_approximate_bytes_used (sk_picture_t picture);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_picture_approximate_bytes_used (sk_picture_t picture);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_picture_approximate_bytes_used (sk_picture_t picture);
+		}
+		private static Delegates.sk_picture_approximate_bytes_used sk_picture_approximate_bytes_used_delegate;
+		internal static /* size_t */ IntPtr sk_picture_approximate_bytes_used (sk_picture_t picture) =>
+			(sk_picture_approximate_bytes_used_delegate ??= GetSymbol<Delegates.sk_picture_approximate_bytes_used> ("sk_picture_approximate_bytes_used")).Invoke (picture);
+		#endif
+
+		// int sk_picture_approximate_op_count(const sk_picture_t* picture, bool nested)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_picture_approximate_op_count (sk_picture_t picture, [MarshalAs (UnmanagedType.I1)] bool nested);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_picture_approximate_op_count (sk_picture_t picture, [MarshalAs (UnmanagedType.I1)] bool nested);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_picture_approximate_op_count (sk_picture_t picture, [MarshalAs (UnmanagedType.I1)] bool nested);
+		}
+		private static Delegates.sk_picture_approximate_op_count sk_picture_approximate_op_count_delegate;
+		internal static Int32 sk_picture_approximate_op_count (sk_picture_t picture, [MarshalAs (UnmanagedType.I1)] bool nested) =>
+			(sk_picture_approximate_op_count_delegate ??= GetSymbol<Delegates.sk_picture_approximate_op_count> ("sk_picture_approximate_op_count")).Invoke (picture, nested);
+		#endif
+
 		// sk_picture_t* sk_picture_deserialize_from_data(sk_data_t* data)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_picture_t sk_picture_deserialize_from_data (sk_data_t data);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_picture_t sk_picture_deserialize_from_data (sk_data_t data);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8015,8 +10888,13 @@ namespace SkiaSharp
 
 		// sk_picture_t* sk_picture_deserialize_from_memory(void* buffer, size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_picture_t sk_picture_deserialize_from_memory (void* buffer, /* size_t */ IntPtr length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_picture_t sk_picture_deserialize_from_memory (void* buffer, /* size_t */ IntPtr length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8029,8 +10907,13 @@ namespace SkiaSharp
 
 		// sk_picture_t* sk_picture_deserialize_from_stream(sk_stream_t* stream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_picture_t sk_picture_deserialize_from_stream (sk_stream_t stream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_picture_t sk_picture_deserialize_from_stream (sk_stream_t stream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8043,8 +10926,13 @@ namespace SkiaSharp
 
 		// void sk_picture_get_cull_rect(sk_picture_t*, sk_rect_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_picture_get_cull_rect (sk_picture_t param0, SKRect* param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_picture_get_cull_rect (sk_picture_t param0, SKRect* param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8057,8 +10945,13 @@ namespace SkiaSharp
 
 		// sk_canvas_t* sk_picture_get_recording_canvas(sk_picture_recorder_t* crec)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_canvas_t sk_picture_get_recording_canvas (sk_picture_recorder_t crec);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_canvas_t sk_picture_get_recording_canvas (sk_picture_recorder_t crec);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8071,8 +10964,13 @@ namespace SkiaSharp
 
 		// uint32_t sk_picture_get_unique_id(sk_picture_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_picture_get_unique_id (sk_picture_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_picture_get_unique_id (sk_picture_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8085,8 +10983,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_picture_make_shader(sk_picture_t* src, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, sk_filter_mode_t mode, const sk_matrix_t* localMatrix, const sk_rect_t* tile)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_picture_make_shader (sk_picture_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode mode, SKMatrix* localMatrix, SKRect* tile);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_picture_make_shader (sk_picture_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode mode, SKMatrix* localMatrix, SKRect* tile);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8097,10 +11000,34 @@ namespace SkiaSharp
 			(sk_picture_make_shader_delegate ??= GetSymbol<Delegates.sk_picture_make_shader> ("sk_picture_make_shader")).Invoke (src, tmx, tmy, mode, localMatrix, tile);
 		#endif
 
+		// void sk_picture_playback(const sk_picture_t* picture, sk_canvas_t* canvas)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_picture_playback (sk_picture_t picture, sk_canvas_t canvas);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_picture_playback (sk_picture_t picture, sk_canvas_t canvas);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_picture_playback (sk_picture_t picture, sk_canvas_t canvas);
+		}
+		private static Delegates.sk_picture_playback sk_picture_playback_delegate;
+		internal static void sk_picture_playback (sk_picture_t picture, sk_canvas_t canvas) =>
+			(sk_picture_playback_delegate ??= GetSymbol<Delegates.sk_picture_playback> ("sk_picture_playback")).Invoke (picture, canvas);
+		#endif
+
 		// sk_canvas_t* sk_picture_recorder_begin_recording(sk_picture_recorder_t*, const sk_rect_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_canvas_t sk_picture_recorder_begin_recording (sk_picture_recorder_t param0, SKRect* param1);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_canvas_t sk_picture_recorder_begin_recording (sk_picture_recorder_t param0, SKRect* param1);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8111,10 +11038,34 @@ namespace SkiaSharp
 			(sk_picture_recorder_begin_recording_delegate ??= GetSymbol<Delegates.sk_picture_recorder_begin_recording> ("sk_picture_recorder_begin_recording")).Invoke (param0, param1);
 		#endif
 
+		// sk_canvas_t* sk_picture_recorder_begin_recording_with_bbh_factory(sk_picture_recorder_t*, const sk_rect_t*, sk_bbh_factory_t*)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_canvas_t sk_picture_recorder_begin_recording_with_bbh_factory (sk_picture_recorder_t param0, SKRect* param1, sk_bbh_factory_t param2);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_canvas_t sk_picture_recorder_begin_recording_with_bbh_factory (sk_picture_recorder_t param0, SKRect* param1, sk_bbh_factory_t param2);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_canvas_t sk_picture_recorder_begin_recording_with_bbh_factory (sk_picture_recorder_t param0, SKRect* param1, sk_bbh_factory_t param2);
+		}
+		private static Delegates.sk_picture_recorder_begin_recording_with_bbh_factory sk_picture_recorder_begin_recording_with_bbh_factory_delegate;
+		internal static sk_canvas_t sk_picture_recorder_begin_recording_with_bbh_factory (sk_picture_recorder_t param0, SKRect* param1, sk_bbh_factory_t param2) =>
+			(sk_picture_recorder_begin_recording_with_bbh_factory_delegate ??= GetSymbol<Delegates.sk_picture_recorder_begin_recording_with_bbh_factory> ("sk_picture_recorder_begin_recording_with_bbh_factory")).Invoke (param0, param1, param2);
+		#endif
+
 		// void sk_picture_recorder_delete(sk_picture_recorder_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_picture_recorder_delete (sk_picture_recorder_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_picture_recorder_delete (sk_picture_recorder_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8127,8 +11078,13 @@ namespace SkiaSharp
 
 		// sk_picture_t* sk_picture_recorder_end_recording(sk_picture_recorder_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_picture_t sk_picture_recorder_end_recording (sk_picture_recorder_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_picture_t sk_picture_recorder_end_recording (sk_picture_recorder_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8141,8 +11097,13 @@ namespace SkiaSharp
 
 		// sk_drawable_t* sk_picture_recorder_end_recording_as_drawable(sk_picture_recorder_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_drawable_t sk_picture_recorder_end_recording_as_drawable (sk_picture_recorder_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_drawable_t sk_picture_recorder_end_recording_as_drawable (sk_picture_recorder_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8155,8 +11116,13 @@ namespace SkiaSharp
 
 		// sk_picture_recorder_t* sk_picture_recorder_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_picture_recorder_t sk_picture_recorder_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_picture_recorder_t sk_picture_recorder_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8169,8 +11135,13 @@ namespace SkiaSharp
 
 		// void sk_picture_ref(sk_picture_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_picture_ref (sk_picture_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_picture_ref (sk_picture_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8183,8 +11154,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_picture_serialize_to_data(const sk_picture_t* picture)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_picture_serialize_to_data (sk_picture_t picture);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_picture_serialize_to_data (sk_picture_t picture);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8197,8 +11173,13 @@ namespace SkiaSharp
 
 		// void sk_picture_serialize_to_stream(const sk_picture_t* picture, sk_wstream_t* stream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_picture_serialize_to_stream (sk_picture_t picture, sk_wstream_t stream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_picture_serialize_to_stream (sk_picture_t picture, sk_wstream_t stream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8211,8 +11192,13 @@ namespace SkiaSharp
 
 		// void sk_picture_unref(sk_picture_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_picture_unref (sk_picture_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_picture_unref (sk_picture_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8223,14 +11209,57 @@ namespace SkiaSharp
 			(sk_picture_unref_delegate ??= GetSymbol<Delegates.sk_picture_unref> ("sk_picture_unref")).Invoke (param0);
 		#endif
 
+		// void sk_rtree_factory_delete(sk_rtree_factory_t*)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rtree_factory_delete (sk_rtree_factory_t param0);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_rtree_factory_delete (sk_rtree_factory_t param0);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_rtree_factory_delete (sk_rtree_factory_t param0);
+		}
+		private static Delegates.sk_rtree_factory_delete sk_rtree_factory_delete_delegate;
+		internal static void sk_rtree_factory_delete (sk_rtree_factory_t param0) =>
+			(sk_rtree_factory_delete_delegate ??= GetSymbol<Delegates.sk_rtree_factory_delete> ("sk_rtree_factory_delete")).Invoke (param0);
+		#endif
+
+		// sk_rtree_factory_t* sk_rtree_factory_new()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_rtree_factory_t sk_rtree_factory_new ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_rtree_factory_t sk_rtree_factory_new ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_rtree_factory_t sk_rtree_factory_new ();
+		}
+		private static Delegates.sk_rtree_factory_new sk_rtree_factory_new_delegate;
+		internal static sk_rtree_factory_t sk_rtree_factory_new () =>
+			(sk_rtree_factory_new_delegate ??= GetSymbol<Delegates.sk_rtree_factory_new> ("sk_rtree_factory_new")).Invoke ();
+		#endif
+
 		#endregion
 
 		#region sk_pixmap.h
 
 		// void sk_color_get_bit_shift(int* a, int* r, int* g, int* b)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_color_get_bit_shift (Int32* a, Int32* r, Int32* g, Int32* b);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_color_get_bit_shift (Int32* a, Int32* r, Int32* g, Int32* b);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8243,8 +11272,13 @@ namespace SkiaSharp
 
 		// sk_pmcolor_t sk_color_premultiply(const sk_color_t color)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_color_premultiply (UInt32 color);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_color_premultiply (UInt32 color);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8257,8 +11291,13 @@ namespace SkiaSharp
 
 		// void sk_color_premultiply_array(const sk_color_t* colors, int size, sk_pmcolor_t* pmcolors)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_color_premultiply_array (UInt32* colors, Int32 size, UInt32* pmcolors);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_color_premultiply_array (UInt32* colors, Int32 size, UInt32* pmcolors);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8271,8 +11310,13 @@ namespace SkiaSharp
 
 		// sk_color_t sk_color_unpremultiply(const sk_pmcolor_t pmcolor)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_color_unpremultiply (UInt32 pmcolor);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_color_unpremultiply (UInt32 pmcolor);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8285,8 +11329,13 @@ namespace SkiaSharp
 
 		// void sk_color_unpremultiply_array(const sk_pmcolor_t* pmcolors, int size, sk_color_t* colors)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_color_unpremultiply_array (UInt32* pmcolors, Int32 size, UInt32* colors);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_color_unpremultiply_array (UInt32* pmcolors, Int32 size, UInt32* colors);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8299,9 +11348,15 @@ namespace SkiaSharp
 
 		// bool sk_jpegencoder_encode(sk_wstream_t* dst, const sk_pixmap_t* src, const sk_jpegencoder_options_t* options)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_jpegencoder_encode (sk_wstream_t dst, sk_pixmap_t src, SKJpegEncoderOptions* options);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_jpegencoder_encode (sk_wstream_t dst, sk_pixmap_t src, SKJpegEncoderOptions* options);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8315,9 +11370,15 @@ namespace SkiaSharp
 
 		// bool sk_pixmap_compute_is_opaque(const sk_pixmap_t* cpixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pixmap_compute_is_opaque (sk_pixmap_t cpixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pixmap_compute_is_opaque (sk_pixmap_t cpixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8331,8 +11392,13 @@ namespace SkiaSharp
 
 		// void sk_pixmap_destructor(sk_pixmap_t* cpixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pixmap_destructor (sk_pixmap_t cpixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_pixmap_destructor (sk_pixmap_t cpixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8345,9 +11411,15 @@ namespace SkiaSharp
 
 		// bool sk_pixmap_erase_color(const sk_pixmap_t* cpixmap, sk_color_t color, const sk_irect_t* subset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pixmap_erase_color (sk_pixmap_t cpixmap, UInt32 color, SKRectI* subset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pixmap_erase_color (sk_pixmap_t cpixmap, UInt32 color, SKRectI* subset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8361,9 +11433,15 @@ namespace SkiaSharp
 
 		// bool sk_pixmap_erase_color4f(const sk_pixmap_t* cpixmap, const sk_color4f_t* color, const sk_irect_t* subset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pixmap_erase_color4f (sk_pixmap_t cpixmap, SKColorF* color, SKRectI* subset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pixmap_erase_color4f (sk_pixmap_t cpixmap, SKColorF* color, SKRectI* subset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8377,9 +11455,15 @@ namespace SkiaSharp
 
 		// bool sk_pixmap_extract_subset(const sk_pixmap_t* cpixmap, sk_pixmap_t* result, const sk_irect_t* subset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pixmap_extract_subset (sk_pixmap_t cpixmap, sk_pixmap_t result, SKRectI* subset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pixmap_extract_subset (sk_pixmap_t cpixmap, sk_pixmap_t result, SKRectI* subset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8393,8 +11477,13 @@ namespace SkiaSharp
 
 		// sk_colorspace_t* sk_pixmap_get_colorspace(const sk_pixmap_t* cpixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_t sk_pixmap_get_colorspace (sk_pixmap_t cpixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_pixmap_get_colorspace (sk_pixmap_t cpixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8407,8 +11496,13 @@ namespace SkiaSharp
 
 		// void sk_pixmap_get_info(const sk_pixmap_t* cpixmap, sk_imageinfo_t* cinfo)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pixmap_get_info (sk_pixmap_t cpixmap, SKImageInfoNative* cinfo);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_pixmap_get_info (sk_pixmap_t cpixmap, SKImageInfoNative* cinfo);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8421,8 +11515,13 @@ namespace SkiaSharp
 
 		// float sk_pixmap_get_pixel_alphaf(const sk_pixmap_t* cpixmap, int x, int y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_pixmap_get_pixel_alphaf (sk_pixmap_t cpixmap, Int32 x, Int32 y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_pixmap_get_pixel_alphaf (sk_pixmap_t cpixmap, Int32 x, Int32 y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8435,8 +11534,13 @@ namespace SkiaSharp
 
 		// sk_color_t sk_pixmap_get_pixel_color(const sk_pixmap_t* cpixmap, int x, int y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_pixmap_get_pixel_color (sk_pixmap_t cpixmap, Int32 x, Int32 y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_pixmap_get_pixel_color (sk_pixmap_t cpixmap, Int32 x, Int32 y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8449,8 +11553,13 @@ namespace SkiaSharp
 
 		// void sk_pixmap_get_pixel_color4f(const sk_pixmap_t* cpixmap, int x, int y, sk_color4f_t* color)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pixmap_get_pixel_color4f (sk_pixmap_t cpixmap, Int32 x, Int32 y, SKColorF* color);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_pixmap_get_pixel_color4f (sk_pixmap_t cpixmap, Int32 x, Int32 y, SKColorF* color);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8463,8 +11572,13 @@ namespace SkiaSharp
 
 		// size_t sk_pixmap_get_row_bytes(const sk_pixmap_t* cpixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_pixmap_get_row_bytes (sk_pixmap_t cpixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_pixmap_get_row_bytes (sk_pixmap_t cpixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8477,8 +11591,13 @@ namespace SkiaSharp
 
 		// void* sk_pixmap_get_writable_addr(const sk_pixmap_t* cpixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void* sk_pixmap_get_writable_addr (sk_pixmap_t cpixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* sk_pixmap_get_writable_addr (sk_pixmap_t cpixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8491,8 +11610,13 @@ namespace SkiaSharp
 
 		// void* sk_pixmap_get_writeable_addr_with_xy(const sk_pixmap_t* cpixmap, int x, int y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void* sk_pixmap_get_writeable_addr_with_xy (sk_pixmap_t cpixmap, Int32 x, Int32 y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* sk_pixmap_get_writeable_addr_with_xy (sk_pixmap_t cpixmap, Int32 x, Int32 y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8505,8 +11629,13 @@ namespace SkiaSharp
 
 		// sk_pixmap_t* sk_pixmap_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_pixmap_t sk_pixmap_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_pixmap_t sk_pixmap_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8519,8 +11648,13 @@ namespace SkiaSharp
 
 		// sk_pixmap_t* sk_pixmap_new_with_params(const sk_imageinfo_t* cinfo, const void* addr, size_t rowBytes)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_pixmap_t sk_pixmap_new_with_params (SKImageInfoNative* cinfo, void* addr, /* size_t */ IntPtr rowBytes);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_pixmap_t sk_pixmap_new_with_params (SKImageInfoNative* cinfo, void* addr, /* size_t */ IntPtr rowBytes);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8533,9 +11667,15 @@ namespace SkiaSharp
 
 		// bool sk_pixmap_read_pixels(const sk_pixmap_t* cpixmap, const sk_imageinfo_t* dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pixmap_read_pixels (sk_pixmap_t cpixmap, SKImageInfoNative* dstInfo, void* dstPixels, /* size_t */ IntPtr dstRowBytes, Int32 srcX, Int32 srcY);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pixmap_read_pixels (sk_pixmap_t cpixmap, SKImageInfoNative* dstInfo, void* dstPixels, /* size_t */ IntPtr dstRowBytes, Int32 srcX, Int32 srcY);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8549,8 +11689,13 @@ namespace SkiaSharp
 
 		// void sk_pixmap_reset(sk_pixmap_t* cpixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pixmap_reset (sk_pixmap_t cpixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_pixmap_reset (sk_pixmap_t cpixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8563,8 +11708,13 @@ namespace SkiaSharp
 
 		// void sk_pixmap_reset_with_params(sk_pixmap_t* cpixmap, const sk_imageinfo_t* cinfo, const void* addr, size_t rowBytes)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pixmap_reset_with_params (sk_pixmap_t cpixmap, SKImageInfoNative* cinfo, void* addr, /* size_t */ IntPtr rowBytes);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_pixmap_reset_with_params (sk_pixmap_t cpixmap, SKImageInfoNative* cinfo, void* addr, /* size_t */ IntPtr rowBytes);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8577,9 +11727,15 @@ namespace SkiaSharp
 
 		// bool sk_pixmap_scale_pixels(const sk_pixmap_t* cpixmap, const sk_pixmap_t* dst, const sk_sampling_options_t* sampling)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pixmap_scale_pixels (sk_pixmap_t cpixmap, sk_pixmap_t dst, SKSamplingOptions* sampling);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pixmap_scale_pixels (sk_pixmap_t cpixmap, sk_pixmap_t dst, SKSamplingOptions* sampling);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8593,8 +11749,13 @@ namespace SkiaSharp
 
 		// void sk_pixmap_set_colorspace(sk_pixmap_t* cpixmap, sk_colorspace_t* colorspace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pixmap_set_colorspace (sk_pixmap_t cpixmap, sk_colorspace_t colorspace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_pixmap_set_colorspace (sk_pixmap_t cpixmap, sk_colorspace_t colorspace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8607,9 +11768,15 @@ namespace SkiaSharp
 
 		// bool sk_pngencoder_encode(sk_wstream_t* dst, const sk_pixmap_t* src, const sk_pngencoder_options_t* options)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_pngencoder_encode (sk_wstream_t dst, sk_pixmap_t src, SKPngEncoderOptions* options);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_pngencoder_encode (sk_wstream_t dst, sk_pixmap_t src, SKPngEncoderOptions* options);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8623,8 +11790,13 @@ namespace SkiaSharp
 
 		// void sk_swizzle_swap_rb(uint32_t* dest, const uint32_t* src, int count)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_swizzle_swap_rb (UInt32* dest, UInt32* src, Int32 count);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_swizzle_swap_rb (UInt32* dest, UInt32* src, Int32 count);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8637,9 +11809,15 @@ namespace SkiaSharp
 
 		// bool sk_webpencoder_encode(sk_wstream_t* dst, const sk_pixmap_t* src, const sk_webpencoder_options_t* options)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_webpencoder_encode (sk_wstream_t dst, sk_pixmap_t src, SKWebpEncoderOptions* options);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_webpencoder_encode (sk_wstream_t dst, sk_pixmap_t src, SKWebpEncoderOptions* options);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8657,8 +11835,13 @@ namespace SkiaSharp
 
 		// void sk_region_cliperator_delete(sk_region_cliperator_t* iter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_region_cliperator_delete (sk_region_cliperator_t iter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_cliperator_delete (sk_region_cliperator_t iter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8671,9 +11854,15 @@ namespace SkiaSharp
 
 		// bool sk_region_cliperator_done(sk_region_cliperator_t* iter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_cliperator_done (sk_region_cliperator_t iter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_cliperator_done (sk_region_cliperator_t iter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8687,8 +11876,13 @@ namespace SkiaSharp
 
 		// sk_region_cliperator_t* sk_region_cliperator_new(const sk_region_t* region, const sk_irect_t* clip)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_region_cliperator_t sk_region_cliperator_new (sk_region_t region, SKRectI* clip);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_region_cliperator_t sk_region_cliperator_new (sk_region_t region, SKRectI* clip);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8701,8 +11895,13 @@ namespace SkiaSharp
 
 		// void sk_region_cliperator_next(sk_region_cliperator_t* iter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_region_cliperator_next (sk_region_cliperator_t iter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_cliperator_next (sk_region_cliperator_t iter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8715,8 +11914,13 @@ namespace SkiaSharp
 
 		// void sk_region_cliperator_rect(const sk_region_cliperator_t* iter, sk_irect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_region_cliperator_rect (sk_region_cliperator_t iter, SKRectI* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_cliperator_rect (sk_region_cliperator_t iter, SKRectI* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8729,9 +11933,15 @@ namespace SkiaSharp
 
 		// bool sk_region_contains(const sk_region_t* r, const sk_region_t* region)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_contains (sk_region_t r, sk_region_t region);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_contains (sk_region_t r, sk_region_t region);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8745,9 +11955,15 @@ namespace SkiaSharp
 
 		// bool sk_region_contains_point(const sk_region_t* r, int x, int y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_contains_point (sk_region_t r, Int32 x, Int32 y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_contains_point (sk_region_t r, Int32 x, Int32 y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8761,9 +11977,15 @@ namespace SkiaSharp
 
 		// bool sk_region_contains_rect(const sk_region_t* r, const sk_irect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_contains_rect (sk_region_t r, SKRectI* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_contains_rect (sk_region_t r, SKRectI* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8777,8 +11999,13 @@ namespace SkiaSharp
 
 		// void sk_region_delete(sk_region_t* r)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_region_delete (sk_region_t r);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_delete (sk_region_t r);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8791,9 +12018,15 @@ namespace SkiaSharp
 
 		// bool sk_region_get_boundary_path(const sk_region_t* r, sk_path_t* path)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_get_boundary_path (sk_region_t r, sk_path_t path);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_get_boundary_path (sk_region_t r, sk_path_t path);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8807,8 +12040,13 @@ namespace SkiaSharp
 
 		// void sk_region_get_bounds(const sk_region_t* r, sk_irect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_region_get_bounds (sk_region_t r, SKRectI* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_get_bounds (sk_region_t r, SKRectI* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8821,9 +12059,15 @@ namespace SkiaSharp
 
 		// bool sk_region_intersects(const sk_region_t* r, const sk_region_t* src)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_intersects (sk_region_t r, sk_region_t src);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_intersects (sk_region_t r, sk_region_t src);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8837,9 +12081,15 @@ namespace SkiaSharp
 
 		// bool sk_region_intersects_rect(const sk_region_t* r, const sk_irect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_intersects_rect (sk_region_t r, SKRectI* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_intersects_rect (sk_region_t r, SKRectI* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8853,9 +12103,15 @@ namespace SkiaSharp
 
 		// bool sk_region_is_complex(const sk_region_t* r)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_is_complex (sk_region_t r);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_is_complex (sk_region_t r);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8869,9 +12125,15 @@ namespace SkiaSharp
 
 		// bool sk_region_is_empty(const sk_region_t* r)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_is_empty (sk_region_t r);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_is_empty (sk_region_t r);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8885,9 +12147,15 @@ namespace SkiaSharp
 
 		// bool sk_region_is_rect(const sk_region_t* r)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_is_rect (sk_region_t r);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_is_rect (sk_region_t r);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8901,8 +12169,13 @@ namespace SkiaSharp
 
 		// void sk_region_iterator_delete(sk_region_iterator_t* iter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_region_iterator_delete (sk_region_iterator_t iter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_iterator_delete (sk_region_iterator_t iter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8915,9 +12188,15 @@ namespace SkiaSharp
 
 		// bool sk_region_iterator_done(const sk_region_iterator_t* iter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_iterator_done (sk_region_iterator_t iter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_iterator_done (sk_region_iterator_t iter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8931,8 +12210,13 @@ namespace SkiaSharp
 
 		// sk_region_iterator_t* sk_region_iterator_new(const sk_region_t* region)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_region_iterator_t sk_region_iterator_new (sk_region_t region);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_region_iterator_t sk_region_iterator_new (sk_region_t region);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8945,8 +12229,13 @@ namespace SkiaSharp
 
 		// void sk_region_iterator_next(sk_region_iterator_t* iter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_region_iterator_next (sk_region_iterator_t iter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_iterator_next (sk_region_iterator_t iter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8959,8 +12248,13 @@ namespace SkiaSharp
 
 		// void sk_region_iterator_rect(const sk_region_iterator_t* iter, sk_irect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_region_iterator_rect (sk_region_iterator_t iter, SKRectI* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_iterator_rect (sk_region_iterator_t iter, SKRectI* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8973,9 +12267,15 @@ namespace SkiaSharp
 
 		// bool sk_region_iterator_rewind(sk_region_iterator_t* iter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_iterator_rewind (sk_region_iterator_t iter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_iterator_rewind (sk_region_iterator_t iter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -8989,8 +12289,13 @@ namespace SkiaSharp
 
 		// sk_region_t* sk_region_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_region_t sk_region_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_region_t sk_region_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9003,9 +12308,15 @@ namespace SkiaSharp
 
 		// bool sk_region_op(sk_region_t* r, const sk_region_t* region, sk_region_op_t op)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_op (sk_region_t r, sk_region_t region, SKRegionOperation op);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_op (sk_region_t r, sk_region_t region, SKRegionOperation op);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9019,9 +12330,15 @@ namespace SkiaSharp
 
 		// bool sk_region_op_rect(sk_region_t* r, const sk_irect_t* rect, sk_region_op_t op)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_op_rect (sk_region_t r, SKRectI* rect, SKRegionOperation op);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_op_rect (sk_region_t r, SKRectI* rect, SKRegionOperation op);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9035,9 +12352,15 @@ namespace SkiaSharp
 
 		// bool sk_region_quick_contains(const sk_region_t* r, const sk_irect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_quick_contains (sk_region_t r, SKRectI* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_quick_contains (sk_region_t r, SKRectI* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9051,9 +12374,15 @@ namespace SkiaSharp
 
 		// bool sk_region_quick_reject(const sk_region_t* r, const sk_region_t* region)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_quick_reject (sk_region_t r, sk_region_t region);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_quick_reject (sk_region_t r, sk_region_t region);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9067,9 +12396,15 @@ namespace SkiaSharp
 
 		// bool sk_region_quick_reject_rect(const sk_region_t* r, const sk_irect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_quick_reject_rect (sk_region_t r, SKRectI* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_quick_reject_rect (sk_region_t r, SKRectI* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9083,9 +12418,15 @@ namespace SkiaSharp
 
 		// bool sk_region_set_empty(sk_region_t* r)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_set_empty (sk_region_t r);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_set_empty (sk_region_t r);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9099,9 +12440,15 @@ namespace SkiaSharp
 
 		// bool sk_region_set_path(sk_region_t* r, const sk_path_t* t, const sk_region_t* clip)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_set_path (sk_region_t r, sk_path_t t, sk_region_t clip);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_set_path (sk_region_t r, sk_path_t t, sk_region_t clip);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9115,9 +12462,15 @@ namespace SkiaSharp
 
 		// bool sk_region_set_rect(sk_region_t* r, const sk_irect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_set_rect (sk_region_t r, SKRectI* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_set_rect (sk_region_t r, SKRectI* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9131,9 +12484,15 @@ namespace SkiaSharp
 
 		// bool sk_region_set_rects(sk_region_t* r, const sk_irect_t* rects, int count)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_set_rects (sk_region_t r, SKRectI* rects, Int32 count);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_set_rects (sk_region_t r, SKRectI* rects, Int32 count);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9147,9 +12506,15 @@ namespace SkiaSharp
 
 		// bool sk_region_set_region(sk_region_t* r, const sk_region_t* region)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_set_region (sk_region_t r, sk_region_t region);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_set_region (sk_region_t r, sk_region_t region);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9163,8 +12528,13 @@ namespace SkiaSharp
 
 		// void sk_region_spanerator_delete(sk_region_spanerator_t* iter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_region_spanerator_delete (sk_region_spanerator_t iter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_spanerator_delete (sk_region_spanerator_t iter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9177,8 +12547,13 @@ namespace SkiaSharp
 
 		// sk_region_spanerator_t* sk_region_spanerator_new(const sk_region_t* region, int y, int left, int right)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_region_spanerator_t sk_region_spanerator_new (sk_region_t region, Int32 y, Int32 left, Int32 right);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_region_spanerator_t sk_region_spanerator_new (sk_region_t region, Int32 y, Int32 left, Int32 right);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9191,9 +12566,15 @@ namespace SkiaSharp
 
 		// bool sk_region_spanerator_next(sk_region_spanerator_t* iter, int* left, int* right)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_region_spanerator_next (sk_region_spanerator_t iter, Int32* left, Int32* right);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_region_spanerator_next (sk_region_spanerator_t iter, Int32* left, Int32* right);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9207,8 +12588,13 @@ namespace SkiaSharp
 
 		// void sk_region_translate(sk_region_t* r, int x, int y)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_region_translate (sk_region_t r, Int32 x, Int32 y);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_region_translate (sk_region_t r, Int32 x, Int32 y);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9225,9 +12611,15 @@ namespace SkiaSharp
 
 		// bool sk_rrect_contains(const sk_rrect_t* rrect, const sk_rect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_rrect_contains (sk_rrect_t rrect, SKRect* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_rrect_contains (sk_rrect_t rrect, SKRect* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9241,8 +12633,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_delete(const sk_rrect_t* rrect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_delete (sk_rrect_t rrect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_delete (sk_rrect_t rrect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9255,8 +12652,13 @@ namespace SkiaSharp
 
 		// float sk_rrect_get_height(const sk_rrect_t* rrect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_rrect_get_height (sk_rrect_t rrect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_rrect_get_height (sk_rrect_t rrect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9269,8 +12671,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_get_radii(const sk_rrect_t* rrect, sk_rrect_corner_t corner, sk_vector_t* radii)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_get_radii (sk_rrect_t rrect, SKRoundRectCorner corner, SKPoint* radii);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_get_radii (sk_rrect_t rrect, SKRoundRectCorner corner, SKPoint* radii);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9283,8 +12690,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_get_rect(const sk_rrect_t* rrect, sk_rect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_get_rect (sk_rrect_t rrect, SKRect* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_get_rect (sk_rrect_t rrect, SKRect* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9297,8 +12709,13 @@ namespace SkiaSharp
 
 		// sk_rrect_type_t sk_rrect_get_type(const sk_rrect_t* rrect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKRoundRectType sk_rrect_get_type (sk_rrect_t rrect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKRoundRectType sk_rrect_get_type (sk_rrect_t rrect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9311,8 +12728,13 @@ namespace SkiaSharp
 
 		// float sk_rrect_get_width(const sk_rrect_t* rrect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Single sk_rrect_get_width (sk_rrect_t rrect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_rrect_get_width (sk_rrect_t rrect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9325,8 +12747,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_inset(sk_rrect_t* rrect, float dx, float dy)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_inset (sk_rrect_t rrect, Single dx, Single dy);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_inset (sk_rrect_t rrect, Single dx, Single dy);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9339,9 +12766,15 @@ namespace SkiaSharp
 
 		// bool sk_rrect_is_valid(const sk_rrect_t* rrect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_rrect_is_valid (sk_rrect_t rrect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_rrect_is_valid (sk_rrect_t rrect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9355,8 +12788,13 @@ namespace SkiaSharp
 
 		// sk_rrect_t* sk_rrect_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_rrect_t sk_rrect_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_rrect_t sk_rrect_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9369,8 +12807,13 @@ namespace SkiaSharp
 
 		// sk_rrect_t* sk_rrect_new_copy(const sk_rrect_t* rrect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_rrect_t sk_rrect_new_copy (sk_rrect_t rrect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_rrect_t sk_rrect_new_copy (sk_rrect_t rrect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9383,8 +12826,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_offset(sk_rrect_t* rrect, float dx, float dy)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_offset (sk_rrect_t rrect, Single dx, Single dy);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_offset (sk_rrect_t rrect, Single dx, Single dy);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9397,8 +12845,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_outset(sk_rrect_t* rrect, float dx, float dy)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_outset (sk_rrect_t rrect, Single dx, Single dy);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_outset (sk_rrect_t rrect, Single dx, Single dy);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9411,8 +12864,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_set_empty(sk_rrect_t* rrect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_set_empty (sk_rrect_t rrect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_set_empty (sk_rrect_t rrect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9425,8 +12883,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_set_nine_patch(sk_rrect_t* rrect, const sk_rect_t* rect, float leftRad, float topRad, float rightRad, float bottomRad)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_set_nine_patch (sk_rrect_t rrect, SKRect* rect, Single leftRad, Single topRad, Single rightRad, Single bottomRad);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_set_nine_patch (sk_rrect_t rrect, SKRect* rect, Single leftRad, Single topRad, Single rightRad, Single bottomRad);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9439,8 +12902,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_set_oval(sk_rrect_t* rrect, const sk_rect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_set_oval (sk_rrect_t rrect, SKRect* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_set_oval (sk_rrect_t rrect, SKRect* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9453,8 +12921,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_set_rect(sk_rrect_t* rrect, const sk_rect_t* rect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_set_rect (sk_rrect_t rrect, SKRect* rect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_set_rect (sk_rrect_t rrect, SKRect* rect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9467,8 +12940,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_set_rect_radii(sk_rrect_t* rrect, const sk_rect_t* rect, const sk_vector_t* radii)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_set_rect_radii (sk_rrect_t rrect, SKRect* rect, SKPoint* radii);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_set_rect_radii (sk_rrect_t rrect, SKRect* rect, SKPoint* radii);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9481,8 +12959,13 @@ namespace SkiaSharp
 
 		// void sk_rrect_set_rect_xy(sk_rrect_t* rrect, const sk_rect_t* rect, float xRad, float yRad)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_rrect_set_rect_xy (sk_rrect_t rrect, SKRect* rect, Single xRad, Single yRad);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_rrect_set_rect_xy (sk_rrect_t rrect, SKRect* rect, Single xRad, Single yRad);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9495,9 +12978,15 @@ namespace SkiaSharp
 
 		// bool sk_rrect_transform(sk_rrect_t* rrect, const sk_matrix_t* matrix, sk_rrect_t* dest)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_rrect_transform (sk_rrect_t rrect, SKMatrix* matrix, sk_rrect_t dest);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_rrect_transform (sk_rrect_t rrect, SKMatrix* matrix, sk_rrect_t dest);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9515,8 +13004,13 @@ namespace SkiaSharp
 
 		// void sk_runtimeeffect_get_child_from_index(const sk_runtimeeffect_t* effect, int index, sk_runtimeeffect_child_t* cchild)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_runtimeeffect_get_child_from_index (sk_runtimeeffect_t effect, Int32 index, SKRuntimeEffectChildNative* cchild);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_runtimeeffect_get_child_from_index (sk_runtimeeffect_t effect, Int32 index, SKRuntimeEffectChildNative* cchild);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9529,8 +13023,13 @@ namespace SkiaSharp
 
 		// void sk_runtimeeffect_get_child_from_name(const sk_runtimeeffect_t* effect, const char* name, size_t len, sk_runtimeeffect_child_t* cchild)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_runtimeeffect_get_child_from_name (sk_runtimeeffect_t effect, /* char */ void* name, /* size_t */ IntPtr len, SKRuntimeEffectChildNative* cchild);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_runtimeeffect_get_child_from_name (sk_runtimeeffect_t effect, /* char */ void* name, /* size_t */ IntPtr len, SKRuntimeEffectChildNative* cchild);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9543,8 +13042,13 @@ namespace SkiaSharp
 
 		// void sk_runtimeeffect_get_child_name(const sk_runtimeeffect_t* effect, int index, sk_string_t* name)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_runtimeeffect_get_child_name (sk_runtimeeffect_t effect, Int32 index, sk_string_t name);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_runtimeeffect_get_child_name (sk_runtimeeffect_t effect, Int32 index, sk_string_t name);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9557,8 +13061,13 @@ namespace SkiaSharp
 
 		// size_t sk_runtimeeffect_get_children_size(const sk_runtimeeffect_t* effect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_runtimeeffect_get_children_size (sk_runtimeeffect_t effect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_runtimeeffect_get_children_size (sk_runtimeeffect_t effect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9571,8 +13080,13 @@ namespace SkiaSharp
 
 		// size_t sk_runtimeeffect_get_uniform_byte_size(const sk_runtimeeffect_t* effect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_runtimeeffect_get_uniform_byte_size (sk_runtimeeffect_t effect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_runtimeeffect_get_uniform_byte_size (sk_runtimeeffect_t effect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9585,8 +13099,13 @@ namespace SkiaSharp
 
 		// void sk_runtimeeffect_get_uniform_from_index(const sk_runtimeeffect_t* effect, int index, sk_runtimeeffect_uniform_t* cuniform)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_runtimeeffect_get_uniform_from_index (sk_runtimeeffect_t effect, Int32 index, SKRuntimeEffectUniformNative* cuniform);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_runtimeeffect_get_uniform_from_index (sk_runtimeeffect_t effect, Int32 index, SKRuntimeEffectUniformNative* cuniform);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9599,8 +13118,13 @@ namespace SkiaSharp
 
 		// void sk_runtimeeffect_get_uniform_from_name(const sk_runtimeeffect_t* effect, const char* name, size_t len, sk_runtimeeffect_uniform_t* cuniform)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_runtimeeffect_get_uniform_from_name (sk_runtimeeffect_t effect, /* char */ void* name, /* size_t */ IntPtr len, SKRuntimeEffectUniformNative* cuniform);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_runtimeeffect_get_uniform_from_name (sk_runtimeeffect_t effect, /* char */ void* name, /* size_t */ IntPtr len, SKRuntimeEffectUniformNative* cuniform);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9613,8 +13137,13 @@ namespace SkiaSharp
 
 		// void sk_runtimeeffect_get_uniform_name(const sk_runtimeeffect_t* effect, int index, sk_string_t* name)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_runtimeeffect_get_uniform_name (sk_runtimeeffect_t effect, Int32 index, sk_string_t name);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_runtimeeffect_get_uniform_name (sk_runtimeeffect_t effect, Int32 index, sk_string_t name);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9627,8 +13156,13 @@ namespace SkiaSharp
 
 		// size_t sk_runtimeeffect_get_uniforms_size(const sk_runtimeeffect_t* effect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_runtimeeffect_get_uniforms_size (sk_runtimeeffect_t effect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_runtimeeffect_get_uniforms_size (sk_runtimeeffect_t effect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9641,8 +13175,13 @@ namespace SkiaSharp
 
 		// sk_blender_t* sk_runtimeeffect_make_blender(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_blender_t sk_runtimeeffect_make_blender (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_blender_t sk_runtimeeffect_make_blender (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9655,8 +13194,13 @@ namespace SkiaSharp
 
 		// sk_colorfilter_t* sk_runtimeeffect_make_color_filter(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_runtimeeffect_make_color_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorfilter_t sk_runtimeeffect_make_color_filter (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9669,8 +13213,13 @@ namespace SkiaSharp
 
 		// sk_runtimeeffect_t* sk_runtimeeffect_make_for_blender(sk_string_t* sksl, sk_string_t* error)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_runtimeeffect_t sk_runtimeeffect_make_for_blender (sk_string_t sksl, sk_string_t error);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_runtimeeffect_t sk_runtimeeffect_make_for_blender (sk_string_t sksl, sk_string_t error);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9683,8 +13232,13 @@ namespace SkiaSharp
 
 		// sk_runtimeeffect_t* sk_runtimeeffect_make_for_color_filter(sk_string_t* sksl, sk_string_t* error)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_runtimeeffect_t sk_runtimeeffect_make_for_color_filter (sk_string_t sksl, sk_string_t error);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_runtimeeffect_t sk_runtimeeffect_make_for_color_filter (sk_string_t sksl, sk_string_t error);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9697,8 +13251,13 @@ namespace SkiaSharp
 
 		// sk_runtimeeffect_t* sk_runtimeeffect_make_for_shader(sk_string_t* sksl, sk_string_t* error)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_runtimeeffect_t sk_runtimeeffect_make_for_shader (sk_string_t sksl, sk_string_t error);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_runtimeeffect_t sk_runtimeeffect_make_for_shader (sk_string_t sksl, sk_string_t error);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9711,8 +13270,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_runtimeeffect_make_shader(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_runtimeeffect_make_shader (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_runtimeeffect_make_shader (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, SKMatrix* localMatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9725,8 +13289,13 @@ namespace SkiaSharp
 
 		// void sk_runtimeeffect_unref(sk_runtimeeffect_t* effect)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_runtimeeffect_unref (sk_runtimeeffect_t effect);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_runtimeeffect_unref (sk_runtimeeffect_t effect);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9743,8 +13312,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_blend(sk_blendmode_t mode, const sk_shader_t* dst, const sk_shader_t* src)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_blend (SKBlendMode mode, sk_shader_t dst, sk_shader_t src);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_blend (SKBlendMode mode, sk_shader_t dst, sk_shader_t src);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9757,8 +13331,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_blender(sk_blender_t* blender, const sk_shader_t* dst, const sk_shader_t* src)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_blender (sk_blender_t blender, sk_shader_t dst, sk_shader_t src);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_blender (sk_blender_t blender, sk_shader_t dst, sk_shader_t src);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9771,8 +13350,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_color(sk_color_t color)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_color (UInt32 color);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_color (UInt32 color);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9785,8 +13369,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_color4f(const sk_color4f_t* color, const sk_colorspace_t* colorspace)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_color4f (SKColorF* color, sk_colorspace_t colorspace);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_color4f (SKColorF* color, sk_colorspace_t colorspace);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9799,8 +13388,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_empty()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_empty ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_empty ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9813,8 +13407,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t[2] points = 2, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_linear_gradient (SKPoint* points, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9827,8 +13426,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_linear_gradient_color4f(const sk_point_t[2] points = 2, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_linear_gradient_color4f (SKPoint* points, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_linear_gradient_color4f (SKPoint* points, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9841,8 +13445,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_perlin_noise_fractal_noise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, const sk_isize_t* tileSize)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_perlin_noise_fractal_noise (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_perlin_noise_fractal_noise (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9855,8 +13464,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_perlin_noise_turbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, const sk_isize_t* tileSize)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_perlin_noise_turbulence (Single baseFrequencyX, Single baseFrequencyY, Int32 numOctaves, Single seed, SKSizeI* tileSize);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9869,8 +13483,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_radial_gradient(const sk_point_t* center, float radius, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_radial_gradient (SKPoint* center, Single radius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9883,8 +13502,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_radial_gradient_color4f(const sk_point_t* center, float radius, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_radial_gradient_color4f (SKPoint* center, Single radius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_radial_gradient_color4f (SKPoint* center, Single radius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9897,8 +13521,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_sweep_gradient(const sk_point_t* center, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, float startAngle, float endAngle, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_sweep_gradient (SKPoint* center, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9911,8 +13540,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_sweep_gradient_color4f(const sk_point_t* center, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, float startAngle, float endAngle, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_sweep_gradient_color4f (SKPoint* center, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_sweep_gradient_color4f (SKPoint* center, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, Single startAngle, Single endAngle, SKMatrix* localMatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9925,8 +13559,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_two_point_conical_gradient(const sk_point_t* start, float startRadius, const sk_point_t* end, float endRadius, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_two_point_conical_gradient (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, UInt32* colors, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9939,8 +13578,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_new_two_point_conical_gradient_color4f(const sk_point_t* start, float startRadius, const sk_point_t* end, float endRadius, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_new_two_point_conical_gradient_color4f (SKPoint* start, Single startRadius, SKPoint* end, Single endRadius, SKColorF* colors, sk_colorspace_t colorspace, Single* colorPos, Int32 colorCount, SKShaderTileMode tileMode, SKMatrix* localMatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9953,8 +13597,13 @@ namespace SkiaSharp
 
 		// void sk_shader_ref(sk_shader_t* shader)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_shader_ref (sk_shader_t shader);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_shader_ref (sk_shader_t shader);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9967,8 +13616,13 @@ namespace SkiaSharp
 
 		// void sk_shader_unref(sk_shader_t* shader)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_shader_unref (sk_shader_t shader);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_shader_unref (sk_shader_t shader);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9981,8 +13635,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_with_color_filter(const sk_shader_t* shader, const sk_colorfilter_t* filter)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_with_color_filter (sk_shader_t shader, sk_colorfilter_t filter);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_with_color_filter (sk_shader_t shader, sk_colorfilter_t filter);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -9995,8 +13654,13 @@ namespace SkiaSharp
 
 		// sk_shader_t* sk_shader_with_local_matrix(const sk_shader_t* shader, const sk_matrix_t* localMatrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_shader_t sk_shader_with_local_matrix (sk_shader_t shader, SKMatrix* localMatrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_shader_t sk_shader_with_local_matrix (sk_shader_t shader, SKMatrix* localMatrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10013,8 +13677,13 @@ namespace SkiaSharp
 
 		// void sk_dynamicmemorywstream_copy_to(sk_wstream_dynamicmemorystream_t* cstream, void* data)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_dynamicmemorywstream_copy_to (sk_wstream_dynamicmemorystream_t cstream, void* data);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_dynamicmemorywstream_copy_to (sk_wstream_dynamicmemorystream_t cstream, void* data);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10027,8 +13696,13 @@ namespace SkiaSharp
 
 		// void sk_dynamicmemorywstream_destroy(sk_wstream_dynamicmemorystream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_dynamicmemorywstream_destroy (sk_wstream_dynamicmemorystream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_dynamicmemorywstream_destroy (sk_wstream_dynamicmemorystream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10041,8 +13715,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_dynamicmemorywstream_detach_as_data(sk_wstream_dynamicmemorystream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_dynamicmemorywstream_detach_as_data (sk_wstream_dynamicmemorystream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_dynamicmemorywstream_detach_as_data (sk_wstream_dynamicmemorystream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10055,8 +13734,13 @@ namespace SkiaSharp
 
 		// sk_stream_asset_t* sk_dynamicmemorywstream_detach_as_stream(sk_wstream_dynamicmemorystream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_stream_asset_t sk_dynamicmemorywstream_detach_as_stream (sk_wstream_dynamicmemorystream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_asset_t sk_dynamicmemorywstream_detach_as_stream (sk_wstream_dynamicmemorystream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10069,8 +13753,13 @@ namespace SkiaSharp
 
 		// sk_wstream_dynamicmemorystream_t* sk_dynamicmemorywstream_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_wstream_dynamicmemorystream_t sk_dynamicmemorywstream_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_wstream_dynamicmemorystream_t sk_dynamicmemorywstream_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10083,9 +13772,15 @@ namespace SkiaSharp
 
 		// bool sk_dynamicmemorywstream_write_to_stream(sk_wstream_dynamicmemorystream_t* cstream, sk_wstream_t* dst)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_dynamicmemorywstream_write_to_stream (sk_wstream_dynamicmemorystream_t cstream, sk_wstream_t dst);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_dynamicmemorywstream_write_to_stream (sk_wstream_dynamicmemorystream_t cstream, sk_wstream_t dst);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10099,8 +13794,13 @@ namespace SkiaSharp
 
 		// void sk_filestream_destroy(sk_stream_filestream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_filestream_destroy (sk_stream_filestream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_filestream_destroy (sk_stream_filestream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10113,9 +13813,15 @@ namespace SkiaSharp
 
 		// bool sk_filestream_is_valid(sk_stream_filestream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_filestream_is_valid (sk_stream_filestream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_filestream_is_valid (sk_stream_filestream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10129,8 +13835,13 @@ namespace SkiaSharp
 
 		// sk_stream_filestream_t* sk_filestream_new(const char* path)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_stream_filestream_t sk_filestream_new (/* char */ void* path);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_filestream_t sk_filestream_new (/* char */ void* path);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10143,8 +13854,13 @@ namespace SkiaSharp
 
 		// void sk_filewstream_destroy(sk_wstream_filestream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_filewstream_destroy (sk_wstream_filestream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_filewstream_destroy (sk_wstream_filestream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10157,9 +13873,15 @@ namespace SkiaSharp
 
 		// bool sk_filewstream_is_valid(sk_wstream_filestream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_filewstream_is_valid (sk_wstream_filestream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_filewstream_is_valid (sk_wstream_filestream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10173,8 +13895,13 @@ namespace SkiaSharp
 
 		// sk_wstream_filestream_t* sk_filewstream_new(const char* path)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_wstream_filestream_t sk_filewstream_new (/* char */ void* path);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_wstream_filestream_t sk_filewstream_new (/* char */ void* path);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10187,8 +13914,13 @@ namespace SkiaSharp
 
 		// void sk_memorystream_destroy(sk_stream_memorystream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_memorystream_destroy (sk_stream_memorystream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_memorystream_destroy (sk_stream_memorystream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10201,8 +13933,13 @@ namespace SkiaSharp
 
 		// sk_stream_memorystream_t* sk_memorystream_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_stream_memorystream_t sk_memorystream_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_memorystream_t sk_memorystream_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10215,8 +13952,13 @@ namespace SkiaSharp
 
 		// sk_stream_memorystream_t* sk_memorystream_new_with_data(const void* data, size_t length, bool copyData)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_stream_memorystream_t sk_memorystream_new_with_data (void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_memorystream_t sk_memorystream_new_with_data (void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10229,8 +13971,13 @@ namespace SkiaSharp
 
 		// sk_stream_memorystream_t* sk_memorystream_new_with_length(size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_stream_memorystream_t sk_memorystream_new_with_length (/* size_t */ IntPtr length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_memorystream_t sk_memorystream_new_with_length (/* size_t */ IntPtr length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10243,8 +13990,13 @@ namespace SkiaSharp
 
 		// sk_stream_memorystream_t* sk_memorystream_new_with_skdata(sk_data_t* data)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_stream_memorystream_t sk_memorystream_new_with_skdata (sk_data_t data);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_memorystream_t sk_memorystream_new_with_skdata (sk_data_t data);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10257,8 +14009,13 @@ namespace SkiaSharp
 
 		// void sk_memorystream_set_memory(sk_stream_memorystream_t* cmemorystream, const void* data, size_t length, bool copyData)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_memorystream_set_memory (sk_stream_memorystream_t cmemorystream, void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_memorystream_set_memory (sk_stream_memorystream_t cmemorystream, void* data, /* size_t */ IntPtr length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10271,8 +14028,13 @@ namespace SkiaSharp
 
 		// void sk_stream_asset_destroy(sk_stream_asset_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_stream_asset_destroy (sk_stream_asset_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_stream_asset_destroy (sk_stream_asset_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10285,8 +14047,13 @@ namespace SkiaSharp
 
 		// void sk_stream_destroy(sk_stream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_stream_destroy (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_stream_destroy (sk_stream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10299,8 +14066,13 @@ namespace SkiaSharp
 
 		// sk_stream_t* sk_stream_duplicate(sk_stream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_stream_t sk_stream_duplicate (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_t sk_stream_duplicate (sk_stream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10313,8 +14085,13 @@ namespace SkiaSharp
 
 		// sk_stream_t* sk_stream_fork(sk_stream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_stream_t sk_stream_fork (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_t sk_stream_fork (sk_stream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10327,8 +14104,13 @@ namespace SkiaSharp
 
 		// size_t sk_stream_get_length(sk_stream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_stream_get_length (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_stream_get_length (sk_stream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10341,8 +14123,13 @@ namespace SkiaSharp
 
 		// const void* sk_stream_get_memory_base(sk_stream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void* sk_stream_get_memory_base (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* sk_stream_get_memory_base (sk_stream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10355,8 +14142,13 @@ namespace SkiaSharp
 
 		// size_t sk_stream_get_position(sk_stream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_stream_get_position (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_stream_get_position (sk_stream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10369,9 +14161,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_has_length(sk_stream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_has_length (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_has_length (sk_stream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10385,9 +14183,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_has_position(sk_stream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_has_position (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_has_position (sk_stream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10401,9 +14205,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_is_at_end(sk_stream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_is_at_end (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_is_at_end (sk_stream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10417,9 +14227,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_move(sk_stream_t* cstream, int offset)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_move (sk_stream_t cstream, Int32 offset);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_move (sk_stream_t cstream, Int32 offset);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10433,8 +14249,13 @@ namespace SkiaSharp
 
 		// size_t sk_stream_peek(sk_stream_t* cstream, void* buffer, size_t size)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_stream_peek (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_stream_peek (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10447,8 +14268,13 @@ namespace SkiaSharp
 
 		// size_t sk_stream_read(sk_stream_t* cstream, void* buffer, size_t size)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_stream_read (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_stream_read (sk_stream_t cstream, void* buffer, /* size_t */ IntPtr size);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10461,9 +14287,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_read_bool(sk_stream_t* cstream, bool* buffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_read_bool (sk_stream_t cstream, Byte* buffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_read_bool (sk_stream_t cstream, Byte* buffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10477,9 +14309,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_read_s16(sk_stream_t* cstream, int16_t* buffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_read_s16 (sk_stream_t cstream, Int16* buffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_read_s16 (sk_stream_t cstream, Int16* buffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10493,9 +14331,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_read_s32(sk_stream_t* cstream, int32_t* buffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_read_s32 (sk_stream_t cstream, Int32* buffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_read_s32 (sk_stream_t cstream, Int32* buffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10509,9 +14353,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_read_s8(sk_stream_t* cstream, int8_t* buffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_read_s8 (sk_stream_t cstream, SByte* buffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_read_s8 (sk_stream_t cstream, SByte* buffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10525,9 +14375,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_read_u16(sk_stream_t* cstream, uint16_t* buffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_read_u16 (sk_stream_t cstream, UInt16* buffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_read_u16 (sk_stream_t cstream, UInt16* buffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10541,9 +14397,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_read_u32(sk_stream_t* cstream, uint32_t* buffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_read_u32 (sk_stream_t cstream, UInt32* buffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_read_u32 (sk_stream_t cstream, UInt32* buffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10557,9 +14419,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_read_u8(sk_stream_t* cstream, uint8_t* buffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_read_u8 (sk_stream_t cstream, Byte* buffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_read_u8 (sk_stream_t cstream, Byte* buffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10573,9 +14441,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_rewind(sk_stream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_rewind (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_rewind (sk_stream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10589,9 +14463,15 @@ namespace SkiaSharp
 
 		// bool sk_stream_seek(sk_stream_t* cstream, size_t position)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_stream_seek (sk_stream_t cstream, /* size_t */ IntPtr position);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_stream_seek (sk_stream_t cstream, /* size_t */ IntPtr position);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10605,8 +14485,13 @@ namespace SkiaSharp
 
 		// size_t sk_stream_skip(sk_stream_t* cstream, size_t size)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_stream_skip (sk_stream_t cstream, /* size_t */ IntPtr size);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_stream_skip (sk_stream_t cstream, /* size_t */ IntPtr size);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10619,8 +14504,13 @@ namespace SkiaSharp
 
 		// size_t sk_wstream_bytes_written(sk_wstream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_wstream_bytes_written (sk_wstream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_wstream_bytes_written (sk_wstream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10633,8 +14523,13 @@ namespace SkiaSharp
 
 		// void sk_wstream_flush(sk_wstream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_wstream_flush (sk_wstream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_wstream_flush (sk_wstream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10647,8 +14542,13 @@ namespace SkiaSharp
 
 		// int sk_wstream_get_size_of_packed_uint(size_t value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_wstream_get_size_of_packed_uint (/* size_t */ IntPtr value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_wstream_get_size_of_packed_uint (/* size_t */ IntPtr value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10661,9 +14561,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_newline(sk_wstream_t* cstream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_newline (sk_wstream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_newline (sk_wstream_t cstream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10677,9 +14583,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write(sk_wstream_t* cstream, const void* buffer, size_t size)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write (sk_wstream_t cstream, void* buffer, /* size_t */ IntPtr size);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write (sk_wstream_t cstream, void* buffer, /* size_t */ IntPtr size);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10693,9 +14605,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_16(sk_wstream_t* cstream, uint16_t value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_16 (sk_wstream_t cstream, UInt16 value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_16 (sk_wstream_t cstream, UInt16 value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10709,9 +14627,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_32(sk_wstream_t* cstream, uint32_t value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_32 (sk_wstream_t cstream, UInt32 value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_32 (sk_wstream_t cstream, UInt32 value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10725,9 +14649,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_8(sk_wstream_t* cstream, uint8_t value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_8 (sk_wstream_t cstream, Byte value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_8 (sk_wstream_t cstream, Byte value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10741,9 +14671,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_bigdec_as_text(sk_wstream_t* cstream, int64_t value, int minDigits)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_bigdec_as_text (sk_wstream_t cstream, Int64 value, Int32 minDigits);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_bigdec_as_text (sk_wstream_t cstream, Int64 value, Int32 minDigits);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10757,9 +14693,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_bool(sk_wstream_t* cstream, bool value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_bool (sk_wstream_t cstream, [MarshalAs (UnmanagedType.I1)] bool value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_bool (sk_wstream_t cstream, [MarshalAs (UnmanagedType.I1)] bool value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10773,9 +14715,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_dec_as_text(sk_wstream_t* cstream, int32_t value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_dec_as_text (sk_wstream_t cstream, Int32 value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_dec_as_text (sk_wstream_t cstream, Int32 value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10789,9 +14737,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_hex_as_text(sk_wstream_t* cstream, uint32_t value, int minDigits)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_hex_as_text (sk_wstream_t cstream, UInt32 value, Int32 minDigits);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_hex_as_text (sk_wstream_t cstream, UInt32 value, Int32 minDigits);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10805,9 +14759,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_packed_uint(sk_wstream_t* cstream, size_t value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_packed_uint (sk_wstream_t cstream, /* size_t */ IntPtr value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_packed_uint (sk_wstream_t cstream, /* size_t */ IntPtr value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10821,9 +14781,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_scalar(sk_wstream_t* cstream, float value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_scalar (sk_wstream_t cstream, Single value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_scalar (sk_wstream_t cstream, Single value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10837,9 +14803,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_scalar_as_text(sk_wstream_t* cstream, float value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_scalar_as_text (sk_wstream_t cstream, Single value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_scalar_as_text (sk_wstream_t cstream, Single value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10853,9 +14825,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_stream(sk_wstream_t* cstream, sk_stream_t* input, size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_stream (sk_wstream_t cstream, sk_stream_t input, /* size_t */ IntPtr length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_stream (sk_wstream_t cstream, sk_stream_t input, /* size_t */ IntPtr length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10869,9 +14847,15 @@ namespace SkiaSharp
 
 		// bool sk_wstream_write_text(sk_wstream_t* cstream, const char* value)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_wstream_write_text (sk_wstream_t cstream, [MarshalAs (UnmanagedType.LPStr)] String value);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_wstream_write_text (sk_wstream_t cstream, [MarshalAs (UnmanagedType.LPStr)] String value);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10889,8 +14873,13 @@ namespace SkiaSharp
 
 		// void sk_string_destructor(const sk_string_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_string_destructor (sk_string_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_string_destructor (sk_string_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10903,8 +14892,13 @@ namespace SkiaSharp
 
 		// const char* sk_string_get_c_str(const sk_string_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* char */ void* sk_string_get_c_str (sk_string_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* char */ void* sk_string_get_c_str (sk_string_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10917,8 +14911,13 @@ namespace SkiaSharp
 
 		// size_t sk_string_get_size(const sk_string_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_string_get_size (sk_string_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_string_get_size (sk_string_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10931,8 +14930,13 @@ namespace SkiaSharp
 
 		// sk_string_t* sk_string_new_empty()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_string_t sk_string_new_empty ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_string_t sk_string_new_empty ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10945,8 +14949,13 @@ namespace SkiaSharp
 
 		// sk_string_t* sk_string_new_with_copy(const char* src, size_t length)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_string_t sk_string_new_with_copy (/* char */ void* src, /* size_t */ IntPtr length);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_string_t sk_string_new_with_copy (/* char */ void* src, /* size_t */ IntPtr length);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10963,8 +14972,13 @@ namespace SkiaSharp
 
 		// void sk_surface_draw(sk_surface_t* surface, sk_canvas_t* canvas, float x, float y, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_surface_draw (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_surface_draw (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10977,8 +14991,13 @@ namespace SkiaSharp
 
 		// void sk_surface_flush(sk_surface_t* surface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_surface_flush (sk_surface_t surface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_surface_flush (sk_surface_t surface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -10991,8 +15010,13 @@ namespace SkiaSharp
 
 		// void sk_surface_flush_and_submit(sk_surface_t* surface, bool syncCpu)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_surface_flush_and_submit (sk_surface_t surface, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_surface_flush_and_submit (sk_surface_t surface, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11005,8 +15029,13 @@ namespace SkiaSharp
 
 		// sk_canvas_t* sk_surface_get_canvas(sk_surface_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_canvas_t sk_surface_get_canvas (sk_surface_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_canvas_t sk_surface_get_canvas (sk_surface_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11019,8 +15048,13 @@ namespace SkiaSharp
 
 		// const sk_surfaceprops_t* sk_surface_get_props(sk_surface_t* surface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surfaceprops_t sk_surface_get_props (sk_surface_t surface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_surfaceprops_t sk_surface_get_props (sk_surface_t surface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11033,8 +15067,13 @@ namespace SkiaSharp
 
 		// gr_recording_context_t* sk_surface_get_recording_context(sk_surface_t* surface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_recording_context_t sk_surface_get_recording_context (sk_surface_t surface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_recording_context_t sk_surface_get_recording_context (sk_surface_t surface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11047,8 +15086,13 @@ namespace SkiaSharp
 
 		// sk_surface_t* sk_surface_new_backend_render_target(gr_recording_context_t* context, const gr_backendrendertarget_t* target, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surface_t sk_surface_new_backend_render_target (gr_recording_context_t context, gr_backendrendertarget_t target, GRSurfaceOrigin origin, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_surface_t sk_surface_new_backend_render_target (gr_recording_context_t context, gr_backendrendertarget_t target, GRSurfaceOrigin origin, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11061,8 +15105,13 @@ namespace SkiaSharp
 
 		// sk_surface_t* sk_surface_new_backend_texture(gr_recording_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, int samples, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surface_t sk_surface_new_backend_texture (gr_recording_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, Int32 samples, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_surface_t sk_surface_new_backend_texture (gr_recording_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, Int32 samples, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11075,8 +15124,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_surface_new_image_snapshot(sk_surface_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_surface_new_image_snapshot (sk_surface_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_surface_new_image_snapshot (sk_surface_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11089,8 +15143,13 @@ namespace SkiaSharp
 
 		// sk_image_t* sk_surface_new_image_snapshot_with_crop(sk_surface_t* surface, const sk_irect_t* bounds)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_image_t sk_surface_new_image_snapshot_with_crop (sk_surface_t surface, SKRectI* bounds);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_image_t sk_surface_new_image_snapshot_with_crop (sk_surface_t surface, SKRectI* bounds);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11103,8 +15162,13 @@ namespace SkiaSharp
 
 		// sk_surface_t* sk_surface_new_metal_layer(gr_recording_context_t* context, const void* layer, gr_surfaceorigin_t origin, int sampleCount, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props, const void** drawable)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surface_t sk_surface_new_metal_layer (gr_recording_context_t context, void* layer, GRSurfaceOrigin origin, Int32 sampleCount, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props, void** drawable);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_surface_t sk_surface_new_metal_layer (gr_recording_context_t context, void* layer, GRSurfaceOrigin origin, Int32 sampleCount, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props, void** drawable);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11117,8 +15181,13 @@ namespace SkiaSharp
 
 		// sk_surface_t* sk_surface_new_metal_view(gr_recording_context_t* context, const void* mtkView, gr_surfaceorigin_t origin, int sampleCount, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surface_t sk_surface_new_metal_view (gr_recording_context_t context, void* mtkView, GRSurfaceOrigin origin, Int32 sampleCount, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_surface_t sk_surface_new_metal_view (gr_recording_context_t context, void* mtkView, GRSurfaceOrigin origin, Int32 sampleCount, SKColorTypeNative colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11131,8 +15200,13 @@ namespace SkiaSharp
 
 		// sk_surface_t* sk_surface_new_null(int width, int height)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surface_t sk_surface_new_null (Int32 width, Int32 height);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_surface_t sk_surface_new_null (Int32 width, Int32 height);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11145,8 +15219,13 @@ namespace SkiaSharp
 
 		// sk_surface_t* sk_surface_new_raster(const sk_imageinfo_t*, size_t rowBytes, const sk_surfaceprops_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surface_t sk_surface_new_raster (SKImageInfoNative* param0, /* size_t */ IntPtr rowBytes, sk_surfaceprops_t param2);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_surface_t sk_surface_new_raster (SKImageInfoNative* param0, /* size_t */ IntPtr rowBytes, sk_surfaceprops_t param2);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11159,8 +15238,13 @@ namespace SkiaSharp
 
 		// sk_surface_t* sk_surface_new_raster_direct(const sk_imageinfo_t*, void* pixels, size_t rowBytes, const sk_surface_raster_release_proc releaseProc, void* context, const sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surface_t sk_surface_new_raster_direct (SKImageInfoNative* param0, void* pixels, /* size_t */ IntPtr rowBytes, void* releaseProc, void* context, sk_surfaceprops_t props);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_surface_t sk_surface_new_raster_direct (SKImageInfoNative* param0, void* pixels, /* size_t */ IntPtr rowBytes, SKSurfaceRasterReleaseProxyDelegate releaseProc, void* context, sk_surfaceprops_t props);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11173,8 +15257,13 @@ namespace SkiaSharp
 
 		// sk_surface_t* sk_surface_new_render_target(gr_recording_context_t* context, bool budgeted, const sk_imageinfo_t* cinfo, int sampleCount, gr_surfaceorigin_t origin, const sk_surfaceprops_t* props, bool shouldCreateWithMips)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surface_t sk_surface_new_render_target (gr_recording_context_t context, [MarshalAs (UnmanagedType.I1)] bool budgeted, SKImageInfoNative* cinfo, Int32 sampleCount, GRSurfaceOrigin origin, sk_surfaceprops_t props, [MarshalAs (UnmanagedType.I1)] bool shouldCreateWithMips);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_surface_t sk_surface_new_render_target (gr_recording_context_t context, [MarshalAs (UnmanagedType.I1)] bool budgeted, SKImageInfoNative* cinfo, Int32 sampleCount, GRSurfaceOrigin origin, sk_surfaceprops_t props, [MarshalAs (UnmanagedType.I1)] bool shouldCreateWithMips);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11187,9 +15276,15 @@ namespace SkiaSharp
 
 		// bool sk_surface_peek_pixels(sk_surface_t* surface, sk_pixmap_t* pixmap)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_surface_peek_pixels (sk_surface_t surface, sk_pixmap_t pixmap);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_surface_peek_pixels (sk_surface_t surface, sk_pixmap_t pixmap);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11203,9 +15298,15 @@ namespace SkiaSharp
 
 		// bool sk_surface_read_pixels(sk_surface_t* surface, sk_imageinfo_t* dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_surface_read_pixels (sk_surface_t surface, SKImageInfoNative* dstInfo, void* dstPixels, /* size_t */ IntPtr dstRowBytes, Int32 srcX, Int32 srcY);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_surface_read_pixels (sk_surface_t surface, SKImageInfoNative* dstInfo, void* dstPixels, /* size_t */ IntPtr dstRowBytes, Int32 srcX, Int32 srcY);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11219,8 +15320,13 @@ namespace SkiaSharp
 
 		// void sk_surface_unref(sk_surface_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_surface_unref (sk_surface_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_surface_unref (sk_surface_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11233,8 +15339,13 @@ namespace SkiaSharp
 
 		// void sk_surfaceprops_delete(sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_surfaceprops_delete (sk_surfaceprops_t props);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_surfaceprops_delete (sk_surfaceprops_t props);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11247,8 +15358,13 @@ namespace SkiaSharp
 
 		// uint32_t sk_surfaceprops_get_flags(sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_surfaceprops_get_flags (sk_surfaceprops_t props);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_surfaceprops_get_flags (sk_surfaceprops_t props);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11261,8 +15377,13 @@ namespace SkiaSharp
 
 		// sk_pixelgeometry_t sk_surfaceprops_get_pixel_geometry(sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKPixelGeometry sk_surfaceprops_get_pixel_geometry (sk_surfaceprops_t props);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKPixelGeometry sk_surfaceprops_get_pixel_geometry (sk_surfaceprops_t props);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11275,8 +15396,13 @@ namespace SkiaSharp
 
 		// sk_surfaceprops_t* sk_surfaceprops_new(uint32_t flags, sk_pixelgeometry_t geometry)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surfaceprops_t sk_surfaceprops_new (UInt32 flags, SKPixelGeometry geometry);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_surfaceprops_t sk_surfaceprops_new (UInt32 flags, SKPixelGeometry geometry);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11293,8 +15419,13 @@ namespace SkiaSharp
 
 		// sk_canvas_t* sk_svgcanvas_create_with_stream(const sk_rect_t* bounds, sk_wstream_t* stream)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_canvas_t sk_svgcanvas_create_with_stream (SKRect* bounds, sk_wstream_t stream);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_canvas_t sk_svgcanvas_create_with_stream (SKRect* bounds, sk_wstream_t stream);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11311,8 +15442,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_builder_alloc_run(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float x, float y, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_builder_alloc_run (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_builder_alloc_run (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11325,8 +15461,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_builder_alloc_run_pos(sk_textblob_builder_t* builder, const sk_font_t* font, int count, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_builder_alloc_run_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_builder_alloc_run_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11339,8 +15480,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_builder_alloc_run_pos_h(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float y, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_builder_alloc_run_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_builder_alloc_run_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11353,8 +15499,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_builder_alloc_run_rsxform(sk_textblob_builder_t* builder, const sk_font_t* font, int count, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_builder_alloc_run_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_builder_alloc_run_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11367,8 +15518,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_builder_alloc_run_text(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float x, float y, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_builder_alloc_run_text (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_builder_alloc_run_text (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single x, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11381,8 +15537,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_builder_alloc_run_text_pos(sk_textblob_builder_t* builder, const sk_font_t* font, int count, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_builder_alloc_run_text_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_builder_alloc_run_text_pos (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11395,8 +15556,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_builder_alloc_run_text_pos_h(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float y, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_builder_alloc_run_text_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_builder_alloc_run_text_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11409,8 +15575,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_builder_alloc_run_text_rsxform(sk_textblob_builder_t* builder, const sk_font_t* font, int count, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_builder_alloc_run_text_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_builder_alloc_run_text_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Int32 textByteCount, SKRect* bounds, SKRunBufferInternal* runbuffer);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11423,8 +15594,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_builder_delete(sk_textblob_builder_t* builder)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_builder_delete (sk_textblob_builder_t builder);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_builder_delete (sk_textblob_builder_t builder);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11437,8 +15613,13 @@ namespace SkiaSharp
 
 		// sk_textblob_t* sk_textblob_builder_make(sk_textblob_builder_t* builder)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_textblob_t sk_textblob_builder_make (sk_textblob_builder_t builder);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_textblob_t sk_textblob_builder_make (sk_textblob_builder_t builder);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11451,8 +15632,13 @@ namespace SkiaSharp
 
 		// sk_textblob_builder_t* sk_textblob_builder_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_textblob_builder_t sk_textblob_builder_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_textblob_builder_t sk_textblob_builder_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11465,8 +15651,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_get_bounds(const sk_textblob_t* blob, sk_rect_t* bounds)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_get_bounds (sk_textblob_t blob, SKRect* bounds);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_get_bounds (sk_textblob_t blob, SKRect* bounds);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11479,8 +15670,13 @@ namespace SkiaSharp
 
 		// int sk_textblob_get_intercepts(const sk_textblob_t* blob, const float[2] bounds = 2, float[-1] intervals, const sk_paint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_textblob_get_intercepts (sk_textblob_t blob, Single* bounds, Single* intervals, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_textblob_get_intercepts (sk_textblob_t blob, Single* bounds, Single* intervals, sk_paint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11493,8 +15689,13 @@ namespace SkiaSharp
 
 		// uint32_t sk_textblob_get_unique_id(const sk_textblob_t* blob)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt32 sk_textblob_get_unique_id (sk_textblob_t blob);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_textblob_get_unique_id (sk_textblob_t blob);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11507,8 +15708,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_ref(const sk_textblob_t* blob)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_ref (sk_textblob_t blob);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_ref (sk_textblob_t blob);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11521,8 +15727,13 @@ namespace SkiaSharp
 
 		// void sk_textblob_unref(const sk_textblob_t* blob)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_textblob_unref (sk_textblob_t blob);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_unref (sk_textblob_t blob);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11539,8 +15750,13 @@ namespace SkiaSharp
 
 		// int sk_fontmgr_count_families(sk_fontmgr_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_fontmgr_count_families (sk_fontmgr_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_fontmgr_count_families (sk_fontmgr_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11553,8 +15769,13 @@ namespace SkiaSharp
 
 		// sk_fontmgr_t* sk_fontmgr_create_default()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_fontmgr_t sk_fontmgr_create_default ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_fontmgr_t sk_fontmgr_create_default ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11567,8 +15788,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_fontmgr_create_from_data(sk_fontmgr_t*, sk_data_t* data, int index)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_fontmgr_create_from_data (sk_fontmgr_t param0, sk_data_t data, Int32 index);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_fontmgr_create_from_data (sk_fontmgr_t param0, sk_data_t data, Int32 index);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11581,8 +15807,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_fontmgr_create_from_file(sk_fontmgr_t*, const char* path, int index)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_fontmgr_create_from_file (sk_fontmgr_t param0, /* char */ void* path, Int32 index);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_fontmgr_create_from_file (sk_fontmgr_t param0, /* char */ void* path, Int32 index);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11595,8 +15826,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_fontmgr_create_from_stream(sk_fontmgr_t*, sk_stream_asset_t* stream, int index)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_fontmgr_create_from_stream (sk_fontmgr_t param0, sk_stream_asset_t stream, Int32 index);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_fontmgr_create_from_stream (sk_fontmgr_t param0, sk_stream_asset_t stream, Int32 index);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11609,8 +15845,13 @@ namespace SkiaSharp
 
 		// sk_fontstyleset_t* sk_fontmgr_create_styleset(sk_fontmgr_t*, int index)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_fontstyleset_t sk_fontmgr_create_styleset (sk_fontmgr_t param0, Int32 index);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_fontstyleset_t sk_fontmgr_create_styleset (sk_fontmgr_t param0, Int32 index);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11623,8 +15864,13 @@ namespace SkiaSharp
 
 		// void sk_fontmgr_get_family_name(sk_fontmgr_t*, int index, sk_string_t* familyName)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_fontmgr_get_family_name (sk_fontmgr_t param0, Int32 index, sk_string_t familyName);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_fontmgr_get_family_name (sk_fontmgr_t param0, Int32 index, sk_string_t familyName);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11637,8 +15883,13 @@ namespace SkiaSharp
 
 		// sk_fontstyleset_t* sk_fontmgr_match_family(sk_fontmgr_t*, const char* familyName)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_fontstyleset_t sk_fontmgr_match_family (sk_fontmgr_t param0, IntPtr familyName);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_fontstyleset_t sk_fontmgr_match_family (sk_fontmgr_t param0, IntPtr familyName);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11651,8 +15902,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_fontmgr_match_family_style(sk_fontmgr_t*, const char* familyName, sk_fontstyle_t* style)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_fontmgr_match_family_style (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_fontmgr_match_family_style (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11665,8 +15921,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_fontmgr_match_family_style_character(sk_fontmgr_t*, const char* familyName, sk_fontstyle_t* style, const char** bcp47, int bcp47Count, int32_t character)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_fontmgr_match_family_style_character (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] bcp47, Int32 bcp47Count, Int32 character);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_fontmgr_match_family_style_character (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] bcp47, Int32 bcp47Count, Int32 character);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11679,8 +15940,13 @@ namespace SkiaSharp
 
 		// sk_fontmgr_t* sk_fontmgr_ref_default()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_fontmgr_t sk_fontmgr_ref_default ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_fontmgr_t sk_fontmgr_ref_default ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11693,8 +15959,13 @@ namespace SkiaSharp
 
 		// void sk_fontmgr_unref(sk_fontmgr_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_fontmgr_unref (sk_fontmgr_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_fontmgr_unref (sk_fontmgr_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11707,8 +15978,13 @@ namespace SkiaSharp
 
 		// void sk_fontstyle_delete(sk_fontstyle_t* fs)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_fontstyle_delete (sk_fontstyle_t fs);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_fontstyle_delete (sk_fontstyle_t fs);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11721,8 +15997,13 @@ namespace SkiaSharp
 
 		// sk_font_style_slant_t sk_fontstyle_get_slant(const sk_fontstyle_t* fs)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKFontStyleSlant sk_fontstyle_get_slant (sk_fontstyle_t fs);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKFontStyleSlant sk_fontstyle_get_slant (sk_fontstyle_t fs);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11735,8 +16016,13 @@ namespace SkiaSharp
 
 		// int sk_fontstyle_get_weight(const sk_fontstyle_t* fs)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_fontstyle_get_weight (sk_fontstyle_t fs);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_fontstyle_get_weight (sk_fontstyle_t fs);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11749,8 +16035,13 @@ namespace SkiaSharp
 
 		// int sk_fontstyle_get_width(const sk_fontstyle_t* fs)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_fontstyle_get_width (sk_fontstyle_t fs);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_fontstyle_get_width (sk_fontstyle_t fs);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11763,8 +16054,13 @@ namespace SkiaSharp
 
 		// sk_fontstyle_t* sk_fontstyle_new(int weight, int width, sk_font_style_slant_t slant)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_fontstyle_t sk_fontstyle_new (Int32 weight, Int32 width, SKFontStyleSlant slant);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_fontstyle_t sk_fontstyle_new (Int32 weight, Int32 width, SKFontStyleSlant slant);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11777,8 +16073,13 @@ namespace SkiaSharp
 
 		// sk_fontstyleset_t* sk_fontstyleset_create_empty()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_fontstyleset_t sk_fontstyleset_create_empty ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_fontstyleset_t sk_fontstyleset_create_empty ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11791,8 +16092,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_fontstyleset_create_typeface(sk_fontstyleset_t* fss, int index)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_fontstyleset_create_typeface (sk_fontstyleset_t fss, Int32 index);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_fontstyleset_create_typeface (sk_fontstyleset_t fss, Int32 index);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11805,8 +16111,13 @@ namespace SkiaSharp
 
 		// int sk_fontstyleset_get_count(sk_fontstyleset_t* fss)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_fontstyleset_get_count (sk_fontstyleset_t fss);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_fontstyleset_get_count (sk_fontstyleset_t fss);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11819,8 +16130,13 @@ namespace SkiaSharp
 
 		// void sk_fontstyleset_get_style(sk_fontstyleset_t* fss, int index, sk_fontstyle_t* fs, sk_string_t* style)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_fontstyleset_get_style (sk_fontstyleset_t fss, Int32 index, sk_fontstyle_t fs, sk_string_t style);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_fontstyleset_get_style (sk_fontstyleset_t fss, Int32 index, sk_fontstyle_t fs, sk_string_t style);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11833,8 +16149,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_fontstyleset_match_style(sk_fontstyleset_t* fss, sk_fontstyle_t* style)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_fontstyleset_match_style (sk_fontstyleset_t fss, sk_fontstyle_t style);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_fontstyleset_match_style (sk_fontstyleset_t fss, sk_fontstyle_t style);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11847,8 +16168,13 @@ namespace SkiaSharp
 
 		// void sk_fontstyleset_unref(sk_fontstyleset_t* fss)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_fontstyleset_unref (sk_fontstyleset_t fss);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_fontstyleset_unref (sk_fontstyleset_t fss);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11861,8 +16187,13 @@ namespace SkiaSharp
 
 		// sk_data_t* sk_typeface_copy_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_typeface_copy_table_data (sk_typeface_t typeface, UInt32 tag);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_data_t sk_typeface_copy_table_data (sk_typeface_t typeface, UInt32 tag);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11875,8 +16206,13 @@ namespace SkiaSharp
 
 		// int sk_typeface_count_glyphs(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_typeface_count_glyphs (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_count_glyphs (sk_typeface_t typeface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11889,8 +16225,13 @@ namespace SkiaSharp
 
 		// int sk_typeface_count_tables(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_typeface_count_tables (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_count_tables (sk_typeface_t typeface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11903,8 +16244,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_typeface_create_default()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_typeface_create_default ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_default ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11917,8 +16263,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_typeface_create_from_data(sk_data_t* data, int index)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11931,8 +16282,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_typeface_create_from_file(const char* path, int index)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11945,8 +16301,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_typeface_create_from_name(const char* familyName, const sk_fontstyle_t* style)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_typeface_create_from_name (IntPtr familyName, sk_fontstyle_t style);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_from_name (IntPtr familyName, sk_fontstyle_t style);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11959,8 +16320,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_typeface_create_from_stream(sk_stream_asset_t* stream, int index)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11973,8 +16339,13 @@ namespace SkiaSharp
 
 		// sk_string_t* sk_typeface_get_family_name(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_string_t sk_typeface_get_family_name (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_string_t sk_typeface_get_family_name (sk_typeface_t typeface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -11987,8 +16358,13 @@ namespace SkiaSharp
 
 		// sk_font_style_slant_t sk_typeface_get_font_slant(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKFontStyleSlant sk_typeface_get_font_slant (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKFontStyleSlant sk_typeface_get_font_slant (sk_typeface_t typeface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12001,8 +16377,13 @@ namespace SkiaSharp
 
 		// int sk_typeface_get_font_weight(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_typeface_get_font_weight (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_font_weight (sk_typeface_t typeface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12015,8 +16396,13 @@ namespace SkiaSharp
 
 		// int sk_typeface_get_font_width(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_typeface_get_font_width (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_font_width (sk_typeface_t typeface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12029,8 +16415,13 @@ namespace SkiaSharp
 
 		// sk_fontstyle_t* sk_typeface_get_fontstyle(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_fontstyle_t sk_typeface_get_fontstyle (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_fontstyle_t sk_typeface_get_fontstyle (sk_typeface_t typeface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12043,9 +16434,15 @@ namespace SkiaSharp
 
 		// bool sk_typeface_get_kerning_pair_adjustments(const sk_typeface_t* typeface, const uint16_t[-1] glyphs, int count, int32_t[-1] adjustments)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_typeface_get_kerning_pair_adjustments (sk_typeface_t typeface, UInt16* glyphs, Int32 count, Int32* adjustments);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_typeface_get_kerning_pair_adjustments (sk_typeface_t typeface, UInt16* glyphs, Int32 count, Int32* adjustments);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12059,8 +16456,13 @@ namespace SkiaSharp
 
 		// size_t sk_typeface_get_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag, size_t offset, size_t length, void* data)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_typeface_get_table_data (sk_typeface_t typeface, UInt32 tag, /* size_t */ IntPtr offset, /* size_t */ IntPtr length, void* data);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_typeface_get_table_data (sk_typeface_t typeface, UInt32 tag, /* size_t */ IntPtr offset, /* size_t */ IntPtr length, void* data);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12073,8 +16475,13 @@ namespace SkiaSharp
 
 		// size_t sk_typeface_get_table_size(const sk_typeface_t* typeface, sk_font_table_tag_t tag)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_typeface_get_table_size (sk_typeface_t typeface, UInt32 tag);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_typeface_get_table_size (sk_typeface_t typeface, UInt32 tag);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12087,8 +16494,13 @@ namespace SkiaSharp
 
 		// int sk_typeface_get_table_tags(const sk_typeface_t* typeface, sk_font_table_tag_t[-1] tags)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_typeface_get_table_tags (sk_typeface_t typeface, UInt32* tags);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_table_tags (sk_typeface_t typeface, UInt32* tags);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12101,8 +16513,13 @@ namespace SkiaSharp
 
 		// int sk_typeface_get_units_per_em(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_typeface_get_units_per_em (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_units_per_em (sk_typeface_t typeface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12115,9 +16532,15 @@ namespace SkiaSharp
 
 		// bool sk_typeface_is_fixed_pitch(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_typeface_is_fixed_pitch (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_typeface_is_fixed_pitch (sk_typeface_t typeface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12131,8 +16554,13 @@ namespace SkiaSharp
 
 		// sk_stream_asset_t* sk_typeface_open_stream(const sk_typeface_t* typeface, int* ttcIndex)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_stream_asset_t sk_typeface_open_stream (sk_typeface_t typeface, Int32* ttcIndex);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_asset_t sk_typeface_open_stream (sk_typeface_t typeface, Int32* ttcIndex);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12145,8 +16573,13 @@ namespace SkiaSharp
 
 		// sk_typeface_t* sk_typeface_ref_default()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_typeface_ref_default ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_ref_default ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12159,8 +16592,13 @@ namespace SkiaSharp
 
 		// uint16_t sk_typeface_unichar_to_glyph(const sk_typeface_t* typeface, const int32_t unichar)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial UInt16 sk_typeface_unichar_to_glyph (sk_typeface_t typeface, Int32 unichar);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt16 sk_typeface_unichar_to_glyph (sk_typeface_t typeface, Int32 unichar);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12173,8 +16611,13 @@ namespace SkiaSharp
 
 		// void sk_typeface_unichars_to_glyphs(const sk_typeface_t* typeface, const int32_t[-1] unichars, int count, uint16_t[-1] glyphs)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_typeface_unichars_to_glyphs (sk_typeface_t typeface, Int32* unichars, Int32 count, UInt16* glyphs);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_typeface_unichars_to_glyphs (sk_typeface_t typeface, Int32* unichars, Int32 count, UInt16* glyphs);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12187,8 +16630,13 @@ namespace SkiaSharp
 
 		// void sk_typeface_unref(sk_typeface_t* typeface)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_typeface_unref (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_typeface_unref (sk_typeface_t typeface);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12205,8 +16653,13 @@ namespace SkiaSharp
 
 		// sk_vertices_t* sk_vertices_make_copy(sk_vertices_vertex_mode_t vmode, int vertexCount, const sk_point_t* positions, const sk_point_t* texs, const sk_color_t* colors, int indexCount, const uint16_t* indices)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_vertices_t sk_vertices_make_copy (SKVertexMode vmode, Int32 vertexCount, SKPoint* positions, SKPoint* texs, UInt32* colors, Int32 indexCount, UInt16* indices);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_vertices_t sk_vertices_make_copy (SKVertexMode vmode, Int32 vertexCount, SKPoint* positions, SKPoint* texs, UInt32* colors, Int32 indexCount, UInt16* indices);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12219,8 +16672,13 @@ namespace SkiaSharp
 
 		// void sk_vertices_ref(sk_vertices_t* cvertices)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_vertices_ref (sk_vertices_t cvertices);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_vertices_ref (sk_vertices_t cvertices);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12233,8 +16691,13 @@ namespace SkiaSharp
 
 		// void sk_vertices_unref(sk_vertices_t* cvertices)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_vertices_unref (sk_vertices_t cvertices);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_vertices_unref (sk_vertices_t cvertices);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12251,8 +16714,13 @@ namespace SkiaSharp
 
 		// sk_compatpaint_t* sk_compatpaint_clone(const sk_compatpaint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_compatpaint_t sk_compatpaint_clone (sk_compatpaint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_compatpaint_t sk_compatpaint_clone (sk_compatpaint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12265,8 +16733,13 @@ namespace SkiaSharp
 
 		// void sk_compatpaint_delete(sk_compatpaint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_compatpaint_delete (sk_compatpaint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_compatpaint_delete (sk_compatpaint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12279,8 +16752,13 @@ namespace SkiaSharp
 
 		// int sk_compatpaint_get_filter_quality(const sk_compatpaint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_compatpaint_get_filter_quality (sk_compatpaint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_compatpaint_get_filter_quality (sk_compatpaint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12293,8 +16771,13 @@ namespace SkiaSharp
 
 		// sk_font_t* sk_compatpaint_get_font(sk_compatpaint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_font_t sk_compatpaint_get_font (sk_compatpaint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_font_t sk_compatpaint_get_font (sk_compatpaint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12307,9 +16790,15 @@ namespace SkiaSharp
 
 		// bool sk_compatpaint_get_lcd_render_text(const sk_compatpaint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_compatpaint_get_lcd_render_text (sk_compatpaint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_compatpaint_get_lcd_render_text (sk_compatpaint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12323,8 +16812,13 @@ namespace SkiaSharp
 
 		// sk_text_align_t sk_compatpaint_get_text_align(const sk_compatpaint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKTextAlign sk_compatpaint_get_text_align (sk_compatpaint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKTextAlign sk_compatpaint_get_text_align (sk_compatpaint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12337,8 +16831,13 @@ namespace SkiaSharp
 
 		// sk_text_encoding_t sk_compatpaint_get_text_encoding(const sk_compatpaint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKTextEncoding sk_compatpaint_get_text_encoding (sk_compatpaint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKTextEncoding sk_compatpaint_get_text_encoding (sk_compatpaint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12351,8 +16850,13 @@ namespace SkiaSharp
 
 		// sk_font_t* sk_compatpaint_make_font(sk_compatpaint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_font_t sk_compatpaint_make_font (sk_compatpaint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_font_t sk_compatpaint_make_font (sk_compatpaint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12365,8 +16869,13 @@ namespace SkiaSharp
 
 		// sk_compatpaint_t* sk_compatpaint_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_compatpaint_t sk_compatpaint_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_compatpaint_t sk_compatpaint_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12379,8 +16888,13 @@ namespace SkiaSharp
 
 		// sk_compatpaint_t* sk_compatpaint_new_with_font(const sk_font_t* font)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_compatpaint_t sk_compatpaint_new_with_font (sk_font_t font);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_compatpaint_t sk_compatpaint_new_with_font (sk_font_t font);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12393,8 +16907,13 @@ namespace SkiaSharp
 
 		// void sk_compatpaint_reset(sk_compatpaint_t* paint)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_compatpaint_reset (sk_compatpaint_t paint);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_compatpaint_reset (sk_compatpaint_t paint);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12407,8 +16926,13 @@ namespace SkiaSharp
 
 		// void sk_compatpaint_set_filter_quality(sk_compatpaint_t* paint, int quality)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_compatpaint_set_filter_quality (sk_compatpaint_t paint, Int32 quality);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_compatpaint_set_filter_quality (sk_compatpaint_t paint, Int32 quality);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12421,8 +16945,13 @@ namespace SkiaSharp
 
 		// void sk_compatpaint_set_is_antialias(sk_compatpaint_t* paint, bool antialias)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_compatpaint_set_is_antialias (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool antialias);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_compatpaint_set_is_antialias (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool antialias);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12435,8 +16964,13 @@ namespace SkiaSharp
 
 		// void sk_compatpaint_set_lcd_render_text(sk_compatpaint_t* paint, bool lcdRenderText)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_compatpaint_set_lcd_render_text (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool lcdRenderText);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_compatpaint_set_lcd_render_text (sk_compatpaint_t paint, [MarshalAs (UnmanagedType.I1)] bool lcdRenderText);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12449,8 +16983,13 @@ namespace SkiaSharp
 
 		// void sk_compatpaint_set_text_align(sk_compatpaint_t* paint, sk_text_align_t align)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_compatpaint_set_text_align (sk_compatpaint_t paint, SKTextAlign align);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_compatpaint_set_text_align (sk_compatpaint_t paint, SKTextAlign align);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12463,8 +17002,13 @@ namespace SkiaSharp
 
 		// void sk_compatpaint_set_text_encoding(sk_compatpaint_t* paint, sk_text_encoding_t encoding)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_compatpaint_set_text_encoding (sk_compatpaint_t paint, SKTextEncoding encoding);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_compatpaint_set_text_encoding (sk_compatpaint_t paint, SKTextEncoding encoding);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12481,8 +17025,13 @@ namespace SkiaSharp
 
 		// sk_manageddrawable_t* sk_manageddrawable_new(void* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_manageddrawable_t sk_manageddrawable_new (void* context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_manageddrawable_t sk_manageddrawable_new (void* context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12495,8 +17044,13 @@ namespace SkiaSharp
 
 		// void sk_manageddrawable_set_procs(sk_manageddrawable_procs_t procs)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_manageddrawable_set_procs (SKManagedDrawableDelegates procs);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_manageddrawable_set_procs (SKManagedDrawableDelegates procs);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12509,8 +17063,13 @@ namespace SkiaSharp
 
 		// void sk_manageddrawable_unref(sk_manageddrawable_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_manageddrawable_unref (sk_manageddrawable_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_manageddrawable_unref (sk_manageddrawable_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12527,8 +17086,13 @@ namespace SkiaSharp
 
 		// void sk_managedstream_destroy(sk_stream_managedstream_t* s)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_managedstream_destroy (sk_stream_managedstream_t s);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_managedstream_destroy (sk_stream_managedstream_t s);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12541,8 +17105,13 @@ namespace SkiaSharp
 
 		// sk_stream_managedstream_t* sk_managedstream_new(void* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_stream_managedstream_t sk_managedstream_new (void* context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_managedstream_t sk_managedstream_new (void* context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12555,8 +17124,13 @@ namespace SkiaSharp
 
 		// void sk_managedstream_set_procs(sk_managedstream_procs_t procs)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_managedstream_set_procs (SKManagedStreamDelegates procs);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_managedstream_set_procs (SKManagedStreamDelegates procs);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12569,8 +17143,13 @@ namespace SkiaSharp
 
 		// void sk_managedwstream_destroy(sk_wstream_managedstream_t* s)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_managedwstream_destroy (sk_wstream_managedstream_t s);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_managedwstream_destroy (sk_wstream_managedstream_t s);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12583,8 +17162,13 @@ namespace SkiaSharp
 
 		// sk_wstream_managedstream_t* sk_managedwstream_new(void* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_wstream_managedstream_t sk_managedwstream_new (void* context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_wstream_managedstream_t sk_managedwstream_new (void* context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12597,8 +17181,13 @@ namespace SkiaSharp
 
 		// void sk_managedwstream_set_procs(sk_managedwstream_procs_t procs)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_managedwstream_set_procs (SKManagedWStreamDelegates procs);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_managedwstream_set_procs (SKManagedWStreamDelegates procs);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12615,8 +17204,13 @@ namespace SkiaSharp
 
 		// void sk_managedtracememorydump_delete(sk_managedtracememorydump_t*)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_managedtracememorydump_delete (sk_managedtracememorydump_t param0);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_managedtracememorydump_delete (sk_managedtracememorydump_t param0);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12629,8 +17223,13 @@ namespace SkiaSharp
 
 		// sk_managedtracememorydump_t* sk_managedtracememorydump_new(bool detailed, bool dumpWrapped, void* context)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_managedtracememorydump_t sk_managedtracememorydump_new ([MarshalAs (UnmanagedType.I1)] bool detailed, [MarshalAs (UnmanagedType.I1)] bool dumpWrapped, void* context);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_managedtracememorydump_t sk_managedtracememorydump_new ([MarshalAs (UnmanagedType.I1)] bool detailed, [MarshalAs (UnmanagedType.I1)] bool dumpWrapped, void* context);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12643,8 +17242,13 @@ namespace SkiaSharp
 
 		// void sk_managedtracememorydump_set_procs(sk_managedtracememorydump_procs_t procs)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_managedtracememorydump_set_procs (SKManagedTraceMemoryDumpDelegates procs);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_managedtracememorydump_set_procs (SKManagedTraceMemoryDumpDelegates procs);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -12663,6 +17267,7 @@ namespace SkiaSharp
 #endregion Functions
 
 #region Delegates
+#if !USE_LIBRARY_IMPORT
 
 namespace SkiaSharp {
 	// typedef void (*)()* gr_gl_func_ptr
@@ -12810,6 +17415,7 @@ namespace SkiaSharp {
 
 }
 
+#endif // !USE_LIBRARY_IMPORT
 #endregion
 
 #region Structs
@@ -12838,7 +17444,9 @@ namespace SkiaSharp {
 		public Int32 fBufferMapThreshold;
 
 		public readonly bool Equals (GRContextOptionsNative obj) =>
+#pragma warning disable CS8909
 			fAvoidStencilBuffers == obj.fAvoidStencilBuffers && fRuntimeProgramCacheSize == obj.fRuntimeProgramCacheSize && fGlyphCacheTextureMaximumBytes == obj.fGlyphCacheTextureMaximumBytes && fAllowPathMaskCaching == obj.fAllowPathMaskCaching && fDoManualMipmapping == obj.fDoManualMipmapping && fBufferMapThreshold == obj.fBufferMapThreshold;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GRContextOptionsNative f && Equals (f);
@@ -12986,7 +17594,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (GRGlFramebufferInfo obj) =>
+#pragma warning disable CS8909
 			fFBOID == obj.fFBOID && fFormat == obj.fFormat && fProtected == obj.fProtected;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GRGlFramebufferInfo f && Equals (f);
@@ -13040,7 +17650,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (GRGlTextureInfo obj) =>
+#pragma warning disable CS8909
 			fTarget == obj.fTarget && fID == obj.fID && fFormat == obj.fFormat && fProtected == obj.fProtected;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GRGlTextureInfo f && Equals (f);
@@ -13070,7 +17682,9 @@ namespace SkiaSharp {
 		public void* fTexture;
 
 		public readonly bool Equals (GRMtlTextureInfoNative obj) =>
+#pragma warning disable CS8909
 			fTexture == obj.fTexture;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GRMtlTextureInfoNative f && Equals (f);
@@ -13132,7 +17746,9 @@ namespace SkiaSharp {
 		private Byte fUsesSystemHeap;
 
 		public readonly bool Equals (GRVkAlloc obj) =>
+#pragma warning disable CS8909
 			fMemory == obj.fMemory && fOffset == obj.fOffset && fSize == obj.fSize && fFlags == obj.fFlags && fBackendMemory == obj.fBackendMemory && fUsesSystemHeap == obj.fUsesSystemHeap;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GRVkAlloc f && Equals (f);
@@ -13203,7 +17819,11 @@ namespace SkiaSharp {
 		public gr_vk_memory_allocator_t fMemoryAllocator;
 
 		// public gr_vk_get_proc fGetProc
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <void*, /* char */ void*, vk_instance_t, vk_device_t, IntPtr> fGetProc;
+#else
 		public GRVkGetProcProxyDelegate fGetProc;
+#endif
 
 		// public void* fGetProcUserData
 		public void* fGetProcUserData;
@@ -13215,7 +17835,9 @@ namespace SkiaSharp {
 		public Byte fProtectedContext;
 
 		public readonly bool Equals (GRVkBackendContextNative obj) =>
+#pragma warning disable CS8909
 			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMinAPIVersion == obj.fMinAPIVersion && fInstanceVersion == obj.fInstanceVersion && fMaxAPIVersion == obj.fMaxAPIVersion && fExtensions == obj.fExtensions && fVkExtensions == obj.fVkExtensions && fFeatures == obj.fFeatures && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fOwnsInstanceAndDevice == obj.fOwnsInstanceAndDevice && fProtectedContext == obj.fProtectedContext;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GRVkBackendContextNative f && Equals (f);
@@ -13340,7 +17962,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (GRVkImageInfo obj) =>
+#pragma warning disable CS8909
 			fImage == obj.fImage && fAlloc == obj.fAlloc && fImageTiling == obj.fImageTiling && fImageLayout == obj.fImageLayout && fFormat == obj.fFormat && fImageUsageFlags == obj.fImageUsageFlags && fSampleCount == obj.fSampleCount && fLevelCount == obj.fLevelCount && fCurrentQueueFamily == obj.fCurrentQueueFamily && fProtected == obj.fProtected && fYcbcrConversionInfo == obj.fYcbcrConversionInfo && fSharingMode == obj.fSharingMode;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GRVkImageInfo f && Equals (f);
@@ -13438,7 +18062,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (GrVkYcbcrConversionInfo obj) =>
+#pragma warning disable CS8909
 			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fFormatFeatures == obj.fFormatFeatures;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GrVkYcbcrConversionInfo f && Equals (f);
@@ -13526,7 +18152,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKCodecFrameInfo obj) =>
+#pragma warning disable CS8909
 			fRequiredFrame == obj.fRequiredFrame && fDuration == obj.fDuration && fFullyReceived == obj.fFullyReceived && fAlphaType == obj.fAlphaType && fHasAlphaWithinBounds == obj.fHasAlphaWithinBounds && fDisposalMethod == obj.fDisposalMethod && fBlend == obj.fBlend && fFrameRect == obj.fFrameRect;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKCodecFrameInfo f && Equals (f);
@@ -13569,7 +18197,9 @@ namespace SkiaSharp {
 		public Int32 fPriorFrame;
 
 		public readonly bool Equals (SKCodecOptionsInternal obj) =>
+#pragma warning disable CS8909
 			fZeroInitialized == obj.fZeroInitialized && fSubset == obj.fSubset && fFrameIndex == obj.fFrameIndex && fPriorFrame == obj.fPriorFrame;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKCodecOptionsInternal f && Equals (f);
@@ -13612,7 +18242,9 @@ namespace SkiaSharp {
 		public readonly Single Alpha => fA;
 
 		public readonly bool Equals (SKColorF obj) =>
+#pragma warning disable CS8909
 			fR == obj.fR && fG == obj.fG && fB == obj.fB && fA == obj.fA;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKColorF f && Equals (f);
@@ -13695,7 +18327,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKColorSpacePrimaries obj) =>
+#pragma warning disable CS8909
 			fRX == obj.fRX && fRY == obj.fRY && fGX == obj.fGX && fGY == obj.fGY && fBX == obj.fBX && fBY == obj.fBY && fWX == obj.fWX && fWY == obj.fWY;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKColorSpacePrimaries f && Equals (f);
@@ -13775,7 +18409,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKColorSpaceTransferFn obj) =>
+#pragma warning disable CS8909
 			fG == obj.fG && fA == obj.fA && fB == obj.fB && fC == obj.fC && fD == obj.fD && fE == obj.fE && fF == obj.fF;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKColorSpaceTransferFn f && Equals (f);
@@ -13832,7 +18468,9 @@ namespace SkiaSharp {
 		private Single fM22;
 
 		public readonly bool Equals (SKColorSpaceXyz obj) =>
+#pragma warning disable CS8909
 			fM00 == obj.fM00 && fM01 == obj.fM01 && fM02 == obj.fM02 && fM10 == obj.fM10 && fM11 == obj.fM11 && fM12 == obj.fM12 && fM20 == obj.fM20 && fM21 == obj.fM21 && fM22 == obj.fM22;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKColorSpaceXyz f && Equals (f);
@@ -13872,7 +18510,9 @@ namespace SkiaSharp {
 		public readonly Single C => fC;
 
 		public readonly bool Equals (SKCubicResampler obj) =>
+#pragma warning disable CS8909
 			fB == obj.fB && fC == obj.fC;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKCubicResampler f && Equals (f);
@@ -13930,7 +18570,9 @@ namespace SkiaSharp {
 		public Int32 fEncodingQuality;
 
 		public readonly bool Equals (SKDocumentPdfMetadataInternal obj) =>
+#pragma warning disable CS8909
 			fTitle == obj.fTitle && fAuthor == obj.fAuthor && fSubject == obj.fSubject && fKeywords == obj.fKeywords && fCreator == obj.fCreator && fProducer == obj.fProducer && fCreation == obj.fCreation && fModified == obj.fModified && fRasterDPI == obj.fRasterDPI && fPDFA == obj.fPDFA && fEncodingQuality == obj.fEncodingQuality;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKDocumentPdfMetadataInternal f && Equals (f);
@@ -14012,7 +18654,9 @@ namespace SkiaSharp {
 		private Single fStrikeoutPosition;
 
 		public readonly bool Equals (SKFontMetrics obj) =>
+#pragma warning disable CS8909
 			fFlags == obj.fFlags && fTop == obj.fTop && fAscent == obj.fAscent && fDescent == obj.fDescent && fBottom == obj.fBottom && fLeading == obj.fLeading && fAvgCharWidth == obj.fAvgCharWidth && fMaxCharWidth == obj.fMaxCharWidth && fXMin == obj.fXMin && fXMax == obj.fXMax && fXHeight == obj.fXHeight && fCapHeight == obj.fCapHeight && fUnderlineThickness == obj.fUnderlineThickness && fUnderlinePosition == obj.fUnderlinePosition && fStrikeoutThickness == obj.fStrikeoutThickness && fStrikeoutPosition == obj.fStrikeoutPosition;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKFontMetrics f && Equals (f);
@@ -14072,7 +18716,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKHighContrastConfig obj) =>
+#pragma warning disable CS8909
 			fGrayscale == obj.fGrayscale && fInvertStyle == obj.fInvertStyle && fContrast == obj.fContrast;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKHighContrastConfig f && Equals (f);
@@ -14113,7 +18759,9 @@ namespace SkiaSharp {
 		public SKAlphaType alphaType;
 
 		public readonly bool Equals (SKImageInfoNative obj) =>
+#pragma warning disable CS8909
 			colorspace == obj.colorspace && width == obj.width && height == obj.height && colorType == obj.colorType && alphaType == obj.alphaType;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKImageInfoNative f && Equals (f);
@@ -14155,7 +18803,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKPointI obj) =>
+#pragma warning disable CS8909
 			x == obj.x && y == obj.y;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKPointI f && Equals (f);
@@ -14208,7 +18858,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKRectI obj) =>
+#pragma warning disable CS8909
 			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKRectI f && Equals (f);
@@ -14249,7 +18901,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKSizeI obj) =>
+#pragma warning disable CS8909
 			w == obj.w && h == obj.h;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKSizeI f && Equals (f);
@@ -14292,7 +18946,9 @@ namespace SkiaSharp {
 		private readonly /* char */ void* fICCProfileDescription;
 
 		public readonly bool Equals (SKJpegEncoderOptions obj) =>
+#pragma warning disable CS8909
 			fQuality == obj.fQuality && fDownsample == obj.fDownsample && fAlphaOption == obj.fAlphaOption && xmpMetadata == obj.xmpMetadata && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKJpegEncoderOptions f && Equals (f);
@@ -14342,7 +18998,9 @@ namespace SkiaSharp {
 		public UInt32* fColors;
 
 		public readonly bool Equals (SKLatticeInternal obj) =>
+#pragma warning disable CS8909
 			fXDivs == obj.fXDivs && fYDivs == obj.fYDivs && fRectTypes == obj.fRectTypes && fXCount == obj.fXCount && fYCount == obj.fYCount && fBounds == obj.fBounds && fColors == obj.fColors;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKLatticeInternal f && Equals (f);
@@ -14372,22 +19030,44 @@ namespace SkiaSharp {
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKManagedDrawableDelegates : IEquatable<SKManagedDrawableDelegates> {
 		// public sk_manageddrawable_draw_proc fDraw
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, sk_canvas_t, void> fDraw;
+#else
 		public SKManagedDrawableDrawProxyDelegate fDraw;
+#endif
 
 		// public sk_manageddrawable_getBounds_proc fGetBounds
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, SKRect*, void> fGetBounds;
+#else
 		public SKManagedDrawableGetBoundsProxyDelegate fGetBounds;
+#endif
 
 		// public sk_manageddrawable_approximateBytesUsed_proc fApproximateBytesUsed
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, /* size_t */ IntPtr> fApproximateBytesUsed;
+#else
 		public SKManagedDrawableApproximateBytesUsedProxyDelegate fApproximateBytesUsed;
+#endif
 
 		// public sk_manageddrawable_makePictureSnapshot_proc fMakePictureSnapshot
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, sk_picture_t> fMakePictureSnapshot;
+#else
 		public SKManagedDrawableMakePictureSnapshotProxyDelegate fMakePictureSnapshot;
+#endif
 
 		// public sk_manageddrawable_destroy_proc fDestroy
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, void> fDestroy;
+#else
 		public SKManagedDrawableDestroyProxyDelegate fDestroy;
+#endif
 
 		public readonly bool Equals (SKManagedDrawableDelegates obj) =>
+#pragma warning disable CS8909
 			fDraw == obj.fDraw && fGetBounds == obj.fGetBounds && fApproximateBytesUsed == obj.fApproximateBytesUsed && fMakePictureSnapshot == obj.fMakePictureSnapshot && fDestroy == obj.fDestroy;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKManagedDrawableDelegates f && Equals (f);
@@ -14415,46 +19095,100 @@ namespace SkiaSharp {
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKManagedStreamDelegates : IEquatable<SKManagedStreamDelegates> {
 		// public sk_managedstream_read_proc fRead
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, void*, /* size_t */ IntPtr, /* size_t */ IntPtr> fRead;
+#else
 		public SKManagedStreamReadProxyDelegate fRead;
+#endif
 
 		// public sk_managedstream_peek_proc fPeek
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, void*, /* size_t */ IntPtr, /* size_t */ IntPtr> fPeek;
+#else
 		public SKManagedStreamPeekProxyDelegate fPeek;
+#endif
 
 		// public sk_managedstream_isAtEnd_proc fIsAtEnd
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> fIsAtEnd;
+#else
 		public SKManagedStreamIsAtEndProxyDelegate fIsAtEnd;
+#endif
 
 		// public sk_managedstream_hasPosition_proc fHasPosition
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> fHasPosition;
+#else
 		public SKManagedStreamHasPositionProxyDelegate fHasPosition;
+#endif
 
 		// public sk_managedstream_hasLength_proc fHasLength
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> fHasLength;
+#else
 		public SKManagedStreamHasLengthProxyDelegate fHasLength;
+#endif
 
 		// public sk_managedstream_rewind_proc fRewind
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> fRewind;
+#else
 		public SKManagedStreamRewindProxyDelegate fRewind;
+#endif
 
 		// public sk_managedstream_getPosition_proc fGetPosition
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr> fGetPosition;
+#else
 		public SKManagedStreamGetPositionProxyDelegate fGetPosition;
+#endif
 
 		// public sk_managedstream_seek_proc fSeek
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr, bool> fSeek;
+#else
 		public SKManagedStreamSeekProxyDelegate fSeek;
+#endif
 
 		// public sk_managedstream_move_proc fMove
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, Int32, bool> fMove;
+#else
 		public SKManagedStreamMoveProxyDelegate fMove;
+#endif
 
 		// public sk_managedstream_getLength_proc fGetLength
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr> fGetLength;
+#else
 		public SKManagedStreamGetLengthProxyDelegate fGetLength;
+#endif
 
 		// public sk_managedstream_duplicate_proc fDuplicate
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, sk_stream_managedstream_t> fDuplicate;
+#else
 		public SKManagedStreamDuplicateProxyDelegate fDuplicate;
+#endif
 
 		// public sk_managedstream_fork_proc fFork
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, sk_stream_managedstream_t> fFork;
+#else
 		public SKManagedStreamForkProxyDelegate fFork;
+#endif
 
 		// public sk_managedstream_destroy_proc fDestroy
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, void> fDestroy;
+#else
 		public SKManagedStreamDestroyProxyDelegate fDestroy;
+#endif
 
 		public readonly bool Equals (SKManagedStreamDelegates obj) =>
+#pragma warning disable CS8909
 			fRead == obj.fRead && fPeek == obj.fPeek && fIsAtEnd == obj.fIsAtEnd && fHasPosition == obj.fHasPosition && fHasLength == obj.fHasLength && fRewind == obj.fRewind && fGetPosition == obj.fGetPosition && fSeek == obj.fSeek && fMove == obj.fMove && fGetLength == obj.fGetLength && fDuplicate == obj.fDuplicate && fFork == obj.fFork && fDestroy == obj.fDestroy;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKManagedStreamDelegates f && Equals (f);
@@ -14490,13 +19224,23 @@ namespace SkiaSharp {
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKManagedTraceMemoryDumpDelegates : IEquatable<SKManagedTraceMemoryDumpDelegates> {
 		// public sk_managedtraceMemoryDump_dumpNumericValue_proc fDumpNumericValue
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_managedtracememorydump_t, void*, /* char */ void*, /* char */ void*, /* char */ void*, UInt64, void> fDumpNumericValue;
+#else
 		public SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate fDumpNumericValue;
+#endif
 
 		// public sk_managedtraceMemoryDump_dumpStringValue_proc fDumpStringValue
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_managedtracememorydump_t, void*, /* char */ void*, /* char */ void*, /* char */ void*, void> fDumpStringValue;
+#else
 		public SKManagedTraceMemoryDumpDumpStringValueProxyDelegate fDumpStringValue;
+#endif
 
 		public readonly bool Equals (SKManagedTraceMemoryDumpDelegates obj) =>
+#pragma warning disable CS8909
 			fDumpNumericValue == obj.fDumpNumericValue && fDumpStringValue == obj.fDumpStringValue;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKManagedTraceMemoryDumpDelegates f && Equals (f);
@@ -14521,19 +19265,37 @@ namespace SkiaSharp {
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKManagedWStreamDelegates : IEquatable<SKManagedWStreamDelegates> {
 		// public sk_managedwstream_write_proc fWrite
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void*, /* size_t */ IntPtr, bool> fWrite;
+#else
 		public SKManagedWStreamWriteProxyDelegate fWrite;
+#endif
 
 		// public sk_managedwstream_flush_proc fFlush
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void> fFlush;
+#else
 		public SKManagedWStreamFlushProxyDelegate fFlush;
+#endif
 
 		// public sk_managedwstream_bytesWritten_proc fBytesWritten
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, /* size_t */ IntPtr> fBytesWritten;
+#else
 		public SKManagedWStreamBytesWrittenProxyDelegate fBytesWritten;
+#endif
 
 		// public sk_managedwstream_destroy_proc fDestroy
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void> fDestroy;
+#else
 		public SKManagedWStreamDestroyProxyDelegate fDestroy;
+#endif
 
 		public readonly bool Equals (SKManagedWStreamDelegates obj) =>
+#pragma warning disable CS8909
 			fWrite == obj.fWrite && fFlush == obj.fFlush && fBytesWritten == obj.fBytesWritten && fDestroy == obj.fDestroy;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKManagedWStreamDelegates f && Equals (f);
@@ -14623,7 +19385,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKMatrix obj) =>
+#pragma warning disable CS8909
 			scaleX == obj.scaleX && skewX == obj.skewX && transX == obj.transX && skewY == obj.skewY && scaleY == obj.scaleY && transY == obj.transY && persp0 == obj.persp0 && persp1 == obj.persp1 && persp2 == obj.persp2;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKMatrix f && Equals (f);
@@ -14767,7 +19531,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKMatrix44 obj) =>
+#pragma warning disable CS8909
 			m00 == obj.m00 && m01 == obj.m01 && m02 == obj.m02 && m03 == obj.m03 && m10 == obj.m10 && m11 == obj.m11 && m12 == obj.m12 && m13 == obj.m13 && m20 == obj.m20 && m21 == obj.m21 && m22 == obj.m22 && m23 == obj.m23 && m30 == obj.m30 && m31 == obj.m31 && m32 == obj.m32 && m33 == obj.m33;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKMatrix44 f && Equals (f);
@@ -14821,7 +19587,9 @@ namespace SkiaSharp {
 		private readonly /* char */ void* fICCProfileDescription;
 
 		public readonly bool Equals (SKPngEncoderOptions obj) =>
+#pragma warning disable CS8909
 			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fComments == obj.fComments && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKPngEncoderOptions f && Equals (f);
@@ -14863,7 +19631,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKPoint obj) =>
+#pragma warning disable CS8909
 			x == obj.x && y == obj.y;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKPoint f && Equals (f);
@@ -14909,7 +19679,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKPoint3 obj) =>
+#pragma warning disable CS8909
 			x == obj.x && y == obj.y && z == obj.z;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKPoint3 f && Equals (f);
@@ -14963,7 +19735,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKRect obj) =>
+#pragma warning disable CS8909
 			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKRect f && Equals (f);
@@ -15018,7 +19792,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKRotationScaleMatrix obj) =>
+#pragma warning disable CS8909
 			fSCos == obj.fSCos && fSSin == obj.fSSin && fTX == obj.fTX && fTY == obj.fTY;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKRotationScaleMatrix f && Equals (f);
@@ -15057,7 +19833,9 @@ namespace SkiaSharp {
 		public Int32 fIndex;
 
 		public readonly bool Equals (SKRuntimeEffectChildNative obj) =>
+#pragma warning disable CS8909
 			fName == obj.fName && fNameLength == obj.fNameLength && fType == obj.fType && fIndex == obj.fIndex;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKRuntimeEffectChildNative f && Equals (f);
@@ -15102,7 +19880,9 @@ namespace SkiaSharp {
 		public SKRuntimeEffectUniformFlagsNative fFlags;
 
 		public readonly bool Equals (SKRuntimeEffectUniformNative obj) =>
+#pragma warning disable CS8909
 			fName == obj.fName && fNameLength == obj.fNameLength && fOffset == obj.fOffset && fType == obj.fType && fCount == obj.fCount && fFlags == obj.fFlags;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKRuntimeEffectUniformNative f && Equals (f);
@@ -15151,7 +19931,9 @@ namespace SkiaSharp {
 		public readonly SKMipmapMode Mipmap => fMipmap;
 
 		public readonly bool Equals (SKSamplingOptions obj) =>
+#pragma warning disable CS8909
 			fMaxAniso == obj.fMaxAniso && fUseCubic == obj.fUseCubic && fCubic == obj.fCubic && fFilter == obj.fFilter && fMipmap == obj.fMipmap;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKSamplingOptions f && Equals (f);
@@ -15193,7 +19975,9 @@ namespace SkiaSharp {
 		}
 
 		public readonly bool Equals (SKSize obj) =>
+#pragma warning disable CS8909
 			w == obj.w && h == obj.h;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKSize f && Equals (f);
@@ -15230,7 +20014,9 @@ namespace SkiaSharp {
 		public void* clusters;
 
 		public readonly bool Equals (SKRunBufferInternal obj) =>
+#pragma warning disable CS8909
 			glyphs == obj.glyphs && pos == obj.pos && utf8text == obj.utf8text && clusters == obj.clusters;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKRunBufferInternal f && Equals (f);
@@ -15281,7 +20067,9 @@ namespace SkiaSharp {
 		public Byte fSecond;
 
 		public readonly bool Equals (SKTimeDateTimeInternal obj) =>
+#pragma warning disable CS8909
 			fTimeZoneMinutes == obj.fTimeZoneMinutes && fYear == obj.fYear && fMonth == obj.fMonth && fDayOfWeek == obj.fDayOfWeek && fDay == obj.fDay && fHour == obj.fHour && fMinute == obj.fMinute && fSecond == obj.fSecond;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKTimeDateTimeInternal f && Equals (f);
@@ -15324,7 +20112,9 @@ namespace SkiaSharp {
 		private readonly /* char */ void* fICCProfileDescription;
 
 		public readonly bool Equals (SKWebpEncoderOptions obj) =>
+#pragma warning disable CS8909
 			fCompression == obj.fCompression && fQuality == obj.fQuality && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is SKWebpEncoderOptions f && Equals (f);
@@ -16091,6 +20881,352 @@ namespace SkiaSharp {
 		// LOSSLESS_SK_WEBPENCODER_COMPTRESSION = 1
 		Lossless = 1,
 	}
+}
+
+#endregion
+
+#region DelegateProxies
+
+namespace SkiaSharp {
+internal static unsafe partial class DelegateProxies { 
+	/// Proxy for gr_gl_get_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, /* char */ void*, IntPtr> GRGlGetProcProxy = &GRGlGetProcProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly GRGlGetProcProxyDelegate GRGlGetProcProxy = GRGlGetProcProxyImplementation;
+	[MonoPInvokeCallback (typeof (GRGlGetProcProxyDelegate))]
+#endif
+	private static partial IntPtr GRGlGetProcProxyImplementation(void* ctx,/* char */ void* name);
+
+	/// Proxy for gr_vk_get_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, /* char */ void*, vk_instance_t, vk_device_t, IntPtr> GRVkGetProcProxy = &GRVkGetProcProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly GRVkGetProcProxyDelegate GRVkGetProcProxy = GRVkGetProcProxyImplementation;
+	[MonoPInvokeCallback (typeof (GRVkGetProcProxyDelegate))]
+#endif
+	private static partial IntPtr GRVkGetProcProxyImplementation(void* ctx,/* char */ void* name,vk_instance_t instance,vk_device_t device);
+
+	/// Proxy for sk_bitmap_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void*, void> SKBitmapReleaseProxy = &SKBitmapReleaseProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKBitmapReleaseProxyDelegate SKBitmapReleaseProxy = SKBitmapReleaseProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKBitmapReleaseProxyDelegate))]
+#endif
+	private static partial void SKBitmapReleaseProxyImplementation(void* addr,void* context);
+
+	/// Proxy for sk_data_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void*, void> SKDataReleaseProxy = &SKDataReleaseProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKDataReleaseProxyDelegate SKDataReleaseProxy = SKDataReleaseProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKDataReleaseProxyDelegate))]
+#endif
+	private static partial void SKDataReleaseProxyImplementation(void* ptr,void* context);
+
+	/// Proxy for sk_glyph_path_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_path_t, SKMatrix*, void*, void> SKGlyphPathProxy = &SKGlyphPathProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKGlyphPathProxyDelegate SKGlyphPathProxy = SKGlyphPathProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]
+#endif
+	private static partial void SKGlyphPathProxyImplementation(sk_path_t pathOrNull,SKMatrix* matrix,void* context);
+
+	/// Proxy for sk_image_raster_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void*, void> SKImageRasterReleaseProxy = &SKImageRasterReleaseProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKImageRasterReleaseProxyDelegate SKImageRasterReleaseProxy = SKImageRasterReleaseProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKImageRasterReleaseProxyDelegate))]
+#endif
+	private static partial void SKImageRasterReleaseProxyImplementation(void* addr,void* context);
+
+	/// Proxy for sk_image_raster_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void*, void> SKImageRasterReleaseProxyForCoTaskMem = &SKImageRasterReleaseProxyImplementationForCoTaskMem;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKImageRasterReleaseProxyDelegate SKImageRasterReleaseProxyForCoTaskMem = SKImageRasterReleaseProxyImplementationForCoTaskMem;
+	[MonoPInvokeCallback (typeof (SKImageRasterReleaseProxyDelegate))]
+#endif
+	private static partial void SKImageRasterReleaseProxyImplementationForCoTaskMem(void* addr,void* context);
+
+	/// Proxy for sk_image_texture_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void> SKImageTextureReleaseProxy = &SKImageTextureReleaseProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKImageTextureReleaseProxyDelegate SKImageTextureReleaseProxy = SKImageTextureReleaseProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKImageTextureReleaseProxyDelegate))]
+#endif
+	private static partial void SKImageTextureReleaseProxyImplementation(void* context);
+
+	/// Proxy for sk_manageddrawable_approximateBytesUsed_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, /* size_t */ IntPtr> SKManagedDrawableApproximateBytesUsedProxy = &SKManagedDrawableApproximateBytesUsedProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedDrawableApproximateBytesUsedProxyDelegate SKManagedDrawableApproximateBytesUsedProxy = SKManagedDrawableApproximateBytesUsedProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedDrawableApproximateBytesUsedProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedDrawableApproximateBytesUsedProxyImplementation(sk_manageddrawable_t d,void* context);
+
+	/// Proxy for sk_manageddrawable_destroy_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, void> SKManagedDrawableDestroyProxy = &SKManagedDrawableDestroyProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedDrawableDestroyProxyDelegate SKManagedDrawableDestroyProxy = SKManagedDrawableDestroyProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedDrawableDestroyProxyDelegate))]
+#endif
+	private static partial void SKManagedDrawableDestroyProxyImplementation(sk_manageddrawable_t d,void* context);
+
+	/// Proxy for sk_manageddrawable_draw_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, sk_canvas_t, void> SKManagedDrawableDrawProxy = &SKManagedDrawableDrawProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedDrawableDrawProxyDelegate SKManagedDrawableDrawProxy = SKManagedDrawableDrawProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedDrawableDrawProxyDelegate))]
+#endif
+	private static partial void SKManagedDrawableDrawProxyImplementation(sk_manageddrawable_t d,void* context,sk_canvas_t ccanvas);
+
+	/// Proxy for sk_manageddrawable_getBounds_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, SKRect*, void> SKManagedDrawableGetBoundsProxy = &SKManagedDrawableGetBoundsProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedDrawableGetBoundsProxyDelegate SKManagedDrawableGetBoundsProxy = SKManagedDrawableGetBoundsProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedDrawableGetBoundsProxyDelegate))]
+#endif
+	private static partial void SKManagedDrawableGetBoundsProxyImplementation(sk_manageddrawable_t d,void* context,SKRect* rect);
+
+	/// Proxy for sk_manageddrawable_makePictureSnapshot_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_manageddrawable_t, void*, sk_picture_t> SKManagedDrawableMakePictureSnapshotProxy = &SKManagedDrawableMakePictureSnapshotProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedDrawableMakePictureSnapshotProxyDelegate SKManagedDrawableMakePictureSnapshotProxy = SKManagedDrawableMakePictureSnapshotProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedDrawableMakePictureSnapshotProxyDelegate))]
+#endif
+	private static partial sk_picture_t SKManagedDrawableMakePictureSnapshotProxyImplementation(sk_manageddrawable_t d,void* context);
+
+	/// Proxy for sk_managedstream_destroy_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, void> SKManagedStreamDestroyProxy = &SKManagedStreamDestroyProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamDestroyProxyDelegate SKManagedStreamDestroyProxy = SKManagedStreamDestroyProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamDestroyProxyDelegate))]
+#endif
+	private static partial void SKManagedStreamDestroyProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_duplicate_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, sk_stream_managedstream_t> SKManagedStreamDuplicateProxy = &SKManagedStreamDuplicateProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamDuplicateProxyDelegate SKManagedStreamDuplicateProxy = SKManagedStreamDuplicateProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamDuplicateProxyDelegate))]
+#endif
+	private static partial sk_stream_managedstream_t SKManagedStreamDuplicateProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_fork_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, sk_stream_managedstream_t> SKManagedStreamForkProxy = &SKManagedStreamForkProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamForkProxyDelegate SKManagedStreamForkProxy = SKManagedStreamForkProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamForkProxyDelegate))]
+#endif
+	private static partial sk_stream_managedstream_t SKManagedStreamForkProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_getLength_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr> SKManagedStreamGetLengthProxy = &SKManagedStreamGetLengthProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamGetLengthProxyDelegate SKManagedStreamGetLengthProxy = SKManagedStreamGetLengthProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamGetLengthProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedStreamGetLengthProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_getPosition_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr> SKManagedStreamGetPositionProxy = &SKManagedStreamGetPositionProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamGetPositionProxyDelegate SKManagedStreamGetPositionProxy = SKManagedStreamGetPositionProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamGetPositionProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedStreamGetPositionProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_hasLength_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> SKManagedStreamHasLengthProxy = &SKManagedStreamHasLengthProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamHasLengthProxyDelegate SKManagedStreamHasLengthProxy = SKManagedStreamHasLengthProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamHasLengthProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamHasLengthProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_hasPosition_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> SKManagedStreamHasPositionProxy = &SKManagedStreamHasPositionProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamHasPositionProxyDelegate SKManagedStreamHasPositionProxy = SKManagedStreamHasPositionProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamHasPositionProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamHasPositionProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_isAtEnd_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> SKManagedStreamIsAtEndProxy = &SKManagedStreamIsAtEndProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamIsAtEndProxyDelegate SKManagedStreamIsAtEndProxy = SKManagedStreamIsAtEndProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamIsAtEndProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamIsAtEndProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_move_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, Int32, bool> SKManagedStreamMoveProxy = &SKManagedStreamMoveProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamMoveProxyDelegate SKManagedStreamMoveProxy = SKManagedStreamMoveProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamMoveProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamMoveProxyImplementation(sk_stream_managedstream_t s,void* context,Int32 offset);
+
+	/// Proxy for sk_managedstream_peek_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, void*, /* size_t */ IntPtr, /* size_t */ IntPtr> SKManagedStreamPeekProxy = &SKManagedStreamPeekProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamPeekProxyDelegate SKManagedStreamPeekProxy = SKManagedStreamPeekProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamPeekProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedStreamPeekProxyImplementation(sk_stream_managedstream_t s,void* context,void* buffer,/* size_t */ IntPtr size);
+
+	/// Proxy for sk_managedstream_read_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, void*, /* size_t */ IntPtr, /* size_t */ IntPtr> SKManagedStreamReadProxy = &SKManagedStreamReadProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamReadProxyDelegate SKManagedStreamReadProxy = SKManagedStreamReadProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamReadProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedStreamReadProxyImplementation(sk_stream_managedstream_t s,void* context,void* buffer,/* size_t */ IntPtr size);
+
+	/// Proxy for sk_managedstream_rewind_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> SKManagedStreamRewindProxy = &SKManagedStreamRewindProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamRewindProxyDelegate SKManagedStreamRewindProxy = SKManagedStreamRewindProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamRewindProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamRewindProxyImplementation(sk_stream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedstream_seek_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr, bool> SKManagedStreamSeekProxy = &SKManagedStreamSeekProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedStreamSeekProxyDelegate SKManagedStreamSeekProxy = SKManagedStreamSeekProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedStreamSeekProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedStreamSeekProxyImplementation(sk_stream_managedstream_t s,void* context,/* size_t */ IntPtr position);
+
+	/// Proxy for sk_managedtraceMemoryDump_dumpNumericValue_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_managedtracememorydump_t, void*, /* char */ void*, /* char */ void*, /* char */ void*, UInt64, void> SKManagedTraceMemoryDumpDumpNumericValueProxy = &SKManagedTraceMemoryDumpDumpNumericValueProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate SKManagedTraceMemoryDumpDumpNumericValueProxy = SKManagedTraceMemoryDumpDumpNumericValueProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate))]
+#endif
+	private static partial void SKManagedTraceMemoryDumpDumpNumericValueProxyImplementation(sk_managedtracememorydump_t d,void* context,/* char */ void* dumpName,/* char */ void* valueName,/* char */ void* units,UInt64 value);
+
+	/// Proxy for sk_managedtraceMemoryDump_dumpStringValue_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_managedtracememorydump_t, void*, /* char */ void*, /* char */ void*, /* char */ void*, void> SKManagedTraceMemoryDumpDumpStringValueProxy = &SKManagedTraceMemoryDumpDumpStringValueProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedTraceMemoryDumpDumpStringValueProxyDelegate SKManagedTraceMemoryDumpDumpStringValueProxy = SKManagedTraceMemoryDumpDumpStringValueProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpStringValueProxyDelegate))]
+#endif
+	private static partial void SKManagedTraceMemoryDumpDumpStringValueProxyImplementation(sk_managedtracememorydump_t d,void* context,/* char */ void* dumpName,/* char */ void* valueName,/* char */ void* value);
+
+	/// Proxy for sk_managedwstream_bytesWritten_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, /* size_t */ IntPtr> SKManagedWStreamBytesWrittenProxy = &SKManagedWStreamBytesWrittenProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedWStreamBytesWrittenProxyDelegate SKManagedWStreamBytesWrittenProxy = SKManagedWStreamBytesWrittenProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedWStreamBytesWrittenProxyDelegate))]
+#endif
+	private static partial /* size_t */ IntPtr SKManagedWStreamBytesWrittenProxyImplementation(sk_wstream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedwstream_destroy_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void> SKManagedWStreamDestroyProxy = &SKManagedWStreamDestroyProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedWStreamDestroyProxyDelegate SKManagedWStreamDestroyProxy = SKManagedWStreamDestroyProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedWStreamDestroyProxyDelegate))]
+#endif
+	private static partial void SKManagedWStreamDestroyProxyImplementation(sk_wstream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedwstream_flush_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void> SKManagedWStreamFlushProxy = &SKManagedWStreamFlushProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedWStreamFlushProxyDelegate SKManagedWStreamFlushProxy = SKManagedWStreamFlushProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedWStreamFlushProxyDelegate))]
+#endif
+	private static partial void SKManagedWStreamFlushProxyImplementation(sk_wstream_managedstream_t s,void* context);
+
+	/// Proxy for sk_managedwstream_write_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <sk_wstream_managedstream_t, void*, void*, /* size_t */ IntPtr, bool> SKManagedWStreamWriteProxy = &SKManagedWStreamWriteProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKManagedWStreamWriteProxyDelegate SKManagedWStreamWriteProxy = SKManagedWStreamWriteProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKManagedWStreamWriteProxyDelegate))]
+#endif
+	[return: MarshalAs (UnmanagedType.I1)]
+	private static partial bool SKManagedWStreamWriteProxyImplementation(sk_wstream_managedstream_t s,void* context,void* buffer,/* size_t */ IntPtr size);
+
+	/// Proxy for sk_surface_raster_release_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, void*, void> SKSurfaceRasterReleaseProxy = &SKSurfaceRasterReleaseProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKSurfaceRasterReleaseProxyDelegate SKSurfaceRasterReleaseProxy = SKSurfaceRasterReleaseProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKSurfaceRasterReleaseProxyDelegate))]
+#endif
+	private static partial void SKSurfaceRasterReleaseProxyImplementation(void* addr,void* context);
+
+}
 }
 
 #endregion

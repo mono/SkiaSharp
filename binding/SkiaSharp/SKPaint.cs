@@ -277,7 +277,7 @@ namespace SkiaSharp
 		// Clone
 
 		public SKPaint Clone () =>
-			GetObject (SkiaApi.sk_paint_clone (Handle))!;
+			GetObject (SkiaApi.sk_compatpaint_clone (Handle))!;
 
 		// MeasureText
 

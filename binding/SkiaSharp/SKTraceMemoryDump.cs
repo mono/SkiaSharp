@@ -1,7 +1,6 @@
 ﻿#nullable disable
 
 using System;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -13,8 +12,8 @@ namespace SkiaSharp
 		static SKTraceMemoryDump ()
 		{
 			delegates = new SKManagedTraceMemoryDumpDelegates {
-				fDumpNumericValue = DumpNumericValueInternal,
-				fDumpStringValue = DumpStringValueInternal,
+				fDumpNumericValue = DelegateProxies.SKManagedTraceMemoryDumpDumpNumericValueProxy,
+				fDumpStringValue = DelegateProxies.SKManagedTraceMemoryDumpDumpStringValueProxy,
 			};
 
 			SkiaApi.sk_managedtracememorydump_set_procs (delegates);
@@ -39,35 +38,12 @@ namespace SkiaSharp
 			gch.Free ();
 		}
 
-		protected virtual void OnDumpNumericValue (string dumpName, string valueName, string units, ulong value)
+		protected internal virtual void OnDumpNumericValue (string dumpName, string valueName, string units, ulong value)
 		{
 		}
 
-		protected virtual void OnDumpStringValue (string dumpName, string valueName, string value)
+		protected internal virtual void OnDumpStringValue (string dumpName, string valueName, string value)
 		{
-		}
-
-		// impl
-
-		[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate))]
-		private static void DumpNumericValueInternal (IntPtr d, void* context, void* dumpName, void* valueName, void* units, ulong value)
-		{
-			var dump = DelegateProxies.GetUserData<SKTraceMemoryDump> ((IntPtr)context, out _);
-			dump.OnDumpNumericValue (
-				Marshal.PtrToStringAnsi ((IntPtr)dumpName),
-				Marshal.PtrToStringAnsi ((IntPtr)valueName),
-				Marshal.PtrToStringAnsi ((IntPtr)units),
-				value);
-		}
-
-		[MonoPInvokeCallback (typeof (SKManagedTraceMemoryDumpDumpStringValueProxyDelegate))]
-		private static void DumpStringValueInternal (IntPtr d, void* context, void* dumpName, void* valueName, void* value)
-		{
-			var dump = DelegateProxies.GetUserData<SKTraceMemoryDump> ((IntPtr)context, out _);
-			dump.OnDumpStringValue (
-				Marshal.PtrToStringAnsi ((IntPtr)dumpName),
-				Marshal.PtrToStringAnsi ((IntPtr)valueName),
-				Marshal.PtrToStringAnsi ((IntPtr)value));
 		}
 	}
 }
