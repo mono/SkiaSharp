@@ -3183,6 +3183,25 @@ namespace SkiaSharp
 			(sk_get_recording_context_delegate ??= GetSymbol<Delegates.sk_get_recording_context> ("sk_get_recording_context")).Invoke (canvas);
 		#endif
 
+		// sk_surface_t* sk_get_surface(sk_canvas_t* canvas)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surface_t sk_get_surface (sk_canvas_t canvas);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_surface_t sk_get_surface (sk_canvas_t canvas);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_surface_t sk_get_surface (sk_canvas_t canvas);
+		}
+		private static Delegates.sk_get_surface sk_get_surface_delegate;
+		internal static sk_surface_t sk_get_surface (sk_canvas_t canvas) =>
+			(sk_get_surface_delegate ??= GetSymbol<Delegates.sk_get_surface> ("sk_get_surface")).Invoke (canvas);
+		#endif
+
 		// void sk_nodraw_canvas_destroy(sk_nodraw_canvas_t* t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT

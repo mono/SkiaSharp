@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKSurface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
+	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
 		internal SKSurface (IntPtr h, bool owns)
 			: base (h, owns)
@@ -329,7 +329,7 @@ namespace SkiaSharp
 				grContext.Flush ();
 		}
 
-		internal static SKSurface GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKSurface (handle, true);
+		internal static SKSurface GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKSurface (h, o));
 	}
 }

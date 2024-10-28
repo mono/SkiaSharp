@@ -711,6 +711,13 @@ namespace SkiaSharp
 			}
 		}
 
+		// Surface
+
+#nullable enable
+		public SKSurface? Surface =>
+			SKSurface.GetObject (SkiaApi.sk_get_surface (Handle), owns: false, unrefExisting: false);
+#nullable disable
+
 		// Context
 
 #nullable enable
