@@ -12,6 +12,7 @@ namespace SkiaSharp
 		Vulkan = 2,
 		Dawn = 3,
 		Direct3D = 4,
+		Unsupported = 5,
 	}
 
 	public static partial class SkiaExtensions
@@ -22,8 +23,8 @@ namespace SkiaSharp
 				GRBackend.Metal => GRBackendNative.Metal,
 				GRBackend.OpenGL => GRBackendNative.OpenGL,
 				GRBackend.Vulkan => GRBackendNative.Vulkan,
-				GRBackend.Dawn => GRBackendNative.Dawn,
 				GRBackend.Direct3D => GRBackendNative.Direct3D,
+				GRBackend.Unsupported => GRBackendNative.Unsupported,
 				_ => throw new ArgumentOutOfRangeException (nameof (backend), $"Unknown backend: '{backend}'"),
 			};
 
@@ -33,8 +34,8 @@ namespace SkiaSharp
 				GRBackendNative.Metal => GRBackend.Metal,
 				GRBackendNative.OpenGL => GRBackend.OpenGL,
 				GRBackendNative.Vulkan => GRBackend.Vulkan,
-				GRBackendNative.Dawn => GRBackend.Dawn,
 				GRBackendNative.Direct3D => GRBackend.Direct3D,
+				GRBackendNative.Unsupported => GRBackend.Unsupported,
 				_ => throw new ArgumentOutOfRangeException (nameof (backend), $"Unknown backend: '{backend}'"),
 			};
 
