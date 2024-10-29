@@ -67,6 +67,6 @@ However, these are easy to install as they are found on the various websites. If
 
 Here are some links to show the differences in our code as compared to Google's code.
 
-What version are we on? [**m116**](https://github.com/google/skia/tree/chrome/m117)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m117)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m117...mono:skiasharp)  
+What version are we on? [**m118**](https://github.com/google/skia/tree/chrome/m118)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m118)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m118...mono:skiasharp)  
