@@ -23,6 +23,7 @@ namespace SkiaSharp
 				GRBackend.Metal => GRBackendNative.Metal,
 				GRBackend.OpenGL => GRBackendNative.OpenGL,
 				GRBackend.Vulkan => GRBackendNative.Vulkan,
+				GRBackend.Dawn => GRBackendNative.Unsupported,
 				GRBackend.Direct3D => GRBackendNative.Direct3D,
 				GRBackend.Unsupported => GRBackendNative.Unsupported,
 				_ => throw new ArgumentOutOfRangeException (nameof (backend), $"Unknown backend: '{backend}'"),
