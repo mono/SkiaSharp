@@ -289,42 +289,42 @@ namespace SkiaSharp
 			(gr_backendrendertarget_new_gl_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_gl> ("gr_backendrendertarget_new_gl")).Invoke (width, height, samples, stencils, glInfo);
 		#endif
 
-		// gr_backendrendertarget_t* gr_backendrendertarget_new_metal(int width, int height, int samples, const gr_mtl_textureinfo_t* mtlInfo)
+		// gr_backendrendertarget_t* gr_backendrendertarget_new_metal(int width, int height, const gr_mtl_textureinfo_t* mtlInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
 		}
 		private static Delegates.gr_backendrendertarget_new_metal gr_backendrendertarget_new_metal_delegate;
-		internal static gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo) =>
-			(gr_backendrendertarget_new_metal_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_metal> ("gr_backendrendertarget_new_metal")).Invoke (width, height, samples, mtlInfo);
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo) =>
+			(gr_backendrendertarget_new_metal_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_metal> ("gr_backendrendertarget_new_metal")).Invoke (width, height, mtlInfo);
 		#endif
 
-		// gr_backendrendertarget_t* gr_backendrendertarget_new_vulkan(int width, int height, int samples, const gr_vk_imageinfo_t* vkImageInfo)
+		// gr_backendrendertarget_t* gr_backendrendertarget_new_vulkan(int width, int height, const gr_vk_imageinfo_t* vkImageInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo);
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo);
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo);
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
 		}
 		private static Delegates.gr_backendrendertarget_new_vulkan gr_backendrendertarget_new_vulkan_delegate;
-		internal static gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo) =>
-			(gr_backendrendertarget_new_vulkan_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_vulkan> ("gr_backendrendertarget_new_vulkan")).Invoke (width, height, samples, vkImageInfo);
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo) =>
+			(gr_backendrendertarget_new_vulkan_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_vulkan> ("gr_backendrendertarget_new_vulkan")).Invoke (width, height, vkImageInfo);
 		#endif
 
 		// void gr_backendtexture_delete(gr_backendtexture_t* texture)
@@ -20497,8 +20497,8 @@ namespace SkiaSharp {
 		Metal = 2,
 		// DIRECT3D_GR_BACKEND = 3
 		Direct3D = 3,
-		// DAWN_GR_BACKEND = 4
-		Dawn = 4,
+		// UNSUPPORTED_GR_BACKEND = 5
+		Unsupported = 5,
 	}
 
 	// gr_surfaceorigin_t

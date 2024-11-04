@@ -11,7 +11,10 @@ namespace SkiaSharp.Tests
 		{
 			foreach (GRBackend value in Enum.GetValues(typeof(GRBackend)))
 			{
-				Assert.Equal(value.ToString(), value.ToNative().ToString());
+				if (value == GRBackend.Dawn)
+					Assert.Equal("Unsupported", value.ToNative().ToString());
+				else
+					Assert.Equal(value.ToString(), value.ToNative().ToString());
 			}
 
 			foreach (GRBackendNative value in Enum.GetValues(typeof(GRBackendNative)))
