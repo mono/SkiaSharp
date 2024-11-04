@@ -18,19 +18,31 @@ namespace SkiaSharp
 			CreateGl (width, height, sampleCount, stencilBits, glInfo);
 		}
 
+		[Obsolete ("Use GRBackendRenderTarget(int width, int height, GRVkImageInfo vkImageInfo) instead.")]
 		public GRBackendRenderTarget (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo)
+			: this (width, height, vkImageInfo)
+		{
+		}
+
+		public GRBackendRenderTarget (int width, int height, GRVkImageInfo vkImageInfo)
 			: this (IntPtr.Zero, true)
 		{
-			CreateVulkan (width, height, sampleCount, vkImageInfo);
+			CreateVulkan (width, height, vkImageInfo);
 		}
 
 #if __IOS__ || __MACOS__
 
+		[Obsolete ("Use GRBackendRenderTarget(int width, int height, GRMtlTextureInfo mtlInfo) instead.")]
 		public GRBackendRenderTarget (int width, int height, int sampleCount, GRMtlTextureInfo mtlInfo)
+			: this (width, height, mtlInfo)
+		{
+		}
+
+		public GRBackendRenderTarget (int width, int height, GRMtlTextureInfo mtlInfo)
 			: this (IntPtr.Zero, true)
 		{
 			var info = mtlInfo.ToNative ();
-			Handle = SkiaApi.gr_backendrendertarget_new_metal (width, height, sampleCount, &info);
+			Handle = SkiaApi.gr_backendrendertarget_new_metal (width, height, &info);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
@@ -48,9 +60,9 @@ namespace SkiaSharp
 			}
 		}
 
-		private void CreateVulkan (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo)
+		private void CreateVulkan (int width, int height, GRVkImageInfo vkImageInfo)
 		{
-			Handle = SkiaApi.gr_backendrendertarget_new_vulkan (width, height, sampleCount, &vkImageInfo);
+			Handle = SkiaApi.gr_backendrendertarget_new_vulkan (width, height, &vkImageInfo);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
