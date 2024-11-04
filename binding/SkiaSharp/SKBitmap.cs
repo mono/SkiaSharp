@@ -609,7 +609,8 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKBitmapReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKBitmapReleaseDelegateProxy, out _, out var ctx);
+			DelegateProxies.Create (del, out _, out var ctx);
+			var proxy = del is not null ? DelegateProxies.SKBitmapReleaseProxy : null;
 			return SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
 		}
 
@@ -766,11 +767,19 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) =>
 			ToShader (tmx, tmy, sampling, null);
 
+		[Obsolete ("Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) instead.")]
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality) =>
+			ToShader (tmx, tmy, quality.ToSamplingOptions(), null);
+
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
 			ToShader (tmx, tmy, SKSamplingOptions.Default, &localMatrix);
 
 		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) =>
 			ToShader (tmx, tmy, sampling, &localMatrix);
+
+		[Obsolete ("Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) instead.")]
+		public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality, SKMatrix localMatrix) =>
+			ToShader (tmx, tmy, quality.ToSamplingOptions(), &localMatrix);
 
 		private SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix* localMatrix) =>
 			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &sampling, localMatrix));
