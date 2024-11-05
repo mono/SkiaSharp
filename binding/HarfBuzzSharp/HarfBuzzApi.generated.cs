@@ -5584,6 +5584,25 @@ namespace HarfBuzzSharp
 			(hb_set_intersect_delegate ??= GetSymbol<Delegates.hb_set_intersect> ("hb_set_intersect")).Invoke (set, other);
 		#endif
 
+		// extern void hb_set_invert(hb_set_t* set)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_set_invert (hb_set_t set);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_set_invert (hb_set_t set);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_set_invert (hb_set_t set);
+		}
+		private static Delegates.hb_set_invert hb_set_invert_delegate;
+		internal static void hb_set_invert (hb_set_t set) =>
+			(hb_set_invert_delegate ??= GetSymbol<Delegates.hb_set_invert> ("hb_set_invert")).Invoke (set);
+		#endif
+
 		// extern hb_bool_t hb_set_is_empty(const hb_set_t* set)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -5895,6 +5914,29 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_shape_list_shapers hb_shape_list_shapers_delegate;
 		internal static /* char */ void** hb_shape_list_shapers () =>
 			(hb_shape_list_shapers_delegate ??= GetSymbol<Delegates.hb_shape_list_shapers> ("hb_shape_list_shapers")).Invoke ();
+		#endif
+
+		#endregion
+
+		#region hb-style.h
+
+		// extern float hb_style_get_value(hb_font_t* font, hb_style_tag_t style_tag)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial Single hb_style_get_value (hb_font_t font, StyleTag style_tag);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single hb_style_get_value (hb_font_t font, StyleTag style_tag);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Single hb_style_get_value (hb_font_t font, StyleTag style_tag);
+		}
+		private static Delegates.hb_style_get_value hb_style_get_value_delegate;
+		internal static Single hb_style_get_value (hb_font_t font, StyleTag style_tag) =>
+			(hb_style_get_value_delegate ??= GetSymbol<Delegates.hb_style_get_value> ("hb_style_get_value")).Invoke (font, style_tag);
 		#endif
 
 		#endregion
@@ -7551,6 +7593,22 @@ namespace HarfBuzzSharp {
 	public enum OpenTypeVarAxisFlags {
 		// HB_OT_VAR_AXIS_FLAG_HIDDEN = 0x00000001u
 		Hidden = 1,
+	}
+
+	// hb_style_tag_t
+	public enum StyleTag {
+		// HB_STYLE_TAG_ITALIC = 1769234796
+		Italic = 1769234796,
+		// HB_STYLE_TAG_OPTICAL_SIZE = 1869640570
+		OpticalSize = 1869640570,
+		// HB_STYLE_TAG_SLANT_ANGLE = 1936486004
+		SlantAngle = 1936486004,
+		// HB_STYLE_TAG_SLANT_RATIO = 1399615092
+		SlantRatio = 1399615092,
+		// HB_STYLE_TAG_WIDTH = 2003072104
+		Width = 2003072104,
+		// HB_STYLE_TAG_WEIGHT = 2003265652
+		Weight = 2003265652,
 	}
 
 	// hb_unicode_combining_class_t
