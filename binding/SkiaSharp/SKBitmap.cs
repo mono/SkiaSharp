@@ -783,5 +783,10 @@ namespace SkiaSharp
 
 		private SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix* localMatrix) =>
 			SKShader.GetObject (SkiaApi.sk_bitmap_make_shader (Handle, tmx, tmy, &sampling, localMatrix));
+
+		// ToImage
+
+		public SKImage ToImage () =>
+			SKImage.FromBitmap (this);
 	}
 }

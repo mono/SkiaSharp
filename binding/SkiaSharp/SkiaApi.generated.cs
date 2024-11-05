@@ -50,6 +50,8 @@ using sk_path_iterator_t = System.IntPtr;
 using sk_path_rawiterator_t = System.IntPtr;
 using sk_path_t = System.IntPtr;
 using sk_pathmeasure_t = System.IntPtr;
+using sk_pdf_metadata_t = System.IntPtr;
+using sk_pdf_structure_element_t = System.IntPtr;
 using sk_picture_recorder_t = System.IntPtr;
 using sk_picture_t = System.IntPtr;
 using sk_pixelref_factory_t = System.IntPtr;
@@ -4974,6 +4976,25 @@ namespace SkiaSharp
 
 		#region sk_document.h
 
+		// void sk_canvas_draw_pdf_node_id_annotation(sk_canvas_t* t, int nodeId)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_canvas_draw_pdf_node_id_annotation (sk_canvas_t t, Int32 nodeId);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_draw_pdf_node_id_annotation (sk_canvas_t t, Int32 nodeId);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_canvas_draw_pdf_node_id_annotation (sk_canvas_t t, Int32 nodeId);
+		}
+		private static Delegates.sk_canvas_draw_pdf_node_id_annotation sk_canvas_draw_pdf_node_id_annotation_delegate;
+		internal static void sk_canvas_draw_pdf_node_id_annotation (sk_canvas_t t, Int32 nodeId) =>
+			(sk_canvas_draw_pdf_node_id_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_pdf_node_id_annotation> ("sk_canvas_draw_pdf_node_id_annotation")).Invoke (t, nodeId);
+		#endif
+
 		// void sk_document_abort(sk_document_t* document)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -5050,22 +5071,22 @@ namespace SkiaSharp
 			(sk_document_create_pdf_from_stream_delegate ??= GetSymbol<Delegates.sk_document_create_pdf_from_stream> ("sk_document_create_pdf_from_stream")).Invoke (stream);
 		#endif
 
-		// sk_document_t* sk_document_create_pdf_from_stream_with_metadata(sk_wstream_t* stream, const sk_document_pdf_metadata_t* metadata)
+		// sk_document_t* sk_document_create_pdf_from_stream_with_metadata(sk_wstream_t* stream, const sk_pdf_metadata_t* metadata)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKDocumentPdfMetadataInternal* metadata);
+		internal static partial sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, sk_pdf_metadata_t metadata);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKDocumentPdfMetadataInternal* metadata);
+		internal static extern sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, sk_pdf_metadata_t metadata);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKDocumentPdfMetadataInternal* metadata);
+			internal delegate sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, sk_pdf_metadata_t metadata);
 		}
 		private static Delegates.sk_document_create_pdf_from_stream_with_metadata sk_document_create_pdf_from_stream_with_metadata_delegate;
-		internal static sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, SKDocumentPdfMetadataInternal* metadata) =>
+		internal static sk_document_t sk_document_create_pdf_from_stream_with_metadata (sk_wstream_t stream, sk_pdf_metadata_t metadata) =>
 			(sk_document_create_pdf_from_stream_with_metadata_delegate ??= GetSymbol<Delegates.sk_document_create_pdf_from_stream_with_metadata> ("sk_document_create_pdf_from_stream_with_metadata")).Invoke (stream, metadata);
 		#endif
 
@@ -5124,6 +5145,557 @@ namespace SkiaSharp
 		private static Delegates.sk_document_unref sk_document_unref_delegate;
 		internal static void sk_document_unref (sk_document_t document) =>
 			(sk_document_unref_delegate ??= GetSymbol<Delegates.sk_document_unref> ("sk_document_unref")).Invoke (document);
+		#endif
+
+		// void sk_pdf_metadata_delete(sk_pdf_metadata_t* metadata)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_delete (sk_pdf_metadata_t metadata);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_delete (sk_pdf_metadata_t metadata);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_delete (sk_pdf_metadata_t metadata);
+		}
+		private static Delegates.sk_pdf_metadata_delete sk_pdf_metadata_delete_delegate;
+		internal static void sk_pdf_metadata_delete (sk_pdf_metadata_t metadata) =>
+			(sk_pdf_metadata_delete_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_delete> ("sk_pdf_metadata_delete")).Invoke (metadata);
+		#endif
+
+		// sk_pdf_metadata_t* sk_pdf_metadata_new()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_pdf_metadata_t sk_pdf_metadata_new ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_pdf_metadata_t sk_pdf_metadata_new ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_pdf_metadata_t sk_pdf_metadata_new ();
+		}
+		private static Delegates.sk_pdf_metadata_new sk_pdf_metadata_new_delegate;
+		internal static sk_pdf_metadata_t sk_pdf_metadata_new () =>
+			(sk_pdf_metadata_new_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_new> ("sk_pdf_metadata_new")).Invoke ();
+		#endif
+
+		// void sk_pdf_metadata_set_author(sk_pdf_metadata_t* metadata, sk_string_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_author (sk_pdf_metadata_t metadata, sk_string_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_author (sk_pdf_metadata_t metadata, sk_string_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_author (sk_pdf_metadata_t metadata, sk_string_t value);
+		}
+		private static Delegates.sk_pdf_metadata_set_author sk_pdf_metadata_set_author_delegate;
+		internal static void sk_pdf_metadata_set_author (sk_pdf_metadata_t metadata, sk_string_t value) =>
+			(sk_pdf_metadata_set_author_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_author> ("sk_pdf_metadata_set_author")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_compression_level(sk_pdf_metadata_t* metadata, sk_pdf_compression_t value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_compression_level (sk_pdf_metadata_t metadata, SKPdfCompression value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_compression_level (sk_pdf_metadata_t metadata, SKPdfCompression value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_compression_level (sk_pdf_metadata_t metadata, SKPdfCompression value);
+		}
+		private static Delegates.sk_pdf_metadata_set_compression_level sk_pdf_metadata_set_compression_level_delegate;
+		internal static void sk_pdf_metadata_set_compression_level (sk_pdf_metadata_t metadata, SKPdfCompression value) =>
+			(sk_pdf_metadata_set_compression_level_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_compression_level> ("sk_pdf_metadata_set_compression_level")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_creation(sk_pdf_metadata_t* metadata, sk_time_datetime_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_creation (sk_pdf_metadata_t metadata, SKTimeDateTimeInternal* value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_creation (sk_pdf_metadata_t metadata, SKTimeDateTimeInternal* value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_creation (sk_pdf_metadata_t metadata, SKTimeDateTimeInternal* value);
+		}
+		private static Delegates.sk_pdf_metadata_set_creation sk_pdf_metadata_set_creation_delegate;
+		internal static void sk_pdf_metadata_set_creation (sk_pdf_metadata_t metadata, SKTimeDateTimeInternal* value) =>
+			(sk_pdf_metadata_set_creation_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_creation> ("sk_pdf_metadata_set_creation")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_creator(sk_pdf_metadata_t* metadata, sk_string_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_creator (sk_pdf_metadata_t metadata, sk_string_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_creator (sk_pdf_metadata_t metadata, sk_string_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_creator (sk_pdf_metadata_t metadata, sk_string_t value);
+		}
+		private static Delegates.sk_pdf_metadata_set_creator sk_pdf_metadata_set_creator_delegate;
+		internal static void sk_pdf_metadata_set_creator (sk_pdf_metadata_t metadata, sk_string_t value) =>
+			(sk_pdf_metadata_set_creator_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_creator> ("sk_pdf_metadata_set_creator")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_encoding_quality(sk_pdf_metadata_t* metadata, int value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_encoding_quality (sk_pdf_metadata_t metadata, Int32 value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_encoding_quality (sk_pdf_metadata_t metadata, Int32 value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_encoding_quality (sk_pdf_metadata_t metadata, Int32 value);
+		}
+		private static Delegates.sk_pdf_metadata_set_encoding_quality sk_pdf_metadata_set_encoding_quality_delegate;
+		internal static void sk_pdf_metadata_set_encoding_quality (sk_pdf_metadata_t metadata, Int32 value) =>
+			(sk_pdf_metadata_set_encoding_quality_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_encoding_quality> ("sk_pdf_metadata_set_encoding_quality")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_keywords(sk_pdf_metadata_t* metadata, sk_string_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_keywords (sk_pdf_metadata_t metadata, sk_string_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_keywords (sk_pdf_metadata_t metadata, sk_string_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_keywords (sk_pdf_metadata_t metadata, sk_string_t value);
+		}
+		private static Delegates.sk_pdf_metadata_set_keywords sk_pdf_metadata_set_keywords_delegate;
+		internal static void sk_pdf_metadata_set_keywords (sk_pdf_metadata_t metadata, sk_string_t value) =>
+			(sk_pdf_metadata_set_keywords_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_keywords> ("sk_pdf_metadata_set_keywords")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_modified(sk_pdf_metadata_t* metadata, sk_time_datetime_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_modified (sk_pdf_metadata_t metadata, SKTimeDateTimeInternal* value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_modified (sk_pdf_metadata_t metadata, SKTimeDateTimeInternal* value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_modified (sk_pdf_metadata_t metadata, SKTimeDateTimeInternal* value);
+		}
+		private static Delegates.sk_pdf_metadata_set_modified sk_pdf_metadata_set_modified_delegate;
+		internal static void sk_pdf_metadata_set_modified (sk_pdf_metadata_t metadata, SKTimeDateTimeInternal* value) =>
+			(sk_pdf_metadata_set_modified_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_modified> ("sk_pdf_metadata_set_modified")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_pdfa(sk_pdf_metadata_t* metadata, bool value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_pdfa (sk_pdf_metadata_t metadata, [MarshalAs (UnmanagedType.I1)] bool value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_pdfa (sk_pdf_metadata_t metadata, [MarshalAs (UnmanagedType.I1)] bool value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_pdfa (sk_pdf_metadata_t metadata, [MarshalAs (UnmanagedType.I1)] bool value);
+		}
+		private static Delegates.sk_pdf_metadata_set_pdfa sk_pdf_metadata_set_pdfa_delegate;
+		internal static void sk_pdf_metadata_set_pdfa (sk_pdf_metadata_t metadata, [MarshalAs (UnmanagedType.I1)] bool value) =>
+			(sk_pdf_metadata_set_pdfa_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_pdfa> ("sk_pdf_metadata_set_pdfa")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_producer(sk_pdf_metadata_t* metadata, sk_string_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_producer (sk_pdf_metadata_t metadata, sk_string_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_producer (sk_pdf_metadata_t metadata, sk_string_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_producer (sk_pdf_metadata_t metadata, sk_string_t value);
+		}
+		private static Delegates.sk_pdf_metadata_set_producer sk_pdf_metadata_set_producer_delegate;
+		internal static void sk_pdf_metadata_set_producer (sk_pdf_metadata_t metadata, sk_string_t value) =>
+			(sk_pdf_metadata_set_producer_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_producer> ("sk_pdf_metadata_set_producer")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_raster_dpi(sk_pdf_metadata_t* metadata, float value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_raster_dpi (sk_pdf_metadata_t metadata, Single value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_raster_dpi (sk_pdf_metadata_t metadata, Single value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_raster_dpi (sk_pdf_metadata_t metadata, Single value);
+		}
+		private static Delegates.sk_pdf_metadata_set_raster_dpi sk_pdf_metadata_set_raster_dpi_delegate;
+		internal static void sk_pdf_metadata_set_raster_dpi (sk_pdf_metadata_t metadata, Single value) =>
+			(sk_pdf_metadata_set_raster_dpi_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_raster_dpi> ("sk_pdf_metadata_set_raster_dpi")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_structure_element_tree_root(sk_pdf_metadata_t* metadata, sk_pdf_structure_element_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_structure_element_tree_root (sk_pdf_metadata_t metadata, sk_pdf_structure_element_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_structure_element_tree_root (sk_pdf_metadata_t metadata, sk_pdf_structure_element_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_structure_element_tree_root (sk_pdf_metadata_t metadata, sk_pdf_structure_element_t value);
+		}
+		private static Delegates.sk_pdf_metadata_set_structure_element_tree_root sk_pdf_metadata_set_structure_element_tree_root_delegate;
+		internal static void sk_pdf_metadata_set_structure_element_tree_root (sk_pdf_metadata_t metadata, sk_pdf_structure_element_t value) =>
+			(sk_pdf_metadata_set_structure_element_tree_root_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_structure_element_tree_root> ("sk_pdf_metadata_set_structure_element_tree_root")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_subject(sk_pdf_metadata_t* metadata, sk_string_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_subject (sk_pdf_metadata_t metadata, sk_string_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_subject (sk_pdf_metadata_t metadata, sk_string_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_subject (sk_pdf_metadata_t metadata, sk_string_t value);
+		}
+		private static Delegates.sk_pdf_metadata_set_subject sk_pdf_metadata_set_subject_delegate;
+		internal static void sk_pdf_metadata_set_subject (sk_pdf_metadata_t metadata, sk_string_t value) =>
+			(sk_pdf_metadata_set_subject_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_subject> ("sk_pdf_metadata_set_subject")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_metadata_set_title(sk_pdf_metadata_t* metadata, sk_string_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_metadata_set_title (sk_pdf_metadata_t metadata, sk_string_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_metadata_set_title (sk_pdf_metadata_t metadata, sk_string_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_metadata_set_title (sk_pdf_metadata_t metadata, sk_string_t value);
+		}
+		private static Delegates.sk_pdf_metadata_set_title sk_pdf_metadata_set_title_delegate;
+		internal static void sk_pdf_metadata_set_title (sk_pdf_metadata_t metadata, sk_string_t value) =>
+			(sk_pdf_metadata_set_title_delegate ??= GetSymbol<Delegates.sk_pdf_metadata_set_title> ("sk_pdf_metadata_set_title")).Invoke (metadata, value);
+		#endif
+
+		// void sk_pdf_structure_element_add_additional_node_id(sk_pdf_structure_element_t* element, int value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_add_additional_node_id (sk_pdf_structure_element_t element, Int32 value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_add_additional_node_id (sk_pdf_structure_element_t element, Int32 value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_add_additional_node_id (sk_pdf_structure_element_t element, Int32 value);
+		}
+		private static Delegates.sk_pdf_structure_element_add_additional_node_id sk_pdf_structure_element_add_additional_node_id_delegate;
+		internal static void sk_pdf_structure_element_add_additional_node_id (sk_pdf_structure_element_t element, Int32 value) =>
+			(sk_pdf_structure_element_add_additional_node_id_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_additional_node_id> ("sk_pdf_structure_element_add_additional_node_id")).Invoke (element, value);
+		#endif
+
+		// void sk_pdf_structure_element_add_additional_node_ids(sk_pdf_structure_element_t* element, int* value, size_t count)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_add_additional_node_ids (sk_pdf_structure_element_t element, Int32* value, /* size_t */ IntPtr count);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_add_additional_node_ids (sk_pdf_structure_element_t element, Int32* value, /* size_t */ IntPtr count);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_add_additional_node_ids (sk_pdf_structure_element_t element, Int32* value, /* size_t */ IntPtr count);
+		}
+		private static Delegates.sk_pdf_structure_element_add_additional_node_ids sk_pdf_structure_element_add_additional_node_ids_delegate;
+		internal static void sk_pdf_structure_element_add_additional_node_ids (sk_pdf_structure_element_t element, Int32* value, /* size_t */ IntPtr count) =>
+			(sk_pdf_structure_element_add_additional_node_ids_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_additional_node_ids> ("sk_pdf_structure_element_add_additional_node_ids")).Invoke (element, value, count);
+		#endif
+
+		// void sk_pdf_structure_element_add_child(sk_pdf_structure_element_t* element, sk_pdf_structure_element_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_add_child (sk_pdf_structure_element_t element, sk_pdf_structure_element_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_add_child (sk_pdf_structure_element_t element, sk_pdf_structure_element_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_add_child (sk_pdf_structure_element_t element, sk_pdf_structure_element_t value);
+		}
+		private static Delegates.sk_pdf_structure_element_add_child sk_pdf_structure_element_add_child_delegate;
+		internal static void sk_pdf_structure_element_add_child (sk_pdf_structure_element_t element, sk_pdf_structure_element_t value) =>
+			(sk_pdf_structure_element_add_child_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_child> ("sk_pdf_structure_element_add_child")).Invoke (element, value);
+		#endif
+
+		// void sk_pdf_structure_element_add_float_array_attribute(sk_pdf_structure_element_t* element, const char* owner, const char* name, float* values, size_t count)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_add_float_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single* values, /* size_t */ IntPtr count);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_add_float_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single* values, /* size_t */ IntPtr count);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_add_float_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single* values, /* size_t */ IntPtr count);
+		}
+		private static Delegates.sk_pdf_structure_element_add_float_array_attribute sk_pdf_structure_element_add_float_array_attribute_delegate;
+		internal static void sk_pdf_structure_element_add_float_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single* values, /* size_t */ IntPtr count) =>
+			(sk_pdf_structure_element_add_float_array_attribute_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_float_array_attribute> ("sk_pdf_structure_element_add_float_array_attribute")).Invoke (element, owner, name, values, count);
+		#endif
+
+		// void sk_pdf_structure_element_add_float_attribute(sk_pdf_structure_element_t* element, const char* owner, const char* name, float value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_add_float_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_add_float_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_add_float_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single value);
+		}
+		private static Delegates.sk_pdf_structure_element_add_float_attribute sk_pdf_structure_element_add_float_attribute_delegate;
+		internal static void sk_pdf_structure_element_add_float_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Single value) =>
+			(sk_pdf_structure_element_add_float_attribute_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_float_attribute> ("sk_pdf_structure_element_add_float_attribute")).Invoke (element, owner, name, value);
+		#endif
+
+		// void sk_pdf_structure_element_add_int_attribute(sk_pdf_structure_element_t* element, const char* owner, const char* name, int value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_add_int_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32 value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_add_int_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32 value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_add_int_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32 value);
+		}
+		private static Delegates.sk_pdf_structure_element_add_int_attribute sk_pdf_structure_element_add_int_attribute_delegate;
+		internal static void sk_pdf_structure_element_add_int_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32 value) =>
+			(sk_pdf_structure_element_add_int_attribute_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_int_attribute> ("sk_pdf_structure_element_add_int_attribute")).Invoke (element, owner, name, value);
+		#endif
+
+		// void sk_pdf_structure_element_add_name_attribute(sk_pdf_structure_element_t* element, const char* owner, const char* name, const char* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_add_name_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, [MarshalAs (UnmanagedType.LPStr)] String value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_add_name_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, [MarshalAs (UnmanagedType.LPStr)] String value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_add_name_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, [MarshalAs (UnmanagedType.LPStr)] String value);
+		}
+		private static Delegates.sk_pdf_structure_element_add_name_attribute sk_pdf_structure_element_add_name_attribute_delegate;
+		internal static void sk_pdf_structure_element_add_name_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, [MarshalAs (UnmanagedType.LPStr)] String value) =>
+			(sk_pdf_structure_element_add_name_attribute_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_name_attribute> ("sk_pdf_structure_element_add_name_attribute")).Invoke (element, owner, name, value);
+		#endif
+
+		// void sk_pdf_structure_element_add_node_id_array_attribute(sk_pdf_structure_element_t* element, const char* owner, const char* name, int* values, size_t count)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_add_node_id_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32* values, /* size_t */ IntPtr count);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_add_node_id_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32* values, /* size_t */ IntPtr count);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_add_node_id_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32* values, /* size_t */ IntPtr count);
+		}
+		private static Delegates.sk_pdf_structure_element_add_node_id_array_attribute sk_pdf_structure_element_add_node_id_array_attribute_delegate;
+		internal static void sk_pdf_structure_element_add_node_id_array_attribute (sk_pdf_structure_element_t element, [MarshalAs (UnmanagedType.LPStr)] String owner, [MarshalAs (UnmanagedType.LPStr)] String name, Int32* values, /* size_t */ IntPtr count) =>
+			(sk_pdf_structure_element_add_node_id_array_attribute_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_add_node_id_array_attribute> ("sk_pdf_structure_element_add_node_id_array_attribute")).Invoke (element, owner, name, values, count);
+		#endif
+
+		// void sk_pdf_structure_element_delete(sk_pdf_structure_element_t* element)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_delete (sk_pdf_structure_element_t element);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_delete (sk_pdf_structure_element_t element);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_delete (sk_pdf_structure_element_t element);
+		}
+		private static Delegates.sk_pdf_structure_element_delete sk_pdf_structure_element_delete_delegate;
+		internal static void sk_pdf_structure_element_delete (sk_pdf_structure_element_t element) =>
+			(sk_pdf_structure_element_delete_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_delete> ("sk_pdf_structure_element_delete")).Invoke (element);
+		#endif
+
+		// sk_pdf_structure_element_t* sk_pdf_structure_element_new()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_pdf_structure_element_t sk_pdf_structure_element_new ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_pdf_structure_element_t sk_pdf_structure_element_new ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_pdf_structure_element_t sk_pdf_structure_element_new ();
+		}
+		private static Delegates.sk_pdf_structure_element_new sk_pdf_structure_element_new_delegate;
+		internal static sk_pdf_structure_element_t sk_pdf_structure_element_new () =>
+			(sk_pdf_structure_element_new_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_new> ("sk_pdf_structure_element_new")).Invoke ();
+		#endif
+
+		// void sk_pdf_structure_element_set_alt(sk_pdf_structure_element_t* element, sk_string_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_set_alt (sk_pdf_structure_element_t element, sk_string_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_set_alt (sk_pdf_structure_element_t element, sk_string_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_set_alt (sk_pdf_structure_element_t element, sk_string_t value);
+		}
+		private static Delegates.sk_pdf_structure_element_set_alt sk_pdf_structure_element_set_alt_delegate;
+		internal static void sk_pdf_structure_element_set_alt (sk_pdf_structure_element_t element, sk_string_t value) =>
+			(sk_pdf_structure_element_set_alt_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_set_alt> ("sk_pdf_structure_element_set_alt")).Invoke (element, value);
+		#endif
+
+		// void sk_pdf_structure_element_set_lang(sk_pdf_structure_element_t* element, sk_string_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_set_lang (sk_pdf_structure_element_t element, sk_string_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_set_lang (sk_pdf_structure_element_t element, sk_string_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_set_lang (sk_pdf_structure_element_t element, sk_string_t value);
+		}
+		private static Delegates.sk_pdf_structure_element_set_lang sk_pdf_structure_element_set_lang_delegate;
+		internal static void sk_pdf_structure_element_set_lang (sk_pdf_structure_element_t element, sk_string_t value) =>
+			(sk_pdf_structure_element_set_lang_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_set_lang> ("sk_pdf_structure_element_set_lang")).Invoke (element, value);
+		#endif
+
+		// void sk_pdf_structure_element_set_node_id(sk_pdf_structure_element_t* element, int value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_set_node_id (sk_pdf_structure_element_t element, Int32 value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_set_node_id (sk_pdf_structure_element_t element, Int32 value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_set_node_id (sk_pdf_structure_element_t element, Int32 value);
+		}
+		private static Delegates.sk_pdf_structure_element_set_node_id sk_pdf_structure_element_set_node_id_delegate;
+		internal static void sk_pdf_structure_element_set_node_id (sk_pdf_structure_element_t element, Int32 value) =>
+			(sk_pdf_structure_element_set_node_id_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_set_node_id> ("sk_pdf_structure_element_set_node_id")).Invoke (element, value);
+		#endif
+
+		// void sk_pdf_structure_element_set_type_string(sk_pdf_structure_element_t* element, sk_string_t* value)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pdf_structure_element_set_type_string (sk_pdf_structure_element_t element, sk_string_t value);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pdf_structure_element_set_type_string (sk_pdf_structure_element_t element, sk_string_t value);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pdf_structure_element_set_type_string (sk_pdf_structure_element_t element, sk_string_t value);
+		}
+		private static Delegates.sk_pdf_structure_element_set_type_string sk_pdf_structure_element_set_type_string_delegate;
+		internal static void sk_pdf_structure_element_set_type_string (sk_pdf_structure_element_t element, sk_string_t value) =>
+			(sk_pdf_structure_element_set_type_string_delegate ??= GetSymbol<Delegates.sk_pdf_structure_element_set_type_string> ("sk_pdf_structure_element_set_type_string")).Invoke (element, value);
 		#endif
 
 		#endregion
@@ -18373,75 +18945,6 @@ namespace SkiaSharp {
 
 	}
 
-	// sk_document_pdf_metadata_t
-	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKDocumentPdfMetadataInternal : IEquatable<SKDocumentPdfMetadataInternal> {
-		// public sk_string_t* fTitle
-		public sk_string_t fTitle;
-
-		// public sk_string_t* fAuthor
-		public sk_string_t fAuthor;
-
-		// public sk_string_t* fSubject
-		public sk_string_t fSubject;
-
-		// public sk_string_t* fKeywords
-		public sk_string_t fKeywords;
-
-		// public sk_string_t* fCreator
-		public sk_string_t fCreator;
-
-		// public sk_string_t* fProducer
-		public sk_string_t fProducer;
-
-		// public sk_time_datetime_t* fCreation
-		public SKTimeDateTimeInternal* fCreation;
-
-		// public sk_time_datetime_t* fModified
-		public SKTimeDateTimeInternal* fModified;
-
-		// public float fRasterDPI
-		public Single fRasterDPI;
-
-		// public bool fPDFA
-		public Byte fPDFA;
-
-		// public int fEncodingQuality
-		public Int32 fEncodingQuality;
-
-		public readonly bool Equals (SKDocumentPdfMetadataInternal obj) =>
-#pragma warning disable CS8909
-			fTitle == obj.fTitle && fAuthor == obj.fAuthor && fSubject == obj.fSubject && fKeywords == obj.fKeywords && fCreator == obj.fCreator && fProducer == obj.fProducer && fCreation == obj.fCreation && fModified == obj.fModified && fRasterDPI == obj.fRasterDPI && fPDFA == obj.fPDFA && fEncodingQuality == obj.fEncodingQuality;
-#pragma warning restore CS8909
-
-		public readonly override bool Equals (object obj) =>
-			obj is SKDocumentPdfMetadataInternal f && Equals (f);
-
-		public static bool operator == (SKDocumentPdfMetadataInternal left, SKDocumentPdfMetadataInternal right) =>
-			left.Equals (right);
-
-		public static bool operator != (SKDocumentPdfMetadataInternal left, SKDocumentPdfMetadataInternal right) =>
-			!left.Equals (right);
-
-		public readonly override int GetHashCode ()
-		{
-			var hash = new HashCode ();
-			hash.Add (fTitle);
-			hash.Add (fAuthor);
-			hash.Add (fSubject);
-			hash.Add (fKeywords);
-			hash.Add (fCreator);
-			hash.Add (fProducer);
-			hash.Add (fCreation);
-			hash.Add (fModified);
-			hash.Add (fRasterDPI);
-			hash.Add (fPDFA);
-			hash.Add (fEncodingQuality);
-			return hash.ToHashCode ();
-		}
-
-	}
-
 	// sk_fontmetrics_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKFontMetrics : IEquatable<SKFontMetrics> {
@@ -20499,6 +21002,20 @@ namespace SkiaSharp {
 		Xor = 3,
 		// REVERSE_DIFFERENCE_SK_PATHOP = 4
 		ReverseDifference = 4,
+	}
+
+	// sk_pdf_compression_t
+	public enum SKPdfCompression {
+		// DEFAULT_SK_PDF_COMPRESSION = -1
+		Default = -1,
+		// NONE_SK_PDF_COMPRESSION = 0
+		None = 0,
+		// LOW_SK_PDF_COMPRESSION = 1
+		Low = 1,
+		// AVERAGE_SK_PDF_COMPRESSION = 6
+		Average = 6,
+		// HIGH_SK_PDF_COMPRESSION = 9
+		High = 9,
 	}
 
 	// sk_pixelgeometry_t

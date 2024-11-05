@@ -2,6 +2,7 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 #if NETSTANDARD1_3 || WINDOWS_UWP
@@ -60,6 +61,16 @@ namespace SkiaSharp
 			}
 		}
 
+#if NET45_OR_GREATER || NETSTANDARD2_0
+		public static int GetBytes (this Encoding encoding, ReadOnlySpan<char> text, Span<byte> bytes)
+		{
+			fixed (char* t = text)
+			fixed (byte* b = bytes) {
+				return encoding.GetBytes (t, text.Length, b, bytes.Length);
+			}
+		}
+#endif
+
 		public static RentedArray<T> RentArray<T> (int length, bool nullIfEmpty = false) =>
 			nullIfEmpty && length <= 0
 				? default
@@ -72,6 +83,15 @@ namespace SkiaSharp
 				handles[i] = objects[i]?.Handle ?? IntPtr.Zero;
 			}
 			return handles;
+		}
+
+		public static RentedArray<T> ToRentedArray<T> (IList<T> list)
+		{
+			var rented = new RentedArray<T> (list.Count);
+			for (var idx = 0; idx < list.Count; idx++) {
+				rented[idx] = list[idx];
+			}
+			return rented;
 		}
 
 		internal readonly ref struct RentedArray<T>
@@ -174,6 +194,24 @@ namespace SkiaSharp
 				SKTextEncoding.Utf8 => Encoding.UTF8.GetBytes (text),
 				SKTextEncoding.Utf16 => Encoding.Unicode.GetBytes (text),
 				SKTextEncoding.Utf32 => Encoding.UTF32.GetBytes (text),
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
+
+		public static int GetEncodedText (ReadOnlySpan<char> text, Span<byte> bytes, SKTextEncoding encoding) =>
+			encoding switch {
+				SKTextEncoding.Utf8 => Encoding.UTF8.GetBytes (text, bytes),
+				SKTextEncoding.Utf16 => Encoding.Unicode.GetBytes (text, bytes),
+				SKTextEncoding.Utf32 => Encoding.UTF32.GetBytes (text, bytes),
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
+
+		// GetMaxByteCount
+
+		public static int GetMaxByteCount (ReadOnlySpan<char> text, SKTextEncoding encoding) =>
+			encoding switch {
+				SKTextEncoding.Utf8 => Encoding.UTF8.GetMaxByteCount (text.Length),
+				SKTextEncoding.Utf16 => Encoding.Unicode.GetMaxByteCount (text.Length),
+				SKTextEncoding.Utf32 => Encoding.UTF32.GetMaxByteCount (text.Length),
 				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
 			};
 
