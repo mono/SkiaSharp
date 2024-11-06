@@ -4,6 +4,7 @@
 
 Param(
     [string] $Version = "4.1",
+    [string] $Snapshot = "5.6",
     [string] $InstallDestination = $null,
     [boolean] $UpgradeLLVM = $true
 )
@@ -58,9 +59,9 @@ if ($IsMacOS -or $IsLinux) {
 Write-Host "Installing Additional Packages: '$packages'..."
 $packMan = Join-Path (Join-Path "$ts" "package-manager") "package-manager-cli.${ext}"
 if ($IsMacOS -or $IsLinux) {
-    & "bash" "$packMan" install --no-java-check --accept-license "$packages"
+    & "bash" "$packMan" install --no-java-check --accept-license "$packages" -s "Tizen_Studio_$Snapshot"
 } else {
-    & "$packMan" install --no-java-check --accept-license "$packages"
+    & "$packMan" install --no-java-check --accept-license "$packages" -s "Tizen_Studio_$Snapshot"
 }
 
 function Swap-Tool {
