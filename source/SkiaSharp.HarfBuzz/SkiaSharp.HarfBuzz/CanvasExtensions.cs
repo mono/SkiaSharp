@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace SkiaSharp.HarfBuzz
@@ -119,32 +120,44 @@ namespace SkiaSharp.HarfBuzz
 			clearCacheTimer?.Change(0, cacheDuration);
 		}
 
-		private static readonly ConcurrentDictionary<int, (SKShaper shaper, DateTime cachedAt)> shaperCache = new();
-		private static readonly ConcurrentDictionary<int, (SKShaper.Result shapeResult, DateTime cachedAt)> shapeResultCache = new();
+		private static readonly Dictionary<int, (SKShaper shaper, DateTime cachedAt)> shaperCache = new();
+		private static readonly Dictionary<int, (SKShaper.Result shapeResult, DateTime cachedAt)> shapeResultCache = new();
 
 		private static SKShaper GetShaper(SKTypeface typeface)
 		{
+			if (cacheDuration == 0)
+				return new SKShaper(typeface);
+
 			var key = HashCode.Combine(typeface.FamilyName, typeface.IsBold, typeface.IsItalic);
 
-			var shaper = shaperCache.TryGetValue(key, out var value)
-				? value.shaper
-				: new SKShaper(typeface);
+			SKShaper shaper;
+			lock (shaperCache)
+			{
+				shaper = shaperCache.TryGetValue(key, out var value)
+					? value.shaper
+					: new SKShaper(typeface);
 
-			if (cacheDuration > 0)
 				shaperCache[key] = (shaper, DateTime.Now);      // update timestamp
+			}
 			return shaper;
 		}
 
 		private static SKShaper.Result GetShapeResult(SKShaper shaper, string text, SKFont font)
 		{
+			if (cacheDuration == 0)
+				return shaper.Shape(text, 0, 0, font);
+
 			var key = HashCode.Combine(font.Typeface.FamilyName, font.Size, font.Typeface.IsBold, font.Typeface.IsItalic, text);
 
-			var result = shapeResultCache.TryGetValue(key, out var value)
-				? value.shapeResult
-				: shaper.Shape(text, 0, 0, font);
+			SKShaper.Result result;
+			lock (shapeResultCache)
+			{
+				result = shapeResultCache.TryGetValue(key, out var value)
+					? value.shapeResult
+					: shaper.Shape(text, 0, 0, font);
 
-			if (cacheDuration > 0)
 				shapeResultCache[key] = (result, DateTime.Now);             // update timestamp
+			}
 			return result;
 		}
 
@@ -154,22 +167,22 @@ namespace SkiaSharp.HarfBuzz
 		{
 			var outdated = DateTime.Now - TimeSpan.FromMilliseconds(cacheDuration);
 
-			foreach (var kv in shaperCache.ToArray())
+			foreach (var kv in shaperCache.AsEnumerable())
 			{
 				if (kv.Value.cachedAt < outdated)
 				{
-					if (shaperCache.TryRemove(kv.Key, out var entry))
-						entry.shaper.Dispose();
+					if (shaperCache.Remove(kv.Key))
+						kv.Value.shaper.Dispose();
 				}
 			}
 
-			foreach (var kv in shapeResultCache.ToArray())
+			foreach (var kv in shapeResultCache.AsEnumerable())
 			{
 				if (kv.Value.cachedAt < outdated)
-					shapeResultCache.TryRemove(kv.Key, out var _);
+					shapeResultCache.Remove(kv.Key);
 			}
 
-			if ((shaperCache.IsEmpty && shapeResultCache.IsEmpty) || cacheDuration == 0)
+			if ((shaperCache.Count == 0 && shapeResultCache.Count == 0) || cacheDuration == 0)
 			{
 				clearCacheTimer?.Dispose();
 				clearCacheTimer = null;

@@ -1,5 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -16,27 +16,27 @@ namespace SkiaSharp.HarfBuzz.Tests
 
 		#region Access private fields
 
-		FieldInfo? shaperCacheField = null;
-		public ConcurrentDictionary<int, (SKShaper shaper, DateTime cachedAt)> ShaperCache
+		FieldInfo shaperCacheField = null;
+		public Dictionary<int, (SKShaper shaper, DateTime cachedAt)> ShaperCache
 		{
 			get
 			{
 				if (shaperCacheField is null)
 					shaperCacheField = typeof(CanvasExtensions).GetField("shaperCache", BindingFlags.NonPublic | BindingFlags.Static);
 
-				return (ConcurrentDictionary<int, (SKShaper shaper, DateTime cachedAt)>)shaperCacheField!.GetValue(null)!;
+				return (Dictionary<int, (SKShaper shaper, DateTime cachedAt)>)shaperCacheField!.GetValue(null)!;
 			}
 		}
 
-		FieldInfo? shapeResultCacheField = null;
-		public ConcurrentDictionary<int, (SKShaper.Result shapeResult, DateTime cachedAt)> ShapeResultCache
+		FieldInfo shapeResultCacheField = null;
+		public Dictionary<int, (SKShaper.Result shapeResult, DateTime cachedAt)> ShapeResultCache
 		{
 			get
 			{
 				if (shapeResultCacheField is null)
 					shapeResultCacheField = typeof(CanvasExtensions).GetField("shapeResultCache", BindingFlags.NonPublic | BindingFlags.Static);
 
-				return (ConcurrentDictionary<int, (SKShaper.Result shapeResult, DateTime cachedAt)>)shapeResultCacheField!.GetValue(null)!;
+				return (Dictionary<int, (SKShaper.Result shapeResult, DateTime cachedAt)>)shapeResultCacheField!.GetValue(null)!;
 			}
 		}
 
