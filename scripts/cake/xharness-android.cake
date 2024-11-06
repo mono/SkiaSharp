@@ -95,11 +95,11 @@ Setup(context =>
 
 Teardown(context =>
 {
-    TakeSnapshot(TEST_RESULTS, "teardown");
-
     // no virtual device was used
     if (!usingEmulator)
         return;
+
+    TakeSnapshot(TEST_RESULTS, "teardown");
 
     // cleanup the emulator
     DotNetTool($"android avd delete --name '{ANDROID_AVD}'");
