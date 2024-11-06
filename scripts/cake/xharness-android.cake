@@ -81,11 +81,11 @@ Setup(context =>
 
     // create the new AVD
     Information("Creating AVD: {0}...", ANDROID_AVD);
-    DotNetTool($"android avd create --name '{ANDROID_AVD}' --sdk '{DEVICE_ID}' --device '{DEVICE_NAME}' --force");
+    DotNetTool($"android avd create --name \"{ANDROID_AVD}\" --sdk \"{DEVICE_ID}\" --device \"{DEVICE_NAME}\" --force");
 
     // start the emulator (only wait 5 mins)
     Information("Starting Emulator: {0}...", ANDROID_AVD);
-    DotNetTool($"android avd start --name '{ANDROID_AVD}' --gpu guest --wait-boot --no-window --no-snapshot --no-audio --no-boot-anim --camera-back none --camera-front none --timeout 300");
+    DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu guest --wait-boot --no-window --no-snapshot --no-audio --no-boot-anim --camera-back none --camera-front none --timeout 300");
 
     // show running emulator information
     Information("Emulator started:");
@@ -102,7 +102,7 @@ Teardown(context =>
     TakeSnapshot(TEST_RESULTS, "teardown");
 
     // cleanup the emulator
-    DotNetTool($"android avd delete --name '{ANDROID_AVD}'");
+    DotNetTool($"android avd delete --name \"{ANDROID_AVD}\"");
 });
 
 Task("Default")
