@@ -336,15 +336,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public readonly void MapPoints (SKPoint[] result, SKPoint[] points)
-		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
-
+		public readonly void MapPoints (SKPoint[] result, SKPoint[] points) =>
 			MapPoints (result.AsSpan (), points.AsSpan ());
-		}
 
 		public readonly SKPoint[] MapPoints (SKPoint[] points) =>
 			MapPoints (points.AsSpan ());
@@ -385,15 +378,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public readonly void MapVectors (SKPoint[] result, SKPoint[] vectors)
-		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-			if (vectors == null)
-				throw new ArgumentNullException (nameof (vectors));
-
+		public readonly void MapVectors (SKPoint[] result, SKPoint[] vectors) =>
 			MapVectors (result.AsSpan (), vectors.AsSpan ());
-		}
 
 		public readonly SKPoint[] MapVectors (SKPoint[] vectors) =>
 			MapVectors (vectors.AsSpan ());

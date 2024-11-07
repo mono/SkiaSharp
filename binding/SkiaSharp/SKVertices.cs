@@ -39,9 +39,6 @@ namespace SkiaSharp
 
 		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, ReadOnlySpan<UInt16> indices)
 		{
-			if (positions == null)
-				throw new ArgumentNullException (nameof (positions));
-
 			if (texs != null && positions.Length != texs.Length)
 				throw new ArgumentException ("The number of texture coordinates must match the number of vertices.", nameof (texs));
 			if (colors != null && positions.Length != colors.Length)

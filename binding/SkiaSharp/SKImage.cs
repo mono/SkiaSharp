@@ -176,13 +176,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKImage FromEncodedData (byte[] data)
-		{
-			if (data == null)
-				throw new ArgumentNullException (nameof (data));
-
-			return FromEncodedData (data.AsSpan ());
-		}
+		public static SKImage FromEncodedData (byte[] data) =>
+			FromEncodedData (data.AsSpan ());
 
 		public static SKImage FromEncodedData (SKStream data)
 		{

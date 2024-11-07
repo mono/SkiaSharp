@@ -36,12 +36,8 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
 		}
 
-		public static SKColorFilter CreateColorMatrix (float[] matrix)
-		{
-			if (matrix == null)
-				throw new ArgumentNullException(nameof(matrix));
-			return CreateColorMatrix(matrix.AsSpan());
-		}
+		public static SKColorFilter CreateColorMatrix (float[] matrix) =>
+			CreateColorMatrix (matrix.AsSpan ());
 
 		public static SKColorFilter CreateColorMatrix(ReadOnlySpan<float> matrix)
 		{
@@ -57,12 +53,8 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_colorfilter_new_luma_color());
 		}
 
-		public static SKColorFilter CreateTable(byte[] table)
-		{
-			if (table == null)
-				throw new ArgumentNullException(nameof(table));
-			return CreateTable(table.AsSpan());
-		}
+		public static SKColorFilter CreateTable (byte[] table) =>
+			CreateTable (table.AsSpan ());
 
 		public static SKColorFilter CreateTable(ReadOnlySpan<byte> table)
 		{
@@ -73,18 +65,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB)
-		{
-			if (tableA == null)
-				throw new ArgumentNullException(nameof(tableA));
-			if (tableR == null)
-				throw new ArgumentNullException(nameof(tableR));
-			if (tableG == null)
-				throw new ArgumentNullException(nameof(tableG));
-			if (tableB == null)
-				throw new ArgumentNullException(nameof(tableB));
-			return CreateTable(tableA.AsSpan(), tableR.AsSpan(), tableG.AsSpan(), tableB.AsSpan());
-		}
+		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB) =>
+			CreateTable(tableA.AsSpan(), tableR.AsSpan(), tableG.AsSpan(), tableB.AsSpan());
 
 		public static SKColorFilter CreateTable(ReadOnlySpan<byte> tableA, ReadOnlySpan<byte> tableR, ReadOnlySpan<byte> tableG, ReadOnlySpan<byte> tableB)
 		{

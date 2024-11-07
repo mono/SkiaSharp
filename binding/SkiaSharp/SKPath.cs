@@ -417,14 +417,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public void AddPoly (SKPoint[] points, bool close = true)
-		{
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
-			fixed (SKPoint* p = points) {
-				SkiaApi.sk_path_add_poly (Handle, p, points.Length, close);
-			}
-		}
+		public void AddPoly (SKPoint[] points, bool close = true) =>
+			AddPoly (points.AsSpan (), close);
 
 		public Iterator CreateIterator (bool forceClose) =>
 			new Iterator (this, forceClose);

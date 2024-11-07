@@ -57,18 +57,8 @@ namespace SkiaSharp
 			return skString.ToString ();
 		}
 
-		internal static SKString Create (string str)
-		{
-			return Create (str.AsSpan ());
-		}
-
-		internal static SKString Create (ReadOnlySpan<char> str)
-		{
-			if (str == null) {
-				return null;
-			}
-			return new SKString (str);
-		}
+		internal static SKString Create (ReadOnlySpan<char> str) =>
+			new SKString (str);
 
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);

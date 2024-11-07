@@ -208,7 +208,7 @@ namespace SkiaSharp
 			CreateRadialGradient (center, radius, colors, null, mode);
 
 		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColor[] colors, float[] colorPos, SKShaderTileMode mode) =>
-			CreateRadialGradient (center, radius, colors.AsSpan (), colorPos.AsSpan(), mode);
+			CreateRadialGradient (center, radius, colors.AsSpan (), colorPos.AsSpan (), mode);
 
 		public static SKShader CreateRadialGradient (SKPoint center, float radius, ReadOnlySpan<SKColor> colors, ReadOnlySpan<float> colorPos, SKShaderTileMode mode)
 		{
