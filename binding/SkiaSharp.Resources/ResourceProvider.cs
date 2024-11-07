@@ -57,7 +57,10 @@ namespace SkiaSharp.Resources
 
 		private static IntPtr Create (string baseDirectory, bool preDecode)
 		{
-			using var baseDir = new SKString(baseDirectory ?? throw new ArgumentNullException (nameof (baseDirectory)));
+			if (baseDirectory == null)
+				throw new ArgumentNullException (nameof (baseDirectory));
+
+			using var baseDir = new SKString (baseDirectory.AsSpan ());
 			return ResourcesApi.skresources_file_resource_provider_make (baseDir.Handle, preDecode);
 		}
 	}

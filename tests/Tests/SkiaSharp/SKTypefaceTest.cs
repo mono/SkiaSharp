@@ -566,7 +566,7 @@ namespace SkiaSharp.Tests
 
 			var adjustments1 = tf.GetKerningPairAdjustments(glyphs);
 			var adjustments2 = new int[glyphs.Length];
-			tf.GetKerningPairAdjustments(adjustments2, glyphs);
+			tf.GetKerningPairAdjustments(glyphs, adjustments2);
 
 			Assert.Equal(adjustments1, adjustments2);
 		}
