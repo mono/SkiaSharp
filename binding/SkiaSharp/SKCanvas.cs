@@ -749,9 +749,7 @@ namespace SkiaSharp
 
 		public SKData DrawUrlAnnotation (SKRect rect, string value)
 		{
-			var data = SKData.FromCString (value);
-			DrawUrlAnnotation (rect, data);
-			return data;
+			return DrawUrlAnnotation (rect, value.AsSpan ());
 		}
 
 		public SKData DrawUrlAnnotation (SKRect rect, ReadOnlySpan<char> value)
@@ -768,9 +766,7 @@ namespace SkiaSharp
 
 		public SKData DrawNamedDestinationAnnotation (SKPoint point, string value)
 		{
-			var data = SKData.FromCString (value);
-			DrawNamedDestinationAnnotation (point, data);
-			return data;
+			return DrawNamedDestinationAnnotation (point, value.AsSpan ());
 		}
 
 		public SKData DrawNamedDestinationAnnotation (SKPoint point, ReadOnlySpan<char> value)
@@ -787,9 +783,7 @@ namespace SkiaSharp
 
 		public SKData DrawLinkDestinationAnnotation (SKRect rect, string value)
 		{
-			var data = SKData.FromCString (value);
-			DrawLinkDestinationAnnotation (rect, data);
-			return data;
+			return DrawLinkDestinationAnnotation (rect, value.AsSpan ());
 		}
 
 		public SKData DrawLinkDestinationAnnotation (SKRect rect, ReadOnlySpan<char> value)
@@ -926,10 +920,20 @@ namespace SkiaSharp
 
 		// DrawVertices
 
+		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKColor[] colors, SKPaint paint)
+		{
+			DrawVertices (vmode, vertices.AsSpan (), colors.AsSpan (), paint);
+		}
+
 		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKColor> colors, SKPaint paint)
 		{
 			using var vert = SKVertices.CreateCopy (vmode, vertices, colors);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
+		}
+
+		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKPaint paint)
+		{
+			DrawVertices (vmode, vertices.AsSpan (), texs.AsSpan (), colors.AsSpan (), paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, SKPaint paint)
@@ -938,10 +942,20 @@ namespace SkiaSharp
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
 		}
 
+		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, UInt16[] indices, SKPaint paint)
+		{
+			DrawVertices (vmode, vertices.AsSpan (), texs.AsSpan (), colors.AsSpan (), indices.AsSpan (), paint);
+		}
+
 		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, ReadOnlySpan<UInt16> indices, SKPaint paint)
 		{
 			using var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
+		}
+
+		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKBlendMode mode, UInt16[] indices, SKPaint paint)
+		{
+			DrawVertices (vmode, vertices.AsSpan (), texs.AsSpan (), colors.AsSpan (), mode, indices.AsSpan (), paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, ReadOnlySpan<SKPoint> vertices, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, SKBlendMode mode, ReadOnlySpan<UInt16> indices, SKPaint paint)
@@ -984,29 +998,50 @@ namespace SkiaSharp
 
 		// DrawAtlas
 
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint = null) =>
+			DrawAtlas (atlas, sprites.AsSpan (), transforms.AsSpan (), paint);
+
 		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, SKPaint paint = null) =>
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, null, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKSamplingOptions sampling, SKPaint paint = null) =>
+			DrawAtlas (atlas, sprites.AsSpan (), transforms.AsSpan (), sampling, paint);
+
 		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, sampling, null, paint);
+
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint = null) =>
+			DrawAtlas (atlas, sprites.AsSpan (), transforms.AsSpan (), colors.AsSpan (), mode, paint);
 
 		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, ReadOnlySpan<SKColor> colors, SKBlendMode mode, SKPaint paint = null) =>
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, null, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKPaint paint = null) =>
+			DrawAtlas (atlas, sprites.AsSpan (), transforms.AsSpan (), colors.AsSpan (), mode, sampling, paint);
+
 		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, ReadOnlySpan<SKColor> colors, SKBlendMode mode, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, sampling, null, paint);
+
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint = null) =>
+			DrawAtlas (atlas, sprites.AsSpan (), transforms.AsSpan (), colors.AsSpan (), mode, cullRect, paint);
 
 		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, ReadOnlySpan<SKColor> colors, SKBlendMode mode, SKRect cullRect, SKPaint paint = null) =>
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, &cullRect, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect cullRect, SKPaint paint = null) =>
+			DrawAtlas (atlas, sprites.AsSpan (), transforms.AsSpan (), colors.AsSpan (), mode, sampling, paint);
+
 		public void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, ReadOnlySpan<SKColor> colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect cullRect, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, sampling, &cullRect, paint);
+
+		private void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect* cullRect, SKPaint paint = null) =>
+			DrawAtlas (atlas, sprites.AsSpan (), transforms.AsSpan (), colors.AsSpan (), mode, sampling, cullRect, paint);
 
 		private void DrawAtlas (SKImage atlas, ReadOnlySpan<SKRect> sprites, ReadOnlySpan<SKRotationScaleMatrix> transforms, ReadOnlySpan<SKColor> colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect* cullRect, SKPaint paint = null)
 		{
@@ -1031,8 +1066,14 @@ namespace SkiaSharp
 
 		// DrawPatch
 
+		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKPaint paint) =>
+			DrawPatch (cubics.AsSpan (), colors.AsSpan (), texCoords.AsSpan (), paint);
+
 		public void DrawPatch (ReadOnlySpan<SKPoint> cubics, ReadOnlySpan<SKColor> colors, ReadOnlySpan<SKPoint> texCoords, SKPaint paint) =>
 			DrawPatch (cubics, colors, texCoords, SKBlendMode.Modulate, paint);
+
+		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKBlendMode mode, SKPaint paint) =>
+			DrawPatch (cubics.AsSpan (), colors.AsSpan (), texCoords.AsSpan (), mode, paint);
 
 		public void DrawPatch (ReadOnlySpan<SKPoint> cubics, ReadOnlySpan<SKColor> colors, ReadOnlySpan<SKPoint> texCoords, SKBlendMode mode, SKPaint paint)
 		{

@@ -41,6 +41,9 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, respectCTM));
 		}
 
+		public static SKMaskFilter CreateTable (byte[] table) =>
+			CreateTable (table.AsSpan ());
+
 		public static SKMaskFilter CreateTable (ReadOnlySpan<byte> table)
 		{
 			if (table.Length != TableMaxLength)

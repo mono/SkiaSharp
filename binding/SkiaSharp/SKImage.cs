@@ -60,6 +60,12 @@ namespace SkiaSharp
 			}
 		}
 
+		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels) =>
+			FromPixelCopy (info, pixels.AsSpan ());
+
+		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels, int rowBytes) =>
+			FromPixelCopy (info, pixels.AsSpan (), rowBytes);
+
 		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels) =>
 			FromPixelCopy (info, pixels, info.RowBytes);
 

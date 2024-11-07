@@ -9,6 +9,11 @@ namespace SkiaSharp
 	{
 		public static readonly SKColorSpacePrimaries Empty;
 
+		public SKColorSpacePrimaries (float[] values)
+			: this (new ReadOnlySpan<float> (values))
+		{
+		}
+
 		public SKColorSpacePrimaries (ReadOnlySpan<float> values)
 		{
 			if (values.Length != 8)
@@ -132,6 +137,11 @@ namespace SkiaSharp
 		}
 
 		public static readonly SKColorSpaceTransferFn Empty;
+
+		public SKColorSpaceTransferFn (float[] values)
+			: this (new ReadOnlySpan<float> (values))
+		{
+		}
 
 		public SKColorSpaceTransferFn (ReadOnlySpan<float> values)
 		{
@@ -270,6 +280,11 @@ namespace SkiaSharp
 			fM20 = value;
 			fM21 = value;
 			fM22 = value;
+		}
+
+		public SKColorSpaceXyz (float[] values)
+			: this (new ReadOnlySpan<float> (values))
+		{
 		}
 
 		public SKColorSpaceXyz (ReadOnlySpan<float> values)

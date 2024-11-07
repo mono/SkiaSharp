@@ -205,12 +205,6 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_data_new_with_proc ((void*)address, (IntPtr)length, proxy, (void*)ctx));
 		}
 
-		internal static SKData FromCString (string str)
-		{
-			var bytes = Encoding.ASCII.GetBytes (str ?? string.Empty);
-			return SKData.CreateCopy (bytes, (ulong)(bytes.Length + 1)); // + 1 for the terminating char
-		}
-
 		internal static SKData FromCString (ReadOnlySpan<char> str)
 		{
 			var bytes = Encoding.ASCII.GetBytes (str);
