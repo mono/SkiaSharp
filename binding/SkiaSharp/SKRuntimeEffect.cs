@@ -518,7 +518,11 @@ namespace SkiaSharp
 
 		public static implicit operator SKRuntimeEffectUniform (float[][] value)
 		{
-			var totalLength = value.Sum (static f => f.Length);
+			var totalLength = 0;
+			foreach (var f in value) {
+				totalLength += f.Length;
+			}
+
 			var floats = new float[totalLength];
 
 			var offset = 0;
