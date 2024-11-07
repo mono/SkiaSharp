@@ -168,14 +168,20 @@ namespace SkiaSharp
 
 		public static SKImage FromEncodedData (ReadOnlySpan<byte> data)
 		{
-			if (data == null)
-				throw new ArgumentNullException (nameof (data));
-			if (data.Length == 0)
+			if (data.IsEmpty)
 				throw new ArgumentException ("The data buffer was empty.");
 
 			using (var skdata = SKData.CreateCopy (data)) {
 				return FromEncodedData (skdata);
 			}
+		}
+
+		public static SKImage FromEncodedData (byte[] data)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+
+			return FromEncodedData (data.AsSpan ());
 		}
 
 		public static SKImage FromEncodedData (SKStream data)

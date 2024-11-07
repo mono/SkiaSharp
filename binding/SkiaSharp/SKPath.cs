@@ -181,6 +181,9 @@ namespace SkiaSharp
 			return points;
 		}
 
+		public int GetPoints (SKPoint[] points, int max) =>
+			GetPoints (points.AsSpan (), max);
+
 		public int GetPoints (Span<SKPoint> points, int max)
 		{
 			if (points == null)
@@ -524,8 +527,11 @@ namespace SkiaSharp
 			var quadCount = 1 << pow2;
 			var ptCount = 2 * quadCount + 1;
 			pts = new SKPoint[ptCount];
-			return ConvertConicToQuads (p0, p1, p2, w, new Span<SKPoint> (pts), pow2);
+			return ConvertConicToQuads (p0, p1, p2, w, pts.AsSpan (), pow2);
 		}
+
+		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, SKPoint[] pts, int pow2) =>
+			ConvertConicToQuads (p0, p1, p2, w, pts.AsSpan (), pow2);
 
 		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, Span<SKPoint> pts, int pow2)
 		{

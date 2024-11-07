@@ -74,7 +74,7 @@ namespace SkiaSharp
 		public static SKData CreateCopy (ReadOnlySpan<byte> bytes, ulong length)
 		{
 			fixed (byte* b = bytes) {
-				return GetObject (SkiaApi.sk_data_new_with_copy (b, (IntPtr)length));
+				return CreateCopy ((IntPtr)b, (ulong)bytes.Length);
 			}
 		}
 
