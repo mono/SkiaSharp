@@ -153,6 +153,7 @@ namespace SkiaSharp
 				SKColorType.Alpha16 => GRGlSizedFormat.R16,
 				SKColorType.Rg1616 => GRGlSizedFormat.RG16,
 				SKColorType.Rgba16161616 => GRGlSizedFormat.RGBA16,
+				SKColorType.Rgba10x6 => 0,
 				SKColorType.RgF16 => GRGlSizedFormat.RG16F,
 				SKColorType.Rg88 => GRGlSizedFormat.RG8,
 				SKColorType.Rgb101010x => 0,
