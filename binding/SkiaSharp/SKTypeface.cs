@@ -258,7 +258,7 @@ namespace SkiaSharp
 			GetFont ().ContainsGlyphs (text);
 
 		public bool ContainsGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
-			ContainsGlyphs (text, encoding);
+			GetFont ().ContainsGlyphs (text, encoding);
 
 		public bool ContainsGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
 			GetFont ().ContainsGlyphs (text, length * encoding.GetCharacterByteSize (), encoding);
