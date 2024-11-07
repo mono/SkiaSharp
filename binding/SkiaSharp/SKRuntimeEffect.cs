@@ -19,6 +19,9 @@ namespace SkiaSharp
 
 		// Create*
 
+		public static SKRuntimeEffect CreateShader (string sksl, out string errors) =>
+			CreateShader (sksl.AsSpan (), out errors);
+
 		public static SKRuntimeEffect CreateShader (ReadOnlySpan<char> sksl, out string errors)
 		{
 			using var s = new SKString (sksl);
@@ -29,6 +32,9 @@ namespace SkiaSharp
 				errors = null;
 			return effect;
 		}
+
+		public static SKRuntimeEffect CreateColorFilter (string sksl, out string errors) =>
+			CreateColorFilter (sksl.AsSpan (), out errors);
 
 		public static SKRuntimeEffect CreateColorFilter (ReadOnlySpan<char> sksl, out string errors)
 		{
@@ -41,7 +47,10 @@ namespace SkiaSharp
 			return effect;
 		}
 
-		public static SKRuntimeEffect CreateBlender (string sksl, out string errors)
+		public static SKRuntimeEffect CreateBlender (string sksl, out string errors) =>
+			CreateBlender (sksl.AsSpan (), out errors);
+
+		public static SKRuntimeEffect CreateBlender (ReadOnlySpan<char> sksl, out string errors)
 		{
 			using var s = new SKString (sksl);
 			using var errorString = new SKString ();
@@ -54,12 +63,18 @@ namespace SkiaSharp
 
 		// Build*
 
+		public static SKRuntimeShaderBuilder BuildShader (string sksl) =>
+			BuildShader (sksl.AsSpan ());
+
 		public static SKRuntimeShaderBuilder BuildShader (ReadOnlySpan<char> sksl)
 		{
 			var effect = CreateShader (sksl, out var errors);
 			ValidateResult (effect, errors);
 			return new SKRuntimeShaderBuilder (effect);
 		}
+
+		public static SKRuntimeColorFilterBuilder BuildColorFilter (string sksl) =>
+			BuildColorFilter (sksl.AsSpan ());
 
 		public static SKRuntimeColorFilterBuilder BuildColorFilter (ReadOnlySpan<char> sksl)
 		{
@@ -68,7 +83,10 @@ namespace SkiaSharp
 			return new SKRuntimeColorFilterBuilder (effect);
 		}
 
-		public static SKRuntimeBlenderBuilder BuildBlender (string sksl)
+		public static SKRuntimeBlenderBuilder BuildBlender (string sksl) =>
+			BuildBlender (sksl.AsSpan ());
+
+		public static SKRuntimeBlenderBuilder BuildBlender (ReadOnlySpan<char> sksl)
 		{
 			var effect = CreateBlender (sksl, out var errors);
 			ValidateResult (effect, errors);

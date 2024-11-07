@@ -409,6 +409,9 @@ namespace SkiaSharp
 
 		// DrawPoints
 
+		public void DrawPoints (SKPointMode mode, SKPoint[] points, SKPaint paint) =>
+			DrawPoints (mode, points.AsSpan (), paint);
+
 		public void DrawPoints (SKPointMode mode, ReadOnlySpan<SKPoint> points, SKPaint paint)
 		{
 			if (paint == null)

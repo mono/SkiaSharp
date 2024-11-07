@@ -27,6 +27,11 @@ namespace SkiaSharp
 			public const int Count = 9;
 		}
 
+		public SKMatrix (float[] values)
+			: this (new ReadOnlySpan<float> (values))
+		{
+		}
+
 		public SKMatrix (ReadOnlySpan<float> values)
 		{
 			if (values.Length != Indices.Count)
@@ -74,6 +79,9 @@ namespace SkiaSharp
 				};
 			set => SetValues (new ReadOnlySpan<float> (value));
 		}
+
+		public readonly void GetValues (float[] values) =>
+			GetValues (values.AsSpan ());
 
 		public readonly void GetValues (Span<float> values)
 		{
@@ -316,6 +324,16 @@ namespace SkiaSharp
 			return result;
 		}
 
+		public readonly void MapPoints (SKPoint[] result, SKPoint[] points)
+		{
+			if (result == null)
+				throw new ArgumentNullException (nameof (result));
+			if (points == null)
+				throw new ArgumentNullException (nameof (points));
+
+			MapPoints (result.AsSpan (), points.AsSpan ());
+		}
+
 		public readonly void MapPoints (Span<SKPoint> result, ReadOnlySpan<SKPoint> points)
 		{
 			if (result.Length != points.Length)
@@ -328,23 +346,10 @@ namespace SkiaSharp
 			}
 		}
 
-		public readonly void MapPoints (SKPoint[] result, SKPoint[] points)
-		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
-			if (result.Length != points.Length)
-				throw new ArgumentException ("Buffers must be the same size.");
+		public readonly SKPoint[] MapPoints (SKPoint[] points) =>
+			MapPoints (points.AsSpan ());
 
-			fixed (SKMatrix* t = &this)
-			fixed (SKPoint* rp = result)
-			fixed (SKPoint* pp = points) {
-				SkiaApi.sk_matrix_map_points (t, rp, pp, result.Length);
-			}
-		}
-
-		public readonly SKPoint[] MapPoints (SKPoint[] points)
+		public readonly SKPoint[] MapPoints (ReadOnlySpan<SKPoint> points)
 		{
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
@@ -368,6 +373,16 @@ namespace SkiaSharp
 			return result;
 		}
 
+		public readonly void MapVectors (SKPoint[] result, SKPoint[] vectors)
+		{
+			if (result == null)
+				throw new ArgumentNullException (nameof (result));
+			if (vectors == null)
+				throw new ArgumentNullException (nameof (vectors));
+
+			MapVectors (result.AsSpan (), vectors.AsSpan ());
+		}
+
 		public readonly void MapVectors (Span<SKPoint> result, ReadOnlySpan<SKPoint> vectors)
 		{
 			if (result.Length != vectors.Length)
@@ -380,21 +395,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public readonly void MapVectors (SKPoint[] result, SKPoint[] vectors)
-		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-			if (vectors == null)
-				throw new ArgumentNullException (nameof (vectors));
-			if (result.Length != vectors.Length)
-				throw new ArgumentException ("Buffers must be the same size.");
-
-			fixed (SKMatrix* t = &this)
-			fixed (SKPoint* rp = result)
-			fixed (SKPoint* pp = vectors) {
-				SkiaApi.sk_matrix_map_vectors (t, rp, pp, result.Length);
-			}
-		}
+		public readonly SKPoint[] MapVectors (SKPoint[] vectors) =>
+			MapVectors (vectors.AsSpan ());
 
 		public readonly SKPoint[] MapVectors (ReadOnlySpan<SKPoint> vectors)
 		{

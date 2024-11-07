@@ -40,11 +40,6 @@ namespace SkiaSharp
 		{
 		}
 
-		public SKString (string str)
-			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf8).AsSpan ())
-		{
-		}
-
 		public SKString (ReadOnlySpan<char> str)
 			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf8).AsSpan ())
 		{
@@ -64,10 +59,7 @@ namespace SkiaSharp
 
 		internal static SKString Create (string str)
 		{
-			if (str == null) {
-				return null;
-			}
-			return new SKString (str);
+			return Create (str.AsSpan ());
 		}
 
 		internal static SKString Create (ReadOnlySpan<char> str)
