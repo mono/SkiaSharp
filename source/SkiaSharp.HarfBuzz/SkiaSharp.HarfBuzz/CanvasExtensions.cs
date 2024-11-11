@@ -167,19 +167,25 @@ namespace SkiaSharp.HarfBuzz
 		{
 			var outdated = DateTime.Now - TimeSpan.FromMilliseconds(cacheDuration);
 
-			foreach (var kv in shaperCache.AsEnumerable())
+			lock (shaperCache)
 			{
-				if (kv.Value.cachedAt < outdated)
+				foreach (var kv in shaperCache.AsEnumerable())
 				{
-					if (shaperCache.Remove(kv.Key))
-						kv.Value.shaper.Dispose();
+					if (kv.Value.cachedAt < outdated)
+					{
+						if (shaperCache.Remove(kv.Key))
+							kv.Value.shaper.Dispose();
+					}
 				}
 			}
 
-			foreach (var kv in shapeResultCache.AsEnumerable())
+			lock (shapeResultCache)
 			{
-				if (kv.Value.cachedAt < outdated)
-					shapeResultCache.Remove(kv.Key);
+				foreach (var kv in shapeResultCache.AsEnumerable())
+				{
+					if (kv.Value.cachedAt < outdated)
+						shapeResultCache.Remove(kv.Key);
+				}
 			}
 
 			if ((shaperCache.Count == 0 && shapeResultCache.Count == 0) || cacheDuration == 0)
