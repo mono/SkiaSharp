@@ -3,21 +3,25 @@ type SizeWatcherElement = {
 	SizeWatcher: SizeWatcherInstance;
 } & HTMLElement
 
+type SizeWatcherCallback = DotNet.DotNetObjectReference | ((width: number, height: number) => void);
+
 type SizeWatcherInstance = {
-	callback: DotNet.DotNetObjectReference;
+	callback: SizeWatcherCallback;
 }
 
 export class SizeWatcher {
 	static observer: ResizeObserver;
 	static elements: Map<string, HTMLElement>;
 
-	public static observe(element: HTMLElement, elementId: string, callback: DotNet.DotNetObjectReference) {
-		if (!element || !callback)
+	public static observe(element: HTMLElement, elementId: string, callback: SizeWatcherCallback) {
+		if ((!element && !elementId) || !callback)
 			return;
 
 		//console.info(`Adding size watcher observation with callback ${callback._id}...`);
 
 		SizeWatcher.init();
+
+		element = element || document.querySelector('[' + elementId + ']');
 
 		const watcherElement = element as SizeWatcherElement;
 		watcherElement.SizeWatcher = {
@@ -63,6 +67,10 @@ export class SizeWatcher {
 		if (!instance || !instance.callback)
 			return;
 
-		return instance.callback.invokeMethod('Invoke', element.clientWidth, element.clientHeight);
+		if (typeof instance.callback === 'function') {
+			instance.callback(element.clientWidth, element.clientHeight);
+		} else {
+			instance.callback.invokeMethod('Invoke', element.clientWidth, element.clientHeight);
+		}
 	}
 }

@@ -1,11 +1,18 @@
-using System;
+﻿using System;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
 
+#if NET7_0_OR_GREATER
+using System.Runtime.InteropServices.JavaScript;
+#endif
+
 namespace SkiaSharp.Views.Blazor.Internal
 {
-	internal class DpiWatcherInterop : JSModuleInterop
+	[SupportedOSPlatform("browser")]
+	internal partial class DpiWatcherInterop : JSModuleInterop
 	{
+		private const string ModuleName = "DpiWatcher";
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/DpiWatcher.js";
 		private const string StartSymbol = "DpiWatcher.start";
 		private const string StopSymbol = "DpiWatcher.stop";
@@ -14,9 +21,13 @@ namespace SkiaSharp.Views.Blazor.Internal
 		private static DpiWatcherInterop? instance;
 
 		private event Action<double>? callbacksEvent;
+#if NET7_0_OR_GREATER
+		private readonly Action<double, double> callbackHelper;
+#else
 		private readonly FloatFloatActionHelper callbackHelper;
 
 		private DotNetObjectReference<FloatFloatActionHelper>? callbackReference;
+#endif
 
 		public static async Task<DpiWatcherInterop> ImportAsync(IJSRuntime js, Action<double>? callback = null)
 		{
@@ -31,9 +42,9 @@ namespace SkiaSharp.Views.Blazor.Internal
 			instance ??= new DpiWatcherInterop(js);
 
 		private DpiWatcherInterop(IJSRuntime js)
-			: base(js, JsFilename)
+			: base(js, ModuleName, JsFilename)
 		{
-			callbackHelper = new FloatFloatActionHelper((o, n) => callbacksEvent?.Invoke(n));
+			callbackHelper = new((o, n) => callbacksEvent?.Invoke((float)n));
 		}
 
 		protected override void OnDisposingModule() =>
@@ -60,21 +71,28 @@ namespace SkiaSharp.Views.Blazor.Internal
 				Stop();
 		}
 
+#if NET7_0_OR_GREATER
+		private double Start() =>
+			Start(callbackHelper);
+
+		[JSImport(StartSymbol, ModuleName)]
+		private static partial double Start([JSMarshalAs<JSType.Function<JSType.Number, JSType.Number>>] Action<double, double> callback);
+
+		[JSImport(StopSymbol, ModuleName)]
+		private static partial void Stop();
+
+		[JSImport(GetDpiSymbol, ModuleName)]
+		public static partial double GetDpi();
+#else
 		private double Start()
 		{
-			if (callbackReference != null)
-				return GetDpi();
-
-			callbackReference = DotNetObjectReference.Create(callbackHelper);
+			callbackReference ??= DotNetObjectReference.Create(callbackHelper);
 
 			return Invoke<double>(StartSymbol, callbackReference);
 		}
 
 		private void Stop()
 		{
-			if (callbackReference == null)
-				return;
-
 			Invoke(StopSymbol);
 
 			callbackReference?.Dispose();
@@ -83,5 +101,6 @@ namespace SkiaSharp.Views.Blazor.Internal
 
 		public double GetDpi() =>
 			Invoke<double>(GetDpiSymbol);
+#endif
 	}
 }

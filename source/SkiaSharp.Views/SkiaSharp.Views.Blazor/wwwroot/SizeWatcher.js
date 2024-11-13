@@ -1,9 +1,10 @@
 export class SizeWatcher {
     static observe(element, elementId, callback) {
-        if (!element || !callback)
+        if ((!element && !elementId) || !callback)
             return;
         //console.info(`Adding size watcher observation with callback ${callback._id}...`);
         SizeWatcher.init();
+        element = element || document.querySelector('[' + elementId + ']');
         const watcherElement = element;
         watcherElement.SizeWatcher = {
             callback: callback
@@ -36,6 +37,11 @@ export class SizeWatcher {
         const instance = watcherElement.SizeWatcher;
         if (!instance || !instance.callback)
             return;
-        return instance.callback.invokeMethod('Invoke', element.clientWidth, element.clientHeight);
+        if (typeof instance.callback === 'function') {
+            instance.callback(element.clientWidth, element.clientHeight);
+        }
+        else {
+            instance.callback.invokeMethod('Invoke', element.clientWidth, element.clientHeight);
+        }
     }
 }

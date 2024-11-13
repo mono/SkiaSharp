@@ -17,16 +17,18 @@ type SKHtmlCanvasElement = {
 	SKHtmlCanvas: SKHtmlCanvas
 } & HTMLCanvasElement
 
+type SKHtmlCanvasCallback = DotNet.DotNetObjectReference | (() => void);
+
 export class SKHtmlCanvas {
 	static elements: Map<string, HTMLCanvasElement>;
 
 	htmlCanvas: HTMLCanvasElement;
 	glInfo: SKGLViewInfo;
-	renderFrameCallback: DotNet.DotNetObjectReference;
+	renderFrameCallback: SKHtmlCanvasCallback;
 	renderLoopEnabled: boolean = false;
 	renderLoopRequest: number = 0;
 
-	public static initGL(element: HTMLCanvasElement, elementId: string, callback: DotNet.DotNetObjectReference): SKGLViewInfo {
+	public static initGL(element: HTMLCanvasElement, elementId: string, callback: SKHtmlCanvasCallback): SKGLViewInfo {
 		var view = SKHtmlCanvas.init(true, element, elementId, callback);
 		if (!view || !view.glInfo)
 			return null;
@@ -34,7 +36,7 @@ export class SKHtmlCanvas {
 		return view.glInfo;
 	}
 
-	public static initRaster(element: HTMLCanvasElement, elementId: string, callback: DotNet.DotNetObjectReference): boolean {
+	public static initRaster(element: HTMLCanvasElement, elementId: string, callback: SKHtmlCanvasCallback): boolean {
 		var view = SKHtmlCanvas.init(false, element, elementId, callback);
 		if (!view)
 			return false;
@@ -42,7 +44,8 @@ export class SKHtmlCanvas {
 		return true;
 	}
 
-	static init(useGL: boolean, element: HTMLCanvasElement, elementId: string, callback: DotNet.DotNetObjectReference): SKHtmlCanvas {
+	static init(useGL: boolean, element: HTMLCanvasElement, elementId: string, callback: SKHtmlCanvasCallback): SKHtmlCanvas {
+		element = element || document.querySelector('[' + elementId + ']');
 		var htmlCanvas = element as SKHtmlCanvasElement;
 		if (!htmlCanvas) {
 			console.error(`No canvas element was provided.`);
@@ -75,31 +78,31 @@ export class SKHtmlCanvas {
 		htmlCanvas.SKHtmlCanvas = undefined;
 	}
 
-	public static requestAnimationFrame(element: HTMLCanvasElement, renderLoop?: boolean, width?: number, height?: number) {
-		const htmlCanvas = element as SKHtmlCanvasElement;
+	public static requestAnimationFrame(elementId: string, renderLoop?: boolean, width?: number, height?: number) {
+		const htmlCanvas = SKHtmlCanvas.elements[elementId] as SKHtmlCanvasElement;
 		if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
 			return;
 
 		htmlCanvas.SKHtmlCanvas.requestAnimationFrame(renderLoop, width, height);
 	}
 
-	public static setEnableRenderLoop(element: HTMLCanvasElement, enable: boolean) {
-		const htmlCanvas = element as SKHtmlCanvasElement;
+	public static setEnableRenderLoop(elementId: string, enable: boolean) {
+		const htmlCanvas = SKHtmlCanvas.elements[elementId] as SKHtmlCanvasElement;
 		if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
 			return;
 
 		htmlCanvas.SKHtmlCanvas.setEnableRenderLoop(enable);
 	}
 
-	public static putImageData(element: HTMLCanvasElement, pData: number, width: number, height: number) {
-		const htmlCanvas = element as SKHtmlCanvasElement;
+	public static putImageData(elementId: string, pData: number, width: number, height: number) {
+		const htmlCanvas = SKHtmlCanvas.elements[elementId] as SKHtmlCanvasElement;
 		if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
 			return;
 
 		htmlCanvas.SKHtmlCanvas.putImageData(pData, width, height);
 	}
 
-	public constructor(useGL: boolean, element: HTMLCanvasElement, callback: DotNet.DotNetObjectReference) {
+	public constructor(useGL: boolean, element: HTMLCanvasElement, callback: SKHtmlCanvasCallback) {
 		this.htmlCanvas = element;
 		this.renderFrameCallback = callback;
 
@@ -154,7 +157,11 @@ export class SKHtmlCanvas {
 				GL.makeContextCurrent(this.glInfo.context);
 			}
 
-			this.renderFrameCallback.invokeMethod('Invoke');
+			if (typeof this.renderFrameCallback === 'function') {
+				this.renderFrameCallback();
+			} else {
+				this.renderFrameCallback.invokeMethod('Invoke');
+			}
 			this.renderLoopRequest = 0;
 
 			// we may want to draw the next frame
@@ -191,6 +198,7 @@ export class SKHtmlCanvas {
 		this.htmlCanvas.height = height;
 
 		// set the canvas to be the bytes
+		const Module = SKHtmlCanvas.getModule();
 		var buffer = new Uint8ClampedArray(Module.HEAPU8.buffer, pData, width * height * 4);
 		var imageData = new ImageData(buffer, width, height);
 		ctx.putImageData(imageData, 0, 0);
@@ -229,6 +237,10 @@ export class SKHtmlCanvas {
 
 	static getGL(): any {
 		return (globalThis as any).SkiaSharpGL || (Module as any).GL || GL;
+	}
+
+	static getModule(): EmscriptenModule {
+		return (globalThis as any).SkiaSharpModule || (Module as any);
 	}
 
 	static getGLctx(): WebGLRenderingContext {
