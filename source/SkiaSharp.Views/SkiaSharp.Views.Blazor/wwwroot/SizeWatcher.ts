@@ -28,7 +28,7 @@ export class SizeWatcher {
 			callback: callback
 		};
 
-		SizeWatcher.elements[elementId] = element;
+		SizeWatcher.elements.set(elementId, element);
 		SizeWatcher.observer.observe(element);
 
 		SizeWatcher.invoke(element);
@@ -40,9 +40,8 @@ export class SizeWatcher {
 
 		//console.info('Removing size watcher observation...');
 
-		const element = SizeWatcher.elements[elementId];
-
-		SizeWatcher.elements.delete(elementId);
+		const element = SizeWatcher.elements.get(elementId);
+		const removed = SizeWatcher.elements.delete(elementId);
 		SizeWatcher.observer.unobserve(element);
 	}
 

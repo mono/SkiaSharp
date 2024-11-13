@@ -54,7 +54,7 @@ export class SKHtmlCanvas {
 
 		if (!SKHtmlCanvas.elements)
 			SKHtmlCanvas.elements = new Map<string, HTMLCanvasElement>();
-		SKHtmlCanvas.elements[elementId] = element;
+		SKHtmlCanvas.elements.set(elementId, element);
 
 		const view = new SKHtmlCanvas(useGL, element, callback);
 
@@ -67,8 +67,8 @@ export class SKHtmlCanvas {
 		if (!elementId)
 			return;
 
-		const element = SKHtmlCanvas.elements[elementId];
-		SKHtmlCanvas.elements.delete(elementId);
+		const element = SKHtmlCanvas.elements.get(elementId);
+		const removed = SKHtmlCanvas.elements.delete(elementId);
 
 		const htmlCanvas = element as SKHtmlCanvasElement;
 		if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
@@ -79,7 +79,7 @@ export class SKHtmlCanvas {
 	}
 
 	public static requestAnimationFrame(elementId: string, renderLoop?: boolean, width?: number, height?: number) {
-		const htmlCanvas = SKHtmlCanvas.elements[elementId] as SKHtmlCanvasElement;
+		const htmlCanvas = SKHtmlCanvas.elements.get(elementId) as SKHtmlCanvasElement;
 		if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
 			return;
 
@@ -87,7 +87,7 @@ export class SKHtmlCanvas {
 	}
 
 	public static setEnableRenderLoop(elementId: string, enable: boolean) {
-		const htmlCanvas = SKHtmlCanvas.elements[elementId] as SKHtmlCanvasElement;
+		const htmlCanvas = SKHtmlCanvas.elements.get(elementId) as SKHtmlCanvasElement;
 		if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
 			return;
 
@@ -95,7 +95,7 @@ export class SKHtmlCanvas {
 	}
 
 	public static putImageData(elementId: string, pData: number, width: number, height: number) {
-		const htmlCanvas = SKHtmlCanvas.elements[elementId] as SKHtmlCanvasElement;
+		const htmlCanvas = SKHtmlCanvas.elements.get(elementId) as SKHtmlCanvasElement;
 		if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
 			return;
 
