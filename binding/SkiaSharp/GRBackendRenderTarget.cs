@@ -38,6 +38,8 @@ namespace SkiaSharp
 		{
 		}
 
+#endif
+
 		public GRBackendRenderTarget (int width, int height, GRMtlTextureInfo mtlInfo)
 			: this (IntPtr.Zero, true)
 		{
@@ -48,8 +50,6 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
 			}
 		}
-
-#endif
 
 		private void CreateGl (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
 		{
