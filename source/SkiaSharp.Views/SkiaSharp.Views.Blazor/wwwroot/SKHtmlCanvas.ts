@@ -140,6 +140,7 @@ export class SKHtmlCanvas {
 		if (width && height) {
 			this.htmlCanvas.width = width;
 			this.htmlCanvas.height = height;
+			this.renderFrameCallback.invokeMethod('Invoke');
 		}
 
 		// skip because we have a render loop
