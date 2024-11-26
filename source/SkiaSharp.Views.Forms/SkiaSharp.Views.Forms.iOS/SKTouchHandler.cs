@@ -108,7 +108,7 @@ namespace SkiaSharp.Views.Forms
 			var cgPoint = touch.LocationInView(View);
 			var point = scalePixels(cgPoint.X, cgPoint.Y);
 
-			var args = new SKTouchEventArgs(id, actionType, point, inContact);
+			var args = new SKTouchEventArgs(id, actionType, point, inContact, (float)touch.Force);
 			onTouchAction(args);
 			return args.Handled;
 		}

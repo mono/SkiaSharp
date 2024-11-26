@@ -127,22 +127,27 @@ namespace SkiaSharp.Views.Forms
 			var skPoint = scalePixels(windowsPoint.X, windowsPoint.Y);
 
 			var mouse = GetMouseButton(pointerPoint);
-			var device = GetTouchDevice(evt);
+			var device = GetTouchDevice(evt, pointerPoint);
 
 			var wheelDelta = pointerPoint?.Properties?.MouseWheelDelta ?? 0;
+			var pressure = pointerPoint?.Properties?.Pressure ?? 0.5;
 
-			var args = new SKTouchEventArgs(id, touchActionType, mouse, device, skPoint, evt.Pointer.IsInContact, wheelDelta);
+			var args = new SKTouchEventArgs(id, touchActionType, mouse, device, skPoint, evt.Pointer.IsInContact, wheelDelta, pressure);
 			onTouchAction(args);
 			return args.Handled;
 		}
 
-		private static SKTouchDeviceType GetTouchDevice(PointerRoutedEventArgs evt)
+		private static SKTouchDeviceType GetTouchDevice(PointerRoutedEventArgs evt, PointerPoint pointerPoint)
 		{
 			var device = SKTouchDeviceType.Touch;
 			switch (evt.Pointer.PointerDeviceType)
 			{
 				case PointerDeviceType.Pen:
-					device = SKTouchDeviceType.Pen;
+					var isEraser =
+						pointerPoint?.Properties?.IsInverted == true ||
+						pointerPoint?.Properties?.IsEraser == true;
+
+					device = isEraser ? SKTouchDeviceType.Eraser : SKTouchDeviceType.Pen;
 					break;
 				case PointerDeviceType.Mouse:
 					device = SKTouchDeviceType.Mouse;
