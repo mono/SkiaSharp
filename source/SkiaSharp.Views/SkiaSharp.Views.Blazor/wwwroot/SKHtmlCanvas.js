@@ -12,6 +12,7 @@ export class SKHtmlCanvas {
         return true;
     }
     static init(useGL, element, elementId, callback) {
+        element = element || document.querySelector('[' + elementId + ']');
         var htmlCanvas = element;
         if (!htmlCanvas) {
             console.error(`No canvas element was provided.`);
@@ -19,7 +20,7 @@ export class SKHtmlCanvas {
         }
         if (!SKHtmlCanvas.elements)
             SKHtmlCanvas.elements = new Map();
-        SKHtmlCanvas.elements[elementId] = element;
+        SKHtmlCanvas.elements.set(elementId, element);
         const view = new SKHtmlCanvas(useGL, element, callback);
         htmlCanvas.SKHtmlCanvas = view;
         return view;
@@ -27,28 +28,28 @@ export class SKHtmlCanvas {
     static deinit(elementId) {
         if (!elementId)
             return;
-        const element = SKHtmlCanvas.elements[elementId];
-        SKHtmlCanvas.elements.delete(elementId);
+        const element = SKHtmlCanvas.elements.get(elementId);
+        const removed = SKHtmlCanvas.elements.delete(elementId);
         const htmlCanvas = element;
         if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
             return;
         htmlCanvas.SKHtmlCanvas.deinit();
         htmlCanvas.SKHtmlCanvas = undefined;
     }
-    static requestAnimationFrame(element, renderLoop, width, height) {
-        const htmlCanvas = element;
+    static requestAnimationFrame(elementId, renderLoop, width, height) {
+        const htmlCanvas = SKHtmlCanvas.elements.get(elementId);
         if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
             return;
         htmlCanvas.SKHtmlCanvas.requestAnimationFrame(renderLoop, width, height);
     }
-    static setEnableRenderLoop(element, enable) {
-        const htmlCanvas = element;
+    static setEnableRenderLoop(elementId, enable) {
+        const htmlCanvas = SKHtmlCanvas.elements.get(elementId);
         if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
             return;
         htmlCanvas.SKHtmlCanvas.setEnableRenderLoop(enable);
     }
-    static putImageData(element, pData, width, height) {
-        const htmlCanvas = element;
+    static putImageData(elementId, pData, width, height) {
+        const htmlCanvas = SKHtmlCanvas.elements.get(elementId);
         if (!htmlCanvas || !htmlCanvas.SKHtmlCanvas)
             return;
         htmlCanvas.SKHtmlCanvas.putImageData(pData, width, height);
@@ -101,7 +102,12 @@ export class SKHtmlCanvas {
                 const GL = SKHtmlCanvas.getGL();
                 GL.makeContextCurrent(this.glInfo.context);
             }
-            this.renderFrameCallback.invokeMethod('Invoke');
+            if (typeof this.renderFrameCallback === 'function') {
+                this.renderFrameCallback();
+            }
+            else {
+                this.renderFrameCallback.invokeMethod('Invoke');
+            }
             this.renderLoopRequest = 0;
             // we may want to draw the next frame
             if (this.renderLoopEnabled)
@@ -132,6 +138,7 @@ export class SKHtmlCanvas {
         this.htmlCanvas.width = width;
         this.htmlCanvas.height = height;
         // set the canvas to be the bytes
+        const Module = SKHtmlCanvas.getModule();
         var buffer = new Uint8ClampedArray(Module.HEAPU8.buffer, pData, width * height * 4);
         var imageData = new ImageData(buffer, width, height);
         ctx.putImageData(imageData, 0, 0);
@@ -165,6 +172,9 @@ export class SKHtmlCanvas {
     }
     static getGL() {
         return globalThis.SkiaSharpGL || Module.GL || GL;
+    }
+    static getModule() {
+        return globalThis.SkiaSharpModule || Module;
     }
     static getGLctx() {
         const GL = SKHtmlCanvas.getGL();
