@@ -31,4 +31,22 @@
     <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.56\$(_HarfBuzzSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0'))" />
   </ItemGroup>
 
+  <!-- Workaround for https://github.com/dotnet/runtime/issues/109289 -->
+  <Target Name="RuntimeIssue109289_Workaround"
+          AfterTargets="_BrowserWasmWriteRspForLinking">
+    <ItemGroup>
+      <_WasmLinkStepArgs Remove="@(_EmccLinkStepArgs)" />
+      <_EmccLinkStepArgs Remove="&quot;%(_WasmNativeFileForLinking.Identity)&quot;" />
+      <_WasmLinkDependencies Remove="@(_WasmNativeFileForLinking)" />
+
+      <_SkiaSharpToReorder Include="@(_WasmNativeFileForLinking)" Condition="$([System.String]::Copy('%(FullPath)').Contains('libSkiaSharp.a'))" />
+      <_WasmNativeFileForLinking Remove="@(_SkiaSharpToReorder)" />
+      <_WasmNativeFileForLinking Include="@(_SkiaSharpToReorder)" />
+
+      <_EmccLinkStepArgs Include="&quot;%(_WasmNativeFileForLinking.Identity)&quot;" />
+      <_WasmLinkDependencies Include="@(_WasmNativeFileForLinking)" />
+      <_WasmLinkStepArgs Include="@(_EmccLinkStepArgs)" />
+    </ItemGroup>
+  </Target>
+
 </Project>
