@@ -101,6 +101,9 @@ jobs:
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
         displayName: Determine build type
 
+      - pwsh: Get-Volume
+        displayName: Get the volume information before the provisioning
+
       # provisioning steps
       - ${{ if ne(parameters.buildAgent.provisioningSteps, '') }}:
         - ${{ parameters.buildAgent.provisioningSteps }}
@@ -273,6 +276,9 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
+      - pwsh: Get-Volume
+        displayName: Get the volume information before downloading artifacts
+
       # download artifacts
       - template: /scripts/azure-templates-download-artifacts.yml@self
         parameters:
@@ -285,11 +291,17 @@ jobs:
           artifacts:
             - name: ${{ parameters.name }}
 
+      - pwsh: Get-Volume
+        displayName: Get the volume information after downloading artifacts
+
       # pre-build steps
       - ${{ if ne(parameters.buildAgent.preBuildSteps, '') }}:
         - ${{ parameters.buildAgent.preBuildSteps }}
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
+
+      - pwsh: Get-Volume
+        displayName: Get the volume information before the build
 
       # actual build
       - ${{ if ne(parameters.skipSteps, 'true') }}:
@@ -359,8 +371,14 @@ jobs:
             retryCountOnTaskFailure: ${{ parameters.retryCount }}
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
+      - pwsh: Get-Volume
+        displayName: Get the volume information after the build
+
       # post-build steps
       - ${{ parameters.postBuildSteps }}
 
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         - template: /scripts/azure-templates-github-status.yml@self
+
+      - pwsh: Get-Volume
+        displayName: Get the volume information after the entire run
