@@ -82,6 +82,9 @@ jobs:
               targetPath: ${{ additionalArtifact.path }}
 
     steps:
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information before the run
+
       # prepare
       - checkout: self
         submodules: recursive
@@ -101,7 +104,7 @@ jobs:
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
         displayName: Determine build type
 
-      - pwsh: Get-Volume
+      - pwsh: .\scripts\get-free-space.ps1
         displayName: Get the volume information before the provisioning
 
       # provisioning steps
@@ -276,7 +279,7 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
-      - pwsh: Get-Volume
+      - pwsh: .\scripts\get-free-space.ps1
         displayName: Get the volume information before downloading artifacts
 
       # download artifacts
@@ -291,7 +294,7 @@ jobs:
           artifacts:
             - name: ${{ parameters.name }}
 
-      - pwsh: Get-Volume
+      - pwsh: .\scripts\get-free-space.ps1
         displayName: Get the volume information after downloading artifacts
 
       # pre-build steps
@@ -300,7 +303,7 @@ jobs:
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
 
-      - pwsh: Get-Volume
+      - pwsh: .\scripts\get-free-space.ps1
         displayName: Get the volume information before the build
 
       # actual build
@@ -371,7 +374,7 @@ jobs:
             retryCountOnTaskFailure: ${{ parameters.retryCount }}
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
-      - pwsh: Get-Volume
+      - pwsh: .\scripts\get-free-space.ps1
         displayName: Get the volume information after the build
 
       # post-build steps
@@ -380,5 +383,5 @@ jobs:
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         - template: /scripts/azure-templates-github-status.yml@self
 
-      - pwsh: Get-Volume
+      - pwsh: .\scripts\get-free-space.ps1
         displayName: Get the volume information after the entire run
