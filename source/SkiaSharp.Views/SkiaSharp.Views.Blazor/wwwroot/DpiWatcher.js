@@ -30,3 +30,4 @@ export class DpiWatcher {
         }
     }
 }
+//# sourceMappingURL=DpiWatcher.js.map

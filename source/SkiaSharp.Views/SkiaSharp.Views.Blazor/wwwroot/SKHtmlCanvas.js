@@ -181,3 +181,4 @@ export class SKHtmlCanvas {
         return GL.currentContext && GL.currentContext.GLctx || GLctx;
     }
 }
+//# sourceMappingURL=SKHtmlCanvas.js.map

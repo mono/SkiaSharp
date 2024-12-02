@@ -20,7 +20,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 		public JSModuleInterop(IJSRuntime js, string moduleName, string moduleUrl)
 		{
 #if NET7_0_OR_GREATER
-			moduleTask = JSHost.ImportAsync(moduleName, "/" + moduleUrl);
+			moduleTask = JSHost.ImportAsync(moduleName, "../" + moduleUrl);
 #else
 			if (js is not IJSInProcessRuntime)
 				throw new NotSupportedException("SkiaSharp currently only works on Web Assembly.");
