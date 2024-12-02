@@ -80,6 +80,9 @@ Task("sync-ANGLE")
         RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("tools/clang/scripts/update.py"));
     }
 
+    // long the free space
+    RunProcess("pwsh", ROOT_PATH.CombineWithFilePath("scripts/get-free-space.ps1").FullPath);
+
     // generate Windows App SDK files
     if (!FileExists(WINAPPSDK_PATH.CombineWithFilePath("Microsoft.WindowsAppSDK.nuspec"))) {
         var setup = ANGLE_PATH.CombineWithFilePath("scripts/winappsdk_setup.py");
@@ -87,6 +90,9 @@ Task("sync-ANGLE")
             ROOT_PATH.CombineWithFilePath("scripts/vcvarsall.bat"),
             $"\"{VS_INSTALL}\" \"x64\" \"{PYTHON_EXE}\" \"{setup}\" --output \"{WINAPPSDK_PATH}\"");
     }
+
+    // long the free space
+    RunProcess("pwsh", ROOT_PATH.CombineWithFilePath("scripts/get-free-space.ps1").FullPath);
 });
 
 Task("ANGLE")
