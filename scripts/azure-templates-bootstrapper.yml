@@ -82,10 +82,18 @@ jobs:
               targetPath: ${{ additionalArtifact.path }}
 
     steps:
+      - pwsh: if ($IsLinux -or $IsMacOS) { df -h } else { Get-Volume }
+        displayName: Get the volume information before the run
+        condition: always()
+
       # prepare
       - checkout: self
         submodules: recursive
       - template: /scripts/azure-templates-variables.yml@self
+
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after the checkout
+        condition: always()
 
       # # checkout required skia PR
       # - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
@@ -100,6 +108,10 @@ jobs:
       # determine build type
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
         displayName: Determine build type
+
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information before the provisioning
+        condition: always()
 
       # provisioning steps
       - ${{ if ne(parameters.buildAgent.provisioningSteps, '') }}:
@@ -273,6 +285,10 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information before downloading artifacts
+        condition: always()
+
       # download artifacts
       - template: /scripts/azure-templates-download-artifacts.yml@self
         parameters:
@@ -285,11 +301,19 @@ jobs:
           artifacts:
             - name: ${{ parameters.name }}
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after downloading artifacts
+        condition: always()
+
       # pre-build steps
       - ${{ if ne(parameters.buildAgent.preBuildSteps, '') }}:
         - ${{ parameters.buildAgent.preBuildSteps }}
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
+
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information before the build
+        condition: always()
 
       # actual build
       - ${{ if ne(parameters.skipSteps, 'true') }}:
@@ -359,8 +383,16 @@ jobs:
             retryCountOnTaskFailure: ${{ parameters.retryCount }}
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after the build
+        condition: always()
+
       # post-build steps
       - ${{ parameters.postBuildSteps }}
 
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         - template: /scripts/azure-templates-github-status.yml@self
+
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after the entire run
+        condition: always()
