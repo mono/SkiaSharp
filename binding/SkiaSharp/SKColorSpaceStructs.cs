@@ -188,7 +188,7 @@ namespace SkiaSharp
 
 		public void SetValues (ReadOnlySpan<float> values)
 		{
-			if (values.Length != 8)
+			if (values.Length != 7)
 				throw new ArgumentException ("The values must have exactly 7 items, one for each of [G, A, B, C, D, E, F].", nameof (values));
 
 			fG = values[0];
