@@ -91,7 +91,7 @@ jobs:
       - template: /scripts/azure-templates-variables.yml@self
 
       - pwsh: if ($IsLinux -or $IsMacOS) { df -h } else { Get-Volume }
-        displayName: Get the volume information before the run
+        displayName: Get the volume information after the checkout
 
       # # checkout required skia PR
       # - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
