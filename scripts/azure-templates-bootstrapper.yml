@@ -82,12 +82,15 @@ jobs:
               targetPath: ${{ additionalArtifact.path }}
 
     steps:
+      - pwsh: if ($IsLinux -or $IsMacOS) { df -h } else { Get-Volume }
+        displayName: Get the volume information before the run
+
       # prepare
       - checkout: self
         submodules: recursive
       - template: /scripts/azure-templates-variables.yml@self
 
-      - pwsh: .\scripts\get-free-space.ps1
+      - pwsh: if ($IsLinux -or $IsMacOS) { df -h } else { Get-Volume }
         displayName: Get the volume information before the run
 
       # # checkout required skia PR
