@@ -45,3 +45,4 @@ export class SizeWatcher {
         }
     }
 }
+//# sourceMappingURL=SizeWatcher.js.map
