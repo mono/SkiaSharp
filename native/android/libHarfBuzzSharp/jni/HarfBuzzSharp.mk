@@ -10,7 +10,7 @@ LOCAL_MODULE           := HarfBuzzSharp
 
 LOCAL_C_INCLUDES       := . $(src_root) $(ext_root)
 
-LOCAL_LDFLAGS          := -s -Wl,--gc-sections
+LOCAL_LDFLAGS          := -s -Wl,--gc-sections -Wl,-z,max-page-size=16384
 
 LOCAL_CFLAGS           := -DNDEBUG                                                                  \
                           -DHAVE_CONFIG_OVERRIDE_H -DHAVE_OT -DHB_NO_FALLBACK_SHAPE                 \
