@@ -38,6 +38,7 @@ Task("libSkiaSharp")
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
+            $"extra_ldflags=[ '-Wl,-z,max-page-size=16384' ] " +
             $"ndk='{ANDROID_NDK_HOME}' " +
             $"ndk_api=21");
 
