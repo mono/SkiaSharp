@@ -10,25 +10,25 @@ jobs:
     permissions:
       issues: write
     steps:
-      - uses: mattleibow/labeled-by-ai@main
+      - uses: mattleibow/dev-tools@action/label-with-ai
         name: Apply AREA labels
         with:
           label-pattern: '^area/.*'
           apply-label: 'false'
           add-comment: 'false'
-      - uses: mattleibow/labeled-by-ai@main
+      - uses: mattleibow/dev-tools@action/label-with-ai
         name: Apply PLATFORM labels
         with:
           label-pattern: '^os/.*'
           apply-label: 'false'
           add-comment: 'false'
-      - uses: mattleibow/labeled-by-ai@main
+      - uses: mattleibow/dev-tools@action/label-with-ai
         name: Apply BACKEND labels
         with:
           label-pattern: '^backend/.*'
           apply-label: 'false'
           add-comment: 'false'
-      - uses: mattleibow/labeled-by-ai@main
+      - uses: mattleibow/dev-tools@action/label-with-ai
         name: Apply TENET labels
         with:
           label-pattern: '^tenet/.*'
