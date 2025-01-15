@@ -62,6 +62,7 @@ using sk_region_t = System.IntPtr;
 using sk_rrect_t = System.IntPtr;
 using sk_rtree_factory_t = System.IntPtr;
 using sk_runtimeeffect_t = System.IntPtr;
+using sk_runtimeshaderbuilder_t = System.IntPtr;
 using sk_shader_t = System.IntPtr;
 using sk_stream_asset_t = System.IntPtr;
 using sk_stream_filestream_t = System.IntPtr;
@@ -7785,6 +7786,25 @@ namespace SkiaSharp
 			(sk_imagefilter_new_point_lit_specular_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_point_lit_specular> ("sk_imagefilter_new_point_lit_specular")).Invoke (location, lightColor, surfaceScale, ks, shininess, input, cropRect);
 		#endif
 
+		// sk_imagefilter_t* sk_imagefilter_new_runtime_shader(const sk_runtimeshaderbuilder_t* builder, float maxSampleRadius, const char*[-1] childShaderNames, const sk_imagefilter_t*[-1] inputs, int inputCount)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_runtime_shader (sk_runtimeshaderbuilder_t builder, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_runtime_shader (sk_runtimeshaderbuilder_t builder, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_runtime_shader (sk_runtimeshaderbuilder_t builder, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount);
+		}
+		private static Delegates.sk_imagefilter_new_runtime_shader sk_imagefilter_new_runtime_shader_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_runtime_shader (sk_runtimeshaderbuilder_t builder, Single maxSampleRadius, /* char */ void** childShaderNames, sk_imagefilter_t* inputs, Int32 inputCount) =>
+			(sk_imagefilter_new_runtime_shader_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_runtime_shader> ("sk_imagefilter_new_runtime_shader")).Invoke (builder, maxSampleRadius, childShaderNames, inputs, inputCount);
+		#endif
+
 		// sk_imagefilter_t* sk_imagefilter_new_shader(const sk_shader_t* shader, bool dither, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -13280,6 +13300,44 @@ namespace SkiaSharp
 		private static Delegates.sk_runtimeeffect_unref sk_runtimeeffect_unref_delegate;
 		internal static void sk_runtimeeffect_unref (sk_runtimeeffect_t effect) =>
 			(sk_runtimeeffect_unref_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_unref> ("sk_runtimeeffect_unref")).Invoke (effect);
+		#endif
+
+		// void sk_runtimeshaderbuilder_destructor(sk_runtimeshaderbuilder_t* builder)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_runtimeshaderbuilder_destructor (sk_runtimeshaderbuilder_t builder);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_runtimeshaderbuilder_destructor (sk_runtimeshaderbuilder_t builder);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_runtimeshaderbuilder_destructor (sk_runtimeshaderbuilder_t builder);
+		}
+		private static Delegates.sk_runtimeshaderbuilder_destructor sk_runtimeshaderbuilder_destructor_delegate;
+		internal static void sk_runtimeshaderbuilder_destructor (sk_runtimeshaderbuilder_t builder) =>
+			(sk_runtimeshaderbuilder_destructor_delegate ??= GetSymbol<Delegates.sk_runtimeshaderbuilder_destructor> ("sk_runtimeshaderbuilder_destructor")).Invoke (builder);
+		#endif
+
+		// sk_runtimeshaderbuilder_t* sk_runtimeshaderbuilder_new(const sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_runtimeshaderbuilder_t sk_runtimeshaderbuilder_new (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_runtimeshaderbuilder_t sk_runtimeshaderbuilder_new (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_runtimeshaderbuilder_t sk_runtimeshaderbuilder_new (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount);
+		}
+		private static Delegates.sk_runtimeshaderbuilder_new sk_runtimeshaderbuilder_new_delegate;
+		internal static sk_runtimeshaderbuilder_t sk_runtimeshaderbuilder_new (sk_runtimeeffect_t effect, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount) =>
+			(sk_runtimeshaderbuilder_new_delegate ??= GetSymbol<Delegates.sk_runtimeshaderbuilder_new> ("sk_runtimeshaderbuilder_new")).Invoke (effect, uniforms, children, childCount);
 		#endif
 
 		#endregion
