@@ -6,9 +6,14 @@
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
     <Nullable>enable</Nullable>
+    <WarningsAsErrors>$(WarningsAsErrors);CA1420;CA1421;</WarningsAsErrors>
+    <NoWarn>$(NoWarn);CS8826</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
     <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.Android\HarfBuzzSharp.NativeAssets.Android.csproj" Condition="$(TargetFramework.Contains('-android'))" />

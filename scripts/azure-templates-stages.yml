@@ -19,6 +19,8 @@ parameters:
     type: object
   - name: buildAgentLinuxNative
     type: object
+  - name: buildAgentAndroidTests
+    type: object
   - name: sdl
     type: object
     default:
@@ -32,6 +34,9 @@ parameters:
     type: boolean
     default: false
   - name: enableSigning
+    type: boolean
+    default: false
+  - name: forceRealSigning
     type: boolean
     default: false
 
@@ -140,39 +145,40 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-windows
             additionalArgs: --buildarch=arm64
-        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x86 (Win + MSVC)
-          parameters:
-            name: native_win32_x86_msvc_windows
-            displayName: Win32 x86 [MSVC]
-            sdl: ${{ parameters.sdl }}
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentWindowsNative }}
-            target: externals-windows
-            additionalArgs: --buildarch=x86 --llvm="msvc"
-            installLlvm: false
-        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x64 (Win + MSVC)
-          parameters:
-            name: native_win32_x64_msvc_windows
-            displayName: Win32 x64 [MSVC]
-            sdl: ${{ parameters.sdl }}
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentWindowsNative }}
-            target: externals-windows
-            additionalArgs: --buildarch=x64 --llvm="msvc"
-            installLlvm: false
-        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|arm64 (Win + MSVC)
-          parameters:
-            name: native_win32_arm64_msvc_windows
-            displayName: Win32 arm64 [MSVC]
-            sdl: ${{ parameters.sdl }}
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentWindowsNative }}
-            target: externals-windows
-            additionalArgs: --buildarch=arm64 --llvm="msvc"
-            installLlvm: false
+        - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+          - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x86 (Win + MSVC)
+            parameters:
+              name: native_win32_x86_msvc_windows
+              displayName: Win32 x86 [MSVC]
+              sdl: ${{ parameters.sdl }}
+              buildExternals: ${{ parameters.buildExternals }}
+              buildPipelineType: ${{ parameters.buildPipelineType }}
+              buildAgent: ${{ parameters.buildAgentWindowsNative }}
+              target: externals-windows
+              additionalArgs: --buildarch=x86 --llvm="msvc"
+              installLlvm: false
+          - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x64 (Win + MSVC)
+            parameters:
+              name: native_win32_x64_msvc_windows
+              displayName: Win32 x64 [MSVC]
+              sdl: ${{ parameters.sdl }}
+              buildExternals: ${{ parameters.buildExternals }}
+              buildPipelineType: ${{ parameters.buildPipelineType }}
+              buildAgent: ${{ parameters.buildAgentWindowsNative }}
+              target: externals-windows
+              additionalArgs: --buildarch=x64 --llvm="msvc"
+              installLlvm: false
+          - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|arm64 (Win + MSVC)
+            parameters:
+              name: native_win32_arm64_msvc_windows
+              displayName: Win32 arm64 [MSVC]
+              sdl: ${{ parameters.sdl }}
+              buildExternals: ${{ parameters.buildExternals }}
+              buildPipelineType: ${{ parameters.buildPipelineType }}
+              buildAgent: ${{ parameters.buildAgentWindowsNative }}
+              target: externals-windows
+              additionalArgs: --buildarch=arm64 --llvm="msvc"
+              installLlvm: false
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native WinUI|x86 (Win)
           parameters:
             name: native_winui_x86_windows
@@ -202,6 +208,36 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-winui
+            additionalArgs: --buildarch=arm64
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native ANGLE WinUI|x86 (Win)
+          parameters:
+            name: native_winui_angle_x86_windows
+            displayName: ANGLE WinUI x86
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
+            target: externals-winui-angle
+            additionalArgs: --buildarch=x86
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native ANGLE WinUI|x64 (Win)
+          parameters:
+            name: native_winui_angle_x64_windows
+            displayName: ANGLE WinUI x64
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
+            target: externals-winui-angle
+            additionalArgs: --buildarch=x64
+        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native ANGLE WinUI|arm64 (Win)
+          parameters:
+            name: native_winui_angle_arm64_windows
+            displayName: ANGLE WinUI arm64
+            sdl: ${{ parameters.sdl }}
+            buildExternals: ${{ parameters.buildExternals }}
+            buildPipelineType: ${{ parameters.buildPipelineType }}
+            buildAgent: ${{ parameters.buildAgentWindowsNative }}
+            target: externals-winui-angle
             additionalArgs: --buildarch=arm64
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native NanoServer|x64 (Win)
           parameters:
@@ -325,15 +361,15 @@ stages:
                 gnArgs: skia_use_fontconfig=false
             matrix:
               - arch: x64
-                docker: scripts/Docker/debian9/amd64
+                docker: scripts/Docker/debian/amd64
               - arch: x64
                 variant: alpine
                 docker: scripts/Docker/alpine/amd64
               - arch: arm
-                docker: scripts/Docker/debian9/clang-cross
+                docker: scripts/Docker/debian/clang-cross
                 target: externals-linux-clang-cross
               - arch: arm64
-                docker: scripts/Docker/debian9/clang-cross
+                docker: scripts/Docker/debian/clang-cross
                 dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
                 target: externals-linux-clang-cross
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Linux)
@@ -345,6 +381,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentLinuxNative }}
             packages: $(TIZEN_LINUX_PACKAGES)
             target: externals-tizen
+            condition: false # https://github.com/mono/SkiaSharp/issues/2933
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native_wasm
@@ -382,7 +419,7 @@ stages:
               - 3.1.12:
                 displayName: '3.1.12_SIMD'
                 version: 3.1.12
-                features: simd
+                features: st,simd
               - 3.1.12:
                 displayName: '3.1.12_Threading'
                 version: 3.1.12
@@ -404,11 +441,29 @@ stages:
               - 3.1.34:
                 displayName: '3.1.34_SIMD'
                 version: 3.1.34
-                features: _wasmeh,simd,st
+                features: _wasmeh,st,simd
               - 3.1.34:
                 displayName: '3.1.34_SIMD_Threading'
                 version: 3.1.34
-                features: _wasmeh,simd,mt
+                features: _wasmeh,mt,simd
+
+              # .NET 9
+              - 3.1.56:
+                displayName: 3.1.56
+                version: 3.1.56
+                features: _wasmeh,st
+              - 3.1.56:
+                displayName: '3.1.56_Threading'
+                version: 3.1.56
+                features: _wasmeh,mt
+              - 3.1.56:
+                displayName: '3.1.56_SIMD'
+                version: 3.1.56
+                features: _wasmeh,st,simd
+              - 3.1.56:
+                displayName: '3.1.56_SIMD_Threading'
+                version: 3.1.56
+                features: _wasmeh,mt,simd
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native
@@ -445,6 +500,9 @@ stages:
               - name: native_winui_x86_windows
               - name: native_winui_x64_windows
               - name: native_winui_arm64_windows
+              - name: native_winui_angle_x86_windows
+              - name: native_winui_angle_x64_windows
+              - name: native_winui_angle_arm64_windows
               # Nano Server
               - name: native_win32_x64_nanoserver_windows
               # iOS
@@ -470,17 +528,18 @@ stages:
             matrixArtifacts:
               - name: native_wasm
                 jobs: $(nativeWasmJobs)
-        - template: /scripts/azure-templates-merger.yml@self # Merge Native MSVC Artifacts
-          parameters:
-            name: native_msvc
-            displayName: Merge Native MSVC Artifacts
-            sdl: ${{ parameters.sdl }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentHost }}
-            requiredArtifacts:
-              - name: native_win32_x86_msvc_windows
-              - name: native_win32_x64_msvc_windows
-              - name: native_win32_arm64_msvc_windows
+        - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+          - template: /scripts/azure-templates-merger.yml@self # Merge Native MSVC Artifacts
+            parameters:
+              name: native_msvc
+              displayName: Merge Native MSVC Artifacts
+              sdl: ${{ parameters.sdl }}
+              buildPipelineType: ${{ parameters.buildPipelineType }}
+              buildAgent: ${{ parameters.buildAgentHost }}
+              requiredArtifacts:
+                - name: native_win32_x86_msvc_windows
+                - name: native_win32_x64_msvc_windows
+                - name: native_win32_arm64_msvc_windows
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: managed
@@ -601,6 +660,7 @@ stages:
             additionalArgs: --skipExternals="all" --exclusive
             shouldPublish: false
             requiredArtifacts:
+              - name: native
               - name: nuget
                 dir: nugets
               - name: nuget_symbols
@@ -660,11 +720,11 @@ stages:
       displayName: Sign NuGets
       dependsOn: package
       jobs:
-        - template: sign-artifacts/jobs/v2.yml@xamarin-templates
+        - template: sign-artifacts/jobs/v3.yml@xamarin-templates
           parameters:
-            ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+            ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
               signType: 'Real'
-            ${{ if not(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
+            ${{ else }}:
               signType: 'Test'
             use1ESTemplate: ${{ parameters.use1ESPipelineTemplates }}
             usePipelineArtifactTasks: true
@@ -685,6 +745,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netfx
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_win32_x86_windows
@@ -710,6 +771,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_win32_x86_windows
@@ -737,6 +799,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_macos_macos
@@ -763,6 +826,7 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES)
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_linux_x64_linux
@@ -786,7 +850,7 @@ stages:
             name: tests_android_macos
             displayName: Android (macOS)
             buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentMac }}
+            buildAgent: ${{ parameters.buildAgentAndroidTests }}
             target: tests-android
             additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
@@ -841,10 +905,12 @@ stages:
           parameters:
             name: tests_maccatalyst_macos
             displayName: Mac Catalyst (macOS)
+            continueOnError: true
             buildPipelineType: ${{ parameters.buildPipelineType }}
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-maccatalyst
             additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_maccatalyst_macos
@@ -871,6 +937,7 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
             additionalArgs: --skipExternals="all" --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
+            installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native_wasm

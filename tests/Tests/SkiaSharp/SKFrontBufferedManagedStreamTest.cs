@@ -182,9 +182,9 @@ namespace SkiaSharp.Tests
 				fHasPosition = hasPosition;
 			}
 
-			protected override bool OnHasLength () => fHasLength;
+			protected internal override bool OnHasLength () => fHasLength;
 
-			protected override bool OnHasPosition () => fHasPosition;
+			protected internal override bool OnHasPosition () => fHasPosition;
 		}
 
 		[SkippableTheory]
@@ -222,9 +222,9 @@ namespace SkiaSharp.Tests
 		{
 			private bool fAtEnd;
 
-			protected override bool OnIsAtEnd () => fAtEnd;
+			protected internal override bool OnIsAtEnd () => fAtEnd;
 
-			protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
+			protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
 			{
 				Assert.False (fAtEnd);
 				fAtEnd = true;

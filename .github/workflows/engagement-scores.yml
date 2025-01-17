@@ -1,0 +1,16 @@
+name: Apply Engagement Scores to Project
+
+on:
+  workflow_dispatch:      # manually triggered
+  schedule:
+    - cron: '0 */6 * * *' # every 6 hours
+
+jobs:
+  test-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mattleibow/dev-tools@action/engagement
+        with:
+          project: 1
+          column: 'Engagement Score'
+          project-token: ${{ secrets.PROJECT_ACCESS_TOKEN }}

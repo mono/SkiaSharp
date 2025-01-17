@@ -26,20 +26,6 @@ namespace SkiaSharp
 		// normal delegates
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		public static T Create<T> (object managedDel, T nativeDel, out GCHandle gch, out IntPtr contextPtr)
-		{
-			if (managedDel == null) {
-				gch = default (GCHandle);
-				contextPtr = IntPtr.Zero;
-				return default (T);
-			}
-
-			gch = GCHandle.Alloc (managedDel);
-			contextPtr = GCHandle.ToIntPtr (gch);
-			return nativeDel;
-		}
-
-		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static void Create (object managedDel, out GCHandle gch, out IntPtr contextPtr)
 		{
 			if (managedDel == null) {
