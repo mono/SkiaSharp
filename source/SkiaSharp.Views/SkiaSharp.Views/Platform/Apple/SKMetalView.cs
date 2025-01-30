@@ -82,7 +82,16 @@ namespace SkiaSharp.Views.Mac
 
 			ColorPixelFormat = MTLPixelFormat.BGRA8Unorm;
 			DepthStencilPixelFormat = MTLPixelFormat.Depth32Float_Stencil8;
-			SampleCount = 1;
+			if (DeviceInfo.Current.DeviceType == DeviceType.Virtual)
+			{
+				DepthStencilStorageMode = MTLStorageMode.Private;
+				SampleCount = 4;
+			}
+			else
+			{
+				DepthStencilStorageMode = MTLStorageMode.Shared;
+				SampleCount = 2;
+			}
 			FramebufferOnly = false;
 			Device = device;
 			backendContext = new GRMtlBackendContext
