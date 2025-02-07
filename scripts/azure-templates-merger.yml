@@ -19,6 +19,8 @@ jobs:
       skipSteps: true
       requiredArtifacts: ${{ parameters.requiredArtifacts }}
       preBuildSteps:
+        - pwsh: az extension update --name azure-devops
+          displayName: Update the az CLI tool
         - pwsh: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject) --use-git-aliases true
           displayName: Configure the az CLI tool
         - ${{ each artifact in parameters.matrixArtifacts }}:
