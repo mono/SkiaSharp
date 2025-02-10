@@ -48,6 +48,7 @@ jobs:
     condition: ${{ parameters.condition }}
     continueOnError: ${{ parameters.continueOnError }}
     variables:
+      DOTNET_NOLOGO: true
       ${{ if ne(parameters.buildAgent.variables, '') }}:
         ${{ parameters.buildAgent.variables }}
       ${{ if ne(length(parameters.variables), 0) }}:
@@ -318,22 +319,13 @@ jobs:
       # actual build
       - ${{ if ne(parameters.skipSteps, 'true') }}:
         - ${{ if eq(parameters.docker, '') }}:
+          - pwsh: dotnet --info
+            displayName: Display all the .NET information
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - pwsh: dotnet tool restore
+            displayName: Restore the .NET tools
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
-            - pwsh: dotnet --info
-              displayName: Display all the .NET information
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-              retryCountOnTaskFailure: 2
-              timeoutInMinutes: 5
-            - pwsh: dotnet tool restore
-              displayName: Restore the .NET tools
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-              retryCountOnTaskFailure: 2
-              timeoutInMinutes: 5
-            - pwsh: dotnet cake --info
-              displayName: Display all the Cake information
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-              retryCountOnTaskFailure: 2
-              timeoutInMinutes: 5
             - pwsh: |
                 Get-Content $PSCommandPath
                 ${{ parameters.initScript }}
@@ -348,21 +340,6 @@ jobs:
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
-            - bash: dotnet --info
-              displayName: Display all the .NET information
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-              retryCountOnTaskFailure: 2
-              timeoutInMinutes: 5
-            - bash: dotnet tool restore
-              displayName: Restore the .NET tools
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-              retryCountOnTaskFailure: 2
-              timeoutInMinutes: 5
-            - bash: dotnet cake --info
-              displayName: Display all the Cake information
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-              retryCountOnTaskFailure: 2
-              timeoutInMinutes: 5
             - bash: |
                 cat ${BASH_SOURCE[0]}
                 ${{ parameters.initScript }}
