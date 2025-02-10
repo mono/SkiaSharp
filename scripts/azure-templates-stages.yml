@@ -513,6 +513,32 @@ stages:
               - name: native_macos_macos
               # tvOS
               - name: native_tvos_macos
+              # Linux
+              - name: native_linux_arm64_linux
+              - name: native_linux_arm64_nodeps_linux
+              - name: native_linux_arm_linux
+              - name: native_linux_arm_nodeps_linux
+              - name: native_linux_x64_alpine_linux
+              - name: native_linux_x64_alpine_nodeps_linux
+              - name: native_linux_x64_linux
+              - name: native_linux_x64_nodeps_linux
+              # WASM
+              - name: native_wasm_2_0_23_linux
+              - name: native_wasm_2_0_6_linux
+              - name: native_wasm_3_1_12_linux
+              - name: native_wasm_3_1_12_SIMD_linux
+              - name: native_wasm_3_1_12_Threading_linux
+              - name: native_wasm_3_1_12_Threading_SIMD_linux
+              - name: native_wasm_3_1_34_linux
+              - name: native_wasm_3_1_34_SIMD_linux
+              - name: native_wasm_3_1_34_SIMD_Threading_linux
+              - name: native_wasm_3_1_34_Threading_linux
+              - name: native_wasm_3_1_56_linux
+              - name: native_wasm_3_1_56_SIMD_linux
+              - name: native_wasm_3_1_56_SIMD_Threading_linux
+              - name: native_wasm_3_1_56_Threading_linux
+              - name: native_wasm_3_1_7_linux
+            # matix checks
             matrixArtifacts:
               - name: native_linux
                 jobs: $(nativeLinuxJobs)
@@ -525,6 +551,33 @@ stages:
             sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              # Linux
+              - name: native_linux_arm64_linux
+              - name: native_linux_arm64_nodeps_linux
+              - name: native_linux_arm_linux
+              - name: native_linux_arm_nodeps_linux
+              - name: native_linux_x64_alpine_linux
+              - name: native_linux_x64_alpine_nodeps_linux
+              - name: native_linux_x64_linux
+              - name: native_linux_x64_nodeps_linux
+              # WASM
+              - name: native_wasm_2_0_23_linux
+              - name: native_wasm_2_0_6_linux
+              - name: native_wasm_3_1_12_linux
+              - name: native_wasm_3_1_12_SIMD_linux
+              - name: native_wasm_3_1_12_Threading_linux
+              - name: native_wasm_3_1_12_Threading_SIMD_linux
+              - name: native_wasm_3_1_34_linux
+              - name: native_wasm_3_1_34_SIMD_linux
+              - name: native_wasm_3_1_34_SIMD_Threading_linux
+              - name: native_wasm_3_1_34_Threading_linux
+              - name: native_wasm_3_1_56_linux
+              - name: native_wasm_3_1_56_SIMD_linux
+              - name: native_wasm_3_1_56_SIMD_Threading_linux
+              - name: native_wasm_3_1_56_Threading_linux
+              - name: native_wasm_3_1_7_linux
+            # matix checks
             matrixArtifacts:
               - name: native_wasm
                 jobs: $(nativeWasmJobs)
