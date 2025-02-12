@@ -1,4 +1,4 @@
-﻿#if __IOS__ || __MACOS__
+#if __IOS__ || __MACOS__
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -30,14 +30,15 @@ namespace SkiaSharp.Views.Mac
 
 		private bool designMode;
 
-readonly bool DepthStencilModePrivate =>
-#if __MACCATALYST__
-    false;
-#elif __MACOS__
-	true;
-#else
-    ObjCRuntime.Runtime.Arch == Arch.SIMULATOR;
-#endif
+		private bool DepthStencilModePrivate =>
+		#if __MACCATALYST__
+			false;
+		#elif __MACOS__
+			true;
+		#else
+			ObjCRuntime.Runtime.Arch == Arch.SIMULATOR;
+		#endif
+
 		private GRMtlBackendContext backendContext;
 		private GRContext context;
 
