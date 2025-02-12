@@ -7,15 +7,6 @@ using Foundation;
 using Metal;
 using MetalKit;
 
-readonly bool DepthStencilModePrivate =>
-#if __MACCATALYST__
-    false;
-#elif __MACOS__
-	true;
-#else
-    ObjCRuntime.Runtime.Arch == Arch.SIMULATOR;
-#endif
-
 #if __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __MACOS__
@@ -39,6 +30,14 @@ namespace SkiaSharp.Views.Mac
 
 		private bool designMode;
 
+readonly bool DepthStencilModePrivate =>
+#if __MACCATALYST__
+    false;
+#elif __MACOS__
+	true;
+#else
+    ObjCRuntime.Runtime.Arch == Arch.SIMULATOR;
+#endif
 		private GRMtlBackendContext backendContext;
 		private GRContext context;
 
