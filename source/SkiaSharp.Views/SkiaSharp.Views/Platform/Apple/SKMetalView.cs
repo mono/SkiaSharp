@@ -1,4 +1,4 @@
-﻿#if __IOS__ || __MACOS__
+#if __IOS__ || __MACOS__
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -29,6 +29,15 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		private bool designMode;
+
+		private bool DepthStencilModePrivate =>
+		#if __MACCATALYST__
+			false;
+		#elif __MACOS__
+			true;
+		#else
+			ObjCRuntime.Runtime.Arch == ObjCRuntime.Arch.SIMULATOR;
+		#endif
 
 		private GRMtlBackendContext backendContext;
 		private GRContext context;
@@ -82,7 +91,16 @@ namespace SkiaSharp.Views.Mac
 
 			ColorPixelFormat = MTLPixelFormat.BGRA8Unorm;
 			DepthStencilPixelFormat = MTLPixelFormat.Depth32Float_Stencil8;
-			SampleCount = 1;
+			if (DepthStencilModePrivate)
+			{
+				DepthStencilStorageMode = MTLStorageMode.Private;
+				SampleCount = 4;
+			}
+			else
+			{
+				DepthStencilStorageMode = MTLStorageMode.Shared;
+				SampleCount = 2;
+			}
 			FramebufferOnly = false;
 			Device = device;
 			backendContext = new GRMtlBackendContext
