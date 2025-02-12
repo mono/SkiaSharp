@@ -36,7 +36,7 @@ namespace SkiaSharp.Views.Mac
 		#elif __MACOS__
 			true;
 		#else
-			ObjCRuntime.Runtime.Arch == Arch.SIMULATOR;
+			ObjCRuntime.Runtime.Arch == ObjCRuntime.Arch.SIMULATOR;
 		#endif
 
 		private GRMtlBackendContext backendContext;
