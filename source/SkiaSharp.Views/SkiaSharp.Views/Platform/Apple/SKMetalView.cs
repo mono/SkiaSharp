@@ -7,6 +7,15 @@ using Foundation;
 using Metal;
 using MetalKit;
 
+bool DepthStencilModePrivate =>
+#if __MACCATALYST__
+    false;
+#elif __MACOS__
+	true;
+#else
+    ObjCRuntime.Runtime.Arch == Arch.SIMULATOR;
+#endif
+
 #if __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __MACOS__
@@ -82,7 +91,7 @@ namespace SkiaSharp.Views.Mac
 
 			ColorPixelFormat = MTLPixelFormat.BGRA8Unorm;
 			DepthStencilPixelFormat = MTLPixelFormat.Depth32Float_Stencil8;
-			if (DeviceInfo.Current.DeviceType == DeviceType.Virtual)
+			if (DepthStencilModePrivate)
 			{
 				DepthStencilStorageMode = MTLStorageMode.Private;
 				SampleCount = 4;
