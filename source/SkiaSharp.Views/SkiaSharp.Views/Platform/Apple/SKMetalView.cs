@@ -7,7 +7,7 @@ using Foundation;
 using Metal;
 using MetalKit;
 
-bool DepthStencilModePrivate =>
+readonly bool DepthStencilModePrivate =>
 #if __MACCATALYST__
     false;
 #elif __MACOS__
