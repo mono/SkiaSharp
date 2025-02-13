@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKSurface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
+	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
 		internal SKSurface (IntPtr h, bool owns)
 			: base (h, owns)
@@ -320,13 +320,16 @@ namespace SkiaSharp
 
 		public void Flush (bool submit, bool synchronous = false)
 		{
+			if (Context is not GRContext grContext)
+				return;
+
 			if (submit)
-				SkiaApi.sk_surface_flush_and_submit (Handle, synchronous);
+				grContext.Flush (submit, synchronous);
 			else
-				SkiaApi.sk_surface_flush (Handle);
+				grContext.Flush ();
 		}
 
-		internal static SKSurface GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKSurface (handle, true);
+		internal static SKSurface GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKSurface (h, o));
 	}
 }

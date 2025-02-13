@@ -48,6 +48,29 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[SkippableFact]
+		public void GpuSurfaceHasCanvas()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+
+			using var grContext = GRContext.CreateGl();
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
+
+			var canvas = surface.Canvas;
+			Assert.NotNull(canvas);
+		}
+
+		[SkippableFact]
+		public void RasterSurfaceHasCanvas()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+
+			var canvas = surface.Canvas;
+			Assert.NotNull(canvas);
+		}
+
 		[SkippableFact]
 		public void SimpleSurfaceIsUnknownPixelGeometry()
 		{

@@ -9,6 +9,57 @@ namespace SkiaSharp.Tests
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
+		public void GpuCanvasReferencesSameSurface()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+
+			using var grContext = GRContext.CreateGl();
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
+			var canvas = surface.Canvas;
+
+			var canvasSurface = canvas.Surface;
+			Assert.NotNull(canvasSurface);
+			Assert.Same(surface, canvasSurface);
+		}
+
+		[SkippableFact]
+		public void RasterCanvasReferencesSameSurface()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+			var canvas = surface.Canvas;
+
+			var canvasSurface = canvas.Surface;
+			Assert.NotNull(canvasSurface);
+			Assert.Same(surface, canvasSurface);
+		}
+
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[SkippableFact]
+		public void GpuCanvasReferencesSameContext()
+		{
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+
+			using var grContext = GRContext.CreateGl();
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
+			var canvas = surface.Canvas;
+
+			Assert.Equal(grContext, canvas.Context);
+		}
+
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[SkippableFact]
+		public void RasterCanvasHasNoContext()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+			var canvas = surface.Canvas;
+
+			Assert.Null(canvas.Context);
+		}
+
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[SkippableFact]
 		public void CanvasCanRestoreOnGpu()
 		{
 			using (var ctx = CreateGlContext())

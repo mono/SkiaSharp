@@ -22,7 +22,14 @@ namespace SkiaSharp
 		public int GetMaxSurfaceSampleCount (SKColorType colorType) =>
 			SkiaApi.gr_recording_context_get_max_surface_sample_count_for_color_type (Handle, colorType.ToNative ());
 
-		internal static GRRecordingContext GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
-			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new GRRecordingContext (h, o));
+		internal static GRRecordingContext GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true)
+		{
+			var directContext = SkiaApi.gr_recording_context_get_direct_context (handle);
+			if (directContext != IntPtr.Zero) {
+				return GRContext.GetObject (directContext, owns: false, unrefExisting: false);
+			}
+
+			return GetOrAddObject (handle, owns, unrefExisting, (h, o) => new GRRecordingContext (h, o));
+		}
 	}
 }

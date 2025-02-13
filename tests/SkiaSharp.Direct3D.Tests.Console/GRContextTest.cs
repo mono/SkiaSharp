@@ -12,7 +12,7 @@ namespace SkiaSharp.Direct3D.Tests
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
-		public void CreateVkContextIsValid()
+		public void CreateDirect3DContextIsValid()
 		{
 			using var ctx = CreateDirect3DContext();
 
@@ -32,7 +32,7 @@ namespace SkiaSharp.Direct3D.Tests
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[SkippableFact]
-		public void CreateVkContextWithOptionsIsValid()
+		public void CreateDirect3DContextWithOptionsIsValid()
 		{
 			using var ctx = CreateDirect3DContext();
 
