@@ -67,5 +67,47 @@ namespace SkiaSharp.Tests
 
 			ValidateTestBitmap(bmp);
 		}
+
+		[SkippableFact]
+		public void CanPlayback()
+		{
+			using var picture = CreateTestPicture();
+
+			using var bmp = new SKBitmap(40, 40);
+			using var cnv = new SKCanvas(bmp);
+
+			picture.Playback(cnv);
+
+			ValidateTestBitmap(bmp);
+		}
+
+		[SkippableFact]
+		public void CanDrawPicture()
+		{
+			using var picture = CreateTestPicture();
+
+			using var bmp = new SKBitmap(40, 40);
+			using var cnv = new SKCanvas(bmp);
+
+			cnv.DrawPicture(picture);
+
+			ValidateTestBitmap(bmp);
+		}
+
+		[SkippableFact]
+		public void CanGetApproximateOperationCount()
+		{
+			using var picture = CreateTestPicture();
+
+			Assert.Equal(5, picture.ApproximateOperationCount);
+		}
+
+		[SkippableFact]
+		public void CanGetApproximateBytesUsed()
+		{
+			using var picture = CreateTestPicture();
+
+			Assert.True(picture.ApproximateBytesUsed > 0);
+		}
 	}
 }

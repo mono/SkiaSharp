@@ -390,6 +390,15 @@ namespace SkiaSharp
 		public void AddCircle (float x, float y, float radius, SKPathDirection dir = SKPathDirection.Clockwise) =>
 			SkiaApi.sk_path_add_circle (Handle, x, y, radius, dir);
 
+		public void AddPoly (ReadOnlySpan<SKPoint> points, bool close = true)
+		{
+			if (points == null)
+				throw new ArgumentNullException (nameof (points));
+			fixed (SKPoint* p = points) {
+				SkiaApi.sk_path_add_poly (Handle, p, points.Length, close);
+			}
+		}
+
 		public void AddPoly (SKPoint[] points, bool close = true)
 		{
 			if (points == null)

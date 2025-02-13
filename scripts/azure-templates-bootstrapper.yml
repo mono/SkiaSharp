@@ -30,12 +30,14 @@ parameters:
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
+  installXcode: true                            # whether or not to install Xcode
   publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
   skipInstall: false                            # whether or not to install any tools
   skipSteps: false                              # whether or not to run any steps
   use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
   sdl: []                                       # the SDL properties to use for this job
+  continueOnError: false                        # whether or not to continue on error
 
 jobs:
   - job: ${{ parameters.name }}
@@ -44,13 +46,18 @@ jobs:
     pool: ${{ parameters.buildAgent.pool }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
+    continueOnError: ${{ parameters.continueOnError }}
     variables:
+      DOTNET_NOLOGO: true
       ${{ if ne(parameters.buildAgent.variables, '') }}:
         ${{ parameters.buildAgent.variables }}
       ${{ if ne(length(parameters.variables), 0) }}:
         ${{ parameters.variables }}
     templateContext:
       sdl: ${{ parameters.sdl }}
+      ${{ if and(ne(parameters.docker, ''), eq(parameters.use1ESPipelineTemplates, 'true')) }}:
+        authenticatedContainerRegistries:
+          - serviceConnection: skiasharp-docker
       outputParentDirectory: 'output'
       outputs:
         - ${{ if eq(parameters.shouldPublish, 'true') }}:
@@ -58,11 +65,11 @@ jobs:
             displayName: 'Publish the ${{ parameters.name }} artifacts'
             artifactName: ${{ parameters.name }}
             targetPath: 'output'
-          - output: pipelineArtifact
-            displayName: 'Publish the failed ${{ parameters.name }} artifacts'
-            condition: failed()
-            artifactName: ${{ parameters.name }}_failed_$(System.JobAttempt)
-            targetPath: 'output'
+        - output: pipelineArtifact
+          displayName: 'Publish the failed ${{ parameters.name }} artifacts'
+          condition: failed()
+          artifactName: ${{ parameters.name }}_failed_$(System.JobAttempt)
+          targetPath: 'output'
         - ${{ each additionalArtifact in parameters.publishArtifacts }}:
           - output: pipelineArtifact
             displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
@@ -76,15 +83,23 @@ jobs:
               targetPath: ${{ additionalArtifact.path }}
 
     steps:
+      - pwsh: if ($IsLinux -or $IsMacOS) { df -h } else { Get-Volume }
+        displayName: Get the volume information before the run
+        condition: always()
+
       # prepare
       - checkout: self
         submodules: recursive
       - template: /scripts/azure-templates-variables.yml@self
 
-      # checkout required skia PR
-      - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
-        displayName: Checkout required skia PR
-        condition: eq(variables['Build.Reason'], 'PullRequest')
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after the checkout
+        condition: always()
+
+      # # checkout required skia PR
+      # - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
+      #   displayName: Checkout required skia PR
+      #   condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         - template: /scripts/azure-templates-github-status.yml@self
@@ -95,6 +110,10 @@ jobs:
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
         displayName: Determine build type
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information before the provisioning
+        condition: always()
+
       # provisioning steps
       - ${{ if ne(parameters.buildAgent.provisioningSteps, '') }}:
         - ${{ parameters.buildAgent.provisioningSteps }}
@@ -102,7 +121,7 @@ jobs:
         - ${{ parameters.provisioningSteps }}
 
       # install any packages on linux
-      - ${{ if and(eq(parameters.docker, ''), endsWith(parameters.name, '_linux'), ne(parameters.skipInstall, 'true')) }}:
+      - ${{ if and(eq(parameters.docker, ''), eq(parameters.buildAgent.pool.os, 'linux'), ne(parameters.skipInstall, 'true')) }}:
         - bash: |
             sudo apt update
             sudo apt install -y ${{ parameters.packages }}
@@ -158,7 +177,7 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         # install the bits needed for Android on macOS and Windows
-        - ${{ if and(eq(parameters.installAndroidSdk, 'true'), not(endsWith(parameters.name, '_linux'))) }}:
+        - ${{ if and(eq(parameters.installAndroidSdk, 'true'), ne(parameters.buildAgent.pool.os, 'linux')) }}:
           # install the correct version of the JDK
           - pwsh: .\scripts\install-openjdk.ps1
             displayName: Install OpenJDK
@@ -170,21 +189,13 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # install the required version of the Android Platforms
-          - pwsh: .\scripts\install-android-platform.ps1 -API 29
-            displayName: Install Android API 29 (v10)
-            retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - pwsh: .\scripts\install-android-platform.ps1 -API 30
-            displayName: Install Android API 30 (v11)
-            retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - pwsh: .\scripts\install-android-platform.ps1 -API 31
-            displayName: Install Android API 31 (v12)
+          - pwsh: .\scripts\install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
+            displayName: Install Android APIs
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
-          - ${{ if endsWith(parameters.name, '_macos') }}:
+          - ${{ if eq(parameters.buildAgent.pool.os, 'macos') }}:
             - pwsh: Remove-Item "$env:AGENT_TOOLSDIRECTORY/dotnet" -Recurse -Force -ErrorAction SilentlyContinue
               displayName: Cleanup existing versions of .NET
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
@@ -192,14 +203,14 @@ jobs:
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             inputs:
               packageType: 'sdk'
-              version: 7.0.x
+              version: $(DOTNET_VERSION)
             retryCountOnTaskFailure: 3
-            displayName: Install .NET 7.0.x
+            displayName: Install .NET $(DOTNET_VERSION)
           - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Install the preview version of .NET
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
-          - ${{ if endsWith(parameters.name, '_linux') }}:
+          - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
             - pwsh: .\scripts\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
               displayName: Fix the Microsoft.WinFX.* file
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
@@ -224,7 +235,7 @@ jobs:
             displayName: Install the .NET workloads
 
       # install the mac tools
-      - ${{ if and(endsWith(parameters.name, '_macos'), ne(parameters.skipInstall, 'true')) }}:
+      - ${{ if and(eq(parameters.installXcode, 'true'), ne(parameters.buildAgent.parameters.installXcode, 'false'), eq(parameters.buildAgent.pool.os, 'macos'), ne(parameters.skipInstall, 'true')) }}:
         - ${{ if not(startsWith(parameters.name, 'native_')) }}:
           - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
             displayName: Switch to the latest Xcode
@@ -235,14 +246,14 @@ jobs:
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install the linux tools
-      - ${{ if and(eq(parameters.installEmsdk, 'true'), endsWith(parameters.name, '_linux'), ne(parameters.skipInstall, 'true')) }}:
+      - ${{ if and(eq(parameters.installEmsdk, 'true'), eq(parameters.buildAgent.pool.os, 'linux'), ne(parameters.skipInstall, 'true')) }}:
         - bash: ./scripts/install-emsdk.sh $(EMSCRIPTEN_VERSION)
           displayName: Install the Emscripten SDK
           retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
       # install the Windows tools
-      - ${{ if and(endsWith(parameters.name, '_windows'), ne(parameters.skipInstall, 'true')) }}:
+      - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
         # select the correct/latest version of Visual Studio
         - pwsh: .\scripts\select-vs.ps1
           displayName: Select Visual Studio
@@ -275,6 +286,10 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information before downloading artifacts
+        condition: always()
+
       # download artifacts
       - template: /scripts/azure-templates-download-artifacts.yml@self
         parameters:
@@ -287,19 +302,32 @@ jobs:
           artifacts:
             - name: ${{ parameters.name }}
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after downloading artifacts
+        condition: always()
+
       # pre-build steps
       - ${{ if ne(parameters.buildAgent.preBuildSteps, '') }}:
         - ${{ parameters.buildAgent.preBuildSteps }}
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information before the build
+        condition: always()
+
       # actual build
       - ${{ if ne(parameters.skipSteps, 'true') }}:
         - ${{ if eq(parameters.docker, '') }}:
-          - ${{ if endsWith(parameters.name, '_windows') }}:
+          - pwsh: dotnet --info
+            displayName: Display all the .NET information
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - pwsh: dotnet tool restore
+            displayName: Restore the .NET tools
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
             - pwsh: |
                 Get-Content $PSCommandPath
-                dotnet tool restore
                 ${{ parameters.initScript }}
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
@@ -311,10 +339,9 @@ jobs:
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - ${{ if not(endsWith(parameters.name, '_windows')) }}:
+          - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
             - bash: |
                 cat ${BASH_SOURCE[0]}
-                dotnet tool restore
                 ${{ parameters.initScript }}
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
@@ -336,6 +363,11 @@ jobs:
                 enableNetwork: true
           - ${{ if ne(parameters.use1ESPipelineTemplates, 'true') }}:
             - task: Docker@2
+              displayName: Authenticate with the Docker registry
+              inputs:
+                command: login
+                containerRegistry: skiasharp-docker
+            - task: Docker@2
               displayName: Build the Docker image for ${{ parameters.docker }}
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
               inputs:
@@ -356,8 +388,16 @@ jobs:
             retryCountOnTaskFailure: ${{ parameters.retryCount }}
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after the build
+        condition: always()
+
       # post-build steps
       - ${{ parameters.postBuildSteps }}
 
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         - template: /scripts/azure-templates-github-status.yml@self
+
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after the entire run
+        condition: always()

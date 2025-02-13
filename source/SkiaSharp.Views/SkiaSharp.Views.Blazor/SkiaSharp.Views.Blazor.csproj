@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent);$(TFMNext)</TargetFrameworks>
+    <TargetFrameworks>$(TFMCurrent);$(TFMPrevious);$(TFMNext)</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.Blazor</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Blazor</AssemblyName>
     <PackagingGroup>SkiaSharp.Views.Blazor</PackagingGroup>
@@ -12,13 +12,22 @@
     <PackageTags>aspnet;blazor;web</PackageTags>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <TypeScriptTarget>es2015</TypeScriptTarget>
+    <TypeScriptModuleKind>es2015</TypeScriptModuleKind>
+    <TypeScriptNoImplicitAny>True</TypeScriptNoImplicitAny>
+  </PropertyGroup>
+
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.0" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.4.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.0" Condition="$(TargetFramework.StartsWith('net6.0'))" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.0" Condition="$(TargetFramework.StartsWith('net7.0'))" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" Condition="$(TargetFramework.StartsWith('net8.0'))" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0" Condition="$(TargetFramework.StartsWith('net9.0'))" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.7.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,7 +44,7 @@
 
   <ItemGroup>
     <PackageFile Include="nuget\buildTransitive\SkiaSharp.Views.Blazor.props" PackagePath="build\SkiaSharp.Views.Blazor.props" />
-    <PackageFile Include="nuget\buildTransitive\SkiaSharpGLInterop.js" PackagePath="build\SkiaSharpGLInterop.js" />
+    <PackageFile Include="nuget\buildTransitive\SkiaSharpInterop.js" PackagePath="build\SkiaSharpInterop.js" />
   </ItemGroup>
 
   <Target Name="AfterCrossTargetingIncludeStaticWebAssets" AfterTargets="CrossTargetingIncludeStaticWebAssets">

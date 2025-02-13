@@ -124,9 +124,9 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
                 var relFilePath = (FilePath) projItem.Attribute("Include").Value;
                 var absFilePath = GetFullPath(file, relFilePath);
 
-                // ignore files in the samples directory
+                // ignore files in the samples directory or are at the root but start with underscore
                 var relSamplesPath = samplesDirPath.GetRelativePath(absFilePath);
-                if (!relSamplesPath.FullPath.StartsWith(".."))
+                if (!relSamplesPath.FullPath.StartsWith("..") && !relSamplesPath.FullPath.StartsWith("_"))
                     continue;
 
                 // substitute <ProjectReference> with <PackageReference>
@@ -168,10 +168,10 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
             foreach (var import in imports) {
                 var project = import.Attribute("Project").Value;
 
-                // skip files inside the samples directory or do not exist
+                // skip files inside the samples directory or do not exist or are at the root but start with underscore
                 var absProject = GetFullPath(file, project);
                 var relSamplesPath = samplesDirPath.GetRelativePath(absProject);
-                if (!relSamplesPath.FullPath.StartsWith(".."))
+                if (!relSamplesPath.FullPath.StartsWith("..") && !relSamplesPath.FullPath.StartsWith("_"))
                     continue;
 
                 Debug($"Removing import '{project}' for project '{rel}'.");
@@ -184,6 +184,14 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
             EnsureDirectoryExists(dest.GetDirectory());
             xdoc.Save(dest.FullPath);
         } else {
+            // skip files that are at the root but start with underscore
+            var relSamplesPath = samplesDirPath.GetRelativePath(file);
+            if (relSamplesPath.FullPath.StartsWith("_"))
+            {
+                Debug($"Removing file '{relSamplesPath}'.");
+                continue;
+            }
+
             EnsureDirectoryExists(dest.GetDirectory());
             CopyFile(file, dest);
         }

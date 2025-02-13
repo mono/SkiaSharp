@@ -1,5 +1,5 @@
 Param(
-    [string] $Version = "r25c",
+    [string] $Version = "r27c",
     [string] $InstallDestination = $null
 )
 
@@ -29,7 +29,7 @@ $ndkTemp = "$HOME_DIR/android-ndk-temp"
 $install = "$ndkTemp/android-ndk-${platform}"
 
 # download
-Write-Host "Downloading NDK ($url)..."
+Write-Host "Downloading NDK ($url) to '$install'..."
 New-Item -ItemType Directory -Force -Path "$ndkTemp" | Out-Null
 (New-Object System.Net.WebClient).DownloadFile("$url", "$install")
 

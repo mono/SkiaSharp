@@ -23,13 +23,29 @@ parameters:
         name: Azure Pipelines
         vmImage: windows-2022
         os: windows
+  - name: buildAgentWindowsNative
+    displayName: 'The Windows build agent configuration for building the native assets:'
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: windows-2022
+        os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
     type: object
     default:
       pool:
         name: Azure Pipelines
-        vmImage: macos-13
+        vmImage: macos-14
+        os: macos
+  - name: buildAgentMacNative
+    displayName: 'The macOS build agent configuration for building the native assets:'
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: macos-14
         os: macos
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
@@ -37,8 +53,26 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
+        vmImage: ubuntu-22.04
+        os: linux
+  - name: buildAgentLinuxNative
+    displayName: 'The Linux build agent configuration for building the native assets:'
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
         vmImage: ubuntu-20.04
         os: linux
+  - name: buildAgentAndroidTests
+    displayName: 'The build agent configuration for building the Android tests:'
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: macos-14
+        os: macos
+      parameters:
+        installXcode: false
   - name: enableSigning
     displayName: 'Enable package signing (Test signing)'
     type: boolean
@@ -107,6 +141,7 @@ extends:
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
-          buildAgentMacNative: ${{ parameters.buildAgentMac }}
+          buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
-          buildAgentLinuxNative: ${{ parameters.buildAgentLinux }}
+          buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+          buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}

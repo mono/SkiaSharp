@@ -27,3 +27,7 @@ using System.Runtime.CompilerServices;
 [assembly: Foundation.LinkerSafe]
 #pragma warning restore CS0618 // Type or member is obsolete
 #endif
+
+#if NET7_0_OR_GREATER
+[assembly: DisableRuntimeMarshalling]
+#endif
