@@ -30,7 +30,7 @@ namespace SkiaSharp
 			CreateVulkan (width, height, vkImageInfo);
 		}
 
-#if __IOS__ || __MACOS__
+#if __IOS__ || __MACOS__ || __TVOS__
 
 		[Obsolete ("Use GRBackendRenderTarget(int width, int height, GRMtlTextureInfo mtlInfo) instead.")]
 		public GRBackendRenderTarget (int width, int height, int sampleCount, GRMtlTextureInfo mtlInfo)
