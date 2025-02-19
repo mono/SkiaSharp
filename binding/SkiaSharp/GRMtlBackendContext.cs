@@ -1,7 +1,7 @@
 ﻿#nullable disable
 
 using System;
-#if __IOS__ || __MACOS__
+#if __IOS__ || __MACOS__ || __TVOS__
 using Metal;
 #endif
 
@@ -25,13 +25,13 @@ namespace SkiaSharp
 			get => _queueHandle;
 			set {
 				_queueHandle = value;
-#if __IOS__ || __MACOS__
+#if __IOS__ || __MACOS__ || __TVOS__
 				_queue = null;
 #endif
 			}
 		}
 
-#if __IOS__ || __MACOS__
+#if __IOS__ || __MACOS__ || __TVOS__
 		private IMTLDevice _device;
 		private IMTLCommandQueue _queue;
 
