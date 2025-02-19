@@ -619,6 +619,7 @@ namespace SkiaSharp
 		public void DrawText (string text, float x, float y, SKPaint paint) =>
 			DrawText (text, x, y, paint.TextAlign, paint.GetFont (), paint);
 
+		[Obsolete ("Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public void DrawText (string text, SKPoint p, SKFont font, SKPaint paint) =>
 #pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
 			DrawText (text, p, paint.TextAlign, font, paint);
@@ -627,6 +628,7 @@ namespace SkiaSharp
 		public void DrawText (string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawText (text, p.X, p.Y, textAlign, font, paint);
 
+		[Obsolete ("Use DrawText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
 		public void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>
 #pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
 			DrawText (text, x, y, paint.TextAlign, font, paint);
