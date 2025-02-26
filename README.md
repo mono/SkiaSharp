@@ -63,10 +63,19 @@ However, these are easy to install as they are found on the various websites. If
  - To get started building, [go here](https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp).
  - If you are just wanting a custom Linux build, [go here](https://github.com/mono/SkiaSharp/wiki/Building-on-Linux)
 
+## Contributors
+
+<a href="https://github.com/mono/SkiaSharp/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=mono/SkiaSharp" />
+</a>
+
+
+Made with [contrib.rocks](https://contrib.rocks).
+
 ## Compare Code
 
 Here are some links to show the differences in our code as compared to Google's code.
 
-What version are we on? [**m116**](https://github.com/google/skia/tree/chrome/m117)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m117)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m117...mono:skiasharp)  
+What version are we on? [**m118**](https://github.com/google/skia/tree/chrome/m118)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m118)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m118...mono:skiasharp)  
