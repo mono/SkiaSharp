@@ -65,17 +65,14 @@ namespace SkiaSharp
 		public int SaveLayer (SKPaint? paint) =>
 			SkiaApi.sk_canvas_save_layer (Handle, null, paint?.Handle ?? IntPtr.Zero);
 
-		public int SaveLayer (SKCanvasSaveLayerRec rec)
+		public int SaveLayer (in SKCanvasSaveLayerRec rec)
 		{
-			if (rec is null)
-				return SaveLayer ();
-
 			var native = rec.ToNative ();
 			return SkiaApi.sk_canvas_save_layer_rec (Handle, &native);
 		}
 
 		public int SaveLayer () =>
-			 SkiaApi.sk_canvas_save_layer (Handle, null, IntPtr.Zero);
+			SkiaApi.sk_canvas_save_layer (Handle, null, IntPtr.Zero);
 #nullable disable
 
 		// DrawColor
@@ -1089,17 +1086,17 @@ namespace SkiaSharp
 	}
 
 #nullable enable
-	public unsafe class SKCanvasSaveLayerRec
+	public unsafe struct SKCanvasSaveLayerRec
 	{
-		public SKRect? Bounds { get; set; }
+		public SKRect? Bounds { readonly get; set; }
 
-		public SKPaint? Paint { get; set; }
+		public SKPaint? Paint { readonly get; set; }
 
-		public SKImageFilter? Backdrop { get; set; }
+		public SKImageFilter? Backdrop { readonly get; set; }
 
-		public SKCanvasSaveLayerRecFlags Flags { get; set; }
+		public SKCanvasSaveLayerRecFlags Flags { readonly get; set; }
 
-		internal SKCanvasSaveLayerRecNative ToNative () =>
+		internal readonly SKCanvasSaveLayerRecNative ToNative () =>
 			new SKCanvasSaveLayerRecNative {
 				fBounds = Bounds is { } bounds ? &bounds : (SKRect*)null,
 				fPaint = Paint?.Handle ?? IntPtr.Zero,
