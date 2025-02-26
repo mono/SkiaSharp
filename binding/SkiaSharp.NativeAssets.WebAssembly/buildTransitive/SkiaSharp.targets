@@ -1,10 +1,15 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
+  <PropertyGroup>
+    <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
+  </PropertyGroup>
+
   <!-- If this is an UNO Platform app -->
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
     <Content Include="@(SkiaSharpStaticLibrary)" Visible="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
+  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
     <!-- Include the GL symbol when running under net7 (https://github.com/dotnet/runtime/issues/76077) -->
     <WasmShellEmccExportedRuntimeMethod Include="GL" />
     <!-- Include the emscripten_gl* symbols in net8 -->
@@ -13,16 +18,48 @@
     <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
   </ItemGroup>
 
-  <!-- If this is a ASP.NET Blazor web assembly app -->
-  <PropertyGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true'">
+  <!-- If this is a .NET web assembly app -->
+  <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
     <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGL2=1</EmccExtraLDFlags>
+    <!-- Pick the threading type: 'mt' for multi-threading or 'st' for single-threading -->
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_SkiaSharpNativeBinaryType>
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_SkiaSharpNativeBinaryType>
+    <!-- Pick the SIMD support: 'simd' for supported or '' for not-supported -->
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_SkiaSharpNativeBinaryType),simd</_SkiaSharpNativeBinaryType>
+    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' != 'True'">$(_SkiaSharpNativeBinaryType)</_SkiaSharpNativeBinaryType>
   </PropertyGroup>
-  <ItemGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(TargetFrameworkVersion)' != ''">
+  <ItemGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
+    <!-- net6.0 (only has st and non-simd) -->
     <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\st\*.a" Condition="$([MSBuild]::VersionGreaterThan($(TargetFrameworkVersion), '8.0'))" />
+    <!-- net7.0 -->
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
+    <!-- net8.0 -->
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
+    <!-- net9.0+ -->
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.56\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0'))" />
   </ItemGroup>
+
+  <!-- Workaround for https://github.com/dotnet/runtime/issues/109289 -->
+  <Target Name="_SkiaSharpRuntimeIssue109289Workaround" AfterTargets="_BrowserWasmWriteRspForLinking">
+    <ItemGroup>
+      <!-- Remove the relevant args from the items -->
+      <_WasmLinkStepArgs Remove="@(_EmccLinkStepArgs)" />
+      <_EmccLinkStepArgs Remove="&quot;%(_WasmNativeFileForLinking.Identity)&quot;" />
+      <_WasmLinkDependencies Remove="@(_WasmNativeFileForLinking)" />
+
+      <!-- Find the libSkiaSharp binaries -->
+      <_SkiaSharpToReorder Include="@(_WasmNativeFileForLinking)" Condition="$([System.String]::Copy('%(FullPath)').Contains('libSkiaSharp.a'))" />
+
+      <!-- Remove the libSkiaSharp binary and add it back, but at the end -->
+      <_WasmNativeFileForLinking Remove="@(_SkiaSharpToReorder)" />
+      <_WasmNativeFileForLinking Include="@(_SkiaSharpToReorder)" />
+
+      <!-- Add all the args back -->
+      <_EmccLinkStepArgs Include="&quot;%(_WasmNativeFileForLinking.Identity)&quot;" />
+      <_WasmLinkDependencies Include="@(_WasmNativeFileForLinking)" />
+      <_WasmLinkStepArgs Include="@(_EmccLinkStepArgs)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

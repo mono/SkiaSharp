@@ -711,11 +711,25 @@ namespace SkiaSharp
 			}
 		}
 
+		// Surface
+
+#nullable enable
+		public SKSurface? Surface =>
+			SKSurface.GetObject (SkiaApi.sk_get_surface (Handle), owns: false, unrefExisting: false);
+#nullable disable
+
+		// Context
+
+#nullable enable
+		public GRRecordingContext? Context =>
+			GRRecordingContext.GetObject (SkiaApi.sk_get_recording_context (Handle), owns: false, unrefExisting: false);
+#nullable disable
+
 		// Flush
 
 		public void Flush ()
 		{
-			SkiaApi.sk_canvas_flush (Handle);
+			(Context as GRContext)?.Flush ();
 		}
 
 		// Draw*Annotation

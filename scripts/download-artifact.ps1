@@ -29,7 +29,7 @@ Write-Host "Downloading artifacts..."
 New-Item "$OutputDirectory" -Type Directory -Force | Out-Null
 foreach ($name in $actualNames) {
     Write-Host "Downloading '$name'..."
-    az pipelines runs artifact download --artifact-name "$name" --path "$OutputDirectory" --run-id "$BuildId" --verbose
+    az pipelines runs artifact download --artifact-name "$name" --path "$OutputDirectory" --run-id "$BuildId" --debug
 }
 Write-Host "Downloads complete."
 

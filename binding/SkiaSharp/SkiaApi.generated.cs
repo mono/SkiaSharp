@@ -287,42 +287,42 @@ namespace SkiaSharp
 			(gr_backendrendertarget_new_gl_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_gl> ("gr_backendrendertarget_new_gl")).Invoke (width, height, samples, stencils, glInfo);
 		#endif
 
-		// gr_backendrendertarget_t* gr_backendrendertarget_new_metal(int width, int height, int samples, const gr_mtl_textureinfo_t* mtlInfo)
+		// gr_backendrendertarget_t* gr_backendrendertarget_new_metal(int width, int height, const gr_mtl_textureinfo_t* mtlInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo);
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo);
 		}
 		private static Delegates.gr_backendrendertarget_new_metal gr_backendrendertarget_new_metal_delegate;
-		internal static gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, Int32 samples, GRMtlTextureInfoNative* mtlInfo) =>
-			(gr_backendrendertarget_new_metal_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_metal> ("gr_backendrendertarget_new_metal")).Invoke (width, height, samples, mtlInfo);
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_metal (Int32 width, Int32 height, GRMtlTextureInfoNative* mtlInfo) =>
+			(gr_backendrendertarget_new_metal_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_metal> ("gr_backendrendertarget_new_metal")).Invoke (width, height, mtlInfo);
 		#endif
 
-		// gr_backendrendertarget_t* gr_backendrendertarget_new_vulkan(int width, int height, int samples, const gr_vk_imageinfo_t* vkImageInfo)
+		// gr_backendrendertarget_t* gr_backendrendertarget_new_vulkan(int width, int height, const gr_vk_imageinfo_t* vkImageInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo);
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo);
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo);
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo);
 		}
 		private static Delegates.gr_backendrendertarget_new_vulkan gr_backendrendertarget_new_vulkan_delegate;
-		internal static gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo) =>
-			(gr_backendrendertarget_new_vulkan_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_vulkan> ("gr_backendrendertarget_new_vulkan")).Invoke (width, height, samples, vkImageInfo);
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkImageInfo) =>
+			(gr_backendrendertarget_new_vulkan_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_vulkan> ("gr_backendrendertarget_new_vulkan")).Invoke (width, height, vkImageInfo);
 		#endif
 
 		// void gr_backendtexture_delete(gr_backendtexture_t* texture)
@@ -1142,6 +1142,25 @@ namespace SkiaSharp
 		private static Delegates.gr_recording_context_get_backend gr_recording_context_get_backend_delegate;
 		internal static GRBackendNative gr_recording_context_get_backend (gr_recording_context_t context) =>
 			(gr_recording_context_get_backend_delegate ??= GetSymbol<Delegates.gr_recording_context_get_backend> ("gr_recording_context_get_backend")).Invoke (context);
+		#endif
+
+		// gr_direct_context_t* gr_recording_context_get_direct_context(gr_recording_context_t* context)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_recording_context_get_direct_context (gr_recording_context_t context);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_direct_context_t gr_recording_context_get_direct_context (gr_recording_context_t context);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_direct_context_t gr_recording_context_get_direct_context (gr_recording_context_t context);
+		}
+		private static Delegates.gr_recording_context_get_direct_context gr_recording_context_get_direct_context_delegate;
+		internal static gr_direct_context_t gr_recording_context_get_direct_context (gr_recording_context_t context) =>
+			(gr_recording_context_get_direct_context_delegate ??= GetSymbol<Delegates.gr_recording_context_get_direct_context> ("gr_recording_context_get_direct_context")).Invoke (context);
 		#endif
 
 		// int gr_recording_context_get_max_surface_sample_count_for_color_type(gr_recording_context_t* context, sk_colortype_t colorType)
@@ -2750,25 +2769,6 @@ namespace SkiaSharp
 			(sk_canvas_draw_vertices_delegate ??= GetSymbol<Delegates.sk_canvas_draw_vertices> ("sk_canvas_draw_vertices")).Invoke (ccanvas, vertices, mode, paint);
 		#endif
 
-		// void sk_canvas_flush(sk_canvas_t* ccanvas)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_canvas_flush (sk_canvas_t ccanvas);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_canvas_flush (sk_canvas_t ccanvas);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_canvas_flush (sk_canvas_t ccanvas);
-		}
-		private static Delegates.sk_canvas_flush sk_canvas_flush_delegate;
-		internal static void sk_canvas_flush (sk_canvas_t ccanvas) =>
-			(sk_canvas_flush_delegate ??= GetSymbol<Delegates.sk_canvas_flush> ("sk_canvas_flush")).Invoke (ccanvas);
-		#endif
-
 		// bool sk_canvas_get_device_clip_bounds(sk_canvas_t* ccanvas, sk_irect_t* cbounds)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -3162,6 +3162,44 @@ namespace SkiaSharp
 		private static Delegates.sk_canvas_translate sk_canvas_translate_delegate;
 		internal static void sk_canvas_translate (sk_canvas_t ccanvas, Single dx, Single dy) =>
 			(sk_canvas_translate_delegate ??= GetSymbol<Delegates.sk_canvas_translate> ("sk_canvas_translate")).Invoke (ccanvas, dx, dy);
+		#endif
+
+		// gr_recording_context_t* sk_get_recording_context(sk_canvas_t* canvas)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_recording_context_t sk_get_recording_context (sk_canvas_t canvas);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_recording_context_t sk_get_recording_context (sk_canvas_t canvas);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_recording_context_t sk_get_recording_context (sk_canvas_t canvas);
+		}
+		private static Delegates.sk_get_recording_context sk_get_recording_context_delegate;
+		internal static gr_recording_context_t sk_get_recording_context (sk_canvas_t canvas) =>
+			(sk_get_recording_context_delegate ??= GetSymbol<Delegates.sk_get_recording_context> ("sk_get_recording_context")).Invoke (canvas);
+		#endif
+
+		// sk_surface_t* sk_get_surface(sk_canvas_t* canvas)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_surface_t sk_get_surface (sk_canvas_t canvas);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_surface_t sk_get_surface (sk_canvas_t canvas);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_surface_t sk_get_surface (sk_canvas_t canvas);
+		}
+		private static Delegates.sk_get_surface sk_get_surface_delegate;
+		internal static sk_surface_t sk_get_surface (sk_canvas_t canvas) =>
+			(sk_get_surface_delegate ??= GetSymbol<Delegates.sk_get_surface> ("sk_get_surface")).Invoke (canvas);
 		#endif
 
 		// void sk_nodraw_canvas_destroy(sk_nodraw_canvas_t* t)
@@ -15003,44 +15041,6 @@ namespace SkiaSharp
 			(sk_surface_draw_delegate ??= GetSymbol<Delegates.sk_surface_draw> ("sk_surface_draw")).Invoke (surface, canvas, x, y, paint);
 		#endif
 
-		// void sk_surface_flush(sk_surface_t* surface)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_surface_flush (sk_surface_t surface);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_surface_flush (sk_surface_t surface);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_surface_flush (sk_surface_t surface);
-		}
-		private static Delegates.sk_surface_flush sk_surface_flush_delegate;
-		internal static void sk_surface_flush (sk_surface_t surface) =>
-			(sk_surface_flush_delegate ??= GetSymbol<Delegates.sk_surface_flush> ("sk_surface_flush")).Invoke (surface);
-		#endif
-
-		// void sk_surface_flush_and_submit(sk_surface_t* surface, bool syncCpu)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_surface_flush_and_submit (sk_surface_t surface, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_surface_flush_and_submit (sk_surface_t surface, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_surface_flush_and_submit (sk_surface_t surface, [MarshalAs (UnmanagedType.I1)] bool syncCpu);
-		}
-		private static Delegates.sk_surface_flush_and_submit sk_surface_flush_and_submit_delegate;
-		internal static void sk_surface_flush_and_submit (sk_surface_t surface, [MarshalAs (UnmanagedType.I1)] bool syncCpu) =>
-			(sk_surface_flush_and_submit_delegate ??= GetSymbol<Delegates.sk_surface_flush_and_submit> ("sk_surface_flush_and_submit")).Invoke (surface, syncCpu);
-		#endif
-
 		// sk_canvas_t* sk_surface_get_canvas(sk_surface_t*)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -20070,8 +20070,8 @@ namespace SkiaSharp {
 		Metal = 2,
 		// DIRECT3D_GR_BACKEND = 3
 		Direct3D = 3,
-		// DAWN_GR_BACKEND = 4
-		Dawn = 4,
+		// UNSUPPORTED_GR_BACKEND = 5
+		Unsupported = 5,
 	}
 
 	// gr_surfaceorigin_t

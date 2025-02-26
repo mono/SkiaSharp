@@ -314,7 +314,7 @@ namespace SkiaSharp
 			if (obj is ISKNonVirtualReferenceCounted nvrefcnt)
 				nvrefcnt.ReferenceNative ();
 			else
-				SkiaApi.sk_refcnt_safe_unref (obj.Handle);
+				SkiaApi.sk_refcnt_safe_ref (obj.Handle);
 		}
 
 		public static void SafeUnRef (this ISKReferenceCounted obj)
