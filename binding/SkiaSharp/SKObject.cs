@@ -45,6 +45,7 @@ namespace SkiaSharp
 			SKFontManager.EnsureStaticInstanceAreInitialized ();
 			SKTypeface.EnsureStaticInstanceAreInitialized ();
 			SKBlender.EnsureStaticInstanceAreInitialized ();
+			SKColorFilter.EnsureStaticInstanceAreInitialized ();
 		}
 
 		internal SKObject (IntPtr handle, bool owns)
