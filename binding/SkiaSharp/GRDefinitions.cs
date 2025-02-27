@@ -87,13 +87,13 @@ namespace SkiaSharp
 			readonly get => _textureHandle;
 			set {
 				_textureHandle = value;
-#if __IOS__ || __MACOS__
+#if __IOS__ || __MACOS__ || __TVOS__
 				_texture = null;
 #endif
 			}
 		}
 
-#if __IOS__ || __MACOS__
+#if __IOS__ || __MACOS__ || __TVOS__
 		private Metal.IMTLTexture _texture;
 		public GRMtlTextureInfo (Metal.IMTLTexture texture)
 		{
