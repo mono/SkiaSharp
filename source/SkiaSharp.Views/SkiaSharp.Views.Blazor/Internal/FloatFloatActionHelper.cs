@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NET7_0_OR_GREATER
+using System;
 using System.ComponentModel;
 using Microsoft.JSInterop;
 
@@ -18,3 +19,4 @@ namespace SkiaSharp.Views.Blazor.Internal
 		public void Invoke(float width, float height) => action?.Invoke(width, height);
 	}
 }
+#endif

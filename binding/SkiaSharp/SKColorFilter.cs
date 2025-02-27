@@ -9,6 +9,26 @@ namespace SkiaSharp
 		public const int ColorMatrixSize = 20;
 		public const int TableMaxLength = 256;
 
+		private static readonly SKColorFilter srgbToLinear;
+		private static readonly SKColorFilter linearToSrgb;
+
+		static SKColorFilter ()
+		{
+			// TODO: This is not the best way to do this as it will create a lot of objects that
+			//       might not be needed, but it is the only way to ensure that the static
+			//       instances are created before any access is made to them.
+			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
+
+			srgbToLinear = new SKColorFilterStatic (SkiaApi.sk_colorfilter_new_srgb_to_linear_gamma ());
+			linearToSrgb = new SKColorFilterStatic (SkiaApi.sk_colorfilter_new_linear_to_srgb_gamma ());
+		}
+
+		internal static void EnsureStaticInstanceAreInitialized ()
+		{
+			// IMPORTANT: do not remove to ensure that the static instances
+			//            are initialized before any access is made to them
+		}
+
 		internal SKColorFilter(IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -16,6 +36,10 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
+
+		public static SKColorFilter CreateSrgbToLinearGamma() => srgbToLinear;
+
+		public static SKColorFilter CreateLinearToSrgbGamma() => linearToSrgb;
 
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{
@@ -36,6 +60,14 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
 		}
 
+		public static SKColorFilter CreateLerp(float weight, SKColorFilter filter0, SKColorFilter filter1)
+		{
+			_ = filter0 ?? throw new ArgumentNullException(nameof(filter0));
+			_ = filter1 ?? throw new ArgumentNullException(nameof(filter1));
+
+			return GetObject (SkiaApi.sk_colorfilter_new_lerp(weight, filter0.Handle, filter1.Handle));
+		}
+
 		public static SKColorFilter CreateColorMatrix(float[] matrix)
 		{
 			if (matrix == null)
@@ -49,6 +81,15 @@ namespace SkiaSharp
 				throw new ArgumentException("Matrix must have a length of 20.", nameof(matrix));
 			fixed (float* m = matrix) {
 				return GetObject (SkiaApi.sk_colorfilter_new_color_matrix (m));
+			}
+		}
+
+		public static SKColorFilter CreateHslaColorMatrix(ReadOnlySpan<float> matrix)
+		{
+			if (matrix.Length != 20)
+				throw new ArgumentException("Matrix must have a length of 20.", nameof(matrix));
+			fixed (float* m = matrix) {
+				return GetObject (SkiaApi.sk_colorfilter_new_hsla_matrix (m));
 			}
 		}
 
@@ -117,5 +158,15 @@ namespace SkiaSharp
 
 		internal static SKColorFilter GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
+			
+		private sealed class SKColorFilterStatic : SKColorFilter
+		{
+			internal SKColorFilterStatic (IntPtr x)
+				: base (x, false)
+			{
+			}
+
+			protected override void Dispose (bool disposing) { }
+		}
 	}
 }

@@ -3,3 +3,4 @@ APP_PLATFORM := android-21
 NDK_TOOLCHAIN_VERSION := clang
 APP_STL := c++_static
 APP_OPTIM := release
+APP_SUPPORT_FLEXIBLE_PAGE_SIZES := true

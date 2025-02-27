@@ -30,13 +30,15 @@ namespace SkiaSharp
 			CreateVulkan (width, height, vkImageInfo);
 		}
 
-#if __IOS__ || __MACOS__
+#if __IOS__ || __MACOS__ || __TVOS__
 
 		[Obsolete ("Use GRBackendRenderTarget(int width, int height, GRMtlTextureInfo mtlInfo) instead.")]
 		public GRBackendRenderTarget (int width, int height, int sampleCount, GRMtlTextureInfo mtlInfo)
 			: this (width, height, mtlInfo)
 		{
 		}
+
+#endif
 
 		public GRBackendRenderTarget (int width, int height, GRMtlTextureInfo mtlInfo)
 			: this (IntPtr.Zero, true)
@@ -48,8 +50,6 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
 			}
 		}
-
-#endif
 
 		private void CreateGl (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
 		{

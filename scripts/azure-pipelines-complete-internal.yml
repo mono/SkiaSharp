@@ -45,7 +45,7 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: macos-13
+        vmImage: macos-14
         os: macos
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
@@ -68,12 +68,9 @@ parameters:
     type: object
     default:
       pool:
-        name: VSEng-VSMac-Xamarin-Shared
-        vmImage: VSEng-VSMac-Xamarin-Shared
+        name: Azure Pipelines
+        vmImage: macos-14
         os: macos
-        demands:
-          - macOS.Name -equals Ventura
-          - macOS.Architecture -equals x64
       parameters:
         installXcode: false
   - name: enableSigning
@@ -144,7 +141,7 @@ extends:
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
-          buildAgentMacNative: ${{ parameters.buildAgentMac }}
+          buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
           buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
