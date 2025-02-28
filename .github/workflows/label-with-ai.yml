@@ -1,0 +1,36 @@
+name: Apply labels using AI
+
+on:
+  issues:
+    types: [opened, reopened]
+
+jobs:
+  apply-label-and-add-comment:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: mattleibow/dev-tools@action/label-with-ai
+        name: Apply AREA labels
+        with:
+          label-pattern: '^area/.*'
+          apply-label: 'false'
+          add-comment: 'false'
+      - uses: mattleibow/dev-tools@action/label-with-ai
+        name: Apply PLATFORM labels
+        with:
+          label-pattern: '^os/.*'
+          apply-label: 'false'
+          add-comment: 'false'
+      - uses: mattleibow/dev-tools@action/label-with-ai
+        name: Apply BACKEND labels
+        with:
+          label-pattern: '^backend/.*'
+          apply-label: 'false'
+          add-comment: 'false'
+      - uses: mattleibow/dev-tools@action/label-with-ai
+        name: Apply TENET labels
+        with:
+          label-pattern: '^tenet/.*'
+          apply-label: 'false'
+          add-comment: 'false'
