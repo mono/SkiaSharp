@@ -6,7 +6,7 @@ FROM arm64v8/debian:11
 # Install the required packages
 RUN apt-get update \
     && apt-get install -y \
-        curl python3 git clang-13 ninja-build \
+        curl python3 git clang-16 ninja-build \
         libfontconfig1-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -20,6 +20,6 @@ RUN curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh \
     && dotnet help \
     && dotnet --info
 
-ENV CC=clang-13 CXX=clang++-13
+ENV CC=clang-16 CXX=clang++-16
 
 WORKDIR /work
