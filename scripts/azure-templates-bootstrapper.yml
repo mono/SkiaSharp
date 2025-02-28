@@ -48,6 +48,7 @@ jobs:
     condition: ${{ parameters.condition }}
     continueOnError: ${{ parameters.continueOnError }}
     variables:
+      DOTNET_NOLOGO: true
       ${{ if ne(parameters.buildAgent.variables, '') }}:
         ${{ parameters.buildAgent.variables }}
       ${{ if ne(length(parameters.variables), 0) }}:
@@ -82,15 +83,23 @@ jobs:
               targetPath: ${{ additionalArtifact.path }}
 
     steps:
+      - pwsh: if ($IsLinux -or $IsMacOS) { df -h } else { Get-Volume }
+        displayName: Get the volume information before the run
+        condition: always()
+
       # prepare
       - checkout: self
         submodules: recursive
       - template: /scripts/azure-templates-variables.yml@self
 
-      # checkout required skia PR
-      - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
-        displayName: Checkout required skia PR
-        condition: eq(variables['Build.Reason'], 'PullRequest')
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after the checkout
+        condition: always()
+
+      # # checkout required skia PR
+      # - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
+      #   displayName: Checkout required skia PR
+      #   condition: eq(variables['Build.Reason'], 'PullRequest')
 
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         - template: /scripts/azure-templates-github-status.yml@self
@@ -100,6 +109,10 @@ jobs:
       # determine build type
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
         displayName: Determine build type
+
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information before the provisioning
+        condition: always()
 
       # provisioning steps
       - ${{ if ne(parameters.buildAgent.provisioningSteps, '') }}:
@@ -273,6 +286,10 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information before downloading artifacts
+        condition: always()
+
       # download artifacts
       - template: /scripts/azure-templates-download-artifacts.yml@self
         parameters:
@@ -285,19 +302,32 @@ jobs:
           artifacts:
             - name: ${{ parameters.name }}
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after downloading artifacts
+        condition: always()
+
       # pre-build steps
       - ${{ if ne(parameters.buildAgent.preBuildSteps, '') }}:
         - ${{ parameters.buildAgent.preBuildSteps }}
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information before the build
+        condition: always()
+
       # actual build
       - ${{ if ne(parameters.skipSteps, 'true') }}:
         - ${{ if eq(parameters.docker, '') }}:
+          - pwsh: dotnet --info
+            displayName: Display all the .NET information
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          - pwsh: dotnet tool restore
+            displayName: Restore the .NET tools
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
             - pwsh: |
                 Get-Content $PSCommandPath
-                dotnet tool restore
                 ${{ parameters.initScript }}
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
@@ -312,7 +342,6 @@ jobs:
           - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
             - bash: |
                 cat ${BASH_SOURCE[0]}
-                dotnet tool restore
                 ${{ parameters.initScript }}
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
@@ -359,8 +388,16 @@ jobs:
             retryCountOnTaskFailure: ${{ parameters.retryCount }}
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
 
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after the build
+        condition: always()
+
       # post-build steps
       - ${{ parameters.postBuildSteps }}
 
       - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
         - template: /scripts/azure-templates-github-status.yml@self
+
+      - pwsh: .\scripts\get-free-space.ps1
+        displayName: Get the volume information after the entire run
+        condition: always()
