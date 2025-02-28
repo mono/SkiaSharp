@@ -145,39 +145,40 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindowsNative }}
             target: externals-windows
             additionalArgs: --buildarch=arm64
-        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x86 (Win + MSVC)
-          parameters:
-            name: native_win32_x86_msvc_windows
-            displayName: Win32 x86 [MSVC]
-            sdl: ${{ parameters.sdl }}
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentWindowsNative }}
-            target: externals-windows
-            additionalArgs: --buildarch=x86 --llvm="msvc"
-            installLlvm: false
-        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x64 (Win + MSVC)
-          parameters:
-            name: native_win32_x64_msvc_windows
-            displayName: Win32 x64 [MSVC]
-            sdl: ${{ parameters.sdl }}
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentWindowsNative }}
-            target: externals-windows
-            additionalArgs: --buildarch=x64 --llvm="msvc"
-            installLlvm: false
-        - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|arm64 (Win + MSVC)
-          parameters:
-            name: native_win32_arm64_msvc_windows
-            displayName: Win32 arm64 [MSVC]
-            sdl: ${{ parameters.sdl }}
-            buildExternals: ${{ parameters.buildExternals }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentWindowsNative }}
-            target: externals-windows
-            additionalArgs: --buildarch=arm64 --llvm="msvc"
-            installLlvm: false
+        - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+          - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x86 (Win + MSVC)
+            parameters:
+              name: native_win32_x86_msvc_windows
+              displayName: Win32 x86 [MSVC]
+              sdl: ${{ parameters.sdl }}
+              buildExternals: ${{ parameters.buildExternals }}
+              buildPipelineType: ${{ parameters.buildPipelineType }}
+              buildAgent: ${{ parameters.buildAgentWindowsNative }}
+              target: externals-windows
+              additionalArgs: --buildarch=x86 --llvm="msvc"
+              installLlvm: false
+          - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|x64 (Win + MSVC)
+            parameters:
+              name: native_win32_x64_msvc_windows
+              displayName: Win32 x64 [MSVC]
+              sdl: ${{ parameters.sdl }}
+              buildExternals: ${{ parameters.buildExternals }}
+              buildPipelineType: ${{ parameters.buildPipelineType }}
+              buildAgent: ${{ parameters.buildAgentWindowsNative }}
+              target: externals-windows
+              additionalArgs: --buildarch=x64 --llvm="msvc"
+              installLlvm: false
+          - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Win32|arm64 (Win + MSVC)
+            parameters:
+              name: native_win32_arm64_msvc_windows
+              displayName: Win32 arm64 [MSVC]
+              sdl: ${{ parameters.sdl }}
+              buildExternals: ${{ parameters.buildExternals }}
+              buildPipelineType: ${{ parameters.buildPipelineType }}
+              buildAgent: ${{ parameters.buildAgentWindowsNative }}
+              target: externals-windows
+              additionalArgs: --buildarch=arm64 --llvm="msvc"
+              installLlvm: false
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native WinUI|x86 (Win)
           parameters:
             name: native_winui_x86_windows
@@ -458,11 +459,11 @@ stages:
               - 3.1.56:
                 displayName: '3.1.56_SIMD'
                 version: 3.1.56
-                features: _wasmeh,simd,st
+                features: _wasmeh,st,simd
               - 3.1.56:
                 displayName: '3.1.56_SIMD_Threading'
                 version: 3.1.56
-                features: _wasmeh,simd,mt
+                features: _wasmeh,mt,simd
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
     - stage: native
@@ -512,6 +513,32 @@ stages:
               - name: native_macos_macos
               # tvOS
               - name: native_tvos_macos
+              # Linux
+              - name: native_linux_arm64_linux
+              - name: native_linux_arm64_nodeps_linux
+              - name: native_linux_arm_linux
+              - name: native_linux_arm_nodeps_linux
+              - name: native_linux_x64_alpine_linux
+              - name: native_linux_x64_alpine_nodeps_linux
+              - name: native_linux_x64_linux
+              - name: native_linux_x64_nodeps_linux
+              # WASM
+              - name: native_wasm_2_0_23_linux
+              - name: native_wasm_2_0_6_linux
+              - name: native_wasm_3_1_12_linux
+              - name: native_wasm_3_1_12_SIMD_linux
+              - name: native_wasm_3_1_12_Threading_linux
+              - name: native_wasm_3_1_12_Threading_SIMD_linux
+              - name: native_wasm_3_1_34_linux
+              - name: native_wasm_3_1_34_SIMD_linux
+              - name: native_wasm_3_1_34_SIMD_Threading_linux
+              - name: native_wasm_3_1_34_Threading_linux
+              - name: native_wasm_3_1_56_linux
+              - name: native_wasm_3_1_56_SIMD_linux
+              - name: native_wasm_3_1_56_SIMD_Threading_linux
+              - name: native_wasm_3_1_56_Threading_linux
+              - name: native_wasm_3_1_7_linux
+            # matix checks
             matrixArtifacts:
               - name: native_linux
                 jobs: $(nativeLinuxJobs)
@@ -524,20 +551,48 @@ stages:
             sdl: ${{ parameters.sdl }}
             buildPipelineType: ${{ parameters.buildPipelineType }}
             buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              # Linux
+              - name: native_linux_arm64_linux
+              - name: native_linux_arm64_nodeps_linux
+              - name: native_linux_arm_linux
+              - name: native_linux_arm_nodeps_linux
+              - name: native_linux_x64_alpine_linux
+              - name: native_linux_x64_alpine_nodeps_linux
+              - name: native_linux_x64_linux
+              - name: native_linux_x64_nodeps_linux
+              # WASM
+              - name: native_wasm_2_0_23_linux
+              - name: native_wasm_2_0_6_linux
+              - name: native_wasm_3_1_12_linux
+              - name: native_wasm_3_1_12_SIMD_linux
+              - name: native_wasm_3_1_12_Threading_linux
+              - name: native_wasm_3_1_12_Threading_SIMD_linux
+              - name: native_wasm_3_1_34_linux
+              - name: native_wasm_3_1_34_SIMD_linux
+              - name: native_wasm_3_1_34_SIMD_Threading_linux
+              - name: native_wasm_3_1_34_Threading_linux
+              - name: native_wasm_3_1_56_linux
+              - name: native_wasm_3_1_56_SIMD_linux
+              - name: native_wasm_3_1_56_SIMD_Threading_linux
+              - name: native_wasm_3_1_56_Threading_linux
+              - name: native_wasm_3_1_7_linux
+            # matix checks
             matrixArtifacts:
               - name: native_wasm
                 jobs: $(nativeWasmJobs)
-        - template: /scripts/azure-templates-merger.yml@self # Merge Native MSVC Artifacts
-          parameters:
-            name: native_msvc
-            displayName: Merge Native MSVC Artifacts
-            sdl: ${{ parameters.sdl }}
-            buildPipelineType: ${{ parameters.buildPipelineType }}
-            buildAgent: ${{ parameters.buildAgentHost }}
-            requiredArtifacts:
-              - name: native_win32_x86_msvc_windows
-              - name: native_win32_x64_msvc_windows
-              - name: native_win32_arm64_msvc_windows
+        - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+          - template: /scripts/azure-templates-merger.yml@self # Merge Native MSVC Artifacts
+            parameters:
+              name: native_msvc
+              displayName: Merge Native MSVC Artifacts
+              sdl: ${{ parameters.sdl }}
+              buildPipelineType: ${{ parameters.buildPipelineType }}
+              buildAgent: ${{ parameters.buildAgentHost }}
+              requiredArtifacts:
+                - name: native_win32_x86_msvc_windows
+                - name: native_win32_x64_msvc_windows
+                - name: native_win32_arm64_msvc_windows
 
   - ${{ if ne(parameters.buildPipelineType, 'build') }}:
     - stage: managed
