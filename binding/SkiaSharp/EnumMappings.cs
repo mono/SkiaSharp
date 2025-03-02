@@ -62,7 +62,7 @@ namespace SkiaSharp
 				SKColorType.Alpha16 => SKColorTypeNative.A16Unorm,
 				SKColorType.Rg1616 => SKColorTypeNative.R16g16Unorm,
 				SKColorType.Rgba16161616 => SKColorTypeNative.R16g16b16a16Unorm,
-				SKColorType.Rgba10x6 => SKColorTypeNative.Rgb10x6,
+				SKColorType.Rgba10x6 => SKColorTypeNative.Rgba10x6,
 				SKColorType.Bgra1010102 => SKColorTypeNative.Bgra1010102,
 				SKColorType.Bgr101010x => SKColorTypeNative.Bgr101010x,
 				SKColorType.Bgr101010xXR => SKColorTypeNative.Bgr101010xXr,
