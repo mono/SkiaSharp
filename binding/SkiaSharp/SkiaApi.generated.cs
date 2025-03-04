@@ -3884,6 +3884,44 @@ namespace SkiaSharp
 			(sk_colorfilter_new_high_contrast_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_high_contrast> ("sk_colorfilter_new_high_contrast")).Invoke (config);
 		#endif
 
+		// sk_colorfilter_t* sk_colorfilter_new_hsla_matrix(const float[20] array = 20)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_hsla_matrix (Single* array);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_hsla_matrix (Single* array);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_hsla_matrix (Single* array);
+		}
+		private static Delegates.sk_colorfilter_new_hsla_matrix sk_colorfilter_new_hsla_matrix_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_hsla_matrix (Single* array) =>
+			(sk_colorfilter_new_hsla_matrix_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_hsla_matrix> ("sk_colorfilter_new_hsla_matrix")).Invoke (array);
+		#endif
+
+		// sk_colorfilter_t* sk_colorfilter_new_lerp(float weight, sk_colorfilter_t* filter0, sk_colorfilter_t* filter1)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1);
+		}
+		private static Delegates.sk_colorfilter_new_lerp sk_colorfilter_new_lerp_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1) =>
+			(sk_colorfilter_new_lerp_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_lerp> ("sk_colorfilter_new_lerp")).Invoke (weight, filter0, filter1);
+		#endif
+
 		// sk_colorfilter_t* sk_colorfilter_new_lighting(sk_color_t mul, sk_color_t add)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -3901,6 +3939,25 @@ namespace SkiaSharp
 		private static Delegates.sk_colorfilter_new_lighting sk_colorfilter_new_lighting_delegate;
 		internal static sk_colorfilter_t sk_colorfilter_new_lighting (UInt32 mul, UInt32 add) =>
 			(sk_colorfilter_new_lighting_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_lighting> ("sk_colorfilter_new_lighting")).Invoke (mul, add);
+		#endif
+
+		// sk_colorfilter_t* sk_colorfilter_new_linear_to_srgb_gamma()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_linear_to_srgb_gamma ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_linear_to_srgb_gamma ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_linear_to_srgb_gamma ();
+		}
+		private static Delegates.sk_colorfilter_new_linear_to_srgb_gamma sk_colorfilter_new_linear_to_srgb_gamma_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_linear_to_srgb_gamma () =>
+			(sk_colorfilter_new_linear_to_srgb_gamma_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_linear_to_srgb_gamma> ("sk_colorfilter_new_linear_to_srgb_gamma")).Invoke ();
 		#endif
 
 		// sk_colorfilter_t* sk_colorfilter_new_luma_color()
@@ -3939,6 +3996,25 @@ namespace SkiaSharp
 		private static Delegates.sk_colorfilter_new_mode sk_colorfilter_new_mode_delegate;
 		internal static sk_colorfilter_t sk_colorfilter_new_mode (UInt32 c, SKBlendMode mode) =>
 			(sk_colorfilter_new_mode_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_mode> ("sk_colorfilter_new_mode")).Invoke (c, mode);
+		#endif
+
+		// sk_colorfilter_t* sk_colorfilter_new_srgb_to_linear_gamma()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_srgb_to_linear_gamma ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_srgb_to_linear_gamma ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_srgb_to_linear_gamma ();
+		}
+		private static Delegates.sk_colorfilter_new_srgb_to_linear_gamma sk_colorfilter_new_srgb_to_linear_gamma_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_srgb_to_linear_gamma () =>
+			(sk_colorfilter_new_srgb_to_linear_gamma_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_srgb_to_linear_gamma> ("sk_colorfilter_new_srgb_to_linear_gamma")).Invoke ();
 		#endif
 
 		// sk_colorfilter_t* sk_colorfilter_new_table(const uint8_t[256] table = 256)
@@ -18433,6 +18509,63 @@ namespace SkiaSharp {
 
 	}
 
+	// sk_document_pdf_datetime_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKTimeDateTimeInternal : IEquatable<SKTimeDateTimeInternal> {
+		// public int16_t fTimeZoneMinutes
+		public Int16 fTimeZoneMinutes;
+
+		// public uint16_t fYear
+		public UInt16 fYear;
+
+		// public uint8_t fMonth
+		public Byte fMonth;
+
+		// public uint8_t fDayOfWeek
+		public Byte fDayOfWeek;
+
+		// public uint8_t fDay
+		public Byte fDay;
+
+		// public uint8_t fHour
+		public Byte fHour;
+
+		// public uint8_t fMinute
+		public Byte fMinute;
+
+		// public uint8_t fSecond
+		public Byte fSecond;
+
+		public readonly bool Equals (SKTimeDateTimeInternal obj) =>
+#pragma warning disable CS8909
+			fTimeZoneMinutes == obj.fTimeZoneMinutes && fYear == obj.fYear && fMonth == obj.fMonth && fDayOfWeek == obj.fDayOfWeek && fDay == obj.fDay && fHour == obj.fHour && fMinute == obj.fMinute && fSecond == obj.fSecond;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKTimeDateTimeInternal f && Equals (f);
+
+		public static bool operator == (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fTimeZoneMinutes);
+			hash.Add (fYear);
+			hash.Add (fMonth);
+			hash.Add (fDayOfWeek);
+			hash.Add (fDay);
+			hash.Add (fHour);
+			hash.Add (fMinute);
+			hash.Add (fSecond);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// sk_document_pdf_metadata_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKDocumentPdfMetadataInternal : IEquatable<SKDocumentPdfMetadataInternal> {
@@ -18454,10 +18587,10 @@ namespace SkiaSharp {
 		// public sk_string_t* fProducer
 		public sk_string_t fProducer;
 
-		// public sk_time_datetime_t* fCreation
+		// public sk_document_pdf_datetime_t* fCreation
 		public SKTimeDateTimeInternal* fCreation;
 
-		// public sk_time_datetime_t* fModified
+		// public sk_document_pdf_datetime_t* fModified
 		public SKTimeDateTimeInternal* fModified;
 
 		// public float fRasterDPI
@@ -19939,63 +20072,6 @@ namespace SkiaSharp {
 
 	}
 
-	// sk_time_datetime_t
-	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKTimeDateTimeInternal : IEquatable<SKTimeDateTimeInternal> {
-		// public int16_t fTimeZoneMinutes
-		public Int16 fTimeZoneMinutes;
-
-		// public uint16_t fYear
-		public UInt16 fYear;
-
-		// public uint8_t fMonth
-		public Byte fMonth;
-
-		// public uint8_t fDayOfWeek
-		public Byte fDayOfWeek;
-
-		// public uint8_t fDay
-		public Byte fDay;
-
-		// public uint8_t fHour
-		public Byte fHour;
-
-		// public uint8_t fMinute
-		public Byte fMinute;
-
-		// public uint8_t fSecond
-		public Byte fSecond;
-
-		public readonly bool Equals (SKTimeDateTimeInternal obj) =>
-#pragma warning disable CS8909
-			fTimeZoneMinutes == obj.fTimeZoneMinutes && fYear == obj.fYear && fMonth == obj.fMonth && fDayOfWeek == obj.fDayOfWeek && fDay == obj.fDay && fHour == obj.fHour && fMinute == obj.fMinute && fSecond == obj.fSecond;
-#pragma warning restore CS8909
-
-		public readonly override bool Equals (object obj) =>
-			obj is SKTimeDateTimeInternal f && Equals (f);
-
-		public static bool operator == (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
-			left.Equals (right);
-
-		public static bool operator != (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
-			!left.Equals (right);
-
-		public readonly override int GetHashCode ()
-		{
-			var hash = new HashCode ();
-			hash.Add (fTimeZoneMinutes);
-			hash.Add (fYear);
-			hash.Add (fMonth);
-			hash.Add (fDayOfWeek);
-			hash.Add (fDay);
-			hash.Add (fHour);
-			hash.Add (fMinute);
-			hash.Add (fSecond);
-			return hash.ToHashCode ();
-		}
-
-	}
-
 	// sk_webpencoder_options_t
 	[StructLayout (LayoutKind.Sequential)]
 	public readonly unsafe partial struct SKWebpEncoderOptions : IEquatable<SKWebpEncoderOptions> {
@@ -20277,30 +20353,32 @@ namespace SkiaSharp {
 		Bgr101010x = 10,
 		// BGR_101010X_XR_SK_COLORTYPE = 11
 		Bgr101010xXr = 11,
-		// GRAY_8_SK_COLORTYPE = 12
-		Gray8 = 12,
-		// RGBA_F16_NORM_SK_COLORTYPE = 13
-		RgbaF16Norm = 13,
-		// RGBA_F16_SK_COLORTYPE = 14
-		RgbaF16 = 14,
-		// RGBA_F32_SK_COLORTYPE = 15
-		RgbaF32 = 15,
-		// R8G8_UNORM_SK_COLORTYPE = 16
-		R8g8Unorm = 16,
-		// A16_FLOAT_SK_COLORTYPE = 17
-		A16Float = 17,
-		// R16G16_FLOAT_SK_COLORTYPE = 18
-		R16g16Float = 18,
-		// A16_UNORM_SK_COLORTYPE = 19
-		A16Unorm = 19,
-		// R16G16_UNORM_SK_COLORTYPE = 20
-		R16g16Unorm = 20,
-		// R16G16B16A16_UNORM_SK_COLORTYPE = 21
-		R16g16b16a16Unorm = 21,
-		// SRGBA_8888_SK_COLORTYPE = 22
-		Srgba8888 = 22,
-		// R8_UNORM_SK_COLORTYPE = 23
-		R8Unorm = 23,
+		// RGBA_10X6_SK_COLORTYPE = 12
+		Rgba10x6 = 12,
+		// GRAY_8_SK_COLORTYPE = 13
+		Gray8 = 13,
+		// RGBA_F16_NORM_SK_COLORTYPE = 14
+		RgbaF16Norm = 14,
+		// RGBA_F16_SK_COLORTYPE = 15
+		RgbaF16 = 15,
+		// RGBA_F32_SK_COLORTYPE = 16
+		RgbaF32 = 16,
+		// R8G8_UNORM_SK_COLORTYPE = 17
+		R8g8Unorm = 17,
+		// A16_FLOAT_SK_COLORTYPE = 18
+		A16Float = 18,
+		// R16G16_FLOAT_SK_COLORTYPE = 19
+		R16g16Float = 19,
+		// A16_UNORM_SK_COLORTYPE = 20
+		A16Unorm = 20,
+		// R16G16_UNORM_SK_COLORTYPE = 21
+		R16g16Unorm = 21,
+		// R16G16B16A16_UNORM_SK_COLORTYPE = 22
+		R16g16b16a16Unorm = 22,
+		// SRGBA_8888_SK_COLORTYPE = 23
+		Srgba8888 = 23,
+		// R8_UNORM_SK_COLORTYPE = 24
+		R8Unorm = 24,
 	}
 
 	// sk_encoded_image_format_t
