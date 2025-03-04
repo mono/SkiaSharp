@@ -115,6 +115,11 @@ namespace SkiaSharp.Tests
 					// SRGB processing
 					Assert.Equal((SKColor)0xAAFE0000, color);
 				}
+				else if (colorType == SKColorType.Rgba10x6)
+				{
+					// alpha % is included
+					Assert.Equal((SKColor)0xAAAA0000, color);
+				}
 				else
 				{
 					Assert.Equal((SKColor)0xAAFF0000, color);
