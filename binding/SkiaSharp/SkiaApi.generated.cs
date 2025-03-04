@@ -3088,6 +3088,25 @@ namespace SkiaSharp
 			(sk_canvas_save_layer_delegate ??= GetSymbol<Delegates.sk_canvas_save_layer> ("sk_canvas_save_layer")).Invoke (ccanvas, crect, cpaint);
 		#endif
 
+		// int sk_canvas_save_layer_rec(sk_canvas_t* ccanvas, const sk_canvas_savelayerrec_t* crec)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec);
+		}
+		private static Delegates.sk_canvas_save_layer_rec sk_canvas_save_layer_rec_delegate;
+		internal static Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec) =>
+			(sk_canvas_save_layer_rec_delegate ??= GetSymbol<Delegates.sk_canvas_save_layer_rec> ("sk_canvas_save_layer_rec")).Invoke (ccanvas, crec);
+		#endif
+
 		// void sk_canvas_scale(sk_canvas_t* ccanvas, float sx, float sy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -18008,6 +18027,47 @@ namespace SkiaSharp {
 
 	}
 
+	// sk_canvas_savelayerrec_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKCanvasSaveLayerRecNative : IEquatable<SKCanvasSaveLayerRecNative> {
+		// public sk_rect_t* fBounds
+		public SKRect* fBounds;
+
+		// public sk_paint_t* fPaint
+		public sk_paint_t fPaint;
+
+		// public sk_imagefilter_t* fBackdrop
+		public sk_imagefilter_t fBackdrop;
+
+		// public sk_canvas_savelayerrec_flags_t fFlags
+		public SKCanvasSaveLayerRecFlags fFlags;
+
+		public readonly bool Equals (SKCanvasSaveLayerRecNative obj) =>
+#pragma warning disable CS8909
+			fBounds == obj.fBounds && fPaint == obj.fPaint && fBackdrop == obj.fBackdrop && fFlags == obj.fFlags;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKCanvasSaveLayerRecNative f && Equals (f);
+
+		public static bool operator == (SKCanvasSaveLayerRecNative left, SKCanvasSaveLayerRecNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKCanvasSaveLayerRecNative left, SKCanvasSaveLayerRecNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fBounds);
+			hash.Add (fPaint);
+			hash.Add (fBackdrop);
+			hash.Add (fFlags);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// sk_codec_frameinfo_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKCodecFrameInfo : IEquatable<SKCodecFrameInfo> {
@@ -20175,6 +20235,18 @@ namespace SkiaSharp {
 		Outer = 2,
 		// INNER_SK_BLUR_STYLE = 3
 		Inner = 3,
+	}
+
+	// sk_canvas_savelayerrec_flags_t
+	public enum SKCanvasSaveLayerRecFlags {
+		// NONE_SK_CANVAS_SAVELAYERREC_FLAGS = 0
+		None = 0,
+		// PRESERVE_LCD_TEXT_SK_CANVAS_SAVELAYERREC_FLAGS = 1 << 1
+		PreserveLcdText = 2,
+		// INITIALIZE_WITH_PREVIOUS_SK_CANVAS_SAVELAYERREC_FLAGS = 1 << 2
+		InitializeWithPrevious = 4,
+		// F16_COLOR_TYPE_SK_CANVAS_SAVELAYERREC_FLAGS = 1 << 4
+		F16ColorType = 16,
 	}
 
 	// sk_clipop_t
