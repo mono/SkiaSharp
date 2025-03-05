@@ -4,32 +4,31 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/osx"))
 #load "../../scripts/cake/native-shared.cake"
 #load "../../scripts/cake/xcode.cake"
 
-string GetDeploymentTarget(string arch)
-{
-    switch (arch.ToLower()) {
-        case "arm64": return "11.0";
-        default: return "10.13";
-    }
-}
+string GetDeploymentTarget(string arch) =>
+    arch.ToLower() switch
+    {
+        "arm64" => "11.0",
+        _ => "10.13",
+    };
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
-    Build("x86_64", "x64");
-    Build("arm64", "arm64");
+    Build("macosx", "x86_64", "x64");
+    Build("macosx", "arm64", "arm64");
 
     CreateFatDylib(OUTPUT_PATH.Combine("libSkiaSharp"));
 
-    void Build(string arch, string skiaArch)
+    void Build(string sdk, string xcodeArch, string skiaArch)
     {
-        if (Skip(arch)) return;
+        if (Skip(xcodeArch)) return;
 
-        GnNinja($"macos/{arch}", "skia modules/skottie",
+        GnNinja($"{sdk}/{xcodeArch}", "skia modules/skottie",
             $"target_os='mac' " +
             $"target_cpu='{skiaArch}' " +
-            $"min_macos_version='{GetDeploymentTarget(arch)}' " +
+            $"min_macos_version='{GetDeploymentTarget(xcodeArch)}' " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_metal=true " +
@@ -44,13 +43,13 @@ Task("libSkiaSharp")
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
             $"extra_ldflags=[ '-stdlib=libc++' ]");
 
-        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch, properties: new Dictionary<string, string> {
-            { "MACOSX_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
+            { "MACOSX_DEPLOYMENT_TARGET", GetDeploymentTarget(xcodeArch) },
         });
 
         SafeCopy(
-            $"libSkiaSharp/bin/{CONFIGURATION}/macosx/{arch}.xcarchive",
-            OUTPUT_PATH.Combine($"libSkiaSharp/{arch}.xcarchive"));
+            $"libSkiaSharp/bin/{CONFIGURATION}/{sdk}/{xcodeArch}.xcarchive",
+            OUTPUT_PATH.Combine($"libSkiaSharp/{xcodeArch}.xcarchive"));
     }
 });
 
@@ -58,22 +57,22 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
-    Build("x86_64");
-    Build("arm64");
+    Build("macosx", "x86_64");
+    Build("macosx", "arm64");
 
     CreateFatDylib(OUTPUT_PATH.Combine("libHarfBuzzSharp"));
 
-    void Build(string arch)
+    void Build(string sdk, string xcodeArch)
     {
-        if (Skip(arch)) return;
+        if (Skip(xcodeArch)) return;
 
-        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", "macosx", arch, properties: new Dictionary<string, string> {
-            { "MACOSX_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
+        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
+            { "MACOSX_DEPLOYMENT_TARGET", GetDeploymentTarget(xcodeArch) },
         });
 
         SafeCopy(
-            $"libHarfBuzzSharp/bin/{CONFIGURATION}/macosx/{arch}.xcarchive",
-            OUTPUT_PATH.Combine($"libHarfBuzzSharp/{arch}.xcarchive"));
+            $"libHarfBuzzSharp/bin/{CONFIGURATION}/{sdk}/{xcodeArch}.xcarchive",
+            OUTPUT_PATH.Combine($"libHarfBuzzSharp/{xcodeArch}.xcarchive"));
     }
 });
 

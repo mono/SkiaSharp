@@ -10,6 +10,7 @@ var MSBUILD_EXE = Argument("msbuild", EnvironmentVariable("MSBUILD_EXE"));
 
 var BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+var BUILD_ALL_ARCH = BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains("all");
 
 var BUILD_VARIANT = Argument("variant", EnvironmentVariable("BUILD_VARIANT"));
 var ADDITIONAL_GN_ARGS = Argument("gnArgs", Argument("gnargs", EnvironmentVariable("ADDITIONAL_GN_ARGS")));
