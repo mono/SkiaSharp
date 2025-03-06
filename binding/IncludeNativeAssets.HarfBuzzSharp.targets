@@ -21,9 +21,8 @@
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == ''" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) and '$(RuntimeIdentifier)' != ''">
-    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\iossimulator\libHarfBuzzSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('iossimulator'))" />
-    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\ios\libHarfBuzzSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('iossimulator'))" />
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios'))">
+    <ResolvedFileToPublish Include="$(MSBuildThisFileDirectory)..\output\native\ios\libHarfBuzzSharp.xcframework.zip" PublishFolderType="CompressedAppleFramework" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
@@ -34,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
-    <ResolvedFileToPublish Include="$(MSBuildThisFileDirectory)..\output\native\maccatalyst\libHarfBuzzSharp.framework.zip" PublishFolderType="CompressedAppleFramework" />
+    <ResolvedFileToPublish Include="$(MSBuildThisFileDirectory)..\output\native\maccatalyst\libHarfBuzzSharp.xcframework.zip" PublishFolderType="CompressedAppleFramework" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
@@ -55,7 +54,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
-    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libHarfBuzzSharp.framework" Kind="Framework" />
+    <ResolvedFileToPublish Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libHarfBuzzSharp.xcframework.zip" PublishFolderType="CompressedAppleFramework" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">

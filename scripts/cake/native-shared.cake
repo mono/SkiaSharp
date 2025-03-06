@@ -124,7 +124,7 @@ string ReduceArch(string arch)
 
 bool Skip(string arch)
 {
-    if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains("all"))
+    if (BUILD_ALL_ARCH)
         return false;
 
     arch = ReduceArch(arch);
@@ -135,4 +135,10 @@ bool Skip(string arch)
     Warning($"Skipping architecture: {arch}");
 
     return true;
+}
+
+string[] FilterArchs(params string[] options)
+{
+    options = options?.Where(x => !Skip(x)).ToArray();
+    return options?.Length > 0 ? options : null;
 }
