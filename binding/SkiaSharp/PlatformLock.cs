@@ -68,9 +68,11 @@ namespace SkiaSharp.Internals
 		/// <returns>A reference to a new platform lock implementation</returns>
 		public static IPlatformLock DefaultFactory ()
 		{
+#if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)
 			if (PlatformConfiguration.IsWindows)
 				return new NonAlertableWin32Lock ();
 			else
+#endif
 				return new ReadWriteLock ();
 		}
 
@@ -90,6 +92,7 @@ namespace SkiaSharp.Internals
 			ReaderWriterLockSlim _lock = new ReaderWriterLockSlim ();
 		}
 
+#if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)
 		/// <summary>
 		/// Windows platform lock uses Win32 CRITICAL_SECTION
 		/// </summary>
@@ -169,6 +172,6 @@ namespace SkiaSharp.Internals
 			static extern void LeaveCriticalSection (IntPtr lpCriticalSection);
 #endif
 		}
+#endif
 	}
-
 }
