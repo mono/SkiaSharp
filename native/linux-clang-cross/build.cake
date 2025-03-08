@@ -7,15 +7,15 @@ if (BUILD_ARCH.Length == 0)
 
 string GetGnArgs(string arch)
 {
-    var toolchainArch = arch == "arm"
-        ? "arm-linux-gnueabihf"
-        : "aarch64-linux-gnu";
-    var targetArch = arch == "arm"
-        ? "armv7a-linux-gnueabihf"
-        : "aarch64-linux-gnu";
+    var (toolchainArch, targetArch) = arch switch
+    {
+        "arm" => ("arm-linux-gnueabihf", "armv7a-linux-gnueabihf"),
+        "aarch64" or "riscv64" => ($"{arch}-linux-gnu", $"{arch}-linux-gnu"),
+        _ => throw new ArgumentException($"Unknown architecture: {arch}")
+    };
 
     var sysroot = $"/usr/{toolchainArch}";
-    var init = $"'--sysroot={sysroot}', '--target={targetArch}'";
+    var init = $"'--target={targetArch}'";
     var bin = $"'-B{sysroot}/bin/' ";
     var libs = $"'-L{sysroot}/lib/' ";
     var includes = 
