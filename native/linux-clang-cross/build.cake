@@ -10,7 +10,7 @@ string GetGnArgs(string arch)
     var (toolchainArch, targetArch) = arch switch
     {
         "arm" => ("arm-linux-gnueabihf", "armv7a-linux-gnueabihf"),
-        "aarch64" or "riscv64" => ($"{arch}-linux-gnu", $"{arch}-linux-gnu"),
+        "arm64" or "riscv64" => ($"{arch}-linux-gnu", $"{arch}-linux-gnu"),
         _ => throw new ArgumentException($"Unknown architecture: {arch}")
     };
 
