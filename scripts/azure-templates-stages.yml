@@ -366,11 +366,15 @@ stages:
                 variant: alpine
                 docker: scripts/Docker/alpine/amd64
               - arch: arm
-                docker: scripts/Docker/debian/clang-cross
+                docker: scripts/Docker/debian/clang-cross/11
                 target: externals-linux-clang-cross
               - arch: arm64
-                docker: scripts/Docker/debian/clang-cross
+                docker: scripts/Docker/debian/clang-cross/11
                 dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
+                target: externals-linux-clang-cross
+              - arch: riscv64
+                docker: scripts/Docker/debian/clang-cross/12
+                dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=riscv64
                 target: externals-linux-clang-cross
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Linux)
           parameters:
@@ -518,6 +522,8 @@ stages:
               - name: native_linux_arm64_nodeps_linux
               - name: native_linux_arm_linux
               - name: native_linux_arm_nodeps_linux
+              - name: native_linux_riscv64_linux
+              - name: native_linux_riscv64_nodeps_linux
               - name: native_linux_x64_alpine_linux
               - name: native_linux_x64_alpine_nodeps_linux
               - name: native_linux_x64_linux
@@ -557,6 +563,8 @@ stages:
               - name: native_linux_arm64_nodeps_linux
               - name: native_linux_arm_linux
               - name: native_linux_arm_nodeps_linux
+              - name: native_linux_riscv64_linux
+              - name: native_linux_riscv64_nodeps_linux
               - name: native_linux_x64_alpine_linux
               - name: native_linux_x64_alpine_nodeps_linux
               - name: native_linux_x64_linux
@@ -884,6 +892,7 @@ stages:
             requiredArtifacts:
               - name: native_linux_x64_linux
               - name: native_linux_arm64_linux
+              - name: native_linux_riscv64_linux
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
