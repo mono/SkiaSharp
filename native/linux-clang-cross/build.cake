@@ -10,8 +10,8 @@ string GetGnArgs(string arch)
     var (toolchainArch, targetArch) = arch switch
     {
         "arm" => ("arm-linux-gnueabihf", "armv7a-linux-gnueabihf"),
-        "arm64" or "riscv64" => ($"{arch}-linux-gnu", $"{arch}-linux-gnu"),
-        _ => throw new ArgumentException($"Unknown architecture: {arch}")
+        "arm64" => ("aarch64-linux-gnu", "aarch64-linux-gnu"),
+        _ => ($"{arch}-linux-gnu", $"{arch}-linux-gnu"),
     };
 
     var sysroot = $"/usr/{toolchainArch}";
