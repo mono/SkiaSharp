@@ -10,10 +10,28 @@ namespace SkiaSharp
 {
 	public class GRDirect3DTextureInfo : GRD3DTextureResourceInfo
 	{
-		private ID3D12Resource _resource;
-		public new ID3D12Resource Resource { get => _resource; set { _resource = value; base.Resource = value?.NativePointer ?? default; } }
-		public new ResourceStates ResourceState { get => (ResourceStates)base.ResourceState; set => base.ResourceState = (uint)value; }
-		public new Format Format { get => (Format)base.Format; set => base.Format = (uint)value; }
+		private ID3D12Resource? _resource;
 
+		public new ID3D12Resource? Resource
+		{
+			get => _resource;
+			set
+			{
+				_resource = value;
+				base.Resource = value?.NativePointer ?? default;
+			}
+		}
+
+		public new ResourceStates ResourceState
+		{
+			get => (ResourceStates)base.ResourceState;
+			set => base.ResourceState = (uint)value;
+		}
+
+		public new Format Format
+		{
+			get => (Format)base.Format;
+			set => base.Format = (uint)value;
+		}
 	}
 }

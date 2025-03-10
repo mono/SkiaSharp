@@ -25,36 +25,29 @@ namespace SkiaSharp.Direct3D.Tests
 			var factory = DXGI.CreateDXGIFactory2<IDXGIFactory4>(true);
 
 			ID3D12Device2 device = default;
-			IDXGIAdapter1 adapter = null;
-			using (IDXGIFactory6 factory6 = factory.QueryInterfaceOrNull<IDXGIFactory6>())
+			IDXGIAdapter1 adapter = default;
+			using (var factory6 = factory.QueryInterfaceOrNull<IDXGIFactory6>())
 			{
-				if (factory6 != null)
+				if (factory6 is null)
 				{
-					for (int adapterIndex = 0; factory6.EnumAdapterByGpuPreference(adapterIndex, GpuPreference.HighPerformance, out adapter).Success; adapterIndex++)
+					for (var i = 0; factory6.EnumAdapterByGpuPreference(i, GpuPreference.HighPerformance, out adapter).Success; i++)
 					{
-						AdapterDescription1 desc = adapter!.Description1;
 						if (D3D12.D3D12CreateDevice(adapter, FeatureLevel.Level_11_0, out device).Success)
 							break;
 					}
 				}
 				else
 				{
-					for (int adapterIndex = 0;
-						factory.EnumAdapters1(adapterIndex, out adapter).Success;
-						adapterIndex++)
+					for (var i = 0; factory.EnumAdapters1(i, out adapter).Success; i++)
 					{
-						AdapterDescription1 desc = adapter.Description1;
 						if (D3D12.D3D12CreateDevice(adapter, FeatureLevel.Level_11_0, out device).Success)
 							break;
 					}
 				}
 			}
 
-			if (device == null)
-				throw new NotSupportedException("Current platform unable to create Direct3D device.");
-
 			_factory = factory;
-			_device = device;
+			_device = device ?? throw new NotSupportedException("Current platform unable to create Direct3D device.");
 			_adapter = adapter;
 		}
 
@@ -64,32 +57,21 @@ namespace SkiaSharp.Direct3D.Tests
 
 		public IDXGIAdapter1 Adapter => _adapter;
 
-		public ID3D12CommandQueue Queue
-		{
-			get
+		public ID3D12CommandQueue Queue =>
+			_queue ??= _device.CreateCommandQueue(new CommandQueueDescription
 			{
-				if (_queue == null)
-				{
-					_queue = _device.CreateCommandQueue(new CommandQueueDescription
-					{
-						Flags = CommandQueueFlags.None,
-						Type = CommandListType.Direct
-					});
-				}
-				return _queue;
-			}
-		}
+				Flags = CommandQueueFlags.None,
+				Type = CommandListType.Direct
+			});
 
 		public void Dispose()
 		{
 			if (_disposed)
 				return;
+
 			_disposed = true;
-			if (_queue != null)
-			{
-				_queue.Dispose();
-				_queue = null;
-			}
+
+			_queue?.Dispose();
 			_device.Dispose();
 			_adapter.Dispose();
 			_factory.Dispose();

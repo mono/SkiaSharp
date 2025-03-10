@@ -4,19 +4,25 @@ using System.Text;
 
 namespace SkiaSharp
 {
-	public class GRD3DTextureResourceInfo
+	public class GRD3DTextureResourceInfo : IDisposable
 	{
 		public nint Resource { get; set; }
+
 		public uint ResourceState { get; set; }
+
 		public uint Format { get; set; }
+
 		public uint SampleCount { get; set; }
+
 		public uint LevelCount { get; set; }
+
 		public uint SampleQualityPattern { get; set; }
+
 		public bool Protected { get; set; }
 
-		internal GrD3DTextureResourceInfoNative ToNative ()
+		internal GRD3DTextureResourceInfoNative ToNative ()
 		{
-			return new GrD3DTextureResourceInfoNative {
+			return new GRD3DTextureResourceInfoNative {
 				fResource = Resource,
 				fResourceState = ResourceState,
 				fFormat = Format,
@@ -25,6 +31,16 @@ namespace SkiaSharp
 				fSampleQualityPattern = SampleQualityPattern,
 				fProtected = Protected ? (byte)1 : (byte)0
 			};
+		}
+
+		protected virtual void Dispose (bool disposing)
+		{
+		}
+
+		public void Dispose ()
+		{
+			Dispose (disposing: true);
+			GC.SuppressFinalize (this);
 		}
 	}
 }

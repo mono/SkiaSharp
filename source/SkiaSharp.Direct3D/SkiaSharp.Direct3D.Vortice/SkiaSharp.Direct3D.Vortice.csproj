@@ -1,18 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(TFMCurrent)</TargetFramework>
+    <TargetFrameworks>$(TFMCurrent)</TargetFrameworks>
     <RootNamespace>SkiaSharp</RootNamespace>
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Direct3D.Vortice</PackagingGroup>
     <Title>SkiaSharp Direct3D support using Vortice</Title>
     <PackageDescription>This package adds Direct3D support to SkiaSharp via Vortice.</PackageDescription>
     <PackageTags>direct3d</PackageTags>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Vortice.Direct3D12" Version="3.5.0" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
