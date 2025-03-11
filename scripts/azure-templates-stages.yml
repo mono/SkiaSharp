@@ -376,6 +376,14 @@ stages:
                 docker: scripts/Docker/debian/clang-cross/12
                 dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=riscv64
                 target: externals-linux-clang-cross
+              - arch: arm64
+                docker: scripts/Docker/alpine/clang-cross
+                dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-alpine-linux-musl --build-arg TOOLCHAIN_ARCH_SHORT=arm64
+                target: externals-linux-clang-cross
+              - arch: riscv64
+                docker: scripts/Docker/alpine/clang-cross
+                dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-alpine-linux-musl --build-arg TOOLCHAIN_ARCH_SHORT=riscv64
+                target: externals-linux-clang-cross
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Linux)
           parameters:
             name: native_tizen_linux
@@ -518,10 +526,14 @@ stages:
               # tvOS
               - name: native_tvos_macos
               # Linux
+              - name: native_linux_arm64_alpine_linux
+              - name: native_linux_arm64_alpine_nodeps_linux
               - name: native_linux_arm64_linux
               - name: native_linux_arm64_nodeps_linux
               - name: native_linux_arm_linux
               - name: native_linux_arm_nodeps_linux
+              - name: native_linux_riscv64_alpine_linux
+              - name: native_linux_riscv64_alpine_nodeps_linux
               - name: native_linux_riscv64_linux
               - name: native_linux_riscv64_nodeps_linux
               - name: native_linux_x64_alpine_linux
@@ -561,8 +573,12 @@ stages:
               # Linux
               - name: native_linux_arm64_linux
               - name: native_linux_arm64_nodeps_linux
+              - name: native_linux_arm64_alpine_linux
+              - name: native_linux_arm64_alpine_nodeps_linux
               - name: native_linux_arm_linux
               - name: native_linux_arm_nodeps_linux
+              - name: native_linux_riscv64_alpine_linux
+              - name: native_linux_riscv64_alpine_nodeps_linux
               - name: native_linux_riscv64_linux
               - name: native_linux_riscv64_nodeps_linux
               - name: native_linux_x64_alpine_linux
