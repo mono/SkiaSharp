@@ -8,7 +8,7 @@ using Vortice.DXGI;
 
 namespace SkiaSharp
 {
-	public class GRDirect3DBackendContext : GRD3DBackendContext
+	public class GRVorticeD3DBackendContext : GRD3DBackendContext
 	{
 		private IDXGIAdapter1? _adapter;
 		private ID3D12Device2? _device;

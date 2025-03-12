@@ -6,50 +6,58 @@ using System.Threading.Tasks;
 using SkiaSharp.Tests;
 using Xunit;
 
-namespace SkiaSharp.Direct3D.Tests
+namespace SkiaSharp.Direct3D.Tests;
+
+public class GRContextTest : Direct3DTest
 {
-	public class GRContextTest : Direct3DTest
+	[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+	[SkippableFact]
+	public void GRContextIsNullWhenNoDirect3DContext()
 	{
-		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
-		public void CreateDirect3DContextIsValid()
-		{
-			using var ctx = CreateDirect3DContext();
+		var grBackendContext = new GRD3DBackendContext();
 
-			var grBackendContext = new GRDirect3DBackendContext
-			{
-				Adapter = ctx.Adapter,
-				Device = ctx.Device,
-				Queue = ctx.Queue,
-			};
+		using var grContext = GRContext.CreateDirect3D(grBackendContext);
 
-			Assert.NotNull(grBackendContext);
+		Assert.Null(grContext);
+	}
 
-			using var grContext = GRContext.CreateDirect3D(grBackendContext);
+#if ENABLE_VORTICE
+	public class Vortice : GRContextTest<VorticeDirect3DContext> { }
+#endif
+}
+	
+public abstract class GRContextTest<TContext> : Direct3DTest<TContext>
+	where TContext : Direct3DContext, new()
+{
+	[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+	[SkippableFact]
+	public void CreateDirect3DContextIsValid()
+	{
+		using var ctx = CreateDirect3DContext();
 
-			Assert.NotNull(grContext);
-		}
+		var grBackendContext = ctx.CreateBackendContext();
 
-		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
-		public void CreateDirect3DContextWithOptionsIsValid()
-		{
-			using var ctx = CreateDirect3DContext();
+		Assert.NotNull(grBackendContext);
 
-			var grBackendContext = new GRDirect3DBackendContext
-			{
-				Adapter = ctx.Adapter,
-				Device = ctx.Device,
-				Queue = ctx.Queue,
-			};
+		using var grContext = GRContext.CreateDirect3D(grBackendContext);
 
-			Assert.NotNull(grBackendContext);
+		Assert.NotNull(grContext);
+	}
 
-			var options = new GRContextOptions();
+	[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+	[SkippableFact]
+	public void CreateDirect3DContextWithOptionsIsValid()
+	{
+		using var ctx = CreateDirect3DContext();
 
-			using var grContext = GRContext.CreateDirect3D(grBackendContext, options);
+		var grBackendContext = ctx.CreateBackendContext();
 
-			Assert.NotNull(grContext);
-		}
+		Assert.NotNull(grBackendContext);
+
+		var options = new GRContextOptions();
+
+		using var grContext = GRContext.CreateDirect3D(grBackendContext, options);
+
+		Assert.NotNull(grContext);
 	}
 }

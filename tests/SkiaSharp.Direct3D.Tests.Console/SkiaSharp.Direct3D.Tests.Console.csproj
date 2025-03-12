@@ -2,12 +2,17 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(TFMCurrent)</TargetFrameworks>
+    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net472</TargetFrameworks>
     <RootNamespace>SkiaSharp.Direct3D.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Direct3D.Tests</AssemblyName>
     <SignAssembly>false</SignAssembly>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <Platforms>AnyCPU;x64;x86</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
+    <DefineConstants>$(DefineConstants);ENABLE_VORTICE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,8 +26,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
-    <ProjectReference Include="..\..\source\SkiaSharp.Direct3D\SkiaSharp.Direct3D.Vortice\SkiaSharp.Direct3D.Vortice.csproj" />
     <ProjectReference Include="..\SkiaSharp.Tests.Console\SkiaSharp.Tests.Console.csproj" />
   </ItemGroup>
-  
+
+  <ItemGroup Condition="!$(TargetFramework.StartsWith('net4'))">
+    <ProjectReference Include="..\..\source\SkiaSharp.Direct3D\SkiaSharp.Direct3D.Vortice\SkiaSharp.Direct3D.Vortice.csproj" />
+  </ItemGroup>
+
 </Project>

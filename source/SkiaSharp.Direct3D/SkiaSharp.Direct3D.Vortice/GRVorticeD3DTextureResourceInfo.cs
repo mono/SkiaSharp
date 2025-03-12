@@ -8,7 +8,7 @@ using Vortice.DXGI;
 
 namespace SkiaSharp
 {
-	public class GRDirect3DTextureInfo : GRD3DTextureResourceInfo
+	public class GRVorticeD3DTextureResourceInfo : GRD3DTextureResourceInfo
 	{
 		private ID3D12Resource? _resource;
 
