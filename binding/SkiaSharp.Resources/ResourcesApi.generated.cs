@@ -63,6 +63,7 @@ using sk_region_t = System.IntPtr;
 using sk_rrect_t = System.IntPtr;
 using sk_rtree_factory_t = System.IntPtr;
 using sk_runtimeeffect_t = System.IntPtr;
+using sk_runtimeshaderbuilder_t = System.IntPtr;
 using sk_shader_t = System.IntPtr;
 using sk_stream_asset_t = System.IntPtr;
 using sk_stream_filestream_t = System.IntPtr;
