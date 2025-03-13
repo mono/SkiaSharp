@@ -7,15 +7,15 @@ if (BUILD_ARCH.Length == 0)
 
 string GetGnArgs(string arch)
 {
-    var toolchainArch = arch == "arm"
-        ? "arm-linux-gnueabihf"
-        : "aarch64-linux-gnu";
-    var targetArch = arch == "arm"
-        ? "armv7a-linux-gnueabihf"
-        : "aarch64-linux-gnu";
+    var (toolchainArch, targetArch) = arch switch
+    {
+        "arm" => ("arm-linux-gnueabihf", "armv7a-linux-gnueabihf"),
+        "arm64" => ("aarch64-linux-gnu", "aarch64-linux-gnu"),
+        _ => ($"{arch}-linux-gnu", $"{arch}-linux-gnu"),
+    };
 
     var sysroot = $"/usr/{toolchainArch}";
-    var init = $"'--sysroot={sysroot}', '--target={targetArch}'";
+    var init = $"'--target={targetArch}'";
     var bin = $"'-B{sysroot}/bin/' ";
     var libs = $"'-L{sysroot}/lib/' ";
     var includes = 

@@ -2,11 +2,15 @@
 
   <!-- This file is exactly the same as IncludeNativeAssets.SkiaSharp.targets, but with a find-replace 'SkiaSharp' to 'HarfBuzzSharp' -->
 
+  <PropertyGroup>
+    <BuildArch>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant)</BuildArch>
+  </PropertyGroup>
+  
   <ItemGroup Condition="!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop'))">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(BuildArch)\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(Platform)\libHarfBuzzSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\osx\libHarfBuzzSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\linux\x64\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\linux\$(BuildArch)\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\linux\$(Platform)\libHarfBuzzSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
@@ -18,7 +22,7 @@
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == ''" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(BuildArch)\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == ''" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-ios'))">
