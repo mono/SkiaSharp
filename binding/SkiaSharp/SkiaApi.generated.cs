@@ -9,8 +9,14 @@ using System.Runtime.CompilerServices;
 
 #region Class declarations
 
+using d3d_alloc_t = System.IntPtr;
+using d3d_d12_command_queue_t = System.IntPtr;
+using d3d_d12_device_t = System.IntPtr;
+using d3d_d12_resource_t = System.IntPtr;
+using d3d_dxgi_adapter_t = System.IntPtr;
 using gr_backendrendertarget_t = System.IntPtr;
 using gr_backendtexture_t = System.IntPtr;
+using gr_d3d_memory_allocator_t = System.IntPtr;
 using gr_direct_context_t = System.IntPtr;
 using gr_glinterface_t = System.IntPtr;
 using gr_recording_context_t = System.IntPtr;
@@ -268,6 +274,25 @@ namespace SkiaSharp
 			(gr_backendrendertarget_is_valid_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_is_valid> ("gr_backendrendertarget_is_valid")).Invoke (rendertarget);
 		#endif
 
+		// gr_backendrendertarget_t* gr_backendrendertarget_new_direct3d(int width, int height, const gr_d3d_textureresourceinfo_t* d3dInfo)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		}
+		private static Delegates.gr_backendrendertarget_new_direct3d gr_backendrendertarget_new_direct3d_delegate;
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo) =>
+			(gr_backendrendertarget_new_direct3d_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_direct3d> ("gr_backendrendertarget_new_direct3d")).Invoke (width, height, d3dInfo);
+		#endif
+
 		// gr_backendrendertarget_t* gr_backendrendertarget_new_gl(int width, int height, int samples, int stencils, const gr_gl_framebufferinfo_t* glInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -465,6 +490,25 @@ namespace SkiaSharp
 		private static Delegates.gr_backendtexture_is_valid gr_backendtexture_is_valid_delegate;
 		internal static bool gr_backendtexture_is_valid (gr_backendtexture_t texture) =>
 			(gr_backendtexture_is_valid_delegate ??= GetSymbol<Delegates.gr_backendtexture_is_valid> ("gr_backendtexture_is_valid")).Invoke (texture);
+		#endif
+
+		// gr_backendtexture_t* gr_backendtexture_new_direct3d(int width, int height, const gr_d3d_textureresourceinfo_t* d3dInfo)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		}
+		private static Delegates.gr_backendtexture_new_direct3d gr_backendtexture_new_direct3d_delegate;
+		internal static gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo) =>
+			(gr_backendtexture_new_direct3d_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_direct3d> ("gr_backendtexture_new_direct3d")).Invoke (width, height, d3dInfo);
 		#endif
 
 		// gr_backendtexture_t* gr_backendtexture_new_gl(int width, int height, bool mipmapped, const gr_gl_textureinfo_t* glInfo)
@@ -715,6 +759,44 @@ namespace SkiaSharp
 		private static Delegates.gr_direct_context_is_abandoned gr_direct_context_is_abandoned_delegate;
 		internal static bool gr_direct_context_is_abandoned (gr_direct_context_t context) =>
 			(gr_direct_context_is_abandoned_delegate ??= GetSymbol<Delegates.gr_direct_context_is_abandoned> ("gr_direct_context_is_abandoned")).Invoke (context);
+		#endif
+
+		// gr_direct_context_t* gr_direct_context_make_direct3d(const gr_d3d_backendcontext_t d3dBackendContext)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
+		}
+		private static Delegates.gr_direct_context_make_direct3d gr_direct_context_make_direct3d_delegate;
+		internal static gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext) =>
+			(gr_direct_context_make_direct3d_delegate ??= GetSymbol<Delegates.gr_direct_context_make_direct3d> ("gr_direct_context_make_direct3d")).Invoke (d3dBackendContext);
+		#endif
+
+		// gr_direct_context_t* gr_direct_context_make_direct3d_with_options(const gr_d3d_backendcontext_t d3dBackendContext, const gr_context_options_t* options)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
+		}
+		private static Delegates.gr_direct_context_make_direct3d_with_options gr_direct_context_make_direct3d_with_options_delegate;
+		internal static gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options) =>
+			(gr_direct_context_make_direct3d_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_direct3d_with_options> ("gr_direct_context_make_direct3d_with_options")).Invoke (d3dBackendContext, options);
 		#endif
 
 		// gr_direct_context_t* gr_direct_context_make_gl(const gr_glinterface_t* glInterface)
@@ -17499,6 +17581,108 @@ namespace SkiaSharp {
 			hash.Add (fAllowPathMaskCaching);
 			hash.Add (fDoManualMipmapping);
 			hash.Add (fBufferMapThreshold);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_d3d_backendcontext_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRD3DBackendContextNative : IEquatable<GRD3DBackendContextNative> {
+		// public d3d_dxgi_adapter_t* fAdapter
+		public d3d_dxgi_adapter_t fAdapter;
+
+		// public d3d_d12_device_t* fDevice
+		public d3d_d12_device_t fDevice;
+
+		// public d3d_d12_command_queue_t* fQueue
+		public d3d_d12_command_queue_t fQueue;
+
+		// public gr_d3d_memory_allocator_t* fMemoryAllocator
+		public gr_d3d_memory_allocator_t fMemoryAllocator;
+
+		// public bool fProtectedContext
+		public Byte fProtectedContext;
+
+		public readonly bool Equals (GRD3DBackendContextNative obj) =>
+#pragma warning disable CS8909
+			fAdapter == obj.fAdapter && fDevice == obj.fDevice && fQueue == obj.fQueue && fMemoryAllocator == obj.fMemoryAllocator && fProtectedContext == obj.fProtectedContext;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRD3DBackendContextNative f && Equals (f);
+
+		public static bool operator == (GRD3DBackendContextNative left, GRD3DBackendContextNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRD3DBackendContextNative left, GRD3DBackendContextNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fAdapter);
+			hash.Add (fDevice);
+			hash.Add (fQueue);
+			hash.Add (fMemoryAllocator);
+			hash.Add (fProtectedContext);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_d3d_textureresourceinfo_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRD3DTextureResourceInfoNative : IEquatable<GRD3DTextureResourceInfoNative> {
+		// public d3d_d12_resource_t* fResource
+		public d3d_d12_resource_t fResource;
+
+		// public d3d_alloc_t* fAlloc
+		public d3d_alloc_t fAlloc;
+
+		// public uint32_t fResourceState
+		public UInt32 fResourceState;
+
+		// public uint32_t fFormat
+		public UInt32 fFormat;
+
+		// public uint32_t fSampleCount
+		public UInt32 fSampleCount;
+
+		// public uint32_t fLevelCount
+		public UInt32 fLevelCount;
+
+		// public unsigned int fSampleQualityPattern
+		public UInt32 fSampleQualityPattern;
+
+		// public bool fProtected
+		public Byte fProtected;
+
+		public readonly bool Equals (GRD3DTextureResourceInfoNative obj) =>
+#pragma warning disable CS8909
+			fResource == obj.fResource && fAlloc == obj.fAlloc && fResourceState == obj.fResourceState && fFormat == obj.fFormat && fSampleCount == obj.fSampleCount && fLevelCount == obj.fLevelCount && fSampleQualityPattern == obj.fSampleQualityPattern && fProtected == obj.fProtected;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRD3DTextureResourceInfoNative f && Equals (f);
+
+		public static bool operator == (GRD3DTextureResourceInfoNative left, GRD3DTextureResourceInfoNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRD3DTextureResourceInfoNative left, GRD3DTextureResourceInfoNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fResource);
+			hash.Add (fAlloc);
+			hash.Add (fResourceState);
+			hash.Add (fFormat);
+			hash.Add (fSampleCount);
+			hash.Add (fLevelCount);
+			hash.Add (fSampleQualityPattern);
+			hash.Add (fProtected);
 			return hash.ToHashCode ();
 		}
 
