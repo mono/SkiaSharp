@@ -377,10 +377,12 @@ stages:
                 dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=riscv64
                 target: externals-linux-clang-cross
               - arch: arm64
+                variant: alpine
                 docker: scripts/Docker/alpine/clang-cross
                 dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-alpine-linux-musl --build-arg TOOLCHAIN_ARCH_SHORT=arm64
                 target: externals-linux-clang-cross
               - arch: riscv64
+                variant: alpine
                 docker: scripts/Docker/alpine/clang-cross
                 dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-alpine-linux-musl --build-arg TOOLCHAIN_ARCH_SHORT=riscv64
                 target: externals-linux-clang-cross
