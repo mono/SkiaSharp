@@ -10,13 +10,17 @@ $projects = @(
 
 New-Item -ItemType Directory -Force -Path "output/generated/" | Out-Null
 
+dotnet build utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj
+
 foreach ($proj in $projects) {
     $json = $proj.Json;
     $output = $proj.Output;
     $root = $proj.Root;
     $filename = Split-Path $output -Leaf
 
-    dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/$json --root $root --output binding/$output
+    $cmd = "dotnet run --no-build --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/$json --root $root --output binding/$output"
+    Write-Host $cmd
+    Invoke-Expression $cmd
     if (!$?) {
         exit $LASTEXITCODE
     }

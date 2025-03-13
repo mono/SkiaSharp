@@ -44,6 +44,10 @@ var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux 
 var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
 var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
+var PLATFORM_SUPPORTS_DIRECT3D_TESTS = IsRunningOnWindows ().ToString ();
+var SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? PLATFORM_SUPPORTS_DIRECT3D_TESTS);
+var SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
+
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 
 DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
@@ -129,6 +133,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.SceneGraph",                          new Version (1, 60, 0) },
     { "SkiaSharp.Resources",                           new Version (1, 60, 0) },
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 60, 0) },
+    { "SkiaSharp.Direct3D.Vortice",                    new Version (1, 60, 0) },
 };
 
 var PREVIEW_ONLY_NUGETS = new List<string> {
@@ -206,6 +211,8 @@ Task ("tests-netfx")
         var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
         if (SUPPORT_VULKAN)
             testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
+        if (SUPPORT_DIRECT3D)
+            testAssemblies.Add ("SkiaSharp.Direct3D.Tests.Console");
         foreach (var testAssembly in testAssemblies) {
             var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
 
@@ -257,6 +264,8 @@ Task ("tests-netcore")
     var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
     if (SUPPORT_VULKAN)
         testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
+    if (SUPPORT_DIRECT3D)
+        testAssemblies.Add ("SkiaSharp.Direct3D.Tests.Console");
     foreach (var testAssembly in testAssemblies) {
         var csproj = $"./tests/{testAssembly}/{testAssembly}.csproj";
 
