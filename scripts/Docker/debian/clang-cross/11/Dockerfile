@@ -7,7 +7,7 @@
 #   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.13.1-2 | * ]
 
 ARG IMAGE_ARCH=amd64
-FROM ${IMAGE_ARCH}/debian:11
+FROM ${IMAGE_ARCH}/debian:10
 
 # Install the required packages
 RUN apt-get update \
