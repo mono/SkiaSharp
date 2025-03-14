@@ -31,7 +31,7 @@ RUN APK_DIR="$(mktemp -d)" && \
         -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" \
         -U --allow-untrusted --root /alpine --arch "$TARGET_MACHINE_ARCH" --no-scripts \
-        add fontconfig-dev build-base
+        add fontconfig-dev build-base linux-headers
 
 # Install the .NET SDK
 ARG DOTNET_SDK_VERSION=8.0
