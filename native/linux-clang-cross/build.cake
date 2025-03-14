@@ -7,15 +7,20 @@ if (BUILD_ARCH.Length == 0)
 
 string GetGnArgs(string arch)
 {
+    var (vendor, abi, sysrootarg, linker) = BUILD_VARIANT switch
+    {
+        "alpine" => ("-alpine", "musl", "'--sysroot=/alpine', ", "'-fuse-ld=lld'"),
+        _ => ("", "gnu", "", ""),
+    };
     var (toolchainArch, targetArch) = arch switch
     {
-        "arm" => ("arm-linux-gnueabihf", "armv7a-linux-gnueabihf"),
-        "arm64" => ("aarch64-linux-gnu", "aarch64-linux-gnu"),
-        _ => ($"{arch}-linux-gnu", $"{arch}-linux-gnu"),
+        "arm" => ($"arm{vendor}-linux-{abi}eabihf", $"armv7a{vendor}-linux-{abi}eabihf"),
+        "arm64" => ($"aarch64{vendor}-linux-{abi}", $"aarch64{vendor}-linux-{abi}"),
+        _ => ($"{arch}{vendor}-linux-{abi}", $"{arch}{vendor}-linux-{abi}"),
     };
 
     var sysroot = $"/usr/{toolchainArch}";
-    var init = $"'--target={targetArch}'";
+    var init = $"{sysrootarg} '--target={targetArch}'";
     var bin = $"'-B{sysroot}/bin/' ";
     var libs = $"'-L{sysroot}/lib/' ";
     var includes = 
@@ -26,7 +31,7 @@ string GetGnArgs(string arch)
     return
         $"extra_asmflags+=[ {init}, '-no-integrated-as', {bin}, {includes} ] " +
         $"extra_cflags+=[ {init}, {bin}, {includes} ] " +
-        $"extra_ldflags+=[ {init}, {bin}, {libs} ] " +
+        $"extra_ldflags+=[ {init}, {bin}, {libs}, {linker} ] " +
         ADDITIONAL_GN_ARGS;
 }
 
@@ -38,6 +43,7 @@ Task("libSkiaSharp")
         RunCake("../linux/build.cake", "libSkiaSharp", new Dictionary<string, string> {
             { "arch", arch },
             { "gnArgs", GetGnArgs(arch) },
+            { "variant", BUILD_VARIANT },
         });
     }
 });
@@ -50,6 +56,7 @@ Task("libHarfBuzzSharp")
         RunCake("../linux/build.cake", "libHarfBuzzSharp", new Dictionary<string, string> {
             { "arch", arch },
             { "gnArgs", GetGnArgs(arch) },
+            { "variant", BUILD_VARIANT },
         });
     }
 });
