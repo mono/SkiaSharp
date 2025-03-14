@@ -4,6 +4,9 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/osx"))
 #load "../../scripts/cake/native-shared.cake"
 #load "../../scripts/cake/xcode.cake"
 
+string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
+bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
+
 string GetDeploymentTarget(string arch)
 {
     switch (arch.ToLower()) {
@@ -39,6 +42,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libjpeg_turbo=false " +
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
+            $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
