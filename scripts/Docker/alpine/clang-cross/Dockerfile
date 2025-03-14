@@ -19,17 +19,18 @@ RUN apt-get update \
 ARG DISTRO_VERSION=3.17
 ARG TOOLCHAIN_ARCH_SHORT=armhf
 ARG MACHINE_ARCH=x86_64
+ARG TARGET_MACHINE_ARCH=armhf
 RUN APK_DIR="$(mktemp -d)" && \
     curl -SLO --create-dirs --output-dir "$APK_DIR" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.11/$MACHINE_ARCH/apk.static" && \
     chmod +x "$APK_DIR/apk.static" && \
     "$APK_DIR/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" \
-        -U --allow-untrusted --root /alpine --arch "$TOOLCHAIN_ARCH_SHORT" --initdb add && \
+        -U --allow-untrusted --root /alpine --arch "$TARGET_MACHINE_ARCH" --initdb add && \
     "$APK_DIR/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/community" \
-        -U --allow-untrusted --root /alpine --arch "$TOOLCHAIN_ARCH_SHORT" --no-scripts \
+        -U --allow-untrusted --root /alpine --arch "$TARGET_MACHINE_ARCH" --no-scripts \
         add fontconfig-dev build-base
 
 # Install the .NET SDK
