@@ -7,15 +7,15 @@
 #   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.15.0-1 | * ]
 
 ARG IMAGE_ARCH=amd64
-FROM ${IMAGE_ARCH}/debian:13
+FROM ${IMAGE_ARCH}/debian:12
 
-# Install the required packages
+# Install the required packages (needs to add ftp.debian.org source)
 RUN apt-get update \
     && apt-get install -y \
         curl python3 git clang-19 ninja-build xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Install the cross-compilation GCC toolchain
+# Install the cross-compilation GCC toolchain (loongarch64 use GCC cross ports)
 ARG TOOLCHAIN_VERSION=14
 ARG TOOLCHAIN_ARCH=loongarch64-linux-gnu
 ARG TOOLCHAIN_ARCH_SHORT=loong64
