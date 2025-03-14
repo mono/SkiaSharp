@@ -16,7 +16,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the cross-compilation GCC toolchain
-ARG TOOLCHAIN_VERSION=9
+ARG TOOLCHAIN_VERSION=8
 ARG TOOLCHAIN_ARCH=arm-linux-gnueabihf
 ARG TOOLCHAIN_ARCH_SHORT=armhf
 RUN apt-get update \
