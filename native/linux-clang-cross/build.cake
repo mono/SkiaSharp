@@ -9,7 +9,7 @@ string GetGnArgs(string arch)
 {
     var (vendor, abi, sysrootarg, linker) = BUILD_VARIANT switch
     {
-        "alpine" => ("-alpine", "musl", "'--sysroot=/alpine', ", "'-fuse-ld=lld'"),
+        "alpine" or "alpinenodeps" => ("-alpine", "musl", "'--sysroot=/alpine', ", "'-fuse-ld=lld'"),
         _ => ("", "gnu", "", ""),
     };
     var (toolchainArch, targetArch) = arch switch
