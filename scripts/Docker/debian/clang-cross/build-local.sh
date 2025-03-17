@@ -17,7 +17,7 @@ esac
 # the docker image architecture to use
 IMAGE_ARCH="${2:-$([[ "$(uname -m)" == "arm64" ]] && echo "arm64v8" || echo "amd64")}"
 
-DEBIAN_VERSION=${3:-11}
+DEBIAN_VERSION=${3:-10}
 
 (cd $DIR && docker build --tag skiasharp-linux-cross-$ARCH $BUILD_ARGS --build-arg IMAGE_ARCH=$IMAGE_ARCH $DEBIAN_VERSION)
 (cd $DIR/../../../../ && 
