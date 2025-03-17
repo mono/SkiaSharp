@@ -8,7 +8,7 @@ ARCH="${1:-arm}"
 case $ARCH in
   arm)     BUILD_ARGS="--build-arg TOOLCHAIN_ARCH=arm-linux-gnueabihf --build-arg TOOLCHAIN_ARCH_SHORT=armhf"   ;;
   arm64)   BUILD_ARGS="--build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu   --build-arg TOOLCHAIN_ARCH_SHORT=arm64"   ;;
-  riscv64) BUILD_ARGS="--build-arg TOOLCHAIN_ARCH=riscv64-linux-gnu   --build-arg TOOLCHAIN_ARCH_SHORT=riscv64 --build-arg FONTCONFIG_VERSION=2.15.0-2" ;;
+  riscv64) BUILD_ARGS="--build-arg TOOLCHAIN_ARCH=riscv64-linux-gnu   --build-arg TOOLCHAIN_ARCH_SHORT=riscv64 --build-arg FONTCONFIG_VERSION=2.15.0-2.1" ;;
   x86)     BUILD_ARGS="--build-arg TOOLCHAIN_ARCH=i686-linux-gnu      --build-arg TOOLCHAIN_ARCH_SHORT=i386"    ;;
   x64)     BUILD_ARGS="--build-arg TOOLCHAIN_ARCH=x86-64-linux-gnu    --build-arg TOOLCHAIN_ARCH_SHORT=amd64"   ;;
   *) echo "Unsupported architecture: $ARCH" && exit 1 ;;
