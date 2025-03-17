@@ -54,6 +54,17 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
+    // patch the gclient_paths.py for Python 3.7
+    {
+        var gclient = DEPOT_PATH.CombineWithFilePath("gclient_paths.py");
+        var contents = System.IO.File.ReadAllText(gclient.FullPath);
+        var newContents = contents
+            .Replace("@functools.lru_cache", "@functools.lru_cache()")
+            .Replace("@functools.lru_cache()()", "@functools.lru_cache()");
+        if (contents != newContents)
+            System.IO.File.WriteAllText(gclient.FullPath, newContents);
+    }
+
     foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
 
