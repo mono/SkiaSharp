@@ -4,7 +4,7 @@
 #   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 9 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu ]
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 ]
-#   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.13.1-2 | * ]
+#   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.13.1-2 | 2.15.0-2 | * ]
 
 ARG IMAGE_ARCH=amd64
 FROM ${IMAGE_ARCH}/debian:10
@@ -33,21 +33,16 @@ RUN ln -s /usr/${TOOLCHAIN_ARCH}/include/c++/${TOOLCHAIN_VERSION} /usr/${TOOLCHA
 
 # Install the cross-compilation skia build dependencies (fontconfig)
 ARG FONTCONFIG_VERSION=2.13.1-2
-RUN (mkdir -p /skia-utils/libfontconfig1-dev \
-    && cd /skia-utils/libfontconfig1-dev \
-    && curl http://deb.debian.org/debian/pool/main/f/fontconfig/libfontconfig1-dev_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig1-dev.deb \
-    && ar vx libfontconfig1-dev.deb \
+RUN set -ex \
+    && mkdir -p /skia-utils/libfontconfig-dev \
+    && cd /skia-utils/libfontconfig-dev \
+    && FC_PKG=$([ "${FONTCONFIG_VERSION}" = "2.13.1-2" ] && echo "libfontconfig1-dev" || echo "libfontconfig-dev") \
+    && curl http://deb.debian.org/debian/pool/main/f/fontconfig/${FC_PKG}_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig-dev.deb \
+    && ar vx libfontconfig-dev.deb \
     && tar -xJvf data.tar.xz \
-    && rm libfontconfig1-dev.deb \
+    && rm libfontconfig-dev.deb \
     && cp -R usr/lib/*/* /usr/${TOOLCHAIN_ARCH}/lib/ \
-    && cp -R usr/include/* /usr/${TOOLCHAIN_ARCH}/include/ )
-RUN (mkdir -p /skia-utils/libfontconfig1 \
-    && cd /skia-utils/libfontconfig1 \
-    && curl http://deb.debian.org/debian/pool/main/f/fontconfig/libfontconfig1_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig1.deb \
-    && ar vx libfontconfig1.deb \
-    && tar -xJvf data.tar.xz \
-    && rm libfontconfig1.deb \
-    && cp -R usr/lib/*/* /usr/${TOOLCHAIN_ARCH}/lib/ )
+    && cp -R usr/include/* /usr/${TOOLCHAIN_ARCH}/include/
 
 # Install the .NET SDK
 ARG DOTNET_SDK_VERSION=8.0

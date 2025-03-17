@@ -367,6 +367,7 @@ stages:
                 docker: scripts/Docker/alpine/amd64
               - arch: arm
                 docker: scripts/Docker/debian/clang-cross/10
+                dockerArgs: --build-arg TOOLCHAIN_ARCH=arm-linux-gnueabihf --build-arg TOOLCHAIN_ARCH_SHORT=armhf
                 target: externals-linux-clang-cross
               - arch: arm64
                 docker: scripts/Docker/debian/clang-cross/10
@@ -374,7 +375,7 @@ stages:
                 target: externals-linux-clang-cross
               - arch: riscv64
                 docker: scripts/Docker/debian/clang-cross/10
-                dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=riscv64
+                dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=riscv64 --build-arg FONTCONFIG_VERSION=2.15.0-2
                 target: externals-linux-clang-cross
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Linux)
           parameters:
