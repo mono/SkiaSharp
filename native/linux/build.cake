@@ -12,6 +12,9 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower() 
 var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
+var VERIFY_GLIBC_MAX_VAR = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.27"));
+var VERIFY_GLIBC_MAX = string.IsNullOrEmpty(VERIFY_GLIBC_MAX_VAR) ? null : System.Version.Parse(VERIFY_GLIBC_MAX_VAR);
+
 string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("cxx", EnvironmentVariable("CXX"));
 string AR = Argument("ar", EnvironmentVariable("AR"));
@@ -31,21 +34,37 @@ if (!string.IsNullOrEmpty(AR))
 
 void CheckDeps(FilePath so)
 {
-    if (VERIFY_EXCLUDED == null || VERIFY_EXCLUDED.Length == 0)
-        return;
-
     Information($"Making sure that there are no dependencies on: {string.Join(", ", VERIFY_EXCLUDED)}");
 
-    RunProcess("readelf", $"-d {so}", out var stdout);
-    Information(String.Join(Environment.NewLine + "    ", stdout));
+    RunProcess("readelf", $"-dV {so}", out var stdoutEnum);
+    var stdout = stdoutEnum.ToArray();
 
-    var needed = stdout
-        .Where(l => l.Contains("(NEEDED)"))
-        .ToList();
+    var needed = MatchRegex(@"\(NEEDED\).+\[(.+)\]", stdout).ToList();
+
+    Information("Dependencies:");
+    foreach (var need in needed) {
+        Information($"    {need}");
+    }
 
     foreach (var exclude in VERIFY_EXCLUDED) {
         if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
             throw new Exception($"{so} contained a dependency on {exclude}.");
+    }
+
+    var glibcs = MatchRegex(@"GLIBC_([\w\.\d]+)", stdout).Distinct().ToList();
+    glibcs.Sort();
+
+    Information("GLIBC:");
+    foreach (var glibc in glibcs) {
+        Information($"    {glibc}");
+    }
+    
+    if (VERIFY_GLIBC_MAX != null) {
+        foreach (var glibc in glibcs) {
+            var version = System.Version.Parse(glibc);
+            if (version > VERIFY_GLIBC_MAX)
+                throw new Exception($"{so} contained a dependency on GLIBC {glibc} which is greater than the expected GLIBC {VERIFY_GLIBC_MAX}.");
+        }
     }
 }
 
