@@ -12,7 +12,7 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower() 
 var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-var VERIFY_GLIBC_MAX_VAR = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.27"));
+var VERIFY_GLIBC_MAX_VAR = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.28"));
 var VERIFY_GLIBC_MAX = string.IsNullOrEmpty(VERIFY_GLIBC_MAX_VAR) ? null : System.Version.Parse(VERIFY_GLIBC_MAX_VAR);
 
 string CC = Argument("cc", EnvironmentVariable("CC"));
