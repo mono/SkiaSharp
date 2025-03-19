@@ -20,8 +20,10 @@ ARG DISTRO_VERSION=3.17
 ARG TOOLCHAIN_ARCH_SHORT=armhf
 ARG MACHINE_ARCH=x86_64
 ARG TARGET_MACHINE_ARCH=armhf
+
+# obtain apk.static from gitlab.alpinelinux.org/alpine/apk-tools/-/releases/v2.12.14
 RUN APK_DIR="$(mktemp -d)" && \
-    curl -SLO --create-dirs --output-dir "$APK_DIR" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.11/$MACHINE_ARCH/apk.static" && \
+    curl -SLO --create-dirs --output-dir "$APK_DIR" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.14/$MACHINE_ARCH/apk.static" && \
     chmod +x "$APK_DIR/apk.static" && \
     "$APK_DIR/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/v$DISTRO_VERSION/main" \
