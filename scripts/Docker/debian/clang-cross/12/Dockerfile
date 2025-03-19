@@ -1,18 +1,19 @@
 # Arguments:
 #   IMAGE_ARCH           - the architecture of the image                    [ amd64 | arm64v8 | riscv64 ]
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
+#   LLVM_VERSION         - the version of the LLVM compiler                 [ 13 | * ]
 #   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 9 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu ]
-#   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 ]
-#   FONTCONFIG_VERSION   - the exact version of libfontconfig1 to use       [ 2.13.1-2 | * ]
+#   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 ]
 
 ARG IMAGE_ARCH=amd64
 FROM ${IMAGE_ARCH}/debian:12
 
 # Install the required packages
+ARG LLVM_VERSION=19
 RUN apt-get update \
     && apt-get install -y \
-        curl python3 git clang-19 ninja-build xz-utils \
+        curl python3 git clang-${LLVM_VERSION} ninja-build xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the cross-compilation GCC toolchain
@@ -28,30 +29,27 @@ RUN apt-get update \
 
 # Make the script more flexible and use "current" instead of the actual version
 RUN ln -s /usr/${TOOLCHAIN_ARCH}/include/c++/${TOOLCHAIN_VERSION} /usr/${TOOLCHAIN_ARCH}/include/c++/current \
-    && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libpthread.so || true \
+    && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libpthread.so \
     && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libc.so
 
 # Install the cross-compilation skia build dependencies (fontconfig)
-ARG FONTCONFIG_VERSION=2.15.0-2
-RUN (mkdir -p /skia-utils/libfontconfig1-dev \
-    && cd /skia-utils/libfontconfig1-dev \
-    && curl http://deb.debian.org/debian/pool/main/f/fontconfig/libfontconfig-dev_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig1-dev.deb \
-    && ar vx libfontconfig1-dev.deb \
+RUN set -ex \
+    && mkdir -p /skia-utils/libfontconfig-dev \
+    && cd /skia-utils/libfontconfig-dev \
+    && case "${TOOLCHAIN_ARCH_SHORT}" in \
+         riscv64) FC_VERSION=2.15.0-2 ; FC_PKG=libfontconfig-dev  ;; \
+         *)       FC_VERSION=2.13.1-2 ; FC_PKG=libfontconfig1-dev ;; \
+       esac \
+    && curl http://deb.debian.org/debian/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig-dev.deb \
+    && ar vx libfontconfig-dev.deb \
     && tar -xJvf data.tar.xz \
-    && rm libfontconfig1-dev.deb \
+    && rm libfontconfig-dev.deb \
     && cp -R usr/lib/*/* /usr/${TOOLCHAIN_ARCH}/lib/ \
-    && cp -R usr/include/* /usr/${TOOLCHAIN_ARCH}/include/ )
-RUN (mkdir -p /skia-utils/libfontconfig1 \
-    && cd /skia-utils/libfontconfig1 \
-    && curl http://deb.debian.org/debian/pool/main/f/fontconfig/libfontconfig1_${FONTCONFIG_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig1.deb \
-    && ar vx libfontconfig1.deb \
-    && tar -xJvf data.tar.xz \
-    && rm libfontconfig1.deb \
-    && cp -R usr/lib/*/* /usr/${TOOLCHAIN_ARCH}/lib/ )
+    && cp -R usr/include/* /usr/${TOOLCHAIN_ARCH}/include/
 
 # Install the .NET SDK
 ARG DOTNET_SDK_VERSION=8.0
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 1
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh \
     && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
@@ -59,6 +57,6 @@ RUN curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh \
     && dotnet help \
     && dotnet --info
 
-ENV CC=clang-19 CXX=clang++-19
+ENV CC=clang-${LLVM_VERSION} CXX=clang++-${LLVM_VERSION}
 
 WORKDIR /work

@@ -375,7 +375,17 @@ stages:
                 target: externals-linux-clang-cross
               - arch: riscv64
                 docker: scripts/Docker/debian/clang-cross/10
-                dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=riscv64 --build-arg FONTCONFIG_VERSION=2.15.0-2.1
+                dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=riscv64
+                target: externals-linux-clang-cross
+              - arch: arm64
+                variant: alpine
+                docker: scripts/Docker/alpine/clang-cross
+                dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-alpine-linux-musl --build-arg TOOLCHAIN_ARCH_SHORT=arm64 --build-arg TARGET_MACHINE_ARCH=aarch64
+                target: externals-linux-clang-cross
+              - arch: riscv64
+                variant: alpine
+                docker: scripts/Docker/alpine/clang-cross
+                dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-alpine-linux-musl --build-arg TOOLCHAIN_ARCH_SHORT=riscv64 --build-arg TARGET_MACHINE_ARCH=riscv64 --build-arg DISTRO_VERSION=3.20
                 target: externals-linux-clang-cross
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Linux)
           parameters:
@@ -519,10 +529,14 @@ stages:
               # tvOS
               - name: native_tvos_macos
               # Linux
+              - name: native_linux_arm64_alpine_linux
+              - name: native_linux_arm64_alpine_nodeps_linux
               - name: native_linux_arm64_linux
               - name: native_linux_arm64_nodeps_linux
               - name: native_linux_arm_linux
               - name: native_linux_arm_nodeps_linux
+              - name: native_linux_riscv64_alpine_linux
+              - name: native_linux_riscv64_alpine_nodeps_linux
               - name: native_linux_riscv64_linux
               - name: native_linux_riscv64_nodeps_linux
               - name: native_linux_x64_alpine_linux
@@ -562,8 +576,12 @@ stages:
               # Linux
               - name: native_linux_arm64_linux
               - name: native_linux_arm64_nodeps_linux
+              - name: native_linux_arm64_alpine_linux
+              - name: native_linux_arm64_alpine_nodeps_linux
               - name: native_linux_arm_linux
               - name: native_linux_arm_nodeps_linux
+              - name: native_linux_riscv64_alpine_linux
+              - name: native_linux_riscv64_alpine_nodeps_linux
               - name: native_linux_riscv64_linux
               - name: native_linux_riscv64_nodeps_linux
               - name: native_linux_x64_alpine_linux
