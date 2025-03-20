@@ -25,7 +25,7 @@ RUN case ${BUILD_ARCH} in \
 ARG LLVM_VERSION=19
 RUN apt-get update \
     && apt-get install -y \
-        curl python3 git clang-${LLVM_VERSION} ninja-build xz-utils \
+        curl python3 git clang-${LLVM_VERSION} lld-${LLVM_VERSION} ninja-build xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the cross-compilation musl toolchain
