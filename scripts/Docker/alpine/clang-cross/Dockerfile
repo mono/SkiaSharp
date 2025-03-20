@@ -30,16 +30,19 @@ RUN apt-get update \
 
 # Install the cross-compilation musl toolchain
 # First, obtain apk.static from https://gitlab.alpinelinux.org/alpine/apk-tools/-/releases/v2.12.14
-ARG DISTRO_VERSION=3.17
 ARG MACHINE_ARCH=x86_64
 RUN . /etc/skia-env \
     && case "${BUILD_ARCH}" in \
-         arm)     APK_ARCH=armv7                 ;; \
-         arm64)   APK_ARCH=aarch64               ;; \
-         riscv64) APK_ARCH=riscv64               ;; \
-         x86)     APK_ARCH=x86                   ;; \
-         x64)     APK_ARCH=x86_64                ;; \
+         arm)     APK_ARCH=armv7   ;; \
+         arm64)   APK_ARCH=aarch64 ;; \
+         riscv64) APK_ARCH=riscv64 ;; \
+         x86)     APK_ARCH=x86     ;; \
+         x64)     APK_ARCH=x86_64  ;; \
          *) echo "Unsupported architecture: ${BUILD_ARCH}" && exit 1 ;; \
+         esac \
+    && case "${BUILD_ARCH}" in \
+         riscv64) DISTRO_VERSION=3.20 ;; \
+         *)       DISTRO_VERSION=3.17 ;; \
          esac \
     && APK_DIR="$(mktemp -d)" \
     && curl -SLO --create-dirs --output-dir "$APK_DIR" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.12.14/$MACHINE_ARCH/apk.static" \

@@ -10,4 +10,4 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ARCH="${1:-arm}"
 DEBIAN_VERSION="${2:-10}"
 
-$DIR/../../_clang-cross-common.sh "$DIR/$DEBIAN_VERSION" "$ARCH" "$DEBIAN_VERSION" "gnu"
+$DIR/../../_clang-cross-common.sh "$DIR/$DEBIAN_VERSION" "$ARCH" "gnu"

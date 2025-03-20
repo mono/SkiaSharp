@@ -4,9 +4,8 @@ set -ex
 # Parameters:
 # $1 - The directory containing the Dockerfile  [ clang-cross/10 | clang-cross ]
 # $2 - The target architecture to build for     [ arm | arm64 | riscv64 | x86 | x64 ]
-# $3 - The distro version                       [ 10 | 3.20 ]
-# $4 - The ABI                                  [ gnu | musl ]
-# $5 - The variant                              [ "" | alpine ]
+# $3 - The ABI                                  [ gnu | musl ]
+# $4 - The variant                              [ "" | alpine ]
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -23,21 +22,17 @@ case $MACHINE_ARCH in
   *)     IMAGE_ARCH=amd64   ;;
 esac
 
-# the distro version
-DISTRO_VERSION=$3
-
 # the ABI
-ABI=$4
+ABI=$3
 
 # the variant
-VARIANT=$5
+VARIANT=$4
 
 (cd $DIR && 
   docker build --tag skiasharp-linux-$ABI-cross-$ARCH \
     --build-arg BUILD_ARCH=$ARCH                      \
     --build-arg IMAGE_ARCH=$IMAGE_ARCH                \
     --build-arg MACHINE_ARCH=$MACHINE_ARCH            \
-    --build-arg DISTRO_VERSION=$DISTRO_VERSION        \
     $DOCKER_DIR)
 
 [ -n "$VARIANT" ] && VARIANT="--variant=$VARIANT"
