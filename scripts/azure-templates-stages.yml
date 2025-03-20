@@ -369,7 +369,7 @@ stages:
               - ${{ each arch in split('arm,arm64,x64,x86,riscv64', ',') }}:
                 - arch: ${{ arch }}
                   variant: alpine
-                  docker: scripts/Docker/debian/clang-cross/10
+                  docker: scripts/Docker/alpine/clang-cross/10
                   target: externals-linux-clang-cross
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Linux)
           parameters:
