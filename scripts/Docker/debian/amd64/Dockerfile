@@ -12,7 +12,7 @@ RUN apt-get update \
 
 # Install the .NET SDK
 ARG DOTNET_SDK_VERSION=8.0
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT 1
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh \
     && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \

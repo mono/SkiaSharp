@@ -2,35 +2,33 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 
 #load "../../scripts/cake/shared.cake"
 
+string TOOLCHAIN_ARCH = Argument("toolchainArch", EnvironmentVariable("TOOLCHAIN_ARCH"));
+string TOOLCHAIN_ARCH_SHORT = Argument("toolchainArchShort", EnvironmentVariable("TOOLCHAIN_ARCH_SHORT"));
+string TOOLCHAIN_ARCH_TARGET = Argument("toolchainArchTarget", EnvironmentVariable("TOOLCHAIN_ARCH_TARGET"));
+
+Information("Toolchain:");
+Information($"    Arch:                          {TOOLCHAIN_ARCH} ({TOOLCHAIN_ARCH_SHORT})");
+Information($"    Target                         {TOOLCHAIN_ARCH_TARGET}");
+
 if (BUILD_ARCH.Length == 0)
     BUILD_ARCH = new [] { "arm" };
 
 string GetGnArgs(string arch)
 {
-    var (vendor, abi, sysrootarg, linker) = BUILD_VARIANT switch
+    var (sysrootArg, linker) = BUILD_VARIANT switch
     {
-        "alpine" or "alpinenodeps" => ("-alpine", "musl", "'--sysroot=/alpine', ", "'-fuse-ld=lld'"),
-        _ => ("", "gnu", "", ""),
+        "alpine" or "alpinenodeps" => ("'--sysroot=/alpine', ", "'-fuse-ld=lld'"),
+        _ => ("", ""),
     };
 
-    var (toolchainArch, targetArch) = arch switch
-    {
-        "arm" => ($"arm{vendor}-linux-{abi}eabihf", $"armv7a{vendor}-linux-{abi}eabihf"),
-        "arm64" => ($"aarch64{vendor}-linux-{abi}", $"aarch64{vendor}-linux-{abi}"),
-        "riscv64" => ($"riscv64{vendor}-linux-{abi}", $"riscv64{vendor}-linux-{abi}"),
-        "x86" => ($"i686{vendor}-linux-{abi}", $"i686{vendor}-linux-{abi}"),
-        "x64" => ($"x86_64{vendor}-linux-{abi}", $"x86_64{vendor}-linux-{abi}"),
-        _ => ($"{arch}{vendor}-linux-{abi}", $"{arch}{vendor}-linux-{abi}"),
-    };
-
-    var sysroot = $"/usr/{toolchainArch}";
-    var init = $"{sysrootarg} '--target={targetArch}'";
+    var sysroot = $"/usr/{TOOLCHAIN_ARCH}";
+    var init = $"{sysrootArg} '--target={TOOLCHAIN_ARCH_TARGET}'";
     var bin = $"'-B{sysroot}/bin/' ";
     var libs = $"'-L{sysroot}/lib/' ";
     var includes = 
         $"'-I{sysroot}/include', " +
         $"'-I{sysroot}/include/c++/current', " +
-        $"'-I{sysroot}/include/c++/current/{toolchainArch}' ";
+        $"'-I{sysroot}/include/c++/current/{TOOLCHAIN_ARCH}' ";
 
     return
         $"extra_asmflags+=[ {init}, '-no-integrated-as', {bin}, {includes} ] " +

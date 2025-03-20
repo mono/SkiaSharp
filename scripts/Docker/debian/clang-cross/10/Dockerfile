@@ -9,6 +9,20 @@
 ARG IMAGE_ARCH=amd64
 FROM ${IMAGE_ARCH}/debian:10
 
+# Set the architecture-specific variables based on the value of the BUILD_ARCH argument
+ARG BUILD_ARCH=arm64
+RUN case ${BUILD_ARCH} in \
+        arm)     TOOLCHAIN_ARCH=arm-linux-gnueabihf   ; TOOLCHAIN_ARCH_SHORT=armhf   ; TOOLCHAIN_ARCH_TARGET=armv7a-linux-gnueabihf ;; \
+        arm64)   TOOLCHAIN_ARCH=aarch64-linux-gnu     ; TOOLCHAIN_ARCH_SHORT=arm64   ; TOOLCHAIN_ARCH_TARGET=aarch64-linux-gnu      ;; \
+        riscv64) TOOLCHAIN_ARCH=riscv64-linux-gnu     ; TOOLCHAIN_ARCH_SHORT=riscv64 ; TOOLCHAIN_ARCH_TARGET=riscv64-linux-gnu      ;; \
+        x86)     TOOLCHAIN_ARCH=i686-linux-gnu        ; TOOLCHAIN_ARCH_SHORT=i386    ; TOOLCHAIN_ARCH_TARGET=i686-linux-gnu         ;; \
+        x64)     TOOLCHAIN_ARCH=x86-64-linux-gnu      ; TOOLCHAIN_ARCH_SHORT=amd64   ; TOOLCHAIN_ARCH_TARGET=x86_64-linux-gnu       ;; \
+        *) echo "Unsupported architecture: ${BUILD_ARCH}" && exit 1 ;; \
+    esac \
+    && echo "export TOOLCHAIN_ARCH=${TOOLCHAIN_ARCH}" > /etc/skia-env \
+    && echo "export TOOLCHAIN_ARCH_SHORT=${TOOLCHAIN_ARCH_SHORT}" >> /etc/skia-env \
+    && echo "export TOOLCHAIN_ARCH_TARGET=${TOOLCHAIN_ARCH_TARGET}" >> /etc/skia-env
+
 # Install the required packages
 ARG LLVM_VERSION=13
 RUN apt-get update \
@@ -18,9 +32,8 @@ RUN apt-get update \
 
 # Install the cross-compilation GCC toolchain
 ARG TOOLCHAIN_VERSION=8
-ARG TOOLCHAIN_ARCH=arm-linux-gnueabihf
-ARG TOOLCHAIN_ARCH_SHORT=armhf
-RUN apt-get update \
+RUN . /etc/skia-env \
+    && apt-get update \
     && apt-get install -y \
        libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross \
        libgcc-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross \
@@ -28,13 +41,14 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Make the script more flexible and use "current" instead of the actual version
-RUN TOOLCHAIN_ARCH=$(echo ${TOOLCHAIN_ARCH} | sed 's/x86-64/x86_64/g') \
+RUN . /etc/skia-env \
+    && TOOLCHAIN_ARCH=$(echo ${TOOLCHAIN_ARCH} | sed 's/x86-64/x86_64/g') \
     && ln -s /usr/${TOOLCHAIN_ARCH}/include/c++/${TOOLCHAIN_VERSION} /usr/${TOOLCHAIN_ARCH}/include/c++/current \
     && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libpthread.so \
     && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libc.so
 
 # Install the cross-compilation skia build dependencies (fontconfig)
-RUN set -ex \
+RUN . /etc/skia-env \
     && mkdir -p /skia-utils/libfontconfig-dev \
     && cd /skia-utils/libfontconfig-dev \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
@@ -62,3 +76,7 @@ RUN curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh \
 ENV CC=clang-${LLVM_VERSION} CXX=clang++-${LLVM_VERSION}
 
 WORKDIR /work
+
+COPY ./startup.sh /
+RUN chmod +x /startup.sh
+ENTRYPOINT [ "/startup.sh" ]
