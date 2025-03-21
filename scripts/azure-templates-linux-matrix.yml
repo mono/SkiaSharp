@@ -31,6 +31,6 @@ jobs:
           buildAgent: ${{ parameters.buildAgent }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           docker: ${{ item.docker }}
-          dockerArgs: --build-arg BUILD_ARCH ${{ item.arch }} ${{ item.dockerArgs }}
+          dockerArgs: --build-arg BUILD_ARCH=${{ item.arch }} ${{ item.dockerArgs }}
           target: ${{ coalesce(item.target, 'externals-linux') }}
           additionalArgs: --buildarch=${{ item.arch }} --variant=${{ coalesce(item.variant, 'linux') }}${{ build.name }} --gnArgs="\"${{ build.gnArgs }} ${{ item.gnArgs }}\"" ${{ build.additionalArgs }} ${{ item.additionalArgs }}
