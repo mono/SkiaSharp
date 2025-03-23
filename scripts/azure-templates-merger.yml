@@ -18,18 +18,11 @@ jobs:
       skipInstall: true
       skipSteps: true
       requiredArtifacts: ${{ parameters.requiredArtifacts }}
-      # preBuildSteps:
-      #   - pwsh: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject) --use-git-aliases true
-      #     displayName: Configure the az CLI tool
-      #   - ${{ each artifact in parameters.matrixArtifacts }}:
-      #     - pwsh: |
-      #         $json=@'
-      #         ${{ artifact.jobs }}
-      #         '@
-      #         .\scripts\download-artifact.ps1 `
-      #           -ArtifactsJson $json `
-      #           -BuildId "$(Build.BuildId)" `
-      #           -OutputDirectory "$(Build.SourcesDirectory)/output"
-      #       env:
-      #         AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
-      #       displayName: Download the pre-built ${{ artifact.name }} artifacts
+      preBuildSteps:
+        - ${{ each artifact in parameters.matrixArtifacts }}:
+          - pwsh: |
+              $json=@'
+              ${{ artifact.jobs }}
+              '@
+              .\scripts\get-artifact-names.ps1 -ArtifactsJson $json
+            displayName: List the pre-built ${{ artifact.name }} artifacts

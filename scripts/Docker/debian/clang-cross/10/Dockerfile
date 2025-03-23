@@ -1,13 +1,13 @@
 # Arguments:
 #   IMAGE_ARCH           - the architecture of the image                    [ amd64 | arm64v8 | riscv64 ]
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
-#   LLVM_VERSION         - the version of the LLVM compiler                 [ 19 | * ]
-#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 12 | * ]
+#   LLVM_VERSION         - the version of the LLVM compiler                 [ 13 | * ]
+#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 9 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu ]
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 ]
 
 ARG IMAGE_ARCH=amd64
-FROM ${IMAGE_ARCH}/debian:12
+FROM ${IMAGE_ARCH}/debian:10
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=arm64
@@ -24,14 +24,14 @@ RUN case ${BUILD_ARCH} in \
     && echo "export TOOLCHAIN_ARCH_TARGET=${TOOLCHAIN_ARCH_TARGET}" >> /etc/skia-env
 
 # Install the required packages
-ARG LLVM_VERSION=19
+ARG LLVM_VERSION=13
 RUN apt-get update \
     && apt-get install -y \
-        curl python3 git clang-${LLVM_VERSION} ninja-build xz-utils \
+        curl python3 git clang-${LLVM_VERSION} lld-${LLVM_VERSION} ninja-build xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the cross-compilation GCC toolchain
-ARG TOOLCHAIN_VERSION=12
+ARG TOOLCHAIN_VERSION=8
 RUN . /etc/skia-env \
     && apt-get update \
     && apt-get install -y \

@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
 set -ex
 
+# Parameters:
+# $1 - The target architecture to build for     [ arm | arm64 | riscv64 | x86 | x64 ]
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-ARCH=$1
-ALPINE_VERSION=$3
-if [ -z "$ALPINE_VERSION" ]; then
-  case $ARCH in
-    riscv64) ALPINE_VERSION=3.20 ;;
-    *) ALPINE_VERSION=3.17       ;;
-  esac
-fi
+ARCH="${1:-arm}"
 
-$DIR/../../_clang-cross-common.sh "$DIR" "$ARCH" "$2" "$ALPINE_VERSION" "musl" "-alpine"
+$DIR/../../_clang-cross-common.sh "$DIR" "$ARCH" "musl" "alpine"
