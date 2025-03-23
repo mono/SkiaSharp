@@ -362,39 +362,15 @@ stages:
             matrix:
               - arch: x64
                 docker: scripts/Docker/debian/amd64
-              - arch: x64
-                variant: alpine
-                docker: scripts/Docker/alpine/amd64
-              - arch: arm
-                docker: scripts/Docker/debian/clang-cross/11
-                target: externals-linux-clang-cross
-              - arch: arm64
-                docker: scripts/Docker/debian/clang-cross/11
-                dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=arm64
-                target: externals-linux-clang-cross
-              - arch: riscv64
-                docker: scripts/Docker/debian/clang-cross/12
-                dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=riscv64 --build-arg DISTRO_VERSION=12
-                target: externals-linux-clang-cross
-              - arch: arm64
-                variant: alpine
-                docker: scripts/Docker/alpine/clang-cross
-                dockerArgs: --build-arg TOOLCHAIN_ARCH=aarch64-alpine-linux-musl --build-arg TOOLCHAIN_ARCH_SHORT=arm64 --build-arg TARGET_MACHINE_ARCH=aarch64
-                target: externals-linux-clang-cross
-              - arch: riscv64
-                variant: alpine
-                docker: scripts/Docker/alpine/clang-cross
-                dockerArgs: --build-arg TOOLCHAIN_ARCH=riscv64-alpine-linux-musl --build-arg TOOLCHAIN_ARCH_SHORT=riscv64 --build-arg TARGET_MACHINE_ARCH=riscv64 --build-arg DISTRO_VERSION=3.20
-                target: externals-linux-clang-cross
-              - arch: loongarch64
-                docker: scripts/Docker/debian/clang-cross/13
-                dockerArgs: --build-arg TOOLCHAIN_ARCH=loongarch64-linux-gnu --build-arg TOOLCHAIN_ARCH_SHORT=loong64
-                target: externals-linux-clang-cross
-              - arch: loongarch64
-                variant: alpine
-                docker: scripts/Docker/alpine/clang-cross
-                dockerArgs: --build-arg TOOLCHAIN_ARCH=loongarch64-alpine-linux-musl --build-arg TOOLCHAIN_ARCH_SHORT=loong64 --build-arg TARGET_MACHINE_ARCH=loongarch64 --build-arg DISTRO_VERSION=3.21
-                target: externals-linux-clang-cross
+              - ${{ each arch in split('arm,arm64,x86,riscv64,loongarch64,loong64', ',') }}: # separate x64 as it fails when cross-compiling
+                - arch: ${{ arch }}
+                  docker: scripts/Docker/debian/clang-cross/10
+                  target: externals-linux-clang-cross
+              - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64,loong64', ',') }}: # removed x86 as it is having issues building
+                - arch: ${{ arch }}
+                  variant: alpine
+                  docker: scripts/Docker/alpine/clang-cross
+                  target: externals-linux-clang-cross
         - template: /scripts/azure-templates-bootstrapper.yml@self # Build Native Tizen (Linux)
           parameters:
             name: native_tizen_linux
@@ -541,6 +517,8 @@ stages:
               - name: native_linux_arm64_alpine_nodeps_linux
               - name: native_linux_arm64_linux
               - name: native_linux_arm64_nodeps_linux
+              - name: native_linux_arm_alpine_linux
+              - name: native_linux_arm_alpine_nodeps_linux
               - name: native_linux_arm_linux
               - name: native_linux_arm_nodeps_linux
               - name: native_linux_loongarch64_alpine_linux
@@ -555,6 +533,8 @@ stages:
               - name: native_linux_x64_alpine_nodeps_linux
               - name: native_linux_x64_linux
               - name: native_linux_x64_nodeps_linux
+              - name: native_linux_x86_linux
+              - name: native_linux_x86_nodeps_linux
               # WASM
               - name: native_wasm_2_0_23_linux
               - name: native_wasm_2_0_6_linux
@@ -585,26 +565,6 @@ stages:
             buildPipelineType: ${{ parameters.buildPipelineType }}
             buildAgent: ${{ parameters.buildAgentHost }}
             requiredArtifacts:
-              # Linux
-              - name: native_linux_arm64_linux
-              - name: native_linux_arm64_nodeps_linux
-              - name: native_linux_arm64_alpine_linux
-              - name: native_linux_arm64_alpine_nodeps_linux
-              - name: native_linux_arm_linux
-              - name: native_linux_arm_nodeps_linux
-              - name: native_linux_loongarch64_alpine_linux
-              - name: native_linux_loongarch64_alpine_nodeps_linux
-              - name: native_linux_loongarch64_linux
-              - name: native_linux_loongarch64_nodeps_linux
-              - name: native_linux_riscv64_alpine_linux
-              - name: native_linux_riscv64_alpine_nodeps_linux
-              - name: native_linux_riscv64_linux
-              - name: native_linux_riscv64_nodeps_linux
-              - name: native_linux_x64_alpine_linux
-              - name: native_linux_x64_alpine_nodeps_linux
-              - name: native_linux_x64_linux
-              - name: native_linux_x64_nodeps_linux
-              # WASM
               - name: native_wasm_2_0_23_linux
               - name: native_wasm_2_0_6_linux
               - name: native_wasm_3_1_12_linux
@@ -927,8 +887,6 @@ stages:
             requiredArtifacts:
               - name: native_linux_x64_linux
               - name: native_linux_arm64_linux
-              - name: native_linux_riscv64_linux
-              - name: native_linux_loongarch64_linux
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
