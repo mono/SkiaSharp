@@ -517,6 +517,8 @@ stages:
               - name: native_linux_arm64_alpine_nodeps_linux
               - name: native_linux_arm64_linux
               - name: native_linux_arm64_nodeps_linux
+              - name: native_linux_arm_alpine_linux
+              - name: native_linux_arm_alpine_nodeps_linux
               - name: native_linux_arm_linux
               - name: native_linux_arm_nodeps_linux
               - name: native_linux_riscv64_alpine_linux
@@ -527,6 +529,8 @@ stages:
               - name: native_linux_x64_alpine_nodeps_linux
               - name: native_linux_x64_linux
               - name: native_linux_x64_nodeps_linux
+              - name: native_linux_x86_linux
+              - name: native_linux_x86_nodeps_linux
               # WASM
               - name: native_wasm_2_0_23_linux
               - name: native_wasm_2_0_6_linux
@@ -879,7 +883,6 @@ stages:
             requiredArtifacts:
               - name: native_linux_x64_linux
               - name: native_linux_arm64_linux
-              - name: native_linux_riscv64_linux
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results

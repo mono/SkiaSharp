@@ -19,7 +19,7 @@ $names | ForEach-Object { Write-Host " - $_" }
 $actualNames = $names | Where-Object { $json."$_".result -ne "Skipped" }
 $skippedNames = $names | Where-Object { $actualNames -notcontains $_ }
 
-Write-Host "Final $($skippedNames.Count) item[s]:"
+Write-Host "Final $($actualNames.Count) item[s]:"
 $actualNames | ForEach-Object { Write-Host " - $_" }
 
 Write-Host "Skipping $($skippedNames.Count) item[s]:"
