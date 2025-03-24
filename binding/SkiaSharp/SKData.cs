@@ -63,16 +63,15 @@ namespace SkiaSharp
 		}
 
 		public static SKData CreateCopy (byte[] bytes) =>
+			CreateCopy (bytes.AsSpan ());
+
+		public static SKData CreateCopy (ReadOnlySpan<byte> bytes) =>
 			CreateCopy (bytes, (ulong)bytes.Length);
 
-		public static SKData CreateCopy (byte[] bytes, ulong length)
-		{
-			fixed (byte* b = bytes) {
-				return GetObject (SkiaApi.sk_data_new_with_copy (b, (IntPtr)length));
-			}
-		}
+		public static SKData CreateCopy (byte[] bytes, ulong length) =>
+			CreateCopy (bytes.AsSpan (), length);
 
-		public static SKData CreateCopy (ReadOnlySpan<byte> bytes)
+		public static SKData CreateCopy (ReadOnlySpan<byte> bytes, ulong length)
 		{
 			fixed (byte* b = bytes) {
 				return CreateCopy ((IntPtr)b, (ulong)bytes.Length);
@@ -212,9 +211,9 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_data_new_with_proc ((void*)address, (IntPtr)length, proxy, (void*)ctx));
 		}
 
-		internal static SKData FromCString (string str)
+		internal static SKData FromCString (ReadOnlySpan<char> str)
 		{
-			var bytes = Encoding.ASCII.GetBytes (str ?? string.Empty);
+			var bytes = Encoding.ASCII.GetBytes (str);
 			return SKData.CreateCopy (bytes, (ulong)(bytes.Length + 1)); // + 1 for the terminating char
 		}
 
