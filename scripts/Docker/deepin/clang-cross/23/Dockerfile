@@ -1,7 +1,7 @@
 # Arguments:
 #   IMAGE_ARCH           - the architecture of the image                    [ amd64 | arm64v8 | riscv64 | loongarch64 ]
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
-#   LLVM_VERSION         - the version of the LLVM compiler                 [ 19 | * ]
+#   LLVM_VERSION         - the version of the LLVM compiler                 [ 18 | * ]
 #   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 12 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu | loongarch64-linux-gnu ]
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 | loong64 ]
@@ -25,7 +25,7 @@ RUN case ${BUILD_ARCH} in \
     && echo "export TOOLCHAIN_ARCH_TARGET=${TOOLCHAIN_ARCH_TARGET}" >> /etc/skia-env
 
 # Install the required packages
-ARG LLVM_VERSION=19
+ARG LLVM_VERSION=18
 RUN apt-get update \
     && apt-get install -y \
         curl python3 git clang-${LLVM_VERSION} ninja-build xz-utils \
