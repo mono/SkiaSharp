@@ -4,7 +4,6 @@ parameters:
   buildAgent: ''                                # the configuration for the build agent
   buildPipelineType: 'both'                     # the type of build pipeline setup
   requiredArtifacts: []                         # the artifacts that this build needs to download
-  matrixArtifacts: []                           # the artifacts that this build needs to download
   sdl: []                                       # the SDL properties to use for this job
 
 jobs:
@@ -18,11 +17,3 @@ jobs:
       skipInstall: true
       skipSteps: true
       requiredArtifacts: ${{ parameters.requiredArtifacts }}
-      preBuildSteps:
-        - ${{ each artifact in parameters.matrixArtifacts }}:
-          - pwsh: |
-              $json=@'
-              ${{ artifact.jobs }}
-              '@
-              .\scripts\get-artifact-names.ps1 -ArtifactsJson $json
-            displayName: List the pre-built ${{ artifact.name }} artifacts
