@@ -2,7 +2,7 @@
 #   IMAGE_ARCH           - the architecture of the image                    [ amd64 | arm64v8 | riscv64 | loongarch64 ]
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
 #   LLVM_VERSION         - the version of the LLVM compiler                 [ 19 | * ]
-#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 13 | * ]
+#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 14 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu | loongarch64-linux-gnu ]
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 | loong64 ]
 
@@ -32,17 +32,18 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the cross-compilation GCC toolchain
-ARG TOOLCHAIN_VERSION=13
+ARG TOOLCHAIN_VERSION=14
 RUN . /etc/skia-env \
     && apt-get update \
     && apt-get install -y \
+       libc6-dev-${TOOLCHAIN_ARCH_SHORT}-cross \
        libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross \
        libgcc-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross \
        binutils-${TOOLCHAIN_ARCH} \
     && rm -rf /var/lib/apt/lists/*
 
 # Make the script more flexible and use "current" instead of the actual version
-# libpthread.so.0 for loong64 is in https://packages.debian.org/trixie/all/libc6-loong64-cross/filelist
+# libpthread.so.0 for loong64 is in https://packages.debian.org/trixie/all/libc6-loong64-cross/filelist that use GCC 14 and Glibc 2.41 to programmed
 RUN . /etc/skia-env \
     && TOOLCHAIN_ARCH=$(echo ${TOOLCHAIN_ARCH} | sed 's/x86-64/x86_64/g') \
     && ln -s /usr/${TOOLCHAIN_ARCH}/include/c++/${TOOLCHAIN_VERSION} /usr/${TOOLCHAIN_ARCH}/include/c++/current \
