@@ -42,13 +42,15 @@ RUN . /etc/skia-env \
     && rm -rf /var/lib/apt/lists/*
 
 # Make the script more flexible and use "current" instead of the actual version
+# libpthread.so.0 for loong64 is in https://packages.debian.org/trixie/all/libc6-loong64-cross/filelist
 RUN . /etc/skia-env \
     && TOOLCHAIN_ARCH=$(echo ${TOOLCHAIN_ARCH} | sed 's/x86-64/x86_64/g') \
     && ln -s /usr/${TOOLCHAIN_ARCH}/include/c++/${TOOLCHAIN_VERSION} /usr/${TOOLCHAIN_ARCH}/include/c++/current \
-    && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libpthread.so \
+    && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libpthread.so.0 \
     && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libc.so
 
 # Install the cross-compilation skia build dependencies (fontconfig)
+# In order to compat Loongnix 25, LoongArch APT_REPO use loongnix 25 mirrors.
 RUN . /etc/skia-env \
     && mkdir -p /skia-utils/libfontconfig-dev \
     && cd /skia-utils/libfontconfig-dev \
