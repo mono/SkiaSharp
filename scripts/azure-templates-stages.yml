@@ -365,7 +365,7 @@ stages:
               - arch: loongarch64
                 docker: scripts/Docker/debian/clang-cross/13
                 target: externals-linux-clang-cross
-                additionalArgs: --verifyGlibcMax=2.36
+                additionalArgs: --verifyGlibcMax=2.38
               - ${{ each arch in split('arm,arm64,x86,riscv64', ',') }}: # separate x64 as it fails when cross-compiling
                 - arch: ${{ arch }}
                   docker: scripts/Docker/debian/clang-cross/10
