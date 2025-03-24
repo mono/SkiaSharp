@@ -365,11 +365,15 @@ stages:
               - arch: loongarch64
                 docker: scripts/Docker/debian/clang-cross/13
                 target: externals-linux-clang-cross
+              - arch: loongarch64
+                variant: alpine
+                docker: scripts/Docker/alpine/clang-cross
+                target: externals-linux-clang-cross
               - ${{ each arch in split('arm,arm64,x86,riscv64', ',') }}: # separate x64 as it fails when cross-compiling
                 - arch: ${{ arch }}
                   docker: scripts/Docker/debian/clang-cross/10
                   target: externals-linux-clang-cross
-              - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}: # removed x86 as it is having issues building
+              - ${{ each arch in split('arm,arm64,x64,riscv64', ',') }}: # removed x86 as it is having issues building
                 - arch: ${{ arch }}
                   variant: alpine
                   docker: scripts/Docker/alpine/clang-cross
