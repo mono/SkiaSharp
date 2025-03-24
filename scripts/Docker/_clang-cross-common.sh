@@ -3,7 +3,7 @@ set -ex
 
 # Parameters:
 # $1 - The directory containing the Dockerfile  [ clang-cross/10 | clang-cross ]
-# $2 - The target architecture to build for     [ arm | arm64 | riscv64 | x86 | x64 ]
+# $2 - The target architecture to build for     [ arm | arm64 | riscv64 | x86 | x64 | loongarch64 ]
 # $3 - The ABI                                  [ gnu | musl ]
 # $4 - The variant                              [ "" | alpine ]
 

@@ -362,11 +362,15 @@ stages:
             matrix:
               - arch: x64
                 docker: scripts/Docker/debian/amd64
+              - arch: loongarch64
+                docker: scripts/Docker/debian/clang-cross/13
+                target: externals-linux-clang-cross
+                additionalArgs: --verifyGlibcMax=2.38
               - ${{ each arch in split('arm,arm64,x86,riscv64', ',') }}: # separate x64 as it fails when cross-compiling
                 - arch: ${{ arch }}
                   docker: scripts/Docker/debian/clang-cross/10
                   target: externals-linux-clang-cross
-              - ${{ each arch in split('arm,arm64,x64,riscv64', ',') }}: # removed x86 as it is having issues building
+              - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}: # removed x86 as it is having issues building
                 - arch: ${{ arch }}
                   variant: alpine
                   docker: scripts/Docker/alpine/clang-cross
@@ -518,6 +522,10 @@ stages:
               - name: native_linux_arm_alpine_nodeps_linux
               - name: native_linux_arm_linux
               - name: native_linux_arm_nodeps_linux
+              - name: native_linux_loongarch64_alpine_linux
+              - name: native_linux_loongarch64_alpine_nodeps_linux
+              - name: native_linux_loongarch64_linux
+              - name: native_linux_loongarch64_nodeps_linux
               - name: native_linux_riscv64_alpine_linux
               - name: native_linux_riscv64_alpine_nodeps_linux
               - name: native_linux_riscv64_linux
