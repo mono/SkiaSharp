@@ -468,8 +468,12 @@ stages:
     - stage: native
       displayName: Native
       variables:
-        nativeLinuxJobs: $[ convertToJson(stageDependencies.native_linux) ]
-        nativeWasmJobs: $[ convertToJson(stageDependencies.native_wasm) ]
+        ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+          nativeLinuxJobs: ''
+          nativeWasmJobs: ''
+        ${{ else }}:
+          nativeLinuxJobs: $[ convertToJson(stageDependencies.native_linux) ]
+          nativeWasmJobs: $[ convertToJson(stageDependencies.native_wasm) ]
       dependsOn:
         - native_windows
         - native_macos

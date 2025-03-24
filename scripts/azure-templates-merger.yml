@@ -20,9 +20,10 @@ jobs:
       requiredArtifacts: ${{ parameters.requiredArtifacts }}
       preBuildSteps:
         - ${{ each artifact in parameters.matrixArtifacts }}:
-          - pwsh: |
-              $json=@'
-              ${{ artifact.jobs }}
-              '@
-              .\scripts\get-artifact-names.ps1 -ArtifactsJson $json
-            displayName: List the pre-built ${{ artifact.name }} artifacts
+          - ${{ if ne(artifact.jobs, '') }}:
+            - pwsh: |
+                $json=@'
+                ${{ artifact.jobs }}
+                '@
+                .\scripts\get-artifact-names.ps1 -ArtifactsJson $json
+              displayName: List the pre-built ${{ artifact.name }} artifacts
