@@ -30,6 +30,9 @@ The excluded dependencies are:
     <PackageFile Include="..\..\output\native\alpinenodeps\arm\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\alpinenodeps\riscv64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-riscv64\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\alpinenodeps\loongarch64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-loongarch64\native\%(Filename)%(Extension)" />
+    <!-- Bionic -->
+    <PackageFile Include="..\..\output\native\bionicnodeps\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-x64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\bionicnodeps\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-arm64\native\%(Filename)%(Extension)" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
