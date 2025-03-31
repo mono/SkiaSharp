@@ -52,7 +52,7 @@ RUN . /etc/skia-env \
     && mkdir -p /skia-utils/libfontconfig-dev \
     && cd /skia-utils/libfontconfig-dev \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
-         riscv64) FC_VERSION=2.15.0-2.1 ; FC_PKG=libfontconfig-dev  ;; \
+         riscv64) FC_VERSION=2.15.0-2.2 ; FC_PKG=libfontconfig-dev  ;; \
          *)       FC_VERSION=2.13.1-2   ; FC_PKG=libfontconfig1-dev ;; \
        esac \
     && curl http://deb.debian.org/debian/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig-dev.deb \
