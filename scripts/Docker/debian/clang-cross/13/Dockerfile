@@ -1,22 +1,23 @@
 # Arguments:
-#   IMAGE_ARCH           - the architecture of the image                    [ amd64 | arm64v8 | riscv64 ]
+#   IMAGE_ARCH           - the architecture of the image                    [ amd64 | arm64v8 | riscv64 | loongarch64 ]
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
 #   LLVM_VERSION         - the version of the LLVM compiler                 [ 19 | * ]
-#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 12 | * ]
-#   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu ]
-#   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 ]
+#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 14 | * ]
+#   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu | loongarch64-linux-gnu ]
+#   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 | loong64 ]
 
 ARG IMAGE_ARCH=amd64
-FROM ${IMAGE_ARCH}/debian:12
+FROM ${IMAGE_ARCH}/debian:trixie
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=arm64
 RUN case ${BUILD_ARCH} in \
-        arm)     TOOLCHAIN_ARCH=arm-linux-gnueabihf   ; TOOLCHAIN_ARCH_SHORT=armhf   ; TOOLCHAIN_ARCH_TARGET=armv7a-linux-gnueabihf ;; \
-        arm64)   TOOLCHAIN_ARCH=aarch64-linux-gnu     ; TOOLCHAIN_ARCH_SHORT=arm64   ; TOOLCHAIN_ARCH_TARGET=aarch64-linux-gnu      ;; \
-        riscv64) TOOLCHAIN_ARCH=riscv64-linux-gnu     ; TOOLCHAIN_ARCH_SHORT=riscv64 ; TOOLCHAIN_ARCH_TARGET=riscv64-linux-gnu      ;; \
-        x86)     TOOLCHAIN_ARCH=i686-linux-gnu        ; TOOLCHAIN_ARCH_SHORT=i386    ; TOOLCHAIN_ARCH_TARGET=i686-linux-gnu         ;; \
-        x64)     TOOLCHAIN_ARCH=x86-64-linux-gnu      ; TOOLCHAIN_ARCH_SHORT=amd64   ; TOOLCHAIN_ARCH_TARGET=x86_64-linux-gnu       ;; \
+        arm)         TOOLCHAIN_ARCH=arm-linux-gnueabihf       ; TOOLCHAIN_ARCH_SHORT=armhf   ; TOOLCHAIN_ARCH_TARGET=armv7a-linux-gnueabihf     ;; \
+        arm64)       TOOLCHAIN_ARCH=aarch64-linux-gnu         ; TOOLCHAIN_ARCH_SHORT=arm64   ; TOOLCHAIN_ARCH_TARGET=aarch64-linux-gnu          ;; \
+        loongarch64) TOOLCHAIN_ARCH=loongarch64-linux-gnu     ; TOOLCHAIN_ARCH_SHORT=loong64 ; TOOLCHAIN_ARCH_TARGET=loongarch64-linux-gnu      ;; \
+        riscv64)     TOOLCHAIN_ARCH=riscv64-linux-gnu         ; TOOLCHAIN_ARCH_SHORT=riscv64 ; TOOLCHAIN_ARCH_TARGET=riscv64-linux-gnu          ;; \
+        x86)         TOOLCHAIN_ARCH=i686-linux-gnu            ; TOOLCHAIN_ARCH_SHORT=i386    ; TOOLCHAIN_ARCH_TARGET=i686-linux-gnu             ;; \
+        x64)         TOOLCHAIN_ARCH=x86-64-linux-gnu          ; TOOLCHAIN_ARCH_SHORT=amd64   ; TOOLCHAIN_ARCH_TARGET=x86_64-linux-gnu           ;; \
         *) echo "Unsupported architecture: ${BUILD_ARCH}" && exit 1 ;; \
     esac \
     && echo "export TOOLCHAIN_ARCH=${TOOLCHAIN_ARCH}" > /etc/skia-env \
@@ -31,31 +32,36 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the cross-compilation GCC toolchain
-ARG TOOLCHAIN_VERSION=12
+ARG TOOLCHAIN_VERSION=14
 RUN . /etc/skia-env \
     && apt-get update \
     && apt-get install -y \
+       libc6-dev-${TOOLCHAIN_ARCH_SHORT}-cross \
        libstdc++-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross \
        libgcc-${TOOLCHAIN_VERSION}-dev-${TOOLCHAIN_ARCH_SHORT}-cross \
        binutils-${TOOLCHAIN_ARCH} \
     && rm -rf /var/lib/apt/lists/*
 
 # Make the script more flexible and use "current" instead of the actual version
+# libpthread.so.0 for loong64 is in https://packages.debian.org/trixie/all/libc6-loong64-cross/filelist that use GCC 14 and Glibc 2.41 to programmed
 RUN . /etc/skia-env \
     && TOOLCHAIN_ARCH=$(echo ${TOOLCHAIN_ARCH} | sed 's/x86-64/x86_64/g') \
     && ln -s /usr/${TOOLCHAIN_ARCH}/include/c++/${TOOLCHAIN_VERSION} /usr/${TOOLCHAIN_ARCH}/include/c++/current \
-    && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libpthread.so \
+    && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libpthread.so.0 \
     && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libc.so
 
 # Install the cross-compilation skia build dependencies (fontconfig)
+# In order to compat Loongnix 25, LoongArch APT_REPO use loongnix 25 mirrors.
 RUN . /etc/skia-env \
     && mkdir -p /skia-utils/libfontconfig-dev \
     && cd /skia-utils/libfontconfig-dev \
+    && APT_REPO=http://deb.debian.org/debian \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
+         loong64) FC_VERSION=2.15.0-1.1 ; FC_PKG=libfontconfig-dev  ; APT_REPO=https://pkg.loongnix.cn/loongnix/25  ;; \
          riscv64) FC_VERSION=2.15.0-2.2 ; FC_PKG=libfontconfig-dev  ;; \
          *)       FC_VERSION=2.13.1-2   ; FC_PKG=libfontconfig1-dev ;; \
        esac \
-    && curl http://deb.debian.org/debian/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig-dev.deb \
+    && curl ${APT_REPO}/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig-dev.deb \
     && ar vx libfontconfig-dev.deb \
     && tar -xJvf data.tar.xz \
     && rm libfontconfig-dev.deb \
