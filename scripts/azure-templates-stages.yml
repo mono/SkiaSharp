@@ -362,6 +362,12 @@ stages:
             matrix:
               - arch: x64
                 docker: scripts/Docker/debian/amd64
+              - arch: x64
+                variant: bionic
+                docker: scripts/Docker/bionic/amd64
+              - arch: arm64
+                variant: bionic
+                docker: scripts/Docker/bionic/arm64v8
               - arch: loongarch64
                 docker: scripts/Docker/debian/clang-cross/13
                 target: externals-linux-clang-cross
@@ -518,6 +524,7 @@ stages:
               - name: native_linux_arm64_alpine_nodeps_linux
               - name: native_linux_arm64_linux
               - name: native_linux_arm64_nodeps_linux
+              - name: native_linux_arm64_bionic_linux
               - name: native_linux_arm_alpine_linux
               - name: native_linux_arm_alpine_nodeps_linux
               - name: native_linux_arm_linux
@@ -534,6 +541,7 @@ stages:
               - name: native_linux_x64_alpine_nodeps_linux
               - name: native_linux_x64_linux
               - name: native_linux_x64_nodeps_linux
+              - name: native_linux_x64_bionic_linux
               - name: native_linux_x86_linux
               - name: native_linux_x86_nodeps_linux
               # WASM
