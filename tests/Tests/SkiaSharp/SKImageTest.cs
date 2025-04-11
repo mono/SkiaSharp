@@ -925,5 +925,18 @@ namespace SkiaSharp.Tests
 			using var shader = image.ToRawShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, sampling);
 			Assert.Null(shader);
 		}
+
+		[SkippableFact]
+		public void FromPictureDoesNotCrash()
+		{
+			using var picture = CreateTestPicture();
+
+			using var image = SKImage.FromPicture(picture, new SKSizeI(40, 40));
+
+			using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+			using var bmp = SKBitmap.Decode(data);
+			
+			ValidateTestBitmap(bmp);
+		}
 	}
 }
