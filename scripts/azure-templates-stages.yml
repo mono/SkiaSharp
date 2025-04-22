@@ -42,27 +42,27 @@ parameters:
 
 stages:
 
-  - template: /scripts/azure-templates-stages-prepare@self
+  - template: /scripts/azure-templates-stages-prepare.yml@self
     parameters:
       buildAgentHost: ${{ parameters.buildAgentHost }}
 
   - ${{ if ne(parameters.buildPipelineType, 'tests') }}:
 
-    - template: /scripts/azure-templates-stages-native-windows@self
+    - template: /scripts/azure-templates-stages-native-windows.yml@self
       parameters:
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
         sdl: ${{ parameters.sdl }}
         buildExternals: ${{ parameters.buildExternals }}
 
-    - template: /scripts/azure-templates-stages-native-macos@self
+    - template: /scripts/azure-templates-stages-native-macos.yml@self
       parameters:
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
         sdl: ${{ parameters.sdl }}
         buildExternals: ${{ parameters.buildExternals }}
 
-    - template: /scripts/azure-templates-stages-native-linux@self
+    - template: /scripts/azure-templates-stages-native-linux.yml@self
       parameters:
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
@@ -70,7 +70,7 @@ stages:
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         buildExternals: ${{ parameters.buildExternals }}
 
-    - template: /scripts/azure-templates-stages-native-wasm@self
+    - template: /scripts/azure-templates-stages-native-wasm.yml@self
       parameters:
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
