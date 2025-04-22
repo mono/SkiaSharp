@@ -1,6 +1,12 @@
-trigger: none
+trigger:
+  - main
+  - develop
+  - release/*
 
-pr: none
+pr:
+  - main
+  - develop
+  - release/*
 
 parameters:
   - name: buildExternals
@@ -12,24 +18,24 @@ parameters:
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-20.04
+        name: Maui-1ESPT
+        image: 1ESPT-Windows2022
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: windows-2022
+        name: Maui-1ESPT
+        image: 1ESPT-Windows2022
         os: windows
   - name: buildAgentWindowsNative
     displayName: 'The Windows build agent configuration for building the native assets:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: windows-2022
+        name: Maui-1ESPT
+        image: 1ESPT-Windows2022
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -52,37 +58,23 @@ parameters:
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-22.04
+        name: Maui-1ESPT
+        image: 1ESPT-Ubuntu22.04
         os: linux
   - name: buildAgentLinuxNative
     displayName: 'The Linux build agent configuration for building the native assets:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-20.04
+        name: Maui-1ESPT
+        image: 1ESPT-Ubuntu20.04
         os: linux
-  - name: buildAgentAndroidTests
-    displayName: 'The build agent configuration for building the Android tests:'
-    type: object
-    default:
-      pool:
-        name: Azure Pipelines
-        vmImage: macos-14
-        os: macos
-      parameters:
-        installXcode: false
-  - name: enableSigning
-    displayName: 'Enable package signing (Test signing)'
-    type: boolean
-    default: false
   - name: runCompliance
     displayName: 'Run post-build compliance tasks (such as API Scan and PoliCheck)'
     type: boolean
     default: false
-  - name: use1ESPipelineTemplates
-    displayName: 'Run the build using the internal 1ES Pipeline Templates'
+  - name: forceRealSigning
+    displayName: 'Ignore all logic and force Real signing on binaries'
     type: boolean
     default: false
 
@@ -102,10 +94,7 @@ resources:
       ref: refs/tags/release
 
 extends:
-  ${{ if eq('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
-    template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
-  ${{ if ne('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
-    template: /scripts/azure-template-fake-1es.yml@self
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     customBuildTags:
@@ -113,35 +102,39 @@ extends:
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
-          buildPipelineType: 'complete'
+          buildPipelineType: 'native'
           buildExternals: ${{ parameters.buildExternals }}
-          enableSigning: ${{ parameters.enableSigning }}
-          ${{ if eq(parameters.runCompliance, 'true') }}:
-            sdl:
-              apiscan:
-                enabled: true
-              binskim:
-                break: false
-              codeInspector:
-                enabled: true
-              credscan:
-                suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
-              policheck:
-                enabled: true
-                exclusionsFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
-              spotBugs:
-                enabled: false
-              suppression:
-                suppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
-              tsa:
-                enabled: true
-                configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
-          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+          ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
+            enableSigning: true
+            forceRealSigning: ${{ parameters.forceRealSigning }}
+            ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+              sdl:
+                apiscan:
+                  enabled: true
+                binskim:
+                  enabled: true
+                  break: false
+                codeInspector:
+                  enabled: true
+                credscan:
+                  enabled: true
+                  # suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
+                policheck:
+                  enabled: true
+                  exclusionsFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
+                spotBugs:
+                  enabled: false
+                suppression:
+                  suppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
+                tsa:
+                  enabled: true
+                  configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
+          use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
-          buildAgentWindowsNative: ${{ parameters.buildAgentWindows }}
+          buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
           buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-          buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+          buildAgentAndroidTests: ${{ parameters.buildAgentMac }}

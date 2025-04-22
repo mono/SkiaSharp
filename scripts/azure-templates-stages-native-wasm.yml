@@ -1,8 +1,6 @@
 parameters:
   - name: buildExternals
     type: string
-  - name: buildAgentHost
-    type: object
   - name: buildAgentLinuxNative
     type: object
   - name: sdl
@@ -91,26 +89,3 @@ stages:
               displayName: '3.1.56_SIMD_Threading'
               version: 3.1.56
               features: _wasmeh,mt,simd
-
-      - template: /scripts/azure-templates-jobs-merger.yml@self      # Merge Native WASM Artifacts
-        parameters:
-          name: native_wasm
-          displayName: Merge Native WASM Artifacts
-          sdl: ${{ parameters.sdl }}
-          buildAgent: ${{ parameters.buildAgentHost }}
-          requiredArtifacts:
-            - name: native_wasm_2_0_23_linux
-            - name: native_wasm_2_0_6_linux
-            - name: native_wasm_3_1_12_linux
-            - name: native_wasm_3_1_12_SIMD_linux
-            - name: native_wasm_3_1_12_Threading_linux
-            - name: native_wasm_3_1_12_Threading_SIMD_linux
-            - name: native_wasm_3_1_34_linux
-            - name: native_wasm_3_1_34_SIMD_linux
-            - name: native_wasm_3_1_34_SIMD_Threading_linux
-            - name: native_wasm_3_1_34_Threading_linux
-            - name: native_wasm_3_1_56_linux
-            - name: native_wasm_3_1_56_SIMD_linux
-            - name: native_wasm_3_1_56_SIMD_Threading_linux
-            - name: native_wasm_3_1_56_Threading_linux
-            - name: native_wasm_3_1_7_linux
