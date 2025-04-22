@@ -65,13 +65,3 @@ stages:
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableSigning: ${{ parameters.enableSigning }}
         forceRealSigning: ${{ parameters.forceRealSigning }}
-
-  - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
-    - template: /scripts/azure-templates-stages-test.yml@self
-      parameters:
-        dependsOnPrepare: ${{ eq(parameters.buildPipelineType, 'test') }}
-        buildAgentHost: ${{ parameters.buildAgentHost }}
-        buildAgentWindows: ${{ parameters.buildAgentWindows }}
-        buildAgentMac: ${{ parameters.buildAgentMac }}
-        buildAgentLinux: ${{ parameters.buildAgentLinux }}
-        buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
