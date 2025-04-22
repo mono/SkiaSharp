@@ -17,7 +17,7 @@ stages:
 
     - stage: api_diff
       displayName: API Diff
-      ${{ if eq(dependsOnPrepare, 'true') }}:
+      ${{ if eq(parameters.dependsOnPrepare, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: package
@@ -46,7 +46,7 @@ stages:
 
     - stage: managed
       displayName: Build Managed
-      ${{ if eq(dependsOnPrepare, 'true') }}:
+      ${{ if eq(parameters.dependsOnPrepare, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -99,7 +99,7 @@ stages:
 
     - stage: tests
       displayName: Tests
-      ${{ if eq(dependsOnPrepare, 'true') }}:
+      ${{ if eq(parameters.dependsOnPrepare, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -350,7 +350,7 @@ stages:
 
     - stage: samples
       displayName: Samples
-      ${{ if eq(dependsOnPrepare, 'true') }}:
+      ${{ if eq(parameters.dependsOnPrepare, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: package
