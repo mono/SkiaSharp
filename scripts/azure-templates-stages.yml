@@ -55,3 +55,13 @@ stages:
         sdl: ${{ parameters.sdl }}
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         buildExternals: ${{ parameters.buildExternals }}
+
+  - ${{ if in(parameters.buildPipelineType, 'package', 'complete') }}:
+    - template: /scripts/azure-templates-stages-package.yml@self
+      parameters:
+        buildAgentHost: ${{ parameters.buildAgentHost }}
+        buildAgentWindows: ${{ parameters.buildAgentWindows }}
+        sdl: ${{ parameters.sdl }}
+        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+        enableSigning: ${{ parameters.enableSigning }}
+        forceRealSigning: ${{ parameters.forceRealSigning }}
