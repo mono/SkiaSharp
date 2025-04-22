@@ -44,24 +44,3 @@ stages:
   - template: /scripts/azure-templates-stages-prepare.yml@self
     parameters:
       buildAgentHost: ${{ parameters.buildAgentHost }}
-
-  - ${{ if in(parameters.buildPipelineType, 'native', 'complete') }}:
-    - template: /scripts/azure-templates-stages-native.yml@self
-      parameters:
-        buildAgentHost: ${{ parameters.buildAgentHost }}
-        buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
-        buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
-        buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-        sdl: ${{ parameters.sdl }}
-        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-        buildExternals: ${{ parameters.buildExternals }}
-
-  - ${{ if in(parameters.buildPipelineType, 'package', 'complete') }}:
-    - template: /scripts/azure-templates-stages-package.yml@self
-      parameters:
-        buildAgentHost: ${{ parameters.buildAgentHost }}
-        buildAgentWindows: ${{ parameters.buildAgentWindows }}
-        sdl: ${{ parameters.sdl }}
-        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-        enableSigning: ${{ parameters.enableSigning }}
-        forceRealSigning: ${{ parameters.forceRealSigning }}
