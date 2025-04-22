@@ -67,7 +67,7 @@ stages:
         forceRealSigning: ${{ parameters.forceRealSigning }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
-    - template: /scripts/azure-templates-stages-package.yml@self
+    - template: /scripts/azure-templates-stages-test.yml@self
       parameters:
         dependsOn: ${{ iif(eq(parameters.buildPipelineType, 'test'), 'prepare', '') }}
         buildAgentHost: ${{ parameters.buildAgentHost }}
