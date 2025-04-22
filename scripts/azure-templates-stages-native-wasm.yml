@@ -1,0 +1,116 @@
+parameters:
+  - name: buildExternals
+    type: string
+  - name: buildAgentHost
+    type: object
+  - name: buildAgentLinuxNative
+    type: object
+  - name: sdl
+    type: object
+  - name: use1ESPipelineTemplates
+    type: boolean
+
+stages:
+
+  - stage: native_wasm
+    displayName: Native WASM
+    dependsOn: prepare
+    jobs:
+      - template: /scripts/azure-templates-jobs-wasm-matrix.yml@self # Build Native WASM (Linux)
+        parameters:
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentLinuxNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+          emscripten:
+            - 2.0.6:
+              displayName: 2.0.6
+              version: 2.0.6
+              features: none
+            - 2.0.23:
+              displayName: 2.0.23
+              version: 2.0.23
+              features: none
+
+            # .NET 6
+            - 3.1.7:
+              displayName: 3.1.7
+              version: 3.1.7
+              features: none
+
+            # .NET 7
+            - 3.1.12:
+              displayName: 3.1.12
+              version: 3.1.12
+              features: st
+            - 3.1.12:
+              displayName: '3.1.12_SIMD'
+              version: 3.1.12
+              features: st,simd
+            - 3.1.12:
+              displayName: '3.1.12_Threading'
+              version: 3.1.12
+              features: mt
+            - 3.1.12:
+              displayName: '3.1.12_Threading_SIMD'
+              version: 3.1.12
+              features: mt,simd
+
+            # .NET 8
+            - 3.1.34:
+              displayName: 3.1.34
+              version: 3.1.34
+              features: _wasmeh,st
+            - 3.1.34:
+              displayName: '3.1.34_Threading'
+              version: 3.1.34
+              features: _wasmeh,mt
+            - 3.1.34:
+              displayName: '3.1.34_SIMD'
+              version: 3.1.34
+              features: _wasmeh,st,simd
+            - 3.1.34:
+              displayName: '3.1.34_SIMD_Threading'
+              version: 3.1.34
+              features: _wasmeh,mt,simd
+
+            # .NET 9
+            - 3.1.56:
+              displayName: 3.1.56
+              version: 3.1.56
+              features: _wasmeh,st
+            - 3.1.56:
+              displayName: '3.1.56_Threading'
+              version: 3.1.56
+              features: _wasmeh,mt
+            - 3.1.56:
+              displayName: '3.1.56_SIMD'
+              version: 3.1.56
+              features: _wasmeh,st,simd
+            - 3.1.56:
+              displayName: '3.1.56_SIMD_Threading'
+              version: 3.1.56
+              features: _wasmeh,mt,simd
+
+      - template: /scripts/azure-templates-jobs-merger.yml@self      # Merge Native WASM Artifacts
+        parameters:
+          name: native_wasm
+          displayName: Merge Native WASM Artifacts
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentHost }}
+          requiredArtifacts:
+            - name: native_wasm_2_0_23_linux
+            - name: native_wasm_2_0_6_linux
+            - name: native_wasm_3_1_12_linux
+            - name: native_wasm_3_1_12_SIMD_linux
+            - name: native_wasm_3_1_12_Threading_linux
+            - name: native_wasm_3_1_12_Threading_SIMD_linux
+            - name: native_wasm_3_1_34_linux
+            - name: native_wasm_3_1_34_SIMD_linux
+            - name: native_wasm_3_1_34_SIMD_Threading_linux
+            - name: native_wasm_3_1_34_Threading_linux
+            - name: native_wasm_3_1_56_linux
+            - name: native_wasm_3_1_56_SIMD_linux
+            - name: native_wasm_3_1_56_SIMD_Threading_linux
+            - name: native_wasm_3_1_56_Threading_linux
+            - name: native_wasm_3_1_7_linux

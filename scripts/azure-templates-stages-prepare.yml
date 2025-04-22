@@ -1,0 +1,16 @@
+parameters:
+  - name: buildAgentHost
+    type: object
+
+stages:
+  - stage: prepare
+    displayName: Prepare Build
+    jobs:
+      - job: prepare
+        displayName: Prepare Build
+        pool: ${{ parameters.buildAgentHost.pool }}
+        steps:
+          - checkout: none
+          - template: /scripts/azure-templates-steps-variables.yml@self
+            parameters:
+              updateBuild: true

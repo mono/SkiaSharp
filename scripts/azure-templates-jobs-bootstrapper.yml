@@ -17,7 +17,6 @@ parameters:
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
   buildExternals: ''                            # the build number to download externals from
-  buildPipelineType: 'both'                     # the type of build pipeline setup
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
@@ -90,7 +89,7 @@ jobs:
       # prepare
       - checkout: self
         submodules: recursive
-      - template: /scripts/azure-templates-variables.yml@self
+      - template: /scripts/azure-templates-steps-variables.yml@self
 
       - pwsh: .\scripts\get-free-space.ps1
         displayName: Get the volume information after the checkout
@@ -100,11 +99,6 @@ jobs:
       # - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
       #   displayName: Checkout required skia PR
       #   condition: eq(variables['Build.Reason'], 'PullRequest')
-
-      - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
-        - template: /scripts/azure-templates-github-status.yml@self
-          parameters:
-            state: 'pending'
 
       # determine build type
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
@@ -291,11 +285,11 @@ jobs:
         condition: always()
 
       # download artifacts
-      - template: /scripts/azure-templates-download-artifacts.yml@self
+      - template: /scripts/azure-templates-steps-download-artifacts.yml@self
         parameters:
           condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           artifacts: ${{ parameters.requiredArtifacts }}
-      - template: /scripts/azure-templates-download-artifacts.yml@self
+      - template: /scripts/azure-templates-steps-download-artifacts.yml@self
         parameters:
           condition: and(succeeded(), ne(variables['DOWNLOAD_EXTERNALS'], ''))
           sourceBuildId: $(DOWNLOAD_EXTERNALS)
@@ -394,9 +388,6 @@ jobs:
 
       # post-build steps
       - ${{ parameters.postBuildSteps }}
-
-      - ${{ if eq(parameters.buildPipelineType, 'tests') }}:
-        - template: /scripts/azure-templates-github-status.yml@self
 
       - pwsh: .\scripts\get-free-space.ps1
         displayName: Get the volume information after the entire run
