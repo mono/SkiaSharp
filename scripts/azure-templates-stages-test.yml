@@ -1,6 +1,7 @@
 parameters:
-  - name: dependsOn
-    type: string
+  - name: dependsOnPrepare
+    type: boolean
+    default: false
   - name: buildAgentHost
     type: object
   - name: buildAgentWindows
@@ -16,10 +17,10 @@ stages:
 
     - stage: api_diff
       displayName: API Diff
-      ${{ if eq(parameters.dependsOn, '') }}:
-        dependsOn: package
+      ${{ if eq(dependsOnPrepare, 'true') }}:
+        dependsOn: prepare
       ${{ else }}:
-        dependsOn: ${{ parameters.dependsOn }}
+        dependsOn: package
       jobs:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # API Diff
           parameters:
@@ -45,10 +46,10 @@ stages:
 
     - stage: managed
       displayName: Build Managed
-      ${{ if eq(parameters.dependsOn, '') }}:
-        dependsOn: native
+      ${{ if eq(dependsOnPrepare, 'true') }}:
+        dependsOn: prepare
       ${{ else }}:
-        dependsOn: ${{ parameters.dependsOn }}
+        dependsOn: native
       jobs:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Validate Interop
           parameters:
@@ -98,10 +99,10 @@ stages:
 
     - stage: tests
       displayName: Tests
-      ${{ if eq(parameters.dependsOn, '') }}:
-        dependsOn: native
+      ${{ if eq(dependsOnPrepare, 'true') }}:
+        dependsOn: prepare
       ${{ else }}:
-        dependsOn: ${{ parameters.dependsOn }}
+        dependsOn: native
       jobs:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netfx (Windows)
           parameters:
@@ -349,10 +350,10 @@ stages:
 
     - stage: samples
       displayName: Samples
-      ${{ if eq(parameters.dependsOn, '') }}:
-        dependsOn: package
+      ${{ if eq(dependsOnPrepare, 'true') }}:
+        dependsOn: prepare
       ${{ else }}:
-        dependsOn: ${{ parameters.dependsOn }}
+        dependsOn: package
       jobs:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Windows)
           parameters:

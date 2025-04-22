@@ -69,7 +69,7 @@ stages:
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self
       parameters:
-        dependsOn: ${{ iif(eq(parameters.buildPipelineType, 'test'), 'prepare', '') }}
+        dependsOn: ${{ eq(parameters.buildPipelineType, 'test') }}
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
         buildAgentMac: ${{ parameters.buildAgentMac }}
