@@ -81,8 +81,10 @@ stages:
             - name: native
             - name: nuget
               dir: nugets
+              currentRun: true
             - name: nuget_symbols
               dir: nugets-symbols
+              currentRun: true
           postBuildSteps:
             - pwsh: |
                 Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
