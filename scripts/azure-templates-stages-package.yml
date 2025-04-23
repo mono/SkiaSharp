@@ -1,4 +1,7 @@
 parameters:
+  - name: dependsOnPrepare
+    type: boolean
+    default: false
   - name: buildAgentHost
     type: object
   - name: buildAgentWindows
@@ -16,7 +19,10 @@ stages:
 
   - stage: package
     displayName: Package NuGets
-    dependsOn: native
+    ${{ if eq(parameters.dependsOnPrepare, 'true') }}:
+      dependsOn: prepare
+    ${{ else }}:
+      dependsOn: native
     jobs:
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package NuGets
         parameters:
