@@ -89,7 +89,8 @@ jobs:
       # prepare
       - checkout: self
         submodules: recursive
-      - template: /scripts/azure-templates-steps-variables.yml@self
+      - pwsh: ./scripts/set-build-variables.ps1
+        displayName: Configure build variables
 
       - pwsh: .\scripts\get-free-space.ps1
         displayName: Get the volume information after the checkout

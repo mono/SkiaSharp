@@ -11,6 +11,5 @@ stages:
         pool: ${{ parameters.buildAgentHost.pool }}
         steps:
           - checkout: none
-          - template: /scripts/azure-templates-steps-variables.yml@self
-            parameters:
-              updateBuild: true
+          - pwsh: ./scripts/set-build-variables.ps1 -UpdateBuildNumber
+            displayName: Configure build variables

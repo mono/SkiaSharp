@@ -326,7 +326,8 @@ stages:
             - tests_netcore_linux
           steps:
             - checkout: self
-            - template: /scripts/azure-templates-steps-variables.yml@self
+            - pwsh: ./scripts/set-build-variables.ps1
+              displayName: Configure build variables
             - task: DownloadBuildArtifacts@1
               displayName: Download the coverage_netcore_windows artifact
               inputs:
