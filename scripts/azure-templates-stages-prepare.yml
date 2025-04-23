@@ -10,6 +10,7 @@ stages:
         displayName: Prepare Build
         pool: ${{ parameters.buildAgentHost.pool }}
         steps:
-          - checkout: none
+          - checkout: self
+            sparseCheckoutDirectories: scripts/set-build-variables.ps1
           - pwsh: ./scripts/set-build-variables.ps1 -UpdateBuildNumber
             displayName: Configure build variables
