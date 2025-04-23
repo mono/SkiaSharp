@@ -18,21 +18,18 @@ stages:
 
   - template: /scripts/azure-templates-stages-native-windows.yml@self
     parameters:
-      buildAgentHost: ${{ parameters.buildAgentHost }}
       buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
       sdl: ${{ parameters.sdl }}
       buildExternals: ${{ parameters.buildExternals }}
 
   - template: /scripts/azure-templates-stages-native-macos.yml@self
     parameters:
-      buildAgentHost: ${{ parameters.buildAgentHost }}
       buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
       sdl: ${{ parameters.sdl }}
       buildExternals: ${{ parameters.buildExternals }}
 
   - template: /scripts/azure-templates-stages-native-linux.yml@self
     parameters:
-      buildAgentHost: ${{ parameters.buildAgentHost }}
       buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
       sdl: ${{ parameters.sdl }}
       use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
@@ -40,7 +37,6 @@ stages:
 
   - template: /scripts/azure-templates-stages-native-wasm.yml@self
     parameters:
-      buildAgentHost: ${{ parameters.buildAgentHost }}
       buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
       sdl: ${{ parameters.sdl }}
       use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}

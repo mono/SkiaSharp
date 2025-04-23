@@ -1,8 +1,6 @@
 parameters:
   - name: buildExternals
     type: string
-  - name: buildAgentHost
-    type: object
   - name: buildAgentWindowsNative
     type: object
   - name: sdl
@@ -178,14 +176,3 @@ stages:
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
-      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-        - template: /scripts/azure-templates-jobs-merger.yml@self       # Merge Native MSVC Artifacts
-          parameters:
-            name: native_msvc
-            displayName: Merge Native MSVC Artifacts
-            sdl: ${{ parameters.sdl }}
-            buildAgent: ${{ parameters.buildAgentHost }}
-            requiredArtifacts:
-              - name: native_win32_x86_msvc_windows
-              - name: native_win32_x64_msvc_windows
-              - name: native_win32_arm64_msvc_windows

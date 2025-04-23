@@ -15,7 +15,7 @@ stages:
       - native_wasm
     jobs:
 
-      - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native Artifacts
+      - template: /scripts/azure-templates-jobs-merger.yml@self   # Merge Native Artifacts
         parameters:
           name: native
           displayName: Merge Native Artifacts
@@ -90,7 +90,7 @@ stages:
             - name: native_wasm_3_1_56_Threading_linux
             - name: native_wasm_3_1_7_linux
 
-      - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native Linux Artifacts
+      - template: /scripts/azure-templates-jobs-merger.yml@self   # Merge Native Linux Artifacts
         parameters:
           name: native_linux
           displayName: Merge Native Linux Artifacts
@@ -120,7 +120,7 @@ stages:
             - name: native_linux_x86_linux
             - name: native_linux_x86_nodeps_linux
 
-      - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native WASM Artifacts
+      - template: /scripts/azure-templates-jobs-merger.yml@self   # Merge Native WASM Artifacts
         parameters:
           name: native_wasm
           displayName: Merge Native WASM Artifacts
@@ -142,3 +142,15 @@ stages:
             - name: native_wasm_3_1_56_SIMD_Threading_linux
             - name: native_wasm_3_1_56_Threading_linux
             - name: native_wasm_3_1_7_linux
+
+      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+        - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native MSVC Artifacts
+          parameters:
+            name: native_msvc
+            displayName: Merge Native MSVC Artifacts
+            sdl: ${{ parameters.sdl }}
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              - name: native_win32_x86_msvc_windows
+              - name: native_win32_x64_msvc_windows
+              - name: native_win32_arm64_msvc_windows
