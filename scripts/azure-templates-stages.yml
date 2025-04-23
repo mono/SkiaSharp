@@ -66,7 +66,7 @@ stages:
   - ${{ if in(parameters.buildPipelineType, 'package', 'complete') }}:
     - template: /scripts/azure-templates-stages-package.yml@self
       parameters:
-        dependsOnPrepare: ${{ eq(parameters.buildPipelineType, 'package') }}
+        isSplitPipeline: ${{ eq(parameters.buildPipelineType, 'package') }}
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
         sdl: ${{ parameters.sdl }}
@@ -77,7 +77,7 @@ stages:
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self
       parameters:
-        dependsOnPrepare: ${{ eq(parameters.buildPipelineType, 'test') }}
+        isSplitPipeline: ${{ eq(parameters.buildPipelineType, 'test') }}
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
         buildAgentMac: ${{ parameters.buildAgentMac }}

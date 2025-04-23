@@ -1,5 +1,5 @@
 parameters:
-  - name: dependsOnPrepare
+  - name: isSplitPipeline
     type: boolean
     default: false
   - name: buildAgentHost
@@ -17,12 +17,23 @@ parameters:
 
 stages:
 
+  - ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+    - stage: native
+      displayName: Native
+      dependsOn: prepare
+      jobs:
+        - template: /scripts/azure-templates-jobs-merger.yml@self
+          parameters:
+            name: native
+            displayName: Re-upload Native Artifacts
+            sdl: ${{ parameters.sdl }}
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              - name: native
+
   - stage: package
     displayName: Package NuGets
-    ${{ if eq(parameters.dependsOnPrepare, 'true') }}:
-      dependsOn: prepare
-    ${{ else }}:
-      dependsOn: native
+    dependsOn: native
     jobs:
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package NuGets
         parameters:

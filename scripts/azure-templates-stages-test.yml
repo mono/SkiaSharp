@@ -1,5 +1,5 @@
 parameters:
-  - name: dependsOnPrepare
+  - name: isSplitPipeline
     type: boolean
     default: false
   - name: buildAgentHost
@@ -17,7 +17,7 @@ stages:
 
     - stage: api_diff
       displayName: API Diff
-      ${{ if eq(parameters.dependsOnPrepare, 'true') }}:
+      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: package
@@ -46,7 +46,7 @@ stages:
 
     - stage: managed
       displayName: Build Managed
-      ${{ if eq(parameters.dependsOnPrepare, 'true') }}:
+      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -99,7 +99,7 @@ stages:
 
     - stage: tests
       displayName: Tests
-      ${{ if eq(parameters.dependsOnPrepare, 'true') }}:
+      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -114,9 +114,7 @@ stages:
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
-              - name: native_win32_x86_windows
-              - name: native_win32_x64_windows
-              - name: native_win32_arm64_windows
+              - name: native
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the .NET Framework test results
@@ -139,9 +137,7 @@ stages:
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
-              - name: native_win32_x86_windows
-              - name: native_win32_x64_windows
-              - name: native_win32_arm64_windows
+              - name: native
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
@@ -166,7 +162,7 @@ stages:
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
-              - name: native_macos_macos
+              - name: native
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
@@ -192,8 +188,7 @@ stages:
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
-              - name: native_linux_x64_linux
-              - name: native_linux_arm64_linux
+              - name: native
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
@@ -217,10 +212,7 @@ stages:
             additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
-              - name: native_android_x86_macos
-              - name: native_android_x64_macos
-              - name: native_android_arm_macos
-              - name: native_android_arm64_macos
+              - name: native
             preBuildSteps:
               - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
                 displayName: Install the Android emulator
@@ -247,7 +239,7 @@ stages:
             additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
-              - name: native_ios_macos
+              - name: native
             preBuildSteps:
               - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
             postBuildSteps:
@@ -273,7 +265,7 @@ stages:
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
-              - name: native_maccatalyst_macos
+              - name: native
             preBuildSteps:
               - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
             postBuildSteps:
@@ -299,7 +291,7 @@ stages:
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
-              - name: native_wasm
+              - name: native
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
             postBuildSteps:
@@ -351,7 +343,7 @@ stages:
 
     - stage: samples
       displayName: Samples
-      ${{ if eq(parameters.dependsOnPrepare, 'true') }}:
+      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: package
