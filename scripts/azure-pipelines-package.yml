@@ -2,6 +2,14 @@ trigger: none
 
 pr: none
 
+schedules:
+  - cron: "0 0 * * *"
+    displayName: Daily midnight build for main
+    branches:
+      include:
+        - main
+    always: true
+
 parameters:
   - name: buildAgentHost
     displayName: 'The generic host build agent configuration:'
