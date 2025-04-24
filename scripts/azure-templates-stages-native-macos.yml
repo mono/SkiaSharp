@@ -1,0 +1,90 @@
+parameters:
+  - name: buildExternals
+    type: string
+  - name: buildAgentMacNative
+    type: object
+  - name: sdl
+    type: object
+
+stages:
+
+  - stage: native_macos
+    displayName: Native macOS
+    dependsOn: prepare
+    jobs:
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|x86 (macOS)
+        parameters:
+          name: native_android_x86_macos
+          displayName: Android x86
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-android
+          additionalArgs: --buildarch=x86
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|x64 (macOS)
+        parameters:
+          name: native_android_x64_macos
+          displayName: Android x64
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-android
+          additionalArgs: --buildarch=x64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|arm (macOS)
+        parameters:
+          name: native_android_arm_macos
+          displayName: Android arm
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-android
+          additionalArgs: --buildarch=arm
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|arm64 (macOS)
+        parameters:
+          name: native_android_arm64_macos
+          displayName: Android arm64
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-android
+          additionalArgs: --buildarch=arm64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native iOS (macOS)
+        parameters:
+          name: native_ios_macos
+          displayName: iOS
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-ios
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Mac Catalyst (macOS)
+        parameters:
+          name: native_maccatalyst_macos
+          displayName: Mac Catalyst
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-maccatalyst
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native macOS (macOS)
+        parameters:
+          name: native_macos_macos
+          displayName: macOS
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-macos
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native tvOS (macOS)
+        parameters:
+          name: native_tvos_macos
+          displayName: tvOS
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-tvos
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen (macOS)
+        parameters:
+          name: native_tizen_macos
+          displayName: Tizen
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-tizen
