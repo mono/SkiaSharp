@@ -58,7 +58,7 @@ RUN . /etc/skia-env \
     && APT_REPO=http://deb.debian.org/debian \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
          loong64) FC_VERSION=2.15.0-1.1 ; FC_PKG=libfontconfig-dev  ; APT_REPO=https://pkg.loongnix.cn/loongnix/25  ;; \
-         riscv64) FC_VERSION=2.15.0-2.2 ; FC_PKG=libfontconfig-dev  ;; \
+         riscv64) FC_VERSION=2.15.0-2.3 ; FC_PKG=libfontconfig-dev  ;; \
          *)       FC_VERSION=2.13.1-2   ; FC_PKG=libfontconfig1-dev ;; \
        esac \
     && curl ${APT_REPO}/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig-dev.deb \
