@@ -1,7 +1,16 @@
 trigger:
-  - main
-  - develop
-  - release/*
+  branches:
+    include:
+      - main
+      - develop
+      - release/*
+  paths:
+    exclude:
+      - .devcontainer/**
+      - .github/**
+      - .vscode/**
+      - changelogs/**
+      - README.md
 
 pr: none
 
