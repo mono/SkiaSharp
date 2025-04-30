@@ -91,6 +91,11 @@ namespace SkiaSharp
 			var device = backendContext.DeviceHandle;
 			var queue = backendContext.QueueHandle;
 
+#if __IOS__ || __MACOS__ || __TVOS__
+			using Foundation.NSObject queueObject = Foundation.NSObject.FromObject(backendContext.Queue);
+			queueObject.DangerousRetain ();
+#endif
+
 			if (options == null) {
 				return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)device, (void*)queue));
 			} else {
