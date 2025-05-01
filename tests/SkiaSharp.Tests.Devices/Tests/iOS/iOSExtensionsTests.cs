@@ -1,5 +1,7 @@
-﻿using CoreGraphics;
+﻿using System;
+using CoreGraphics;
 using Foundation;
+using Metal;
 using Xunit;
 
 namespace SkiaSharp.Views.iOS.Tests
@@ -98,6 +100,22 @@ namespace SkiaSharp.Views.iOS.Tests
 			var actual = initial.ToSKRect();
 
 			Assert.Equal(expected, actual);
+		}
+
+		[SkippableFact]
+		public void GRContextDisposeDoesNotCrash()
+		{
+			var device = MTLDevice.SystemDefault!;
+			Skip.If(device == null, "Metal is not supported on this device.");
+
+			using var commandQueue = device.CreateCommandQueue();
+			using var backendContext = new GRMtlBackendContext()
+			{
+				Device = device,
+				Queue = commandQueue,
+			};
+
+			using var context = GRContext.CreateMetal(backendContext);
 		}
 	}
 }
