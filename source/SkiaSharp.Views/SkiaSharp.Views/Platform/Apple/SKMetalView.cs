@@ -48,7 +48,6 @@ namespace SkiaSharp.Views.tvOS
 		public SKMetalView()
 			: this(CGRect.Empty)
 		{
-			Initialize();
 		}
 
 		// created in code
