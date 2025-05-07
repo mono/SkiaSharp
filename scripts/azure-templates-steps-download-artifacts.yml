@@ -1,6 +1,6 @@
 parameters:
   sourceBuildId: ''
-  artifacts: [ ] # name, dir
+  artifacts: [ ] # name, dir, currentRun
   condition: succeeded()
 
 steps:
@@ -41,16 +41,16 @@ steps:
 
   - ${{ each artifact in parameters.artifacts }}:
     - task: DownloadBuildArtifacts@1
-      displayName: Download the pre-built ${{ artifact.name }} artifacts
+      displayName: Download the pre-built ${{ artifact.name }} artifacts from ${{ iif(artifact.currentRun, 'the current run', 'the previous run') }}
       condition: ${{ parameters.condition }}
       retryCountOnTaskFailure: 3
       inputs:
         buildType: 'specific'
         project: '$(System.TeamProjectId)'
-        pipeline: '$(DOWNLOAD_PIPELINE_ID)'
-        branchName: '$(DOWNLOAD_BRANCH)'
-        buildVersionToDownload: '$(DOWNLOAD_VERSION_TYPE)'
-        buildId: '$(DOWNLOAD_BUILD_ID)'
+        pipeline: ${{ iif(artifact.currentRun, '$(System.DefinitionId)', '$(DOWNLOAD_PIPELINE_ID)') }}
+        branchName: ${{ iif(artifact.currentRun, '$(Build.SourceBranch)', '$(DOWNLOAD_BRANCH)') }}
+        buildVersionToDownload: ${{ iif(artifact.currentRun, 'specific', '$(DOWNLOAD_VERSION_TYPE)') }}
+        buildId: ${{ iif(artifact.currentRun, '$(Build.BuildId)', '$(DOWNLOAD_BUILD_ID)') }}
         downloadType: 'single'
         allowPartiallySucceededBuilds: true
         artifactName: ${{ artifact.name }}
