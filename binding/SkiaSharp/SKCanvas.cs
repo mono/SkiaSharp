@@ -1065,7 +1065,10 @@ namespace SkiaSharp
 
 		public void Dispose ()
 		{
-			Restore ();
+			//canvas can be GC-ed before us
+			if (canvas != null && canvas.Handle != IntPtr.Zero) {
+				Restore ();
+			}				
 		}
 
 		/// <summary>
