@@ -92,16 +92,20 @@ namespace SkiaSharp.Views.tvOS
 
 			ColorPixelFormat = MTLPixelFormat.BGRA8Unorm;
 			DepthStencilPixelFormat = MTLPixelFormat.Depth32Float_Stencil8;
-			if (DepthStencilModePrivate)
+			nuint sampling = 1;
+			if (UIKit.UIDevice.CurrentDevice.CheckSystemVersion(16, 0))
 			{
-				DepthStencilStorageMode = MTLStorageMode.Private;
-				SampleCount = 4;
+				if (DepthStencilModePrivate)
+				{
+					DepthStencilStorageMode = MTLStorageMode.Private;
+					sampling = 4;
+				}
+				else
+				{
+					DepthStencilStorageMode = MTLStorageMode.Shared;
+				}
 			}
-			else
-			{
-				DepthStencilStorageMode = MTLStorageMode.Shared;
-				SampleCount = 2;
-			}
+			SampleCount = sampling;
 			FramebufferOnly = false;
 			Device = device;
 			backendContext = new GRMtlBackendContext
