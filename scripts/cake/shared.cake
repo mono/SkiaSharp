@@ -105,6 +105,18 @@ string GetRegexValue(string regex, FilePath file)
     }
 }
 
+List<string> MatchRegex(string regex, params string[] lines)
+{
+    var matches = new List<string>();
+    foreach (var line in lines) {
+        var match = Regex.Match(line, regex, RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        if (match.Success) {
+            matches.Add(match.Groups[1].Value.Trim());
+        }
+    }
+    return matches;
+}
+
 void DeleteDir(DirectoryPath dir)
 {
     if (DirectoryExists(dir))

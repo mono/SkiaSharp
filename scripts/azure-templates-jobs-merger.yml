@@ -1,0 +1,17 @@
+parameters:
+  name: ''                                      # in the form type_platform_host
+  displayName: ''                               # the human name
+  buildAgent: ''                                # the configuration for the build agent
+  requiredArtifacts: []                         # the artifacts that this build needs to download
+  sdl: []                                       # the SDL properties to use for this job
+
+jobs:
+  - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      sdl: ${{ parameters.sdl }}
+      buildAgent: ${{ parameters.buildAgent }}
+      skipInstall: true
+      skipSteps: true
+      requiredArtifacts: ${{ parameters.requiredArtifacts }}

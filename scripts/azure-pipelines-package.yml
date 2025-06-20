@@ -1,18 +1,16 @@
-trigger:
-  - main
-  - develop
-  - release/*
+trigger: none
 
-pr:
-  - main
-  - develop
-  - release/*
+pr: none
+
+schedules:
+  - cron: "0 0 * * *"
+    displayName: Daily midnight build for main
+    branches:
+      include:
+        - main
+    always: true
 
 parameters:
-  - name: buildExternals
-    displayName: 'The Build ID containing the specific native artifacts to use:'
-    type: string
-    default: 'latest'
   - name: buildAgentHost
     displayName: 'The generic host build agent configuration:'
     type: object
@@ -29,24 +27,8 @@ parameters:
         name: Maui-1ESPT
         image: 1ESPT-Windows2022
         os: windows
-  - name: buildAgentWindowsNative
-    displayName: 'The Windows build agent configuration for building the native assets:'
-    type: object
-    default:
-      pool:
-        name: Maui-1ESPT
-        image: 1ESPT-Windows2022
-        os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
-    type: object
-    default:
-      pool:
-        name: Azure Pipelines
-        vmImage: macos-14
-        os: macos
-  - name: buildAgentMacNative
-    displayName: 'The macOS build agent configuration for building the native assets:'
     type: object
     default:
       pool:
@@ -61,14 +43,6 @@ parameters:
         name: Maui-1ESPT
         image: 1ESPT-Ubuntu22.04
         os: linux
-  - name: buildAgentLinuxNative
-    displayName: 'The Linux build agent configuration for building the native assets:'
-    type: object
-    default:
-      pool:
-        name: Maui-1ESPT
-        image: 1ESPT-Ubuntu20.04
-        os: linux
   - name: runCompliance
     displayName: 'Run post-build compliance tasks (such as API Scan and PoliCheck)'
     type: boolean
@@ -79,7 +53,7 @@ parameters:
     default: false
 
 variables:
-  - template: /scripts/azure-pipelines-variables.yml@self
+  - template: /scripts/azure-templates-variables.yml@self
 
 resources:
   repositories:
@@ -92,6 +66,10 @@ resources:
       type: git
       name: 1ESPipelineTemplates/1ESPipelineTemplates
       ref: refs/tags/release
+  pipelines:
+    - pipeline: SkiaSharp
+      source: SkiaSharp-Native
+      trigger: true
 
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
@@ -102,8 +80,7 @@ extends:
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
-          buildPipelineType: 'build'
-          buildExternals: ${{ parameters.buildExternals }}
+          buildPipelineType: 'package'
           ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
             enableSigning: true
             forceRealSigning: ${{ parameters.forceRealSigning }}
@@ -132,9 +109,5 @@ extends:
           use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
-          buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
-          buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
-          buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-          buildAgentAndroidTests: ${{ parameters.buildAgentMac }}
