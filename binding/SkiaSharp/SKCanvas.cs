@@ -1069,10 +1069,7 @@ namespace SkiaSharp
 
 		public void Dispose ()
 		{
-			//canvas can be GC-ed before us
-			if (canvas != null && canvas.Handle != IntPtr.Zero) {
-				Restore ();
-			}				
+			Restore ();
 		}
 
 		/// <summary>
@@ -1081,10 +1078,11 @@ namespace SkiaSharp
 		/// </summary>
 		public void Restore ()
 		{
-			if (canvas != null) {
+			// canvas can be GC-ed before us
+			if (canvas != null && canvas.Handle != IntPtr.Zero) {
 				canvas.RestoreToCount (saveCount);
-				canvas = null;
 			}
+			canvas = null;
 		}
 	}
 
