@@ -1,0 +1,388 @@
+parameters:
+  - name: isSplitPipeline
+    type: boolean
+    default: false
+  - name: buildAgentHost
+    type: object
+  - name: buildAgentWindows
+    type: object
+  - name: buildAgentMac
+    type: object
+  - name: buildAgentLinux
+    type: object
+  - name: buildAgentAndroidTests
+    type: object
+
+stages:
+
+    - stage: api_diff
+      displayName: API Diff
+      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+        dependsOn: prepare
+      ${{ else }}:
+        dependsOn: package
+      jobs:
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # API Diff
+          parameters:
+            name: api_diff_windows
+            displayName: API Diff
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: docs-api-diff
+            additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
+            shouldPublish: false
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
+            preBuildSteps:
+              - pwsh: .\scripts\install-gtk.ps1
+                displayName: Install GTK# 2.12
+            publishArtifacts:
+              - name: api-diff
+                always: true
+                path: '$(Build.SourcesDirectory)\output\api-diff'
+              - name: changelogs
+                always: true
+                path: '$(Build.SourcesDirectory)\changelogs'
+
+    - stage: managed
+      displayName: Build Managed
+      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+        dependsOn: prepare
+      ${{ else }}:
+        dependsOn: native
+      jobs:
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Validate Interop
+          parameters:
+            name: managed_interop_windows
+            displayName: Validate Interop
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: externals-interop
+            additionalArgs: --skipExternals="all"
+            installAndroidSdk: false
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (Windows)
+          parameters:
+            name: managed_windows
+            displayName: Managed (Windows)
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: libs
+            additionalArgs: --skipExternals="all"
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the native folder
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (macOS)
+          parameters:
+            name: managed_macos
+            displayName: Managed (macOS)
+            buildAgent: ${{ parameters.buildAgentMac }}
+            target: libs
+            additionalArgs: --skipExternals="all"
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the native folder
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Managed (Linux)
+          parameters:
+            name: managed_linux
+            displayName: Managed (Linux)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            packages: $(MANAGED_LINUX_PACKAGES)
+            target: libs
+            additionalArgs: --skipExternals="all"
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - pwsh: Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the native folder
+
+    - stage: tests
+      displayName: Tests
+      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+        dependsOn: prepare
+      ${{ else }}:
+        dependsOn: native
+      jobs:
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netfx (Windows)
+          parameters:
+            name: tests_netfx_windows
+            displayName: Windows (.NET Framework)
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: tests-netfx
+            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the .NET Framework test results
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testRunTitle: 'Windows .NET Framework Tests'
+            publishArtifacts:
+              - name: testlogs_netfx_windows
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netcore (Windows)
+          parameters:
+            name: tests_netcore_windows
+            displayName: Windows (.NET Core)
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: tests-netcore
+            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the .NET Core test results
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testRunTitle: 'Windows .NET Core Tests'
+            publishArtifacts:
+              - name: testlogs_netcore_windows
+                always: true
+                path: 'output/logs/testlogs'
+              - name: coverage_netcore_windows
+                path: 'output/coverage'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netcore (macOS)
+          parameters:
+            name: tests_netcore_macos
+            displayName: macOS (.NET Core)
+            buildAgent: ${{ parameters.buildAgentMac }}
+            target: tests-netcore
+            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the .NET Core test results
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testRunTitle: 'macOS .NET Core Tests'
+            publishArtifacts:
+              - name: testlogs_netcore_macos
+                always: true
+                path: 'output/logs/testlogs'
+              - name: coverage_netcore_macos
+                path: 'output/coverage'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netcore (Linux)
+          parameters:
+            name: tests_netcore_linux
+            displayName: Linux (.NET Core)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            packages: $(MANAGED_LINUX_PACKAGES)
+            target: tests-netcore
+            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the .NET Core test results
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testRunTitle: 'Linux .NET Core Tests'
+            publishArtifacts:
+              - name: testlogs_netcore_linux
+                always: true
+                path: 'output/logs/testlogs'
+              - name: coverage_netcore_linux
+                path: 'output/coverage'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|android (macOS)
+          parameters:
+            name: tests_android_macos
+            displayName: Android (macOS)
+            buildAgent: ${{ parameters.buildAgentAndroidTests }}
+            target: tests-android
+            additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            preBuildSteps:
+              - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
+                displayName: Install the Android emulator
+              - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
+                displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Android test results
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testRunTitle: 'Android Tests (API $(ANDROID_TEST_DEVICE_VERSION))'
+            publishArtifacts:
+              - name: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|ios (macOS)
+          parameters:
+            name: tests_ios_macos
+            displayName: iOS (macOS)
+            buildAgent: ${{ parameters.buildAgentMac }}
+            target: tests-ios
+            additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            preBuildSteps:
+              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the iOS test results
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testRunTitle: 'iOS Tests (v$(IOS_TEST_DEVICE_VERSION))'
+            publishArtifacts:
+              - name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|maccatalyst (macOS)
+          parameters:
+            name: tests_maccatalyst_macos
+            displayName: Mac Catalyst (macOS)
+            continueOnError: true
+            buildAgent: ${{ parameters.buildAgentMac }}
+            target: tests-maccatalyst
+            additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            preBuildSteps:
+              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Mac Catalyst test results
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testRunTitle: 'Mac Catalyst Tests'
+            publishArtifacts:
+              - name: testlogs_maccatalyst
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests [WASM] (Linux)
+          parameters:
+            name: tests_wasm_linux
+            displayName: WASM (Linux)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            packages: $(MANAGED_LINUX_PACKAGES) ninja-build
+            target: tests-wasm
+            additionalArgs: --skipExternals="all" --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
+            installAndroidSdk: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            installEmsdk: true
+            initScript: source ~/emsdk/emsdk_env.sh
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the WASM test results
+                condition: always()
+                inputs:
+                  testResultsFormat: xUnit
+                  testResultsFiles: 'output/logs/testlogs/**/*.xml'
+                  testRunTitle: 'Linux WASM Tests'
+            publishArtifacts:
+              - name: testlogs_wasm
+                always: true
+                path: 'output/logs/testlogs'
+        # TODO: add tests for linux alpine
+        # TODO: add tests for linux no dependencies
+        # TODO: add tests for windows nano server
+        - job: coverage_reports                      # Coverage Reports
+          displayName: Coverage Reports
+          pool: ${{ parameters.buildAgentHost.pool }}
+          dependsOn:
+            - tests_netcore_windows
+            - tests_netcore_macos
+            - tests_netcore_linux
+          steps:
+            - checkout: self
+            - pwsh: ./scripts/set-build-variables.ps1
+              displayName: Configure build variables
+            - task: DownloadBuildArtifacts@1
+              displayName: Download the coverage_netcore_windows artifact
+              inputs:
+                artifactName: coverage_netcore_windows
+                downloadPath: output
+            - task: DownloadBuildArtifacts@1
+              displayName: Download the coverage_netcore_macos artifact
+              inputs:
+                artifactName: coverage_netcore_macos
+                downloadPath: output
+            - task: DownloadBuildArtifacts@1
+              displayName: Download the coverage_netcore_linux artifact
+              inputs:
+                artifactName: coverage_netcore_linux
+                downloadPath: output
+            - task: PublishCodeCoverageResults@1
+              displayName: 'Publish the code coverage results'
+              inputs:
+                codeCoverageTool: Cobertura
+                summaryFileLocation: 'output/**/Cobertura.xml'
+
+    - stage: samples
+      displayName: Samples
+      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+        dependsOn: prepare
+      ${{ else }}:
+        dependsOn: package
+      jobs:
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Windows)
+          parameters:
+            name: samples_windows
+            displayName: Windows
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: samples
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
+            postBuildSteps:
+              - pwsh: Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
+                displayName: Delete the nugets folder
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (macOS)
+          parameters:
+            name: samples_macos
+            displayName: macOS
+            buildAgent: ${{ parameters.buildAgentMac }}
+            target: samples
+            installNinja: true
+            shouldPublish: false
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
+            preBuildSteps:
+              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
+          parameters:
+            name: samples_linux
+            displayName: Linux
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            packages: $(MANAGED_LINUX_PACKAGES)
+            target: samples
+            shouldPublish: false
+            requiredArtifacts:
+              - name: nuget
+                dir: nugets
+            installEmsdk: true
+            initScript: source ~/emsdk/emsdk_env.sh

@@ -1,0 +1,169 @@
+parameters:
+  - name: isSplitPipeline
+    type: boolean
+    default: false
+  - name: buildAgentHost
+    type: object
+  - name: buildAgentWindows
+    type: object
+  - name: sdl
+    type: object
+  - name: use1ESPipelineTemplates
+    type: boolean
+  - name: enableSigning
+    type: boolean
+  - name: forceRealSigning
+    type: boolean
+
+stages:
+
+  - ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+    - stage: native
+      displayName: Native
+      dependsOn: prepare
+      jobs:
+        - template: /scripts/azure-templates-jobs-merger.yml@self
+          parameters:
+            name: native
+            displayName: Re-upload Native Artifacts
+            sdl: ${{ parameters.sdl }}
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              - name: native
+
+  - stage: package
+    displayName: Package NuGets
+    dependsOn: native
+    jobs:
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package NuGets
+        parameters:
+          name: package_normal_windows
+          displayName: Package NuGets
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentWindows}}
+          target: nuget-normal
+          additionalArgs: --skipExternals="all"
+          shouldPublish: false
+          requiredArtifacts:
+            - name: native
+          postBuildSteps:
+            - pwsh: |
+                Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
+                New-Item '.\output\' -Type Directory -Force | Out-Null
+              displayName: Re-organize the output folder for publishing
+            - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
+                Copy-Item -Path '.\scripts\SignList.xml' -Destination '.\output\nugets\'
+              displayName: Prepare the nugets artifact for publishing
+            - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
+              displayName: Prepare the nugets-symbols artifact for publishing
+            - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
+              displayName: Prepare the build artifact for publishing
+            - pwsh: |
+                $nupkgs = (Get-ChildItem ".\output\nugets*\*.*nupkg")
+                foreach ($nupkg in $nupkgs) {
+                  $filename = $nupkg.Name.TrimEnd('.nupkg')
+                  $dest = ".\output\extracted_nugets\$filename"
+                  Write-Host "Extracting '$nupkg' to '$dest'..."
+                  Expand-Archive $nupkg $dest
+                }
+              displayName: Extract all the .nupkg files for scanning
+          publishArtifacts:
+            - name: package_normal_windows
+              path: '.\output\output\'
+            - name: nuget
+              path: '.\output\nugets'
+            - name: nuget_symbols
+              path: '.\output\nugets-symbols'
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package Special NuGets
+        parameters:
+          name: package_special_windows
+          displayName: Package Special NuGets
+          sdl: ${{ parameters.sdl }}
+          buildAgent: ${{ parameters.buildAgentWindows}}
+          dependsOn: package_normal_windows
+          target: nuget-special
+          additionalArgs: --skipExternals="all" --exclusive
+          shouldPublish: false
+          requiredArtifacts:
+            - name: native
+            - name: nuget
+              dir: nugets
+              currentRun: true
+            - name: nuget_symbols
+              dir: nugets-symbols
+              currentRun: true
+          postBuildSteps:
+            - pwsh: |
+                Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
+                Remove-Item ./output/nugets-symbols/ -Recurse -Force -ErrorAction Continue
+                Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
+                New-Item '.\output\' -Type Directory -Force | Out-Null
+              displayName: Re-organize the output folder for publishing
+            - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
+              displayName: Prepare the nugets-special artifact for publishing
+            - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
+              displayName: Prepare the build artifact for publishing
+          publishArtifacts:
+            - name: package_special_windows
+              path: '.\output\output\'
+            - name: nuget_special
+              path: '.\output\nugets-special'
+
+  - ${{ if eq(parameters.enableSigning, 'true') }}:
+    - stage: signing
+      displayName: Sign NuGets
+      dependsOn: package
+      jobs:
+        - template: sign-artifacts/jobs/v3.yml@xamarin-templates
+          parameters:
+            ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+              signType: 'Real'
+            ${{ else }}:
+              signType: 'Test'
+            use1ESTemplate: ${{ parameters.use1ESPipelineTemplates }}
+            usePipelineArtifactTasks: true
+
+  - ${{ if eq(parameters.sdl.apiscan.enabled, 'true') }}:
+    - template: security/apiscan/v0.yml@xamarin-templates
+      parameters:
+        windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
+        windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
+        timeoutInMinutes: 480
+        stageDependsOn:
+          - package
+        scanArtifacts:
+          - nuget
+          - nuget_symbols
+          - native_msvc
+        apiScanSoftwareName: 'SkiaSharp'
+        apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
+        apiScanPreserveLogsFolder: true
+        apiScanAuthConnectionString: 'runAs=App;AppId=$(ApiScanClientId)'
+        apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
+        preScanSteps:
+          - pwsh: |
+              $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
+              $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
+              $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
+              $destFile = "$destFolder\APIScanSurrogates.xml"
+              New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
+              $surrogateContents = (Get-Content $surrogateFile)
+              $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
+              $surrogateContents | Set-Content $destFile
+            displayName: Generate the surrogate files
+          - pwsh: |
+              $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
+              foreach ($nupkg in $nupkgs) {
+                $filename = $nupkg.Name.TrimEnd('.nupkg')
+                $dest = "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted\$filename"
+                Write-Host "Extracting '$nupkg' to '$dest'..."
+                Expand-Archive $nupkg $dest
+                Remove-Item $nupkg
+              }
+            displayName: Extract all the .nupkg files
