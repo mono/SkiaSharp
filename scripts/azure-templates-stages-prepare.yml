@@ -1,6 +1,8 @@
 parameters:
   - name: buildAgentHost
     type: object
+  - name: sdl
+    type: object
 
 stages:
   - stage: prepare
@@ -16,3 +18,9 @@ stages:
             sparseCheckoutDirectories: scripts/set-build-variables.ps1
           - pwsh: ./scripts/set-build-variables.ps1 -UpdateBuildNumber
             displayName: Configure build variables
+          - pwsh: |
+              $sdl = "
+              ${{ convertToJson(parameters.sdl) }}"
+              "
+              Write-Host "SDL configuration: $sdl"
+            displayName: Log the full SDL configuration

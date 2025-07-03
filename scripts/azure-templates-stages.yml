@@ -51,6 +51,7 @@ stages:
   - template: /scripts/azure-templates-stages-prepare.yml@self
     parameters:
       buildAgentHost: ${{ parameters.buildAgentHost }}
+      sdk: ${{ parameters.sdl }}
 
   - ${{ if in(parameters.buildPipelineType, 'native', 'complete') }}:
     - template: /scripts/azure-templates-stages-native.yml@self
