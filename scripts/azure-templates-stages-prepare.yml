@@ -19,8 +19,8 @@ stages:
           - pwsh: ./scripts/set-build-variables.ps1 -UpdateBuildNumber
             displayName: Configure build variables
           - pwsh: |
-              $sdl = "
-              ${{ convertToJson(parameters.sdl) }}"
-              "
+              $sdl = @'
+              ${{ convertToJson(parameters.sdl) }}
+              '@
               Write-Host "SDL configuration: $sdl"
             displayName: Log the full SDL configuration
