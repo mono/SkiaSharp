@@ -152,13 +152,31 @@ namespace SkiaSharp.HarfBuzz
 			return Shape(buffer, xOffset, yOffset, font);
 		}
 
+		public Result Shape(ReadOnlySpan<char> text, SKFont font) =>
+			Shape(text, 0, 0, font);
+
+		public Result Shape(ReadOnlySpan<char> text, float xOffset, float yOffset, SKFont font)
+		{
+			if (text.IsEmpty)
+			{
+				return new Result();
+			}
+
+			using var buffer = new Buffer();
+			buffer.AddUtf16(text);
+
+			buffer.GuessSegmentProperties();
+
+			return Shape(buffer, xOffset, yOffset, font);
+		}
+
 		public class Result
 		{
 			public Result()
 			{
-				Codepoints = new uint[0];
-				Clusters = new uint[0];
-				Points = new SKPoint[0];
+				Codepoints = Array.Empty<uint>();
+				Clusters = Array.Empty<uint>();
+				Points = Array.Empty<SKPoint>();
 				Width = 0f;
 			}
 
