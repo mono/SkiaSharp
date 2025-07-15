@@ -17,6 +17,10 @@ jobs:
       contents: read
       issues: write
       models: read
+    env:
+      TRIAGE_AI_MODEL: openai/gpt-4o
+      TRIAGE_AI_ENDPOINT: ${{ secrets.TRIAGE_AI_ENDPOINT }}
+      TRIAGE_GITHUB_TOKEN: ${{ secrets.TRIAGE_GITHUB_TOKEN }}
     steps:
 
       - name: Checkout
