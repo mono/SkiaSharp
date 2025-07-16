@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using HarfBuzzSharp;
@@ -55,6 +56,25 @@ namespace SkiaSharp.HarfBuzz.Tests
 		}
 
 		[SkippableFact]
+		public void CorrectlyShapesArabicScriptAtAnOffsetWithSpan()
+		{
+			var clusters = new uint[] { 2, 1, 0 };
+			var codepoints = new uint[] { 629, 668, 891 };
+			var points = new SKPoint[] { new SKPoint(100, 200), new SKPoint(128.375f, 200), new SKPoint(142.125f, 200) };
+
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var shaper = new SKShaper(tf))
+			using (var font = new SKFont { Size = 64, Typeface = tf })
+			{
+				var result = shaper.Shape("متن".AsSpan(), 100, 200, font);
+
+				Assert.Equal(clusters, result.Clusters);
+				Assert.Equal(codepoints, result.Codepoints);
+				Assert.Equal(points, result.Points);
+			}
+		}
+
+		[SkippableFact]
 		public void CorrectlyShapesArabicScript()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
@@ -66,6 +86,25 @@ namespace SkiaSharp.HarfBuzz.Tests
 			using (var font = new SKFont { Size = 64, Typeface = tf })
 			{
 				var result = shaper.Shape("متن", font);
+
+				Assert.Equal(clusters, result.Clusters);
+				Assert.Equal(codepoints, result.Codepoints);
+				Assert.Equal(points, result.Points);
+			}
+		}
+
+		[SkippableFact]
+		public void CorrectlyShapesArabicScriptWithSpan()
+		{
+			var clusters = new uint[] { 2, 1, 0 };
+			var codepoints = new uint[] { 629, 668, 891 };
+			var points = new SKPoint[] { new SKPoint(0, 0), new SKPoint(28.375f, 0), new SKPoint(42.125f, 0) };
+
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var shaper = new SKShaper(tf))
+			using (var font = new SKFont { Size = 64, Typeface = tf })
+			{
+				var result = shaper.Shape("متن".AsSpan(), font);
 
 				Assert.Equal(clusters, result.Clusters);
 				Assert.Equal(codepoints, result.Codepoints);
