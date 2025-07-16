@@ -17,6 +17,8 @@ jobs:
       contents: read
       issues: write
       models: read
+    env:
+      TRIAGE_AI_TOKEN: ${{ secrets.TRIAGE_AI_TOKEN }}
     steps:
 
       - name: Checkout
@@ -54,5 +56,6 @@ jobs:
         uses: mattleibow/triage-assistant@v0
         with:
           issue: ${{ inputs.issue_number || github.event.issue.number }}
-          apply-labels: false
-          apply-comment: false
+          apply-labels: true
+          apply-comment: true
+          dry-run: true
