@@ -12,6 +12,7 @@ namespace SkiaSharp
 		Vulkan = 2,
 		Dawn = 3,
 		Direct3D = 4,
+		Unsupported = 5,
 	}
 
 	public static partial class SkiaExtensions
@@ -22,8 +23,9 @@ namespace SkiaSharp
 				GRBackend.Metal => GRBackendNative.Metal,
 				GRBackend.OpenGL => GRBackendNative.OpenGL,
 				GRBackend.Vulkan => GRBackendNative.Vulkan,
-				GRBackend.Dawn => GRBackendNative.Dawn,
+				GRBackend.Dawn => GRBackendNative.Unsupported,
 				GRBackend.Direct3D => GRBackendNative.Direct3D,
+				GRBackend.Unsupported => GRBackendNative.Unsupported,
 				_ => throw new ArgumentOutOfRangeException (nameof (backend), $"Unknown backend: '{backend}'"),
 			};
 
@@ -33,8 +35,8 @@ namespace SkiaSharp
 				GRBackendNative.Metal => GRBackend.Metal,
 				GRBackendNative.OpenGL => GRBackend.OpenGL,
 				GRBackendNative.Vulkan => GRBackend.Vulkan,
-				GRBackendNative.Dawn => GRBackend.Dawn,
 				GRBackendNative.Direct3D => GRBackend.Direct3D,
+				GRBackendNative.Unsupported => GRBackend.Unsupported,
 				_ => throw new ArgumentOutOfRangeException (nameof (backend), $"Unknown backend: '{backend}'"),
 			};
 
@@ -60,6 +62,7 @@ namespace SkiaSharp
 				SKColorType.Alpha16 => SKColorTypeNative.A16Unorm,
 				SKColorType.Rg1616 => SKColorTypeNative.R16g16Unorm,
 				SKColorType.Rgba16161616 => SKColorTypeNative.R16g16b16a16Unorm,
+				SKColorType.Rgba10x6 => SKColorTypeNative.Rgba10x6,
 				SKColorType.Bgra1010102 => SKColorTypeNative.Bgra1010102,
 				SKColorType.Bgr101010x => SKColorTypeNative.Bgr101010x,
 				SKColorType.Bgr101010xXR => SKColorTypeNative.Bgr101010xXr,
@@ -90,6 +93,7 @@ namespace SkiaSharp
 				SKColorTypeNative.A16Unorm => SKColorType.Alpha16,
 				SKColorTypeNative.R16g16Unorm => SKColorType.Rg1616,
 				SKColorTypeNative.R16g16b16a16Unorm => SKColorType.Rgba16161616,
+				SKColorTypeNative.Rgba10x6 => SKColorType.Rgba10x6,
 				SKColorTypeNative.Bgra1010102 => SKColorType.Bgra1010102,
 				SKColorTypeNative.Bgr101010x => SKColorType.Bgr101010x,
 				SKColorTypeNative.Bgr101010xXr => SKColorType.Bgr101010xXR,

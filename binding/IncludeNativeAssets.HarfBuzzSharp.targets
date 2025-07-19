@@ -2,11 +2,15 @@
 
   <!-- This file is exactly the same as IncludeNativeAssets.SkiaSharp.targets, but with a find-replace 'SkiaSharp' to 'HarfBuzzSharp' -->
 
-  <ItemGroup Condition="!$(TargetFramework.Contains('-'))">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+  <PropertyGroup>
+    <BuildArch>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant)</BuildArch>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop'))">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(BuildArch)\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(Platform)\libHarfBuzzSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\osx\libHarfBuzzSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\linux\x64\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\linux\$(BuildArch)\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\linux\$(Platform)\libHarfBuzzSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
@@ -18,7 +22,7 @@
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == ''" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(BuildArch)\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == ''" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-ios')) and '$(RuntimeIdentifier)' != ''">
@@ -62,13 +66,18 @@
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\**\*.a" Visible="false" />
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true'">
+  <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
+    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_HarfBuzzSharpNativeBinaryType>
+    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_HarfBuzzSharpNativeBinaryType>
+    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_HarfBuzzSharpNativeBinaryType),simd</_HarfBuzzSharpNativeBinaryType>
+    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' != 'True'">$(_HarfBuzzSharpNativeBinaryType)</_HarfBuzzSharpNativeBinaryType>
   </PropertyGroup>
-  <ItemGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' and '$(TargetFrameworkVersion)' != ''">
+  <ItemGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != ''">
     <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
-    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\3.1.12\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
-    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\3.1.34\st\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
+    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\3.1.12\$(_HarfBuzzSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
+    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\3.1.34\$(_HarfBuzzSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
+    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\3.1.56\$(_HarfBuzzSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0'))" />
   </ItemGroup>
 
 </Project>

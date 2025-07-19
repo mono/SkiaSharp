@@ -80,11 +80,19 @@ namespace SkiaSharp
 		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) =>
 			src?.ToShader (tmx, tmy, sampling) ?? throw new ArgumentNullException (nameof (src));
 
+		[Obsolete ("Use CreateImage(SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) instead.")]
+		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality) =>
+			src?.ToShader (tmx, tmy, quality.ToSamplingOptions()) ?? throw new ArgumentNullException (nameof (src));
+
 		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix) =>
 			src?.ToShader (tmx, tmy, localMatrix) ?? throw new ArgumentNullException (nameof (src));
 
 		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) =>
 			src?.ToShader (tmx, tmy, sampling, localMatrix) ?? throw new ArgumentNullException (nameof (src));
+
+		[Obsolete ("Use CreateImage(SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) instead.")]
+		public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality, SKMatrix localMatrix) =>
+			src?.ToShader (tmx, tmy, quality.ToSamplingOptions(), localMatrix) ?? throw new ArgumentNullException (nameof (src));
 
 		// CreatePicture
 
@@ -406,6 +414,23 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (shaderB));
 
 			return GetObject (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle));
+		}
+
+		// CreateBlend
+
+		public static SKShader CreateBlend (SKBlendMode mode, SKShader shaderA, SKShader shaderB)
+		{
+			_ = shaderA ?? throw new ArgumentNullException (nameof (shaderA));
+			_ = shaderB ?? throw new ArgumentNullException (nameof (shaderB));
+			return GetObject (SkiaApi.sk_shader_new_blend (mode, shaderA.Handle, shaderB.Handle));
+		}
+
+		public static SKShader CreateBlend (SKBlender blender, SKShader shaderA, SKShader shaderB)
+		{
+			_ = shaderA ?? throw new ArgumentNullException (nameof (shaderA));
+			_ = shaderB ?? throw new ArgumentNullException (nameof (shaderB));
+			_ = blender ?? throw new ArgumentNullException (nameof (blender));
+			return GetObject (SkiaApi.sk_shader_new_blender (blender.Handle, shaderA.Handle, shaderB.Handle));
 		}
 
 		// CreateColorFilter

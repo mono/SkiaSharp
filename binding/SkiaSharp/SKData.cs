@@ -19,6 +19,11 @@ namespace SkiaSharp
 
 		static SKData ()
 		{
+			// TODO: This is not the best way to do this as it will create a lot of objects that
+			//       might not be needed, but it is the only way to ensure that the static
+			//       instances are created before any access is made to them.
+			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
+
 			empty = new SKDataStatic (SkiaApi.sk_data_new_empty ());
 		}
 
@@ -181,7 +186,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 
 			try {
-				return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));	
+				return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
 			} finally {
 				GC.KeepAlive(stream);
 			}
@@ -202,7 +207,8 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKDataReleaseDelegateProxy, out _, out var ctx);
+			DelegateProxies.Create (del, out _, out var ctx);
+			var proxy = del is not null ? DelegateProxies.SKDataReleaseProxy : null;
 			return GetObject (SkiaApi.sk_data_new_with_proc ((void*)address, (IntPtr)length, proxy, (void*)ctx));
 		}
 

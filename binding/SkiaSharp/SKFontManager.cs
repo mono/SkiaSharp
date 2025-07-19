@@ -14,6 +14,11 @@ namespace SkiaSharp
 
 		static SKFontManager ()
 		{
+			// TODO: This is not the best way to do this as it will create a lot of objects that
+			//       might not be needed, but it is the only way to ensure that the static
+			//       instances are created before any access is made to them.
+			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
+
 			defaultManager = new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ());
 		}
 

@@ -61,7 +61,7 @@ namespace SkiaSharp
 			base.DisposeManaged ();
 		}
 
-		protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
+		protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
 			var start = offset;
 
@@ -123,7 +123,7 @@ namespace SkiaSharp
 			return (IntPtr)(offset - start);
 		}
 
-		protected override IntPtr OnPeek (IntPtr buffer, IntPtr size)
+		protected internal override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
 			if (offset >= bufferLength)
 			{
@@ -143,7 +143,7 @@ namespace SkiaSharp
 			return (IntPtr)bytesRead;
 		}
 
-		protected override bool OnIsAtEnd ()
+		protected internal override bool OnIsAtEnd ()
 		{
 			if (offset < bufferedSoFar)
 			{
@@ -155,7 +155,7 @@ namespace SkiaSharp
 			return stream.IsAtEnd;
 		}
 
-		protected override bool OnRewind ()
+		protected internal override bool OnRewind ()
 		{
 			// only allow a rewind if we have not exceeded the buffer.
 			if (offset <= bufferLength)
@@ -167,23 +167,23 @@ namespace SkiaSharp
 			return false;
 		}
 
-		protected override bool OnHasLength () => hasLength;
+		protected internal override bool OnHasLength () => hasLength;
 
-		protected override IntPtr OnGetLength () => (IntPtr)streamLength;
-
-		// seeking is not supported
-		protected override bool OnHasPosition () => false;
+		protected internal override IntPtr OnGetLength () => (IntPtr)streamLength;
 
 		// seeking is not supported
-		protected override IntPtr OnGetPosition () => (IntPtr)0;
+		protected internal override bool OnHasPosition () => false;
 
 		// seeking is not supported
-		protected override bool OnSeek (IntPtr position) => false;
+		protected internal override IntPtr OnGetPosition () => (IntPtr)0;
 
 		// seeking is not supported
-		protected override bool OnMove (int offset) => false;
+		protected internal override bool OnSeek (IntPtr position) => false;
+
+		// seeking is not supported
+		protected internal override bool OnMove (int offset) => false;
 
 		// duplicating or forking is not supported
-		protected override IntPtr OnCreateNew () => IntPtr.Zero;
+		protected internal override IntPtr OnCreateNew () => IntPtr.Zero;
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 #region Namespaces
 
@@ -17,7 +18,9 @@ using gr_recording_context_t = System.IntPtr;
 using gr_vk_extensions_t = System.IntPtr;
 using gr_vk_memory_allocator_t = System.IntPtr;
 using gr_vkinterface_t = System.IntPtr;
+using sk_bbh_factory_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
+using sk_blender_t = System.IntPtr;
 using sk_canvas_t = System.IntPtr;
 using sk_codec_t = System.IntPtr;
 using sk_colorfilter_t = System.IntPtr;
@@ -58,6 +61,7 @@ using sk_region_iterator_t = System.IntPtr;
 using sk_region_spanerator_t = System.IntPtr;
 using sk_region_t = System.IntPtr;
 using sk_rrect_t = System.IntPtr;
+using sk_rtree_factory_t = System.IntPtr;
 using sk_runtimeeffect_t = System.IntPtr;
 using sk_shader_t = System.IntPtr;
 using sk_stream_asset_t = System.IntPtr;
@@ -109,8 +113,13 @@ namespace SkiaSharp
 
 		// void sksg_invalidation_controller_begin(sksg_invalidation_controller_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sksg_invalidation_controller_begin (sksg_invalidation_controller_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sksg_invalidation_controller_begin (sksg_invalidation_controller_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -123,8 +132,13 @@ namespace SkiaSharp
 
 		// void sksg_invalidation_controller_delete(sksg_invalidation_controller_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sksg_invalidation_controller_delete (sksg_invalidation_controller_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sksg_invalidation_controller_delete (sksg_invalidation_controller_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -137,8 +151,13 @@ namespace SkiaSharp
 
 		// void sksg_invalidation_controller_end(sksg_invalidation_controller_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sksg_invalidation_controller_end (sksg_invalidation_controller_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sksg_invalidation_controller_end (sksg_invalidation_controller_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -151,8 +170,13 @@ namespace SkiaSharp
 
 		// void sksg_invalidation_controller_get_bounds(sksg_invalidation_controller_t* instance, sk_rect_t* bounds)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sksg_invalidation_controller_get_bounds (sksg_invalidation_controller_t instance, SKRect* bounds);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sksg_invalidation_controller_get_bounds (sksg_invalidation_controller_t instance, SKRect* bounds);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -165,8 +189,13 @@ namespace SkiaSharp
 
 		// void sksg_invalidation_controller_inval(sksg_invalidation_controller_t* instance, sk_rect_t* rect, sk_matrix_t* matrix)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sksg_invalidation_controller_inval (sksg_invalidation_controller_t instance, SKRect* rect, SKMatrix* matrix);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sksg_invalidation_controller_inval (sksg_invalidation_controller_t instance, SKRect* rect, SKMatrix* matrix);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -179,8 +208,13 @@ namespace SkiaSharp
 
 		// sksg_invalidation_controller_t* sksg_invalidation_controller_new()
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sksg_invalidation_controller_t sksg_invalidation_controller_new ();
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sksg_invalidation_controller_t sksg_invalidation_controller_new ();
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -193,8 +227,13 @@ namespace SkiaSharp
 
 		// void sksg_invalidation_controller_reset(sksg_invalidation_controller_t* instance)
 		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sksg_invalidation_controller_reset (sksg_invalidation_controller_t instance);
+		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sksg_invalidation_controller_reset (sksg_invalidation_controller_t instance);
+		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -213,7 +252,9 @@ namespace SkiaSharp
 #endregion Functions
 
 #region Delegates
+#if !USE_LIBRARY_IMPORT
 
+#endif // !USE_LIBRARY_IMPORT
 #endregion
 
 #region Structs
@@ -221,5 +262,9 @@ namespace SkiaSharp
 #endregion
 
 #region Enums
+
+#endregion
+
+#region DelegateProxies
 
 #endregion

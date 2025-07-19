@@ -6,15 +6,19 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- glibc -->
-    <PackageFile Include="..\..\output\native\linux\x64\libHarfBuzzSharp*" PackagePath="runtimes\linux-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\x86\libHarfBuzzSharp*" PackagePath="runtimes\linux-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\arm64\libHarfBuzzSharp*" PackagePath="runtimes\linux-arm64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\arm\libHarfBuzzSharp*" PackagePath="runtimes\linux-arm\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linux\x64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-x64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linux\x86\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-x86\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linux\arm64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-arm64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linux\arm\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-arm\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linux\riscv64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-riscv64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linux\loongarch64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-loongarch64\native\%(Filename)%(Extension)" />
     <!-- Musl -->
-    <PackageFile Include="..\..\output\native\alpine\x64\libHarfBuzzSharp*" PackageFile="runtimes\linux-musl-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\x86\libHarfBuzzSharp*" PackageFile="runtimes\linux-musl-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\arm64\libHarfBuzzSharp*" PackageFile="runtimes\linux-musl-arm64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\arm\libHarfBuzzSharp*" PackageFile="runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpine\x64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-x64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpine\x86\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-x86\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpine\arm64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-arm64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpine\arm\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpine\riscv64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-riscv64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpine\loongarch64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-musl-loongarch64\native\%(Filename)%(Extension)" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">

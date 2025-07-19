@@ -44,6 +44,8 @@ namespace SkiaSharp
 			SKData.EnsureStaticInstanceAreInitialized ();
 			SKFontManager.EnsureStaticInstanceAreInitialized ();
 			SKTypeface.EnsureStaticInstanceAreInitialized ();
+			SKBlender.EnsureStaticInstanceAreInitialized ();
+			SKColorFilter.EnsureStaticInstanceAreInitialized ();
 		}
 
 		internal SKObject (IntPtr handle, bool owns)
@@ -205,24 +207,6 @@ namespace SkiaSharp
 
 			return owner;
 		}
-
-		internal static T[] PtrToStructureArray<T> (IntPtr intPtr, int count)
-		{
-			var items = new T[count];
-			var size = Marshal.SizeOf<T> ();
-			for (var i = 0; i < count; i++) {
-				var newPtr = new IntPtr (intPtr.ToInt64 () + (i * size));
-				items[i] = Marshal.PtrToStructure<T> (newPtr);
-			}
-			return items;
-		}
-
-		internal static T PtrToStructure<T> (IntPtr intPtr, int index)
-		{
-			var size = Marshal.SizeOf<T> ();
-			var newPtr = new IntPtr (intPtr.ToInt64 () + (index * size));
-			return Marshal.PtrToStructure<T> (newPtr);
-		}
 	}
 
 	public abstract class SKNativeObject : IDisposable
@@ -330,7 +314,7 @@ namespace SkiaSharp
 			if (obj is ISKNonVirtualReferenceCounted nvrefcnt)
 				nvrefcnt.ReferenceNative ();
 			else
-				SkiaApi.sk_refcnt_safe_unref (obj.Handle);
+				SkiaApi.sk_refcnt_safe_ref (obj.Handle);
 		}
 
 		public static void SafeUnRef (this ISKReferenceCounted obj)

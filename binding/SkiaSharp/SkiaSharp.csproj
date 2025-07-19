@@ -5,9 +5,15 @@
     <AssemblyName>SkiaSharp</AssemblyName>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Nullable>enable</Nullable>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <WarningsAsErrors>$(WarningsAsErrors);CA1420;CA1421;</WarningsAsErrors>
+    <NoWarn>$(NoWarn);CS8826</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Android\SkiaSharp.NativeAssets.Android.csproj" Condition="$(TargetFramework.Contains('-android'))" />

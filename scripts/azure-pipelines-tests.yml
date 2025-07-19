@@ -9,7 +9,7 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: ubuntu-20.04
+        vmImage: ubuntu-22.04
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
@@ -25,7 +25,7 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: macos-13
+        vmImage: macos-14
         os: macos
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
@@ -33,11 +33,21 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: ubuntu-20.04
+        vmImage: ubuntu-22.04
         os: linux
+  - name: buildAgentAndroidTests
+    displayName: 'The build agent configuration for building the Android tests:'
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: macos-14
+        os: macos
+      parameters:
+        installXcode: false
 
 variables:
-  - template: /scripts/azure-pipelines-variables.yml@self
+  - template: /scripts/azure-templates-variables.yml@self
 
 resources:
   repositories:
@@ -52,17 +62,15 @@ resources:
       trigger: true
 
 extends:
-  template: /scripts/azure-template.yml@self
+  template: /scripts/azure-template-fake-1es.yml@self
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
-          buildPipelineType: 'tests'
+          buildPipelineType: 'test'
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
-          buildAgentWindowsNative: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
-          buildAgentMacNative: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
-          buildAgentLinuxNative: ${{ parameters.buildAgentLinux }}
+          buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}

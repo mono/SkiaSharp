@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public unsafe class SKSurface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
+	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
 		internal SKSurface (IntPtr h, bool owns)
 			: base (h, owns)
@@ -68,7 +68,8 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKSurfaceReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKSurfaceReleaseDelegateProxy, out _, out var ctx);
+			DelegateProxies.Create (del, out _, out var ctx);
+			var proxy = del != null ? DelegateProxies.SKSurfaceRasterReleaseProxy : null;
 			return GetObject (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
 		}
 
@@ -319,13 +320,16 @@ namespace SkiaSharp
 
 		public void Flush (bool submit, bool synchronous = false)
 		{
+			if (Context is not GRContext grContext)
+				return;
+
 			if (submit)
-				SkiaApi.sk_surface_flush_and_submit (Handle, synchronous);
+				grContext.Flush (submit, synchronous);
 			else
-				SkiaApi.sk_surface_flush (Handle);
+				grContext.Flush ();
 		}
 
-		internal static SKSurface GetObject (IntPtr handle) =>
-			handle == IntPtr.Zero ? null : new SKSurface (handle, true);
+		internal static SKSurface GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKSurface (h, o));
 	}
 }

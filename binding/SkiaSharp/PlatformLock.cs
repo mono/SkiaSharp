@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -38,7 +39,7 @@ namespace SkiaSharp.Internals
 	/// Helper class to create a IPlatformLock instance, by default according to the current platform
 	/// but also client toolkits can plugin their own implementation.
 	/// </summary>
-	public static class PlatformLock
+	public static partial class PlatformLock
 	{
 		/// <summary>
 		/// Creates a platform lock
@@ -67,9 +68,11 @@ namespace SkiaSharp.Internals
 		/// <returns>A reference to a new platform lock implementation</returns>
 		public static IPlatformLock DefaultFactory ()
 		{
+#if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)
 			if (PlatformConfiguration.IsWindows)
 				return new NonAlertableWin32Lock ();
 			else
+#endif
 				return new ReadWriteLock ();
 		}
 
@@ -89,14 +92,15 @@ namespace SkiaSharp.Internals
 			ReaderWriterLockSlim _lock = new ReaderWriterLockSlim ();
 		}
 
+#if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)
 		/// <summary>
 		/// Windows platform lock uses Win32 CRITICAL_SECTION
 		/// </summary>
-		class NonAlertableWin32Lock : IPlatformLock
+		partial class NonAlertableWin32Lock : IPlatformLock
 		{
 			public NonAlertableWin32Lock ()
 			{
-				_cs = Marshal.AllocHGlobal (Marshal.SizeOf<CRITICAL_SECTION> ());
+				_cs = Marshal.AllocHGlobal (Unsafe.SizeOf<CRITICAL_SECTION>());
 				if (_cs == IntPtr.Zero)
 					throw new OutOfMemoryException ("Failed to allocate memory for critical section");
 
@@ -146,6 +150,17 @@ namespace SkiaSharp.Internals
 				public UIntPtr SpinCount;
 			}
 
+#if USE_LIBRARY_IMPORT
+			[LibraryImport ("Kernel32.dll", SetLastError = true)]
+			[return: MarshalAs (UnmanagedType.Bool)]
+			private static partial bool InitializeCriticalSectionEx (IntPtr lpCriticalSection, uint dwSpinCount, uint Flags);
+			[LibraryImport ("Kernel32.dll")]
+			private static partial void DeleteCriticalSection (IntPtr lpCriticalSection);
+			[LibraryImport ("Kernel32.dll")]
+			private static partial void EnterCriticalSection (IntPtr lpCriticalSection);
+			[LibraryImport ("Kernel32.dll")]
+			private static partial void LeaveCriticalSection (IntPtr lpCriticalSection);
+#else
 			[DllImport ("Kernel32.dll", SetLastError = true)]
 			[return: MarshalAs (UnmanagedType.Bool)]
 			static extern bool InitializeCriticalSectionEx (IntPtr lpCriticalSection, uint dwSpinCount, uint Flags);
@@ -155,7 +170,8 @@ namespace SkiaSharp.Internals
 			static extern void EnterCriticalSection (IntPtr lpCriticalSection);
 			[DllImport ("Kernel32.dll")]
 			static extern void LeaveCriticalSection (IntPtr lpCriticalSection);
+#endif
 		}
+#endif
 	}
-
 }

@@ -82,6 +82,39 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void MatrixMapsSpanPoints()
+		{
+			Span<SKPoint> source = stackalloc[] {
+				new SKPoint(0, 0),
+				new SKPoint(-10, -10),
+				new SKPoint(-10, 10),
+				new SKPoint(10, -10),
+				new SKPoint(10, 10),
+				new SKPoint(-5, -5),
+				new SKPoint(-5, 5),
+				new SKPoint(5, -5),
+				new SKPoint(5, 5),
+			};
+
+			Span<SKPoint> expectedResult = stackalloc[] {
+				new SKPoint(10, 10),
+				new SKPoint(0, 0),
+				new SKPoint(0, 20),
+				new SKPoint(20, 0),
+				new SKPoint(20, 20),
+				new SKPoint(5, 5),
+				new SKPoint(5, 15),
+				new SKPoint(15, 5),
+				new SKPoint(15, 15),
+			};
+
+			var matrix = SKMatrix.CreateTranslation(10, 10);
+			matrix.MapPoints(source, source);
+
+			Assert.True(expectedResult.SequenceEqual(source));
+		}
+
+		[SkippableFact]
 		public void MapRectCreatesModifiedRect()
 		{
 			var rect = SKRect.Create(2, 4, 6, 8);
@@ -132,6 +165,39 @@ namespace SkiaSharp.Tests
 			matrix.MapVectors(source, source);
 
 			Assert.Equal(expectedResult, source);
+		}
+
+		[SkippableFact]
+		public void MatrixMapsSpanVectors()
+		{
+			Span<SKPoint> source = stackalloc[] {
+				new SKPoint(0, 0),
+				new SKPoint(-10, -10),
+				new SKPoint(-10, 10),
+				new SKPoint(10, -10),
+				new SKPoint(10, 10),
+				new SKPoint(-5, -5),
+				new SKPoint(-5, 5),
+				new SKPoint(5, -5),
+				new SKPoint(5, 5),
+			};
+
+			Span<SKPoint> expectedResult = stackalloc[] {
+				new SKPoint(0, 0),
+				new SKPoint(-10, -10),
+				new SKPoint(-10, 10),
+				new SKPoint(10, -10),
+				new SKPoint(10, 10),
+				new SKPoint(-5, -5),
+				new SKPoint(-5, 5),
+				new SKPoint(5, -5),
+				new SKPoint(5, 5),
+			};
+
+			var matrix = SKMatrix.CreateTranslation(10, 10);
+			matrix.MapVectors(source, source);
+
+			Assert.True(expectedResult.SequenceEqual(source));
 		}
 
 		[SkippableFact]

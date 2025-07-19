@@ -45,7 +45,8 @@ Write-Host "Installing .NET workloads..."
   --source $feed1 `
   --source $feed2 `
   --source $feed3 `
-  --skip-sign-check
+  --skip-sign-check `
+  --verbosity diagnostic
 
 Write-Host "Installing Tizen workloads..."
 New-Item -ItemType Directory -Force './output/tmp' | Out-Null

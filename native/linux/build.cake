@@ -12,6 +12,9 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower() 
 var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
+var VERIFY_GLIBC_MAX_VAR = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.28"));
+var VERIFY_GLIBC_MAX = string.IsNullOrEmpty(VERIFY_GLIBC_MAX_VAR) ? null : System.Version.Parse(VERIFY_GLIBC_MAX_VAR);
+
 string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("cxx", EnvironmentVariable("CXX"));
 string AR = Argument("ar", EnvironmentVariable("AR"));
@@ -31,21 +34,37 @@ if (!string.IsNullOrEmpty(AR))
 
 void CheckDeps(FilePath so)
 {
-    if (VERIFY_EXCLUDED == null || VERIFY_EXCLUDED.Length == 0)
-        return;
-
     Information($"Making sure that there are no dependencies on: {string.Join(", ", VERIFY_EXCLUDED)}");
 
-    RunProcess("readelf", $"-d {so}", out var stdout);
-    Information(String.Join(Environment.NewLine + "    ", stdout));
+    RunProcess("readelf", $"-dV {so}", out var stdoutEnum);
+    var stdout = stdoutEnum.ToArray();
 
-    var needed = stdout
-        .Where(l => l.Contains("(NEEDED)"))
-        .ToList();
+    var needed = MatchRegex(@"\(NEEDED\).+\[(.+)\]", stdout).ToList();
+
+    Information("Dependencies:");
+    foreach (var need in needed) {
+        Information($"    {need}");
+    }
 
     foreach (var exclude in VERIFY_EXCLUDED) {
         if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
             throw new Exception($"{so} contained a dependency on {exclude}.");
+    }
+
+    var glibcs = MatchRegex(@"GLIBC_([\w\.\d]+)", stdout).Distinct().ToList();
+    glibcs.Sort();
+
+    Information("GLIBC:");
+    foreach (var glibc in glibcs) {
+        Information($"    {glibc}");
+    }
+    
+    if (VERIFY_GLIBC_MAX != null) {
+        foreach (var glibc in glibcs) {
+            var version = System.Version.Parse(glibc);
+            if (version > VERIFY_GLIBC_MAX)
+                throw new Exception($"{so} contained a dependency on GLIBC {glibc} which is greater than the expected GLIBC {VERIFY_GLIBC_MAX}.");
+        }
     }
 }
 
@@ -54,11 +73,30 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
+    // patch the gclient_paths.py for Python 3.7
+    {
+        var gclient = DEPOT_PATH.CombineWithFilePath("gclient_paths.py");
+        var contents = System.IO.File.ReadAllText(gclient.FullPath);
+        var newContents = contents
+            .Replace("@functools.lru_cache", "@functools.lru_cache()")
+            .Replace("@functools.lru_cache()()", "@functools.lru_cache()");
+        if (contents != newContents)
+            System.IO.File.WriteAllText(gclient.FullPath, newContents);
+    }
+
     foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
 
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
+
+        // This is terrible! But, Alpine (musl) does not define this
+        // so we are forced to for dng_sdk. If this ever becomes a problem
+        // for other libraries, we will need to find a better solution.
+        var wordSize = ReduceArch(arch).EndsWith("64") ? "64" : "32";
+        var wordSizeDefine = VARIANT.ToLower().StartsWith("alpine")
+            ? $", '-D__WORDSIZE={wordSize}'"
+            : $"";
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
@@ -77,7 +115,7 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' {wordSizeDefine} ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +

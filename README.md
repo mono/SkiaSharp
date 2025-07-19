@@ -5,7 +5,7 @@
 
 [![SkiaSharp.Views](https://img.shields.io/nuget/vpre/SkiaSharp.Views.svg?cacheSeconds=3600&label=SkiaSharp.Views%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views)
 [![SkiaSharp.Views.Maui.Controls](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Maui.Controls.svg?cacheSeconds=3600&label=SkiaSharp.Views.Maui.Controls%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls)
-[![SkiaSharp.Views.Uno](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Uno.svg?cacheSeconds=3600&label=SkiaSharp.Views.Uno%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Uno) 
+[![SkiaSharp.Views.Uno.WinUI](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Uno.WinUI.svg?cacheSeconds=3600&label=SkiaSharp.Views.Uno.WinUI%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Uno.WinUI) 
 
 [![discord](https://img.shields.io/badge/chat-.NET%20Discord-E60256.svg)](https://aka.ms/dotnet-discord)
 [![SkiaSharp API Docs](https://img.shields.io/badge/docs-skiasharp-1faece.svg)](https://docs.microsoft.com/dotnet/api/SkiaSharp)
@@ -63,10 +63,19 @@ However, these are easy to install as they are found on the various websites. If
  - To get started building, [go here](https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp).
  - If you are just wanting a custom Linux build, [go here](https://github.com/mono/SkiaSharp/wiki/Building-on-Linux)
 
+## Contributors
+
+<a href="https://github.com/mono/SkiaSharp/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=mono/SkiaSharp" />
+</a>
+
+
+Made with [contrib.rocks](https://contrib.rocks).
+
 ## Compare Code
 
 Here are some links to show the differences in our code as compared to Google's code.
 
-What version are we on? [**m115**](https://github.com/google/skia/tree/chrome/m115)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m115)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m115...mono:skiasharp)  
+What version are we on? [**m118**](https://github.com/google/skia/tree/chrome/m118)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m118)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m118...mono:skiasharp)  

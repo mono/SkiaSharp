@@ -30,7 +30,7 @@ namespace SkiaSharp
 			var pixels = Marshal.AllocCoTaskMem (info.BytesSize);
 			using (var pixmap = new SKPixmap (info, pixels)) {
 				// don't use the managed version as that is just extra overhead which isn't necessary
-				return GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, DelegateProxies.SKImageRasterReleaseDelegateProxyForCoTaskMem, null));
+				return GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, DelegateProxies.SKImageRasterReleaseProxyForCoTaskMem, null));
 			}
 		}
 
@@ -148,7 +148,8 @@ namespace SkiaSharp
 			var del = releaseProc != null && releaseContext != null
 				? new SKImageRasterReleaseDelegate ((addr, _) => releaseProc (addr, releaseContext))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageRasterReleaseDelegateProxy, out _, out var ctx);
+			DelegateProxies.Create (del, out _, out var ctx);
+			var proxy = del is not null ? DelegateProxies.SKImageRasterReleaseProxy : null;
 			return GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, proxy, (void*)ctx));
 		}
 
@@ -289,7 +290,8 @@ namespace SkiaSharp
 			var del = releaseProc != null && releaseContext != null
 				? new SKImageTextureReleaseDelegate ((_) => releaseProc (releaseContext))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageTextureReleaseDelegateProxy, out _, out var ctx);
+			DelegateProxies.Create (del, out _, out var ctx);
+			var proxy = del is not null ? DelegateProxies.SKImageTextureReleaseProxy : null;
 			return GetObject (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType.ToNative (), alpha, cs, proxy, (void*)ctx));
 		}
 
@@ -328,16 +330,16 @@ namespace SkiaSharp
 		// create a new image from a picture
 
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions) =>
-			FromPicture (picture, dimensions, null, null, false, null, null);
+			FromPicture (picture, dimensions, null, null, false, SKColorSpace.CreateSrgb (), null);
 
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, SKMatrix matrix) =>
-			FromPicture (picture, dimensions, &matrix, null, false, null, null);
+			FromPicture (picture, dimensions, &matrix, null, false, SKColorSpace.CreateSrgb (), null);
 
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, SKPaint paint) =>
-			FromPicture (picture, dimensions, null, paint, false, null, null);
+			FromPicture (picture, dimensions, null, paint, false, SKColorSpace.CreateSrgb (), null);
 
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, SKMatrix matrix, SKPaint paint) =>
-			FromPicture (picture, dimensions, &matrix, paint, false, null, null);
+			FromPicture (picture, dimensions, &matrix, paint, false, SKColorSpace.CreateSrgb (), null);
 
 		private static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, SKMatrix* matrix, SKPaint paint, bool useFloatingPointBitDepth, SKColorSpace colorspace, SKSurfaceProperties props)
 		{
@@ -345,7 +347,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (picture));
 
 			var p = paint?.Handle ?? IntPtr.Zero;
-			return GetObject (SkiaApi.sk_image_new_from_picture (picture.Handle, &dimensions, matrix, p, useFloatingPointBitDepth, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			var cs = colorspace?.Handle ?? IntPtr.Zero;
+			var prps = props?.Handle ?? IntPtr.Zero;
+			return GetObject (SkiaApi.sk_image_new_from_picture (picture.Handle, &dimensions, matrix, p, useFloatingPointBitDepth, cs, prps));
 		}
 
 		public SKData Encode ()
@@ -409,8 +413,16 @@ namespace SkiaSharp
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling) =>
 			ToShader (tileX, tileY, sampling, null);
 
+		[Obsolete ("Use ToShader(SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling) instead.")]
+		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKFilterQuality quality) =>
+			ToShader (tileX, tileY, quality.ToSamplingOptions(), null);
+
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix localMatrix) =>
 			ToShader (tileX, tileY, sampling, &localMatrix);
+
+		[Obsolete ("Use ToShader(SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix localMatrix) instead.")]
+		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKFilterQuality quality, SKMatrix localMatrix) =>
+			ToShader (tileX, tileY, quality.ToSamplingOptions(), &localMatrix);
 
 		private SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix* localMatrix) =>
 			SKShader.GetObject (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, &sampling, localMatrix));

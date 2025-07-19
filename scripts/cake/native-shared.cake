@@ -93,34 +93,45 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
     RunNinja(SKIA_PATH, $"out/{outDir}", target);
 }
 
-bool Skip(string arch)
+string ReduceArch(string arch)
 {
     arch = arch?.ToLower() ?? "";
-
-    if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains("all"))
-        return false;
 
     switch (arch) {
         case "win32":
         case "i386":
         case "i586":
-            arch = "x86";
-            break;
+        case "x86":
+            return "x86";
         case "x86_64":
-            arch = "x64";
-            break;
+        case "x64":
+            return "x64";
         case "armeabi-v7a":
         case "armel":
         case "armv7":
         case "armv7k":
-            arch = "arm";
-            break;
+        case "arm":
+            return "arm";
         case "arm64_32":
         case "arm64-v8a":
         case "aarch64":
-            arch = "arm64";
-            break;
+        case "arm64":
+            return "arm64";
+        case "riscv64":
+            return "riscv64";
+        case "loongarch64":
+            return "loongarch64";
     }
+
+    throw new Exception($"Unknown architecture: {arch}");
+}
+
+bool Skip(string arch)
+{
+    if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains("all"))
+        return false;
+
+    arch = ReduceArch(arch);
 
     if (BUILD_ARCH.Contains(arch))
         return false;

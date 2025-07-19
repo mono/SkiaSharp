@@ -63,7 +63,20 @@ namespace SkiaSharp
 			}
 		}
 
-#if __IOS__ || __MACOS__
+		public static GRContext CreateDirect3D (GRD3DBackendContext backendContext) =>
+			CreateDirect3D (backendContext, null);
+
+		public static GRContext CreateDirect3D (GRD3DBackendContext backendContext, GRContextOptions options)
+		{
+			if (backendContext == null)
+				throw new ArgumentNullException (nameof (backendContext));
+			if (options == null) {
+				return GetObject (SkiaApi.gr_direct_context_make_direct3d (backendContext.ToNative ()));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_direct_context_make_direct3d_with_options (backendContext.ToNative (), &opts));
+			}
+		}
 
 		// CreateMetal
 
@@ -75,18 +88,16 @@ namespace SkiaSharp
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));
 
-			var device = backendContext.Device;
-			var queue = backendContext.Queue;
+			var device = backendContext.DeviceHandle;
+			var queue = backendContext.QueueHandle;
 
 			if (options == null) {
-				return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)(IntPtr)device.Handle, (void*)(IntPtr)queue.Handle));
+				return GetObject (SkiaApi.gr_direct_context_make_metal ((void*)device, (void*)queue));
 			} else {
 				var opts = options.ToNative ();
-				return GetObject (SkiaApi.gr_direct_context_make_metal_with_options ((void*)(IntPtr)device.Handle, (void*)(IntPtr)queue.Handle, &opts));
+				return GetObject (SkiaApi.gr_direct_context_make_metal_with_options ((void*)device, (void*)queue, &opts));
 			}
 		}
-
-#endif
 
 		//
 
@@ -157,7 +168,7 @@ namespace SkiaSharp
 		public void PurgeUnlockedResources (long bytesToPurge, bool preferScratchResources) =>
 			SkiaApi.gr_direct_context_purge_unlocked_resources_bytes (Handle, (IntPtr)bytesToPurge, preferScratchResources);
 
-		internal static GRContext GetObject (IntPtr handle, bool owns = true) =>
-			GetOrAddObject (handle, owns, (h, o) => new GRContext (h, o));
+		internal static GRContext GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new GRContext (h, o));
 	}
 }

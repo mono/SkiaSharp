@@ -203,6 +203,11 @@ namespace SkiaSharp
 			set => SkiaApi.sk_paint_set_blendmode (Handle, value);
 		}
 
+		public SKBlender Blender {
+			get => SKBlender.GetObject (SkiaApi.sk_paint_get_blender (Handle));
+			set => SkiaApi.sk_paint_set_blender (Handle, value == null ? IntPtr.Zero : value.Handle);
+		}
+
 		[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.")]
 		public SKFilterQuality FilterQuality {
 			get => (SKFilterQuality)SkiaApi.sk_compatpaint_get_filter_quality (Handle);
@@ -272,7 +277,7 @@ namespace SkiaSharp
 		// Clone
 
 		public SKPaint Clone () =>
-			GetObject (SkiaApi.sk_paint_clone (Handle))!;
+			GetObject (SkiaApi.sk_compatpaint_clone (Handle))!;
 
 		// MeasureText
 

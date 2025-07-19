@@ -41,6 +41,17 @@ namespace SkiaSharp
 			return effect;
 		}
 
+		public static SKRuntimeEffect CreateBlender (string sksl, out string errors)
+		{
+			using var s = new SKString (sksl);
+			using var errorString = new SKString ();
+			var effect = GetObject (SkiaApi.sk_runtimeeffect_make_for_blender (s.Handle, errorString.Handle));
+			errors = errorString?.ToString ();
+			if (errors?.Length == 0)
+				errors = null;
+			return effect;
+		}
+
 		// Build*
 
 		public static SKRuntimeShaderBuilder BuildShader (string sksl)
@@ -55,6 +66,13 @@ namespace SkiaSharp
 			var effect = CreateColorFilter (sksl, out var errors);
 			ValidateResult (effect, errors);
 			return new SKRuntimeColorFilterBuilder (effect);
+		}
+
+		public static SKRuntimeBlenderBuilder BuildBlender (string sksl)
+		{
+			var effect = CreateBlender (sksl, out var errors);
+			ValidateResult (effect, errors);
+			return new SKRuntimeBlenderBuilder (effect);
 		}
 
 		private static void ValidateResult (SKRuntimeEffect effect, string errors)
@@ -145,6 +163,30 @@ namespace SkiaSharp
 
 			fixed (IntPtr* ch = childrenHandles) {
 				return SKColorFilter.GetObject (SkiaApi.sk_runtimeeffect_make_color_filter (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length));
+			}
+		}
+
+		// ToBlender
+
+		public SKBlender ToBlender () =>
+			ToBlender ((SKData)null, null);
+
+		public SKBlender ToBlender (SKRuntimeEffectUniforms uniforms) =>
+			ToBlender (uniforms.ToData (), null);
+
+		private SKBlender ToBlender (SKData uniforms) =>
+			ToBlender (uniforms, null);
+
+		public SKBlender ToBlender (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children) =>
+			ToBlender (uniforms.ToData (), children.ToArray ());
+
+		private SKBlender ToBlender (SKData uniforms, SKObject[] children)
+		{
+			var uniformsHandle = uniforms?.Handle ?? IntPtr.Zero;
+			using var childrenHandles = Utils.RentHandlesArray (children, true);
+
+			fixed (IntPtr* ch = childrenHandles) {
+				return SKBlender.GetObject (SkiaApi.sk_runtimeeffect_make_blender (Handle, uniformsHandle, ch, (IntPtr)childrenHandles.Length));
 			}
 		}
 
@@ -560,15 +602,24 @@ namespace SkiaSharp
 			value = colorFilter;
 		}
 
+		public SKRuntimeEffectChild (SKBlender blender)
+		{
+			value = blender;
+		}
+
 		public SKObject Value => value;
 
 		public SKShader Shader => value as SKShader;
 
 		public SKColorFilter ColorFilter => value as SKColorFilter;
 
+		public SKBlender Blender => value as SKBlender;
+
 		public static implicit operator SKRuntimeEffectChild (SKShader shader) => new (shader);
 
 		public static implicit operator SKRuntimeEffectChild (SKColorFilter colorFilter) => new (colorFilter);
+
+		public static implicit operator SKRuntimeEffectChild (SKBlender blender) => new (blender);
 	}
 
 	public class SKRuntimeEffectBuilderException : ApplicationException
@@ -626,5 +677,16 @@ namespace SkiaSharp
 
 		public SKColorFilter Build () =>
 			Effect.ToColorFilter (Uniforms, Children);
+	}
+
+	public class SKRuntimeBlenderBuilder : SKRuntimeEffectBuilder
+	{
+		public SKRuntimeBlenderBuilder (SKRuntimeEffect effect)
+			: base (effect)
+		{
+		}
+
+		public SKBlender Build () =>
+			Effect.ToBlender (Uniforms, Children);
 	}
 }

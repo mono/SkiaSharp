@@ -26,6 +26,15 @@ namespace SkiaSharp
 			}
 		}
 
+		public int ApproximateBytesUsed =>
+			(int)SkiaApi.sk_picture_approximate_bytes_used (Handle);
+
+		public int ApproximateOperationCount =>
+			GetApproximateOperationCount (false);
+
+		public int GetApproximateOperationCount(bool includeNested) =>
+			SkiaApi.sk_picture_approximate_op_count (Handle, includeNested);
+
 		// Serialize
 
 		public SKData Serialize () =>
@@ -46,6 +55,16 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 
 			SkiaApi.sk_picture_serialize_to_stream (Handle, stream.Handle);
+		}
+
+		// Playback
+
+		public void Playback (SKCanvas canvas)
+		{
+			if (canvas is null)
+				throw new ArgumentNullException (nameof (canvas));
+
+			SkiaApi.sk_picture_playback (Handle, canvas.Handle);
 		}
 
 		// ToShader

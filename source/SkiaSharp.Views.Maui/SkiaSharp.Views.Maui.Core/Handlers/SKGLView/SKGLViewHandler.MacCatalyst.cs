@@ -8,9 +8,8 @@ namespace SkiaSharp.Views.Maui.Handlers
 {
 	public partial class SKGLViewHandler : ViewHandler<ISKGLView, SKMetalView>
 	{
-		private SKSizeI lastCanvasSize;
-		private GRContext? lastGRContext;
-		private SKTouchHandler? touchHandler;
+		private PaintSurfaceProxy? paintSurfaceProxy;
+		private SKTouchHandlerProxy? touchProxy;
 
 		protected override SKMetalView CreatePlatformView() =>
 			new MauiSKMetalView
@@ -21,17 +20,20 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		protected override void ConnectHandler(SKMetalView platformView)
 		{
-			platformView.PaintSurface += OnPaintSurface;
+			paintSurfaceProxy = new();
+			paintSurfaceProxy.Connect(VirtualView, platformView);
+			touchProxy = new();
+			touchProxy.Connect(VirtualView, platformView);
 
 			base.ConnectHandler(platformView);
 		}
 
 		protected override void DisconnectHandler(SKMetalView platformView)
 		{
-			touchHandler?.Detach(platformView);
-			touchHandler = null;
-
-			platformView.PaintSurface -= OnPaintSurface;
+			paintSurfaceProxy?.Disconnect(platformView);
+			paintSurfaceProxy = null;
+			touchProxy?.Disconnect(platformView);
+			touchProxy = null;
 
 			base.DisconnectHandler(platformView);
 		}
@@ -40,13 +42,16 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		public static void OnInvalidateSurface(SKGLViewHandler handler, ISKGLView view, object? args)
 		{
+			if (handler?.PlatformView == null)
+				return;
+
 			if (handler.PlatformView.Paused && handler.PlatformView.EnableSetNeedsDisplay)
 				handler.PlatformView.SetNeedsDisplay();
 		}
 
 		public static void MapIgnorePixelScaling(SKGLViewHandler handler, ISKGLView view)
 		{
-			if (handler.PlatformView is MauiSKMetalView pv)
+			if (handler?.PlatformView is MauiSKMetalView pv)
 			{
 				pv.IgnorePixelScaling = view.IgnorePixelScaling;
 				handler.PlatformView.SetNeedsDisplay();
@@ -55,55 +60,23 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		public static void MapHasRenderLoop(SKGLViewHandler handler, ISKGLView view)
 		{
+			if (handler?.PlatformView == null)
+				return;
+
 			handler.PlatformView.Paused = !view.HasRenderLoop;
 			handler.PlatformView.EnableSetNeedsDisplay = !view.HasRenderLoop;
 		}
 
 		public static void MapEnableTouchEvents(SKGLViewHandler handler, ISKGLView view)
 		{
-			handler.touchHandler ??= new SKTouchHandler(
-				args => view.OnTouch(args),
-				(x, y) => handler.OnGetScaledCoord(x, y));
+			if (handler?.PlatformView == null)
+				return;
 
-			handler.touchHandler?.SetEnabled(handler.PlatformView, view.EnableTouchEvents);
+			handler.touchProxy?.UpdateEnableTouchEvents(handler.PlatformView, view.EnableTouchEvents);
 		}
 
 		// helper methods
 
-		private void OnPaintSurface(object? sender, iOS.SKPaintMetalSurfaceEventArgs e)
-		{
-			var newCanvasSize = e.Info.Size;
-			if (lastCanvasSize != newCanvasSize)
-			{
-				lastCanvasSize = newCanvasSize;
-				VirtualView?.OnCanvasSizeChanged(newCanvasSize);
-			}
-			if (sender is SKMetalView platformView)
-			{
-				var newGRContext = platformView.GRContext;
-				if (lastGRContext != newGRContext)
-				{
-					lastGRContext = newGRContext;
-					VirtualView?.OnGRContextChanged(newGRContext);
-				}
-			}
-
-			VirtualView?.OnPaintSurface(new SKPaintGLSurfaceEventArgs(e.Surface, e.BackendRenderTarget, e.Origin, e.Info, e.RawInfo));
-		}
-
-		private SKPoint OnGetScaledCoord(double x, double y)
-		{
-			if (VirtualView?.IgnorePixelScaling == false && PlatformView != null)
-			{
-				var scale = PlatformView.ContentScaleFactor;
-
-				x *= scale;
-				y *= scale;
-			}
-
-			return new SKPoint((float)x, (float)y);
-		}
-	
 		private class MauiSKMetalView : SKMetalView
 		{
 			public bool IgnorePixelScaling { get; set; }
@@ -121,6 +94,42 @@ namespace SkiaSharp.Views.Maui.Handlers
 				}
 
 				base.OnPaintSurface(e);
+			}
+		}
+
+		private class PaintSurfaceProxy : SKEventProxy<ISKGLView, SKMetalView>
+		{
+			private SKSizeI lastCanvasSize;
+			private GRContext? lastGRContext;
+
+			protected override void OnConnect(ISKGLView virtualView, SKMetalView platformView) =>
+				platformView.PaintSurface += OnPaintSurface;
+
+			protected override void OnDisconnect(SKMetalView platformView) =>
+				platformView.PaintSurface -= OnPaintSurface;
+
+			private void OnPaintSurface(object? sender, iOS.SKPaintMetalSurfaceEventArgs e)
+			{
+				if (VirtualView is not {} view)
+					return;
+
+				var newCanvasSize = e.Info.Size;
+				if (lastCanvasSize != newCanvasSize)
+				{
+					lastCanvasSize = newCanvasSize;
+					view.OnCanvasSizeChanged(newCanvasSize);
+				}
+				if (sender is SKMetalView platformView)
+				{
+					var newGRContext = platformView.GRContext;
+					if (lastGRContext != newGRContext)
+					{
+						lastGRContext = newGRContext;
+						view.OnGRContextChanged(newGRContext);
+					}
+				}
+
+				view.OnPaintSurface(new SKPaintGLSurfaceEventArgs(e.Surface, e.BackendRenderTarget, e.Origin, e.Info, e.RawInfo));
 			}
 		}
 	}

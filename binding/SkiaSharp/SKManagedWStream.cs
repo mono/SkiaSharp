@@ -42,7 +42,7 @@ namespace SkiaSharp
 			base.DisposeManaged ();
 		}
 
-		protected override bool OnWrite (IntPtr buffer, IntPtr size)
+		protected internal override bool OnWrite (IntPtr buffer, IntPtr size)
 		{
 			var count = (int)size;
 			using var managedBuffer = Utils.RentArray<byte> (count);
@@ -53,12 +53,12 @@ namespace SkiaSharp
 			return true;
 		}
 
-		protected override void OnFlush ()
+		protected internal override void OnFlush ()
 		{
 			stream.Flush ();
 		}
 
-		protected override IntPtr OnBytesWritten ()
+		protected internal override IntPtr OnBytesWritten ()
 		{
 			return (IntPtr)stream.Position;
 		}
