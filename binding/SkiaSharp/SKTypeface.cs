@@ -142,6 +142,8 @@ namespace SkiaSharp
 
 		public int GlyphCount => SkiaApi.sk_typeface_count_glyphs (Handle);
 
+		public string PostScriptName => (string)SKString.GetObject (SkiaApi.sk_typeface_get_post_script_name (Handle));
+
 		// GetTableTags
 
 		public int TableCount => SkiaApi.sk_typeface_count_tables (Handle);
