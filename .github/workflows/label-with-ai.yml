@@ -3,34 +3,59 @@ name: Apply labels using AI
 on:
   issues:
     types: [opened, reopened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage'
+        required: true
+        type: number
 
 jobs:
   apply-label-and-add-comment:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
+      models: read
+    env:
+      TRIAGE_AI_TOKEN: ${{ secrets.TRIAGE_AI_TOKEN }}
     steps:
-      - uses: mattleibow/dev-tools@action/label-with-ai
-        name: Apply AREA labels
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine AREA labels
+        uses: mattleibow/triage-assistant@v0
         with:
-          label-pattern: '^area/.*'
-          apply-label: 'false'
-          add-comment: 'false'
-      - uses: mattleibow/dev-tools@action/label-with-ai
-        name: Apply PLATFORM labels
+          issue: ${{ inputs.issue_number || github.event.issue.number }}
+          label-prefix: 'area/'
+          template: 'single-label'
+
+      - name: Determine PLATFORM labels
+        uses: mattleibow/triage-assistant@v0
         with:
-          label-pattern: '^os/.*'
-          apply-label: 'false'
-          add-comment: 'false'
-      - uses: mattleibow/dev-tools@action/label-with-ai
-        name: Apply BACKEND labels
+          issue: ${{ inputs.issue_number || github.event.issue.number }}
+          label-prefix: 'os/'
+          template: 'multi-label'
+
+      - name: Determine BACKEND labels
+        uses: mattleibow/triage-assistant@v0
         with:
-          label-pattern: '^backend/.*'
-          apply-label: 'false'
-          add-comment: 'false'
-      - uses: mattleibow/dev-tools@action/label-with-ai
-        name: Apply TENET labels
+          issue: ${{ inputs.issue_number || github.event.issue.number }}
+          label-prefix: 'backend/'
+          template: 'multi-label'
+
+      - name: Determine TENET labels
+        uses: mattleibow/triage-assistant@v0
         with:
-          label-pattern: '^tenet/.*'
-          apply-label: 'false'
-          add-comment: 'false'
+          issue: ${{ inputs.issue_number || github.event.issue.number }}
+          label-prefix: 'tenet/'
+          template: 'single-label'
+
+      - name: Apply all labels and add comment
+        uses: mattleibow/triage-assistant@v0
+        with:
+          issue: ${{ inputs.issue_number || github.event.issue.number }}
+          apply-labels: true
+          apply-comment: true
+          dry-run: true
