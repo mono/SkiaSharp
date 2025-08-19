@@ -95,23 +95,28 @@ Task("ANGLE")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
-    Build("x86");
-    Build("x64");
-    Build("arm64");
+    foreach (var arch in new[] { "x86", "x64", "arm64" })
+    {
+        Build(arch, "libEGL", wasdk: false);
+        Build(arch, "libGLESv2", wasdk: true);
+    }
 
-    void Build(string arch)
+    void Build(string arch, string target, bool wasdk)
     {
         if (Skip(arch)) return;
 
-        try {
+        var suffix = wasdk ? "_wasdk" : "";
+
+        try
+        {
             System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", "0");
 
-            RunGn(ANGLE_PATH, $"out/winui/{arch}", 
+            RunGn(ANGLE_PATH, $"out/winui{suffix}/{arch}",
                 $"target_cpu='{arch}' " +
                 $"is_component_build=false " +
                 $"is_debug=false " +
                 $"is_clang=false " +
-                $"angle_is_winappsdk=true " +
+                $"angle_is_winappsdk={wasdk} ".ToLower() +
                 $"winappsdk_dir='{WINAPPSDK_PATH}' " +
                 $"enable_precompiled_headers=false " +
                 $"angle_enable_null=false " +
@@ -119,17 +124,17 @@ Task("ANGLE")
                 $"angle_enable_gl_desktop_backend=false " +
                 $"angle_enable_vulkan=false");
 
-            RunNinja(ANGLE_PATH, $"out/winui/{arch}", "libEGL libGLESv2");
-        } finally {
+            RunNinja(ANGLE_PATH, $"out/winui{suffix}/{arch}", target);
+        }
+        finally
+        {
             System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", "");
         }
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui/{arch}/libEGL.dll"), outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui/{arch}/libEGL.pdb"), outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui/{arch}/libGLESv2.dll"), outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui/{arch}/libGLESv2.pdb"), outDir);
+        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll"), outDir);
+        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.pdb"), outDir);
     }
 });
 
