@@ -24,6 +24,9 @@ Write-Host "Installing LLVM..."
 # echo version
 & "$InstallDestination\bin\clang.exe" --version
 
+# List versions
+Get-ChildItem "$InstallDestination\lib\clang"
+
 # make sure that LLVM is in LLVM_HOME
 Write-Host "##vso[task.setvariable variable=LLVM_HOME;]$InstallDestination";
 
