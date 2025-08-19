@@ -7,7 +7,7 @@
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 ]
 
 ARG IMAGE_ARCH=amd64
-FROM ${IMAGE_ARCH}/debian:10
+FROM ${IMAGE_ARCH}/debian:11
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=arm64
@@ -24,7 +24,7 @@ RUN case ${BUILD_ARCH} in \
     && echo "export TOOLCHAIN_ARCH_TARGET=${TOOLCHAIN_ARCH_TARGET}" >> /etc/skia-env
 
 # Install the required packages
-ARG LLVM_VERSION=13
+ARG LLVM_VERSION=16
 RUN apt-get update \
     && apt-get install -y \
         curl python3 git clang-${LLVM_VERSION} lld-${LLVM_VERSION} ninja-build xz-utils \
