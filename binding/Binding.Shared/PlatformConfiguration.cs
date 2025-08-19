@@ -85,7 +85,7 @@ namespace SkiaSharp.Internals
 			set => linuxFlavor = value;
 		}
 
-#if WINDOWS_UWP
+#if WINDOWS_UWP || __IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__
 		public static bool IsGlibc { get; }
 #else
 		private static readonly Lazy<bool> isGlibcLazy = new Lazy<bool> (IsGlibcImplementation);

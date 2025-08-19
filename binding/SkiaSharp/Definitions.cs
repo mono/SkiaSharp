@@ -59,6 +59,7 @@ namespace SkiaSharp
 		Bgr101010xXR = 21,
 		Srgba8888 = 22,
 		R8Unorm = 23,
+		Rgba10x6 = 24,
 	}
 
 	public static partial class SkiaExtensions
@@ -106,6 +107,7 @@ namespace SkiaSharp
 				SKColorType.RgbaF16Clamped => 8,
 				SKColorType.RgbaF16 => 8,
 				SKColorType.Rgba16161616 => 8,
+				SKColorType.Rgba10x6 => 8,
 				// 16
 				SKColorType.RgbaF32 => 16,
 				//
@@ -143,6 +145,7 @@ namespace SkiaSharp
 				SKColorType.RgbaF16Clamped => 3,
 				SKColorType.RgbaF16 => 3,
 				SKColorType.Rgba16161616 => 3,
+				SKColorType.Rgba10x6 => 3,
 				// 4
 				SKColorType.RgbaF32 => 4,
 				//
@@ -177,6 +180,7 @@ namespace SkiaSharp
 				case SKColorType.RgbaF16:
 				case SKColorType.RgbaF32:
 				case SKColorType.Rgba16161616:
+				case SKColorType.Rgba10x6:
 					break;
 
 				// opaque
@@ -356,7 +360,7 @@ namespace SkiaSharp
 	{
 		public static SKTimeDateTimeInternal Create (DateTime datetime)
 		{
-			var zone = datetime.Hour - datetime.ToUniversalTime ().Hour;
+			var zone = datetime.ToLocalTime ().Hour - datetime.ToUniversalTime ().Hour;
 			return new SKTimeDateTimeInternal {
 				fTimeZoneMinutes = (Int16)(zone * 60),
 				fYear = (UInt16)datetime.Year,

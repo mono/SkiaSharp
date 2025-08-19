@@ -161,9 +161,9 @@ namespace SkiaSharp.Views.UWP
 		public void Invalidate()
 		{
 #if WINDOWS
-			DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, DoInvalidate);
+			DispatcherQueue?.TryEnqueue(DispatcherQueuePriority.Normal, DoInvalidate);
 #else
-			Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
+			Dispatcher?.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
 #endif
 		}
 

@@ -42,13 +42,16 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		public static void OnInvalidateSurface(SKGLViewHandler handler, ISKGLView view, object? args)
 		{
+			if (handler?.PlatformView == null)
+				return;
+
 			if (handler.PlatformView.Paused && handler.PlatformView.EnableSetNeedsDisplay)
 				handler.PlatformView.SetNeedsDisplay();
 		}
 
 		public static void MapIgnorePixelScaling(SKGLViewHandler handler, ISKGLView view)
 		{
-			if (handler.PlatformView is MauiSKMetalView pv)
+			if (handler?.PlatformView is MauiSKMetalView pv)
 			{
 				pv.IgnorePixelScaling = view.IgnorePixelScaling;
 				handler.PlatformView.SetNeedsDisplay();
@@ -57,12 +60,18 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		public static void MapHasRenderLoop(SKGLViewHandler handler, ISKGLView view)
 		{
+			if (handler?.PlatformView == null)
+				return;
+
 			handler.PlatformView.Paused = !view.HasRenderLoop;
 			handler.PlatformView.EnableSetNeedsDisplay = !view.HasRenderLoop;
 		}
 
 		public static void MapEnableTouchEvents(SKGLViewHandler handler, ISKGLView view)
 		{
+			if (handler?.PlatformView == null)
+				return;
+
 			handler.touchProxy?.UpdateEnableTouchEvents(handler.PlatformView, view.EnableTouchEvents);
 		}
 
