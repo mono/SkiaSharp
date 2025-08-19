@@ -10,8 +10,8 @@ ARG IMAGE_ARCH=amd64
 FROM ${IMAGE_ARCH}/debian:10
 
 # Switch to archives
-RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
-RUN sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
+RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list && \
+    sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=arm64
