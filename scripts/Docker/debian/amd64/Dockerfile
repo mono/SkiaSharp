@@ -1,5 +1,6 @@
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
+#   LLVM_VERSION         - the version of the LLVM compiler                 [ 13 | * ]
 
 FROM amd64/debian:10
 

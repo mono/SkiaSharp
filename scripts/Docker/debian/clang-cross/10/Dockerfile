@@ -2,7 +2,7 @@
 #   IMAGE_ARCH           - the architecture of the image                    [ amd64 | arm64v8 | riscv64 ]
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
 #   LLVM_VERSION         - the version of the LLVM compiler                 [ 13 | * ]
-#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 9 | * ]
+#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 8 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu ]
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 ]
 

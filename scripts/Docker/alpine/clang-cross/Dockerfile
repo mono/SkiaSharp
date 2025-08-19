@@ -1,8 +1,7 @@
 # Arguments:
 #   IMAGE_ARCH           - the architecture of the image                    [ amd64 | arm64v8 | riscv64 | loongarch64 ]
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
-#   LLVM_VERSION         - the version of the LLVM compiler                 [ 13 | * ]
-#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 14 | * ]
+#   LLVM_VERSION         - the version of the LLVM compiler                 [ 19 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-alpine-linux-musleabihf | aarch64-alpine-linux-musl | riscv64-alpine-linux-musl | loongarch64-alpine-linux-musl ]
 
 ARG IMAGE_ARCH=amd64
