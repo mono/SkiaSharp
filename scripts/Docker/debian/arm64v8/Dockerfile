@@ -4,7 +4,7 @@
 FROM arm64v8/debian:10
 
 # Install the required packages
-ARG LLVM_VERSION=16
+ARG LLVM_VERSION=13
 RUN apt-get update \
     && apt-get install -y \
         curl python3 git clang-${LLVM_VERSION} ninja-build \
