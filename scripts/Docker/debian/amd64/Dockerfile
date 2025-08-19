@@ -1,10 +1,14 @@
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
 
-FROM amd64/debian:11
+FROM amd64/debian:10
+
+# Switch to archives
+RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
+RUN sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
 
 # Install the required packages
-ARG LLVM_VERSION=16
+ARG LLVM_VERSION=13
 RUN apt-get update \
     && apt-get install -y \
         curl python3 git clang-${LLVM_VERSION} ninja-build \
