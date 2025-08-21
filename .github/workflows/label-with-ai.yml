@@ -1,61 +1,94 @@
 name: Apply labels using AI
 
 on:
+  # When someone opens a new issue
   issues:
-    types: [opened, reopened]
+    types: [opened]
+  # When someone opens a new pull request
+  pull_request:
+    types: [opened]
+  # When someone adds the "/triage" comments
+  issue_comment:
+    types: [created]
+  # When the workflow is run manually
   workflow_dispatch:
     inputs:
       issue_number:
         description: 'Issue number to triage'
         required: true
         type: number
+      dry_run:
+        description: 'Dry Run (no writes)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  models: read
 
 jobs:
   apply-label-and-add-comment:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
-      models: read
+    if: |
+      github.event_name == 'issues' ||
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/triage'))
     env:
+      TRIAGE_AI_MODEL: openai/gpt-4o-mini # slightly cheaper model
       TRIAGE_AI_TOKEN: ${{ secrets.TRIAGE_AI_TOKEN }}
     steps:
 
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Get Issue or PR Number
+        id: get-number
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $number="${{ inputs.issue_number }}"
+          } else {
+            $number="${{ github.event.number }}"
+          }
+          echo "number=$number" >> $env:GITHUB_OUTPUT
+          echo "I will triage issue number #$number"
+
       - name: Determine AREA labels
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant/apply-labels@v0
         with:
-          issue: ${{ inputs.issue_number || github.event.issue.number }}
+          issue: ${{ steps.get-number.outputs.number }}
           label-prefix: 'area/'
           template: 'single-label'
 
       - name: Determine PLATFORM labels
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant/apply-labels@v0
         with:
-          issue: ${{ inputs.issue_number || github.event.issue.number }}
+          issue: ${{ steps.get-number.outputs.number }}
           label-prefix: 'os/'
           template: 'multi-label'
 
       - name: Determine BACKEND labels
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant/apply-labels@v0
         with:
-          issue: ${{ inputs.issue_number || github.event.issue.number }}
+          issue: ${{ steps.get-number.outputs.number }}
           label-prefix: 'backend/'
           template: 'multi-label'
 
       - name: Determine TENET labels
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant/apply-labels@v0
         with:
-          issue: ${{ inputs.issue_number || github.event.issue.number }}
+          issue: ${{ steps.get-number.outputs.number }}
           label-prefix: 'tenet/'
           template: 'single-label'
 
       - name: Apply all labels and add comment
-        uses: mattleibow/triage-assistant@v0
+        uses: mattleibow/triage-assistant/apply-labels@v0
         with:
-          issue: ${{ inputs.issue_number || github.event.issue.number }}
+          issue: ${{ steps.get-number.outputs.number }}
           apply-labels: true
           apply-comment: true
-          dry-run: true
+          dry-run: ${{ inputs.dry_run || false }}
