@@ -7,7 +7,7 @@
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 | loong64 ]
 
 ARG IMAGE_ARCH=amd64
-FROM ${IMAGE_ARCH}/debian:trixie
+FROM ${IMAGE_ARCH}/debian:13
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=arm64
@@ -55,13 +55,14 @@ RUN . /etc/skia-env \
 RUN . /etc/skia-env \
     && mkdir -p /skia-utils/libfontconfig-dev \
     && cd /skia-utils/libfontconfig-dev \
-    && APT_REPO=http://deb.debian.org/debian \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
          loong64) FC_VERSION=2.15.0-1.1 ; FC_PKG=libfontconfig-dev  ; APT_REPO=https://pkg.loongnix.cn/loongnix/25  ;; \
-         riscv64) FC_VERSION=2.15.0-2.3 ; FC_PKG=libfontconfig-dev  ;; \
-         *)       FC_VERSION=2.13.1-2   ; FC_PKG=libfontconfig1-dev ;; \
+         riscv64) FC_VERSION=2.15.0-2.3 ; FC_PKG=libfontconfig-dev  ; APT_REPO=http://deb.debian.org/debian         ;; \
+         *)       FC_VERSION=2.13.1-2   ; FC_PKG=libfontconfig1-dev ; APT_REPO=http://deb.debian.org/debian         ;; \
        esac \
-    && curl ${APT_REPO}/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig-dev.deb \
+    && FC_URL=${APT_REPO}/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && echo "Downloading fontconfig from $FC_URL" \
+    && curl $FC_URL -L -o libfontconfig-dev.deb \
     && ar vx libfontconfig-dev.deb \
     && tar -xJvf data.tar.xz \
     && rm libfontconfig-dev.deb \

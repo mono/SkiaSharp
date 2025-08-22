@@ -1,12 +1,18 @@
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
+#   LLVM_VERSION         - the version of the LLVM compiler                 [ 13 | * ]
 
 FROM arm64v8/debian:10
 
+# Switch to archives
+RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list && \
+    sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
+
 # Install the required packages
+ARG LLVM_VERSION=13
 RUN apt-get update \
     && apt-get install -y \
-        curl python3 git clang-13 ninja-build \
+        curl python3 git clang-${LLVM_VERSION} ninja-build \
         libfontconfig1-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -20,6 +26,6 @@ RUN curl https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh
     && dotnet help \
     && dotnet --info
 
-ENV CC=clang-13 CXX=clang++-13
+ENV CC=clang-${LLVM_VERSION} CXX=clang++-${LLVM_VERSION}
 
 WORKDIR /work
