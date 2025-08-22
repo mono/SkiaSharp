@@ -16569,6 +16569,25 @@ namespace SkiaSharp
 			(sk_typeface_get_kerning_pair_adjustments_delegate ??= GetSymbol<Delegates.sk_typeface_get_kerning_pair_adjustments> ("sk_typeface_get_kerning_pair_adjustments")).Invoke (typeface, glyphs, count, adjustments);
 		#endif
 
+		// sk_string_t* sk_typeface_get_post_script_name(const sk_typeface_t* typeface)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_string_t sk_typeface_get_post_script_name (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_string_t sk_typeface_get_post_script_name (sk_typeface_t typeface);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_string_t sk_typeface_get_post_script_name (sk_typeface_t typeface);
+		}
+		private static Delegates.sk_typeface_get_post_script_name sk_typeface_get_post_script_name_delegate;
+		internal static sk_string_t sk_typeface_get_post_script_name (sk_typeface_t typeface) =>
+			(sk_typeface_get_post_script_name_delegate ??= GetSymbol<Delegates.sk_typeface_get_post_script_name> ("sk_typeface_get_post_script_name")).Invoke (typeface);
+		#endif
+
 		// size_t sk_typeface_get_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag, size_t offset, size_t length, void* data)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
