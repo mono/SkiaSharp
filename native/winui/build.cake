@@ -1,17 +1,24 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 
+var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
+
 #load "../../scripts/cake/native-shared.cake"
 #load "../../scripts/cake/msbuild.cake"
 
-void CheckDeps(FilePath so)
+void CheckDeps(FilePath dll)
 {
     Information($"Making sure that there are no dependencies on: {string.Join(", ", VERIFY_EXCLUDED)}");
 
-    RunProcess("dumpbin", $"/dependents {so}", out var stdoutEnum);
+    var dumpbins = GetFiles($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Host*/*/dumpbin.exe");
+    if (dumpbins.Count == 0) {
+        throw new Exception("Could not find dumpbin.exe, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
+    }
+
+    RunProcess(dumpbins.First(), $"/dependents {dll}", out var stdoutEnum);
     var stdout = stdoutEnum.ToArray();
 
-    var needed = MatchRegex(@"\(NEEDED\).+\[(.+)\]", stdout).ToList();
+    var needed = MatchRegex(@"\s\s+(\S+\.dll)", stdout).ToList();
 
     Information("Dependencies:");
     foreach (var need in needed) {
@@ -20,23 +27,7 @@ void CheckDeps(FilePath so)
 
     foreach (var exclude in VERIFY_EXCLUDED) {
         if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{so} contained a dependency on {exclude}.");
-    }
-
-    var glibcs = MatchRegex(@"GLIBC_([\w\.\d]+)", stdout).Distinct().ToList();
-    glibcs.Sort();
-
-    Information("GLIBC:");
-    foreach (var glibc in glibcs) {
-        Information($"    {glibc}");
-    }
-    
-    if (VERIFY_GLIBC_MAX != null) {
-        foreach (var glibc in glibcs) {
-            var version = System.Version.Parse(glibc);
-            if (version > VERIFY_GLIBC_MAX)
-                throw new Exception($"{so} contained a dependency on GLIBC {glibc} which is greater than the expected GLIBC {VERIFY_GLIBC_MAX}.");
-        }
+            throw new Exception($"{dll} contained a dependency on {exclude}.");
     }
 }
 
@@ -74,6 +65,7 @@ Task("SkiaSharp.Views.WinUI.Native")
         CopyFileToDirectory($"{name}/{name}.Projection/bin/{CONFIGURATION}/net6.0-windows10.0.19041.0/{name}.Projection.pdb", anyOutDir);
 
         CheckDeps($"{outDir}/{name}.dll");
+        CheckDeps($"{anyOutDir}/{name}.Projection.dll");
     }
 });
 
