@@ -91,19 +91,17 @@ variables:
 
 resources:
   repositories:
-    - repository: xamarin-templates
-      type: github
-      name: xamarin/yaml-templates
-      endpoint: xamarin
+    - repository: yaml-templates
+      type: git
+      name: DevDiv/Xamarin.yaml-templates
       ref: refs/heads/main
     - repository: 1ESPipelineTemplates
       type: git
-      name: 1ESPipelineTemplates/1ESPipelineTemplates
-      ref: refs/tags/release
+      name: 1ESPipelineTemplates/MicroBuildTemplate
 
 extends:
   ${{ if eq('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
-    template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
+    template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@1ESPipelineTemplates
   ${{ if ne('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
     template: /scripts/azure-template-fake-1es.yml@self
   parameters:
