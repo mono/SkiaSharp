@@ -120,7 +120,7 @@ stages:
       displayName: Sign NuGets
       dependsOn: package
       jobs:
-        - template: sign-artifacts/jobs/v4.yml@xamarin-templates
+        - template: sign-artifacts/jobs/v4.yml@yaml-templates
           parameters:
             ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
               signType: 'Real'
@@ -130,7 +130,7 @@ stages:
             usePipelineArtifactTasks: true
 
   - ${{ if eq(parameters.sdl.apiscan.enabled, 'true') }}:
-    - template: security/apiscan/v0.yml@xamarin-templates
+    - template: security/apiscan/v0.yml@yaml-templates
       parameters:
         windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
         windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
