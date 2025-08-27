@@ -80,39 +80,55 @@ resources:
 extends:
   template: azure-pipelines/MicroBuild.1ES.Official.yml@1ESPipelineTemplates
   parameters:
-    pool: ${{ parameters.buildAgentHost.pool }}
+    pool:
+      name: AzurePipelines-EO
+      image: 1ESPT-Windows2022
+      os: windows
     customBuildTags:
       - ES365AIMigrationTooling
     stages:
-      - template: /scripts/azure-templates-stages.yml@self
-        parameters:
-          buildPipelineType: 'native'
-          buildExternals: ${{ parameters.buildExternals }}
-          ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
-            ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-              sdl:
-                apiscan:
-                  enabled: true
-                binskim:
-                  enabled: true
-                  break: false
-                codeInspector:
-                  enabled: true
-                credscan:
-                  enabled: true
-                  # suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
-                policheck:
-                  enabled: true
-                  exclusionsFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
-                spotBugs:
-                  enabled: false
-                suppression:
-                  suppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
-                tsa:
-                  enabled: true
-                  configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
-          use1ESPipelineTemplates: true
-          buildAgentHost: ${{ parameters.buildAgentHost }}
-          buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
-          buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
-          buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+      - stage: prepare
+        displayName: Prepare Build
+        jobs:
+          - job: prepare
+            displayName: Prepare Build
+            pool:
+              name: AzurePipelines-EO
+              image: 1ESPT-Windows2022
+              os: windows
+            steps:
+              - pwsh: echo "Hello World!"
+
+
+      # - template: /scripts/azure-templates-stages.yml@self
+      #   parameters:
+      #     buildPipelineType: 'native'
+      #     buildExternals: ${{ parameters.buildExternals }}
+      #     ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
+      #       ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+      #         sdl:
+      #           apiscan:
+      #             enabled: true
+      #           binskim:
+      #             enabled: true
+      #             break: false
+      #           codeInspector:
+      #             enabled: true
+      #           credscan:
+      #             enabled: true
+      #             # suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
+      #           policheck:
+      #             enabled: true
+      #             exclusionsFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
+      #           spotBugs:
+      #             enabled: false
+      #           suppression:
+      #             suppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
+      #           tsa:
+      #             enabled: true
+      #             configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
+      #     use1ESPipelineTemplates: true
+      #     buildAgentHost: ${{ parameters.buildAgentHost }}
+      #     buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
+      #     buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
+      #     buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
