@@ -89,8 +89,11 @@ extends:
           buildPipelineType: 'native'
           buildExternals: ${{ parameters.buildExternals }}
           ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
-            ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-              sdl:
+            sdl:
+              sourceRepositoriesToScan:
+                exclude:
+                - repository: yaml-templates
+              ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
                 apiscan:
                   enabled: true
                 binskim:
@@ -111,9 +114,6 @@ extends:
                 tsa:
                   enabled: true
                   configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
-                sourceRepositoriesToScan:
-                  exclude:
-                  - repository: yaml-templates
           use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
