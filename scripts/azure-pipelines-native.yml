@@ -111,6 +111,9 @@ extends:
                 tsa:
                   enabled: true
                   configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
+                sourceRepositoriesToScan:
+                  exclude:
+                  - repository: yaml-templates
           use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
