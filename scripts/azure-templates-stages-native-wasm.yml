@@ -3,8 +3,6 @@ parameters:
     type: string
   - name: buildAgentLinuxNative
     type: object
-  - name: sdl
-    type: object
   - name: use1ESPipelineTemplates
     type: boolean
 
@@ -16,7 +14,6 @@ stages:
     jobs:
       - template: /scripts/azure-templates-jobs-wasm-matrix.yml@self # Build Native WASM (Linux)
         parameters:
-          sdl: ${{ parameters.sdl }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           buildExternals: ${{ parameters.buildExternals }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}

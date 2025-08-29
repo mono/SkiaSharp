@@ -1,8 +1,6 @@
 parameters:
   - name: buildAgentHost
     type: object
-  - name: sdl
-    type: object
 
 stages:
 
@@ -19,7 +17,6 @@ stages:
         parameters:
           name: native
           displayName: Merge Native Artifacts
-          sdl: ${{ parameters.sdl }}
           buildAgent: ${{ parameters.buildAgentHost }}
           requiredArtifacts:
             # Android
@@ -94,7 +91,6 @@ stages:
         parameters:
           name: native_linux
           displayName: Merge Native Linux Artifacts
-          sdl: ${{ parameters.sdl }}
           buildAgent: ${{ parameters.buildAgentHost }}
           requiredArtifacts:
             - name: native_linux_arm_alpine_linux
@@ -124,7 +120,6 @@ stages:
         parameters:
           name: native_wasm
           displayName: Merge Native WASM Artifacts
-          sdl: ${{ parameters.sdl }}
           buildAgent: ${{ parameters.buildAgentHost }}
           requiredArtifacts:
             - name: native_wasm_2_0_23_linux
@@ -148,7 +143,6 @@ stages:
           parameters:
             name: native_msvc
             displayName: Merge Native MSVC Artifacts
-            sdl: ${{ parameters.sdl }}
             buildAgent: ${{ parameters.buildAgentHost }}
             requiredArtifacts:
               - name: native_win32_x86_msvc_windows

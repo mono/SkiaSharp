@@ -6,13 +6,13 @@ parameters:
     type: object
   - name: buildAgentWindows
     type: object
-  - name: sdl
-    type: object
   - name: use1ESPipelineTemplates
     type: boolean
   - name: enableSigning
     type: boolean
   - name: forceRealSigning
+    type: boolean
+  - name: enableApiScan
     type: boolean
 
 stages:
@@ -26,7 +26,6 @@ stages:
           parameters:
             name: native
             displayName: Re-upload Native Artifacts
-            sdl: ${{ parameters.sdl }}
             buildAgent: ${{ parameters.buildAgentHost }}
             requiredArtifacts:
               - name: native
@@ -39,7 +38,6 @@ stages:
         parameters:
           name: package_normal_windows
           displayName: Package NuGets
-          sdl: ${{ parameters.sdl }}
           buildAgent: ${{ parameters.buildAgentWindows}}
           target: nuget-normal
           additionalArgs: --skipExternals="all"
@@ -82,7 +80,6 @@ stages:
         parameters:
           name: package_special_windows
           displayName: Package Special NuGets
-          sdl: ${{ parameters.sdl }}
           buildAgent: ${{ parameters.buildAgentWindows}}
           dependsOn: package_normal_windows
           target: nuget-special
@@ -128,7 +125,7 @@ stages:
               signType: 'Test'
             usePipelineArtifactTasks: true
 
-  - ${{ if eq(parameters.sdl.apiscan.enabled, 'true') }}:
+  - ${{ if eq(parameters.enableApiScan, 'true') }}:
     - template: security/apiscan/v0.yml@yaml-templates
       parameters:
         windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}

@@ -27,15 +27,6 @@ parameters:
   - name: buildAgentAndroidTests
     type: object
     default: ''
-  - name: sdl
-    type: object
-    default:
-      apiscan:
-        enabled: false
-      binskim:
-        break: false
-      spotBugs:
-        enabled: false
   - name: use1ESPipelineTemplates
     type: boolean
     default: false
@@ -43,6 +34,9 @@ parameters:
     type: boolean
     default: false
   - name: forceRealSigning
+    type: boolean
+    default: false
+  - name: enableApiScan
     type: boolean
     default: false
 
@@ -59,7 +53,6 @@ stages:
         buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
         buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
         buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-        sdl: ${{ parameters.sdl }}
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         buildExternals: ${{ parameters.buildExternals }}
 
@@ -69,10 +62,10 @@ stages:
         isSplitPipeline: ${{ eq(parameters.buildPipelineType, 'package') }}
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
-        sdl: ${{ parameters.sdl }}
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableSigning: ${{ parameters.enableSigning }}
         forceRealSigning: ${{ parameters.forceRealSigning }}
+        enableApiScan: ${{ parameters.enableApiScan }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self

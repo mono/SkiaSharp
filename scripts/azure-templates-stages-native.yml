@@ -9,8 +9,6 @@ parameters:
     type: object
   - name: buildAgentLinuxNative
     type: object
-  - name: sdl
-    type: object
   - name: use1ESPipelineTemplates
     type: boolean
 
@@ -19,30 +17,25 @@ stages:
   - template: /scripts/azure-templates-stages-native-windows.yml@self
     parameters:
       buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
-      sdl: ${{ parameters.sdl }}
       buildExternals: ${{ parameters.buildExternals }}
 
   - template: /scripts/azure-templates-stages-native-macos.yml@self
     parameters:
       buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
-      sdl: ${{ parameters.sdl }}
       buildExternals: ${{ parameters.buildExternals }}
 
   - template: /scripts/azure-templates-stages-native-linux.yml@self
     parameters:
       buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-      sdl: ${{ parameters.sdl }}
       use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
       buildExternals: ${{ parameters.buildExternals }}
 
   - template: /scripts/azure-templates-stages-native-wasm.yml@self
     parameters:
       buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-      sdl: ${{ parameters.sdl }}
       use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
       buildExternals: ${{ parameters.buildExternals }}
 
   - template: /scripts/azure-templates-stages-native-merge.yml@self
     parameters:
-      sdl: ${{ parameters.sdl }}
       buildAgentHost: ${{ parameters.buildAgentHost }}

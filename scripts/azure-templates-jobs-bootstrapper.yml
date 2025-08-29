@@ -35,7 +35,6 @@ parameters:
   skipInstall: false                            # whether or not to install any tools
   skipSteps: false                              # whether or not to run any steps
   use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
-  sdl: []                                       # the SDL properties to use for this job
   continueOnError: false                        # whether or not to continue on error
 
 jobs:
@@ -53,7 +52,6 @@ jobs:
       ${{ if ne(length(parameters.variables), 0) }}:
         ${{ parameters.variables }}
     templateContext:
-      sdl: ${{ parameters.sdl }}
       ${{ if and(ne(parameters.docker, ''), eq(parameters.use1ESPipelineTemplates, 'true')) }}:
         authenticatedContainerRegistries:
           - serviceConnection: skiasharp-docker
