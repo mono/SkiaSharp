@@ -115,18 +115,18 @@ stages:
             - name: nuget_special
               path: '.\output\nugets-special'
 
-  # - ${{ if eq(parameters.enableSigning, 'true') }}:
-  #   - stage: signing
-  #     displayName: Sign NuGets
-  #     dependsOn: package
-  #     jobs:
-  #       - template: sign-artifacts/jobs/v4.yml@yaml-templates
-  #         parameters:
-  #           ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
-  #             signType: 'Real'
-  #           ${{ else }}:
-  #             signType: 'Test'
-  #           usePipelineArtifactTasks: true
+  - ${{ if eq(parameters.enableSigning, 'true') }}:
+    - stage: signing
+      displayName: Sign NuGets
+      dependsOn: package
+      jobs:
+        - template: sign-artifacts/jobs/v4.yml@yaml-templates
+          parameters:
+            ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+              signType: 'Real'
+            ${{ else }}:
+              signType: 'Test'
+            usePipelineArtifactTasks: true
 
   - ${{ if eq(parameters.sdl.apiscan.enabled, 'true') }}:
     - template: security/apiscan/v0.yml@yaml-templates
