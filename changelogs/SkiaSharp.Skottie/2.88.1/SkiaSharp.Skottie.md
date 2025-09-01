@@ -9,7 +9,7 @@
 #### New Type: SkiaSharp.Skottie.Animation
 
 ```csharp
-public class Animation : SkiaSharp.SKObject, System.IDisposable {
+public class Animation : SkiaSharp.SKObject, SkiaSharp.ISKNonVirtualReferenceCounted, SkiaSharp.ISKReferenceCounted, SkiaSharp.ISKSkipObjectRegistration {
 	// properties
 	public System.TimeSpan Duration { get; }
 	public double Fps { get; }

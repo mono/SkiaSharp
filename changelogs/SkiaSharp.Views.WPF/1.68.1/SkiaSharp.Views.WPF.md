@@ -9,7 +9,7 @@
 #### New Type: SkiaSharp.Views.WPF.SKElement
 
 ```csharp
-public class SKElement : System.Windows.FrameworkElement, System.ComponentModel.ISupportInitialize, System.Windows.IFrameworkInputElement, System.Windows.IInputElement, System.Windows.Markup.IQueryAmbient, System.Windows.Media.Animation.IAnimatable {
+public class SKElement : System.Windows.FrameworkElement {
 	// constructors
 	public SKElement ();
 	// properties

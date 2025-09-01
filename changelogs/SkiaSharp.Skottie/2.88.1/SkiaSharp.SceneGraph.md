@@ -9,7 +9,7 @@
 #### New Type: SkiaSharp.SceneGraph.InvalidationController
 
 ```csharp
-public class InvalidationController : SkiaSharp.SKObject, System.IDisposable {
+public class InvalidationController : SkiaSharp.SKObject, SkiaSharp.ISKSkipObjectRegistration {
 	// constructors
 	public InvalidationController ();
 	// properties
