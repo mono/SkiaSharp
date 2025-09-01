@@ -5,28 +5,27 @@
 
 ## Namespace HarfBuzzSharp
 
-- [x] HarfBuzzSharp.Blob
-  - [x] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.Int32,HarfBuzzSharp.MemoryMode,HarfBuzzSharp.ReleaseDelegate)
-  - [x] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.Int32,HarfBuzzSharp.MemoryMode)
-  - [ ] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.UInt32,HarfBuzzSharp.MemoryMode,System.Object,HarfBuzzSharp.BlobReleaseDelegate) - Missing in code: depends on BlobReleaseDelegate type
-  - [x] M:HarfBuzzSharp.Blob.AsSpan - Note: returns Span<byte> in code vs ReadOnlySpan<byte> in XML
-  - [x] M:HarfBuzzSharp.Blob.AsStream
-  - [x] M:HarfBuzzSharp.Blob.Dispose(System.Boolean)
-  - [x] M:HarfBuzzSharp.Blob.DisposeHandler
-  - [x] M:HarfBuzzSharp.Blob.FromFile(System.String)
-  - [x] M:HarfBuzzSharp.Blob.FromStream(System.IO.Stream)
-  - [x] M:HarfBuzzSharp.Blob.MakeImmutable
-  - [x] P:HarfBuzzSharp.Blob.Empty
-  - [x] P:HarfBuzzSharp.Blob.FaceCount
-  - [x] P:HarfBuzzSharp.Blob.IsImmutable
-  - [x] P:HarfBuzzSharp.Blob.Length
+- [ ] HarfBuzzSharp.Blob
+  - [ ] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.Int32,HarfBuzzSharp.MemoryMode,HarfBuzzSharp.ReleaseDelegate)
+  - [ ] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.Int32,HarfBuzzSharp.MemoryMode)
+  - [ ] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.UInt32,HarfBuzzSharp.MemoryMode,System.Object,HarfBuzzSharp.BlobReleaseDelegate)
+  - [ ] M:HarfBuzzSharp.Blob.AsSpan
+  - [ ] M:HarfBuzzSharp.Blob.AsStream
+  - [ ] M:HarfBuzzSharp.Blob.Dispose(System.Boolean)
+  - [ ] M:HarfBuzzSharp.Blob.DisposeHandler
+  - [ ] M:HarfBuzzSharp.Blob.FromFile(System.String)
+  - [ ] M:HarfBuzzSharp.Blob.FromStream(System.IO.Stream)
+  - [ ] M:HarfBuzzSharp.Blob.MakeImmutable
+  - [ ] P:HarfBuzzSharp.Blob.Empty
+  - [ ] P:HarfBuzzSharp.Blob.FaceCount
+  - [ ] P:HarfBuzzSharp.Blob.IsImmutable
+  - [ ] P:HarfBuzzSharp.Blob.Length
 - [ ] HarfBuzzSharp.BlobReleaseDelegate
-  - Missing in code: T:HarfBuzzSharp.BlobReleaseDelegate
-- [x] HarfBuzzSharp.Buffer
-  - [x] F:HarfBuzzSharp.Buffer.DefaultReplacementCodepoint
-  - [x] M:HarfBuzzSharp.Buffer.#ctor
-  - [x] M:HarfBuzzSharp.Buffer.Add(System.Int32,System.Int32)
-  - [x] M:HarfBuzzSharp.Buffer.Add(System.UInt32,System.UInt32)
+- [ ] HarfBuzzSharp.Buffer
+  - [ ] F:HarfBuzzSharp.Buffer.DefaultReplacementCodepoint
+  - [ ] M:HarfBuzzSharp.Buffer.#ctor
+  - [ ] M:HarfBuzzSharp.Buffer.Add(System.Int32,System.Int32)
+  - [ ] M:HarfBuzzSharp.Buffer.Add(System.UInt32,System.UInt32)
   - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.IntPtr,System.Int32,System.Int32,System.Int32)
   - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.IntPtr,System.Int32)
   - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.ReadOnlySpan{System.Int32},System.Int32,System.Int32)
@@ -48,12 +47,12 @@
   - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.ReadOnlySpan{System.UInt32},System.Int32,System.Int32)
   - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.ReadOnlySpan{System.UInt32})
   - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.String)
-  - [x] M:HarfBuzzSharp.Buffer.AddUtf8(System.Byte[])
+  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.Byte[])
   - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.IntPtr,System.Int32,System.Int32,System.Int32)
   - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.IntPtr,System.Int32)
-  - [x] M:HarfBuzzSharp.Buffer.AddUtf8(System.ReadOnlySpan{System.Byte},System.Int32,System.Int32)
-  - [x] M:HarfBuzzSharp.Buffer.AddUtf8(System.ReadOnlySpan{System.Byte})
-  - [x] M:HarfBuzzSharp.Buffer.AddUtf8(System.String)
+  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.ReadOnlySpan{System.Byte},System.Int32,System.Int32)
+  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.ReadOnlySpan{System.Byte})
+  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.String)
   - [ ] M:HarfBuzzSharp.Buffer.Append(HarfBuzzSharp.Buffer,System.Int32,System.Int32)
   - [ ] M:HarfBuzzSharp.Buffer.Append(HarfBuzzSharp.Buffer)
   - [ ] M:HarfBuzzSharp.Buffer.ClearContents
