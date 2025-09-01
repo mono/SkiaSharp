@@ -52,21 +52,36 @@ Task ("docs-download-output")
 Task ("docs-api-diff")
     .Does (async () =>
 {
-    // working version
-    var baseDir = $"{OUTPUT_NUGETS_PATH}/api-diff";
-    CleanDirectories (baseDir);
+    // Check if this is the past version mode based on target name
+    var isPastMode = TARGET.EndsWith("-past");
+    var generatePrettyVersion = !isPastMode;
+    var cleanupAfter = isPastMode;
+    
+    Information ($"Running API diff in {(isPastMode ? "past versions" : "current vs latest")} mode...");
 
-    // pretty version
-    var diffDir = "./output/api-diff";
+    // clean up diff folders
+    var pastDiffDir = $"{OUTPUT_NUGETS_PATH}/api-diffs-past";
+    EnsureDirectoryExists (pastDiffDir);
+    CleanDirectories (pastDiffDir);
+    var diffDir = $"{OUTPUT_NUGETS_PATH}/api-diff";
     EnsureDirectoryExists (diffDir);
     CleanDirectories (diffDir);
+
+    var baseDir = isPastMode ? pastDiffDir : diffDir;
 
     Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
 
-    var filter = new NuGetVersions.Filter {
+    // some parts of SkiaSharp depend on other parts (needed for past mode)
+    if (isPastMode) {
+        foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
+            comparer.SearchPaths.Add(dir.FullPath);
+    }
+
+    // Filter for current mode only
+    var filter = isPastMode ? null : new NuGetVersions.Filter {
         IncludePrerelease = NUGET_DIFF_PRERELEASE
     };
 
@@ -77,107 +92,91 @@ Task ("docs-api-diff")
 
         Information ($"Comparing the assemblies in '{id}'...");
 
-        var version = GetVersion (id);
-        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
-            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
-            : version;
-
-        var latestVersion = (await NuGetVersions.GetLatestAsync (id, filter))?.ToNormalizedString ();
-        Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");
-
-        // pre-cache so we can have better logs
-        if (!string.IsNullOrEmpty (latestVersion)) {
-            Debug ($"Caching version '{latestVersion}' of '{id}'...");
-            await comparer.ExtractCachedPackageAsync (id, latestVersion);
-        }
-
-        // generate the diff and copy to the changelogs
-        Debug ($"Running a diff on '{latestVersion}' vs '{localNugetVersion}' of '{id}'...");
-        var diffRoot = $"{baseDir}/{id}";
-        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id.ToLower ()}.{localNugetVersion}.nupkg")) {
-            // run the diff with just the breaking changes
-            comparer.MarkdownDiffFileExtension = ".breaking.md";
-            comparer.IgnoreNonBreakingChanges = true;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
-            // run the diff on everything
-            comparer.MarkdownDiffFileExtension = null;
-            comparer.IgnoreNonBreakingChanges = false;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
-        }
-        CopyChangelogs (diffRoot, id, version);
-
-        // copy pretty version
-        foreach (var md in GetFiles ($"{diffRoot}/*/*.md")) {
-            var tfm = md.GetDirectory ().GetDirectoryName();
-            var prettyPath = ((DirectoryPath)diffDir).CombineWithFilePath ($"{id}/{tfm}/{md.GetFilename ()}");
-            if (!FindTextInFiles (md.FullPath, "No changes").Any ()) {
-                EnsureDirectoryExists (prettyPath.GetDirectory ());
-                CopyFile (md, prettyPath);
+        // Build version comparison pairs based on mode
+        var versionPairs = new List<(string from, string to, string outputVersion, PackageArchiveReader reader)>();
+        
+        if (isPastMode) {
+            // Past mode: compare all historical versions (each version vs previous)
+            var allVersions = await NuGetVersions.GetAllAsync (id);
+            for (var idx = 0; idx < allVersions.Length; idx++) {
+                var version = allVersions [idx].ToNormalizedString ();
+                var previous = idx == 0 ? null : allVersions [idx - 1].ToNormalizedString ();
+                versionPairs.Add((previous, version, version, null));
             }
+        } else {
+            // Current mode: compare current dev version vs latest released
+            var version = GetVersion (id);
+            var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
+                ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
+                : version;
+            var latestVersion = (await NuGetVersions.GetLatestAsync (id, filter))?.ToNormalizedString ();
+            var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id.ToLower ()}.{localNugetVersion}.nupkg");
+            versionPairs.Add((latestVersion, localNugetVersion, version, reader));
         }
 
-        Information ($"Diff complete of '{id}'.");
-    }
-});
-
-Task ("docs-api-diff-past")
-    .Does (async () =>
-{
-    var baseDir = "./output/api-diffs-past";
-    CleanDirectories (baseDir);
-
-    Information ($"Creating comparer...");
-    var comparer = await CreateNuGetDiffAsync ();
-    comparer.SaveAssemblyApiInfo = true;
-    comparer.SaveAssemblyMarkdownDiff = true;
-
-    // some parts of SkiaSharp depend on other parts
-    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
-        comparer.SearchPaths.Add(dir.FullPath);
-
-    foreach (var id in TRACKED_NUGETS.Keys) {
-        // skip doc generation for NativeAssets as that has nothing but a native binary
-        if (id.Contains ("NativeAssets"))
-            continue;
-
-        Information ($"Comparing the assemblies in '{id}'...");
-
-        var allVersions = await NuGetVersions.GetAllAsync (id);
-        for (var idx = 0; idx < allVersions.Length; idx++) {
-            // get the versions for the diff
-            var version = allVersions [idx].ToNormalizedString ();
-            var previous = idx == 0 ? null : allVersions [idx - 1].ToNormalizedString ();
-            Information ($"Comparing version '{previous}' vs '{version}' of '{id}'...");
+        // Process each version comparison
+        foreach (var (fromVersion, toVersion, outputVersion, reader) in versionPairs) {
+            Information ($"Comparing version '{fromVersion}' vs '{toVersion}' of '{id}'...");
 
             // pre-cache so we can have better logs
-            Debug ($"Caching version '{version}' of '{id}'...");
-            await comparer.ExtractCachedPackageAsync (id, version);
-            if (previous != null) {
-                Debug ($"Caching version '{previous}' of '{id}'...");
-                await comparer.ExtractCachedPackageAsync (id, previous);
+            Debug ($"Caching version '{toVersion}' of '{id}'...");
+            if (reader == null) {
+                await comparer.ExtractCachedPackageAsync (id, toVersion);
+            }
+            if (!string.IsNullOrEmpty (fromVersion)) {
+                Debug ($"Caching version '{fromVersion}' of '{id}'...");
+                await comparer.ExtractCachedPackageAsync (id, fromVersion);
             }
 
             // generate the diff and copy to the changelogs
-            Debug ($"Running a diff on '{previous}' vs '{version}' of '{id}'...");
-            var diffRoot = $"{baseDir}/{id}/{version}";
+            Debug ($"Running a diff on '{fromVersion}' vs '{toVersion}' of '{id}'...");
+            var diffRoot = isPastMode ? $"{baseDir}/{id}/{outputVersion}" : $"{baseDir}/{id}";
+            
             // run the diff with just the breaking changes
             comparer.MarkdownDiffFileExtension = ".breaking.md";
             comparer.IgnoreNonBreakingChanges = true;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, previous, version, diffRoot);
+            if (reader != null) {
+                await comparer.SaveCompleteDiffToDirectoryAsync (id, fromVersion, reader, diffRoot);
+            } else {
+                await comparer.SaveCompleteDiffToDirectoryAsync (id, fromVersion, toVersion, diffRoot);
+            }
+            
             // run the diff on everything
             comparer.MarkdownDiffFileExtension = null;
             comparer.IgnoreNonBreakingChanges = false;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, previous, version, diffRoot);
-            CopyChangelogs (diffRoot, id, version);
+            if (reader != null) {
+                await comparer.SaveCompleteDiffToDirectoryAsync (id, fromVersion, reader, diffRoot);
+            } else {
+                await comparer.SaveCompleteDiffToDirectoryAsync (id, fromVersion, toVersion, diffRoot);
+            }
+            
+            CopyChangelogs (diffRoot, id, outputVersion);
 
-            Debug ($"Diff complete of version '{version}' of '{id}'.");
+            // copy pretty version
+            if (generatePrettyVersion) {
+                foreach (var md in GetFiles ($"{diffRoot}/*/*.md")) {
+                    var tfm = md.GetDirectory ().GetDirectoryName();
+                    var prettyPath = ((DirectoryPath)diffDir).CombineWithFilePath ($"{id}/{tfm}/{md.GetFilename ()}");
+                    if (!FindTextInFiles (md.FullPath, "No changes").Any ()) {
+                        EnsureDirectoryExists (prettyPath.GetDirectory ());
+                        CopyFile (md, prettyPath);
+                    }
+                }
+            }
+
+            Debug ($"Diff complete of version '{toVersion}' of '{id}'.");
+            
+            // Dispose reader for current mode
+            reader?.Dispose();
         }
+
         Information ($"Diff complete of '{id}'.");
     }
-
-    // clean up after working
-    CleanDirectories (baseDir);
 });
+
+Task("docs-api-diff-past")
+    .Description("Generate API diffs for all past versions (alias for docs-api-diff with past mode detection)")
+    .IsDependentOn("docs-api-diff");
 
 Task ("docs-update-frameworks")
     .Does (async () =>
