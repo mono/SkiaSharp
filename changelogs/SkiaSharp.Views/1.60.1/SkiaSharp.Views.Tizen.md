@@ -9,7 +9,7 @@
 #### New Type: SkiaSharp.Views.Tizen.CustomRenderingView
 
 ```csharp
-public abstract class CustomRenderingView : ElmSharp.Widget, ElmSharp.Accessible.IAccessibleObject {
+public abstract class CustomRenderingView : ElmSharp.Widget {
 	// constructors
 	public CustomRenderingView (ElmSharp.EvasObject parent);
 	// fields
@@ -52,7 +52,7 @@ public enum RenderingMode {
 #### New Type: SkiaSharp.Views.Tizen.SKCanvasView
 
 ```csharp
-public class SKCanvasView : SkiaSharp.Views.Tizen.CustomRenderingView, ElmSharp.Accessible.IAccessibleObject {
+public class SKCanvasView : SkiaSharp.Views.Tizen.CustomRenderingView {
 	// constructors
 	public SKCanvasView (ElmSharp.EvasObject parent);
 	// properties
@@ -70,7 +70,7 @@ public class SKCanvasView : SkiaSharp.Views.Tizen.CustomRenderingView, ElmSharp.
 #### New Type: SkiaSharp.Views.Tizen.SKGLSurfaceView
 
 ```csharp
-public class SKGLSurfaceView : SkiaSharp.Views.Tizen.CustomRenderingView, ElmSharp.Accessible.IAccessibleObject {
+public class SKGLSurfaceView : SkiaSharp.Views.Tizen.CustomRenderingView {
 	// constructors
 	public SKGLSurfaceView (ElmSharp.EvasObject parent);
 	// properties
