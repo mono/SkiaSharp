@@ -131,6 +131,7 @@ stages:
             ${{ else }}:
               signType: 'Test'
             usePipelineArtifactTasks: true
+            checkoutType: 'self'
 
   - ${{ if eq(parameters.enableApiScan, 'true') }}:
     - template: security/apiscan/v0.yml@yaml-templates
