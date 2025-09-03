@@ -75,6 +75,28 @@ extends:
     pool: ${{ parameters.buildAgentHost.pool }}
     customBuildTags:
       - ES365AIMigrationTooling
+    sdl:
+      sourceRepositoriesToScan:
+        exclude:
+        - repository: yaml-templates
+      binskim:
+        enabled: true
+        break: false
+      codeInspector:
+        enabled: true
+      credscan:
+        enabled: true
+        # suppressionsFile: $(Build.SourcesDirectory)/scripts/guardian/CredScanSuppressions.json
+      policheck:
+        enabled: true
+        exclusionsFile: $(Build.SourcesDirectory)/scripts/guardian/PoliCheckExclusions.xml
+      spotBugs:
+        enabled: false
+      suppression:
+        suppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
+      tsa:
+        enabled: true
+        configFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
@@ -87,7 +109,6 @@ extends:
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
-
       - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
         - template: security/apiscan/v0.yml@yaml-templates
           parameters:
@@ -126,26 +147,3 @@ extends:
                     Remove-Item $nupkg
                   }
                 displayName: Extract all the .nupkg files
-
-    sdl:
-      sourceRepositoriesToScan:
-        exclude:
-        - repository: yaml-templates
-      binskim:
-        enabled: true
-        break: false
-      codeInspector:
-        enabled: true
-      credscan:
-        enabled: true
-        # suppressionsFile: $(Build.SourcesDirectory)/scripts/guardian/CredScanSuppressions.json
-      policheck:
-        enabled: true
-        exclusionsFile: $(Build.SourcesDirectory)/scripts/guardian/PoliCheckExclusions.xml
-      spotBugs:
-        enabled: false
-      suppression:
-        suppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
-      tsa:
-        enabled: true
-        configFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json
