@@ -43,8 +43,8 @@ parameters:
         name: Maui-1ESPT
         image: 1ESPT-Ubuntu22.04
         os: linux
-  - name: runCompliance
-    displayName: 'Run post-build compliance tasks (such as API Scan and PoliCheck)'
+  - name: runApiScan
+    displayName: 'Run API Scan'
     type: boolean
     default: false
   - name: forceRealSigning
@@ -82,35 +82,72 @@ extends:
           ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
             enableSigning: true
             forceRealSigning: ${{ parameters.forceRealSigning }}
-          ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-            enableApiScan: true
           use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
+
+      - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+        - template: security/apiscan/v0.yml@yaml-templates
+          parameters:
+            windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
+            windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
+            timeoutInMinutes: 480
+            stageDependsOn:
+              - package
+            scanArtifacts:
+              - nuget
+              - nuget_symbols
+              - native_msvc
+            apiScanSoftwareName: 'SkiaSharp'
+            apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
+            apiScanPreserveLogsFolder: true
+            apiScanAuthConnectionString: 'runAs=App;AppId=$(ApiScanClientId)'
+            apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
+            preScanSteps:
+              - pwsh: |
+                  $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
+                  $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
+                  $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
+                  $destFile = "$destFolder\APIScanSurrogates.xml"
+                  New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
+                  $surrogateContents = (Get-Content $surrogateFile)
+                  $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
+                  $surrogateContents | Set-Content $destFile
+                displayName: Generate the surrogate files
+              - pwsh: |
+                  $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
+                  foreach ($nupkg in $nupkgs) {
+                    $filename = $nupkg.Name.TrimEnd('.nupkg')
+                    $dest = "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted\$filename"
+                    Write-Host "Extracting '$nupkg' to '$dest'..."
+                    Expand-Archive $nupkg $dest
+                    Remove-Item $nupkg
+                  }
+                displayName: Extract all the .nupkg files
+
     sdl:
       sourceRepositoriesToScan:
         exclude:
         - repository: yaml-templates
-      ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-        apiscan:
-          enabled: true
-        binskim:
-          enabled: true
-          break: false
-        codeInspector:
-          enabled: true
-        credscan:
-          enabled: true
-          # suppressionsFile: $(Build.SourcesDirectory)/scripts/guardian/CredScanSuppressions.json
-        policheck:
-          enabled: true
-          exclusionsFile: $(Build.SourcesDirectory)/scripts/guardian/PoliCheckExclusions.xml
-        spotBugs:
-          enabled: false
-        suppression:
-          suppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
-        tsa:
-          enabled: true
-          configFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json
+      apiscan:
+        enabled: true # not used actually, but could be in the future
+      binskim:
+        enabled: true
+        break: false
+      codeInspector:
+        enabled: true
+      credscan:
+        enabled: true
+        # suppressionsFile: $(Build.SourcesDirectory)/scripts/guardian/CredScanSuppressions.json
+      policheck:
+        enabled: true
+        exclusionsFile: $(Build.SourcesDirectory)/scripts/guardian/PoliCheckExclusions.xml
+      spotBugs:
+        enabled: false
+      suppression:
+        suppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
+      tsa:
+        enabled: true
+        configFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json

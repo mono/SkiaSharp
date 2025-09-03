@@ -59,10 +59,6 @@ parameters:
         name: Maui-1ESPT
         image: 1ESPT-Ubuntu22.04
         os: linux
-  - name: runCompliance
-    displayName: 'Run post-build compliance tasks (such as API Scan and PoliCheck)'
-    type: boolean
-    default: false
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self
@@ -98,24 +94,23 @@ extends:
         sourceRepositoriesToScan:
           exclude:
           - repository: yaml-templates
-        ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-          apiscan:
-            enabled: true
-          binskim:
-            enabled: true
-            break: false
-          codeInspector:
-            enabled: true
-          credscan:
-            enabled: true
-            # suppressionsFile: $(Build.SourcesDirectory)/scripts/guardian/CredScanSuppressions.json
-          policheck:
-            enabled: true
-            exclusionsFile: $(Build.SourcesDirectory)/scripts/guardian/PoliCheckExclusions.xml
-          spotBugs:
-            enabled: false
-          suppression:
-            suppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
-          tsa:
-            enabled: true
-            configFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json
+        apiscan:
+          enabled: true # not used actually, but could be in the future
+        binskim:
+          enabled: true
+          break: false
+        codeInspector:
+          enabled: true
+        credscan:
+          enabled: true
+          # suppressionsFile: $(Build.SourcesDirectory)/scripts/guardian/CredScanSuppressions.json
+        policheck:
+          enabled: true
+          exclusionsFile: $(Build.SourcesDirectory)/scripts/guardian/PoliCheckExclusions.xml
+        spotBugs:
+          enabled: false
+        suppression:
+          suppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
+        tsa:
+          enabled: true
+          configFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json
