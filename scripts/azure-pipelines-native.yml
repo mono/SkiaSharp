@@ -69,18 +69,16 @@ variables:
 
 resources:
   repositories:
-    - repository: xamarin-templates
-      type: github
-      name: xamarin/yaml-templates
-      endpoint: xamarin
-      ref: refs/heads/main
-    - repository: 1ESPipelineTemplates
+    - repository: yaml-templates
       type: git
-      name: 1ESPipelineTemplates/1ESPipelineTemplates
-      ref: refs/tags/release
+      name: DevDiv/Xamarin.yaml-templates
+      ref: refs/heads/dev/maleib/testing
+    - repository: 1ESTemplates
+      type: git
+      name: 1ESPipelineTemplates/MicroBuildTemplate
 
 extends:
-  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  template: azure-pipelines/MicroBuild.1ES.Official.yml@1ESTemplates
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     customBuildTags:
@@ -90,31 +88,34 @@ extends:
         parameters:
           buildPipelineType: 'native'
           buildExternals: ${{ parameters.buildExternals }}
-          ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
-            ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-              sdl:
-                apiscan:
-                  enabled: true
-                binskim:
-                  enabled: true
-                  break: false
-                codeInspector:
-                  enabled: true
-                credscan:
-                  enabled: true
-                  # suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
-                policheck:
-                  enabled: true
-                  exclusionsFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
-                spotBugs:
-                  enabled: false
-                suppression:
-                  suppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
-                tsa:
-                  enabled: true
-                  configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
           use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
           buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+    ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
+      sdl:
+        sourceRepositoriesToScan:
+          exclude:
+          - repository: yaml-templates
+        ${{ if or(parameters.runCompliance, and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+          apiscan:
+            enabled: true
+          binskim:
+            enabled: true
+            break: false
+          codeInspector:
+            enabled: true
+          credscan:
+            enabled: true
+            # suppressionsFile: $(Build.SourcesDirectory)/scripts/guardian/CredScanSuppressions.json
+          policheck:
+            enabled: true
+            exclusionsFile: $(Build.SourcesDirectory)/scripts/guardian/PoliCheckExclusions.xml
+          spotBugs:
+            enabled: false
+          suppression:
+            suppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
+          tsa:
+            enabled: true
+            configFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json

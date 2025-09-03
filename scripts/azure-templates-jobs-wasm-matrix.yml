@@ -2,7 +2,6 @@ parameters:
   buildExternals: ''                            # the build number to download externals from
   buildAgent: ''                                # the configuration for the build agent
   use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
-  sdl: []                                       # the SDL properties to use for this job
   emscripten: [ ]
 
 jobs:
@@ -11,7 +10,6 @@ jobs:
       parameters:
         name: native_wasm_${{ replace(version.displayName, '.', '_') }}_linux
         displayName: WASM (${{ version.displayName }})
-        sdl: ${{ parameters.sdl }}
         buildExternals: ${{ parameters.buildExternals }}
         buildAgent: ${{ parameters.buildAgent }}
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}

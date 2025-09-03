@@ -6,13 +6,13 @@ parameters:
     type: object
   - name: buildAgentWindows
     type: object
-  - name: sdl
-    type: object
   - name: use1ESPipelineTemplates
     type: boolean
   - name: enableSigning
     type: boolean
   - name: forceRealSigning
+    type: boolean
+  - name: enableApiScan
     type: boolean
 
 stages:
@@ -26,10 +26,16 @@ stages:
           parameters:
             name: native
             displayName: Re-upload Native Artifacts
-            sdl: ${{ parameters.sdl }}
             buildAgent: ${{ parameters.buildAgentHost }}
             requiredArtifacts:
               - name: native
+        - template: /scripts/azure-templates-jobs-merger.yml@self
+          parameters:
+            name: native_msvc
+            displayName: Re-upload Native MSVC Artifacts
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              - name: native_msvc
 
   - stage: package
     displayName: Package NuGets
@@ -39,7 +45,6 @@ stages:
         parameters:
           name: package_normal_windows
           displayName: Package NuGets
-          sdl: ${{ parameters.sdl }}
           buildAgent: ${{ parameters.buildAgentWindows}}
           target: nuget-normal
           additionalArgs: --skipExternals="all"
@@ -82,7 +87,6 @@ stages:
         parameters:
           name: package_special_windows
           displayName: Package Special NuGets
-          sdl: ${{ parameters.sdl }}
           buildAgent: ${{ parameters.buildAgentWindows}}
           dependsOn: package_normal_windows
           target: nuget-special
@@ -120,17 +124,17 @@ stages:
       displayName: Sign NuGets
       dependsOn: package
       jobs:
-        - template: sign-artifacts/jobs/v3.yml@xamarin-templates
+        - template: sign-artifacts/jobs/v4.yml@yaml-templates
           parameters:
             ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
               signType: 'Real'
             ${{ else }}:
               signType: 'Test'
-            use1ESTemplate: ${{ parameters.use1ESPipelineTemplates }}
             usePipelineArtifactTasks: true
+            checkoutType: 'self'
 
-  - ${{ if eq(parameters.sdl.apiscan.enabled, 'true') }}:
-    - template: security/apiscan/v0.yml@xamarin-templates
+  - ${{ if eq(parameters.enableApiScan, 'true') }}:
+    - template: security/apiscan/v0.yml@yaml-templates
       parameters:
         windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
         windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
