@@ -121,6 +121,9 @@ extends:
               - nuget
               - nuget_symbols
               - native_msvc
+            sourceGdnSuppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
+            tsaConfigFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json
+            tsaUploadEnabled: true
             apiScanSoftwareName: 'SkiaSharp'
             apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
             apiScanPreserveLogsFolder: true
