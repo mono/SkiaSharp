@@ -9,19 +9,24 @@ namespace SkiaSharpGenerator
 {
 	public class Generator : BaseTool
 	{
-		public Generator(string skiaRoot, string configFile, TextWriter outputWriter)
+		public Generator(string skiaRoot, string configFile, TextWriter outputWriter, DocumentationStore? docStore = null)
 			: base(skiaRoot, configFile)
 		{
 			OutputWriter = outputWriter ?? throw new ArgumentNullException(nameof(outputWriter));
+			PreviousDocumentation = docStore;
 		}
 
 		public TextWriter OutputWriter { get; }
+
+		public DocumentationStore? PreviousDocumentation { get; }
 
 		public async Task GenerateAsync()
 		{
 			Log?.Log("Starting C# API generation...");
 
 			config = await LoadConfigAsync(ConfigFile);
+
+			PreviousDocumentation?.Load();
 
 			LoadStandardMappings();
 
@@ -174,6 +179,7 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine();
 			writer.WriteLine($"\t// {cppClassName}");
+			WriteDocIfAny(writer, DocumentationStore.Type(name), "\t");
 			writer.WriteLine($"\t[StructLayout (LayoutKind.Sequential)]");
 			var visibility = map?.IsInternal == true ? "internal" : "public";
 			var isReadonly = map?.IsReadOnly == true ? " readonly" : "";
@@ -196,6 +202,8 @@ namespace SkiaSharpGenerator
 				isPrivate |= fieldName.StartsWith("reserved", StringComparison.OrdinalIgnoreCase);
 
 				allFields.Add(fieldName);
+
+				WriteDocIfAny(writer, DocumentationStore.Field(name, fieldName), "\t\t");
 
 				var vis = map?.IsInternal == true ? "public" : "private";
 				var ro = map?.IsReadOnly == true ? " readonly" : "";
@@ -228,6 +236,8 @@ namespace SkiaSharpGenerator
 
 					if (!isPrivate)
 					{
+						WriteDocIfAny(writer, DocumentationStore.Property(name, propertyName), "\t\t");
+
 						if (fieldName == "value")
 							fieldName = "this." + fieldName;
 
@@ -284,6 +294,7 @@ namespace SkiaSharpGenerator
 				{
 					equalityFields.Add($"{f} == obj.{f}");
 				}
+				WriteDocIfAny(writer, DocumentationStore.Method(name, "Equals", [name]), "\t\t");
 				writer.WriteLine($"\t\tpublic readonly bool Equals ({name} obj) =>");
 				writer.WriteLine($"#pragma warning disable CS8909");
 				writer.WriteLine($"\t\t\t{string.Join(" && ", equalityFields)};");
@@ -291,19 +302,23 @@ namespace SkiaSharpGenerator
 				writer.WriteLine();
 
 				// Equals
+				WriteDocIfAny(writer, DocumentationStore.Method(name, "Equals", ["object"]), "\t\t");
 				writer.WriteLine($"\t\tpublic readonly override bool Equals (object obj) =>");
 				writer.WriteLine($"\t\t\tobj is {name} f && Equals (f);");
 				writer.WriteLine();
 
 				// equality operators
+				WriteDocIfAny(writer, DocumentationStore.Method(name, "op_Equality", [name, name]), "\t\t");
 				writer.WriteLine($"\t\tpublic static bool operator == ({name} left, {name} right) =>");
 				writer.WriteLine($"\t\t\tleft.Equals (right);");
 				writer.WriteLine();
+				WriteDocIfAny(writer, DocumentationStore.Method(name, "op_Inequality", [name, name]), "\t\t");
 				writer.WriteLine($"\t\tpublic static bool operator != ({name} left, {name} right) =>");
 				writer.WriteLine($"\t\t\t!left.Equals (right);");
 				writer.WriteLine();
 
 				// GetHashCode
+				WriteDocIfAny(writer, DocumentationStore.Method(name, "GetHashCode", Array.Empty<string>()), "\t\t");
 				writer.WriteLine($"\t\tpublic readonly override int GetHashCode ()");
 				writer.WriteLine($"\t\t{{");
 				writer.WriteLine($"\t\t\tvar hash = new HashCode ();");
@@ -371,6 +386,7 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine();
 			writer.WriteLine($"\t// {cppEnumName}");
+			WriteDocIfAny(writer, DocumentationStore.Type(name), "\t");
 			if (map?.IsObsolete == true)
 				writer.WriteLine($"\t[Obsolete]");
 			if (map?.IsFlags == true)
@@ -392,6 +408,7 @@ namespace SkiaSharpGenerator
 					commentVal = field.Value.ToString();
 
 				writer.WriteLine($"\t\t// {field.Name} = {commentVal}");
+				WriteDocIfAny(writer, DocumentationStore.Field(name, fieldName), "\t\t");
 				writer.WriteLine($"\t\t{fieldName} = {field.Value},");
 			}
 			writer.WriteLine($"\t}}");
@@ -634,6 +651,21 @@ namespace SkiaSharpGenerator
 				if (returnType == "bool") writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
 				writer.WriteLine($"\tprivate static partial {returnType} {implName}({string.Join(",", paramsList)});");
 				writer.WriteLine();
+			}
+		}
+
+		private void WriteDocIfAny(TextWriter writer, string key, string indent)
+		{
+			if (PreviousDocumentation?.TryGet(key, out var xml) != true)
+				return;
+
+			foreach (var line in xml.Split('\n'))
+			{
+				if (string.IsNullOrWhiteSpace(line))
+					continue;
+
+				writer.Write(indent);
+				writer.WriteLine(line.TrimEnd());
 			}
 		}
 	}

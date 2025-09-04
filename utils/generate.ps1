@@ -5,7 +5,7 @@ $projects = @(
     @{ Json="libSkiaSharp.Skottie.json";    Root="externals/skia";                                  Output="SkiaSharp.Skottie/SkottieApi.generated.cs"       },
     @{ Json="libSkiaSharp.SceneGraph.json"; Root="externals/skia";                                  Output="SkiaSharp.SceneGraph/SceneGraphApi.generated.cs" },
     @{ Json="libSkiaSharp.Resources.json";  Root="externals/skia";                                  Output="SkiaSharp.Resources/ResourcesApi.generated.cs"   },
-    @{ Json="libHarfBuzzSharp.json";        Root="externals/skia/third_party/externals/harfbuzz";   Output="HarfBuzzSharp/HarfBuzzApi.generated.cs"          }
+    @{ Json="libHarfBuzzSharp.json";        Root="externals/skia/third_party/externals/harfbuzz";   Output="HarfBuzzSharp/HarfBuzzApi.generated.cs"          } # you may have to revert harfbuzz in Deps to 2.8.2 or 63e15eac4f443fa53565d1e4fb9611cdd7814f28
 )
 
 New-Item -ItemType Directory -Force -Path "output/generated/" | Out-Null
