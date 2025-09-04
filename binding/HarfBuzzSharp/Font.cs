@@ -8,10 +8,19 @@ using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>
+	/// Represents a specific font face.
+	/// </summary>
+	/// <remarks></remarks>
 	public unsafe class Font : NativeObject
 	{
 		internal const int NameBufferLength = 128;
 
+		/// <summary>
+		/// Creates a new <see cref="T:HarfBuzzSharp.Font" /> using a specific font face.
+		/// </summary>
+		/// <param name="face">The face to use.</param>
+		/// <remarks></remarks>
 		public Font (Face face)
 			: base (IntPtr.Zero)
 		{
@@ -22,6 +31,11 @@ namespace HarfBuzzSharp
 			OpenTypeMetrics = new OpenTypeMetrics (this);
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="parent">To be added.</param>
+		/// <remarks>To be added.</remarks>
 		public Font (Font parent)
 			: base (IntPtr.Zero)
 		{
@@ -35,19 +49,52 @@ namespace HarfBuzzSharp
 			OpenTypeMetrics = new OpenTypeMetrics (this);
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public Font Parent { get; }
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public OpenTypeMetrics OpenTypeMetrics { get; }
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public string[] SupportedShapers =>
 			PtrToStringArray ((IntPtr)HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="fontFunctions">To be added.</param>
+		/// <remarks>To be added.</remarks>
 		public void SetFontFunctions (FontFunctions fontFunctions) =>
 			SetFontFunctions (fontFunctions, null, null);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="fontFunctions">To be added.</param>
+		/// <param name="fontData">To be added.</param>
+		/// <remarks>To be added.</remarks>
 		public void SetFontFunctions (FontFunctions fontFunctions, object fontData) =>
 			SetFontFunctions (fontFunctions, fontData, null);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="fontFunctions">To be added.</param>
+		/// <param name="fontData">To be added.</param>
+		/// <param name="destroy">To be added.</param>
+		/// <remarks>To be added.</remarks>
 		public void SetFontFunctions (FontFunctions fontFunctions, object fontData, ReleaseDelegate destroy)
 		{
 			_ = fontFunctions ?? throw new ArgumentNullException (nameof (fontFunctions));
@@ -57,6 +104,12 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
 		}
 
+		/// <summary>
+		/// Retrieves the font scale.
+		/// </summary>
+		/// <param name="xScale">The scale along the x-axis.</param>
+		/// <param name="yScale">The scale along the y-axis.</param>
+		/// <remarks></remarks>
 		public void GetScale (out int xScale, out int yScale)
 		{
 			fixed (int* x = &xScale)
@@ -65,9 +118,21 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// Sets the font scale.
+		/// </summary>
+		/// <param name="xScale">The scale along the x-axis.</param>
+		/// <param name="yScale">The scale along the y-axis.</param>
+		/// <remarks></remarks>
 		public void SetScale (int xScale, int yScale) =>
 			HarfBuzzApi.hb_font_set_scale (Handle, xScale, yScale);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="extents">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetHorizontalFontExtents (out FontExtents extents)
 		{
 			fixed (FontExtents* e = &extents) {
@@ -75,6 +140,12 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="extents">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetVerticalFontExtents (out FontExtents extents)
 		{
 			fixed (FontExtents* e = &extents) {
@@ -82,9 +153,23 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="unicode">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetNominalGlyph (int unicode, out uint glyph) =>
 			TryGetNominalGlyph ((uint)unicode, out glyph);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="unicode">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetNominalGlyph (uint unicode, out uint glyph)
 		{
 			fixed (uint* g = &glyph) {
@@ -92,9 +177,23 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="unicode">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetVariationGlyph (int unicode, out uint glyph) =>
 			TryGetVariationGlyph (unicode, 0, out glyph);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="unicode">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetVariationGlyph (uint unicode, out uint glyph)
 		{
 			fixed (uint* g = &glyph) {
@@ -102,9 +201,25 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="unicode">To be added.</param>
+		/// <param name="variationSelector">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetVariationGlyph (int unicode, uint variationSelector, out uint glyph) =>
 			TryGetVariationGlyph ((uint)unicode, variationSelector, out glyph);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="unicode">To be added.</param>
+		/// <param name="variationSelector">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetVariationGlyph (uint unicode, uint variationSelector, out uint glyph)
 		{
 			fixed (uint* g = &glyph) {
@@ -112,12 +227,30 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public int GetHorizontalGlyphAdvance (uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph_h_advance (Handle, glyph);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public int GetVerticalGlyphAdvance (uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, glyph);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyphs">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public unsafe int[] GetHorizontalGlyphAdvances (ReadOnlySpan<uint> glyphs)
 		{
 			fixed (uint* firstGlyph = glyphs) {
@@ -125,6 +258,13 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="firstGlyph">To be added.</param>
+		/// <param name="count">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public unsafe int[] GetHorizontalGlyphAdvances (IntPtr firstGlyph, int count)
 		{
 			var advances = new int[count];
@@ -136,6 +276,12 @@ namespace HarfBuzzSharp
 			return advances;
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyphs">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public unsafe int[] GetVerticalGlyphAdvances (ReadOnlySpan<uint> glyphs)
 		{
 			fixed (uint* firstGlyph = glyphs) {
@@ -143,6 +289,13 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="firstGlyph">To be added.</param>
+		/// <param name="count">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public unsafe int[] GetVerticalGlyphAdvances (IntPtr firstGlyph, int count)
 		{
 			var advances = new int[count];
@@ -154,6 +307,14 @@ namespace HarfBuzzSharp
 			return advances;
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyph">To be added.</param>
+		/// <param name="xOrigin">To be added.</param>
+		/// <param name="yOrigin">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetHorizontalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin)
 		{
 			fixed (int* x = &xOrigin)
@@ -162,6 +323,14 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyph">To be added.</param>
+		/// <param name="xOrigin">To be added.</param>
+		/// <param name="yOrigin">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetVerticalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin)
 		{
 			fixed (int* x = &xOrigin)
@@ -170,9 +339,23 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="leftGlyph">To be added.</param>
+		/// <param name="rightGlyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public int GetHorizontalGlyphKerning (uint leftGlyph, uint rightGlyph) =>
 			HarfBuzzApi.hb_font_get_glyph_h_kerning (Handle, leftGlyph, rightGlyph);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyph">To be added.</param>
+		/// <param name="extents">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetGlyphExtents (uint glyph, out GlyphExtents extents)
 		{
 			fixed (GlyphExtents* e = &extents) {
@@ -180,6 +363,15 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyph">To be added.</param>
+		/// <param name="pointIndex">To be added.</param>
+		/// <param name="x">To be added.</param>
+		/// <param name="y">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetGlyphContourPoint (uint glyph, uint pointIndex, out int x, out int y)
 		{
 			fixed (int* xPtr = &x)
@@ -188,6 +380,13 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyph">To be added.</param>
+		/// <param name="name">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public unsafe bool TryGetGlyphName (uint glyph, out string name)
 		{
 			var pool = ArrayPool<byte>.Shared;
@@ -206,6 +405,13 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="name">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetGlyphFromName (string name, out uint glyph)
 		{
 			fixed (uint* g = &glyph) {
@@ -213,15 +419,45 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="unicode">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetGlyph (int unicode, out uint glyph) =>
 			TryGetGlyph ((uint)unicode, 0, out glyph);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="unicode">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetGlyph (uint unicode, out uint glyph) =>
 			TryGetGlyph (unicode, 0, out glyph);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="unicode">To be added.</param>
+		/// <param name="variationSelector">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetGlyph (int unicode, uint variationSelector, out uint glyph) =>
 			TryGetGlyph ((uint)unicode, variationSelector, out glyph);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="unicode">To be added.</param>
+		/// <param name="variationSelector">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph)
 		{
 			fixed (uint* g = &glyph) {
@@ -229,6 +465,12 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="direction">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public FontExtents GetFontExtentsForDirection (Direction direction)
 		{
 			FontExtents extents;
@@ -236,6 +478,14 @@ namespace HarfBuzzSharp
 			return extents;
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyph">To be added.</param>
+		/// <param name="direction">To be added.</param>
+		/// <param name="x">To be added.</param>
+		/// <param name="y">To be added.</param>
+		/// <remarks>To be added.</remarks>
 		public void GetGlyphAdvanceForDirection (uint glyph, Direction direction, out int x, out int y)
 		{
 			fixed (int* xPtr = &x)
@@ -244,6 +494,13 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyphs">To be added.</param>
+		/// <param name="direction">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public unsafe int[] GetGlyphAdvancesForDirection (ReadOnlySpan<uint> glyphs, Direction direction)
 		{
 			fixed (uint* firstGlyph = glyphs) {
@@ -251,6 +508,14 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="firstGlyph">To be added.</param>
+		/// <param name="count">To be added.</param>
+		/// <param name="direction">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public unsafe int[] GetGlyphAdvancesForDirection (IntPtr firstGlyph, int count, Direction direction)
 		{
 			var advances = new int[count];
@@ -262,6 +527,16 @@ namespace HarfBuzzSharp
 			return advances;
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyph">To be added.</param>
+		/// <param name="pointIndex">To be added.</param>
+		/// <param name="direction">To be added.</param>
+		/// <param name="x">To be added.</param>
+		/// <param name="y">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetGlyphContourPointForOrigin (uint glyph, uint pointIndex, Direction direction, out int x, out int y)
 		{
 			fixed (int* xPtr = &x)
@@ -270,6 +545,12 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public unsafe string GlyphToString (uint glyph)
 		{
 			var pool = ArrayPool<byte>.Shared;
@@ -284,6 +565,13 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="s">To be added.</param>
+		/// <param name="glyph">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public bool TryGetGlyphFromString (string s, out uint glyph)
 		{
 			fixed (uint* g = &glyph) {
@@ -291,12 +579,29 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// Sets the font functions to that of OpenType.
+		/// </summary>
+		/// <remarks></remarks>
 		public void SetFunctionsOpenType () =>
 			HarfBuzzApi.hb_ot_font_set_funcs (Handle);
 
+		/// <summary>
+		/// Shapes the specified buffer using the current font.
+		/// </summary>
+		/// <param name="buffer">The buffer to shape.</param>
+		/// <param name="features">The features to control the shaping process.</param>
+		/// <remarks></remarks>
 		public void Shape (Buffer buffer, params Feature[] features) =>
 			Shape (buffer, features, null);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="buffer">To be added.</param>
+		/// <param name="features">To be added.</param>
+		/// <param name="shapers">To be added.</param>
+		/// <remarks>To be added.</remarks>
 		public void Shape (Buffer buffer, IReadOnlyList<Feature> features, IReadOnlyList<string> shapers)
 		{
 			if (buffer == null)
@@ -339,9 +644,19 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// Releases the unmanaged resources used by the <see cref="T:HarfBuzzSharp.Font" /> and optionally releases the managed resources.
+		/// </summary>
+		/// <param name="disposing">
+		/// <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:HarfBuzzSharp.Font" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
+		/// <summary>
+		/// Releases the unmanaged resources used.
+		/// </summary>
+		/// <remarks></remarks>
 		protected override void DisposeHandler ()
 		{
 			if (Handle != IntPtr.Zero) {
