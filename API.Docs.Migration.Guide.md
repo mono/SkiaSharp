@@ -28,6 +28,7 @@ Rules
   - Match overload signatures exactly before pasting docs.
 - Coverage: Migrate all members that exist in code and are present in the XML. If the XML contains a DocId that is not present in code, do not add code. Add a note under the type in the checklist: `Missing in code: <DocId>` and leave it unchecked.
 - Fidelity: Preserve wording, punctuation, and simple formatting. Use appropriate XML doc tags: `summary`, `remarks`, `param`, `returns`, `value`, `exception` when present.
+- Tag ordering, make sure to follow the order of: `summary`, `value`, `param`, `returns`, `exception`, `remarks`.
 - No API changes: Do not alter public APIs to make docs fit. If there’s a mismatch, note it in the checklist and continue.
 
 Workflow
