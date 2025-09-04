@@ -5,21 +5,21 @@
 
 ## Namespace HarfBuzzSharp
 
-- [ ] HarfBuzzSharp.Blob
-  - [ ] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.Int32,HarfBuzzSharp.MemoryMode,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.Int32,HarfBuzzSharp.MemoryMode)
-  - [ ] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.UInt32,HarfBuzzSharp.MemoryMode,System.Object,HarfBuzzSharp.BlobReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.Blob.AsSpan
-  - [ ] M:HarfBuzzSharp.Blob.AsStream
-  - [ ] M:HarfBuzzSharp.Blob.Dispose(System.Boolean)
-  - [ ] M:HarfBuzzSharp.Blob.DisposeHandler
-  - [ ] M:HarfBuzzSharp.Blob.FromFile(System.String)
-  - [ ] M:HarfBuzzSharp.Blob.FromStream(System.IO.Stream)
-  - [ ] M:HarfBuzzSharp.Blob.MakeImmutable
-  - [ ] P:HarfBuzzSharp.Blob.Empty
-  - [ ] P:HarfBuzzSharp.Blob.FaceCount
-  - [ ] P:HarfBuzzSharp.Blob.IsImmutable
-  - [ ] P:HarfBuzzSharp.Blob.Length
+- [x] HarfBuzzSharp.Blob
+  - [x] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.Int32,HarfBuzzSharp.MemoryMode,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.Int32,HarfBuzzSharp.MemoryMode)
+  - [ ] M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.UInt32,HarfBuzzSharp.MemoryMode,System.Object,HarfBuzzSharp.BlobReleaseDelegate) - Missing in code
+  - [x] M:HarfBuzzSharp.Blob.AsSpan - Note: returns Span<byte> in code vs ReadOnlySpan<byte> in XML
+  - [x] M:HarfBuzzSharp.Blob.AsStream
+  - [x] M:HarfBuzzSharp.Blob.Dispose(System.Boolean)
+  - [x] M:HarfBuzzSharp.Blob.DisposeHandler
+  - [x] M:HarfBuzzSharp.Blob.FromFile(System.String)
+  - [x] M:HarfBuzzSharp.Blob.FromStream(System.IO.Stream)
+  - [x] M:HarfBuzzSharp.Blob.MakeImmutable
+  - [x] P:HarfBuzzSharp.Blob.Empty
+  - [x] P:HarfBuzzSharp.Blob.FaceCount
+  - [x] P:HarfBuzzSharp.Blob.IsImmutable
+  - [x] P:HarfBuzzSharp.Blob.Length
 - [ ] HarfBuzzSharp.BlobReleaseDelegate
 - [ ] HarfBuzzSharp.Buffer
   - [ ] F:HarfBuzzSharp.Buffer.DefaultReplacementCodepoint
