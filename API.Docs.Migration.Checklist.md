@@ -201,39 +201,39 @@
   - [x] P:HarfBuzzSharp.Font.OpenTypeMetrics
   - [x] P:HarfBuzzSharp.Font.Parent
   - [x] P:HarfBuzzSharp.Font.SupportedShapers
-- [ ] HarfBuzzSharp.FontExtents
-  - [ ] M:HarfBuzzSharp.FontExtents.Equals(HarfBuzzSharp.FontExtents)
-  - [ ] M:HarfBuzzSharp.FontExtents.Equals(System.Object)
-  - [ ] M:HarfBuzzSharp.FontExtents.GetHashCode
-  - [ ] M:HarfBuzzSharp.FontExtents.op_Equality(HarfBuzzSharp.FontExtents,HarfBuzzSharp.FontExtents)
-  - [ ] M:HarfBuzzSharp.FontExtents.op_Inequality(HarfBuzzSharp.FontExtents,HarfBuzzSharp.FontExtents)
-  - [ ] P:HarfBuzzSharp.FontExtents.Ascender
-  - [ ] P:HarfBuzzSharp.FontExtents.Descender
-  - [ ] P:HarfBuzzSharp.FontExtents.LineGap
-- [ ] HarfBuzzSharp.FontExtentsDelegate
-- [ ] HarfBuzzSharp.FontFunctions
-  - [ ] M:HarfBuzzSharp.FontFunctions.#ctor
-  - [ ] M:HarfBuzzSharp.FontFunctions.Dispose(System.Boolean)
-  - [ ] M:HarfBuzzSharp.FontFunctions.DisposeHandler
-  - [ ] M:HarfBuzzSharp.FontFunctions.MakeImmutable
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetGlyphContourPointDelegate(HarfBuzzSharp.GlyphContourPointDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetGlyphExtentsDelegate(HarfBuzzSharp.GlyphExtentsDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetGlyphFromNameDelegate(HarfBuzzSharp.GlyphFromNameDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetGlyphNameDelegate(HarfBuzzSharp.GlyphNameDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetHorizontalFontExtentsDelegate(HarfBuzzSharp.FontExtentsDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetHorizontalGlyphAdvanceDelegate(HarfBuzzSharp.GlyphAdvanceDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetHorizontalGlyphAdvancesDelegate(HarfBuzzSharp.GlyphAdvancesDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetHorizontalGlyphKerningDelegate(HarfBuzzSharp.GlyphKerningDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetHorizontalGlyphOriginDelegate(HarfBuzzSharp.GlyphOriginDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetNominalGlyphDelegate(HarfBuzzSharp.NominalGlyphDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetNominalGlyphsDelegate(HarfBuzzSharp.NominalGlyphsDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetVariationGlyphDelegate(HarfBuzzSharp.VariationGlyphDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetVerticalFontExtentsDelegate(HarfBuzzSharp.FontExtentsDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetVerticalGlyphAdvanceDelegate(HarfBuzzSharp.GlyphAdvanceDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetVerticalGlyphAdvancesDelegate(HarfBuzzSharp.GlyphAdvancesDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.FontFunctions.SetVerticalGlyphOriginDelegate(HarfBuzzSharp.GlyphOriginDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] P:HarfBuzzSharp.FontFunctions.Empty
-  - [ ] P:HarfBuzzSharp.FontFunctions.IsImmutable
+- [ ] HarfBuzzSharp.FontExtents - Generated code: cannot add documentation comments
+  - [ ] M:HarfBuzzSharp.FontExtents.Equals(HarfBuzzSharp.FontExtents) - Generated code
+  - [ ] M:HarfBuzzSharp.FontExtents.Equals(System.Object) - Generated code
+  - [ ] M:HarfBuzzSharp.FontExtents.GetHashCode - Generated code
+  - [ ] M:HarfBuzzSharp.FontExtents.op_Equality(HarfBuzzSharp.FontExtents,HarfBuzzSharp.FontExtents) - Generated code
+  - [ ] M:HarfBuzzSharp.FontExtents.op_Inequality(HarfBuzzSharp.FontExtents,HarfBuzzSharp.FontExtents) - Generated code
+  - [ ] P:HarfBuzzSharp.FontExtents.Ascender - Generated code
+  - [ ] P:HarfBuzzSharp.FontExtents.Descender - Generated code
+  - [ ] P:HarfBuzzSharp.FontExtents.LineGap - Generated code
+- [x] HarfBuzzSharp.FontExtentsDelegate
+- [x] HarfBuzzSharp.FontFunctions
+  - [x] M:HarfBuzzSharp.FontFunctions.#ctor
+  - [x] M:HarfBuzzSharp.FontFunctions.Dispose(System.Boolean)
+  - [x] M:HarfBuzzSharp.FontFunctions.DisposeHandler
+  - [x] M:HarfBuzzSharp.FontFunctions.MakeImmutable
+  - [x] M:HarfBuzzSharp.FontFunctions.SetGlyphContourPointDelegate(HarfBuzzSharp.GlyphContourPointDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetGlyphExtentsDelegate(HarfBuzzSharp.GlyphExtentsDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetGlyphFromNameDelegate(HarfBuzzSharp.GlyphFromNameDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetGlyphNameDelegate(HarfBuzzSharp.GlyphNameDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetHorizontalFontExtentsDelegate(HarfBuzzSharp.FontExtentsDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetHorizontalGlyphAdvanceDelegate(HarfBuzzSharp.GlyphAdvanceDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetHorizontalGlyphAdvancesDelegate(HarfBuzzSharp.GlyphAdvancesDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetHorizontalGlyphKerningDelegate(HarfBuzzSharp.GlyphKerningDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetHorizontalGlyphOriginDelegate(HarfBuzzSharp.GlyphOriginDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetNominalGlyphDelegate(HarfBuzzSharp.NominalGlyphDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetNominalGlyphsDelegate(HarfBuzzSharp.NominalGlyphsDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetVariationGlyphDelegate(HarfBuzzSharp.VariationGlyphDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetVerticalFontExtentsDelegate(HarfBuzzSharp.FontExtentsDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetVerticalGlyphAdvanceDelegate(HarfBuzzSharp.GlyphAdvanceDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetVerticalGlyphAdvancesDelegate(HarfBuzzSharp.GlyphAdvancesDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.FontFunctions.SetVerticalGlyphOriginDelegate(HarfBuzzSharp.GlyphOriginDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] P:HarfBuzzSharp.FontFunctions.Empty
+  - [x] P:HarfBuzzSharp.FontFunctions.IsImmutable
 - [ ] HarfBuzzSharp.GeneralCategoryDelegate
 - [ ] HarfBuzzSharp.GetTableDelegate
 - [ ] HarfBuzzSharp.GlyphAdvanceDelegate
