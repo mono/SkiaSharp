@@ -21,11 +21,11 @@
   - [x] P:HarfBuzzSharp.Blob.IsImmutable
   - [x] P:HarfBuzzSharp.Blob.Length
 - [x] HarfBuzzSharp.BlobReleaseDelegate
-- [ ] HarfBuzzSharp.Buffer
-  - [ ] F:HarfBuzzSharp.Buffer.DefaultReplacementCodepoint
-  - [ ] M:HarfBuzzSharp.Buffer.#ctor
-  - [ ] M:HarfBuzzSharp.Buffer.Add(System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.Add(System.UInt32,System.UInt32)
+- [x] HarfBuzzSharp.Buffer
+  - [x] F:HarfBuzzSharp.Buffer.DefaultReplacementCodepoint
+  - [x] M:HarfBuzzSharp.Buffer.#ctor
+  - [x] M:HarfBuzzSharp.Buffer.Add(System.Int32,System.Int32)
+  - [x] M:HarfBuzzSharp.Buffer.Add(System.UInt32,System.UInt32)
   - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.IntPtr,System.Int32,System.Int32,System.Int32)
   - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.IntPtr,System.Int32)
   - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.ReadOnlySpan{System.Int32},System.Int32,System.Int32)
@@ -47,12 +47,12 @@
   - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.ReadOnlySpan{System.UInt32},System.Int32,System.Int32)
   - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.ReadOnlySpan{System.UInt32})
   - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.String)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.Byte[])
+  - [x] M:HarfBuzzSharp.Buffer.AddUtf8(System.Byte[])
   - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.IntPtr,System.Int32,System.Int32,System.Int32)
   - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.IntPtr,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.ReadOnlySpan{System.Byte},System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.ReadOnlySpan{System.Byte})
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.String)
+  - [x] M:HarfBuzzSharp.Buffer.AddUtf8(System.ReadOnlySpan{System.Byte},System.Int32,System.Int32)
+  - [x] M:HarfBuzzSharp.Buffer.AddUtf8(System.ReadOnlySpan{System.Byte})
+  - [x] M:HarfBuzzSharp.Buffer.AddUtf8(System.String)
   - [ ] M:HarfBuzzSharp.Buffer.Append(HarfBuzzSharp.Buffer,System.Int32,System.Int32)
   - [ ] M:HarfBuzzSharp.Buffer.Append(HarfBuzzSharp.Buffer)
   - [ ] M:HarfBuzzSharp.Buffer.ClearContents
