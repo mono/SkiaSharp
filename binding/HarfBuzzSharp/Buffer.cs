@@ -93,15 +93,15 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>To be added.</summary>
 		/// <param name="codepoint">To be added.</param>
 		/// <param name="cluster">To be added.</param>
-		/// <summary>To be added.</summary>
 		/// <remarks>To be added.</remarks>
 		public void Add (int codepoint, int cluster) => Add ((uint)codepoint, (uint)cluster);
 
+		/// <summary>Appends a character with the Unicode value and gives it the initial cluster value.</summary>
 		/// <param name="codepoint">The Unicode code point.</param>
 		/// <param name="cluster">The cluster value of the code point.</param>
-		/// <summary>Appends a character with the Unicode value and gives it the initial cluster value.</summary>
 		/// <remarks>This function does not check the validity of the codepoint.</remarks>
 		public void Add (uint codepoint, uint cluster)
 		{
@@ -113,18 +113,18 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add (Handle, codepoint, cluster);
 		}
 
-		/// <param name="utf8text">The array of UTF-8 characters to append.</param>
 		/// <summary>Appends the specified text to the buffer.</summary>
+		/// <param name="utf8text">The array of UTF-8 characters to append.</param>
 		/// <remarks></remarks>
 		public void AddUtf8 (string utf8text) => AddUtf8 (Encoding.UTF8.GetBytes (utf8text), 0, -1);
 
-		/// <param name="bytes">To be added.</param>
 		/// <summary>To be added.</summary>
+		/// <param name="bytes">To be added.</param>
 		/// <remarks>To be added.</remarks>
 		public void AddUtf8 (byte[] bytes) => AddUtf8 (new ReadOnlySpan<byte> (bytes));
 
-		/// <param name="text">To be added.</param>
 		/// <summary>To be added.</summary>
+		/// <param name="text">To be added.</param>
 		/// <remarks>To be added.</remarks>
 		public void AddUtf8 (ReadOnlySpan<byte> text) => AddUtf8 (text, 0, -1);
 

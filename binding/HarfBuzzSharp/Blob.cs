@@ -27,44 +27,30 @@ namespace HarfBuzzSharp
 		{
 		}
 
+		/// <summary>Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance, wrapping the specified data.</summary>
 		/// <param name="data">The data to wrap.</param>
 		/// <param name="length">The length of the data being wrapped.</param>
 		/// <param name="mode">The memory mode to use.</param>
-		/// <summary>Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance, wrapping the specified data.</summary>
 		/// <remarks>If there was a problem creating the blob, or if the data length was zero, then an empty blob will be created.</remarks>
 		public Blob (IntPtr data, int length, MemoryMode mode)
 			: this (data, length, mode, null)
 		{
 		}
 
+		/// <summary>Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance, wrapping the specified data.</summary>
 		/// <param name="data">The data to wrap.</param>
 		/// <param name="length">The length of the data being wrapped.</param>
 		/// <param name="mode">The memory mode to use.</param>
 		/// <param name="releaseDelegate">The delegate to invoke when the data is not needed anymore.</param>
-		/// <summary>Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance, wrapping the specified data.</summary>
 		/// <remarks>If there was a problem creating the blob, or if the data length was zero, then an empty blob will be created.</remarks>
 		public Blob (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseDelegate)
 			: this (Create (data, length, mode, releaseDelegate))
 		{
 		}
 
-		/// <param name="data">The data to wrap.</param>
-		/// <param name="length">The length of the data being wrapped.</param>
-		/// <param name="mode">The memory mode to use.</param>
-		/// <param name="context">The user data passed to <paramref name="releaseDelegate" />.</param>
-		/// <param name="releaseDelegate">The delegate to invoke when the data is not needed anymore.</param>
-		/// <summary>Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance, wrapping the specified data.</summary>
-		/// <remarks>If there was a problem creating the blob, or if the data length was zero, then an empty blob will be created.</remarks>
-		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-		[System.Obsolete("Use ReleaseDelegate instead.")]
-		public Blob (IntPtr data, uint length, MemoryMode mode, object context, BlobReleaseDelegate releaseDelegate)
-			: this (Create (data, (int)length, mode, releaseDelegate != null ? () => releaseDelegate(context) : null))
-		{
-		}
-
+		/// <summary>Releases the unmanaged resources used by the <see cref="T:HarfBuzzSharp.Blob" /> and optionally releases the managed resources.</summary>
 		/// <param name="disposing">
 		///   <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
-		/// <summary>Releases the unmanaged resources used by the <see cref="T:HarfBuzzSharp.Blob" /> and optionally releases the managed resources.</summary>
 		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:HarfBuzzSharp.Blob" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
@@ -128,8 +114,8 @@ namespace HarfBuzzSharp
 			return new Span<byte> (dataPtr, (int)length);
 		}
 
-		/// <param name="fileName">The path to the file to load.</param>
 		/// <summary>Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance from the contents of the file.</summary>
+		/// <param name="fileName">The path to the file to load.</param>
 		/// <returns>Returns the new <see cref="T:HarfBuzzSharp.Blob" /> instance.</returns>
 		/// <remarks>
 		/// </remarks>
@@ -143,8 +129,8 @@ namespace HarfBuzzSharp
 			return new Blob (blob);
 		}
 
-		/// <param name="stream">The stream to use.</param>
 		/// <summary>Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance from the contents of the stream.</summary>
+		/// <param name="stream">The stream to use.</param>
 		/// <returns>Returns the new <see cref="T:HarfBuzzSharp.Blob" /> instance.</returns>
 		/// <remarks>
 		/// </remarks>
