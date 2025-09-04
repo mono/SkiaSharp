@@ -57,20 +57,6 @@ $(PackageNotes)</PackageDescription>
 
   <!--
     ===================================================================================================================
-    IncludeMDocTfmSpecificPackageFiles
-
-    Include the XML docs in the package.
-    ===================================================================================================================
-  -->
-  <Target Name="IncludeMDocTfmSpecificPackageFiles">
-    <ItemGroup>
-      <TfmSpecificPackageFile Include="$(MDocOutputPath)" PackagePath="lib\$(NuGetShortFolderName)\$(MDocOutputName)"
-                              Exclude="@(DocumentationProjectOutputGroupOutput)" Condition="Exists('$(MDocOutputPath)')" />
-    </ItemGroup>
-  </Target>
-
-  <!--
-    ===================================================================================================================
     IncludeReferenceAssemblyTfmSpecificPackageFiles
 
     Include the reference assembly in the package.
@@ -93,7 +79,6 @@ $(PackageNotes)</PackageDescription>
   <PropertyGroup>
     <_IncludeAdditionalTfmSpecificPackageFilesDependsOn>
       _IncludeAdditionalTfmSpecificPackageFilesPrepare;
-      IncludeMDocTfmSpecificPackageFiles;
       IncludeReferenceAssemblyTfmSpecificPackageFiles;
       IncludeAdditionalTfmSpecificPackageFiles;
     </_IncludeAdditionalTfmSpecificPackageFilesDependsOn>
