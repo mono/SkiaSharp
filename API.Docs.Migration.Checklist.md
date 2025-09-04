@@ -122,37 +122,37 @@
   - [x] F:HarfBuzzSharp.Direction.LeftToRight
   - [x] F:HarfBuzzSharp.Direction.RightToLeft
   - [x] F:HarfBuzzSharp.Direction.TopToBottom
-- [ ] HarfBuzzSharp.Face
-  - [ ] M:HarfBuzzSharp.Face.#ctor(HarfBuzzSharp.Blob,System.Int32)
-  - [ ] M:HarfBuzzSharp.Face.#ctor(HarfBuzzSharp.Blob,System.UInt32)
-  - [ ] M:HarfBuzzSharp.Face.#ctor(HarfBuzzSharp.GetTableDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.Face.#ctor(HarfBuzzSharp.GetTableDelegate)
-  - [ ] M:HarfBuzzSharp.Face.Dispose(System.Boolean)
-  - [ ] M:HarfBuzzSharp.Face.DisposeHandler
-  - [ ] M:HarfBuzzSharp.Face.MakeImmutable
-  - [ ] M:HarfBuzzSharp.Face.ReferenceTable(HarfBuzzSharp.Tag)
-  - [ ] P:HarfBuzzSharp.Face.Empty
-  - [ ] P:HarfBuzzSharp.Face.GlyphCount
-  - [ ] P:HarfBuzzSharp.Face.Index
-  - [ ] P:HarfBuzzSharp.Face.IsImmutable
-  - [ ] P:HarfBuzzSharp.Face.Tables
-  - [ ] P:HarfBuzzSharp.Face.UnitsPerEm
-- [ ] HarfBuzzSharp.Feature
-  - [ ] M:HarfBuzzSharp.Feature.#ctor(HarfBuzzSharp.Tag,System.UInt32,System.UInt32,System.UInt32)
-  - [ ] M:HarfBuzzSharp.Feature.#ctor(HarfBuzzSharp.Tag,System.UInt32)
-  - [ ] M:HarfBuzzSharp.Feature.#ctor(HarfBuzzSharp.Tag)
-  - [ ] M:HarfBuzzSharp.Feature.Equals(HarfBuzzSharp.Feature)
-  - [ ] M:HarfBuzzSharp.Feature.Equals(System.Object)
-  - [ ] M:HarfBuzzSharp.Feature.GetHashCode
-  - [ ] M:HarfBuzzSharp.Feature.op_Equality(HarfBuzzSharp.Feature,HarfBuzzSharp.Feature)
-  - [ ] M:HarfBuzzSharp.Feature.op_Inequality(HarfBuzzSharp.Feature,HarfBuzzSharp.Feature)
-  - [ ] M:HarfBuzzSharp.Feature.Parse(System.String)
-  - [ ] M:HarfBuzzSharp.Feature.ToString
-  - [ ] M:HarfBuzzSharp.Feature.TryParse(System.String,HarfBuzzSharp.Feature@)
-  - [ ] P:HarfBuzzSharp.Feature.End
-  - [ ] P:HarfBuzzSharp.Feature.Start
-  - [ ] P:HarfBuzzSharp.Feature.Tag
-  - [ ] P:HarfBuzzSharp.Feature.Value
+- [x] HarfBuzzSharp.Face
+  - [x] M:HarfBuzzSharp.Face.#ctor(HarfBuzzSharp.Blob,System.Int32)
+  - [x] M:HarfBuzzSharp.Face.#ctor(HarfBuzzSharp.Blob,System.UInt32)
+  - [x] M:HarfBuzzSharp.Face.#ctor(HarfBuzzSharp.GetTableDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.Face.#ctor(HarfBuzzSharp.GetTableDelegate)
+  - [x] M:HarfBuzzSharp.Face.Dispose(System.Boolean)
+  - [x] M:HarfBuzzSharp.Face.DisposeHandler
+  - [x] M:HarfBuzzSharp.Face.MakeImmutable
+  - [x] M:HarfBuzzSharp.Face.ReferenceTable(HarfBuzzSharp.Tag)
+  - [x] P:HarfBuzzSharp.Face.Empty
+  - [x] P:HarfBuzzSharp.Face.GlyphCount
+  - [x] P:HarfBuzzSharp.Face.Index
+  - [x] P:HarfBuzzSharp.Face.IsImmutable
+  - [x] P:HarfBuzzSharp.Face.Tables
+  - [x] P:HarfBuzzSharp.Face.UnitsPerEm
+- [x] HarfBuzzSharp.Feature
+  - [x] M:HarfBuzzSharp.Feature.#ctor(HarfBuzzSharp.Tag,System.UInt32,System.UInt32,System.UInt32)
+  - [x] M:HarfBuzzSharp.Feature.#ctor(HarfBuzzSharp.Tag,System.UInt32)
+  - [x] M:HarfBuzzSharp.Feature.#ctor(HarfBuzzSharp.Tag)
+  - [x] M:HarfBuzzSharp.Feature.Equals(HarfBuzzSharp.Feature)
+  - [x] M:HarfBuzzSharp.Feature.Equals(System.Object)
+  - [x] M:HarfBuzzSharp.Feature.GetHashCode
+  - [x] M:HarfBuzzSharp.Feature.op_Equality(HarfBuzzSharp.Feature,HarfBuzzSharp.Feature)
+  - [x] M:HarfBuzzSharp.Feature.op_Inequality(HarfBuzzSharp.Feature,HarfBuzzSharp.Feature)
+  - [x] M:HarfBuzzSharp.Feature.Parse(System.String)
+  - [x] M:HarfBuzzSharp.Feature.ToString
+  - [x] M:HarfBuzzSharp.Feature.TryParse(System.String,HarfBuzzSharp.Feature@)
+  - [x] P:HarfBuzzSharp.Feature.End
+  - [x] P:HarfBuzzSharp.Feature.Start
+  - [x] P:HarfBuzzSharp.Feature.Tag
+  - [x] P:HarfBuzzSharp.Feature.Value
 - [ ] HarfBuzzSharp.Font
   - [ ] M:HarfBuzzSharp.Font.#ctor(HarfBuzzSharp.Face)
   - [ ] M:HarfBuzzSharp.Font.#ctor(HarfBuzzSharp.Font)

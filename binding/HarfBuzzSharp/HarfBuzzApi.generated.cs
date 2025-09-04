@@ -6498,20 +6498,41 @@ namespace HarfBuzzSharp {
 		// public unsigned int end
 		private UInt32 end;
 
+		/// <summary>Determines whether the specified feature is equal to the current feature.</summary>
+		/// <param name="obj">The feature to compare with the current feature.</param>
+		/// <returns>true if the specified feature is equal to the current feature; otherwise, false.</returns>
+		/// <remarks></remarks>
 		public readonly bool Equals (Feature obj) =>
 #pragma warning disable CS8909
 			tag == obj.tag && value == obj.value && start == obj.start && end == obj.end;
 #pragma warning restore CS8909
 
+		/// <summary>Determines whether the specified object is equal to the current feature.</summary>
+		/// <param name="obj">The object to compare with the current feature.</param>
+		/// <returns>true if the specified object is equal to the current feature; otherwise, false.</returns>
+		/// <remarks></remarks>
 		public readonly override bool Equals (object obj) =>
 			obj is Feature f && Equals (f);
 
+		/// <summary>Determines whether two features are equal.</summary>
+		/// <param name="left">The first feature to compare.</param>
+		/// <param name="right">The second feature to compare.</param>
+		/// <returns>true if the features are equal; otherwise, false.</returns>
+		/// <remarks></remarks>
 		public static bool operator == (Feature left, Feature right) =>
 			left.Equals (right);
 
+		/// <summary>Determines whether two features are not equal.</summary>
+		/// <param name="left">The first feature to compare.</param>
+		/// <param name="right">The second feature to compare.</param>
+		/// <returns>true if the features are not equal; otherwise, false.</returns>
+		/// <remarks></remarks>
 		public static bool operator != (Feature left, Feature right) =>
 			!left.Equals (right);
 
+		/// <summary>Returns the hash code for this instance.</summary>
+		/// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+		/// <remarks></remarks>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();

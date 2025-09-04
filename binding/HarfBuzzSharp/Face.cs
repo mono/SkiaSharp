@@ -4,17 +4,30 @@ using System;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>Represents a typeface.</summary>
+	/// <remarks></remarks>
 	public unsafe class Face : NativeObject
 	{
 		private static readonly Lazy<Face> emptyFace = new Lazy<Face> (() => new StaticFace (HarfBuzzApi.hb_face_get_empty ()));
 
+		/// <summary>To be added.</summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public static Face Empty => emptyFace.Value;
 
+		/// <summary>Creates a new <see cref="T:HarfBuzzSharp.Face" /> instance, using the specified typeface blob.</summary>
+		/// <param name="blob">The typeface data.</param>
+		/// <param name="index">The zero-based face index in a collection.</param>
+		/// <remarks></remarks>
 		public Face (Blob blob, uint index)
 			: this (blob, (int)index)
 		{
 		}
 
+		/// <summary>Creates a new <see cref="T:HarfBuzzSharp.Face" /> instance, using the specified typeface blob.</summary>
+		/// <param name="blob">The typeface data.</param>
+		/// <param name="index">The zero-based face index in a collection.</param>
+		/// <remarks></remarks>
 		public Face (Blob blob, int index)
 			: this (IntPtr.Zero)
 		{
@@ -29,11 +42,18 @@ namespace HarfBuzzSharp
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, (uint)index);
 		}
 
+		/// <summary>Creates a new <see cref="T:HarfBuzzSharp.Face" /> instance, using the delegate to assemble the data.</summary>
+		/// <param name="getTable">The delegate to retrieve the table data.</param>
+		/// <remarks></remarks>
 		public Face (GetTableDelegate getTable)
 			: this (getTable, null)
 		{
 		}
 
+		/// <summary>To be added.</summary>
+		/// <param name="getTable">To be added.</param>
+		/// <param name="destroy">To be added.</param>
+		/// <remarks>To be added.</remarks>
 		public Face (GetTableDelegate getTable, ReleaseDelegate destroy)
 			: this (IntPtr.Zero)
 		{
@@ -51,21 +71,33 @@ namespace HarfBuzzSharp
 		{
 		}
 
+		/// <summary>To be added.</summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public int Index {
 			get => (int)HarfBuzzApi.hb_face_get_index (Handle);
 			set => HarfBuzzApi.hb_face_set_index (Handle, (uint)value);
 		}
 
+		/// <summary>To be added.</summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public int UnitsPerEm {
 			get => (int)HarfBuzzApi.hb_face_get_upem (Handle);
 			set => HarfBuzzApi.hb_face_set_upem (Handle, (uint)value);
 		}
 
+		/// <summary>To be added.</summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public int GlyphCount {
 			get => (int)HarfBuzzApi.hb_face_get_glyph_count (Handle);
 			set => HarfBuzzApi.hb_face_set_glyph_count (Handle, (uint)value);
 		}
 
+		/// <summary>To be added.</summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public unsafe Tag[] Tables {
 			get {
 				uint tableCount;
@@ -78,16 +110,30 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>To be added.</summary>
+		/// <param name="table">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public Blob ReferenceTable (Tag table) =>
 			new Blob (HarfBuzzApi.hb_face_reference_table (Handle, table));
 
+		/// <summary>To be added.</summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public bool IsImmutable => HarfBuzzApi.hb_face_is_immutable (Handle);
 
+		/// <summary>To be added.</summary>
+		/// <remarks>To be added.</remarks>
 		public void MakeImmutable () => HarfBuzzApi.hb_face_make_immutable (Handle);
 
+		/// <summary>To be added.</summary>
+		/// <param name="disposing">To be added.</param>
+		/// <remarks>To be added.</remarks>
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
+		/// <summary>To be added.</summary>
+		/// <remarks>To be added.</remarks>
 		protected override void DisposeHandler ()
 		{
 			if (Handle != IntPtr.Zero) {
