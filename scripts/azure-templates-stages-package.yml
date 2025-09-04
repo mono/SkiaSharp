@@ -12,8 +12,6 @@ parameters:
     type: boolean
   - name: forceRealSigning
     type: boolean
-  - name: enableApiScan
-    type: boolean
 
 stages:
 
@@ -132,42 +130,3 @@ stages:
               signType: 'Test'
             usePipelineArtifactTasks: true
             checkoutType: 'self'
-
-  - ${{ if eq(parameters.enableApiScan, 'true') }}:
-    - template: security/apiscan/v0.yml@yaml-templates
-      parameters:
-        windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
-        windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
-        timeoutInMinutes: 480
-        stageDependsOn:
-          - package
-        scanArtifacts:
-          - nuget
-          - nuget_symbols
-          - native_msvc
-        apiScanSoftwareName: 'SkiaSharp'
-        apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
-        apiScanPreserveLogsFolder: true
-        apiScanAuthConnectionString: 'runAs=App;AppId=$(ApiScanClientId)'
-        apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
-        preScanSteps:
-          - pwsh: |
-              $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
-              $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
-              $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
-              $destFile = "$destFolder\APIScanSurrogates.xml"
-              New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
-              $surrogateContents = (Get-Content $surrogateFile)
-              $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
-              $surrogateContents | Set-Content $destFile
-            displayName: Generate the surrogate files
-          - pwsh: |
-              $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
-              foreach ($nupkg in $nupkgs) {
-                $filename = $nupkg.Name.TrimEnd('.nupkg')
-                $dest = "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted\$filename"
-                Write-Host "Extracting '$nupkg' to '$dest'..."
-                Expand-Archive $nupkg $dest
-                Remove-Item $nupkg
-              }
-            displayName: Extract all the .nupkg files

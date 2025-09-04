@@ -36,9 +36,6 @@ parameters:
   - name: forceRealSigning
     type: boolean
     default: false
-  - name: enableApiScan
-    type: boolean
-    default: false
 
 stages:
 
@@ -65,7 +62,6 @@ stages:
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableSigning: ${{ parameters.enableSigning }}
         forceRealSigning: ${{ parameters.forceRealSigning }}
-        enableApiScan: ${{ parameters.enableApiScan }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self
