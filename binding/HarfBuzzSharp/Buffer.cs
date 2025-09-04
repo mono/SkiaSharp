@@ -7,8 +7,19 @@ using System.Text;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>
+	/// Represents a text buffer in memory.
+	/// </summary>
+	/// <remarks>
+	/// </remarks>
 	public unsafe class Buffer : NativeObject
 	{
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <remarks>
+		/// To be added.
+		/// </remarks>
 		public const int DefaultReplacementCodepoint = '\uFFFD';
 
 		internal Buffer (IntPtr handle)
@@ -16,21 +27,53 @@ namespace HarfBuzzSharp
 		{
 		}
 
+		/// <summary>
+		/// Creates a new <see cref="M:HarfBuzzSharp.Buffer.#ctor" /> with default values.
+		/// </summary>
+		/// <remarks>
+		/// </remarks>
 		public Buffer ()
 			: this (HarfBuzzApi.hb_buffer_create ())
 		{
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>
+		/// To be added.
+		/// </value>
+		/// <remarks>
+		/// To be added.
+		/// </remarks>
 		public ContentType ContentType {
 			get => HarfBuzzApi.hb_buffer_get_content_type (Handle);
 			set => HarfBuzzApi.hb_buffer_set_content_type (Handle, value);
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>
+		/// To be added.
+		/// </value>
+		/// <remarks>
+		/// To be added.
+		/// </remarks>
 		public Direction Direction {
 			get => HarfBuzzApi.hb_buffer_get_direction (Handle);
 			set => HarfBuzzApi.hb_buffer_set_direction (Handle, value);
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>
+		/// To be added.
+		/// </value>
+		/// <remarks>
+		/// To be added.
+		/// </remarks>
 		public Language Language {
 			get => new Language (HarfBuzzApi.hb_buffer_get_language (Handle));
 			set => HarfBuzzApi.hb_buffer_set_language (Handle, value.Handle);

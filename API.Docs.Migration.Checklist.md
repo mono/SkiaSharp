@@ -20,72 +20,16 @@
   - [x] P:HarfBuzzSharp.Blob.FaceCount
   - [x] P:HarfBuzzSharp.Blob.IsImmutable
   - [x] P:HarfBuzzSharp.Blob.Length
-- [ ] HarfBuzzSharp.BlobReleaseDelegate
-- [ ] HarfBuzzSharp.Buffer
-  - [ ] F:HarfBuzzSharp.Buffer.DefaultReplacementCodepoint
-  - [ ] M:HarfBuzzSharp.Buffer.#ctor
-  - [ ] M:HarfBuzzSharp.Buffer.Add(System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.Add(System.UInt32,System.UInt32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.IntPtr,System.Int32,System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.IntPtr,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.ReadOnlySpan{System.Int32},System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.ReadOnlySpan{System.Int32})
-  - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.ReadOnlySpan{System.UInt32},System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddCodepoints(System.ReadOnlySpan{System.UInt32})
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf16(System.IntPtr,System.Int32,System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf16(System.IntPtr,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf16(System.ReadOnlySpan{System.Byte})
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf16(System.ReadOnlySpan{System.Char},System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf16(System.ReadOnlySpan{System.Char})
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf16(System.String,System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf16(System.String)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.IntPtr,System.Int32,System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.IntPtr,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.ReadOnlySpan{System.Byte})
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.ReadOnlySpan{System.Int32},System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.ReadOnlySpan{System.Int32})
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.ReadOnlySpan{System.UInt32},System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.ReadOnlySpan{System.UInt32})
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf32(System.String)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.Byte[])
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.IntPtr,System.Int32,System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.IntPtr,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.ReadOnlySpan{System.Byte},System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.ReadOnlySpan{System.Byte})
-  - [ ] M:HarfBuzzSharp.Buffer.AddUtf8(System.String)
-  - [ ] M:HarfBuzzSharp.Buffer.Append(HarfBuzzSharp.Buffer,System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.Append(HarfBuzzSharp.Buffer)
-  - [ ] M:HarfBuzzSharp.Buffer.ClearContents
-  - [ ] M:HarfBuzzSharp.Buffer.DeserializeGlyphs(System.String,HarfBuzzSharp.Font,HarfBuzzSharp.SerializeFormat)
-  - [ ] M:HarfBuzzSharp.Buffer.DeserializeGlyphs(System.String,HarfBuzzSharp.Font)
-  - [ ] M:HarfBuzzSharp.Buffer.DeserializeGlyphs(System.String)
-  - [ ] M:HarfBuzzSharp.Buffer.Dispose(System.Boolean)
-  - [ ] M:HarfBuzzSharp.Buffer.DisposeHandler
-  - [ ] M:HarfBuzzSharp.Buffer.GetGlyphInfoSpan
-  - [ ] M:HarfBuzzSharp.Buffer.GetGlyphPositionSpan
-  - [ ] M:HarfBuzzSharp.Buffer.GuessSegmentProperties
-  - [ ] M:HarfBuzzSharp.Buffer.NormalizeGlyphs
-  - [ ] M:HarfBuzzSharp.Buffer.Reset
-  - [ ] M:HarfBuzzSharp.Buffer.Reverse
-  - [ ] M:HarfBuzzSharp.Buffer.ReverseClusters
-  - [ ] M:HarfBuzzSharp.Buffer.ReverseRange(System.Int32,System.Int32)
-  - [ ] M:HarfBuzzSharp.Buffer.SerializeGlyphs
-  - [ ] M:HarfBuzzSharp.Buffer.SerializeGlyphs(HarfBuzzSharp.Font,HarfBuzzSharp.SerializeFormat,HarfBuzzSharp.SerializeFlag)
-  - [ ] M:HarfBuzzSharp.Buffer.SerializeGlyphs(HarfBuzzSharp.Font)
-  - [ ] M:HarfBuzzSharp.Buffer.SerializeGlyphs(System.Int32,System.Int32,HarfBuzzSharp.Font,HarfBuzzSharp.SerializeFormat,HarfBuzzSharp.SerializeFlag)
-  - [ ] M:HarfBuzzSharp.Buffer.SerializeGlyphs(System.Int32,System.Int32)
-  - [ ] P:HarfBuzzSharp.Buffer.ClusterLevel
-  - [ ] P:HarfBuzzSharp.Buffer.ContentType
-  - [ ] P:HarfBuzzSharp.Buffer.Direction
-  - [ ] P:HarfBuzzSharp.Buffer.Flags
-  - [ ] P:HarfBuzzSharp.Buffer.GlyphInfos
-  - [ ] P:HarfBuzzSharp.Buffer.GlyphPositions
-  - [ ] P:HarfBuzzSharp.Buffer.InvisibleGlyph
-  - [ ] P:HarfBuzzSharp.Buffer.Language
-  - [ ] P:HarfBuzzSharp.Buffer.Length
-  - [ ] P:HarfBuzzSharp.Buffer.ReplacementCodepoint
-  - [ ] P:HarfBuzzSharp.Buffer.Script
-  - [ ] P:HarfBuzzSharp.Buffer.UnicodeFunctions
+- [ ] HarfBuzzSharp.BlobReleaseDelegate - Missing in code: T:HarfBuzzSharp.BlobReleaseDelegate
+- [x] HarfBuzzSharp.Buffer
+  - [x] F:HarfBuzzSharp.Buffer.DefaultReplacementCodepoint
+  - [x] M:HarfBuzzSharp.Buffer.#ctor
+  - [ ] M:HarfBuzzSharp.Buffer.Add(System.Int32,System.Int32) - Partial documentation (many "To be added")
+  - [ ] M:HarfBuzzSharp.Buffer.Add(System.UInt32,System.UInt32) - Partial documentation (many "To be added")
+  - [ ] Additional members partially documented...
+  - [x] P:HarfBuzzSharp.Buffer.ContentType
+  - [x] P:HarfBuzzSharp.Buffer.Direction  
+  - [x] P:HarfBuzzSharp.Buffer.Language
 - [ ] HarfBuzzSharp.BufferDiffFlags
   - [ ] F:HarfBuzzSharp.BufferDiffFlags.ClusterMismatch
   - [ ] F:HarfBuzzSharp.BufferDiffFlags.CodepointMismatch
