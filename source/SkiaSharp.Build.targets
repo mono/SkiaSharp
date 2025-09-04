@@ -43,10 +43,6 @@
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB9004</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
-  <ItemGroup Condition=" $(IsWindows) and '$(Configuration)' == 'Release' ">
-    <PackageReference Include="mdoc" Version="5.8.9" PrivateAssets="All" GeneratePathProperty="true" />
-  </ItemGroup>
-
   <ItemGroup Condition="'$(TargetFramework)' != '' and $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
     <Compile Include="$(MSBuildThisFileDirectory)Common\NullableAttributes.generated.cs" Visible="false" />
   </ItemGroup>
@@ -200,50 +196,6 @@ internal partial class VersionConstants {
   -->
   <Target Name="_CheckSkiaSharpBuildPropsImported" BeforeTargets="BeforeBuild">
     <Error Text="SkiaSharp.Build.props was not imported." Condition=" '$(SkiaSharpBuildPropsImported)' != 'true' " />
-  </Target>
-
-  <!--
-    ===================================================================================================================
-    MDocGenerateDocs
-
-    Generated the XML documentation file using mdoc.
-    This runs during the build phase.
-    ===================================================================================================================
-  -->
-  <PropertyGroup Condition=" '$(SkipMDocGenerateDocs)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' ">
-    <MDocGenerateDocsAfterTargets>
-      CoreCompile
-    </MDocGenerateDocsAfterTargets>
-  </PropertyGroup>
-  <Target Name="_MDocGenerateDocsDep">
-    <PropertyGroup>
-      <MDocToolPath>$(Pkgmdoc)\tools\mdoc.exe</MDocToolPath>
-      <MDocOutputName>$(TargetName).xml</MDocOutputName>
-      <MDocOutputPath>$(TargetDir)$(MDocOutputName)</MDocOutputPath>
-      <MDocIntermediateOutputPath>$(IntermediateOutputPath)mdoc\</MDocIntermediateOutputPath>
-      <_ShouldGenerateDocs Condition=" '$(MDocDocumentationDirectory)' != '' and Exists('$(MDocDocumentationDirectory)\index.xml') ">true</_ShouldGenerateDocs>
-    </PropertyGroup>
-    <ItemGroup Condition=" '$(_ShouldGenerateDocs)' == 'true' ">
-      <_MDocInputs Include="$(MDocDocumentationDirectory)\**\*" />
-    </ItemGroup>
-  </Target>
-  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' and $(IsWindows) and '$(Configuration)' == 'Release' "
-          AfterTargets="$(MDocGenerateDocsAfterTargets)" DependsOnTargets="_MDocGenerateDocsDep"
-          Inputs="@(_MDocInputs)" Outputs="$(MDocIntermediateOutputPath)$(MDocOutputName)">
-    <MakeDir Condition=" '$(_ShouldGenerateDocs)' == 'true' "
-             Directories="$(MDocIntermediateOutputPath)" />
-    <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
-          WorkingDirectory="$(MDocIntermediateOutputPath)"
-          Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc --quiet=true &quot;$(MDocDocumentationDirectory)&quot;" />
-    <Copy Condition=" Exists('$(MDocIntermediateOutputPath)$(MDocOutputName)') "
-          SourceFiles="$(MDocIntermediateOutputPath)$(MDocOutputName)"
-          DestinationFiles="$(MDocOutputPath)"
-          ContinueOnError="false"
-          Retries="0" />
-    <ItemGroup Condition=" '$(_ShouldGenerateDocs)' == 'true' ">
-      <FileWrites Include="$(MDocOutputPath)" />
-      <FileWrites Include="$(MDocIntermediateOutputPath)\*" />
-    </ItemGroup>
   </Target>
 
   <!-- HACK: the new IDE seems to not like Analyzers in AdditionalFiles -->
