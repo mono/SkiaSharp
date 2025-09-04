@@ -9,6 +9,13 @@ namespace HarfBuzzSharp
 {
 	public delegate void ReleaseDelegate ();
 
+	/// <param name="context">The user data passed to <see cref="M:HarfBuzzSharp.Blob.#ctor(System.IntPtr,System.UInt32,HarfBuzzSharp.MemoryMode,System.Object,HarfBuzzSharp.BlobReleaseDelegate)" />.</param>
+	/// <summary>The delegate that will be invoked when a blob is ready to be discarded.</summary>
+	/// <remarks></remarks>
+	[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+	[System.Obsolete("Use ReleaseDelegate instead.")]
+	public delegate void BlobReleaseDelegate (object context);
+
 	public delegate Blob GetTableDelegate (Face face, Tag tag);
 
 	internal static unsafe partial class DelegateProxies
