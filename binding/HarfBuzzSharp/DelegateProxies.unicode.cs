@@ -7,16 +7,50 @@ using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>To be added.</summary>
+	/// <param name="ufuncs">To be added.</param>
+	/// <param name="unicode">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate UnicodeCombiningClass CombiningClassDelegate (UnicodeFunctions ufuncs, uint unicode);
 
+	/// <summary>To be added.</summary>
+	/// <param name="ufuncs">To be added.</param>
+	/// <param name="unicode">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate UnicodeGeneralCategory GeneralCategoryDelegate (UnicodeFunctions ufuncs, uint unicode);
 
+	/// <summary>To be added.</summary>
+	/// <param name="ufuncs">To be added.</param>
+	/// <param name="unicode">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate uint MirroringDelegate (UnicodeFunctions ufuncs, uint unicode);
 
+	/// <summary>To be added.</summary>
+	/// <param name="ufuncs">To be added.</param>
+	/// <param name="unicode">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate Script ScriptDelegate (UnicodeFunctions ufuncs, uint unicode);
 
+	/// <summary>To be added.</summary>
+	/// <param name="ufuncs">To be added.</param>
+	/// <param name="a">To be added.</param>
+	/// <param name="b">To be added.</param>
+	/// <param name="ab">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate bool ComposeDelegate (UnicodeFunctions ufuncs, uint a, uint b, out uint ab);
 
+	/// <summary>To be added.</summary>
+	/// <param name="ufuncs">To be added.</param>
+	/// <param name="ab">To be added.</param>
+	/// <param name="a">To be added.</param>
+	/// <param name="b">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate bool DecomposeDelegate (UnicodeFunctions ufuncs, uint ab, out uint a, out uint b);
 
 	internal static unsafe partial class DelegateProxies

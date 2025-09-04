@@ -7179,63 +7179,93 @@ namespace HarfBuzzSharp {
 namespace HarfBuzzSharp {
 
 	// hb_buffer_cluster_level_t
+	/// <summary>To be added.</summary>
+	/// <remarks>To be added.</remarks>
 	public enum ClusterLevel {
 		// HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES = 0
+		/// <summary>To be added.</summary>
 		MonotoneGraphemes = 0,
 		// HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS = 1
+		/// <summary>To be added.</summary>
 		MonotoneCharacters = 1,
 		// HB_BUFFER_CLUSTER_LEVEL_CHARACTERS = 2
+		/// <summary>To be added.</summary>
 		Characters = 2,
 		// HB_BUFFER_CLUSTER_LEVEL_DEFAULT = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
+		/// <summary>To be added.</summary>
 		Default = 0,
 	}
 
 	// hb_buffer_content_type_t
+	/// <summary>To be added.</summary>
+	/// <remarks>To be added.</remarks>
 	public enum ContentType {
 		// HB_BUFFER_CONTENT_TYPE_INVALID = 0
+		/// <summary>To be added.</summary>
 		Invalid = 0,
 		// HB_BUFFER_CONTENT_TYPE_UNICODE = 1
+		/// <summary>To be added.</summary>
 		Unicode = 1,
 		// HB_BUFFER_CONTENT_TYPE_GLYPHS = 2
+		/// <summary>To be added.</summary>
 		Glyphs = 2,
 	}
 
 	// hb_buffer_diff_flags_t
+	/// <summary>To be added.</summary>
+	/// <remarks>To be added.</remarks>
 	public enum BufferDiffFlags {
 		// HB_BUFFER_DIFF_FLAG_EQUAL = 0x0000
+		/// <summary>To be added.</summary>
 		Equal = 0,
 		// HB_BUFFER_DIFF_FLAG_CONTENT_TYPE_MISMATCH = 0x0001
+		/// <summary>To be added.</summary>
 		ContentTypeMismatch = 1,
 		// HB_BUFFER_DIFF_FLAG_LENGTH_MISMATCH = 0x0002
+		/// <summary>To be added.</summary>
 		LengthMismatch = 2,
 		// HB_BUFFER_DIFF_FLAG_NOTDEF_PRESENT = 0x0004
+		/// <summary>To be added.</summary>
 		NotdefPresent = 4,
 		// HB_BUFFER_DIFF_FLAG_DOTTED_CIRCLE_PRESENT = 0x0008
+		/// <summary>To be added.</summary>
 		DottedCirclePresent = 8,
 		// HB_BUFFER_DIFF_FLAG_CODEPOINT_MISMATCH = 0x0010
+		/// <summary>To be added.</summary>
 		CodepointMismatch = 16,
 		// HB_BUFFER_DIFF_FLAG_CLUSTER_MISMATCH = 0x0020
+		/// <summary>To be added.</summary>
 		ClusterMismatch = 32,
 		// HB_BUFFER_DIFF_FLAG_GLYPH_FLAGS_MISMATCH = 0x0040
+		/// <summary>To be added.</summary>
 		GlyphFlagsMismatch = 64,
 		// HB_BUFFER_DIFF_FLAG_POSITION_MISMATCH = 0x0080
+		/// <summary>To be added.</summary>
 		PositionMismatch = 128,
 	}
 
 	// hb_buffer_flags_t
+	/// <summary>To be added.</summary>
+	/// <remarks>To be added.</remarks>
 	[Flags]
 	public enum BufferFlags {
 		// HB_BUFFER_FLAG_DEFAULT = 0x00000000u
+		/// <summary>To be added.</summary>
 		Default = 0,
 		// HB_BUFFER_FLAG_BOT = 0x00000001u
+		/// <summary>To be added.</summary>
 		BeginningOfText = 1,
 		// HB_BUFFER_FLAG_EOT = 0x00000002u
+		/// <summary>To be added.</summary>
 		EndOfText = 2,
 		// HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES = 0x00000004u
+		/// <summary>To be added.</summary>
 		PreserveDefaultIgnorables = 4,
 		// HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES = 0x00000008u
+		/// <summary>To be added.</summary>
 		RemoveDefaultIgnorables = 8,
 		// HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE = 0x00000010u
+		/// <summary>To be added.</summary>
 		DoNotInsertDottedCircle = 16,
 	}
 
@@ -7269,16 +7299,23 @@ namespace HarfBuzzSharp {
 	}
 
 	// hb_direction_t
+	/// <summary>To be added.</summary>
+	/// <remarks>To be added.</remarks>
 	public enum Direction {
 		// HB_DIRECTION_INVALID = 0
+		/// <summary>To be added.</summary>
 		Invalid = 0,
 		// HB_DIRECTION_LTR = 4
+		/// <summary>To be added.</summary>
 		LeftToRight = 4,
 		// HB_DIRECTION_RTL = 5
+		/// <summary>To be added.</summary>
 		RightToLeft = 5,
 		// HB_DIRECTION_TTB = 6
+		/// <summary>To be added.</summary>
 		TopToBottom = 6,
 		// HB_DIRECTION_BTT = 7
+		/// <summary>To be added.</summary>
 		BottomToTop = 7,
 	}
 

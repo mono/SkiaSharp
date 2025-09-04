@@ -87,41 +87,41 @@
   - [x] P:HarfBuzzSharp.Buffer.ReplacementCodepoint
   - [x] P:HarfBuzzSharp.Buffer.Script
   - [x] P:HarfBuzzSharp.Buffer.UnicodeFunctions
-- [ ] HarfBuzzSharp.BufferDiffFlags
-  - [ ] F:HarfBuzzSharp.BufferDiffFlags.ClusterMismatch
-  - [ ] F:HarfBuzzSharp.BufferDiffFlags.CodepointMismatch
-  - [ ] F:HarfBuzzSharp.BufferDiffFlags.ContentTypeMismatch
-  - [ ] F:HarfBuzzSharp.BufferDiffFlags.DottedCirclePresent
-  - [ ] F:HarfBuzzSharp.BufferDiffFlags.Equal
-  - [ ] F:HarfBuzzSharp.BufferDiffFlags.GlyphFlagsMismatch
-  - [ ] F:HarfBuzzSharp.BufferDiffFlags.LengthMismatch
-  - [ ] F:HarfBuzzSharp.BufferDiffFlags.NotdefPresent
-  - [ ] F:HarfBuzzSharp.BufferDiffFlags.PositionMismatch
-- [ ] HarfBuzzSharp.BufferFlags
-  - [ ] F:HarfBuzzSharp.BufferFlags.BeginningOfText
-  - [ ] F:HarfBuzzSharp.BufferFlags.Default
-  - [ ] F:HarfBuzzSharp.BufferFlags.DoNotInsertDottedCircle
-  - [ ] F:HarfBuzzSharp.BufferFlags.EndOfText
-  - [ ] F:HarfBuzzSharp.BufferFlags.PreserveDefaultIgnorables
-  - [ ] F:HarfBuzzSharp.BufferFlags.RemoveDefaultIgnorables
-- [ ] HarfBuzzSharp.ClusterLevel
-  - [ ] F:HarfBuzzSharp.ClusterLevel.Characters
-  - [ ] F:HarfBuzzSharp.ClusterLevel.Default
-  - [ ] F:HarfBuzzSharp.ClusterLevel.MonotoneCharacters
-  - [ ] F:HarfBuzzSharp.ClusterLevel.MonotoneGraphemes
-- [ ] HarfBuzzSharp.CombiningClassDelegate
-- [ ] HarfBuzzSharp.ComposeDelegate
-- [ ] HarfBuzzSharp.ContentType
-  - [ ] F:HarfBuzzSharp.ContentType.Glyphs
-  - [ ] F:HarfBuzzSharp.ContentType.Invalid
-  - [ ] F:HarfBuzzSharp.ContentType.Unicode
-- [ ] HarfBuzzSharp.DecomposeDelegate
-- [ ] HarfBuzzSharp.Direction
-  - [ ] F:HarfBuzzSharp.Direction.BottomToTop
-  - [ ] F:HarfBuzzSharp.Direction.Invalid
-  - [ ] F:HarfBuzzSharp.Direction.LeftToRight
-  - [ ] F:HarfBuzzSharp.Direction.RightToLeft
-  - [ ] F:HarfBuzzSharp.Direction.TopToBottom
+- [x] HarfBuzzSharp.BufferDiffFlags
+  - [x] F:HarfBuzzSharp.BufferDiffFlags.ClusterMismatch
+  - [x] F:HarfBuzzSharp.BufferDiffFlags.CodepointMismatch
+  - [x] F:HarfBuzzSharp.BufferDiffFlags.ContentTypeMismatch
+  - [x] F:HarfBuzzSharp.BufferDiffFlags.DottedCirclePresent
+  - [x] F:HarfBuzzSharp.BufferDiffFlags.Equal
+  - [x] F:HarfBuzzSharp.BufferDiffFlags.GlyphFlagsMismatch
+  - [x] F:HarfBuzzSharp.BufferDiffFlags.LengthMismatch
+  - [x] F:HarfBuzzSharp.BufferDiffFlags.NotdefPresent
+  - [x] F:HarfBuzzSharp.BufferDiffFlags.PositionMismatch
+- [x] HarfBuzzSharp.BufferFlags
+  - [x] F:HarfBuzzSharp.BufferFlags.BeginningOfText
+  - [x] F:HarfBuzzSharp.BufferFlags.Default
+  - [x] F:HarfBuzzSharp.BufferFlags.DoNotInsertDottedCircle
+  - [x] F:HarfBuzzSharp.BufferFlags.EndOfText
+  - [x] F:HarfBuzzSharp.BufferFlags.PreserveDefaultIgnorables
+  - [x] F:HarfBuzzSharp.BufferFlags.RemoveDefaultIgnorables
+- [x] HarfBuzzSharp.ClusterLevel
+  - [x] F:HarfBuzzSharp.ClusterLevel.Characters
+  - [x] F:HarfBuzzSharp.ClusterLevel.Default
+  - [x] F:HarfBuzzSharp.ClusterLevel.MonotoneCharacters
+  - [x] F:HarfBuzzSharp.ClusterLevel.MonotoneGraphemes
+- [x] HarfBuzzSharp.CombiningClassDelegate
+- [x] HarfBuzzSharp.ComposeDelegate
+- [x] HarfBuzzSharp.ContentType
+  - [x] F:HarfBuzzSharp.ContentType.Glyphs
+  - [x] F:HarfBuzzSharp.ContentType.Invalid
+  - [x] F:HarfBuzzSharp.ContentType.Unicode
+- [x] HarfBuzzSharp.DecomposeDelegate
+- [x] HarfBuzzSharp.Direction
+  - [x] F:HarfBuzzSharp.Direction.BottomToTop
+  - [x] F:HarfBuzzSharp.Direction.Invalid
+  - [x] F:HarfBuzzSharp.Direction.LeftToRight
+  - [x] F:HarfBuzzSharp.Direction.RightToLeft
+  - [x] F:HarfBuzzSharp.Direction.TopToBottom
 - [ ] HarfBuzzSharp.Face
   - [ ] M:HarfBuzzSharp.Face.#ctor(HarfBuzzSharp.Blob,System.Int32)
   - [ ] M:HarfBuzzSharp.Face.#ctor(HarfBuzzSharp.Blob,System.UInt32)
