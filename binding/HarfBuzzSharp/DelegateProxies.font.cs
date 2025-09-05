@@ -21,8 +21,25 @@ namespace HarfBuzzSharp
 
 	public delegate bool VariationGlyphDelegate (Font font, object fontData, uint unicode, uint variationSelector, out uint glyph);
 
+	/// <summary>
+	/// The delegate that is invoked when <see cref="M:HarfBuzzSharp.Font.GetHorizontalGlyphAdvance(System.UInt32)" /> or <see cref="M:HarfBuzzSharp.Font.GetVerticalGlyphAdvance(System.UInt32)" /> is invoked.
+	/// </summary>
+	/// <param name="font">The font.</param>
+	/// <param name="fontData">The additional data passed to <see cref="M:HarfBuzzSharp.Font.SetFontFunctions(HarfBuzzSharp.FontFunctions,System.Object,HarfBuzzSharp.ReleaseDelegate)" /> when the functions were set.</param>
+	/// <param name="glyph">The glyph.</param>
+	/// <returns>Return the advance amount.</returns>
+	/// <remarks></remarks>
 	public delegate int GlyphAdvanceDelegate (Font font, object fontData, uint glyph);
 
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <param name="font">To be added.</param>
+	/// <param name="fontData">To be added.</param>
+	/// <param name="count">To be added.</param>
+	/// <param name="glyphs">To be added.</param>
+	/// <param name="advances">To be added.</param>
+	/// <remarks>To be added.</remarks>
 	public delegate void GlyphAdvancesDelegate (Font font, object fontData, uint count, ReadOnlySpan<uint> glyphs, Span<int> advances);
 
 	public delegate bool GlyphOriginDelegate (Font font, object fontData, uint glyph, out int x, out int y);
@@ -31,6 +48,17 @@ namespace HarfBuzzSharp
 
 	public delegate bool GlyphExtentsDelegate (Font font, object fontData, uint glyph, out GlyphExtents extents);
 
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <param name="font">To be added.</param>
+	/// <param name="fontData">To be added.</param>
+	/// <param name="glyph">To be added.</param>
+	/// <param name="pointIndex">To be added.</param>
+	/// <param name="x">To be added.</param>
+	/// <param name="y">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate bool GlyphContourPointDelegate (Font font, object fontData, uint glyph, uint pointIndex, out int x, out int y);
 
 	public delegate bool GlyphNameDelegate (Font font, object fontData, uint glyph, out string name);

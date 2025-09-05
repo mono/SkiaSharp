@@ -234,21 +234,21 @@
   - [x] M:HarfBuzzSharp.FontFunctions.SetVerticalGlyphOriginDelegate(HarfBuzzSharp.GlyphOriginDelegate,HarfBuzzSharp.ReleaseDelegate)
   - [x] P:HarfBuzzSharp.FontFunctions.Empty
   - [x] P:HarfBuzzSharp.FontFunctions.IsImmutable
-- [ ] HarfBuzzSharp.GeneralCategoryDelegate
-- [ ] HarfBuzzSharp.GetTableDelegate
-- [ ] HarfBuzzSharp.GlyphAdvanceDelegate
-- [ ] HarfBuzzSharp.GlyphAdvancesDelegate
-- [ ] HarfBuzzSharp.GlyphContourPointDelegate
-- [ ] HarfBuzzSharp.GlyphExtents
-  - [ ] M:HarfBuzzSharp.GlyphExtents.Equals(HarfBuzzSharp.GlyphExtents)
-  - [ ] M:HarfBuzzSharp.GlyphExtents.Equals(System.Object)
-  - [ ] M:HarfBuzzSharp.GlyphExtents.GetHashCode
-  - [ ] M:HarfBuzzSharp.GlyphExtents.op_Equality(HarfBuzzSharp.GlyphExtents,HarfBuzzSharp.GlyphExtents)
-  - [ ] M:HarfBuzzSharp.GlyphExtents.op_Inequality(HarfBuzzSharp.GlyphExtents,HarfBuzzSharp.GlyphExtents)
-  - [ ] P:HarfBuzzSharp.GlyphExtents.Height
-  - [ ] P:HarfBuzzSharp.GlyphExtents.Width
-  - [ ] P:HarfBuzzSharp.GlyphExtents.XBearing
-  - [ ] P:HarfBuzzSharp.GlyphExtents.YBearing
+- [x] HarfBuzzSharp.GeneralCategoryDelegate
+- [x] HarfBuzzSharp.GetTableDelegate
+- [x] HarfBuzzSharp.GlyphAdvanceDelegate
+- [x] HarfBuzzSharp.GlyphAdvancesDelegate
+- [x] HarfBuzzSharp.GlyphContourPointDelegate
+- [ ] HarfBuzzSharp.GlyphExtents - Generated code: cannot add documentation comments
+  - [ ] M:HarfBuzzSharp.GlyphExtents.Equals(HarfBuzzSharp.GlyphExtents) - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphExtents.Equals(System.Object) - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphExtents.GetHashCode - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphExtents.op_Equality(HarfBuzzSharp.GlyphExtents,HarfBuzzSharp.GlyphExtents) - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphExtents.op_Inequality(HarfBuzzSharp.GlyphExtents,HarfBuzzSharp.GlyphExtents) - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphExtents.Height - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphExtents.Width - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphExtents.XBearing - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphExtents.YBearing - Generated code
 - [ ] HarfBuzzSharp.GlyphExtentsDelegate
 - [ ] HarfBuzzSharp.GlyphFlags
   - [ ] F:HarfBuzzSharp.GlyphFlags.Defined

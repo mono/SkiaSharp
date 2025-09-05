@@ -9,6 +9,13 @@ namespace HarfBuzzSharp
 {
 	public delegate void ReleaseDelegate ();
 
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <param name="face">To be added.</param>
+	/// <param name="tag">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate Blob GetTableDelegate (Face face, Tag tag);
 
 	internal static unsafe partial class DelegateProxies
