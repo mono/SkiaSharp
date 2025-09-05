@@ -411,12 +411,12 @@
 - [ ] HarfBuzzSharp.OpenTypeMetaTag
   - [ ] F:HarfBuzzSharp.OpenTypeMetaTag.DesignLanguages
   - [ ] F:HarfBuzzSharp.OpenTypeMetaTag.SupportedLanguages
-- [ ] HarfBuzzSharp.OpenTypeMetrics
-  - [ ] M:HarfBuzzSharp.OpenTypeMetrics.#ctor(HarfBuzzSharp.Font)
-  - [ ] M:HarfBuzzSharp.OpenTypeMetrics.GetVariation(HarfBuzzSharp.OpenTypeMetricsTag)
-  - [ ] M:HarfBuzzSharp.OpenTypeMetrics.GetXVariation(HarfBuzzSharp.OpenTypeMetricsTag)
-  - [ ] M:HarfBuzzSharp.OpenTypeMetrics.GetYVariation(HarfBuzzSharp.OpenTypeMetricsTag)
-  - [ ] M:HarfBuzzSharp.OpenTypeMetrics.TryGetPosition(HarfBuzzSharp.OpenTypeMetricsTag,System.Int32@)
+- [x] HarfBuzzSharp.OpenTypeMetrics
+  - [x] M:HarfBuzzSharp.OpenTypeMetrics.#ctor(HarfBuzzSharp.Font)
+  - [x] M:HarfBuzzSharp.OpenTypeMetrics.GetVariation(HarfBuzzSharp.OpenTypeMetricsTag)
+  - [x] M:HarfBuzzSharp.OpenTypeMetrics.GetXVariation(HarfBuzzSharp.OpenTypeMetricsTag)
+  - [x] M:HarfBuzzSharp.OpenTypeMetrics.GetYVariation(HarfBuzzSharp.OpenTypeMetricsTag)
+  - [x] M:HarfBuzzSharp.OpenTypeMetrics.TryGetPosition(HarfBuzzSharp.OpenTypeMetricsTag,System.Int32@)
 - [ ] HarfBuzzSharp.OpenTypeMetricsTag
   - [ ] F:HarfBuzzSharp.OpenTypeMetricsTag.CapHeight
   - [ ] F:HarfBuzzSharp.OpenTypeMetricsTag.HorizontalAscender
@@ -455,7 +455,7 @@
   - [ ] P:HarfBuzzSharp.OpenTypeNameEntry.Language
   - [ ] P:HarfBuzzSharp.OpenTypeNameEntry.NameId
   - [ ] P:HarfBuzzSharp.OpenTypeNameEntry.Var
-- [ ] HarfBuzzSharp.OpenTypeNameId
+- [x] HarfBuzzSharp.OpenTypeNameId
   - [ ] F:HarfBuzzSharp.OpenTypeNameId.CidFindFontName
   - [ ] F:HarfBuzzSharp.OpenTypeNameId.Copyright
   - [ ] F:HarfBuzzSharp.OpenTypeNameId.DarkBackground
@@ -820,7 +820,7 @@
   - [ ] M:HarfBuzzSharp.Variation.op_Inequality(HarfBuzzSharp.Variation,HarfBuzzSharp.Variation)
   - [ ] P:HarfBuzzSharp.Variation.Tag
   - [ ] P:HarfBuzzSharp.Variation.Value
-- [ ] HarfBuzzSharp.VariationGlyphDelegate
+- [x] HarfBuzzSharp.VariationGlyphDelegate
 
 ## Namespace HarfBuzzSharp.Internals
 

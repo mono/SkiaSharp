@@ -38,6 +38,16 @@ namespace HarfBuzzSharp
 	/// <remarks>To be added.</remarks>
 	public delegate uint NominalGlyphsDelegate (Font font, object fontData, uint count, ReadOnlySpan<uint> codepoints, Span<uint> glyphs);
 
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <param name="font">To be added.</param>
+	/// <param name="fontData">To be added.</param>
+	/// <param name="unicode">To be added.</param>
+	/// <param name="variationSelector">To be added.</param>
+	/// <param name="glyph">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate bool VariationGlyphDelegate (Font font, object fontData, uint unicode, uint variationSelector, out uint glyph);
 
 	/// <summary>

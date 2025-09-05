@@ -15,6 +15,10 @@ namespace HarfBuzzSharp
 		}
 	}
 
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <remarks>To be added.</remarks>
 	public enum OpenTypeNameId
 	{
 		Copyright = 0,
