@@ -1084,7 +1084,7 @@ namespace SkiaSharp
 		/// <param name="matrix">The matrix to apply while painting.</param>
 		/// <param name="paint">The paint to use when drawing the picture, or <see langword="null" />.</param>
 		/// <remarks>This is equivalent to calling <see cref="SkiaSharp.SKCanvas.Save" />, followed by
-		/// <see cref="SkiaSharp.SKCanvas.Concat(SkiaSharp.SKMatrix@)" /> with the specified `matrix`,
+		/// <see cref="SkiaSharp.SKCanvas.Concat(SkiaSharp.SKMatrix)" /> with the specified `matrix`,
 		/// <see cref="SkiaSharp.SKCanvas.DrawPicture(SkiaSharp.SKPicture,SkiaSharp.SKPaint)" />
 		/// and then <see cref="SkiaSharp.SKCanvas.Restore" />.
 		/// If paint is non-null, the picture is drawn into a temporary buffer, and then
