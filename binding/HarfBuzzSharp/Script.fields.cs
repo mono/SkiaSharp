@@ -4,6 +4,10 @@ namespace HarfBuzzSharp
 {
 	public partial struct Script
 	{
+		/// <summary>
+		/// The script used to indicate an invalid or no script.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Invalid = new Script (Tag.None);
 
 		public static readonly Script MaxValue = new Script (Tag.Max);
@@ -13,43 +17,115 @@ namespace HarfBuzzSharp
 		// Special scripts
 
 		// 1.1
+		/// <summary>
+		/// The Common (Zyyy) script used to indicate an undetermined script.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Common = new Script (new Tag ('Z', 'y', 'y', 'y'));
 		// 1.1
+		/// <summary>
+		/// The Inherited (Zinh) script used to indicate an inherited script.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Inherited = new Script (new Tag ('Z', 'i', 'n', 'h'));
 		// 5.0
+		/// <summary>
+		/// The Unknown (Zzzz) script used to indicate an uncoded script.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Unknown = new Script (new Tag ('Z', 'z', 'z', 'z'));
 
 		// Scripts
 
 		// 1.1
+		/// <summary>
+		/// The Arabic (Arab) script typically used with text in the Arabic (ar) language originating from Saudi Arabia.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Arabic = new Script (new Tag ('A', 'r', 'a', 'b'));
 		// 1.1
+		/// <summary>
+		/// The Armenian (Armn) script typically used with text in the Armenian (hy) language originating from Armenia.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Armenian = new Script (new Tag ('A', 'r', 'm', 'n'));
 		// 1.1
+		/// <summary>
+		/// The Bengali (Beng) script typically used with text in the Bengali (bn) language originating from Bangladesh.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Bengali = new Script (new Tag ('B', 'e', 'n', 'g'));
 		// 1.1
+		/// <summary>
+		/// The Cyrillic (Cyrl) script typically used with text in the Russian (ru) language originating from Bulgaria.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Cyrillic = new Script (new Tag ('C', 'y', 'r', 'l'));
 		// 1.1
+		/// <summary>
+		/// The Devanagari (Deva) script typically used with text in the Hindi (hi) language originating from India.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Devanagari = new Script (new Tag ('D', 'e', 'v', 'a'));
 		// 1.1
+		/// <summary>
+		/// The Georgian (Geor) script typically used with text in the Georgian (ka) language originating from Georgia.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Georgian = new Script (new Tag ('G', 'e', 'o', 'r'));
 		// 1.1
+		/// <summary>
+		/// The Greek (Grek) script typically used with text in the Greek (el) language originating from Greece.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Greek = new Script (new Tag ('G', 'r', 'e', 'k'));
 		// 1.1
+		/// <summary>
+		/// The Gujarati (Gujr) script typically used with text in the Gujarati (gu) language originating from India.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Gujarati = new Script (new Tag ('G', 'u', 'j', 'r'));
 		// 1.1
+		/// <summary>
+		/// The Gurmukhi (Guru) script typically used with text in the Punjabi (pa) language originating from India.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Gurmukhi = new Script (new Tag ('G', 'u', 'r', 'u'));
 		// 1.1
+		/// <summary>
+		/// The Hangul (Hang) script typically used with text in the Korean (ko) language originating from Republic of Korea.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Hangul = new Script (new Tag ('H', 'a', 'n', 'g'));
 		// 1.1
+		/// <summary>
+		/// The Han (Hani) script typically used with text in the Chinese (zh) language originating from China.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Han = new Script (new Tag ('H', 'a', 'n', 'i'));
 		// 1.1
+		/// <summary>
+		/// The Hebrew (Hebr) script typically used with text in the Hebrew (he) language originating from Israel.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Hebrew = new Script (new Tag ('H', 'e', 'b', 'r'));
 		// 1.1
+		/// <summary>
+		/// The Hiragana (Hira) script typically used with text in the Japanese (ja) language originating from Japan.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Hiragana = new Script (new Tag ('H', 'i', 'r', 'a'));
 		// 1.1
+		/// <summary>
+		/// The Kannada (Knda) script typically used with text in the Kannada (kn) language originating from India.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Kannada = new Script (new Tag ('K', 'n', 'd', 'a'));
 		// 1.1
+		/// <summary>
+		/// The Katakana (Kana) script typically used with text in the Japanese (ja) language originating from Japan.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Katakana = new Script (new Tag ('K', 'a', 'n', 'a'));
 		// 1.1
 		public static readonly Script Lao = new Script (new Tag ('L', 'a', 'o', 'o'));
