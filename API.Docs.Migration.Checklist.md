@@ -876,22 +876,22 @@
 - [x] SkiaSharp.GRBackendState
   - [x] F:SkiaSharp.GRBackendState.All
   - [x] F:SkiaSharp.GRBackendState.None
-- [ ] SkiaSharp.GRBackendTexture
-  - [ ] M:SkiaSharp.GRBackendTexture.#ctor(SkiaSharp.GRBackendTextureDesc)
-  - [ ] M:SkiaSharp.GRBackendTexture.#ctor(SkiaSharp.GRGlBackendTextureDesc)
-  - [ ] M:SkiaSharp.GRBackendTexture.#ctor(System.Int32,System.Int32,SkiaSharp.GRVkImageInfo)
-  - [ ] M:SkiaSharp.GRBackendTexture.#ctor(System.Int32,System.Int32,System.Boolean,SkiaSharp.GRGlTextureInfo)
-  - [ ] M:SkiaSharp.GRBackendTexture.Dispose(System.Boolean)
-  - [ ] M:SkiaSharp.GRBackendTexture.DisposeNative
-  - [ ] M:SkiaSharp.GRBackendTexture.GetGlTextureInfo
-  - [ ] M:SkiaSharp.GRBackendTexture.GetGlTextureInfo(SkiaSharp.GRGlTextureInfo@)
-  - [ ] P:SkiaSharp.GRBackendTexture.Backend
-  - [ ] P:SkiaSharp.GRBackendTexture.HasMipMaps
-  - [ ] P:SkiaSharp.GRBackendTexture.Height
-  - [ ] P:SkiaSharp.GRBackendTexture.IsValid
-  - [ ] P:SkiaSharp.GRBackendTexture.Rect
-  - [ ] P:SkiaSharp.GRBackendTexture.Size
-  - [ ] P:SkiaSharp.GRBackendTexture.Width
+- [x] SkiaSharp.GRBackendTexture
+  - [ ] M:SkiaSharp.GRBackendTexture.#ctor(SkiaSharp.GRBackendTextureDesc) - Missing in code: obsolete constructor removed
+  - [ ] M:SkiaSharp.GRBackendTexture.#ctor(SkiaSharp.GRGlBackendTextureDesc) - Missing in code: obsolete constructor removed
+  - [ ] M:SkiaSharp.GRBackendTexture.#ctor(System.Int32,System.Int32,SkiaSharp.GRVkImageInfo) - Missing in code: constructor signature not found in current implementation
+  - [x] M:SkiaSharp.GRBackendTexture.#ctor(System.Int32,System.Int32,System.Boolean,SkiaSharp.GRGlTextureInfo)
+  - [x] M:SkiaSharp.GRBackendTexture.Dispose(System.Boolean)
+  - [x] M:SkiaSharp.GRBackendTexture.DisposeNative
+  - [x] M:SkiaSharp.GRBackendTexture.GetGlTextureInfo
+  - [x] M:SkiaSharp.GRBackendTexture.GetGlTextureInfo(SkiaSharp.GRGlTextureInfo@)
+  - [x] P:SkiaSharp.GRBackendTexture.Backend
+  - [x] P:SkiaSharp.GRBackendTexture.HasMipMaps
+  - [x] P:SkiaSharp.GRBackendTexture.Height
+  - [x] P:SkiaSharp.GRBackendTexture.IsValid
+  - [x] P:SkiaSharp.GRBackendTexture.Rect
+  - [x] P:SkiaSharp.GRBackendTexture.Size
+  - [x] P:SkiaSharp.GRBackendTexture.Width
 - [ ] SkiaSharp.GRBackendTextureDesc
   - [ ] M:SkiaSharp.GRBackendTextureDesc.Equals(SkiaSharp.GRBackendTextureDesc)
   - [ ] M:SkiaSharp.GRBackendTextureDesc.Equals(System.Object)
