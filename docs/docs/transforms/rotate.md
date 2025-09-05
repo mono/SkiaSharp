@@ -249,7 +249,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 }
 ```
 
-The `revolveDegrees` and `rotateDegrees` fields are animated. This program uses a different animation technique based on the .NET MAUI [`Animation`](xref:Xamarin.Forms.Animation) class. (This class is described in Chapter 22 of [Free PDF download of *Creating Mobile Apps with .NET MAUI*](https://aka.ms/xamformsebook)) The `OnAppearing` override creates two `Animation` objects with callback methods and then calls `Commit` on them for an animation duration:
+The `revolveDegrees` and `rotateDegrees` fields are animated. This program uses a different animation technique based on the .NET MAUI [`Animation`](xref:Microsoft.Maui.Controls.Animation) class. The `OnAppearing` override creates two `Animation` objects with callback methods and then calls `Commit` on them for an animation duration:
 
 ```csharp
 protected override void OnAppearing()

@@ -437,7 +437,7 @@ public class AnimatedRotation3DPage : ContentPage
 }
 ```
 
-The `OnAppearing` override defines three Xamarin.Forms `Animation` objects to animate the `xRotationDegrees`, `yRotationDegrees`, and `zRotationDegrees` fields at different rates. Notice that the periods of these animations are set to prime numbers (5 seconds, 7 seconds, and 11 seconds) so the overall combination only repeats every 385 seconds, or more than 10 minutes:
+The `OnAppearing` override defines three .NET MAUI `Animation` objects to animate the `xRotationDegrees`, `yRotationDegrees`, and `zRotationDegrees` fields at different rates. Notice that the periods of these animations are set to prime numbers (5 seconds, 7 seconds, and 11 seconds) so the overall combination only repeats every 385 seconds, or more than 10 minutes:
 
 ```csharp
 public class AnimatedRotation3DPage : ContentPage

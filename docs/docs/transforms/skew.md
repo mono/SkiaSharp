@@ -20,7 +20,7 @@ In SkiaSharp, the skew transform tilts graphical objects, such as the shadow in 
 
 The skew turns a rectangle into a parallelogram, but a skewed ellipse is still an ellipse.
 
-Although Xamarin.Forms defines properties for translation, scaling, and rotations, there is no corresponding property in Xamarin.Forms for skew.
+Although .NET MAUI defines properties for translation, scaling, and rotations, there is no corresponding property in .NET MAUI for skew.
 
 The [`Skew`](xref:SkiaSharp.SKCanvas.Skew(System.Single,System.Single)) method of `SKCanvas` accepts two arguments for horizontal skew and vertical skew:
 

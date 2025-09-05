@@ -14,7 +14,7 @@ no-loc: [.NET MAUI, Microsoft.Maui]
 
 _Learn the basics of SkiaSharp drawing, including canvases and paint objects_
 
-This article introduces the concepts of drawing graphics in Xamarin.Forms using SkiaSharp, including creating an `SKCanvasView` object to host the graphics, handling the `PaintSurface` event, and using a `SKPaint` object to specify color and other drawing attributes.
+This article introduces the concepts of drawing graphics in .NET MAUI using SkiaSharp, including creating an `SKCanvasView` object to host the graphics, handling the `PaintSurface` event, and using a `SKPaint` object to specify color and other drawing attributes.
 
 The sample program contains all the sample code for this series of SkiaSharp articles. The first page is entitled **Simple Circle** and invokes the page class [`SimpleCirclePage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/SimpleCirclePage.cs). This code shows how to draw a circle in the center of the page with a radius of 100 pixels. The outline of the circle is red, and the interior of the circle is blue.
 
@@ -40,7 +40,7 @@ public SimpleCirclePage()
 }
 ```
 
-The `SKCanvasView` occupies the entire content area of the page. You can alternatively combine an `SKCanvasView` with other Xamarin.Forms `View` derivatives, as you'll see in other examples.
+The `SKCanvasView` occupies the entire content area of the page. You can alternatively combine an `SKCanvasView` with other .NET MAUI `View` derivatives, as you'll see in other examples.
 
 The `PaintSurface` event handler is where you do all your drawing. This method can be called multiple times while your program is running, so it should maintain all the information necessary to recreate the graphics display:
 
@@ -102,7 +102,7 @@ The [`Style`](xref:SkiaSharp.SKPaint.Style) property indicates that you want to 
 
 The default is `Fill`. Use the third option to stroke the line and fill the interior with the same color.
 
-Set the [`Color`](xref:SkiaSharp.SKPaint.Color) property to a value of type [`SKColor`](xref:SkiaSharp.SKColor). One way to get an `SKColor` value is by converting a .NET MAUI `Color` value to an `SKColor` value using the extension method [`ToSKColor`](xref:SkiaSharp.Views.Maui.Controls.Extensions.ToSKColor*). The [`Extensions`](xref:SkiaSharp.Views.Maui.Controls.Extensions) class in the `SkiaSharp.Views.Maui.Controls` namespace includes other methods that convert between Xamarin.Forms values and SkiaSharp values.
+Set the [`Color`](xref:SkiaSharp.SKPaint.Color) property to a value of type [`SKColor`](xref:SkiaSharp.SKColor). One way to get an `SKColor` value is by converting a .NET MAUI `Color` value to an `SKColor` value using the extension method [`ToSKColor`](xref:SkiaSharp.Views.Maui.Controls.Extensions.ToSKColor*). The [`Extensions`](xref:SkiaSharp.Views.Maui.Controls.Extensions) class in the `SkiaSharp.Views.Maui.Controls` namespace includes other methods that convert between .NET MAUI values and SkiaSharp values.
 
 The [`StrokeWidth`](xref:SkiaSharp.SKPaint.StrokeWidth) property indicates the thickness of the line. Here it's set to 25 pixels.
 

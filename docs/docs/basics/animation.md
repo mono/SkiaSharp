@@ -14,11 +14,11 @@ no-loc: [.NET MAUI, Microsoft.Maui]
 
 _Discover how to animate your SkiaSharp graphics_
 
-You can animate SkiaSharp graphics in Xamarin.Forms by causing the `PaintSurface` method to be called periodically, each time drawing the graphics a little differently. Here's an animation shown later in this article with concentric circles that seemingly expand from the center:
+You can animate SkiaSharp graphics in .NET MAUI by causing the `PaintSurface` method to be called periodically, each time drawing the graphics a little differently. Here's an animation shown later in this article with concentric circles that seemingly expand from the center:
 
 ![Several concentric circles seemingly expanding from the center](animation-images/animationexample.png)
 
-The **Pulsating Ellipse** page in the sample program animates the two axes of an ellipse so that it appears to be pulsating, and you can even control the rate of this pulsation. The [**PulsatingEllipsePage.xaml**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/PulsatingEllipsePage.xaml) file instantiates a .NET MAUI `Slider` and a `Label` to display the current value of the slider. This is a common way to integrate an `SKCanvasView` with other Xamarin.Forms views:
+The **Pulsating Ellipse** page in the sample program animates the two axes of an ellipse so that it appears to be pulsating, and you can even control the rate of this pulsation. The [**PulsatingEllipsePage.xaml**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/PulsatingEllipsePage.xaml) file instantiates a .NET MAUI `Slider` and a `Label` to display the current value of the slider. This is a common way to integrate an `SKCanvasView` with other .NET MAUI views:
 
 ```xaml
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
