@@ -66,7 +66,7 @@ namespace SkiaSharp
 		/// <returns>Returns the <see cref="SKPicture" /> containing the recorded content.</returns>
 		/// <remarks>
 		/// This invalidates the canvas returned by
-		/// <see cref="SkiaSharp.SKPictureRecorder.BeginRecording" /> and
+		/// <see cref="SkiaSharp.SKPictureRecorder.BeginRecording(SKRect)" /> and
 		/// <see cref="SkiaSharp.SKPictureRecorder.RecordingCanvas" />.
 		/// </remarks>
 		public SKPicture EndRecording ()
@@ -80,7 +80,7 @@ namespace SkiaSharp
 		/// <returns>Returns the <see cref="SKDrawable" /> containing the recorded content.</returns>
 		/// <remarks>
 		/// This invalidates the canvas returned by
-		/// <see cref="SkiaSharp.SKPictureRecorder.BeginRecording" /> and
+		/// <see cref="SkiaSharp.SKPictureRecorder.BeginRecording(SKRect)" /> and
 		/// <see cref="SkiaSharp.SKPictureRecorder.RecordingCanvas" />.
 		/// Unlike <see cref="SkiaSharp.SKPictureRecorder.EndRecording" />, which returns an
 		/// immutable picture, the returned drawable may contain live references to other

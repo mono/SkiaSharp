@@ -477,7 +477,7 @@ namespace SkiaSharp
 		/// <param name="y">The y-component of the vector.</param>
 		/// <returns>Returns the mapped point.</returns>
 		/// <remarks>
-		/// Mapping vectors ignores the translation component in the matrix. Use <see cref="SKMatrix.MapXY(System.Single,System.Single)" /> to take the translation into consideration.
+		/// Mapping vectors ignores the translation component in the matrix. Use <see cref="SKMatrix.MapPoint(System.Single,System.Single)" /> to take the translation into consideration.
 		/// </remarks>
 		public readonly SKPoint MapVector (float x, float y)
 		{

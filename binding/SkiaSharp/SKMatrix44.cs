@@ -79,7 +79,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <returns>Returns the new identity matrix.</returns>
 		/// <remarks>
-		/// This is equivalent to creating an uninitialized matrix, and invoking <see cref="SKMatrix44.SetIdentity" />.
+		/// This is equivalent to creating an identity matrix.
 		/// </remarks>
 		public static SKMatrix44 CreateIdentity () => Identity;
 
@@ -97,7 +97,7 @@ namespace SkiaSharp
 		/// <param name="z">The amount, along the z-axis, to scale.</param>
 		/// <returns>Returns the new scale matrix.</returns>
 		/// <remarks>
-		/// This is equivalent to creating an uninitialized matrix and passing the values to <see cref="SKMatrix44.SetScale(System.Single,System.Single,System.Single)" />.
+		/// This creates a scale matrix with the specified scaling factors.
 		/// </remarks>
 		public static SKMatrix44 CreateScale (float x, float y, float z) =>
 			Matrix4x4.CreateScale (x, y, z);
@@ -116,7 +116,7 @@ namespace SkiaSharp
 		/// <param name="radians">The amount, in radians, to rotate by.</param>
 		/// <returns>Returns the new rotation matrix.</returns>
 		/// <remarks>
-		/// This is equivalent to creating an uninitialized matrix and passing the values to <see cref="SKMatrix44.SetRotationAbout(System.Single,System.Single,System.Single,System.Single)" />.
+		/// This creates a rotation matrix around the specified axis by the given angle in radians.
 		/// </remarks>
 		public static SKMatrix44 CreateRotation (float x, float y, float z, float radians) =>
 			Matrix4x4.CreateFromAxisAngle (new Vector3 (x, y, z), radians);
@@ -150,7 +150,7 @@ namespace SkiaSharp
 		/// <param name="degrees">The amount, in degrees, to rotate by.</param>
 		/// <returns>Returns the new rotation matrix.</returns>
 		/// <remarks>
-		/// This is equivalent to creating an uninitialized matrix and passing the values to <see cref="SKMatrix44.SetRotationAboutDegrees(System.Single,System.Single,System.Single,System.Single)" />.
+		/// This creates a rotation matrix around the specified axis by the given angle in degrees.
 		/// </remarks>
 		public static SKMatrix44 CreateRotationDegrees (float x, float y, float z, float degrees) =>
 			Matrix4x4.CreateFromAxisAngle (new Vector3 (x, y, z), degrees * DegreesToRadians);
@@ -325,7 +325,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Applies the matrix to a point.
 		/// </summary>
-		/// <param name="src">The point to map.</param>
+		/// <param name="point">The point to map.</param>
 		/// <returns>Returns a new point with the matrix applied.</returns>
 		public readonly SKPoint MapPoint (SKPoint point) =>
 			Vector2.Transform (point, this);
@@ -388,14 +388,14 @@ namespace SkiaSharp
 		/// <summary>
 		/// Pre-concatenates the matrix with the specified matrix.
 		/// </summary>
-		/// <param name="m">The matrix to concatenate.</param>
+		/// <param name="matrix">The matrix to concatenate.</param>
 		public readonly SKMatrix44 PreConcat (SKMatrix44 matrix) =>
 			this * matrix;
 
 		/// <summary>
 		/// Post-concatenates the current matrix with the specified matrix.
 		/// </summary>
-		/// <param name="m">The matrix to concatenate.</param>
+		/// <param name="matrix">The matrix to concatenate.</param>
 		public readonly SKMatrix44 PostConcat (SKMatrix44 matrix) =>
 			matrix * this;
 

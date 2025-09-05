@@ -16,11 +16,11 @@ namespace SkiaSharp
 	/// The surface always has non-zero dimensions. If there is a request for a new
 	/// surface, and either of the requested dimensions are zero, then <see langword="null" /> will
 	/// be returned.
-	/// Once you create a surface with one of its <see cref="SkiaSharp.SKSurface.Create" />
+	/// Once you create a surface with one of its <see cref="SkiaSharp.SKSurface.Create(SKImageInfo)" />
 	/// methods, you can draw into the canvas returned by the
 	/// <see cref="SkiaSharp.SKSurface.Canvas" /> property. Once the drawing is complete, you
 	/// can retrieve an <see cref="SkiaSharp.SKImage" /> by calling the
-	/// <see cref="SkiaSharp.SKSurface.Snapshot" /> method.
+	/// <see cref="SkiaSharp.SKSurface.Snapshot()" /> method.
 	/// ## Examples
 	/// ```csharp
 	/// var info = new SKImageInfo(256, 256);
@@ -677,7 +677,7 @@ namespace SkiaSharp
 		/// <param name="height">The desired height for the surface.</param>
 		/// <returns>Returns the new surface if it could be created, otherwise <see langword="null" />.</returns>
 		/// <remarks>
-		/// Drawing to the <see cref="SKCanvas" /> returned from <see cref="SKSurface.Canvas" /> has no effect. Calling <see cref="SKSurface.Snapshot" /> on the returned <see cref="SKSurface" /> returns <see langword="null" />.
+		/// Drawing to the <see cref="SKCanvas" /> returned from <see cref="SKSurface.Canvas" /> has no effect. Calling <see cref="SKSurface.Snapshot()" /> on the returned <see cref="SKSurface" /> returns <see langword="null" />.
 		/// </remarks>
 		public static SKSurface CreateNull (int width, int height) =>
 			GetObject (SkiaApi.sk_surface_new_null (width, height));

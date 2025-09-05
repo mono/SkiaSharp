@@ -10,7 +10,7 @@ namespace SkiaSharp
 	/// A high-level API for creating a document-based canvas.
 	/// </summary>
 	/// <remarks>
-	/// For each page, call <see cref="SkiaSharp.SKDocument.BeginPage" /> to get the
+	/// For each page, call <see cref="SkiaSharp.SKDocument.BeginPage(float, float)" /> to get the
 	/// canvas, and then complete the page with a call to
 	/// <see cref="SkiaSharp.SKDocument.EndPage" />. Finally, call
 	/// <see cref="SkiaSharp.SKDocument.Close" /> to complete the document.

@@ -239,7 +239,7 @@ namespace SkiaSharp
 		public void PurgeUnlockedResources (long bytesToPurge, bool preferScratchResources) =>
 			SkiaApi.gr_direct_context_purge_unlocked_resources_bytes (Handle, (IntPtr)bytesToPurge, preferScratchResources);
 
-		internal static GRContext GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+		internal static new GRContext GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
 			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new GRContext (h, o));
 	}
 }

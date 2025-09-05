@@ -143,7 +143,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Creates a new table color filter.
 		/// </summary>
-		/// <param name="table">The table of values for each color component, with a length of <see cref="SKColorTable.MaxLength" />.</param>
+		/// <param name="table">The table of values for each color component, with a length of <see cref="SKColorFilter.TableMaxLength" />.</param>
 		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
 		public static SKColorFilter CreateTable(byte[] table)
 		{
@@ -164,10 +164,10 @@ namespace SkiaSharp
 		/// <summary>
 		/// Creates a new table color filter.
 		/// </summary>
-		/// <param name="tableA">The table of values for the alpha component, with a length of <see cref="SKColorTable.MaxLength" />.</param>
-		/// <param name="tableR">The table of values for the red component, with a length of <see cref="SKColorTable.MaxLength" />.</param>
-		/// <param name="tableG">The table of values for the green component, with a length of <see cref="SKColorTable.MaxLength" />.</param>
-		/// <param name="tableB">The table of values for the blue component, with a length of <see cref="SKColorTable.MaxLength" />.</param>
+		/// <param name="tableA">The table of values for the alpha component, with a length of <see cref="SKColorFilter.TableMaxLength" />.</param>
+		/// <param name="tableR">The table of values for the red component, with a length of <see cref="SKColorFilter.TableMaxLength" />.</param>
+		/// <param name="tableG">The table of values for the green component, with a length of <see cref="SKColorFilter.TableMaxLength" />.</param>
+		/// <param name="tableB">The table of values for the blue component, with a length of <see cref="SKColorFilter.TableMaxLength" />.</param>
 		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
 		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB)
 		{

@@ -700,11 +700,11 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Encodes the image using the <see cref="SKImageEncodeFormat.Png" /> format.
+		/// Encodes the image using the <see cref="SKEncodedImageFormat.Png" /> format.
 		/// </summary>
 		/// <returns>Returns the <see cref="SKData" /> wrapping the encoded image.</returns>
 		/// <remarks>
-		/// Use the overload that takes a <see cref="SKImageEncodeFormat" /> if you want to encode in a different format.
+		/// Use the overload that takes a <see cref="SKEncodedImageFormat" /> if you want to encode in a different format.
 		/// </remarks>
 		public SKData Encode ()
 		{
@@ -892,7 +892,7 @@ namespace SkiaSharp
 		/// Gets a value indicating whether the image is backed by an image-generator or other source that creates (and caches) its pixels / texture on-demand.
 		/// </summary>
 		/// <remarks>
-		/// If this method returns <see langword="false" />, then <see cref="SKImage.PeekPixels" /> will return <see langword="null" />.
+		/// If this method returns <see langword="false" />, then <see cref="SKImage.PeekPixels()" /> will return <see langword="null" />.
 		/// </remarks>
 		public bool IsLazyGenerated =>
 			SkiaApi.sk_image_is_lazy_generated (Handle);

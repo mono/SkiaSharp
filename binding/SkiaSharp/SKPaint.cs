@@ -1304,9 +1304,6 @@ namespace SkiaSharp
 		/// <param name="text">The text.</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
 		/// <remarks>
-		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
-		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
-		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.
@@ -1326,9 +1323,6 @@ namespace SkiaSharp
 		/// <param name="text">The text encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
 		/// <remarks>
-		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
-		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
-		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.
@@ -1349,9 +1343,6 @@ namespace SkiaSharp
 		/// <param name="length">The length of the text buffer.</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
 		/// <remarks>
-		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
-		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
-		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.
@@ -1367,9 +1358,6 @@ namespace SkiaSharp
 		/// <param name="length">The length of the text buffer.</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
 		/// <remarks>
-		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
-		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
-		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.
@@ -1385,9 +1373,6 @@ namespace SkiaSharp
 		/// <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
 		/// <remarks>
-		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
-		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
-		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.
@@ -1409,9 +1394,6 @@ namespace SkiaSharp
 		/// <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
 		/// <remarks>
-		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
-		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
-		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.
@@ -1434,9 +1416,6 @@ namespace SkiaSharp
 		/// <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
 		/// <remarks>
-		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
-		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
-		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.
@@ -1453,9 +1432,6 @@ namespace SkiaSharp
 		/// <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
 		/// <remarks>
-		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
-		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
-		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.

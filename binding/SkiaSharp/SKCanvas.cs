@@ -145,14 +145,14 @@ namespace SkiaSharp
 	/// The canvas supports a number of 2D transformations. Unlike other 2D graphic
 	/// systems like CoreGraphics or Cairo, SKCanvas extends the transformations to
 	/// include perspectives.
-	/// You can use the <see cref="SkiaSharp.SKCanvas.Scale" />,
-	/// <see cref="SkiaSharp.SKCanvas.Skew" />, <see cref="SkiaSharp.SKCanvas.Translate" />,
-	/// <see cref="SkiaSharp.SKCanvas.RotateDegrees" />,
-	/// <see cref="SkiaSharp.SKCanvas.RotateRadians" /> to perform some of the most common
+	/// You can use the <see cref="SkiaSharp.SKCanvas.Scale(float)" />,
+	/// <see cref="SkiaSharp.SKCanvas.Skew(float, float)" />, <see cref="SkiaSharp.SKCanvas.Translate(float, float)" />,
+	/// <see cref="SkiaSharp.SKCanvas.RotateDegrees(float)" />,
+	/// <see cref="SkiaSharp.SKCanvas.RotateRadians(float)" /> to perform some of the most common
 	/// 2D transformations.
-	/// For more control you can use the <see cref="SkiaSharp.SKCanvas.SetMatrix" /> to set
+	/// For more control you can use the <see cref="SkiaSharp.SKCanvas.SetMatrix(in SKMatrix)" /> to set
 	/// an arbitrary transformation using the <see cref="SkiaSharp.SKMatrix" /> and the
-	/// <see cref="SkiaSharp.SKCanvas.Concat" /> to concatenate an <see cref="SkiaSharp.SKMatrix" />
+	/// <see cref="SkiaSharp.SKCanvas.Concat(in SKMatrix)" /> to concatenate an <see cref="SkiaSharp.SKMatrix" />
 	/// transformation to the current matrix in use.
 	/// The <see cref="SkiaSharp.SKCanvas.ResetMatrix" /> can be used to reset the state of
 	/// the matrix.
@@ -167,7 +167,7 @@ namespace SkiaSharp
 	/// state by using the <see cref="SkiaSharp.SKCanvas.Restore" /> or
 	/// <see cref="SkiaSharp.SKCanvas.RestoreToCount" /> methods.
 	/// Additionally, it is possible to push a new state with
-	/// <see cref="SkiaSharp.SKCanvas.SaveLayer" /> which will make an offscreen copy of a
+	/// <see cref="SkiaSharp.SKCanvas.SaveLayer(SKRect, SKPaint?)" /> which will make an offscreen copy of a
 	/// region, and once the drawing is completed, calling the
 	/// <see cref="SkiaSharp.SKCanvas.Restore" /> method which copies the offscreen bitmap
 	/// into this canvas.
@@ -1113,7 +1113,7 @@ namespace SkiaSharp
 		/// <param name="paint">The paint to use when drawing the picture, or <see langword="null" />.</param>
 		/// <remarks>
 		/// This is equivalent to calling <see cref="SkiaSharp.SKCanvas.Save" />, followed by
-		/// <see cref="SkiaSharp.SKCanvas.Concat(SkiaSharp.SKMatrix)" /> with the specified `matrix`,
+		/// <see cref="SkiaSharp.SKCanvas.Concat(in SKMatrix)" /> with the specified `matrix`,
 		/// <see cref="SkiaSharp.SKCanvas.DrawPicture(SkiaSharp.SKPicture,SkiaSharp.SKPaint)" />
 		/// and then <see cref="SkiaSharp.SKCanvas.Restore" />.
 		/// If paint is non-null, the picture is drawn into a temporary buffer, and then

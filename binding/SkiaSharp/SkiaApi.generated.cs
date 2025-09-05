@@ -19463,9 +19463,7 @@ namespace SkiaSharp {
 		/// <summary>
 		/// Tests whether two <see cref="SKSizeI" /> structures are equal.
 		/// </summary>
-		/// <param name="sz1">The <see cref="SKSizeI" /> structure on the left side of the equality operator.</param>
 		/// <param name="left">The <see cref="SKSizeI" /> structure on the left side of the equality operator.</param>
-		/// <param name="sz2">The <see cref="SKSizeI" /> structure on the right of the equality operator.</param>
 		/// <param name="right">The <see cref="SKSizeI" /> structure on the right of the equality operator.</param>
 		/// <returns>This operator returns true if both <see cref="SKSizeI" /> structures have equal <see cref="SKSizeI.Width" /> and <see cref="SKSizeI.Height" />; otherwise, false.</returns>
 		public static bool operator == (SKSizeI left, SKSizeI right) =>
@@ -19474,9 +19472,7 @@ namespace SkiaSharp {
 		/// <summary>
 		/// Tests whether two <see cref="SKSizeI" /> structures are different.
 		/// </summary>
-		/// <param name="sz1">The <see cref="SKSizeI" /> structure that is to the left of the inequality operator.</param>
 		/// <param name="left">The <see cref="SKSizeI" /> structure that is to the left of the inequality operator.</param>
-		/// <param name="sz2">The <see cref="SKSizeI" /> structure that is to the right of the inequality operator.</param>
 		/// <param name="right">The <see cref="SKSizeI" /> structure that is to the right of the inequality operator.</param>
 		/// <returns>This operator returns true if either of the <see cref="SKSizeI.Width" /> and <see cref="SKSizeI.Height" /> properties of the two <see cref="SKSizeI" /> structures are unequal; otherwise false.</returns>
 		public static bool operator != (SKSizeI left, SKSizeI right) =>
@@ -20765,9 +20761,7 @@ namespace SkiaSharp {
 		/// <summary>
 		/// Tests whether two <see cref="SKSize" /> structures are equal.
 		/// </summary>
-		/// <param name="sz1">The <see cref="SKSize" /> structure on the left side of the equality operator.</param>
 		/// <param name="left">The <see cref="SKSize" /> structure on the left side of the equality operator.</param>
-		/// <param name="sz2">The <see cref="SKSize" /> structure on the right of the equality operator.</param>
 		/// <param name="right">The <see cref="SKSize" /> structure on the right of the equality operator.</param>
 		/// <returns>This operator returns true if both <see cref="SKSize" /> structures have equal <see cref="SKSize.Width" /> and <see cref="SKSize.Height" />; otherwise, false.</returns>
 		public static bool operator == (SKSize left, SKSize right) =>
@@ -20776,9 +20770,7 @@ namespace SkiaSharp {
 		/// <summary>
 		/// Tests whether two <see cref="SKSize" /> structures are different.
 		/// </summary>
-		/// <param name="sz1">The <see cref="SKSize" /> structure that is to the left of the inequality operator.</param>
 		/// <param name="left">The <see cref="SKSize" /> structure that is to the left of the inequality operator.</param>
-		/// <param name="sz2">The <see cref="SKSize" /> structure that is to the right of the inequality operator.</param>
 		/// <param name="right">The <see cref="SKSize" /> structure that is to the right of the inequality operator.</param>
 		/// <returns>This operator returns true if either of the <see cref="SKSize.Width" /> and <see cref="SKSize.Height" /> properties of the two <see cref="SKSize" /> structures are unequal; otherwise false.</returns>
 		public static bool operator != (SKSize left, SKSize right) =>
@@ -21456,7 +21448,7 @@ namespace SkiaSharp {
 
 	// sk_encodedorigin_t
 	/// <summary>
-	/// Represents various origin values returned by <see cref="SKCodec.Origin" />.
+	/// Represents various origin values returned by <see cref="SKCodec.EncodedOrigin" />.
 	/// </summary>
 	public enum SKEncodedOrigin {
 		// TOP_LEFT_SK_ENCODED_ORIGIN = 1
@@ -21849,37 +21841,37 @@ namespace SkiaSharp {
 	/// Verbs contained in an <see cref="SKPath" />.
 	/// </summary>
 	/// <remarks>
-	/// In the description below, the number of points returned represents the number of valid entries on the return array of points that is passed to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" />.
+	/// In the description below, the number of points returned represents the number of valid entries on the return array of points that is passed to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[])" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" />.
 	/// </remarks>
 	public enum SKPathVerb {
 		// MOVE_SK_PATH_VERB = 0
 		/// <summary>
-		/// Move command, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return a single point.
+		/// Move command, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[])" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return a single point.
 		/// </summary>
 		Move = 0,
 		// LINE_SK_PATH_VERB = 1
 		/// <summary>
-		/// Line path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return two points.
+		/// Line path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[])" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return two points.
 		/// </summary>
 		Line = 1,
 		// QUAD_SK_PATH_VERB = 2
 		/// <summary>
-		/// Quad command, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return three points.
+		/// Quad command, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[])" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return three points.
 		/// </summary>
 		Quad = 2,
 		// CONIC_SK_PATH_VERB = 3
 		/// <summary>
-		/// Conic path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return three points, plus the <see cref="SKPath.RawIterator.ConicWeight" /> point.
+		/// Conic path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[])" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return three points, plus the <see cref="SKPath.RawIterator.ConicWeight" /> point.
 		/// </summary>
 		Conic = 3,
 		// CUBIC_SK_PATH_VERB = 4
 		/// <summary>
-		/// Cubic path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return four points.
+		/// Cubic path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[])" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return four points.
 		/// </summary>
 		Cubic = 4,
 		// CLOSE_SK_PATH_VERB = 5
 		/// <summary>
-		/// Close path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return one point (contour's <see cref="SKPath.MoveTo(SkiaSharp.SKPoint)" /> point).
+		/// Close path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[])" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return one point (contour's <see cref="SKPath.MoveTo(SkiaSharp.SKPoint)" /> point).
 		/// </summary>
 		Close = 5,
 		// DONE_SK_PATH_VERB = 6

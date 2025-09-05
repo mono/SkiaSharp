@@ -74,7 +74,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Return a new instance to a typeface that most closely matches the requested family name and style.
 		/// </summary>
-		/// <param name="familyName">The name of the font family. May be <paramref name="null" />.</param>
+		/// <param name="familyName">The name of the font family. May be <see langword="null" />.</param>
 		/// <param name="weight">The weight of the typeface.</param>
 		/// <param name="width">The width of the typeface.</param>
 		/// <param name="slant">The slant of the typeface.</param>
@@ -87,7 +87,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Returns a new instance to a typeface that most closely matches the requested family name and style.
 		/// </summary>
-		/// <param name="familyName">The name of the font family. May be <paramref name="null" />.</param>
+		/// <param name="familyName">The name of the font family. May be <see langword="null" />.</param>
 		/// <returns>Returns to the closest-matching typeface.</returns>
 		public static SKTypeface FromFamilyName (string familyName)
 		{
@@ -97,7 +97,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Returns a new instance to a typeface that most closely matches the requested family name and style.
 		/// </summary>
-		/// <param name="familyName">The name of the font family. May be <paramref name="null" />.</param>
+		/// <param name="familyName">The name of the font family. May be <see langword="null" />.</param>
 		/// <param name="style">The style (normal, bold, italic) of the typeface.</param>
 		/// <returns>Returns to the closest-matching typeface.</returns>
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyle style)
@@ -117,7 +117,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Return a new instance to a typeface that most closely matches the requested family name and style.
 		/// </summary>
-		/// <param name="familyName">The name of the font family. May be <paramref name="null" />.</param>
+		/// <param name="familyName">The name of the font family. May be <see langword="null" />.</param>
 		/// <param name="weight">The weight of the typeface.</param>
 		/// <param name="width">The width of the typeface.</param>
 		/// <param name="slant">The slant of the typeface.</param>
@@ -134,7 +134,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="path">The path of the file.</param>
 		/// <param name="index">The font face index.</param>
-		/// <returns>Returns a new typeface, or <paramref name="null" /> if the file does not exist, or is not a valid font file.</returns>
+		/// <returns>Returns a new typeface, or <see langword="null" /> if the file does not exist, or is not a valid font file.</returns>
 		public static SKTypeface FromFile (string path, int index = 0)
 		{
 			if (path == null)
@@ -151,7 +151,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="stream">The input stream.</param>
 		/// <param name="index">The font face index.</param>
-		/// <returns>Returns a new typeface, or <paramref name="null" /> if the file does not exist, or is not a valid font file.</returns>
+		/// <returns>Returns a new typeface, or <see langword="null" /> if the file does not exist, or is not a valid font file.</returns>
 		public static SKTypeface FromStream (Stream stream, int index = 0)
 		{
 			if (stream == null)
@@ -165,7 +165,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="stream">The input stream.</param>
 		/// <param name="index">The font face index.</param>
-		/// <returns>Returns a new typeface, or <paramref name="null" /> if the file does not exist, or is not a valid font file.</returns>
+		/// <returns>Returns a new typeface, or <see langword="null" /> if the file does not exist, or is not a valid font file.</returns>
 		public static SKTypeface FromStream (SKStreamAsset stream, int index = 0)
 		{
 			if (stream == null)
@@ -186,7 +186,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="data">The input data.</param>
 		/// <param name="index">The font face index.</param>
-		/// <returns>Returns a new typeface, or <paramref name="null" /> if the file does not exist, or is not a valid font file.</returns>
+		/// <returns>Returns a new typeface, or <see langword="null" /> if the file does not exist, or is not a valid font file.</returns>
 		public static SKTypeface FromData (SKData data, int index = 0)
 		{
 			if (data == null)
@@ -517,7 +517,7 @@ namespace SkiaSharp
 		// GetKerningPairAdjustments
 
 		/// <summary>
-		/// If false, then <see cref="GetKerningPairAdjustments"/> will never return nonzero
+		/// If false, then <see cref="GetKerningPairAdjustments(ReadOnlySpan{ushort})"/> will never return nonzero
 		/// adjustments for any possible pair of glyphs.
 		/// </summary>
 		public bool HasGetKerningPairAdjustments =>

@@ -15,7 +15,7 @@ namespace SkiaSharp
 	/// The <see cref="SKBitmap" /> specifies a raster bitmap.
 	/// </summary>
 	/// <remarks>
-	/// <para>A bitmap has an integer width and height, and a format (color type), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="SKCanvas" />, but they are also used to specify the target of a <see cref="SKCanvas" />' drawing operations.</para><para>A <see cref="SKBitmap" /> exposes <see cref="SKBitmap.GetPixels" />, which lets a caller write its pixels. To retrieve a pointer to the raw image data of the bitmap, call the <see cref="SKBitmap.LockPixels" /> method, and then call the <see cref="SKBitmap.GetPixels" /> method to get a pointer to the image data.  Once you no longer need to use the raw data pointer, call the <see cref="SKBitmap.UnlockPixels" /> method. The raw data is laid out in the format configured at the time that the bitmap was created.</para><para>(Note: As of SkiaSharp 1.60.0, calls to <see cref="SKBitmap.LockPixels" /> and <see cref="SKBitmap.UnlockPixels" /> are no longer required, and they no longer exist as part of the API.)</para>
+	/// <para>A bitmap has an integer width and height, and a format (color type), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="SKCanvas" />, but they are also used to specify the target of a <see cref="SKCanvas" />' drawing operations.</para><para>A <see cref="SKBitmap" /> exposes <see cref="SKBitmap.GetPixels()" />, which lets a caller write its pixels. To retrieve a pointer to the raw image data of the bitmap, call the GetPixels method to get a pointer to the image data. The raw data is laid out in the format configured at the time that the bitmap was created.</para><para>(Note: As of SkiaSharp 1.60.0, calls to LockPixels and UnlockPixels are no longer required, and they no longer exist as part of the API.)</para>
 	/// </remarks>
 	public unsafe class SKBitmap : SKObject, ISKSkipObjectRegistration
 	{
@@ -233,7 +233,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="x">The x-cordinate.</param>
 		/// <param name="y">The y-cordinate.</param>
-		/// <returns>Alpha only color types return black with the appropriate alpha set. The value is undefined for <see cref="SKColorType.Unknown" />, if the coordinates are out of bounds, if the bitmap does not have any pixels, or has not be locked with <see cref="SKBitmap.LockPixels" />.</returns>
+		/// <returns>Alpha only color types return black with the appropriate alpha set. The value is undefined for <see cref="SKColorType.Unknown" />, if the coordinates are out of bounds, if the bitmap does not have any pixels.</returns>
 		/// <remarks>
 		/// In most cases this will require unpremultiplying the color.
 		/// </remarks>
@@ -266,7 +266,7 @@ namespace SkiaSharp
 		// Copy
 
 		/// <summary>
-		/// Returns true if this bitmap's pixels can be converted into the requested color type, such that <see cref="SKBitmap.Copy" /> or <see cref="SKBitmap.CopyTo(SkiaSharp.SKBitmap)" /> could succeed.
+		/// Returns true if this bitmap's pixels can be converted into the requested color type, such that <see cref="SKBitmap.Copy()" /> or <see cref="SKBitmap.CopyTo(SkiaSharp.SKBitmap)" /> could succeed.
 		/// </summary>
 		/// <param name="colorType">The color type to check with.</param>
 		/// <returns>Returns true if this bitmap's pixels can be converted into the requested color type.</returns>
@@ -288,7 +288,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Copies the contents of the bitmap and returns the copy.
 		/// </summary>
-		/// <returns>The copy of the bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The copy of the bitmap, or <see langword="null" /> on error.</returns>
 		public SKBitmap Copy ()
 		{
 			return Copy (ColorType);
@@ -298,7 +298,7 @@ namespace SkiaSharp
 		/// Copies the contents of the bitmap with the specified color type and returns the copy.
 		/// </summary>
 		/// <param name="colorType">The color type to use for the copy of the bitmap.</param>
-		/// <returns>The copy of the bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The copy of the bitmap, or <see langword="null" /> on error.</returns>
 		public SKBitmap Copy (SKColorType colorType)
 		{
 			var destination = new SKBitmap ();
@@ -735,7 +735,7 @@ namespace SkiaSharp
 		/// Decode a bitmap using the specified codec.
 		/// </summary>
 		/// <param name="codec">The codec to decode.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (SKCodec codec)
 		{
 			if (codec == null) {
@@ -753,7 +753,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="codec">The codec to decode.</param>
 		/// <param name="bitmapInfo">The destination image information.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (SKCodec codec, SKImageInfo bitmapInfo)
 		{
 			if (codec == null) {
@@ -773,7 +773,7 @@ namespace SkiaSharp
 		/// Decode a bitmap using the specified stream and destination image information.
 		/// </summary>
 		/// <param name="stream">The stream to decode.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (Stream stream)
 		{
 			if (stream == null) {
@@ -792,7 +792,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="stream">The stream to decode.</param>
 		/// <param name="bitmapInfo">The destination image information.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (Stream stream, SKImageInfo bitmapInfo)
 		{
 			if (stream == null) {
@@ -810,7 +810,7 @@ namespace SkiaSharp
 		/// Decode a bitmap using the specified stream.
 		/// </summary>
 		/// <param name="stream">The stream to decode.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (SKStream stream)
 		{
 			if (stream == null) {
@@ -829,7 +829,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="stream">The stream to decode.</param>
 		/// <param name="bitmapInfo">The destination image information.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (SKStream stream, SKImageInfo bitmapInfo)
 		{
 			if (stream == null) {
@@ -847,7 +847,7 @@ namespace SkiaSharp
 		/// Decode a bitmap using the specified data.
 		/// </summary>
 		/// <param name="data">The data to decode.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (SKData data)
 		{
 			if (data == null) {
@@ -866,7 +866,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="data">The data to decode.</param>
 		/// <param name="bitmapInfo">The destination image information.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (SKData data, SKImageInfo bitmapInfo)
 		{
 			if (data == null) {
@@ -884,7 +884,7 @@ namespace SkiaSharp
 		/// Decode a bitmap for the specified filename.
 		/// </summary>
 		/// <param name="filename">The filename of the bitmap to decode.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (string filename)
 		{
 			if (filename == null) {
@@ -903,7 +903,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="filename">The filename of the bitmap to decode.</param>
 		/// <param name="bitmapInfo">The destination image information.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (string filename, SKImageInfo bitmapInfo)
 		{
 			if (filename == null) {
@@ -921,7 +921,7 @@ namespace SkiaSharp
 		/// Decode a bitmap using the specified byte buffer.
 		/// </summary>
 		/// <param name="buffer">The byte buffer to decode.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (byte[] buffer) =>
 			Decode (buffer.AsSpan ());
 
@@ -930,7 +930,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="buffer">The byte buffer to decode.</param>
 		/// <param name="bitmapInfo">The destination image information.</param>
-		/// <returns>The decoded bitmap, or <paramref name="null" /> on error.</returns>
+		/// <returns>The decoded bitmap, or <see langword="null" /> on error.</returns>
 		public static SKBitmap Decode (byte[] buffer, SKImageInfo bitmapInfo) =>
 			Decode (buffer.AsSpan (), bitmapInfo);
 
