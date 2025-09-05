@@ -22,13 +22,22 @@ namespace SkiaSharp.Views.Windows
 namespace SkiaSharp.Views.Blazor
 #endif
 {
+	/// <summary>
+	/// Provides data for the <see cref="SKCanvasView.PaintSurface" /> event.
+	/// </summary>
 	public class SKPaintSurfaceEventArgs : EventArgs
 	{
+		/// <summary>
+		/// Creates a new instance of the <see cref="SKPaintSurfaceEventArgs" /> event arguments.
+		/// </summary>
 		public SKPaintSurfaceEventArgs(SKSurface surface, SKImageInfo info)
 			: this(surface, info, info)
 		{
 		}
 
+		/// <summary>
+		/// Creates a new instance of the <see cref="SKPaintSurfaceEventArgs" /> event arguments.
+		/// </summary>
 		public SKPaintSurfaceEventArgs(SKSurface surface, SKImageInfo info, SKImageInfo rawInfo)
 		{
 			Surface = surface;
@@ -36,8 +45,14 @@ namespace SkiaSharp.Views.Blazor
 			RawInfo = rawInfo;
 		}
 
+		/// <summary>
+		/// Gets the surface that is currently being drawn on.
+		/// </summary>
 		public SKSurface Surface { get; }
 
+		/// <summary>
+		/// Gets the information about the surface that is currently being drawn.
+		/// </summary>
 		public SKImageInfo Info { get; }
 
 		public SKImageInfo RawInfo { get; }
