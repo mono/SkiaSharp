@@ -1,13 +1,13 @@
 ---
 title: "Paths and Text in SkiaSharp"
 description: "This article explores the intersection of SkiaSharp paths and text, and demonstrates this with sample code."
-ms.service: xamarin
+ms.service: dotnet-maui
 ms.assetid: C14C07F6-4A84-4A8C-BDB4-CD61FBF0F79B
-ms.subservice: xamarin-skiasharp
+ms.subservice: skiasharp
 author: davidbritch
 ms.author: dabritch
 ms.date: 08/01/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Paths and Text in SkiaSharp

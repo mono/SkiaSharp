@@ -1,13 +1,13 @@
 ---
 title: "Polylines and Parametric Equations"
 description: "This article explains how to Use SkiaSharp to render any line that you can define with parametric equations, and demonstrates this with sample code."
-ms.service: xamarin
+ms.service: dotnet-maui
 ms.assetid: 85AEBB33-E954-4364-A6E1-808FAB197BEE
-ms.subservice: xamarin-skiasharp
+ms.subservice: skiasharp
 author: davidbritch
 ms.author: dabritch
 ms.date: 03/10/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Polylines and Parametric Equations

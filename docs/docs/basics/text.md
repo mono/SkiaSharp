@@ -1,13 +1,13 @@
 ---
 title: "Integrating Text and Graphics"
-description: "This article explains how to determine the size of rendered text string to integrate text with SkiaSharp graphics into Xamarin.Forms applications, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explains how to determine the size of rendered text string to integrate text with SkiaSharp graphics into .NET MAUI applications, and demonstrates this with sample code."
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: A0B5AC82-7736-4AD8-AA16-FE43E18D203C
 author: davidbritch
 ms.author: dabritch
 ms.date: 03/10/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Integrating Text and Graphics

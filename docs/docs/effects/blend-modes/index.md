@@ -1,13 +1,13 @@
 ---
 title: "SkiaSharp blend modes"
 description: "Use blend modes to define what happens when graphical objects are stacked on one another."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: CE1B222E-A2D0-4016-A532-EC1E59EE3D6B
 author: davidbritch
 ms.author: dabritch
 ms.date: 08/23/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # SkiaSharp blend modes
@@ -56,7 +56,7 @@ canvas.Clear();
 
 This method replaces all the pixels of the canvas with transparent black pixels, equivalent to `new SKColor(0, 0, 0, 0)` or the integer 0x00000000. All the bytes of all the pixels are initialized to zero.
 
-The drawing surface of an `SKCanvas` that is obtained in a `PaintSurface` handler might appear to have a white background, but that's only because the `SKCanvasView` itself has a transparent background, and the page has a white background. You can demonstrate this fact to yourself by setting the Xamarin.Forms `BackgroundColor` property of `SKCanvasView` to a Xamarin.Forms color:
+The drawing surface of an `SKCanvas` that is obtained in a `PaintSurface` handler might appear to have a white background, but that's only because the `SKCanvasView` itself has a transparent background, and the page has a white background. You can demonstrate this fact to yourself by setting the .NET MAUI `BackgroundColor` property of `SKCanvasView` to a .NET MAUI color:
 
 ```csharp
 canvasView.BackgroundColor = Color.Red;

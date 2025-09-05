@@ -1,13 +1,13 @@
 ---
 title: "Segmented display of SkiaSharp bitmaps"
 description: "Display a SkiaSharp bitmap so that some area are stretched and some areas are not."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 79AE2033-C41C-4447-95A6-76D22E913D19
 author: davidbritch
 ms.author: dabritch
 ms.date: 07/17/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Segmented display of SkiaSharp bitmaps

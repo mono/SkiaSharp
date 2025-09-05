@@ -1,13 +1,13 @@
 ---
 title: "The Rotate Transform"
 description: "This article explores the effects and animations possible with the SkiaSharp rotate transform, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: CBB3CD72-4377-4EA3-A768-0C4228229FC2
 author: davidbritch
 ms.author: dabritch
 ms.date: 03/23/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # The Rotate Transform
@@ -249,7 +249,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 }
 ```
 
-The `revolveDegrees` and `rotateDegrees` fields are animated. This program uses a different animation technique based on the Xamarin.Forms [`Animation`](xref:Xamarin.Forms.Animation) class. (This class is described in Chapter 22 of [Free PDF download of *Creating Mobile Apps with Xamarin.Forms*](https://aka.ms/xamformsebook)) The `OnAppearing` override creates two `Animation` objects with callback methods and then calls `Commit` on them for an animation duration:
+The `revolveDegrees` and `rotateDegrees` fields are animated. This program uses a different animation technique based on the .NET MAUI [`Animation`](xref:Xamarin.Forms.Animation) class. (This class is described in Chapter 22 of [Free PDF download of *Creating Mobile Apps with .NET MAUI*](https://aka.ms/xamformsebook)) The `OnAppearing` override creates two `Animation` objects with callback methods and then calls `Commit` on them for an animation duration:
 
 ```csharp
 protected override void OnAppearing()

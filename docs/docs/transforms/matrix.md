@@ -1,13 +1,13 @@
 ---
 title: "Matrix Transforms in SkiaSharp"
 description: "This article dives deeper into SkiaSharp transforms with the versatile transform matrix, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 9EDED6A0-F0BF-4471-A9EF-E0D6C5954AE4
 author: davidbritch
 ms.author: dabritch
 ms.date: 04/12/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Matrix Transforms in SkiaSharp
@@ -484,7 +484,7 @@ public partial class ShowAffineMatrixPage : ContentPage
 
 An affine matrix is uniquely defined by three points. The three `TouchPoint` objects correspond to the upper-left, upper-right, and lower-left corners of the bitmap. Because an affine matrix is only capable of transforming a rectangle into a parallelogram, the fourth point is implied by the other three. The constructor concludes with a call to `ComputeMatrix`, which calculates the cells of an `SKMatrix` object from these three points.
 
-The `TouchAction` handler calls the `ProcessTouchEvent` method of each `TouchPoint`. The `scale` value converts from Xamarin.Forms coordinates to pixels:
+The `TouchAction` handler calls the `ProcessTouchEvent` method of each `TouchPoint`. The `scale` value converts from .NET MAUI coordinates to pixels:
 
 ```csharp
 public partial class ShowAffineMatrixPage : ContentPage

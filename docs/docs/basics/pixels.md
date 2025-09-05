@@ -1,13 +1,13 @@
 ---
 title: "Pixels and Device-Independent Units"
-description: "This article explores the differences between SkiaSharp coordinates and Xamarin.Forms coordinates, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explores the differences between SkiaSharp coordinates and .NET MAUI coordinates, and demonstrates this with sample code."
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 26C25BB8-FBE8-4B77-B01D-16A163A16890
 author: davidbritch
 ms.author: dabritch
 ms.date: 02/09/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Pixels and Device-Independent Units
@@ -18,14 +18,14 @@ This article explores the differences in the coordinate system used in SkiaSharp
 
 ![An oval that fills the screen](pixels-images/screenfillexample.png)
 
-If you've been programming in Xamarin.Forms for a while, you might have a feel for Xamarin.Forms coordinates and sizes. The circles drawn in the two previous articles might seem a little small to you.
+If you've been programming in Xamarin.Forms for a while, you might have a feel for .NET MAUI coordinates and sizes. The circles drawn in the two previous articles might seem a little small to you.
 
-Those circles *are* small in comparison with Xamarin.Forms sizes. By default, SkiaSharp draws in units of pixels while Xamarin.Forms bases coordinates and sizes on a device-independent unit established by the underlying platform. (More information on the Xamarin.Forms coordinate system can be found in [Chapter 5. Dealing with Sizes](~/xamarin-forms/creating-mobile-apps-xamarin-forms/summaries/chapter05.md) of the book *Creating Mobile Apps with Xamarin.Forms*.)
+Those circles *are* small in comparison with .NET MAUI sizes. By default, SkiaSharp draws in units of pixels while Xamarin.Forms bases coordinates and sizes on a device-independent unit established by the underlying platform. (More information on the .NET MAUI coordinate system can be found in [Chapter 5. Dealing with Sizes](~/xamarin-forms/creating-mobile-apps-xamarin-forms/summaries/chapter05.md) of the book *Creating Mobile Apps with .NET MAUI*.)
 
 The page in the sample program entitled **Surface Size** uses SkiaSharp text output to show the size of the display surface from three different sources:
 
 - The normal Xamarin.Forms [`Width`](xref:Xamarin.Forms.VisualElement.Width) and [`Height`](xref:Xamarin.Forms.VisualElement.Height) properties of the `SKCanvasView` object.
-- The [`CanvasSize`](xref:SkiaSharp.Views.Forms.SKCanvasView.CanvasSize) property of the `SKCanvasView` object.
+- The [`CanvasSize`](xref:SkiaSharp.Views.Maui.Controls.SKCanvasView.CanvasSize) property of the `SKCanvasView` object.
 - The [`Size`](xref:SkiaSharp.SKImageInfo.Size) property of the `SKImageInfo` value, which is consistent with the `Width` and `Height` properties used in the two previous pages.
 
 The [`SurfaceSizePage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/SurfaceSizePage.cs) class shows how to display these values. The constructor saves the `SKCanvasView` object as a field, so it can be accessed in the `PaintSurface` event handler:

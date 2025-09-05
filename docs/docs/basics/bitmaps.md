@@ -1,13 +1,13 @@
 ---
 title: "Bitmap Basics in SkiaSharp"
-description: "This article explains how to load bitmaps in SkiaSharp from various sources and display them in Xamarin.Forms applications, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explains how to load bitmaps in SkiaSharp from various sources and display them in .NET MAUI applications, and demonstrates this with sample code."
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 32C95DFF-9065-42D7-966C-D3DBD16906B3
 author: davidbritch
 ms.author: dabritch
 ms.date: 07/17/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Bitmap Basics in SkiaSharp
