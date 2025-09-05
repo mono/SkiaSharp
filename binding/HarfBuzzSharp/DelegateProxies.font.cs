@@ -1,10 +1,17 @@
-﻿#nullable disable
+#nullable disable
 // ReSharper disable PartialMethodParameterNameMismatch
 
 using System;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>
+	/// The delegate that is invoked when <see cref="M:HarfBuzzSharp.Font.TryGetHorizontalFontExtents(HarfBuzzSharp.FontExtents@)" /> or <see cref="M:HarfBuzzSharp.Font.TryGetVerticalFontExtents(HarfBuzzSharp.FontExtents@)" /> is invoked.
+	/// </summary>
+	/// <param name="font">The font.</param>
+	/// <param name="fontData">The additional data passed to <see cref="M:HarfBuzzSharp.Font.SetFontFunctions(HarfBuzzSharp.FontFunctions,System.Object,HarfBuzzSharp.ReleaseDelegate)" /> when the functions were set.</param>
+	/// <param name="extents">The font extents.</param>
+	/// <returns>Return true if the <see cref="T:HarfBuzzSharp.Font" /> has extents, otherwise false.</returns>
 	public delegate bool FontExtentsDelegate (Font font, object fontData, out FontExtents extents);
 
 	public delegate bool NominalGlyphDelegate (Font font, object fontData, uint unicode, out uint glyph);
@@ -13,6 +20,13 @@ namespace HarfBuzzSharp
 
 	public delegate bool VariationGlyphDelegate (Font font, object fontData, uint unicode, uint variationSelector, out uint glyph);
 
+	/// <summary>
+	/// The delegate that is invoked when <see cref="M:HarfBuzzSharp.Font.GetHorizontalGlyphAdvance(System.UInt32)" /> or <see cref="M:HarfBuzzSharp.Font.GetVerticalGlyphAdvance(System.UInt32)" /> is invoked.
+	/// </summary>
+	/// <param name="font">The font.</param>
+	/// <param name="fontData">The additional data passed to <see cref="M:HarfBuzzSharp.Font.SetFontFunctions(HarfBuzzSharp.FontFunctions,System.Object,HarfBuzzSharp.ReleaseDelegate)" /> when the functions were set.</param>
+	/// <param name="glyph">The glyph.</param>
+	/// <returns>Return the advance amount.</returns>
 	public delegate int GlyphAdvanceDelegate (Font font, object fontData, uint glyph);
 
 	public delegate void GlyphAdvancesDelegate (Font font, object fontData, uint count, ReadOnlySpan<uint> glyphs, Span<int> advances);

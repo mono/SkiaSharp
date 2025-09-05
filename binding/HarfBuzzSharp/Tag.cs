@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 
@@ -27,6 +27,11 @@ namespace HarfBuzzSharp
 			value = (uint)(((byte)c1 << 24) | ((byte)c2 << 16) | ((byte)c3 << 8) | (byte)c4);
 		}
 
+		/// <summary>
+		/// Parses the ISO 15924 tag into the corresponding <see cref="T:HarfBuzzSharp.Tag" />.
+		/// </summary>
+		/// <param name="tag">The ISO 15924 tag to parse.</param>
+		/// <returns>Returns the <see cref="T:HarfBuzzSharp.Tag" /> that corresponds the tag that was parsed.</returns>
 		public static Tag Parse (string tag)
 		{
 			if (string.IsNullOrEmpty (tag))
@@ -44,6 +49,10 @@ namespace HarfBuzzSharp
 			return new Tag (realTag[0], realTag[1], realTag[2], realTag[3]);
 		}
 
+		/// <summary>
+		/// Returns a string representation of the value of this instance of the <see cref="T:HarfBuzzSharp.Tag" />.
+		/// </summary>
+		/// <returns>Returns a string representation.</returns>
 		public override string ToString ()
 		{
 			if (value == None) {

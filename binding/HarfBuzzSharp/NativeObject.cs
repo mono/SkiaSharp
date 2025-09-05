@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -6,6 +6,9 @@ using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>
+	/// Represents a native object.
+	/// </summary>
 	public class NativeObject : IDisposable
 	{
 		private bool isDisposed;
@@ -28,6 +31,9 @@ namespace HarfBuzzSharp
 			Dispose (false);
 		}
 
+		/// <summary>
+		/// Gets or sets the handle to the underlying native object.
+		/// </summary>
 		public virtual IntPtr Handle { get; protected set; }
 
 		// Dispose method - always called
@@ -56,6 +62,10 @@ namespace HarfBuzzSharp
 		{
 		}
 
+		/// <summary>
+		/// Releases all resources used by this <see cref="T:HarfBuzzSharp.NativeObject" />.
+		/// </summary>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:HarfBuzzSharp.NativeObject" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		public void Dispose ()
 		{
 			Dispose (true);

@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Buffers;
@@ -8,10 +8,17 @@ using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>
+	/// Represents a specific font face.
+	/// </summary>
 	public unsafe class Font : NativeObject
 	{
 		internal const int NameBufferLength = 128;
 
+		/// <summary>
+		/// Creates a new <see cref="T:HarfBuzzSharp.Font" /> using a specific font face.
+		/// </summary>
+		/// <param name="face">The face to use.</param>
 		public Font (Face face)
 			: base (IntPtr.Zero)
 		{
@@ -57,6 +64,11 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
 		}
 
+		/// <summary>
+		/// Retrieves the font scale.
+		/// </summary>
+		/// <param name="xScale">The scale along the x-axis.</param>
+		/// <param name="yScale">The scale along the y-axis.</param>
 		public void GetScale (out int xScale, out int yScale)
 		{
 			fixed (int* x = &xScale)
@@ -65,6 +77,11 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// Sets the font scale.
+		/// </summary>
+		/// <param name="xScale">The scale along the x-axis.</param>
+		/// <param name="yScale">The scale along the y-axis.</param>
 		public void SetScale (int xScale, int yScale) =>
 			HarfBuzzApi.hb_font_set_scale (Handle, xScale, yScale);
 
@@ -291,9 +308,17 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		/// <summary>
+		/// Sets the font functions to that of OpenType.
+		/// </summary>
 		public void SetFunctionsOpenType () =>
 			HarfBuzzApi.hb_ot_font_set_funcs (Handle);
 
+		/// <summary>
+		/// Shapes the specified buffer using the current font.
+		/// </summary>
+		/// <param name="buffer">The buffer to shape.</param>
+		/// <param name="features">The features to control the shaping process.</param>
 		public void Shape (Buffer buffer, params Feature[] features) =>
 			Shape (buffer, features, null);
 

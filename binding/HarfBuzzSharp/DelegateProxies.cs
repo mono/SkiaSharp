@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Runtime.CompilerServices;
@@ -7,6 +7,9 @@ using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>
+	/// The delegate that will be invoked when a resource is ready to be discarded.
+	/// </summary>
 	public delegate void ReleaseDelegate ();
 
 	public delegate Blob GetTableDelegate (Face face, Tag tag);
