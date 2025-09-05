@@ -51,6 +51,7 @@ namespace SkiaSharp.Views.tvOS
 		}
 
 		// created in code
+		/// <param name="frame"></param>
 		public SKMetalView(CGRect frame)
 			: base(frame, null)
 		{
@@ -58,6 +59,8 @@ namespace SkiaSharp.Views.tvOS
 		}
 
 		// created in code
+		/// <param name="frame"></param>
+		/// <param name="device"></param>
 		public SKMetalView(CGRect frame, IMTLDevice device)
 			: base(frame, device)
 		{
@@ -65,6 +68,7 @@ namespace SkiaSharp.Views.tvOS
 		}
 
 		// created via designer
+		/// <param name="p"></param>
 		public SKMetalView(IntPtr p)
 			: base(p)
 		{
