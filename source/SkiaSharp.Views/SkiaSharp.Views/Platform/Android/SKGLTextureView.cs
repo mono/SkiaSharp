@@ -72,9 +72,9 @@ namespace SkiaSharp.Views.Android
 		/// </summary>
 		/// <remarks>
 		/// There are two ways to draw on this surface: by overriding the
-		/// <see cref="SkiaSharp.Views.Android.SKGLTextureView.OnPaintSurface(SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs)" />
+		/// <see cref="OnPaintSurface(SKPaintGLSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
-		/// <see cref="SkiaSharp.Views.Android.SKGLTextureView.PaintSurface" />
+		/// <see cref="PaintSurface" />
 		/// event.
 		/// ## Examples
 		/// ```csharp

@@ -161,7 +161,7 @@ namespace SkiaSharp.Views.tvOS
 
 			// create the render target
 			var metalInfo = new GRMtlTextureInfo(CurrentDrawable.Texture);
-			using var renderTarget = new GRBackendRenderTarget((int)CanvasSize.Width, (int)CanvasSize.Height, (int)SampleCount, metalInfo);
+			using var renderTarget = new GRBackendRenderTarget((int)CanvasSize.Width, (int)CanvasSize.Height, metalInfo);
 
 			// create the surface
 			using var surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);

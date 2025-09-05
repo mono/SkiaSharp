@@ -147,7 +147,7 @@ namespace SkiaSharp.Views.Android
 		/// </summary>
 		/// <param name="factory">The custom context factory.</param>
 		/// <remarks>
-		/// If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.
+		/// If this method is called, it must be called before <see cref="SetRenderer(IRenderer)" /> is called.
 		/// </remarks>
 		public void SetEGLContextFactory(IEGLContextFactory factory)
 		{
@@ -160,7 +160,7 @@ namespace SkiaSharp.Views.Android
 		/// </summary>
 		/// <param name="factory">The custom window surface factory.</param>
 		/// <remarks>
-		/// If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.
+		/// If this method is called, it must be called before <see cref="SetRenderer(IRenderer)" /> is called.
 		/// </remarks>
 		public void SetEGLWindowSurfaceFactory(IEGLWindowSurfaceFactory factory)
 		{
@@ -176,7 +176,7 @@ namespace SkiaSharp.Views.Android
 		/// If no EGL config chooser is set, then by default the view will choose an RGB
 		/// 888 surface with a depth buffer depth of at least 16 bits.
 		/// If this method is called, it must be called before
-		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer" /> is called.
+		/// <see cref="SetRenderer(IRenderer)" /> is called.
 		/// </remarks>
 		public void SetEGLConfigChooser(IEGLConfigChooser configChooser)
 		{
@@ -192,7 +192,7 @@ namespace SkiaSharp.Views.Android
 		/// If no EGL config chooser is set, then by default the view will choose an RGB
 		/// 888 surface with a depth buffer depth of at least 16 bits.
 		/// If this method is called, it must be called before
-		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer" /> is called.
+		/// <see cref="SetRenderer(IRenderer)" /> is called.
 		/// </remarks>
 		public void SetEGLConfigChooser(bool needDepth)
 		{
@@ -212,7 +212,7 @@ namespace SkiaSharp.Views.Android
 		/// If no EGL config chooser is set, then by default the view will choose an RGB
 		/// 888 surface with a depth buffer depth of at least 16 bits.
 		/// If this method is called, it must be called before
-		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer" /> is called.
+		/// <see cref="SetRenderer(IRenderer)" /> is called.
 		/// </remarks>
 		public void SetEGLConfigChooser(int redSize, int greenSize, int blueSize, int alphaSize, int depthSize, int stencilSize)
 		{
@@ -224,7 +224,7 @@ namespace SkiaSharp.Views.Android
 		/// </summary>
 		/// <param name="version">The context client version to choose. Use 2 for OpenGL ES 2.0</param>
 		/// <remarks>
-		/// If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.
+		/// If this method is called, it must be called before <see cref="SetRenderer(IRenderer)" /> is called.
 		/// </remarks>
 		public void SetEGLContextClientVersion(int version)
 		{
@@ -452,10 +452,10 @@ namespace SkiaSharp.Views.Android
 		/// </summary>
 		/// <remarks>
 		/// The renderer is responsible for making OpenGL calls to render a frame.
-		/// Typically, <see cref="SkiaSharp.Views.Android.GLTextureView" /> clients create their
+		/// Typically, <see cref="GLTextureView" /> clients create their
 		/// own classes that implement this interface, and then call
-		/// <see cref="SetRenderer" />
-		/// to register the renderer with the <see cref="SkiaSharp.Views.Android.GLTextureView" />.
+		/// <see cref="SetRenderer(IRenderer)" />
+		/// to register the renderer with the <see cref="GLTextureView" />.
 		/// </remarks>
 		public interface IRenderer
 		{

@@ -60,15 +60,11 @@ namespace SkiaSharp
 			CreateDirect3D (width, height, d3dTextureInfo);
 		}
 
-#if __IOS__ || __MACOS__ || __TVOS__
-
 		[Obsolete ("Use GRBackendRenderTarget(int width, int height, GRMtlTextureInfo mtlInfo) instead.")]
 		public GRBackendRenderTarget (int width, int height, int sampleCount, GRMtlTextureInfo mtlInfo)
 			: this (width, height, mtlInfo)
 		{
 		}
-
-#endif
 
 		public GRBackendRenderTarget (int width, int height, GRMtlTextureInfo mtlInfo)
 			: this (IntPtr.Zero, true)
