@@ -836,28 +836,28 @@
 
 ## Namespace SkiaSharp
 
-- [ ] SkiaSharp.GRBackend
-  - [ ] F:SkiaSharp.GRBackend.Dawn
-  - [ ] F:SkiaSharp.GRBackend.Direct3D
-  - [ ] F:SkiaSharp.GRBackend.Metal
-  - [ ] F:SkiaSharp.GRBackend.OpenGL
-  - [ ] F:SkiaSharp.GRBackend.Vulkan
-- [ ] SkiaSharp.GRBackendRenderTarget
-  - [ ] M:SkiaSharp.GRBackendRenderTarget.#ctor(SkiaSharp.GRBackend,SkiaSharp.GRBackendRenderTargetDesc)
-  - [ ] M:SkiaSharp.GRBackendRenderTarget.#ctor(System.Int32,System.Int32,System.Int32,SkiaSharp.GRVkImageInfo)
-  - [ ] M:SkiaSharp.GRBackendRenderTarget.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,SkiaSharp.GRGlFramebufferInfo)
-  - [ ] M:SkiaSharp.GRBackendRenderTarget.Dispose(System.Boolean)
-  - [ ] M:SkiaSharp.GRBackendRenderTarget.DisposeNative
-  - [ ] M:SkiaSharp.GRBackendRenderTarget.GetGlFramebufferInfo
-  - [ ] M:SkiaSharp.GRBackendRenderTarget.GetGlFramebufferInfo(SkiaSharp.GRGlFramebufferInfo@)
-  - [ ] P:SkiaSharp.GRBackendRenderTarget.Backend
-  - [ ] P:SkiaSharp.GRBackendRenderTarget.Height
-  - [ ] P:SkiaSharp.GRBackendRenderTarget.IsValid
-  - [ ] P:SkiaSharp.GRBackendRenderTarget.Rect
-  - [ ] P:SkiaSharp.GRBackendRenderTarget.SampleCount
-  - [ ] P:SkiaSharp.GRBackendRenderTarget.Size
-  - [ ] P:SkiaSharp.GRBackendRenderTarget.StencilBits
-  - [ ] P:SkiaSharp.GRBackendRenderTarget.Width
+- [x] SkiaSharp.GRBackend
+  - [x] F:SkiaSharp.GRBackend.Dawn
+  - [x] F:SkiaSharp.GRBackend.Direct3D
+  - [x] F:SkiaSharp.GRBackend.Metal
+  - [x] F:SkiaSharp.GRBackend.OpenGL
+  - [x] F:SkiaSharp.GRBackend.Vulkan
+- [x] SkiaSharp.GRBackendRenderTarget
+  - [ ] M:SkiaSharp.GRBackendRenderTarget.#ctor(SkiaSharp.GRBackend,SkiaSharp.GRBackendRenderTargetDesc) - Missing in code: constructor not found in current implementation
+  - [x] M:SkiaSharp.GRBackendRenderTarget.#ctor(System.Int32,System.Int32,System.Int32,SkiaSharp.GRVkImageInfo)
+  - [x] M:SkiaSharp.GRBackendRenderTarget.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,SkiaSharp.GRGlFramebufferInfo)
+  - [x] M:SkiaSharp.GRBackendRenderTarget.Dispose(System.Boolean)
+  - [x] M:SkiaSharp.GRBackendRenderTarget.DisposeNative
+  - [x] M:SkiaSharp.GRBackendRenderTarget.GetGlFramebufferInfo
+  - [x] M:SkiaSharp.GRBackendRenderTarget.GetGlFramebufferInfo(SkiaSharp.GRGlFramebufferInfo@)
+  - [x] P:SkiaSharp.GRBackendRenderTarget.Backend
+  - [x] P:SkiaSharp.GRBackendRenderTarget.Height
+  - [x] P:SkiaSharp.GRBackendRenderTarget.IsValid
+  - [x] P:SkiaSharp.GRBackendRenderTarget.Rect
+  - [x] P:SkiaSharp.GRBackendRenderTarget.SampleCount
+  - [x] P:SkiaSharp.GRBackendRenderTarget.Size
+  - [x] P:SkiaSharp.GRBackendRenderTarget.StencilBits
+  - [x] P:SkiaSharp.GRBackendRenderTarget.Width
 - [ ] SkiaSharp.GRBackendRenderTargetDesc
   - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.Equals(SkiaSharp.GRBackendRenderTargetDesc)
   - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.Equals(System.Object)
