@@ -27,11 +27,11 @@ These are known as *affine* transforms. Affine transforms always preserve parall
 
 SkiaSharp also supports non-affine transforms (also called *projective* or *perspective* transforms) based on a standard 3-by-3 transform matrix. A non-affine transform allows a square to be transformed into any convex quadrilateral, which is a four-sided figure with all interior angles less than 180 degrees. Non-affine transforms can cause coordinates or sizes to become infinite, but they are vital for 3D effects.
 
-## Differences between SkiaSharp and Xamarin.Forms Transforms
+## Differences between SkiaSharp and .NET MAUI Transforms
 
-Xamarin.Forms also supports transforms that are similar to those in SkiaSharp. The Xamarin.Forms [`VisualElement`](xref:Xamarin.Forms.VisualElement) class defines the following transform properties:
+.NET MAUI also supports transforms that are similar to those in SkiaSharp. The .NET MAUI [`VisualElement`](xref:Microsoft.Maui.Controls.VisualElement) class defines the following transform properties:
 
-- [`TranslationX`](xref:Xamarin.Forms.VisualElement.TranslationX) and [`TranslationY`](xref:Xamarin.Forms.VisualElement.TranslationY)
+- [`TranslationX`](xref:Microsoft.Maui.Controls.VisualElement.TranslationX) and [`TranslationY`](xref:Microsoft.Maui.Controls.VisualElement.TranslationY)
 - [`Scale`](xref:Microsoft.Maui.Controls.VisualElement.Scale)
 - [`Rotation`](xref:Microsoft.Maui.Controls.VisualElement.Rotation), [`RotationX`](xref:Microsoft.Maui.Controls.VisualElement.RotationX), and [`RotationY`](xref:Microsoft.Maui.Controls.VisualElement.RotationY)
 
