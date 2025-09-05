@@ -858,11 +858,11 @@
   - [x] P:SkiaSharp.GRBackendRenderTarget.Size
   - [x] P:SkiaSharp.GRBackendRenderTarget.StencilBits
   - [x] P:SkiaSharp.GRBackendRenderTarget.Width
-- [ ] SkiaSharp.GRBackendRenderTargetDesc
-  - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.Equals(SkiaSharp.GRBackendRenderTargetDesc)
-  - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.Equals(System.Object)
-  - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.GetHashCode
-  - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.op_Equality(SkiaSharp.GRBackendRenderTargetDesc,SkiaSharp.GRBackendRenderTargetDesc)
+- [ ] SkiaSharp.GRBackendRenderTargetDesc - Missing in code: entire type removed from current implementation
+  - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.Equals(SkiaSharp.GRBackendRenderTargetDesc) - Missing in code: type removed
+  - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.Equals(System.Object) - Missing in code: type removed
+  - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.GetHashCode - Missing in code: type removed
+  - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.op_Equality(SkiaSharp.GRBackendRenderTargetDesc,SkiaSharp.GRBackendRenderTargetDesc) - Missing in code: type removed
   - [ ] M:SkiaSharp.GRBackendRenderTargetDesc.op_Inequality(SkiaSharp.GRBackendRenderTargetDesc,SkiaSharp.GRBackendRenderTargetDesc)
   - [ ] P:SkiaSharp.GRBackendRenderTargetDesc.Config
   - [ ] P:SkiaSharp.GRBackendRenderTargetDesc.Height
@@ -873,9 +873,9 @@
   - [ ] P:SkiaSharp.GRBackendRenderTargetDesc.Size
   - [ ] P:SkiaSharp.GRBackendRenderTargetDesc.StencilBits
   - [ ] P:SkiaSharp.GRBackendRenderTargetDesc.Width
-- [ ] SkiaSharp.GRBackendState
-  - [ ] F:SkiaSharp.GRBackendState.All
-  - [ ] F:SkiaSharp.GRBackendState.None
+- [x] SkiaSharp.GRBackendState
+  - [x] F:SkiaSharp.GRBackendState.All
+  - [x] F:SkiaSharp.GRBackendState.None
 - [ ] SkiaSharp.GRBackendTexture
   - [ ] M:SkiaSharp.GRBackendTexture.#ctor(SkiaSharp.GRBackendTextureDesc)
   - [ ] M:SkiaSharp.GRBackendTexture.#ctor(SkiaSharp.GRGlBackendTextureDesc)

@@ -27,10 +27,21 @@ namespace SkiaSharp
 		All = 0xffff
 	}
 
+	/// <summary>
+	/// Various flags for the <see cref="M:SkiaSharp.GRContext.ResetContext(SkiaSharp.GRBackendState)" /> method.
+	/// </summary>
+	/// <remarks>
+	/// </remarks>
 	[Flags]
 	public enum GRBackendState : UInt32
 	{
+		/// <summary>
+		/// Reset nothing.
+		/// </summary>
 		None = 0,
+		/// <summary>
+		/// Reset all the context state for any backend.
+		/// </summary>
 		All = 0xffffffff,
 	}
 
