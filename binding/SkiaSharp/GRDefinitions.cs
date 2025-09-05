@@ -9,7 +9,7 @@ using GRBackendObject = System.IntPtr;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Various flags for the <see cref="M:SkiaSharp.GRContext.ResetContext(SkiaSharp.GRGlBackendState)" /> method when using a <see cref="GRBackend.OpenGL" /> backend.
+	/// Various flags for the <see cref="GRContext.ResetContext(SkiaSharp.GRGlBackendState)" /> method when using a <see cref="GRBackend.OpenGL" /> backend.
 	/// </summary>
 	[Flags]
 	public enum GRGlBackendState : UInt32
@@ -73,7 +73,7 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// Various flags for the <see cref="M:SkiaSharp.GRContext.ResetContext(SkiaSharp.GRBackendState)" /> method.
+	/// Various flags for the <see cref="GRContext.ResetContext(SkiaSharp.GRBackendState)" /> method.
 	/// </summary>
 	[Flags]
 	public enum GRBackendState : UInt32

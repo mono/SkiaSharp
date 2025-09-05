@@ -307,8 +307,8 @@ namespace SkiaSharp
 		/// Start or continue the incremental decode.
 		/// </summary>
 		/// <param name="rowsDecoded">The total number of lines initialized. Only meaningful if this method returns <see cref="SKCodecResult.IncompleteInput" />.</param>
-		/// <returns>Returns <see cref="SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" /> have been completely decoded. <see cref="SKCodecResult.IncompleteInput" /> otherwise.</returns>
-		/// <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels(System.Byte[]@)" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> if all lines requested in <see cref="SKCodec.StartIncrementalDecode(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" /> have been completely decoded. <see cref="SKCodecResult.IncompleteInput" /> otherwise.</returns>
+		/// <remarks>Unlike <see cref="SKCodec.GetPixels(System.Byte[]@)" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
 		public SKCodecResult IncrementalDecode (out int rowsDecoded)
 		{
 			fixed (int* r = &rowsDecoded) {
@@ -319,8 +319,8 @@ namespace SkiaSharp
 		/// <summary>
 		/// Start or continue the incremental decode.
 		/// </summary>
-		/// <returns>Returns <see cref="SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" /> have been completely decoded. <see cref="SKCodecResult.IncompleteInput" /> otherwise.</returns>
-		/// <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels(System.Byte[]@)" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> if all lines requested in <see cref="SKCodec.StartIncrementalDecode(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" /> have been completely decoded. <see cref="SKCodecResult.IncompleteInput" /> otherwise.</returns>
+		/// <remarks>Unlike <see cref="SKCodec.GetPixels(System.Byte[]@)" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
 		public SKCodecResult IncrementalDecode () =>
 			SkiaApi.sk_codec_incremental_decode (Handle, null);
 

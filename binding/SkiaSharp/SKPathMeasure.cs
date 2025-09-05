@@ -31,7 +31,7 @@ namespace SkiaSharp
 		/// <param name="path">The path to use, or null.</param>
 		/// <param name="forceClosed">Controls whether or not the path is treated as closed.</param>
 		/// <param name="resScale">Controls the precision of the measure. Values greater 1 increase the precision (and possibly slow down the computation).</param>
-		/// <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="M:SkiaSharp.SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
+		/// <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
 		public SKPathMeasure (SKPath path, bool forceClosed = false, float resScale = 1)
 			: this (IntPtr.Zero, true)
 		{
@@ -84,7 +84,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="path">The path to use, or null.</param>
 		/// <param name="forceClosed">Controls whether or not the path is treated as closed.</param>
-		/// <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="M:SkiaSharp.SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
+		/// <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
 		public void SetPath (SKPath path, bool forceClosed)
 		{
 			SkiaApi.sk_pathmeasure_set_path (Handle, path == null ? IntPtr.Zero : path.Handle, forceClosed);
@@ -190,7 +190,7 @@ namespace SkiaSharp
 		/// <param name="start">The starting offset of the segment.</param>
 		/// <param name="stop">The end offset of the segment.</param>
 		/// <param name="dst">The path to hold the new segment.</param>
-		/// <param name="startWithMoveTo">If true, begin the path segment with a <see cref="M:SkiaSharp.SKPath.MoveTo(SkiaSharp.SKPoint)" />.</param>
+		/// <param name="startWithMoveTo">If true, begin the path segment with a <see cref="SKPath.MoveTo(SkiaSharp.SKPoint)" />.</param>
 		/// <returns>Returns false if the segment is zero-length, otherwise returns true.</returns>
 		/// <remarks>The start and stop parameters are pinned to 0..<see cref="SKPathMeasure.Length" />.</remarks>
 		public bool GetSegment (float start, float stop, SKPath dst, bool startWithMoveTo)

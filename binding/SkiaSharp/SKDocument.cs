@@ -40,7 +40,7 @@ namespace SkiaSharp
 		/// <param name="width">The width of the page.</param>
 		/// <param name="height">The height of the page.</param>
 		/// <returns>Returns a canvas for the new page.</returns>
-		/// <remarks>The document owns this canvas, and it will go out of scope when <see cref="M:SkiaSharp.SKDocument.EndPage" /> or <see cref="M:SkiaSharp.SKDocument.Close" /> is called, or the document is deleted.</remarks>
+		/// <remarks>The document owns this canvas, and it will go out of scope when <see cref="SKDocument.EndPage" /> or <see cref="SKDocument.Close" /> is called, or the document is deleted.</remarks>
 		public SKCanvas BeginPage (float width, float height) =>
 			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, null), false), this);
 
@@ -51,12 +51,12 @@ namespace SkiaSharp
 		/// <param name="height">The height of the page.</param>
 		/// <param name="content">The area for the page contents.</param>
 		/// <returns>Returns a canvas for the new page.</returns>
-		/// <remarks>The document owns this canvas, and it will go out of scope when <see cref="M:SkiaSharp.SKDocument.EndPage" /> or <see cref="M:SkiaSharp.SKDocument.Close" /> is called, or the document is deleted.</remarks>
+		/// <remarks>The document owns this canvas, and it will go out of scope when <see cref="SKDocument.EndPage" /> or <see cref="SKDocument.Close" /> is called, or the document is deleted.</remarks>
 		public SKCanvas BeginPage (float width, float height, SKRect content) =>
 			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false), this);
 
 		/// <summary>
-		/// Completes the drawing for the current page created by <see cref="M:SkiaSharp.SKDocument.BeginPage(System.Single,System.Single)" />.
+		/// Completes the drawing for the current page created by <see cref="SKDocument.BeginPage(System.Single,System.Single)" />.
 		/// </summary>
 		public void EndPage () =>
 			SkiaApi.sk_document_end_page (Handle);

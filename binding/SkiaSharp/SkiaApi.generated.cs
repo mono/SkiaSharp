@@ -19125,7 +19125,7 @@ namespace SkiaSharp {
 
 	// sk_highcontrastconfig_t
 	/// <summary>
-	/// High contrast configuration settings for use with <see cref="M:SkiaSharp.SKColorFilter.CreateHighContrast(SkiaSharp.SKHighContrastConfig)" />.
+	/// High contrast configuration settings for use with <see cref="SKColorFilter.CreateHighContrast(SkiaSharp.SKHighContrastConfig)" />.
 	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKHighContrastConfig : IEquatable<SKHighContrastConfig> {
@@ -20241,7 +20241,7 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Represents an ordered pair of floating-point x- and y-coordinates that defines a point in a two-dimensional plane.
 	/// </summary>
-	/// <remarks>To convert a <see cref="SKPoint" /> to a <see cref="SKPointI" />, use <see cref="M:SkiaSharp.SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="M:SkiaSharp.SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
+	/// <remarks>To convert a <see cref="SKPoint" /> to a <see cref="SKPointI" />, use <see cref="SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKPoint : IEquatable<SKPoint> {
 		// public float x
@@ -20939,7 +20939,7 @@ namespace SkiaSharp {
 
 	// sk_bitmap_allocflags_t
 	/// <summary>
-	/// Flags to use with <see cref="M:SkiaSharp.SKBitmap.#ctor" />.
+	/// Flags to use with <see cref="SKBitmap.#ctor" />.
 	/// </summary>
 	[Flags]
 	public enum SKBitmapAllocFlags {
@@ -21120,7 +21120,7 @@ namespace SkiaSharp {
 
 	// sk_blurstyle_t
 	/// <summary>
-	/// Blur types for the <see cref="M:SkiaSharp.SKMaskFilter.CreateBlur(SkiaSharp.SKBlurStyle,System.Single)" /> method and its overloads.
+	/// Blur types for the <see cref="SKMaskFilter.CreateBlur(SkiaSharp.SKBlurStyle,System.Single)" /> method and its overloads.
 	/// </summary>
 	public enum SKBlurStyle {
 		// NORMAL_SK_BLUR_STYLE = 0
@@ -21176,7 +21176,7 @@ namespace SkiaSharp {
 
 	// sk_codec_result_t
 	/// <summary>
-	/// Used to describe the result of a call to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> or one of the overloads that accepts a <see cref="SKCodecOptions" />.
+	/// Used to describe the result of a call to <see cref="SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> or one of the overloads that accepts a <see cref="SKCodecOptions" />.
 	/// </summary>
 	/// <remarks>Result is the union of possible results from subclasses.</remarks>
 	public enum SKCodecResult {
@@ -21252,7 +21252,7 @@ namespace SkiaSharp {
 
 	// sk_codec_zero_initialized_t
 	/// <summary>
-	/// Whether or not the memory passed to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> (or one of the overloads that accepts a <see cref="SKCodecOptions" />) is zero initialized
+	/// Whether or not the memory passed to <see cref="SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> (or one of the overloads that accepts a <see cref="SKCodecOptions" />) is zero initialized
 	/// </summary>
 	public enum SKZeroInitialized {
 		// YES_SK_CODEC_ZERO_INITIALIZED = 0
@@ -21826,36 +21826,36 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Verbs contained in an <see cref="SKPath" />.
 	/// </summary>
-	/// <remarks>In the description below, the number of points returned represents the number of valid entries on the return array of points that is passed to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" />.</remarks>
+	/// <remarks>In the description below, the number of points returned represents the number of valid entries on the return array of points that is passed to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" />.</remarks>
 	public enum SKPathVerb {
 		// MOVE_SK_PATH_VERB = 0
 		/// <summary>
-		/// Move command, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return a single point.
+		/// Move command, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return a single point.
 		/// </summary>
 		Move = 0,
 		// LINE_SK_PATH_VERB = 1
 		/// <summary>
-		/// Line path, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return two points.
+		/// Line path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return two points.
 		/// </summary>
 		Line = 1,
 		// QUAD_SK_PATH_VERB = 2
 		/// <summary>
-		/// Quad command, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return three points.
+		/// Quad command, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return three points.
 		/// </summary>
 		Quad = 2,
 		// CONIC_SK_PATH_VERB = 3
 		/// <summary>
-		/// Conic path, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return three points, plus the <see cref="M:SkiaSharp.SKPath.RawIterator.ConicWeight" /> point.
+		/// Conic path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return three points, plus the <see cref="SKPath.RawIterator.ConicWeight" /> point.
 		/// </summary>
 		Conic = 3,
 		// CUBIC_SK_PATH_VERB = 4
 		/// <summary>
-		/// Cubic path, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return four points.
+		/// Cubic path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return four points.
 		/// </summary>
 		Cubic = 4,
 		// CLOSE_SK_PATH_VERB = 5
 		/// <summary>
-		/// Close path, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return one point (contour's <see cref="M:SkiaSharp.SKPath.MoveTo(SkiaSharp.SKPoint)" /> point).
+		/// Close path, a call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return one point (contour's <see cref="SKPath.MoveTo(SkiaSharp.SKPoint)" /> point).
 		/// </summary>
 		Close = 5,
 		// DONE_SK_PATH_VERB = 6
@@ -21869,7 +21869,7 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Flags to indicate how to compute a matrix from a position along a path.
 	/// </summary>
-	/// <remarks>This is used with <see cref="M:SkiaSharp.SKPathMeasure.GetMatrix(System.Single,SkiaSharp.SKMatrix@,SkiaSharp.SKPathMeasureMatrixFlags)" />.</remarks>
+	/// <remarks>This is used with <see cref="SKPathMeasure.GetMatrix(System.Single,SkiaSharp.SKMatrix@,SkiaSharp.SKPathMeasureMatrixFlags)" />.</remarks>
 	[Flags]
 	public enum SKPathMeasureMatrixFlags {
 		// GET_POSITION_SK_PATHMEASURE_MATRIXFLAGS = 0x01
@@ -21891,7 +21891,7 @@ namespace SkiaSharp {
 
 	// sk_pathop_t
 	/// <summary>
-	/// The logical operations that can be performed when combining two paths using <see cref="M:SkiaSharp.SKPath.Op(SkiaSharp.SKPath,SkiaSharp.SKPathOp)" />.
+	/// The logical operations that can be performed when combining two paths using <see cref="SKPath.Op(SkiaSharp.SKPath,SkiaSharp.SKPathOp)" />.
 	/// </summary>
 	public enum SKPathOp {
 		// DIFFERENCE_SK_PATHOP = 0
@@ -21999,7 +21999,7 @@ namespace SkiaSharp {
 
 	// sk_point_mode_t
 	/// <summary>
-	/// Possible values to interpret the incoming array of points for the <see cref="M:SkiaSharp.SKCanvas.DrawPoints(SkiaSharp.SKPointMode,SkiaSharp.SKPoint[],SkiaSharp.SKPaint)" /> method.
+	/// Possible values to interpret the incoming array of points for the <see cref="SKCanvas.DrawPoints(SkiaSharp.SKPointMode,SkiaSharp.SKPoint[],SkiaSharp.SKPaint)" /> method.
 	/// </summary>
 	public enum SKPointMode {
 		// POINTS_SK_POINT_MODE = 0
@@ -22312,7 +22312,7 @@ namespace SkiaSharp {
 
 	// sk_vertices_vertex_mode_t
 	/// <summary>
-	/// Various mode with which to interpret triangles when invoking <see cref="M:SkiaSharp.SKCanvas.DrawVertices(SkiaSharp.SKVertexMode,SkiaSharp.SKPoint[],SkiaSharp.SKColor[],SkiaSharp.SKPaint)" />.
+	/// Various mode with which to interpret triangles when invoking <see cref="SKCanvas.DrawVertices(SkiaSharp.SKVertexMode,SkiaSharp.SKPoint[],SkiaSharp.SKColor[],SkiaSharp.SKPaint)" />.
 	/// </summary>
 	public enum SKVertexMode {
 		// TRIANGLES_SK_VERTICES_VERTEX_MODE = 0

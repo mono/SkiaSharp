@@ -11,7 +11,7 @@ namespace SkiaSharp
 	/// <summary>
 	/// The <see cref="SKData" /> holds an immutable data buffer.
 	/// </summary>
-	/// <remarks><para>Not only is the data immutable, but the actual pointer that is returned by the <see cref="SKData.Data" /> property is guaranteed to always be the same for the life of this instance.</para><para>The <see cref="M:SkiaSharp.SKData.AsStream" /> method can be used to return a <see cref="T:System.IO.Stream" /> that wraps this <see cref="SKData" /> and allows for .NET APIs to scan the contents of the <see cref="SKData" /> as a stream.</para></remarks>
+	/// <remarks><para>Not only is the data immutable, but the actual pointer that is returned by the <see cref="SKData.Data" /> property is guaranteed to always be the same for the life of this instance.</para><para>The <see cref="SKData.AsStream" /> method can be used to return a <see cref="T:System.IO.Stream" /> that wraps this <see cref="SKData" /> and allows for .NET APIs to scan the contents of the <see cref="SKData" /> as a stream.</para></remarks>
 	public unsafe class SKData : SKObject, ISKNonVirtualReferenceCounted
 	{
 		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).

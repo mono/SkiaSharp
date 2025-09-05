@@ -22,7 +22,7 @@ namespace SkiaSharp
 	/// The delegate that is used when a <see cref="SKData" /> instance is about to be released.
 	/// </summary>
 	/// <param name="address">The pointer to the byte buffer.</param>
-	/// <param name="context">The user state passed to <see cref="M:SkiaSharp.SKData.Create(System.IntPtr,System.Int32,SkiaSharp.SKDataReleaseDelegate,System.Object)" />.</param>
+	/// <param name="context">The user state passed to <see cref="SKData.Create(System.IntPtr,System.Int32,SkiaSharp.SKDataReleaseDelegate,System.Object)" />.</param>
 	public delegate void SKDataReleaseDelegate (IntPtr address, object context);
 
 	/// <summary>

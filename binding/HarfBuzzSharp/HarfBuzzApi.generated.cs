@@ -7301,7 +7301,7 @@ namespace HarfBuzzSharp {
 
 	// hb_buffer_serialize_flags_t
 	/// <summary>
-	/// The various flags that control what glyph information are serialized by <see cref="M:HarfBuzzSharp.Buffer.SerializeGlyphs(System.Int32,System.Int32,HarfBuzzSharp.Font,HarfBuzzSharp.SerializeFormat,HarfBuzzSharp.SerializeFlag)" />.
+	/// The various flags that control what glyph information are serialized by <see cref="Buffer.SerializeGlyphs(System.Int32,System.Int32,HarfBuzzSharp.Font,HarfBuzzSharp.SerializeFormat,HarfBuzzSharp.SerializeFlag)" />.
 	/// </summary>
 	[Flags]
 	public enum SerializeFlag {

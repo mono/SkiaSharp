@@ -331,7 +331,7 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// Additional options to pass to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> or one of the overloads that accepts a <see cref="SKCodecOptions" />.
+	/// Additional options to pass to <see cref="SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> or one of the overloads that accepts a <see cref="SKCodecOptions" />.
 	/// </summary>
 	public struct SKCodecOptions : IEquatable<SKCodecOptions>
 	{
@@ -839,7 +839,7 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// High contrast configuration settings for use with <see cref="M:SkiaSharp.SKColorFilter.CreateHighContrast(SkiaSharp.SKHighContrastConfig)" />.
+	/// High contrast configuration settings for use with <see cref="SKColorFilter.CreateHighContrast(SkiaSharp.SKHighContrastConfig)" />.
 	/// </summary>
 	public partial struct SKHighContrastConfig
 	{

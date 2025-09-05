@@ -2,6 +2,9 @@
 
 namespace SkiaSharp.Views.Maui
 {
+	/// <summary>
+	/// Various extension methods to convert between SkiaSharp types and Microsoft.Maui types.
+	/// </summary>
 	public static class Extensions
 	{
 		// Point

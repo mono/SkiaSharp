@@ -873,7 +873,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets a value indicating whether the image is backed by an image-generator or other source that creates (and caches) its pixels / texture on-demand.
 		/// </summary>
-		/// <remarks>If this method returns <see langword="false" />, then <see cref="M:SkiaSharp.SKImage.PeekPixels" /> will return <see langword="null" />.</remarks>
+		/// <remarks>If this method returns <see langword="false" />, then <see cref="SKImage.PeekPixels" /> will return <see langword="null" />.</remarks>
 		public bool IsLazyGenerated =>
 			SkiaApi.sk_image_is_lazy_generated (Handle);
 

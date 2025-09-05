@@ -20,7 +20,7 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="M:HarfBuzzSharp.Buffer.#ctor" /> with default values.
+		/// Creates a new <see cref="Buffer.#ctor" /> with default values.
 		/// </summary>
 		public Buffer ()
 			: this (HarfBuzzApi.hb_buffer_create ())
@@ -35,7 +35,7 @@ namespace HarfBuzzSharp
 		/// <summary>
 		/// Get or sets the text flow direction of the buffer.
 		/// </summary>
-		/// <remarks>No shaping can happen without setting the direction, or invoking <see cref="M:HarfBuzzSharp.Buffer.GuessSegmentProperties" />.</remarks>
+		/// <remarks>No shaping can happen without setting the direction, or invoking <see cref="Buffer.GuessSegmentProperties" />.</remarks>
 		public Direction Direction {
 			get => HarfBuzzApi.hb_buffer_get_direction (Handle);
 			set => HarfBuzzApi.hb_buffer_set_direction (Handle, value);

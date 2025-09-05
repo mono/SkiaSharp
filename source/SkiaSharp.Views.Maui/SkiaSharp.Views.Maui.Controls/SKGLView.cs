@@ -71,7 +71,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		/// Occurs when the surface needs to be redrawn.
 		/// </summary>
 		/// <remarks>There are two ways to draw on this surface: by overriding the
-		/// <see cref="SkiaSharp.Views.Maui.Controls.SKGLView.OnPaintSurface(SkiaSharp.Views.Maui.Controls.SKPaintGLSurfaceEventArgs)" />
+		/// <see cref="SkiaSharp.Views.Maui.Controls.SKGLView.OnPaintSurface(SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
 		/// <see cref="SkiaSharp.Views.Maui.Controls.SKGLView.PaintSurface" />
 		/// event.

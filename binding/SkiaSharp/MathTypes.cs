@@ -8,7 +8,7 @@ namespace SkiaSharp
 	/// <summary>
 	/// Represents an ordered pair of floating-point x- and y-coordinates that defines a point in a two-dimensional plane.
 	/// </summary>
-	/// <remarks>To convert a <see cref="SKPoint" /> to a <see cref="SKPointI" />, use <see cref="M:SkiaSharp.SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="M:SkiaSharp.SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
+	/// <remarks>To convert a <see cref="SKPoint" /> to a <see cref="SKPointI" />, use <see cref="SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
 	public partial struct SKPoint
 	{
 		/// <summary>

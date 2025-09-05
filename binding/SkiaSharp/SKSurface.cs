@@ -660,7 +660,7 @@ namespace SkiaSharp
 		/// <param name="width">The desired width for the surface.</param>
 		/// <param name="height">The desired height for the surface.</param>
 		/// <returns>Returns the new surface if it could be created, otherwise <see langword="null" />.</returns>
-		/// <remarks>Drawing to the <see cref="SKCanvas" /> returned from <see cref="SKSurface.Canvas" /> has no effect. Calling <see cref="M:SkiaSharp.SKSurface.Snapshot" /> on the returned <see cref="SKSurface" /> returns <see langword="null" />.</remarks>
+		/// <remarks>Drawing to the <see cref="SKCanvas" /> returned from <see cref="SKSurface.Canvas" /> has no effect. Calling <see cref="SKSurface.Snapshot" /> on the returned <see cref="SKSurface" /> returns <see langword="null" />.</remarks>
 		public static SKSurface CreateNull (int width, int height) =>
 			GetObject (SkiaApi.sk_surface_new_null (width, height));
 

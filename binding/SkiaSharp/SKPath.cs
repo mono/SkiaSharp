@@ -100,25 +100,25 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets a value indicating whether the path is a single oval or circle.
 		/// </summary>
-		/// <remarks>See also <see cref="M:SkiaSharp.SKPath.GetOvalBounds" />.</remarks>
+		/// <remarks>See also <see cref="SKPath.GetOvalBounds" />.</remarks>
 		public bool IsOval => SkiaApi.sk_path_is_oval (Handle, null);
 
 		/// <summary>
 		/// Gets a value indicating whether the path is a single, round rectangle.
 		/// </summary>
-		/// <remarks>See also <see cref="M:SkiaSharp.SKPath.GetRoundRect" />.</remarks>
+		/// <remarks>See also <see cref="SKPath.GetRoundRect" />.</remarks>
 		public bool IsRoundRect => SkiaApi.sk_path_is_rrect (Handle, IntPtr.Zero);
 
 		/// <summary>
 		/// Gets a value indicating whether the path is a single, straight line.
 		/// </summary>
-		/// <remarks>See also <see cref="M:SkiaSharp.SKPath.GetLine" />.</remarks>
+		/// <remarks>See also <see cref="SKPath.GetLine" />.</remarks>
 		public bool IsLine => SkiaApi.sk_path_is_line (Handle, null);
 
 		/// <summary>
 		/// Gets a value indicating whether the path is a single rectangle.
 		/// </summary>
-		/// <remarks>See also <see cref="M:SkiaSharp.SKPath.GetRect" /> and <see cref="M:SkiaSharp.SKPath.GetRect(System.Boolean@,SkiaSharp.SKPathDirection@)" />.</remarks>
+		/// <remarks>See also <see cref="SKPath.GetRect" /> and <see cref="SKPath.GetRect(System.Boolean@,SkiaSharp.SKPathDirection@)" />.</remarks>
 		public bool IsRect => SkiaApi.sk_path_is_rect (Handle, null, null, null);
 
 		/// <summary>
@@ -354,14 +354,14 @@ namespace SkiaSharp
 			SkiaApi.sk_path_move_to (Handle, x, y);
 
 		/// <summary>
-		/// Same as <see cref="M:SkiaSharp.SKPath.MoveTo(SkiaSharp.SKPoint)" /> but the coordinates are considered relative to the last point on this contour.
+		/// Same as <see cref="SKPath.MoveTo(SkiaSharp.SKPoint)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="point">The amount to add to the coordinates of the last point on this contour, to specify the start of a new contour.</param>
 		public void RMoveTo (SKPoint point) =>
 			SkiaApi.sk_path_rmove_to (Handle, point.X, point.Y);
 
 		/// <summary>
-		/// Same as <see cref="M:SkiaSharp.SKPath.MoveTo(System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
+		/// Same as <see cref="SKPath.MoveTo(System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="dx">The amount to add to the x-coordinate of the last point on this contour, to specify the start of a new contour.</param>
 		/// <param name="dy">The amount to add to the x-coordinate of the last point on this contour, to specify the start of a new contour.</param>
@@ -388,7 +388,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_line_to (Handle, x, y);
 
 		/// <summary>
-		/// Same as <see cref="M:SkiaSharp.SKPath.LineTo(SkiaSharp.SKPoint)" /> but the coordinates are considered relative to the last point on this contour.
+		/// Same as <see cref="SKPath.LineTo(SkiaSharp.SKPoint)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="point">The amount to add to the coordinates of the last point on this contour, to specify the end of a line.</param>
 		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
@@ -397,7 +397,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_rline_to (Handle, point.X, point.Y);
 
 		/// <summary>
-		/// Same as <see cref="M:SkiaSharp.SKPath.LineTo(System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
+		/// Same as <see cref="SKPath.LineTo(System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="dx">The amount to add to the x-coordinate of the last point on this contour, to specify the end of a line.</param>
 		/// <param name="dy">The amount to add to the y-coordinate of the last point on this contour, to specify the end of a line.</param>
@@ -433,7 +433,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_quad_to (Handle, x0, y0, x1, y1);
 
 		/// <summary>
-		/// Same as <see cref="M:SkiaSharp.SKPath.QuadTo(SkiaSharp.SKPoint,SkiaSharp.SKPoint)" /> but the coordinates are considered relative to the last point on this contour.
+		/// Same as <see cref="SKPath.QuadTo(SkiaSharp.SKPoint,SkiaSharp.SKPoint)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="point0">The amount to add to the coordinates of the last point on this contour, to specify the control point on a quadratic curve.</param>
 		/// <param name="point1">The amount to add to the coordinates of the last point on this contour, to specify end point on a quadratic curve.</param>
@@ -443,7 +443,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_rquad_to (Handle, point0.X, point0.Y, point1.X, point1.Y);
 
 		/// <summary>
-		/// Same as <see cref="M:SkiaSharp.SKPath.QuadTo(System.Single,System.Single,System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
+		/// Same as <see cref="SKPath.QuadTo(System.Single,System.Single,System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="dx0">The amount to add to the x-coordinate of the last point on this contour, to specify the control point on a quadratic curve.</param>
 		/// <param name="dy0">The amount to add to the y-coordinate of the last point on this contour, to specify the control point on a quadratic curve.</param>
@@ -479,7 +479,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_conic_to (Handle, x0, y0, x1, y1, w);
 
 		/// <summary>
-		/// Same as <see cref="M:SkiaSharp.SKPath.ConicTo(SkiaSharp.SKPoint,SkiaSharp.SKPoint,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
+		/// Same as <see cref="SKPath.ConicTo(SkiaSharp.SKPoint,SkiaSharp.SKPoint,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="point0">The amount to add to the coordinates of the last point on this contour, to specify the control point of the conic curve.</param>
 		/// <param name="point1">The amount to add to the coordinates of the last point on this contour, to specify the end point of the conic curve.</param>
@@ -490,7 +490,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_rconic_to (Handle, point0.X, point0.Y, point1.X, point1.Y, w);
 
 		/// <summary>
-		/// Same as <see cref="M:SkiaSharp.SKPath.ConicTo(System.Single,System.Single,System.Single,System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
+		/// Same as <see cref="SKPath.ConicTo(System.Single,System.Single,System.Single,System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="dx0">The amount to add to the x-coordinate of the last point on this contour, to specify the control point of the conic curve.</param>
 		/// <param name="dy0">The amount to add to the y-coordinate of the last point on this contour, to specify the control point of the conic curve.</param>
@@ -528,7 +528,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_cubic_to (Handle, x0, y0, x1, y1, x2, y2);
 
 		/// <summary>
-		/// Same as <see cref="M:SkiaSharp.SKPath.CubicTo(SkiaSharp.SKPoint,SkiaSharp.SKPoint,SkiaSharp.SKPoint)" /> but the coordinates are considered relative to the last point on this contour.
+		/// Same as <see cref="SKPath.CubicTo(SkiaSharp.SKPoint,SkiaSharp.SKPoint,SkiaSharp.SKPoint)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="point0">The amount to add to the coordinates of the last point on this contour, to specify the 1st control point on a cubic curve.</param>
 		/// <param name="point1">The amount to add to the coordinates of the last point on this contour, to specify the 2nd control point on a cubic curve.</param>
@@ -539,7 +539,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_rcubic_to (Handle, point0.X, point0.Y, point1.X, point1.Y, point2.X, point2.Y);
 
 		/// <summary>
-		/// Same as <see cref="M:SkiaSharp.SKPath.CubicTo(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
+		/// Same as <see cref="SKPath.CubicTo(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="dx0">The amount to add to the x-coordinate of the last point on this contour, to specify the 1st control point on a cubic curve.</param>
 		/// <param name="dy0">The amount to add to the y-coordinate of the last point on this contour, to specify the 1st control point on a cubic curve.</param>
@@ -613,7 +613,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_arc_to_with_points (Handle, x1, y1, x2, y2, radius);
 
 		/// <summary>
-		/// The same as <see cref="M:SkiaSharp.SKPath.ArcTo(SkiaSharp.SKPoint,System.Single,SkiaSharp.SKPathArcSize,SkiaSharp.SKPathDirection,SkiaSharp.SKPoint)" />, but the coordinates are considered relative to the last point on this contour.
+		/// The same as <see cref="SKPath.ArcTo(SkiaSharp.SKPoint,System.Single,SkiaSharp.SKPathArcSize,SkiaSharp.SKPathDirection,SkiaSharp.SKPoint)" />, but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="r">The radius.</param>
 		/// <param name="xAxisRotate">The angle in degrees relative to the x-axis.</param>
@@ -624,7 +624,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_rarc_to (Handle, r.X, r.Y, xAxisRotate, largeArc, sweep, xy.X, xy.Y);
 
 		/// <summary>
-		/// The same as <see cref="M:SkiaSharp.SKPath.ArcTo(System.Single,System.Single,System.Single,SkiaSharp.SKPathArcSize,SkiaSharp.SKPathDirection,System.Single,System.Single)" />, but the coordinates are considered relative to the last point on this contour.
+		/// The same as <see cref="SKPath.ArcTo(System.Single,System.Single,System.Single,SkiaSharp.SKPathArcSize,SkiaSharp.SKPathDirection,System.Single,System.Single)" />, but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="rx">The radius in the x-direction.</param>
 		/// <param name="ry">The radius in the y-direction.</param>
@@ -670,7 +670,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="rect">The rectangle to add as a closed contour to the path</param>
 		/// <param name="direction">The direction to wind the rectangle's contour.</param>
-		/// <param name="startIndex">Initial point of the contour (initial <see cref="M:SkiaSharp.SKPath.MoveTo(SkiaSharp.SKPoint)" />), expressed as a corner index, starting in the upper-left position, clock-wise. Must be in the range of 0..3.</param>
+		/// <param name="startIndex">Initial point of the contour (initial <see cref="SKPath.MoveTo(SkiaSharp.SKPoint)" />), expressed as a corner index, starting in the upper-left position, clock-wise. Must be in the range of 0..3.</param>
 		/// <remarks>Add a closed rectangle contour to the path with an initial point of the contour (startIndex) expressed as a corner index.</remarks>
 		public void AddRect (SKRect rect, SKPathDirection direction, uint startIndex)
 		{
@@ -697,7 +697,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="rect">The rounded rectangle.</param>
 		/// <param name="direction">The direction to wind the rectangle's contour.</param>
-		/// <param name="startIndex">Initial point of the contour (initial <see cref="M:SkiaSharp.SKPath.MoveTo(SkiaSharp.SKPoint)" />), expressed as an index of the radii minor/major points, ordered clock-wise. Must be in the range of 0..7.</param>
+		/// <param name="startIndex">Initial point of the contour (initial <see cref="SKPath.MoveTo(SkiaSharp.SKPoint)" />), expressed as an index of the radii minor/major points, ordered clock-wise. Must be in the range of 0..7.</param>
 		public void AddRoundRect (SKRoundRect rect, SKPathDirection direction, uint startIndex)
 		{
 			if (rect == null)
@@ -909,7 +909,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="other">The second operand.</param>
 		/// <param name="op">The logical operator.</param>
-		/// <param name="result">The path that will be used to set the result to. The current path will be <see cref="M:SkiaSharp.SKPath.Reset" />.</param>
+		/// <param name="result">The path that will be used to set the result to. The current path will be <see cref="SKPath.Reset" />.</param>
 		/// <returns>Returns true if the operation was successful, otherwise false.</returns>
 		public bool Op (SKPath other, SKPathOp op, SKPath result)
 		{
@@ -969,7 +969,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Gets the "tight" bounds of the path. Unlike <see cref="M:SkiaSharp.SKPath.GetBounds(SkiaSharp.SKRect@)" />, the control points of curves are excluded.
+		/// Gets the "tight" bounds of the path. Unlike <see cref="SKPath.GetBounds(SkiaSharp.SKRect@)" />, the control points of curves are excluded.
 		/// </summary>
 		/// <param name="result">The tight bounds of the path.</param>
 		/// <returns>Returns true if the bounds could be computed, otherwise false.</returns>
@@ -1133,10 +1133,10 @@ namespace SkiaSharp
 				SkiaApi.sk_path_iter_conic_weight (Handle);
 
 			/// <summary>
-			/// Returns a value indicating whether the last call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returns a line which was the result of a <see cref="M:SkiaSharp.SKPath.Close" /> command.
+			/// Returns a value indicating whether the last call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returns a line which was the result of a <see cref="SKPath.Close" /> command.
 			/// </summary>
-			/// <returns>Returns true if the last call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returned a line which was the result of a <see cref="M:SkiaSharp.SKPath.Close" /> command.</returns>
-			/// <remarks>If the call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returned a different value than <see cref="SKPathVerb.Line" />, the result is undefined.</remarks>
+			/// <returns>Returns true if the last call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returned a line which was the result of a <see cref="SKPath.Close" /> command.</returns>
+			/// <remarks>If the call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returned a different value than <see cref="SKPathVerb.Line" />, the result is undefined.</remarks>
 			public bool IsCloseLine () =>
 				SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
 
@@ -1193,7 +1193,7 @@ namespace SkiaSharp
 			/// <summary>
 			/// Returns the weight for the current conic.
 			/// </summary>
-			/// <remarks>Only valid if the current segment returned by <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> was <see cref="SKPathVerb.Conic" />.</remarks>
+			/// <remarks>Only valid if the current segment returned by <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> was <see cref="SKPathVerb.Conic" />.</remarks>
 			public float ConicWeight () =>
 				SkiaApi.sk_path_rawiter_conic_weight (Handle);
 

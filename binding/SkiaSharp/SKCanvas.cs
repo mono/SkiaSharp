@@ -277,8 +277,8 @@ namespace SkiaSharp
 		/// <summary>
 		/// Saves the canvas state.
 		/// </summary>
-		/// <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
-		/// <remarks>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. Subsequent calls to translate, scale, rotate, skew, concatenate or clipping path or drawing filter all operate on this copy. When the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</remarks>
+		/// <returns>The value to pass to <see cref="SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
+		/// <remarks>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. Subsequent calls to translate, scale, rotate, skew, concatenate or clipping path or drawing filter all operate on this copy. When the balancing call to <see cref="SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</remarks>
 		public int Save ()
 		{
 			if (Handle == IntPtr.Zero)
@@ -290,8 +290,8 @@ namespace SkiaSharp
 		/// Saves the canvas state and allocates an offscreen bitmap.
 		/// </summary>
 		/// <param name="limit">This clipping rectangle hint to limit the size of the offscreen bitmap.</param>
-		/// <param name="paint">This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</param>
-		/// <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
+		/// <param name="paint">This is copied, and is applied to the offscreen when <see cref="SKCanvas.Restore" /> is called.</param>
+		/// <returns>The value to pass to <see cref="SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
 		/// <remarks>This behaves the same as <see cref="SkiaSharp.SKCanvas.Save" /> but in addition it
 		/// allocates an offscreen bitmap. All drawing calls are directed there, and only
 		/// when the balancing call to <see cref="SkiaSharp.SKCanvas.Restore" /> is made is that
@@ -306,9 +306,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Saves the canvas state and allocates an offscreen bitmap.
 		/// </summary>
-		/// <param name="paint">This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</param>
-		/// <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
-		/// <remarks>This behaves the same as <see cref="M:SkiaSharp.SKCanvas.Save" /> but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made is that offscreen transfered to the canvas (or the previous layer).</remarks>
+		/// <param name="paint">This is copied, and is applied to the offscreen when <see cref="SKCanvas.Restore" /> is called.</param>
+		/// <returns>The value to pass to <see cref="SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
+		/// <remarks>This behaves the same as <see cref="SKCanvas.Save" /> but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to <see cref="SKCanvas.Restore" /> is made is that offscreen transfered to the canvas (or the previous layer).</remarks>
 		public int SaveLayer (SKPaint? paint) =>
 			SkiaApi.sk_canvas_save_layer (Handle, null, paint?.Handle ?? IntPtr.Zero);
 
@@ -389,7 +389,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Restore the canvas state.
 		/// </summary>
-		/// <remarks>This call balances a previous call to <see cref="M:SkiaSharp.SKCanvas.Save" />, and is used to remove all modifications to the matrix, clip and draw filter state since the last save call. It is an error to restore more times than was previously saved.</remarks>
+		/// <remarks>This call balances a previous call to <see cref="SKCanvas.Save" />, and is used to remove all modifications to the matrix, clip and draw filter state since the last save call. It is an error to restore more times than was previously saved.</remarks>
 		public void Restore ()
 		{
 			SkiaApi.sk_canvas_restore (Handle);
@@ -398,8 +398,8 @@ namespace SkiaSharp
 		/// <summary>
 		/// Efficiently restores the state to a specific level.
 		/// </summary>
-		/// <param name="count">The number of <see cref="M:SkiaSharp.SKCanvas.Save" /> levels to restore from, or -1 to restore all the way back to the initial value.</param>
-		/// <remarks>Efficient way to pop any calls to <see cref="M:SkiaSharp.SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. It is an error for <paramref name="count" /> to be greater than <see cref="SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.</remarks>
+		/// <param name="count">The number of <see cref="SKCanvas.Save" /> levels to restore from, or -1 to restore all the way back to the initial value.</param>
+		/// <remarks>Efficient way to pop any calls to <see cref="SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. It is an error for <paramref name="count" /> to be greater than <see cref="SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.</remarks>
 		public void RestoreToCount (int count)
 		{
 			SkiaApi.sk_canvas_restore_to_count (Handle, count);
@@ -1467,7 +1467,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Annotates the canvas by associating a name with the specified point (see <see cref="M:SkiaSharp.SKCanvas.DrawLinkDestinationAnnotation(SkiaSharp.SKRect,SkiaSharp.SKData)" />).
+		/// Annotates the canvas by associating a name with the specified point (see <see cref="SKCanvas.DrawLinkDestinationAnnotation(SkiaSharp.SKRect,SkiaSharp.SKData)" />).
 		/// </summary>
 		/// <param name="point">The location of the destination.</param>
 		/// <param name="value">The data that specifies the name of the destination.</param>
@@ -1480,7 +1480,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Annotates the canvas by associating a name with the specified point (see <see cref="M:SkiaSharp.SKCanvas.DrawLinkDestinationAnnotation(SkiaSharp.SKRect,System.String)" />).
+		/// Annotates the canvas by associating a name with the specified point (see <see cref="SKCanvas.DrawLinkDestinationAnnotation(SkiaSharp.SKRect,System.String)" />).
 		/// </summary>
 		/// <param name="point">The location of the destination.</param>
 		/// <param name="value">The name of the destination.</param>
@@ -1494,7 +1494,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="M:SkiaSharp.SKCanvas.DrawNamedDestinationAnnotation(SkiaSharp.SKPoint,SkiaSharp.SKData)" />).
+		/// Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="SKCanvas.DrawNamedDestinationAnnotation(SkiaSharp.SKPoint,SkiaSharp.SKData)" />).
 		/// </summary>
 		/// <param name="rect">The bounds of the annotation.</param>
 		/// <param name="value">The data that specifies the name of the link's destination.</param>
@@ -1507,7 +1507,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="M:SkiaSharp.SKCanvas.DrawNamedDestinationAnnotation(SkiaSharp.SKPoint,System.String)" />).
+		/// Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="SKCanvas.DrawNamedDestinationAnnotation(SkiaSharp.SKPoint,System.String)" />).
 		/// </summary>
 		/// <param name="rect">The bounds of the annotation.</param>
 		/// <param name="value">The name of the link's destination.</param>
@@ -1701,7 +1701,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the number of matrix/clip states on the canvas' private stack.
 		/// </summary>
-		/// <remarks>This will equal the number of <see cref="M:SkiaSharp.SKCanvas.Save" /> calls minus <see cref="M:SkiaSharp.SKCanvas.Restore" /> calls + 1. The save count on a new canvas is 1.</remarks>
+		/// <remarks>This will equal the number of <see cref="SKCanvas.Save" /> calls minus <see cref="SKCanvas.Restore" /> calls + 1. The save count on a new canvas is 1.</remarks>
 		public int SaveCount => SkiaApi.sk_canvas_get_save_count (Handle);
 
 		// DrawVertices
@@ -1945,7 +1945,7 @@ namespace SkiaSharp
 		private readonly int saveCount;
 
 		/// <summary>
-		/// Creates a canvas restore point, invoking the <see cref="M:SkiaSharp.SKCanvas.Save" /> method.
+		/// Creates a canvas restore point, invoking the <see cref="SKCanvas.Save" /> method.
 		/// </summary>
 		/// <param name="canvas">The canvas whose state will be preserved.</param>
 		public SKAutoCanvasRestore (SKCanvas canvas)
@@ -1957,7 +1957,7 @@ namespace SkiaSharp
 		/// Creates a canvas restore point.
 		/// </summary>
 		/// <param name="canvas">The canvas whose state will be preserved.</param>
-		/// <param name="doSave">Whether or not to invoke <see cref="M:SkiaSharp.SKCanvas.Save" /> method at this point.</param>
+		/// <param name="doSave">Whether or not to invoke <see cref="SKCanvas.Save" /> method at this point.</param>
 		public SKAutoCanvasRestore (SKCanvas canvas, bool doSave)
 		{
 			this.canvas = canvas;
@@ -1972,7 +1972,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// <para>Disposes the canvas restore point, restoring the state of the canvas (matrix, clip and draw filter) to the state it was when the object was created.</para><para>This operation will not do anything if you had previously manually called the <see cref="M:SkiaSharp.SKAutoCanvasRestore.Restore" /> method.</para>
+		/// <para>Disposes the canvas restore point, restoring the state of the canvas (matrix, clip and draw filter) to the state it was when the object was created.</para><para>This operation will not do anything if you had previously manually called the <see cref="SKAutoCanvasRestore.Restore" /> method.</para>
 		/// </summary>
 		public void Dispose ()
 		{

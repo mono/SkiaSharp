@@ -9,7 +9,7 @@ using System.ComponentModel;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Represents an immutable set of vertex data that can be used with <see cref="M:SkiaSharp.SKCanvas.DrawVertices(SkiaSharp.SKVertices,SkiaSharp.SKBlendMode,SkiaSharp.SKPaint)" />.
+	/// Represents an immutable set of vertex data that can be used with <see cref="SKCanvas.DrawVertices(SkiaSharp.SKVertices,SkiaSharp.SKBlendMode,SkiaSharp.SKPaint)" />.
 	/// </summary>
 	public unsafe class SKVertices : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{

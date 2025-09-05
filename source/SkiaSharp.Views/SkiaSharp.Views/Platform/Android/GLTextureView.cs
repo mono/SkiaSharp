@@ -142,7 +142,7 @@ namespace SkiaSharp.Views.Android
 		/// Install a custom context factory.
 		/// </summary>
 		/// <param name="factory">The custom context factory.</param>
-		/// <remarks>If this method is called, it must be called before <see cref="M:SkiaSharp.Views.Android.GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
+		/// <remarks>If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
 		public void SetEGLContextFactory(IEGLContextFactory factory)
 		{
 			CheckRenderThreadState();
@@ -153,7 +153,7 @@ namespace SkiaSharp.Views.Android
 		/// Install a custom window surface factory.
 		/// </summary>
 		/// <param name="factory">The custom window surface factory.</param>
-		/// <remarks>If this method is called, it must be called before <see cref="M:SkiaSharp.Views.Android.GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
+		/// <remarks>If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
 		public void SetEGLWindowSurfaceFactory(IEGLWindowSurfaceFactory factory)
 		{
 			CheckRenderThreadState();
@@ -209,7 +209,7 @@ namespace SkiaSharp.Views.Android
 		/// Inform the default context factory and default config chooser which context client version to pick.
 		/// </summary>
 		/// <param name="version">The context client version to choose. Use 2 for OpenGL ES 2.0</param>
-		/// <remarks>If this method is called, it must be called before <see cref="M:SkiaSharp.Views.Android.GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
+		/// <remarks>If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
 		public void SetEGLContextClientVersion(int version)
 		{
 			CheckRenderThreadState();
