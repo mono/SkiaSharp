@@ -4,6 +4,9 @@ using SkiaSharp.Views.Tizen.Interop;
 
 namespace SkiaSharp.Views.Tizen
 {
+	/// <summary>
+	/// An abstract view that can be inherited from to allow drawing on using SkiaSharp drawing commands.
+	/// </summary>
 	public abstract class CustomRenderingView : Widget
 	{
 		private readonly Evas.ImagePixelsSetCallback redrawCallback;
@@ -20,8 +23,15 @@ namespace SkiaSharp.Views.Tizen
 			redrawCallback = (d, o) => OnDrawFrame();
 		}
 
+		/// <summary>
+		/// Gets the current canvas size.
+		/// </summary>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize => GetSurfaceSize();
 
+		/// <summary>
+		/// Gets or sets the rendering mode.
+		/// </summary>
 		public RenderingMode RenderingMode
 		{
 			get { return renderingMode; }
@@ -39,6 +49,9 @@ namespace SkiaSharp.Views.Tizen
 			}
 		}
 
+		/// <summary>
+		/// Invalidates the entire surface of the control and causes the control to be redrawn.
+		/// </summary>
 		public void Invalidate()
 		{
 			if (RenderingMode == RenderingMode.WhenDirty)

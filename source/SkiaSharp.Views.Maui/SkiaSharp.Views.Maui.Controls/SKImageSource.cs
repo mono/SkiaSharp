@@ -6,7 +6,7 @@ using Microsoft.Maui.Controls;
 namespace SkiaSharp.Views.Maui.Controls
 {
 	/// <summary>
-	/// Represents a <see cref="T:SkiaSharp.SKImage" /> image source.
+	/// Represents a <see cref="SKImage" /> image source.
 	/// </summary>
 	public sealed partial class SKImageImageSource : ImageSource, ISKImageImageSource
 	{
@@ -16,7 +16,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		public static readonly BindableProperty ImageProperty = BindableProperty.Create(nameof(Image), typeof(SKImage), typeof(SKImageImageSource), default(SKImage));
 
 		/// <summary>
-		/// Gets or sets the underlying <see cref="T:SkiaSharp.SKImage" /> of the image source.
+		/// Gets or sets the underlying <see cref="SKImage" /> of the image source.
 		/// </summary>
 		public SKImage Image
 		{
@@ -34,7 +34,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		}
 
 		/// <summary>
-		/// Allows implicit casting from a <see cref="T:SkiaSharp.SKImage" />.
+		/// Allows implicit casting from a <see cref="SKImage" />.
 		/// </summary>
 		/// <param name="image">The image to use when creating the ImageSource.</param>
 		/// <returns>Returns a new instance of <see cref="SKImageImageSource" /> with the <see cref="SKImageImageSource.Image" /> property set to the image.</returns>
@@ -47,10 +47,10 @@ namespace SkiaSharp.Views.Maui.Controls
 		}
 
 		/// <summary>
-		/// Allows implicit casting to a <see cref="T:SkiaSharp.SKImage" />.
+		/// Allows implicit casting to a <see cref="SKImage" />.
 		/// </summary>
 		/// <param name="source">The ImageSource to retrieve the image from.</param>
-		/// <returns>Returns the underlying <see cref="T:SkiaSharp.SKImage" /> of the ImageSource.</returns>
+		/// <returns>Returns the underlying <see cref="SKImage" /> of the ImageSource.</returns>
 		public static implicit operator SKImage(SKImageImageSource source)
 		{
 			return source?.Image;
@@ -65,7 +65,7 @@ namespace SkiaSharp.Views.Maui.Controls
 	}
 
 	/// <summary>
-	/// Represents a <see cref="T:SkiaSharp.SKBitmap" /> image source.
+	/// Represents a <see cref="SKBitmap" /> image source.
 	/// </summary>
 	public sealed partial class SKBitmapImageSource : ImageSource, ISKBitmapImageSource
 	{
@@ -75,7 +75,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		public static readonly BindableProperty BitmapProperty = BindableProperty.Create(nameof(Bitmap), typeof(SKBitmap), typeof(SKBitmapImageSource), default(SKBitmap));
 
 		/// <summary>
-		/// Gets or sets the underlying <see cref="T:SkiaSharp.SKBitmap" /> of the image source.
+		/// Gets or sets the underlying <see cref="SKBitmap" /> of the image source.
 		/// </summary>
 		public SKBitmap Bitmap
 		{
@@ -93,7 +93,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		}
 
 		/// <summary>
-		/// Allows implicit casting from a <see cref="T:SkiaSharp.SKBitmap" />.
+		/// Allows implicit casting from a <see cref="SKBitmap" />.
 		/// </summary>
 		/// <param name="bitmap">The bitmap to use when creating the ImageSource.</param>
 		/// <returns>Returns a new instance of <see cref="SKBitmapImageSource" /> with the <see cref="SKBitmapImageSource.Bitmap" /> property set to the bitmap.</returns>
@@ -106,10 +106,10 @@ namespace SkiaSharp.Views.Maui.Controls
 		}
 
 		/// <summary>
-		/// Allows implicit casting to a <see cref="T:SkiaSharp.SKBitmap" />.
+		/// Allows implicit casting to a <see cref="SKBitmap" />.
 		/// </summary>
 		/// <param name="source">The ImageSource to retrieve the bitmap from.</param>
-		/// <returns>Returns the underlying <see cref="T:SkiaSharp.SKBitmap" /> of the ImageSource.</returns>
+		/// <returns>Returns the underlying <see cref="SKBitmap" /> of the ImageSource.</returns>
 		public static implicit operator SKBitmap(SKBitmapImageSource source)
 		{
 			return source?.Bitmap;
@@ -124,7 +124,7 @@ namespace SkiaSharp.Views.Maui.Controls
 	}
 
 	/// <summary>
-	/// Represents a <see cref="T:SkiaSharp.SKPixmap" /> image source.
+	/// Represents a <see cref="SKPixmap" /> image source.
 	/// </summary>
 	public sealed partial class SKPixmapImageSource : ImageSource, ISKPixmapImageSource
 	{
@@ -134,7 +134,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		public static readonly BindableProperty PixmapProperty = BindableProperty.Create(nameof(Pixmap), typeof(SKPixmap), typeof(SKPixmapImageSource), default(SKPixmap));
 
 		/// <summary>
-		/// Gets or sets the underlying <see cref="T:SkiaSharp.SKPixmap" /> of the image source.
+		/// Gets or sets the underlying <see cref="SKPixmap" /> of the image source.
 		/// </summary>
 		public SKPixmap Pixmap
 		{
@@ -152,7 +152,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		}
 
 		/// <summary>
-		/// Allows implicit casting from a <see cref="T:SkiaSharp.SKPixmap" />.
+		/// Allows implicit casting from a <see cref="SKPixmap" />.
 		/// </summary>
 		/// <param name="pixmap">The pixmap to use when creating the ImageSource.</param>
 		/// <returns>Returns a new instance of <see cref="SKPixmapImageSource" /> with the <see cref="SKPixmapImageSource.Pixmap" /> property set to the bitmap.</returns>
@@ -165,10 +165,10 @@ namespace SkiaSharp.Views.Maui.Controls
 		}
 
 		/// <summary>
-		/// Allows implicit casting to a <see cref="T:SkiaSharp.SKPixmap" />.
+		/// Allows implicit casting to a <see cref="SKPixmap" />.
 		/// </summary>
 		/// <param name="source">The ImageSource to retrieve the pixmap from.</param>
-		/// <returns>Returns the underlying <see cref="T:SkiaSharp.SKPixmap" /> of the ImageSource.</returns>
+		/// <returns>Returns the underlying <see cref="SKPixmap" /> of the ImageSource.</returns>
 		public static implicit operator SKPixmap(SKPixmapImageSource source)
 		{
 			return source?.Pixmap;
@@ -183,7 +183,7 @@ namespace SkiaSharp.Views.Maui.Controls
 	}
 
 	/// <summary>
-	/// Represents a <see cref="T:SkiaSharp.SKPicture" /> image source.
+	/// Represents a <see cref="SKPicture" /> image source.
 	/// </summary>
 	public sealed partial class SKPictureImageSource : ImageSource, ISKPictureImageSource
 	{
@@ -198,7 +198,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		public static readonly BindableProperty DimensionsProperty = BindableProperty.Create(nameof(Dimensions), typeof(SKSizeI), typeof(SKPictureImageSource), default(SKSizeI));
 
 		/// <summary>
-		/// Gets or sets the underlying <see cref="T:SkiaSharp.SKImage" /> of the image source.
+		/// Gets or sets the underlying <see cref="SKImage" /> of the image source.
 		/// </summary>
 		public SKPicture Picture
 		{
@@ -225,10 +225,10 @@ namespace SkiaSharp.Views.Maui.Controls
 		}
 
 		/// <summary>
-		/// Allows explicit casting to a <see cref="T:SkiaSharp.SKPicture" />.
+		/// Allows explicit casting to a <see cref="SKPicture" />.
 		/// </summary>
 		/// <param name="source">The ImageSource to retrieve the picture from.</param>
-		/// <returns>Returns the underlying <see cref="T:SkiaSharp.SKPicture" /> of the ImageSource.</returns>
+		/// <returns>Returns the underlying <see cref="SKPicture" /> of the ImageSource.</returns>
 		public static explicit operator SKPicture(SKPictureImageSource source)
 		{
 			return source?.Picture;

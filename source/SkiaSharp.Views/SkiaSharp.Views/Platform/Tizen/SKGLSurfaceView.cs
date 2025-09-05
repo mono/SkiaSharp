@@ -7,6 +7,9 @@ using Tizen;
 
 namespace SkiaSharp.Views.Tizen
 {
+	/// <summary>
+	/// A hardware-accelerated view that can be drawn on using SkiaSharp drawing commands.
+	/// </summary>
 	public class SKGLSurfaceView : CustomRenderingView
 	{
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -40,8 +43,30 @@ namespace SkiaSharp.Views.Tizen
 			};
 		}
 
+		/// <summary>
+		/// Occurs when the surface needs to be redrawn.
+		/// </summary>
+		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <see cref="SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame(SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs)" />
+		/// method, or by attaching a handler to the
+		/// <see cref="SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface" />
+		/// event.
+		/// ## Examples
+		/// ```csharp
+		/// myView.PaintSurface += (sender, e) => {
+		/// var surface = e.Surface;
+		/// var surfaceWidth = e.BackendRenderTarget.Width;
+		/// var surfaceHeight = e.BackendRenderTarget.Height;
+		/// var canvas = surface.Canvas;
+		/// // draw on the canvas
+		/// canvas.Flush ();
+		/// };
+		/// ```</remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
+		/// <summary>
+		/// Gets the current GPU context.
+		/// </summary>
 		public GRContext GRContext => context;
 
 		protected override SKSizeI GetSurfaceSize() => surfaceSize;
