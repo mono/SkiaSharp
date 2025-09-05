@@ -13,6 +13,9 @@ namespace SkiaSharp.Views.UWP
 namespace SkiaSharp.Views.Mac
 #endif
 {
+	/// <summary>
+	/// A hardware-accelerated view that can be drawn on using SkiaSharp drawing commands.
+	/// </summary>
 	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]
 #if HAS_UNO
@@ -35,12 +38,19 @@ namespace SkiaSharp.Views.Mac
 		private SKSizeI newSize;
 
 		// created in code
+		/// <summary>
+		/// Default constructor that initializes a new instance of <see cref="SKGLView" />.
+		/// </summary>
 		public SKGLView()
 		{
 			Initialize();
 		}
 
 		// created in code
+		/// <summary>
+		/// Initializes the <see cref="SKGLView" /> with the specified frame.
+		/// </summary>
+		/// <param name="frame">The frame used by the view, expressed in Mac points.</param>
 		public SKGLView(CGRect frame)
 			: base(frame)
 		{
@@ -48,12 +58,19 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		// created via designer
+		/// <summary>
+		/// A constructor used when creating managed representations of unmanaged objects; Called by the runtime.
+		/// </summary>
+		/// <param name="p">The pointer (handle) to the unmanaged object.</param>
 		public SKGLView(IntPtr p)
 			: base(p)
 		{
 		}
 
 		// created via designer
+		/// <summary>
+		/// Called after the object has been loaded from the nib file. Overriders must call the base method.
+		/// </summary>
 		public override void AwakeFromNib()
 		{
 			Initialize();
@@ -81,10 +98,20 @@ namespace SkiaSharp.Views.Mac
 			PixelFormat = new NSOpenGLPixelFormat(attrs);
 		}
 
+		/// <summary>
+		/// Gets the current canvas size.
+		/// </summary>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize => lastSize;
 
+		/// <summary>
+		/// Gets the current GPU context.
+		/// </summary>
 		public GRContext GRContext => context;
 
+		/// <summary>
+		/// Used by subclasses to initialize OpenGL state.
+		/// </summary>
 		public override void PrepareOpenGL()
 		{
 			base.PrepareOpenGL();
@@ -94,6 +121,9 @@ namespace SkiaSharp.Views.Mac
 			context = GRContext.CreateGl(glInterface);
 		}
 
+		/// <summary>
+		/// Called by Cocoa when the view's visible rectangle or bounds change.
+		/// </summary>
 		public override void Reshape()
 		{
 			base.Reshape();
@@ -105,6 +135,10 @@ namespace SkiaSharp.Views.Mac
 
 		private nfloat lastBackingScaleFactor = 0;
 
+		/// <summary>
+		/// Draws the view within the passed-in rectangle.
+		/// </summary>
+		/// <param name="dirtyRect">The rectangle to draw.</param>
 		public override void DrawRect(CGRect dirtyRect)
 		{
 			// Track if the scale of the display has changed and if so force the SKGLView to reshape itself.
@@ -175,6 +209,30 @@ namespace SkiaSharp.Views.Mac
 			OpenGLContext.FlushBuffer();
 		}
 
+		/// <summary>
+		/// Occurs when the surface needs to be redrawn.
+		/// </summary>
+		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <see cref="SKGLView.OnPaintSurface(SKPaintGLSurfaceEventArgs)" />
+		/// method, or by attaching a handler to the
+		/// <see cref="SKGLView.PaintSurface" />
+		/// event.
+		/// > [!NOTE]
+		/// > If a version of SkiaSharp prior to version v1.68.x is being used, then the
+		/// > <see cref="SKGLView.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" />
+		/// > method should be overridden instead of
+		/// > <see cref="SKGLView.OnPaintSurface(SKPaintGLSurfaceEventArgs)" />.
+		/// ## Examples
+		/// ```csharp
+		/// myView.PaintSurface += (sender, e) => {
+		/// var surface = e.Surface;
+		/// var surfaceWidth = e.BackendRenderTarget.Width;
+		/// var surfaceHeight = e.BackendRenderTarget.Height;
+		/// var canvas = surface.Canvas;
+		/// // draw on the canvas
+		/// canvas.Flush ();
+		/// };
+		/// ```</remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)

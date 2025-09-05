@@ -7,6 +7,9 @@ using SkiaSharp.Views.GlesInterop;
 
 namespace SkiaSharp.Views.Mac
 {
+	/// <summary>
+	/// A CoreAnimation OpenGL layer that can be drawn on using SkiaSharp drawing commands.
+	/// </summary>
 	public class SKGLLayer : CAOpenGLLayer
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
@@ -20,16 +23,50 @@ namespace SkiaSharp.Views.Mac
 
 		private SKSizeI lastSize;
 
+		/// <summary>
+		/// Default constructor that initializes a new instance of <see cref="SKGLLayer" />.
+		/// </summary>
 		public SKGLLayer()
 		{
 			Opaque = true;
 			NeedsDisplayOnBoundsChange = true;
 		}
 
+		/// <summary>
+		/// Gets the current canvas size.
+		/// </summary>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize => lastSize;
 
+		/// <summary>
+		/// Gets the current GPU context.
+		/// </summary>
 		public GRContext GRContext => context;
 
+		/// <summary>
+		/// Occurs when the the canvas needs to be redrawn.
+		/// </summary>
+		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <see cref="SKGLLayer.OnPaintSurface(SKPaintGLSurfaceEventArgs)" />
+		/// method, or by attaching a handler to the
+		/// <see cref="SKGLLayer.PaintSurface" />
+		/// event.
+		/// > [!NOTE]
+		/// > If a version of SkiaSharp prior to version v1.68.x is being used, then the
+		/// > <see cref="SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" />
+		/// > method should be overridden instead of
+		/// > <see cref="SKGLLayer.OnPaintSurface(SKPaintGLSurfaceEventArgs)" />.
+		/// ## Examples
+		/// ```csharp
+		/// myLayer.PaintSurface += (sender, e) => {
+		/// var surface = e.Surface;
+		/// var surfaceWidth = e.BackendRenderTarget.Width;
+		/// var surfaceHeight = e.BackendRenderTarget.Height;
+		/// var canvas = surface.Canvas;
+		/// // draw on the canvas
+		/// canvas.Flush ();
+		/// };
+		/// ```</remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
@@ -37,6 +74,13 @@ namespace SkiaSharp.Views.Mac
 			PaintSurface?.Invoke(this, e);
 		}
 
+		/// <summary>
+		/// Draws the OpenGL content for the specified time.
+		/// </summary>
+		/// <param name="glContext">The rendering context in to which the OpenGL content should be rendered.</param>
+		/// <param name="pixelFormat">The pixel format used when the context was created.</param>
+		/// <param name="timeInterval">The current layer time.</param>
+		/// <param name="timeStamp">The display timestamp associated with the time interval. Can be <see langword="null" />.</param>
 		public override void DrawInCGLContext(CGLContext glContext, CGLPixelFormat pixelFormat, double timeInterval, ref CVTimeStamp timeStamp)
 		{
 			CGLContext.CurrentContext = glContext;
@@ -97,6 +141,10 @@ namespace SkiaSharp.Views.Mac
 			base.DrawInCGLContext(glContext, pixelFormat, timeInterval, ref timeStamp);
 		}
 
+		/// <summary>
+		/// Releases the specified rendering context.
+		/// </summary>
+		/// <param name="glContext">The rendering context to release.</param>
 		public override void Release(CGLContext glContext)
 		{
 			context.Dispose();
